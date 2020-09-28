@@ -12,6 +12,9 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://messaging-system/experiments/ExperimentManager.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/MSTestUtils.jsm"
+);
 
 const TEST_EXPERIMENT = {
   enabled: true,
@@ -78,8 +81,9 @@ add_task(async function test_experimentEnrollment() {
     clear: true,
   });
 
-  let waitForExperimentEnrollment = new Promise(resolve =>
-    ExperimentAPI.on(`update:${recipe.arguments.slug}`, resolve)
+  let waitForExperimentEnrollment = ExperimentFakes.waitForExperimentUpdate(
+    ExperimentAPI,
+    recipe.arguments.slug
   );
   RemoteSettingsExperimentLoader.updateRecipes("mochitest");
 
@@ -91,8 +95,9 @@ add_task(async function test_experimentEnrollment() {
 
   Assert.ok(experiment.active, "Should be enrolled in the experiment");
 
-  let waitForExperimentUnenrollment = new Promise(resolve =>
-    ExperimentAPI.on(`update:${recipe.arguments.slug}`, resolve)
+  let waitForExperimentUnenrollment = ExperimentFakes.waitForExperimentUpdate(
+    ExperimentAPI,
+    recipe.arguments.slug
   );
   ExperimentManager.unenroll(recipe.arguments.slug, "mochitest-cleanup");
 

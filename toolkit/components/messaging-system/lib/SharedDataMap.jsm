@@ -121,9 +121,9 @@ class SharedDataMap extends EventEmitter {
    * Notify store listeners of updates
    * Called both from Main and Content process
    */
-  _notifyUpdate() {
+  _notifyUpdate(process = "parent") {
     for (let key of Object.keys(this._data || {})) {
-      this.emit(`update:${key}`, this._data[key]);
+      this.emit(`${process}-store-update:${key}`, this._data[key]);
     }
   }
 
@@ -137,7 +137,7 @@ class SharedDataMap extends EventEmitter {
   _syncFromParent() {
     this._data = Services.cpmm.sharedData.get(this.sharedDataKey);
     this._checkIfReady();
-    this._notifyUpdate();
+    this._notifyUpdate("child");
   }
 
   _checkIfReady() {

@@ -7,6 +7,9 @@ const { FileTestUtils } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/MSTestUtils.jsm"
+);
 
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
@@ -35,6 +38,38 @@ with_sharedDataMap(function test_sync({ instance, sandbox }) {
   instance.set("foo", "bar");
 
   Assert.equal(instance.get("foo"), "bar", "It should retrieve a string value");
+});
+
+with_sharedDataMap(function test_set_notify({ instance, sandbox }) {
+  instance.init(true);
+  let updateStub = sandbox.stub();
+
+  instance.on("parent-store-update:foo", updateStub);
+  instance.set("foo", "bar");
+
+  Assert.equal(updateStub.callCount, 1, "Update event sent");
+  Assert.equal(updateStub.firstCall.args[1], "bar", "Update event sent value");
+});
+
+with_sharedDataMap(async function test_set_child_notify({ instance, sandbox }) {
+  instance.init(true);
+
+  let updateStub = sandbox.stub();
+  const childInstance = new SharedDataMap("xpcshell", {
+    path: PATH,
+    isParent: false,
+  });
+
+  childInstance.on("child-store-update:foo", updateStub);
+  let childStoreUpdate = new Promise(resolve =>
+    childInstance.on("child-store-update:foo", resolve)
+  );
+  instance.set("foo", "bar");
+
+  await childStoreUpdate;
+
+  Assert.equal(updateStub.callCount, 1, "Update event sent");
+  Assert.equal(updateStub.firstCall.args[1], "bar", "Update event sent value");
 });
 
 with_sharedDataMap(async function test_async({ instance, sandbox }) {

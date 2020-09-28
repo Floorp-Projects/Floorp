@@ -88,6 +88,11 @@ class ExperimentStore extends SharedDataMap {
     return this.getAll().filter(experiment => experiment.active);
   }
 
+  _emitExperimentUpdates(experiment) {
+    this.emit(`update:${experiment.slug}`, experiment);
+    this.emit(`update:${experiment.branch.feature.featureId}`, experiment);
+  }
+
   /**
    * Add an experiment. Short form for .set(slug, experiment)
    * @param {Enrollment} experiment
@@ -99,6 +104,7 @@ class ExperimentStore extends SharedDataMap {
       );
     }
     this.set(experiment.slug, experiment);
+    this._emitExperimentUpdates(experiment);
   }
 
   /**
@@ -113,6 +119,8 @@ class ExperimentStore extends SharedDataMap {
         `Tried to update experiment ${slug} bug it doesn't exist`
       );
     }
-    this.set(slug, { ...oldProperties, ...newProperties });
+    const updatedExperiment = { ...oldProperties, ...newProperties };
+    this.set(slug, updatedExperiment);
+    this._emitExperimentUpdates(updatedExperiment);
   }
 }

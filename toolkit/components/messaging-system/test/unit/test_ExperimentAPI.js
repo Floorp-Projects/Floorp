@@ -120,9 +120,7 @@ add_task(async function test_isFeatureEnabledDefault() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
   const FEATURE_ENABLED_DEFAULT = true;
-  const expected = ExperimentFakes.experiment("foo", {
-    branch: { slug: "treatment" },
-  });
+  const expected = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
 
@@ -239,7 +237,7 @@ add_task(async function test_event_updates_content() {
   sandbox.stub(ExperimentAPI, "_store").get(() => ExperimentFakes.childStore());
 
   // Set update cb
-  ExperimentAPI.on("update:foo", updateEventCbStub);
+  ExperimentAPI.on("child-store-update:foo", updateEventCbStub);
 
   // Add some data
   manager.store.addExperiment(expected);
@@ -262,7 +260,7 @@ add_task(async function test_event_updates_content() {
   );
 
   // Remove the update listener
-  ExperimentAPI.off("update:foo", updateEventCbStub);
+  ExperimentAPI.off("child-store-update:foo", updateEventCbStub);
   // Trigger another change
   manager.store.updateExperiment("foo", { active: true });
 
@@ -298,7 +296,7 @@ add_task(async function test_event_updates_main() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
   // Set update cb
-  ExperimentAPI.on("update:foo", updateEventCbStub);
+  ExperimentAPI.on("parent-store-update:foo", updateEventCbStub);
 
   // Add some data
   manager.store.addExperiment(expected);
@@ -315,7 +313,7 @@ add_task(async function test_event_updates_main() {
   );
 
   // Remove the update listener
-  ExperimentAPI.off("update:foo", updateEventCbStub);
+  ExperimentAPI.off("parent-store-update:foo", updateEventCbStub);
   // Trigger another change
   manager.store.updateExperiment("foo", { active: true });
 
