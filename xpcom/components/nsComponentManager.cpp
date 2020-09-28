@@ -1324,6 +1324,9 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
   nsresult rv;
   {
     SafeMutexAutoUnlock unlock(mLock);
+    AUTO_PROFILER_MARKER_TEXT(
+        "GetService", OTHER.WithOptions(MarkerStack::Capture()),
+        nsDependentCString(nsIDToCString(aEntry.CID()).get()));
     rv = aEntry.CreateInstance(nullptr, aIID, getter_AddRefs(service));
   }
   if (NS_SUCCEEDED(rv) && !service) {
@@ -1501,6 +1504,8 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     return NS_ERROR_UNEXPECTED;
   }
 
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE("GetServiceByContractID", OTHER,
+                                                aContractID);
   MutexLock lock(mLock);
 
   Maybe<EntryWrapper> entry =

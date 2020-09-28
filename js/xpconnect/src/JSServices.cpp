@@ -131,6 +131,8 @@ static bool Services_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 
   nsAutoJSLinearCString nameStr(name);
   if (const auto* service = xpcom::JSServiceEntry::Lookup(nameStr)) {
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("Services_Resolve",
+                                                       OTHER, service->Name());
     *resolvedp = true;
 
     ErrorResult rv;
