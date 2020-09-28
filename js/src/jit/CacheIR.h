@@ -1896,10 +1896,8 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   AttachDecision tryAttachBigInt(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachNumberUndefined(ValOperandId lhsId,
                                           ValOperandId rhsId);
-  AttachDecision tryAttachPrimitiveUndefined(ValOperandId lhsId,
-                                             ValOperandId rhsId);
-  AttachDecision tryAttachObjectUndefined(ValOperandId lhsId,
-                                          ValOperandId rhsId);
+  AttachDecision tryAttachAnyNullUndefined(ValOperandId lhsId,
+                                           ValOperandId rhsId);
   AttachDecision tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachPrimitiveSymbol(ValOperandId lhsId,
