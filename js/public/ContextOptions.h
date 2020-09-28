@@ -26,6 +26,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmIon_(true),
         wasmCranelift_(false),
         wasmReftypes_(true),
+        wasmFunctionReferences_(false),
         wasmGc_(false),
         wasmMultiValue_(false),
         wasmSimd_(false),
@@ -107,6 +108,10 @@ class JS_PUBLIC_API ContextOptions {
     wasmReftypes_ = flag;
     return *this;
   }
+
+  bool wasmFunctionReferences() const { return wasmFunctionReferences_; }
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setWasmFunctionReferences(bool flag);
 
   bool wasmGc() const { return wasmGc_; }
   // Defined out-of-line because it depends on a compile-time option
@@ -242,6 +247,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmIon_ : 1;
   bool wasmCranelift_ : 1;
   bool wasmReftypes_ : 1;
+  bool wasmFunctionReferences_ : 1;
   bool wasmGc_ : 1;
   bool wasmMultiValue_ : 1;
   bool wasmSimd_ : 1;

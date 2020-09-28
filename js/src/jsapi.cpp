@@ -430,6 +430,13 @@ JS::ContextOptions& JS::ContextOptions::setWasmCranelift(bool flag) {
   return *this;
 }
 
+JS::ContextOptions& JS::ContextOptions::setWasmFunctionReferences(bool flag) {
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  wasmFunctionReferences_ = flag;
+#endif
+  return *this;
+}
+
 JS::ContextOptions& JS::ContextOptions::setWasmGc(bool flag) {
 #ifdef ENABLE_WASM_GC
   wasmGc_ = flag;

@@ -113,6 +113,9 @@ extern bool enableWasmBaseline;
 extern bool enableWasmIon;
 extern bool enableWasmCranelift;
 extern bool enableWasmReftypes;
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+extern bool enableWasmFunctionReferences;
+#endif
 #ifdef ENABLE_WASM_GC
 extern bool enableWasmGc;
 #endif
