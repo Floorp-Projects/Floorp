@@ -10,7 +10,7 @@
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
-#include "frontend/CompilationInfo.h"   // CompilationInfo
+#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationInfoVector, CompilationGCOutput
 #include "frontend/SharedContext.h"
 #include "gc/AllocKind.h"    // gc::AllocKind
 #include "js/CallArgs.h"     // JSNative
@@ -617,14 +617,68 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
   return true;
 }
 
+bool CompilationInfoVector::buildDelazificationStencilMap(
+    FunctionMap& functionMap) {
+  // Stantdlone-functions are not supported by XDR.
+  MOZ_ASSERT(!initial.stencil.scriptData[0].isFunction());
+
+  if (!functionMap.reserve(initial.stencil.scriptData.length() - 1)) {
+    return false;
+  }
+
+  for (size_t i = 1; i < initial.stencil.scriptData.length(); i++) {
+    if (!functionMap.put(toFunctionKey(initial.stencil.scriptData[i].extent),
+                         FunctionIndex(i))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool CompilationInfoVector::instantiateStencils(JSContext* cx,
+                                                CompilationGCOutput& gcOutput) {
+  if (!initial.instantiateStencils(cx, gcOutput)) {
+    return false;
+  }
+
+  FunctionMap functionMap(cx);
+  if (!buildDelazificationStencilMap(functionMap)) {
+    return false;
+  }
+
+  for (auto& delazification : delazifications) {
+    auto p = functionMap.lookup(
+        toFunctionKey(delazification.stencil.scriptData[0].extent));
+    MOZ_ASSERT(p);
+
+    JSFunction* fun = gcOutput.functions[p->value()];
+    MOZ_ASSERT(fun);
+
+    BaseScript* lazy = fun->baseScript();
+    MOZ_ASSERT(!lazy->hasBytecode());
+
+    // CompilationInfo.input for delazification isn't initialized when
+    // decoding.
+    delazification.input.initFromLazy(lazy);
+
+    CompilationGCOutput gcOutputForDelazification(cx);
+    if (!delazification.instantiateStencils(cx, gcOutputForDelazification)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool CompilationInfo::serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                         bool* succeededOut) {
   if (succeededOut) {
     *succeededOut = false;
   }
-  XDRIncrementalStencilEncoder encoder(cx, *this);
+  XDRIncrementalStencilEncoder encoder(cx);
 
-  XDRResult res = encoder.codeStencil(stencil);
+  XDRResult res = encoder.codeStencil(*this);
   if (res.isErr()) {
     if (res.unwrapErr() & JS::TranscodeResult_Failure) {
       buf.clear();
@@ -649,17 +703,17 @@ bool CompilationInfo::serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
   return true;
 }
 
-bool CompilationInfo::deserializeStencils(JSContext* cx,
-                                          const JS::TranscodeRange& range,
-                                          bool* succeededOut) {
+bool CompilationInfoVector::deserializeStencils(JSContext* cx,
+                                                const JS::TranscodeRange& range,
+                                                bool* succeededOut) {
   if (succeededOut) {
     *succeededOut = false;
   }
-  MOZ_ASSERT(stencil.parserAtoms.empty());
-  XDRStencilDecoder decoder(cx, &input.options, range, *this,
-                            stencil.parserAtoms);
+  MOZ_ASSERT(initial.stencil.parserAtoms.empty());
+  XDRStencilDecoder decoder(cx, &initial.input.options, range,
+                            initial.stencil.parserAtoms);
 
-  XDRResult res = decoder.codeStencil(stencil);
+  XDRResult res = decoder.codeStencils(*this);
   if (res.isErr()) {
     if (res.unwrapErr() & JS::TranscodeResult_Failure) {
       return true;
