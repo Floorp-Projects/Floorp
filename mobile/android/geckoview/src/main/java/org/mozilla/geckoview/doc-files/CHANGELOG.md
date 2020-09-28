@@ -23,9 +23,13 @@ exclude: true
   ([bug 1658937]({{bugzilla}}1658937))
 - Replaced android.util.ArrayMap with java.util.TreeMap in [`WebMessage`][65.13] to enable case-insensitive handling of the HTTP headers.
   ([bug 1666013]({{bugzilla}}1666013))
+- Added [`ContentBlocking.SafeBrowsingProvider`][83.3] to configure Safe
+  Browsing providers.
+  ([bug 1660241]({{bugzilla}}1660241))
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 [83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
+[83.3]: {{javadoc_uri}}/ContentBlocking.SafeBrowsingProvider.html
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -815,4 +819,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 01fdaf45cfe4dc5974de314cbdb79584781eb282
+[api-version]: 2a562a8a5620ba5db90a9e7f59f6396eaeb4356f

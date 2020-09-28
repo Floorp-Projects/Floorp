@@ -6,6 +6,7 @@
 package org.mozilla.geckoview.test;
 
 import org.mozilla.geckoview.AllowOrDeny;
+import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
@@ -287,8 +288,23 @@ public class TestRunnerActivity extends Activity {
                 runtimeSettingsBuilder.extras(extras);
             }
 
+            final ContentBlocking.SafeBrowsingProvider googleLegacy = ContentBlocking.SafeBrowsingProvider
+                    .from(ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER)
+                    .getHashUrl("http://{server}/safebrowsing-dummy/gethash")
+                    .updateUrl("http://{server}/safebrowsing-dummy/update")
+                    .build();
+
+            final ContentBlocking.SafeBrowsingProvider google = ContentBlocking.SafeBrowsingProvider
+                    .from(ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER)
+                    .getHashUrl("http://{server}/safebrowsing4-dummy/gethash")
+                    .updateUrl("http://{server}/safebrowsing4-dummy/update")
+                    .build();
+
             runtimeSettingsBuilder
                     .consoleOutput(true)
+                    .contentBlocking(new ContentBlocking.Settings.Builder()
+                        .safeBrowsingProviders(google, googleLegacy)
+                        .build())
                     .crashHandler(TestCrashHandler.class);
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
