@@ -377,6 +377,6 @@ class Core(
         private const val KEY_STRENGTH = 256
         private const val KEY_STORAGE_NAME = "core_prefs"
         private const val PASSWORDS_KEY = "passwords"
-        private const val RECENTLY_CLOSED_MAX = 5
+        private const val RECENTLY_CLOSED_MAX = 10
     }
 }
