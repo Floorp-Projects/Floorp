@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
+import sys
 
 MERCURIAL_INSTALL_PROMPT = '''
 Mercurial releases a new version every 3 months and your distro's package
@@ -81,6 +82,14 @@ class DebianBootstrapper(
         self.packages = list(self.COMMON_PACKAGES)
         if self.distro == 'debian':
             self.packages += self.DEBIAN_PACKAGES
+
+    def suggest_install_distutils(self):
+        print('HINT: Try installing distutils with '
+              '`apt-get install python3-distutils`.', file=sys.stderr)
+
+    def suggest_install_pip3(self):
+        print("HINT: Try installing pip3 with `apt-get install python3-pip`.",
+              file=sys.stderr)
 
     def install_system_packages(self):
         self.apt_install(*self.packages)

@@ -364,6 +364,7 @@ class Bootstrapper(object):
             env=self.instance._hg_cleanenv(load_hgrc=True),
             hg=which('hg'))
         self.instance.validate_environment(checkout_root)
+        self._validate_python_environment()
         self.instance.ensure_mach_environment(checkout_root)
 
         if self.instance.no_system_changes:
@@ -438,6 +439,38 @@ class Bootstrapper(object):
                 suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (
                     mozconfig_path, raw_mozconfig)
                 print(suggestion)
+
+    def _validate_python_environment(self):
+        valid = True
+        try:
+            # distutils is singled out here because some distros (namely Ubuntu)
+            # include it in a separate package outside of the main Python
+            # installation.
+            import distutils.sysconfig
+            import distutils.spawn
+            assert (distutils.sysconfig is not None
+                    and distutils.spawn is not None)
+        except ImportError as e:
+            print('ERROR: Could not import package %s' % e.name,
+                  file=sys.stderr)
+            self.instance.suggest_install_distutils()
+            valid = False
+        except AssertionError:
+            print('ERROR: distutils is not behaving as expected.',
+                  file=sys.stderr)
+            self.instance.suggest_install_distutils()
+            valid = False
+        pip3 = which('pip3')
+        if not pip3:
+            print('ERROR: Could not find pip3.', file=sys.stderr)
+            self.instance.suggest_install_pip3()
+            valid = False
+        if not valid:
+            print('ERROR: Your Python installation will not be able to run '
+                  '`mach bootstrap`. `mach bootstrap` cannot maintain your '
+                  'Python environment for you; fix the errors shown here, and '
+                  'then re-run `mach bootstrap`.', file=sys.stderr)
+            sys.exit(1)
 
 
 def update_vct(hg, root_state_dir):
