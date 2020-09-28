@@ -151,6 +151,14 @@ static const char kGOOGLE_PIN_GeoTrustGlobal2Fingerprint[] =
 static const char kGOOGLE_PIN_GoDaddySecureFingerprint[] =
   "MrZLZnJ6IGPkBm87lYywqu5Xal7O/ZUzmbuIdHMdlYc=";
 
+/* GOOGLE_PIN_R3LetsEncrypt */
+static const char kGOOGLE_PIN_R3LetsEncryptFingerprint[] =
+  "jQJTbIh0grw0/1TkHSumWb+Fs0Ggogr621gT3PvPKG0=";
+
+/* GOOGLE_PIN_R4LetsEncrypt */
+static const char kGOOGLE_PIN_R4LetsEncryptFingerprint[] =
+  "5VReIRNHJBiRxVSgOTTN6bdJZkpZ0m1hX+WPd5kPLQM=";
+
 /* GOOGLE_PIN_RapidSSL */
 static const char kGOOGLE_PIN_RapidSSLFingerprint[] =
   "lT09gPUeQfbYrlxRtpsHrjDblj9Rpz+u7ajfCrg4qDM=";
@@ -464,10 +472,12 @@ static const StaticFingerprints kPinset_google = {
 };
 
 static const char* const kPinset_tor_Data[] = {
+  kGOOGLE_PIN_R4LetsEncryptFingerprint,
   kTor3Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kLet_s_Encrypt_Authority_X3Fingerprint,
   kTor1Fingerprint,
+  kGOOGLE_PIN_R3LetsEncryptFingerprint,
   kGOOGLE_PIN_RapidSSLFingerprint,
   kLet_s_Encrypt_Authority_X4Fingerprint,
   kTor2Fingerprint,
@@ -1132,4 +1142,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1609424264406000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1609769651764000);
