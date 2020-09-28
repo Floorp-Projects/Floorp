@@ -24,7 +24,6 @@ class TestElementState(WindowManagerMixin, MarionetteTestCase):
 
         super(TestElementState, self).tearDown()
 
-    @skip("Switched off in bug 896043, and to be turned on in bug 896046")
     def test_is_displayed(self):
         l = self.marionette.find_element(By.ID, "textInput")
         self.assertTrue(l.is_displayed())
