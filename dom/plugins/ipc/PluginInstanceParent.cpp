@@ -10,6 +10,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/Element.h"
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
@@ -859,7 +860,7 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShowDirectBitmap(
   PLUGIN_LOG_DEBUG(
       ("   (RecvShowDirectBitmap received shmem=%p stride=%d size=%s dirty=%s)",
        buffer.get<unsigned char>(), stride, Stringify(size).c_str(),
-       Stringify(dirty).c_str()));
+       ToString(dirty).c_str()));
   return IPC_OK();
 }
 
@@ -915,7 +916,7 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShowDirectDXGISurface(
 
   PLUGIN_LOG_DEBUG(("   (RecvShowDirectDXGISurface received handle=%p rect=%s)",
                     reinterpret_cast<void*>(pluginSurfHandle),
-                    Stringify(dirty).c_str()));
+                    ToString(dirty).c_str()));
 #endif
   return IPC_OK();
 }

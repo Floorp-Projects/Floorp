@@ -53,38 +53,24 @@ void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
   aStream << sfx;
 }
 
-void AppendToString(std::stringstream& aStream, const nsIntRegion& r,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-
-  aStream << "< ";
-  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
-    aStream << iter.Get() << "; ";
-  }
-  aStream << ">";
-
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const EventRegions& e,
                     const char* pfx, const char* sfx) {
   aStream << pfx << "{";
   if (!e.mHitRegion.IsEmpty()) {
-    AppendToString(aStream, e.mHitRegion, " hitregion=", "");
+    aStream << " hitregion=" << e.mHitRegion << "";
   }
   if (!e.mDispatchToContentHitRegion.IsEmpty()) {
-    AppendToString(aStream, e.mDispatchToContentHitRegion,
-                   " dispatchtocontentregion=", "");
+    aStream << " dispatchtocontentregion=" << e.mDispatchToContentHitRegion
+            << "";
   }
   if (!e.mNoActionRegion.IsEmpty()) {
-    AppendToString(aStream, e.mNoActionRegion, " NoActionRegion=", "");
+    aStream << " NoActionRegion=" << e.mNoActionRegion << "";
   }
   if (!e.mHorizontalPanRegion.IsEmpty()) {
-    AppendToString(aStream, e.mHorizontalPanRegion,
-                   " HorizontalPanRegion=", "");
+    aStream << " HorizontalPanRegion=" << e.mHorizontalPanRegion << "";
   }
   if (!e.mVerticalPanRegion.IsEmpty()) {
-    AppendToString(aStream, e.mVerticalPanRegion, " VerticalPanRegion=", "");
+    aStream << " VerticalPanRegion=" << e.mVerticalPanRegion << "";
   }
   aStream << "}" << sfx;
 }
