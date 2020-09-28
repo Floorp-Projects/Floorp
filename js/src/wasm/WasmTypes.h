@@ -374,10 +374,11 @@ static inline bool UnpackTypeCodeNullable(PackedTypeCode ptc) {
   return (uint32_t(ptc) >> PackedTypeNullableShift) == 1;
 }
 
-// Return the TypeCode, but return TypeCode::NullableRef for any reference type.
+// Return the TypeCode, but return AbstractReferenceTypeCode for any reference
+// type.
 //
 // This function is very, very hot, hence what would normally be a switch on the
-// value `c` to map the reference types to TypeCode::NullableRef has been
+// value `c` to map the reference types to AbstractReferenceTypeCode has been
 // distilled into a simple comparison; this is fastest.  Should type codes
 // become too complicated for this to work then a lookup table also has better
 // performance than a switch.
