@@ -87,9 +87,8 @@ add_task(async function test_onRecipe_enroll() {
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
-  const storeUpdate = ExperimentFakes.waitForStoreUpdate(
-    manager.store,
-    fooRecipe.slug
+  const experimentUpdate = new Promise(resolve =>
+    manager.store.on(`update:${fooRecipe.slug}`, resolve)
   );
   await manager.onStartup();
   await manager.onRecipe(fooRecipe, "test");
@@ -99,7 +98,7 @@ add_task(async function test_onRecipe_enroll() {
     true,
     "should call .enroll() the first time a recipe is seen"
   );
-  await storeUpdate;
+  await experimentUpdate;
   Assert.equal(
     manager.store.has("foo"),
     true,
@@ -115,16 +114,15 @@ add_task(async function test_onRecipe_update() {
   sandbox.stub(manager, "isInBucketAllocation").resolves(true);
 
   const fooRecipe = ExperimentFakes.recipe("foo");
-  const storeUpdate = ExperimentFakes.waitForStoreUpdate(
-    manager.store,
-    fooRecipe.slug
+  const experimentUpdate = new Promise(resolve =>
+    manager.store.on(`update:${fooRecipe.slug}`, resolve)
   );
 
   await manager.onStartup();
   await manager.onRecipe(fooRecipe, "test");
   // onRecipe calls enroll which saves the experiment in the store
   // but none of them wait on disk operations to finish
-  await storeUpdate;
+  await experimentUpdate;
   // Call again after recipe has already been enrolled
   await manager.onRecipe(fooRecipe, "test");
 

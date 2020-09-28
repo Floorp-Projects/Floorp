@@ -31,12 +31,12 @@ const ExperimentFakes = {
   store() {
     return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
   },
-  waitForStoreUpdate(store, slug) {
+  waitForExperimentUpdate(ExperimentAPI, slug) {
     if (!slug) {
       throw new Error("Must specify an expected recipe update");
     }
 
-    return new Promise(resolve => store.on(`update:${slug}`, resolve));
+    return new Promise(resolve => ExperimentAPI.on(`update:${slug}`, resolve));
   },
   childStore() {
     return new ExperimentStore("FakeStore", { isParent: false });
