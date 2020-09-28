@@ -13388,6 +13388,25 @@ if (IsCSSPropertyPrefEnabled("layout.css.aspect-ratio.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.math-depth.enabled")) {
+  gCSSProperties["math-depth"] = {
+    domProp: "mathDepth",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["0"],
+    other_values: [
+      "auto-add",
+      "123",
+      "-123",
+      "add(123)",
+      "add(-123)",
+      "calc(1 + 2*3)",
+      "add(calc(1 - 2/3))",
+    ],
+    invalid_values: ["auto", "1,23", "1.23", "add(1,23)", "add(1.23)"],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.math-style.enabled")) {
   gCSSProperties["math-style"] = {
     domProp: "mathStyle",

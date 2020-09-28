@@ -96,6 +96,11 @@ class MappedDeclarations final {
     Servo_DeclarationBlock_SetIntValue(mDecl, aId, aValue);
   }
 
+  // Set "math-depth: <integer>" or "math-depth: add(<integer>)"
+  void SetMathDepthValue(int32_t aValue, bool aIsRelative) {
+    Servo_DeclarationBlock_SetMathDepthValue(mDecl, aValue, aIsRelative);
+  }
+
   // Set "counter-reset: list-item <integer>".
   void SetCounterResetListItem(int32_t aValue) {
     Servo_DeclarationBlock_SetCounterResetListItem(mDecl, aValue);

@@ -4901,16 +4901,33 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
     property: nsCSSPropertyID,
     value: i32,
 ) {
-    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
     use style::properties::PropertyDeclaration;
     use style::values::specified::Integer;
 
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
         XSpan => Integer::new(value),
-        // Gecko uses Integer values to signal that it is relative
-        MathDepth => MathDepth::Relative(value),
     };
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(prop, Importance::Normal);
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_SetMathDepthValue(
+    declarations: &RawServoDeclarationBlock,
+    value: i32,
+    is_relative: bool,
+) {
+    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
+    use style::properties::PropertyDeclaration;
+
+    let integer_value = style::values::specified::Integer::new(value);
+    let prop = PropertyDeclaration::MathDepth(if is_relative {
+        MathDepth::Add(integer_value)
+    } else {
+        MathDepth::Absolute(integer_value)
+    });
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
     })
@@ -5072,7 +5089,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
     property: nsCSSPropertyID,
     value: f32,
 ) {
-    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
     use style::properties::longhands::_moz_script_size_multiplier::SpecifiedValue as MozScriptSizeMultiplier;
     use style::properties::PropertyDeclaration;
 
@@ -5080,8 +5096,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
 
     let prop = match_wrap_declared! { long,
         MozScriptSizeMultiplier => MozScriptSizeMultiplier(value),
-        // Gecko uses Number values to signal that it is absolute
-        MathDepth => MathDepth::MozAbsolute(value as i32),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
