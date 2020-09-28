@@ -397,6 +397,15 @@ static inline bool IsReferenceType(PackedTypeCode ptc) {
   return UnpackTypeCodeTypeAbstracted(ptc) == AbstractReferenceTypeCode;
 }
 
+// Return a TypeCode with the nullable bit cleared, must only be used on
+// reference types.
+
+static inline PackedTypeCode RepackTypeCodeAsNonNullable(PackedTypeCode ptc) {
+  MOZ_ASSERT(IsReferenceType(ptc));
+  constexpr uint32_t NonNullableMask = ~(1 << PackedTypeNullableShift);
+  return PackedTypeCode(uint32_t(ptc) & NonNullableMask);
+}
+
 // An enum that describes the representation classes for tables; The table
 // element type is mapped into this by Table::repr().
 

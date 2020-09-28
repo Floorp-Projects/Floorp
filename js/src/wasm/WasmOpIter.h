@@ -64,6 +64,12 @@ class StackType {
     return ValType(tc_);
   }
 
+  ValType asNonNullable() const {
+    MOZ_ASSERT(IsValid(tc_));
+    MOZ_ASSERT(!isBottom());
+    return ValType(RepackTypeCodeAsNonNullable(tc_));
+  }
+
   bool isValidForUntypedSelect() const {
     MOZ_ASSERT(IsValid(tc_));
     if (isBottom()) {
@@ -154,6 +160,8 @@ enum class OpKind {
   TableSize,
   RefNull,
   RefFunc,
+  RefAsNonNull,
+  BrOnNull,
   StructNew,
   StructGet,
   StructSet,
@@ -297,7 +305,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool popStackType(StackType* type, Value* value);
   MOZ_MUST_USE bool popWithType(ValType expected, Value* value);
   MOZ_MUST_USE bool popWithType(ResultType expected, ValueVector* values);
-  MOZ_MUST_USE bool popWithRefType(Value* value);
+  MOZ_MUST_USE bool popWithRefType(Value* value, StackType* type);
   MOZ_MUST_USE bool popThenPushType(ResultType expected, ValueVector* values);
   MOZ_MUST_USE bool topWithType(ResultType expected, ValueVector* values);
 
@@ -439,6 +447,9 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readRefFunc(uint32_t* funcTypeIndex);
   MOZ_MUST_USE bool readRefNull();
   MOZ_MUST_USE bool readRefIsNull(Value* input);
+  MOZ_MUST_USE bool readRefAsNonNull(Value* input);
+  MOZ_MUST_USE bool readBrOnNull(uint32_t* relativeDepth, ResultType* type,
+                                 ValueVector* values, Value* condition);
   MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
   MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex,
                                      uint32_t* tableIndex, Value* callee,
@@ -689,17 +700,16 @@ inline bool OpIter<Policy>::popWithType(ResultType expected,
 // This function pops exactly one value from the stack, checking that it is a
 // reference type.
 template <typename Policy>
-inline bool OpIter<Policy>::popWithRefType(Value* value) {
-  StackType stackType;
-  if (!popStackType(&stackType, value)) {
+inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
+  if (!popStackType(type, value)) {
     return false;
   }
 
-  if (stackType.isBottom() || stackType.valType().isReference()) {
+  if (type->isBottom() || type->valType().isReference()) {
     return true;
   }
 
-  UniqueChars actualText = ToString(stackType.valType());
+  UniqueChars actualText = ToString(type->valType());
   if (!actualText) {
     return false;
   }
@@ -1742,10 +1752,55 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRefIsNull(Value* input) {
   MOZ_ASSERT(Classify(op_) == OpKind::Conversion);
 
-  if (!popWithRefType(input)) {
+  StackType type;
+  if (!popWithRefType(input, &type)) {
     return false;
   }
   return push(ValType::I32);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRefAsNonNull(Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::RefAsNonNull);
+
+  StackType type;
+  if (!popWithRefType(input, &type)) {
+    return false;
+  }
+
+  if (type.isBottom()) {
+    infalliblePush(type);
+  } else {
+    infalliblePush(type.asNonNullable());
+  }
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
+                                         ResultType* type, ValueVector* values,
+                                         Value* condition) {
+  MOZ_ASSERT(Classify(op_) == OpKind::BrOnNull);
+
+  if (!readVarU32(relativeDepth)) {
+    return fail("unable to read br_on_null depth");
+  }
+
+  StackType refType;
+  if (!popWithRefType(condition, &refType)) {
+    return false;
+  }
+
+  if (!checkBranchValue(*relativeDepth, type, values)) {
+    return false;
+  }
+
+  if (refType.isBottom()) {
+    infalliblePush(refType);
+  } else {
+    infalliblePush(refType.asNonNullable());
+  }
+  return true;
 }
 
 template <typename Policy>
