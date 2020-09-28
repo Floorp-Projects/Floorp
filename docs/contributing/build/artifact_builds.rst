@@ -11,8 +11,7 @@ with compiled code (see "Restrictions" below). Artifacts are typically
 fetched from `mozilla-central <https://hg.mozilla.org/mozilla-central/>`__.
 
 To automatically download and use pre-built binary artifacts, add the
-following lines into your
-`mozconfig <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options#Using_a_.mozconfig_Configuration_File>`__
+following lines into your :ref:`mozconfig <Configuring Build Options#using-a-mozconfig-configuration-file>`
 file:
 
 .. code-block:: shell
@@ -35,6 +34,9 @@ artifacts), add ``ac_add_options --enable-debug`` to your mozconfig file
 
    # Automatically download and use compiled C++ components:
    ac_add_options --enable-artifact-builds
+
+   # Download debug info so that stack traces refers to file and columns rather than library and Hex address
+   ac_add_options --enable-artifact-build-symbols
 
    # Write build artifacts to:
    mk_add_options MOZ_OBJDIR=./objdir-frontend-debug-artifact
@@ -127,8 +129,11 @@ artifact builds.
 Things that are not supported
 -----------------------------
 
--  Products other than Firefox for Desktop and Firefox for Android are
-   not supported and are unlikely to ever be supported.
+-  Support for products other than Firefox for Desktop and
+   Android are not supported and are unlikely to ever be supported.
+   Other projects like Thunderbird may provide
+   <a href="https://developer.thunderbird.net/thunderbird-development/building-thunderbird/artifact-builds">their own support</a>
+   for artifact builds.
 -  You cannot modify C, C++, or Rust source code anywhere in the tree.
    If it’s compiled to machine code, it can't be changed.
 -  You cannot modify ``histograms.json`` to add Telemetry histogram
