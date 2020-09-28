@@ -1,10 +1,13 @@
 package org.mozilla.geckoview.test.util;
 
+import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.test.TestCrashHandler;
+
+import static org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider;
 
 import android.os.Looper;
 import android.os.Process;
@@ -143,8 +146,23 @@ public class RuntimeCreator {
             return sRuntime;
         }
 
+        final SafeBrowsingProvider googleLegacy = SafeBrowsingProvider
+                .from(ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER)
+                .getHashUrl("http://{server}/safebrowsing-dummy/gethash")
+                .updateUrl("http://{server}/safebrowsing-dummy/update")
+                .build();
+
+        final SafeBrowsingProvider google = SafeBrowsingProvider
+                .from(ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER)
+                .getHashUrl("http://{server}/safebrowsing4-dummy/gethash")
+                .updateUrl("http://{server}/safebrowsing4-dummy/update")
+                .build();
+
         final GeckoRuntimeSettings runtimeSettings = new GeckoRuntimeSettings.Builder()
                 .useMultiprocess(env.isMultiprocess())
+                .contentBlocking(new ContentBlocking.Settings.Builder()
+                        .safeBrowsingProviders(googleLegacy, google)
+                        .build())
                 .arguments(new String[]{"-purgecaches"})
                 .extras(InstrumentationRegistry.getArguments())
                 .remoteDebuggingEnabled(true)
