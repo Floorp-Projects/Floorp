@@ -542,28 +542,52 @@ def enable_wasm_reftypes(value):
 set_config('ENABLE_WASM_REFTYPES', enable_wasm_reftypes)
 set_define('ENABLE_WASM_REFTYPES', enable_wasm_reftypes)
 
+# Support for WebAssembly function-references.
+# ===========================
+
+@depends(milestone.is_nightly, '--disable-wasm-reftypes')
+def default_wasm_function_references(is_nightly, reftypes):
+    if is_nightly and reftypes:
+        return True
+
+js_option('--enable-wasm-function-references',
+          default=default_wasm_function_references,
+          help='{Enable|Disable} WebAssembly function-references')
+
+@depends('--enable-wasm-function-references', '--disable-wasm-reftypes')
+def wasm_function_references(value, reftypes):
+    if not value:
+        return
+
+    if reftypes:
+        return True
+
+    die('--enable-wasm-function-references only possible without --disable-wasm-reftypes')
+
+set_config('ENABLE_WASM_FUNCTION_REFERENCES', wasm_function_references)
+set_define('ENABLE_WASM_FUNCTION_REFERENCES', wasm_function_references)
 
 # Support for WebAssembly GC.
 # ===========================
 
-@depends(milestone.is_nightly, '--enable-wasm-reftypes', '--enable-typed-objects')
-def default_wasm_gc(is_nightly, reftypes, typed_objects):
-    if is_nightly and reftypes and typed_objects:
+@depends(milestone.is_nightly, '--enable-wasm-function-references', '--enable-typed-objects')
+def default_wasm_gc(is_nightly, function_references, typed_objects):
+    if is_nightly and function_references and typed_objects:
         return True
 
 js_option('--enable-wasm-gc',
           default=default_wasm_gc,
           help='{Enable|Disable} WebAssembly GC')
 
-@depends('--enable-wasm-gc', '--enable-wasm-reftypes', '--enable-typed-objects')
-def wasm_gc(value, reftypes, typed_objects):
+@depends('--enable-wasm-gc', '--enable-wasm-function-references', '--enable-typed-objects')
+def wasm_gc(value, function_references, typed_objects):
     if not value:
         return
 
-    if reftypes and typed_objects:
+    if function_references and typed_objects:
         return True
 
-    die('--enable-wasm-gc only possible with --enable-wasm-reftypes and --enable-typed-objects')
+    die('--enable-wasm-gc only possible with --enable-wasm-function-references and --enable-typed-objects')
 
 set_config('ENABLE_WASM_GC', wasm_gc)
 set_define('ENABLE_WASM_GC', wasm_gc)

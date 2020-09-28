@@ -23,6 +23,7 @@
 
 #include "ds/Bitmap.h"
 
+#include "wasm/WasmCompile.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -69,11 +70,6 @@ struct CompilerEnvironment {
       Tier tier_;
       OptimizedBackend optimizedBackend_;
       DebugEnabled debug_;
-      bool refTypes_;
-      bool gcTypes_;
-      bool multiValues_;
-      bool hugeMemory_;
-      bool v128_;
     };
   };
 
@@ -87,9 +83,7 @@ struct CompilerEnvironment {
   // final value of gcTypes/refTypes.
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
-                      DebugEnabled debugEnabled, bool multiValueConfigured,
-                      bool refTypesConfigured, bool gcTypesConfigured,
-                      bool hugeMemory, bool v128Configured);
+                      DebugEnabled debugEnabled);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d);
@@ -116,26 +110,6 @@ struct CompilerEnvironment {
     MOZ_ASSERT(isComputed());
     return debug_;
   }
-  bool gcTypes() const {
-    MOZ_ASSERT(isComputed());
-    return gcTypes_;
-  }
-  bool refTypes() const {
-    MOZ_ASSERT(isComputed());
-    return refTypes_;
-  }
-  bool multiValues() const {
-    MOZ_ASSERT(isComputed());
-    return multiValues_;
-  }
-  bool hugeMemory() const {
-    MOZ_ASSERT(isComputed());
-    return hugeMemory_;
-  }
-  bool v128() const {
-    MOZ_ASSERT(isComputed());
-    return v128_;
-  }
 };
 
 // ModuleEnvironment contains all the state necessary to process or render
@@ -152,8 +126,8 @@ struct CompilerEnvironment {
 struct ModuleEnvironment {
   // Constant parameters for the entire compilation:
   const ModuleKind kind;
-  const Shareable sharedMemoryEnabled;
   CompilerEnvironment* const compilerEnv;
+  const FeatureArgs features;
 
   // Module fields decoded from the module environment (or initialized while
   // validating an asm.js module) and immutable during compilation:
@@ -183,11 +157,11 @@ struct ModuleEnvironment {
   NameVector funcNames;
 
   explicit ModuleEnvironment(CompilerEnvironment* compilerEnv,
-                             Shareable sharedMemoryEnabled,
+                             FeatureArgs features,
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
-        sharedMemoryEnabled(sharedMemoryEnabled),
         compilerEnv(compilerEnv),
+        features(features),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0),
         numStructTypes(0) {}
@@ -205,21 +179,21 @@ struct ModuleEnvironment {
   size_t numFuncDefs() const {
     return funcTypes.length() - funcImportGlobalDataOffsets.length();
   }
-  bool gcTypesEnabled() const { return compilerEnv->gcTypes(); }
-  bool refTypesEnabled() const { return compilerEnv->refTypes(); }
-  bool multiValuesEnabled() const { return compilerEnv->multiValues(); }
-  bool v128Enabled() const { return compilerEnv->v128(); }
+  Shareable sharedMemoryEnabled() const { return features.sharedMemory; }
+  bool refTypesEnabled() const { return features.refTypes; }
+  bool functionReferencesEnabled() const { return features.functionReferences; }
+  bool gcTypesEnabled() const { return features.gcTypes; }
+  bool multiValueEnabled() const { return features.multiValue; }
+  bool v128Enabled() const { return features.v128; }
+  bool hugeMemoryEnabled() const { return !isAsmJS() && features.hugeMemory; }
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
   bool debugEnabled() const {
     return compilerEnv->debug() == DebugEnabled::True;
   }
-  bool hugeMemoryEnabled() const {
-    return !isAsmJS() && compilerEnv->hugeMemory();
-  }
   uint32_t funcMaxResults() const {
-    return multiValuesEnabled() ? MaxResults : 1;
+    return multiValueEnabled() ? MaxResults : 1;
   }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();

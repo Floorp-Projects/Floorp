@@ -502,6 +502,9 @@ bool shell::enableWasmBaseline = false;
 bool shell::enableWasmIon = false;
 bool shell::enableWasmCranelift = false;
 bool shell::enableWasmReftypes = true;
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+bool shell::enableWasmFunctionReferences = false;
+#endif
 #ifdef ENABLE_WASM_GC
 bool shell::enableWasmGc = false;
 #endif
@@ -10325,6 +10328,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   enableWasmReftypes = !op.getBoolOption("no-wasm-reftypes");
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  enableWasmFunctionReferences = op.getBoolOption("wasm-function-references");
+#endif
 #ifdef ENABLE_WASM_GC
   enableWasmGc = op.getBoolOption("wasm-gc");
 #endif
@@ -10364,6 +10370,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasmReftypes(enableWasmReftypes)
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(enableWasmCranelift)
+#endif
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      .setWasmFunctionReferences(enableWasmFunctionReferences)
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
@@ -11181,6 +11190,13 @@ int main(int argc, char** argv, char** envp) {
                         "instantiation on completion of tier2") ||
       !op.addBoolOption('\0', "no-wasm-reftypes",
                         "Disable wasm reference types features") ||
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      !op.addBoolOption(
+          '\0', "wasm-function-references",
+          "Enable experimental wasm function-references features") ||
+#else
+      !op.addBoolOption('\0', "wasm-function-references", "No-op") ||
+#endif
 #ifdef ENABLE_WASM_GC
       !op.addBoolOption('\0', "wasm-gc",
                         "Enable experimental wasm GC features") ||
