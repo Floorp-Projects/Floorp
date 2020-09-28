@@ -206,6 +206,40 @@ def test_optimization_strategy(responses, params, opt, tasks, arg, expected):
         ['task-4'],
     ),
 
+    # tasks matching "groups" selected, only on specific platforms.
+    pytest.param(
+        (0.1, False, False, None, 1, True),
+        {
+            'tasks': {'task-2': 0.2},
+            'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75},
+            'config_groups': {'foo/test.ini': ['task-1', 'task-0'], 'bar/test.ini': ['task-0']}},
+        ['task-0', 'task-2'],
+    ),
+    pytest.param(
+        (0.1, False, False, None, 1, True),
+        {
+            'tasks': {'task-2': 0.2},
+            'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75},
+            'config_groups': {'foo/test.ini': ['task-1', 'task-0'], 'bar/test.ini': ['task-1']}},
+        ['task-0', 'task-1', 'task-2'],
+    ),
+    pytest.param(
+        (0.1, False, False, None, 1, True),
+        {
+            'tasks': {'task-2': 0.2},
+            'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75},
+            'config_groups': {'foo/test.ini': ['task-1'], 'bar/test.ini': ['task-0']}},
+        ['task-0', 'task-2'],
+    ),
+    pytest.param(
+        (0.1, False, False, None, 1, True),
+        {
+            'tasks': {'task-2': 0.2},
+            'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75},
+            'config_groups': {'foo/test.ini': ['task-1'], 'bar/test.ini': ['task-3']}},
+        ['task-2'],
+    ),
+
 ], ids=idfn)
 def test_bugbug_push_schedules(responses, params, args, data, expected):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)
@@ -239,6 +273,7 @@ def test_bugbug_multiple_pushes(responses, params):
         json={
             'tasks': {'task-2': 0.2, 'task-4': 0.5},
             'groups': {'foo/test.ini': 0.2, 'bar/test.ini': 0.25},
+            'config_groups': {'foo/test.ini': ['linux-*'], 'bar/test.ini': ['task-*']},
             'known_tasks': ['task-4'],
         },
         status=200,
@@ -253,6 +288,7 @@ def test_bugbug_multiple_pushes(responses, params):
         json={
             'tasks': {'task-2': 0.2, 'task-4': 0.2},
             'groups': {'foo/test.ini': 0.65, 'bar/test.ini': 0.25},
+            'config_groups': {'foo/test.ini': ['task-*'], 'bar/test.ini': ['windows-*']},
             'known_tasks': ['task-1', 'task-3'],
         },
         status=200,
@@ -263,6 +299,14 @@ def test_bugbug_multiple_pushes(responses, params):
     opt = BugBugPushSchedules(0.3, False, False, False, 2)
     labels = [t.label for t in default_tasks if not opt.should_remove_task(t, params, {})]
     assert sorted(labels) == sorted(['task-0', 'task-2', 'task-4'])
+
+    opt = BugBugPushSchedules(0.3, False, False, False, 2, True)
+    labels = [t.label for t in default_tasks if not opt.should_remove_task(t, params, {})]
+    assert sorted(labels) == sorted(['task-0', 'task-2', 'task-4'])
+
+    opt = BugBugPushSchedules(0.2, False, False, False, 2, True)
+    labels = [t.label for t in default_tasks if not opt.should_remove_task(t, params, {})]
+    assert sorted(labels) == sorted(['task-0', 'task-1', 'task-2', 'task-4'])
 
 
 def test_bugbug_timeout(monkeypatch, responses, params):
