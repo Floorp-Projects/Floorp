@@ -30,6 +30,8 @@ NS_INTERFACE_MAP_BEGIN(nsStructuredCloneContainer)
 NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer() : mVersion(0) {}
+nsStructuredCloneContainer::nsStructuredCloneContainer(uint32_t aVersion)
+    : mVersion(aVersion) {}
 
 nsStructuredCloneContainer::~nsStructuredCloneContainer() = default;
 

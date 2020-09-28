@@ -25,6 +25,7 @@ class nsStructuredCloneContainer final
       public mozilla::dom::ipc::StructuredCloneData {
  public:
   nsStructuredCloneContainer();
+  explicit nsStructuredCloneContainer(uint32_t aVersion);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRUCTUREDCLONECONTAINER
