@@ -4270,8 +4270,9 @@ void nsGlobalWindowInner::SetReadyForFocus() {
   mNeedsFocus = false;
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    fm->WindowShown(GetOuterWindow(), oldNeedsFocus);
+  nsPIDOMWindowOuter* outer = GetOuterWindow();
+  if (fm && outer) {
+    fm->WindowShown(outer, oldNeedsFocus);
   }
 }
 
