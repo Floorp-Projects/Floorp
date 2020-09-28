@@ -36,7 +36,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::services;
 
 /*
  * Implementation of PresentationChannelDescription
