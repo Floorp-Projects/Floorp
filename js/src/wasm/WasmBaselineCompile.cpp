@@ -11210,6 +11210,18 @@ bool BaseCompiler::emitSelect(bool typed) {
       pushF64(r);
       break;
     }
+#ifdef ENABLE_WASM_SIMD
+    case ValType::V128: {
+      RegV128 r, rs;
+      pop2xV128(&r, &rs);
+      emitBranchPerform(&b);
+      moveV128(rs, r);
+      masm.bind(&done);
+      freeV128(rs);
+      pushV128(r);
+      break;
+    }
+#endif
     case ValType::Ref: {
       RegPtr r, rs;
       pop2xRef(&r, &rs);

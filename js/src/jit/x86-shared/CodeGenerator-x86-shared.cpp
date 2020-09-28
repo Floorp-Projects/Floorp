@@ -344,6 +344,12 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* ins) {
     } else {
       masm.loadDouble(falseExpr, out);
     }
+  } else if (mirType == MIRType::Simd128) {
+    if (falseExpr.kind() == Operand::FPREG) {
+      masm.moveSimd128(ToFloatRegister(ins->falseExpr()), out);
+    } else {
+      masm.loadUnalignedSimd128(falseExpr, out);
+    }
   } else {
     MOZ_CRASH("unhandled type in visitWasmSelect!");
   }
