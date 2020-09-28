@@ -2563,11 +2563,6 @@
   value: false
   mirror: always
 
-- name: dom.security.respect_document_nosniff
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: dom.security.featurePolicy.experimental.enabled
   type: bool
   value: false

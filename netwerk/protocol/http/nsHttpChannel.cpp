@@ -1599,9 +1599,8 @@ nsresult ProcessXCTO(nsHttpChannel* aChannel, nsIURI* aURI,
   }
 
   auto policyType = aLoadInfo->GetExternalContentPolicyType();
-  if ((policyType == nsIContentPolicy::TYPE_DOCUMENT ||
-       policyType == nsIContentPolicy::TYPE_SUBDOCUMENT) &&
-      gHttpHandler->IsDocumentNosniffEnabled()) {
+  if (policyType == nsIContentPolicy::TYPE_DOCUMENT ||
+      policyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
     // If the header XCTO nosniff is set for any browsing context, then
     // we set the skipContentSniffing flag on the Loadinfo. Within
     // GetMIMETypeFromContent we then bail early and do not do any sniffing.

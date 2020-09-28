@@ -28,14 +28,8 @@
     SimpleTest.waitForExplicitFinish();
 
     window.addEventListener("load", async () => {
-      await SpecialPowers.pushPrefEnv(
-      {
-          set: [["dom.security.respect_document_nosniff", true]],
-        }
-    );
-    window.open("window_nosniff_navigation.html");
-});
+      window.open("window_nosniff_navigation.html");
+    });
   </script>
 </body>
-
 </html>
