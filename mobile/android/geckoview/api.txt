@@ -277,7 +277,9 @@ package org.mozilla.geckoview {
   }
 
   @AnyThread public class ContentBlocking {
-    ctor public ContentBlocking();
+    ctor protected ContentBlocking();
+    field public static final ContentBlocking.SafeBrowsingProvider GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER;
+    field public static final ContentBlocking.SafeBrowsingProvider GOOGLE_SAFE_BROWSING_PROVIDER;
   }
 
   public static class ContentBlocking.AntiTracking {
@@ -343,6 +345,39 @@ package org.mozilla.geckoview {
     field public static final int UNWANTED = 2048;
   }
 
+  @AnyThread public static class ContentBlocking.SafeBrowsingProvider extends RuntimeSettings {
+    method @NonNull public static ContentBlocking.SafeBrowsingProvider.Builder from(@NonNull ContentBlocking.SafeBrowsingProvider);
+    method @Nullable public String getAdvisoryName();
+    method @Nullable public String getAdvisoryUrl();
+    method @Nullable public Boolean getDataSharingEnabled();
+    method @Nullable public String getDataSharingUrl();
+    method @Nullable public String getGetHashUrl();
+    method @NonNull public String[] getLists();
+    method @NonNull public String getName();
+    method @Nullable public String getReportMalwareMistakeUrl();
+    method @Nullable public String getReportPhishingMistakeUrl();
+    method @Nullable public String getReportUrl();
+    method @Nullable public String getUpdateUrl();
+    method @Nullable public String getVersion();
+    method @NonNull public static ContentBlocking.SafeBrowsingProvider.Builder withName(@NonNull String);
+    field public static final Parcelable.Creator<ContentBlocking.SafeBrowsingProvider> CREATOR;
+  }
+
+  @AnyThread public static class ContentBlocking.SafeBrowsingProvider.Builder {
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder advisoryName(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder advisoryUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider build();
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder dataSharingEnabled(boolean);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder dataSharingUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder getHashUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder lists(@NonNull String...);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder reportMalwareMistakeUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder reportPhishingMistakeUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder reportUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder updateUrl(@NonNull String);
+    method @NonNull public ContentBlocking.SafeBrowsingProvider.Builder version(@NonNull String);
+  }
+
   @AnyThread public static class ContentBlocking.Settings extends RuntimeSettings {
     method public int getAntiTrackingCategories();
     method public int getCookieBehavior();
@@ -350,6 +385,9 @@ package org.mozilla.geckoview {
     method public boolean getCookiePurging();
     method public int getEnhancedTrackingProtectionLevel();
     method public int getSafeBrowsingCategories();
+    method @NonNull public String[] getSafeBrowsingMalwareTable();
+    method @NonNull public String[] getSafeBrowsingPhishingTable();
+    method @NonNull public Collection<ContentBlocking.SafeBrowsingProvider> getSafeBrowsingProviders();
     method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
@@ -357,6 +395,9 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings setCookiePurging(boolean);
     method @NonNull public ContentBlocking.Settings setEnhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings setSafeBrowsing(int);
+    method @NonNull public ContentBlocking.Settings setSafeBrowsingMalwareTable(@NonNull String...);
+    method @NonNull public ContentBlocking.Settings setSafeBrowsingPhishingTable(@NonNull String...);
+    method @NonNull public ContentBlocking.Settings setSafeBrowsingProviders(@NonNull ContentBlocking.SafeBrowsingProvider...);
     method @NonNull public ContentBlocking.Settings setStrictSocialTrackingProtection(boolean);
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
   }
@@ -369,6 +410,9 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings.Builder cookiePurging(boolean);
     method @NonNull public ContentBlocking.Settings.Builder enhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings.Builder safeBrowsing(int);
+    method @NonNull public ContentBlocking.Settings.Builder safeBrowsingMalwareTable(@NonNull String[]);
+    method @NonNull public ContentBlocking.Settings.Builder safeBrowsingPhishingTable(@NonNull String[]);
+    method @NonNull public ContentBlocking.Settings.Builder safeBrowsingProviders(@NonNull ContentBlocking.SafeBrowsingProvider...);
     method @NonNull public ContentBlocking.Settings.Builder strictSocialTrackingProtection(boolean);
     method @NonNull protected ContentBlocking.Settings newSettings(@Nullable ContentBlocking.Settings);
   }
