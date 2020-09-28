@@ -11,7 +11,7 @@ use crate::composite::{CompositeState};
 use crate::glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
-use crate::gpu_types::{SplitCompositeInstance, BrushShaderKind};
+use crate::gpu_types::{SplitCompositeInstance};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
@@ -75,24 +75,6 @@ pub enum BatchKind {
     SplitComposite,
     TextRun(GlyphFormat),
     Brush(BrushBatchKind),
-}
-
-impl BatchKind {
-    fn shader_kind(&self) -> BrushShaderKind {
-        match self {
-            BatchKind::Brush(BrushBatchKind::Solid) => BrushShaderKind::Solid,
-            BatchKind::Brush(BrushBatchKind::Image(..)) => BrushShaderKind::Image,
-            BatchKind::Brush(BrushBatchKind::LinearGradient) => BrushShaderKind::LinearGradient,
-            BatchKind::Brush(BrushBatchKind::RadialGradient) => BrushShaderKind::RadialGradient,
-            BatchKind::Brush(BrushBatchKind::ConicGradient) => BrushShaderKind::ConicGradient,
-            BatchKind::Brush(BrushBatchKind::Blend) => BrushShaderKind::Blend,
-            BatchKind::Brush(BrushBatchKind::MixBlend { .. }) => BrushShaderKind::MixBlend,
-            BatchKind::Brush(BrushBatchKind::YuvImage(..)) => BrushShaderKind::Yuv,
-            BatchKind::Brush(BrushBatchKind::Opacity) => BrushShaderKind::Opacity,
-            BatchKind::TextRun(..) => BrushShaderKind::Text,
-            _ => BrushShaderKind::None,
-        }
-    }
 }
 
 /// Optional textures that can be used as a source in the shaders.
@@ -698,7 +680,6 @@ impl BatchBuilder {
                     brush_flags,
                     prim_header_index,
                     resource_address,
-                    brush_kind: batch_key.kind.shader_kind(),
                 };
 
                 batcher.push_single_instance(

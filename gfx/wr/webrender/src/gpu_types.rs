@@ -56,28 +56,6 @@ impl ZBufferIdGenerator {
     }
 }
 
-/// A shader kind identifier that can be used by a generic-shader to select the behavior at runtime.
-///
-/// Not all brush kinds need to be present in this enum, only those we want to support in the generic
-/// brush shader.
-/// Do not use the 24 lowest bits. This will be packed with other information in the vertex attributes.
-/// The constants must match the corresponding defines in brush_multi.glsl.
-#[repr(i32)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum BrushShaderKind {
-    None            = 0,
-    Solid           = 1,
-    Image           = 2,
-    Text            = 3,
-    LinearGradient  = 4,
-    RadialGradient  = 5,
-    ConicGradient   = 6,
-    Blend           = 7,
-    MixBlend        = 8,
-    Yuv             = 9,
-    Opacity         = 10,
-}
-
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -492,8 +470,7 @@ impl GlyphInstance {
                 (subpx_dir as u32 as i32) << 24
                 | (color_mode as u32 as i32) << 16
                 | glyph_index_in_text_run,
-                glyph_uv_rect.as_int()
-                | ((BrushShaderKind::Text as i32) << 24),
+                glyph_uv_rect.as_int(),
             ],
         }
     }
@@ -555,7 +532,6 @@ pub struct BrushInstance {
     pub edge_flags: EdgeAaSegmentMask,
     pub brush_flags: BrushFlags,
     pub resource_address: i32,
-    pub brush_kind: BrushShaderKind,
 }
 
 impl From<BrushInstance> for PrimitiveInstanceData {
@@ -568,8 +544,7 @@ impl From<BrushInstance> for PrimitiveInstanceData {
                 instance.segment_index
                 | ((instance.edge_flags.bits() as i32) << 16)
                 | ((instance.brush_flags.bits() as i32) << 24),
-                instance.resource_address
-                | ((instance.brush_kind as i32) << 24),
+                instance.resource_address,
             ]
         }
     }

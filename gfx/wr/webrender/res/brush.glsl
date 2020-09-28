@@ -46,10 +46,6 @@
 ///   other brush types don't use it.
 ///
 
-#ifdef WR_FEATURE_MULTI_BRUSH
-flat varying int v_brush_kind;
-#endif
-
 #ifdef WR_VERTEX_SHADER
 
 #define FWD_DECLARE_VS_FUNCTION(name)   \
@@ -132,18 +128,8 @@ void brush_shader_main_vs(
         segment_rect = ph.local_rect;
         segment_data = vec4(0.0);
     } else {
-        // This contraption is needed by the Mac GLSL compiler which falls
-        // over (generating garbage values) if:
-        // - we use a variable insead of the ACTUAL_VECS_PER_BRUSH define,
-        // - this compile time condition is done inside of vecs_per_brush.
-        #ifdef WR_FEATURE_MULTI_BRUSH
-        #define ACTUAL_VECS_PER_BRUSH vecs_per_brush(instance.brush_kind)
-        #else
-        #define ACTUAL_VECS_PER_BRUSH VECS_PER_SPECIFIC_BRUSH
-        #endif
-
         int segment_address = ph.specific_prim_address +
-                              ACTUAL_VECS_PER_BRUSH +
+                              VECS_PER_SPECIFIC_BRUSH +
                               instance.segment_index * VECS_PER_SEGMENT;
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
@@ -205,22 +191,6 @@ void brush_shader_main_vs(
 #endif
 
     // Run the specific brush VS code to write interpolators.
-#ifdef WR_FEATURE_MULTI_BRUSH
-    v_brush_kind = instance.brush_kind;
-    multi_brush_vs(
-        vi,
-        ph.specific_prim_address,
-        ph.local_rect,
-        segment_rect,
-        ph.user_data,
-        instance.resource_address,
-        transform.m,
-        pic_task,
-        brush_flags,
-        segment_data,
-        instance.brush_kind
-    );
-#else
     WR_BRUSH_VS_FUNCTION(
         vi,
         ph.specific_prim_address,
@@ -233,8 +203,6 @@ void brush_shader_main_vs(
         brush_flags,
         segment_data
     );
-#endif
-
 }
 
 #ifndef WR_VERTEX_SHADER_MAIN_FUNCTION
@@ -276,13 +244,7 @@ void main(void) {
     oFragColor = WR_DEBUG_OVERDRAW_COLOR;
 #else
 
-    // Run the specific brush FS code to output the color.
-#ifdef WR_FEATURE_MULTI_BRUSH
-    Fragment frag = multi_brush_fs(v_brush_kind);
-#else
     Fragment frag = WR_BRUSH_FS_FUNCTION();
-#endif
-
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Apply the clip mask
