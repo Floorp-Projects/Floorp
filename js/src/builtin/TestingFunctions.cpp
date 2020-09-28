@@ -849,6 +849,13 @@ static bool WasmReftypesEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmFunctionReferencesEnabled(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(wasm::FunctionReferencesAvailable(cx));
+  return true;
+}
+
 static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::GcTypesAvailable(cx));
@@ -6832,6 +6839,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
 "wasmReftypesEnabled()",
 "  Returns a boolean indicating whether the WebAssembly reftypes proposal is enabled."),
+
+    JS_FN_HELP("wasmFunctionReferencesEnabled", WasmFunctionReferencesEnabled, 1, 0,
+"wasmFunctionReferencesEnabled()",
+"  Returns a boolean indicating whether the WebAssembly function-references proposal is enabled."),
 
     JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
 "wasmGcEnabled()",

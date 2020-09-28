@@ -1300,7 +1300,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       }
 #endif
       case uint16_t(Op::ThreadPrefix): {
-        if (env.sharedMemoryEnabled == Shareable::False) {
+        if (env.sharedMemoryEnabled() == Shareable::False) {
           return iter.unrecognizedOpcode(&op);
         }
         switch (op.b1) {
@@ -2013,7 +2013,7 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
   ConvertMemoryPagesToBytes(&memory);
 
   if (memory.shared == Shareable::True &&
-      env->sharedMemoryEnabled == Shareable::False) {
+      env->sharedMemoryEnabled() == Shareable::False) {
     return d.fail("shared memory is disabled");
   }
 
@@ -3214,21 +3214,10 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
                     UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-  bool gcTypesConfigured = GcTypesAvailable(cx);
-  bool refTypesConfigured = ReftypesAvailable(cx);
-  bool multiValueConfigured = MultiValuesAvailable(cx);
-  bool hugeMemory = false;
-  bool v128Configured = SimdAvailable(cx);
-
-  CompilerEnvironment compilerEnv(
-      CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
-      DebugEnabled::False, multiValueConfigured, refTypesConfigured,
-      gcTypesConfigured, hugeMemory, v128Configured);
-  ModuleEnvironment env(
-      &compilerEnv,
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
-          ? Shareable::True
-          : Shareable::False);
+  FeatureArgs features = FeatureArgs::build(cx);
+  CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
+                                  OptimizedBackend::Ion, DebugEnabled::False);
+  ModuleEnvironment env(&compilerEnv, features);
   if (!DecodeModuleEnvironment(d, &env)) {
     return false;
   }

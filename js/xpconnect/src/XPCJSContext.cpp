@@ -954,6 +954,10 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
   bool useWasmReftypes =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_reftypes");
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  bool useWasmFunctionReferences =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_function_references");
+#endif
 #ifdef ENABLE_WASM_GC
   bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
 #endif
@@ -1032,6 +1036,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setWasmReftypes(useWasmReftypes)
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(useWasmCranelift)
+#endif
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      .setWasmFunctionReferences(useWasmFunctionReferences)
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(useWasmGc)

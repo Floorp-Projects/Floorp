@@ -902,7 +902,7 @@ inline bool OpIter<Policy>::readBlockType(BlockType* type) {
   }
 
 #ifdef ENABLE_WASM_MULTI_VALUE
-  if (!env_.multiValuesEnabled()) {
+  if (!env_.multiValueEnabled()) {
     return fail("invalid block type reference");
   }
 

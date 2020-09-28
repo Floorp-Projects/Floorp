@@ -106,6 +106,9 @@ bool CodeCachingAvailable(JSContext* cx);
 // General reference types (externref, funcref) and operations on them.
 bool ReftypesAvailable(JSContext* cx);
 
+// Typed functions reference support.
+bool FunctionReferencesAvailable(JSContext* cx);
+
 // Experimental (ref T) types and structure types.
 bool GcTypesAvailable(JSContext* cx);
 
