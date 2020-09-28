@@ -147,6 +147,8 @@
     <string name="browser_menu_install_on_homescreen">Pasang</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Tab yang disinkronkan</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Sinkron ulang</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Temukan di laman</string>
     <!-- Browser menu button that creates a private tab -->
@@ -275,6 +277,8 @@
     <string name="preferences_open_links_in_a_private_tab">Buka tautan di tab pribadi</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Izinkan tangkapan layar di penjelajahan pribadi</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Jika diizinkan, tab pribadi juga akan terlihat saat beberapa aplikasi terbuka</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahkan pintasan penjelajahan pribadi</string>
     <!-- Preference for accessibility -->
@@ -295,6 +299,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Beranda</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestur</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ubahsuai</string>
     <!-- Preference description for banner about signing in -->
@@ -329,9 +335,13 @@
     <string name="preferences_search_browsing_history">Cari riwayat jelajah</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Cari markah</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Cari tab tersinkron</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Setelan akun</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URL lengkapi-otomatis</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Buka tautan di aplikasi</string>
 
@@ -473,6 +483,16 @@
     <string name="preference_auto_battery_theme">Diatur oleh Penghemat Baterai</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ikuti tema peranti</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tarik untuk menyegarkan</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Gulir untuk menyembunyikan bilah alat</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Geser bilah alat ke samping untuk beralih tab</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Geser bilah alat ke atas untuk membuka tab</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1072,7 +1092,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Anda masuk sebagai %s di peramban Firefox lainnya pada ponsel ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Anda masuk sebagai %s di peramban Firefox lainnya pada perangkat ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ya, masukkan saya</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1161,6 +1181,8 @@
     <string name="sign_in_with_camera">Masuk dengan kamera Anda</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Gunakan surel saja</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Tidak ada akun? <u>Buat satu</u> untuk menyinkronkan Firefox antar perangkat.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox akan berhenti menyinkronkan dengan akun Anda, tetapi tidak akan menghapus data penjelajahan Anda di peranti ini.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1269,6 +1291,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Pustaka OSS</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Alihkan Pelacak</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Menghapus kuki yang ditetapkan oleh pengalihan ke situs web pelacakan yang dikenal.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Dukungan</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1315,7 +1342,7 @@
     <string name="add_to_homescreen_text_placeholder">Nama pintasan</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Anda dapat dengan mudah menambahkan situs web ini ke layar Beranda ponsel Anda untuk mendapatkan akses instan dan penjelajahan lebih cepat seperti menggunakan aplikasi.</string>
+    <string name="add_to_homescreen_description_2">Anda dapat dengan mudah menambahkan situs web ini ke layar Beranda perangkat Anda untuk mendapatkan akses instan dan penjelajahan lebih cepat seperti menggunakan aplikasi.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Info masuk dan kata sandi</string>
@@ -1385,8 +1412,12 @@
     <string name="logins_site_copied">Situs disalin ke clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Salin sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Hapus sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Salin nama pengguna</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Hapus nama pengguna</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Salin situs</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1541,7 +1572,7 @@
     <string name="saved_login_duplicate">Sebuah info masuk dengan nama pengguna tersebut sudah ada</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Hubungkan perangkat lain</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Harap autentikasi ulang.</string>
@@ -1562,7 +1593,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Batas situs teratas tercapai</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Untuk menambahkan situs teratas, hapus salah satu. Tekan lama situs yang dimaksud dan pilih hapus.</string>
+    <string name="top_sites_max_limit_content_2">Untuk menambahkan situs teratas, hapus salah satu. Tekan lama situs yang dimaksud dan pilih hapus.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oke, Paham!</string>
 
@@ -1572,7 +1603,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Hapus</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
 
@@ -1580,4 +1611,9 @@
     <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar dapat diakses cepat nanti.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Anda masuk sebagai %s di peramban Firefox lainnya pada ponsel ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Anda dapat dengan mudah menambahkan situs web ini ke layar Beranda ponsel Anda untuk mendapatkan akses instan dan penjelajahan lebih cepat seperti menggunakan aplikasi.</string>
+
     </resources>

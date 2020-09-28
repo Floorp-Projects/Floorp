@@ -140,6 +140,8 @@
     <string name="browser_menu_install_on_homescreen">Staliañ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Ivinelloù goubredet</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Adgoubredañ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Kavout er bajennad</string>
     <!-- Browser menu button that creates a private tab -->
@@ -260,6 +262,8 @@
     <string name="preferences_open_links_in_a_private_tab">Digeriñ an ereoù en un ivinell brevez</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Aotren an tapadennoù-skramm er merdeiñ prevez</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Mard eo aotreet, an ivinelloù prevez a vo hewel pa vo meur a arload digor</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ouzhpennañ ur verradenn merdeiñ prevez</string>
     <!-- Preference for accessibility -->
@@ -280,6 +284,8 @@
     <string name="preferences_theme">Neuz</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Degemer</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Jestroù</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personelaat</string>
     <!-- Preference description for banner about signing in -->
@@ -314,8 +320,12 @@
     <string name="preferences_search_browsing_history">Klask er roll istor</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Klask er sinedoù</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Klask en ivinelloù goubredet</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Arventennoù ar gont</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Leuniañ an ereoù ent emgefreek</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Digeriñ ereoù en arloadoù</string>
     <!-- Preference for open download with an external download manager app -->
@@ -451,6 +461,16 @@
     <string name="preference_auto_battery_theme">Dibabet gant an esperner tredan</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Mont gant neuz ar benveg</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Sachit da azgrenaat</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Dibunit da guzhat ar varrenn-ostilhoù</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Riklit ar varrenn-ostilhoù war ar c’hostez evit cheñch ivinell</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Rikli ar ar varrenn-ostilhoù war-zu an nec’h evit digeriñ ivinelloù</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1039,7 +1059,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Kennasket hoc’h evel %s war ur merdeer Firefox all war ar pellgomzer-mañ. Fellout a ra deoc’h kennaskañ gant ar gont-mañ?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Kennasket oc’h evel %s war ur merdeer Firefox all war an trevnad-mañ. Fellout a ra deoc’h kennaskañ gant ar gont-mañ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ya, kennaskit ac’hanon</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1129,6 +1149,8 @@
     <string name="sign_in_with_camera">Kennaskit gant ho kamera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Ober gant ur chomlec’h postel kentoc’h</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Kont ebet? <u>Krouit unan</u> evit goubredañ Firefox etre an trevnadoù.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox a baouezo da c’houbredañ gant ho kont, met ne vo ket dilamet ho roadennoù merdeiñ war an trevnad-mañ.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1237,6 +1259,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Levraouegoù digor o zarzh</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Heulierien adheñchañ</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Skarzhañ an toupinoù lakaet gant adheñchadurioù etrezek lec’hiennoù heuliañ anavezet</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Skor</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1279,8 +1306,9 @@
     <string name="add_to_homescreen_continue">Kenderc’hel etrezek al lec’hienn</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Anv ar verradenn</string>
+
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Gallout a rit ouzhpennañ al lec’hienn d’ho pennbajenn en un doare aes evit gallout he haeziñ ha merdeiñ buanoc’h, evel un arload.</string>
+    <string name="add_to_homescreen_description_2">Gallout a rit ouzhpennañ al lec’hienn-mañ da bennbajenn ho trevnad evit mont war-eeun ha merdeiñ primoc’h evel ma vefe un arload.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Titouroù kennaskañ</string>
@@ -1351,8 +1379,12 @@
     <string name="logins_site_copied">Eilet eo bet al lec’hienn er golver</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Eilañ ar ger-tremen</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Skarzhañ ar ger-tremen</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Eilañ an anv arveriad</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Skarzhañ an anv arveriad</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Eilañ al lec’hienn</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1505,7 +1537,7 @@
     <string name="saved_login_duplicate">Un titour kennaskañ gant an anv arveriad-mañ a zo dioutañ endeo.</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Kennaskañ un trevnad all.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Adkennaskit mar plij ganeoc’h.</string>
@@ -1526,7 +1558,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Tizhet eo bet ar vevenn lec’hiennoù</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Evit ouzhpennañ ul lec’hienn gwellañ nevez e rankit dilemel unan all. Stokit ’pad pell amzer war ul lec’hienn ha dibabit Dilemel.</string>
+    <string name="top_sites_max_limit_content_2">Evit ouzhpennañ ul lec’hienn gwellañ eo ret deoc’h dilemel unan. Stokit ha dalc’hit al lec’hienn ha dibabit dilemel.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Mat, komprenet am eus</string>
 
@@ -1536,7 +1568,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Dilemel</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Tennit gounid eus %s.</string>
 
@@ -1544,4 +1576,9 @@
     <string name="no_collections_header1">Dastumit ar pezh a zo pouezus evidoc‘h</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Strollit ar cʼhlaskoù, al lecʼhiennoù hag an ivinelloù heñvel evit mont daveto buanocʼh.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Kennasket hoc’h evel %s war ur merdeer Firefox all war ar pellgomzer-mañ. Fellout a ra deoc’h kennaskañ gant ar gont-mañ?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Gallout a rit ouzhpennañ al lec’hienn d’ho pennbajenn en un doare aes evit gallout he haeziñ ha merdeiñ buanoc’h, evel un arload.</string>
+
     </resources>

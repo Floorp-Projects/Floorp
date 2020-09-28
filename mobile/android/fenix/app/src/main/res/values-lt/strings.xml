@@ -144,6 +144,8 @@
     <string name="browser_menu_install_on_homescreen">Įdiegti</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Sinchronizuotos kortelės</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Sinchronizuoti iš naujo</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Rasti tinklalapyje</string>
     <!-- Browser menu button that creates a private tab -->
@@ -325,6 +327,8 @@
     <string name="preferences_search_browsing_history">Ieškoti naršymo žurnale</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Ieškoti adresyne</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Ieškoti tarp sinchronizuotų kortelių</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paskyros nuostatos</string>
     <!-- Preference for enabling url autocomplete-->
@@ -1166,6 +1170,8 @@
     <string name="sign_in_with_camera">Prisijunkite su savo kamera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Naudoti el. paštą</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Neturite paskyros? <u>Susikurkite</u>, norėdami sinchronizuoti „Firefox“ tarp įrenginių.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">„Firefox“ nebesinchronizuos duomenų su jūsų paskyra, tačiau šiame įrenginyje esančių naršymo duomenų nepašalins.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1273,6 +1279,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">„%s“ | Atvirosios bibliotekos</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Nukreipimų stebėjimo elementai</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Išvalo slapukus, įrašomus nukreipiant į žinomas stebėjimo svetaines.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Žinynas</string>

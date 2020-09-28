@@ -76,6 +76,19 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ابھی نہیں</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">سیٹنگز پر جائیں</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">برخاست کریں</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">سیٹنگز پر جائیں</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">برخاست کریں</string>
+
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">برخاست کریں</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">نیا ٹیب</string>
@@ -472,6 +485,10 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">ٹیب بند کریں</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ٹیبس کھولیں</string>
@@ -502,9 +519,9 @@
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">مجموعہ سے ٹیب کو ہٹا دیں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">ٹیب بند کر دیں</string>
+    <string name="close_tab">ٹیب بند کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
-    <string name="close_tab_title">%s ٹیب بند کر دیں</string>
+    <string name="close_tab_title">%s ٹیب بند کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">ٹیبز کا مینو کھولیں</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -594,7 +611,7 @@
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">تباہی کی رپورٹ Mozilla کو ارسال کریں</string>
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">ٹیب بند کر دیں</string>
+    <string name="tab_crash_close">ٹیب بند کریں</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ٹیب بحال کریں</string>
 
@@ -743,10 +760,6 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">مجموعہ کا مینو</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">آپ کے لئے اہم چیزیں جمع کریں</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ایک طرح کی تلاشیں ، سائٹیں اور ٹیبز کو   بعد میں فوری رسائی کے  لئے گروہ بندی کریں۔</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ٹیب کو منتخب کریں</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -983,8 +996,8 @@
     <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">%s کا زیادہ سے زیادہ فائدہ اٹھائیں۔</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">مزید سیکھیں</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ہاں ، مجھے سائن ان کریں</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1427,7 +1440,7 @@
     <string name="saved_login_duplicate">اس صارف نام کے ساتھ لاگ ان پہلے سے موجود ہے</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">ایک اور آلہ جوڑیں۔</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">برائے مہربانی دوبارہ توثیق کریں۔</string>
@@ -1446,9 +1459,18 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">اعلٰی سائٹ کی حد پوری ہو گئی </string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">نئی ٹاپ سائٹ شامل کرنے کے لئے ، ایک سائٹ کو ہٹائیں۔ سائٹ پر دیر تک دبائیں اور ہٹانا منتخب کریں۔</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
 
-</resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s کا زیادہ سے زیادہ فائدہ اٹھائیں۔</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">آپ کے لئے اہم چیزیں جمع کریں</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">ایک طرح کی تلاشیں ، سائٹیں اور ٹیبز کو   بعد میں فوری رسائی کے  لئے گروہ بندی کریں۔</string>
+    </resources>

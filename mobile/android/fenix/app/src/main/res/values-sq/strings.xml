@@ -143,6 +143,8 @@
     <string name="browser_menu_install_on_homescreen">Instaloje</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Skeda të njëkohësuara</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Rinjëkohëso</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Gjej në faqe</string>
     <!-- Browser menu button that creates a private tab -->
@@ -324,6 +326,8 @@
     <string name="preferences_search_browsing_history">Kërkoni në historik shfletimi</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Kërkoni te faqerojtësit</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Kërko në skeda të njëkohësuara</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Rregullime llogarie</string>
     <!-- Preference for enabling url autocomplete-->
@@ -1158,6 +1162,8 @@
     <string name="sign_in_with_camera">Hyni me kamerën tuaj</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Më mirë përdorni email</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Pa llogari? <u>Krijoni një të tillë</u> që të njëkohësoni Firefox-in mes pajisjesh.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox-i do të reshtë së njëkohësuari me llogarinë tuaj, por s’do të fshijë ndonjë nga të dhënat e shfletimit tuaj në këtë pajisje.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1266,6 +1272,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Biblioteka OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Gjurmues Ridrejtimesh</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Spastron cookies të depozituara nga ridrejtime për te sajte të njohur për gjurmim.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Asistencë</string>

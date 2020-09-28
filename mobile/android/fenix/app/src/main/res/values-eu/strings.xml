@@ -147,6 +147,8 @@
     <string name="browser_menu_install_on_homescreen">Instalatu</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Sinkronizatutako fitxak</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Sinkronizatu berriro</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Bilatu orrian</string>
     <!-- Browser menu button that creates a private tab -->
@@ -292,6 +294,8 @@
     <string name="preferences_theme">Itxura</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Hasierako pantaila</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Keinuak</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Pertsonalizatu</string>
     <!-- Preference description for banner about signing in -->
@@ -326,9 +330,13 @@
     <string name="preferences_search_browsing_history">Bilatu nabigatze-historia</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Bilatu laster-markak</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Bilatu sinkronizatutako fitxak</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontu-ezarpenak</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Osatu automatikoki URLak</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ireki loturak aplikazioetan</string>
 
@@ -470,6 +478,9 @@
     <string name="preference_auto_battery_theme">Bateria-aurrezlea ezarrita</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Jarraitu gailuaren itxura</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Korritu tresna-barra ezkutatzeko</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1061,10 +1072,6 @@
     <string name="onboarding_account_sign_in_header">Hasi sinkronizatzen laster-markak, historia eta gehiago zure Firefox kontua erabiliz.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Argibide gehiago</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">%s bezala saioa hasita duzu telefono honetako beste Firefox nabigatzaile batean. Kontu honekin saioa hasi nahi duzu?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Bai, hasi saioa</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1308,9 +1315,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Lasterbidearen izena</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Modu errazean gehi dezakezu webgune hau zure telefonoaren hasierako pantailan berehalako sarbidea izan eta aplikazio-moduko esperientziarekin azkarrago nabigatzeko.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Saio-hasierak eta pasahitzak</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1537,7 +1541,7 @@
     <string name="saved_login_duplicate">Erabiltzaile-izen hori badago lehendik ere</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Konektatu beste gailu bat.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Autentifikatu berriro mesedez.</string>
@@ -1557,8 +1561,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Gune erabilienen mugara iritsi da</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Gune erabilienetako bat gehitzeko, kendu aurretik dagoen bat. Sakatu eta mantendu gunea eta hautatu kentzeko aukera.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ados, ulertuta</string>
 
@@ -1568,7 +1570,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kendu</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Atera %s(r)i ahalik eta zuku gehiena.</string>
 
@@ -1576,4 +1578,9 @@
     <string name="no_collections_header1">Bildu zuretzat garrantzizkoa dena</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Multzokatu antzerako bilaketak, guneak eta fitxak sarbide azkarrago baterako.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">%s bezala saioa hasita duzu telefono honetako beste Firefox nabigatzaile batean. Kontu honekin saioa hasi nahi duzu?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Modu errazean gehi dezakezu webgune hau zure telefonoaren hasierako pantailan berehalako sarbidea izan eta aplikazio-moduko esperientziarekin azkarrago nabigatzeko.</string>
+
     </resources>

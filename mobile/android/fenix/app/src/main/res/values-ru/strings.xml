@@ -153,6 +153,8 @@
     <string name="browser_menu_install_on_homescreen">Установить</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Облачные вкладки</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Повторная синхронизация</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Найти на странице</string>
     <!-- Browser menu button that creates a private tab -->
@@ -1197,6 +1199,8 @@
     <string name="sign_in_with_camera">Войти с помощью камеры</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Использовать электронную почту</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ещё нет аккаунта? <u>Создайте его</u>, чтобы синхронизировать Firefox между устройствами.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox прекратит синхронизацию с вашим аккаунтом, но не будет удалять ничего из ваших данных веб-сёрфинга на этом устройстве.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1303,6 +1307,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Свободные библиотеки</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Трекеры перенаправлений</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Удаляет куки, установленные в ходе перенаправлений на известные веб-сайты с отслеживанием.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Поддержка</string>

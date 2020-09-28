@@ -151,6 +151,8 @@
     <string name="browser_menu_install_on_homescreen">Tiyak</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Ximon taq ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Tixim chik</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tikanöx pa ruxaq</string>
     <!-- Browser menu button that creates a private tab -->
@@ -277,6 +279,8 @@
 
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Tiya\' q\'ij richin nichap ruwa pa ichinan okem pa k\'amaya\'l</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">We ya\'on q\'ij, xketz\'et chuqa\' ri ichinan taq ruwi\' toq e jaqäl k\'ïy chokoy</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Titz\'aqatisäx choj okem pa ri ichinan okem pa k\'amaya\'l</string>
     <!-- Preference for accessibility -->
@@ -297,6 +301,8 @@
     <string name="preferences_theme">Wachinel</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Tikirib\'äl</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">B\'anoj paläj</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tichinäx</string>
     <!-- Preference description for banner about signing in -->
@@ -334,8 +340,12 @@
     <string name="preferences_search_browsing_history">Tikanöx runatab\'al okem pa k\'amaya\'l</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Kekanöx taq yaketal</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Kekanöx ri taq ruwi\' eximon</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kinuk\'ulem Rub\'i\' Taqoya\'l</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Titz\'aqatisäx ruyon URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Kejaq taq ximonel pa taq chokoy</string>
     <!-- Preference for open download with an external download manager app -->
@@ -475,6 +485,17 @@
     <string name="preference_auto_battery_theme">Xjikib\'äx ruma ri Yakonel Uchuq\'ab\'äl</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Tojqäx ri ruwachinel oyonib\'äl</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tiqirirëx richin nik\'ex</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Taq\'axaj richin nawewaj ri ajkajtz\'ik</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Tiq\'axäx ri ajkajtz\'ik chi taq ruchi\' richin nijal ruwi\'</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Tiq\'axäx ri ajkatz\'ik ajsik richin yejaq taq ruwi\'</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1174,6 +1195,8 @@
     <string name="sign_in_with_camera">Tatikirisaj molojri\'ïl rik\'in ri elesäy awachib\'al</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Tawokisaj ri taqoya\'l</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[¿La man k\'o ta rub\'i\' ataqoya\'l? <u>Tatz\'uku\' jun</u> richin naxïm Firefox pa taq okisab\'äl.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox man xtuxïm ta chik ri rub\'i\' ataqoya\'l, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1285,6 +1308,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS taq wujb\'äl</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Kechojmïx chik Ojqanela\'</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Yeruyüj ri taq cookies echojmirisan pan ajk\'amaya\'l taq ruxaq ojqanem etaman kiwa.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Tob\'äl</string>
@@ -1589,6 +1617,8 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Xaq\'i\' ruchi\' ri jutaqil taq ruxaq</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Richin natz\'aqatisaj jun k\'ak\'a\' nimaläj ruxaq, tayuju\' jun. Tapitz\'a\' ri ruxaq chuqa\' tacha\' tiyuj.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ÜTZ, Wetaman Chik</string>
 
@@ -1598,7 +1628,7 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tiyuj</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ütz tawokisaj ri %s.</string>
 
