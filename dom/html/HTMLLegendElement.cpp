@@ -83,7 +83,7 @@ void HTMLLegendElement::Focus(const FocusOptions& aOptions,
 
   // If the legend isn't focusable, focus whatever is focusable following
   // the legend instead, bug 81481.
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
   }

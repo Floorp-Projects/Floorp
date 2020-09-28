@@ -2221,7 +2221,7 @@ mozilla::ipc::IPCResult PluginInstanceParent::AnswerPluginFocusChange(
   if (gotFocus) {
     nsPluginInstanceOwner* owner = GetOwner();
     if (owner) {
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
+      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
       RefPtr<dom::Element> element;
       owner->GetDOMElement(getter_AddRefs(element));
       if (fm && element) {

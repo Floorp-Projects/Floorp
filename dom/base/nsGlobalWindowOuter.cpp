@@ -5191,7 +5191,7 @@ void nsGlobalWindowOuter::BlurOuter() {
     siteWindow->Blur();
 
     // if the root is focused, clear the focus
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm && mDoc) {
       RefPtr<Element> element;
       fm->GetFocusedElementForWindow(this, false, nullptr,
@@ -7512,7 +7512,7 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
   // it easy to tell which link was last clicked when going back a page.
   Element* focusedElement = inner->GetFocusedElement();
   if (nsContentUtils::ContentIsLink(focusedElement)) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       // XXXbz Do we need the stack strong ref here?
       RefPtr<Element> kungFuDeathGrip(focusedElement);

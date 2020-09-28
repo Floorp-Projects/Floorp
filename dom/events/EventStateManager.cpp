@@ -3148,7 +3148,7 @@ void EventStateManager::PostHandleKeyboardEvent(
         }
 
         EnsureDocument(mPresContext);
-        nsFocusManager* fm = nsFocusManager::GetFocusManager();
+        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && mDocument) {
           // Shift focus forward or back depending on shift key
           bool isDocMove = aKeyboardEvent->IsControl() ||
@@ -3329,7 +3329,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         MOZ_ASSERT_IF(newFocus, newFocus->IsElement());
 
-        nsFocusManager* fm = nsFocusManager::GetFocusManager();
+        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm) {
           // if something was found to focus, focus it. Otherwise, if the
           // element that was clicked doesn't have -moz-user-focus: ignore,
@@ -5703,7 +5703,7 @@ void EventStateManager::FlushLayout(nsPresContext* aPresContext) {
 }
 
 nsIContent* EventStateManager::GetFocusedContent() {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   EnsureDocument(mPresContext);
   if (!fm || !mDocument) return nullptr;
 
