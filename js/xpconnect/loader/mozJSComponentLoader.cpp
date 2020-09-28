@@ -823,6 +823,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   aTableScript.set(script);
 
   {  // Scope for AutoEntryScript
+    AutoAllowLegacyScriptExecution exemption;
 
     // We're going to run script via JS_ExecuteScript, so we need an
     // AutoEntryScript. This is Gecko-specific and not in any spec.

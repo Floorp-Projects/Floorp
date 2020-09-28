@@ -9161,6 +9161,7 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
       return NS_ERROR_FAILURE;
     }
 
+    AutoAllowLegacyScriptExecution exemption;
     AutoEntryScript aes(global, "create custom elements");
     JSContext* cx = aes.cx();
     ErrorResult rv;

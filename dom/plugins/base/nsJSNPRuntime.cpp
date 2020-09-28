@@ -692,6 +692,8 @@ static bool doInvoke(NPObject* npobj, NPIdentifier method,
     return false;
   }
 
+  AutoAllowLegacyScriptExecution exemption;
+
   // We're about to run script via JS_CallFunctionValue, so we need an
   // AutoEntryScript. NPAPI plugins are Gecko-specific and not in any spec.
   dom::AutoEntryScript aes(globalObject, "NPAPI doInvoke");
