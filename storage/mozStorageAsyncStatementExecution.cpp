@@ -87,8 +87,7 @@ AsyncExecuteStatements::AsyncExecuteStatements(
       mState(PENDING),
       mCancelRequested(false),
       mMutex(aConnection->sharedAsyncExecutionMutex),
-      mDBMutex(aConnection->sharedDBMutex),
-      mRequestStartDate(TimeStamp::Now()) {
+      mDBMutex(aConnection->sharedDBMutex) {
   NS_ASSERTION(mStatements.Length(), "We weren't given any statements!");
 }
 
@@ -219,8 +218,6 @@ bool AsyncExecuteStatements::executeAndProcessStatement(StatementData& aData,
 
 bool AsyncExecuteStatements::executeStatement(StatementData& aData) {
   mMutex.AssertNotCurrentThreadOwns();
-  Telemetry::AutoTimer<Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_MS>
-      finallySendExecutionDuration(mRequestStartDate);
 
   sqlite3_stmt* aStatement = nullptr;
   // This cannot fail; we are only called if it's available.
@@ -262,15 +259,11 @@ bool AsyncExecuteStatements::executeStatement(StatementData& aData) {
 
     // Stop if we have no more results.
     if (rc == SQLITE_DONE) {
-      Telemetry::Accumulate(Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS,
-                            true);
       return false;
     }
 
     // If we got results, we can return now.
     if (rc == SQLITE_ROW) {
-      Telemetry::Accumulate(Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS,
-                            true);
       return true;
     }
 
@@ -281,7 +274,6 @@ bool AsyncExecuteStatements::executeStatement(StatementData& aData) {
 
     // Set an error state.
     mState = ERROR;
-    Telemetry::Accumulate(Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS, false);
 
     // Construct the error message before giving up the mutex (which we cannot
     // hold during the call to notifyError).
