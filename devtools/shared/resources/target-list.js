@@ -363,7 +363,7 @@ class TargetList extends EventEmitter {
       return TargetList.TYPES.PROCESS;
     }
 
-    if (typeName == "workerTarget") {
+    if (typeName == "workerDescriptor") {
       if (target.isSharedWorker) {
         return TargetList.TYPES.SHARED_WORKER;
       }

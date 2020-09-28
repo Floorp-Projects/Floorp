@@ -418,13 +418,17 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    * Open a window-hosted toolbox to debug the worker associated to the provided
    * worker actor.
    *
-   * @param  {WorkerTargetFront} workerTargetFront
-   *         worker actor front to debug
+   * @param  {WorkerDescriptorFront} workerDescriptorFront
+   *         descriptor front of the worker to debug
    * @param  {String} toolId (optional)
    *        The id of the default tool to show
    */
-  async openWorkerToolbox(workerTarget, toolId) {
-    await gDevTools.showToolbox(workerTarget, toolId, Toolbox.HostType.WINDOW);
+  async openWorkerToolbox(workerDescriptorFront, toolId) {
+    await gDevTools.showToolbox(
+      workerDescriptorFront,
+      toolId,
+      Toolbox.HostType.WINDOW
+    );
   },
 
   /**
