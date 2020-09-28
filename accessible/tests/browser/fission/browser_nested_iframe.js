@@ -117,10 +117,7 @@ addAccessibleTask(
                         {
                           LIST: [
                             {
-                              LISTITEM: [
-                                { LISTITEM_MARKER: [] },
-                                { TEXT_LEAF: [] },
-                              ],
+                              LISTITEM: [{ STATICTEXT: [] }, { TEXT_LEAF: [] }],
                             },
                           ],
                         },
