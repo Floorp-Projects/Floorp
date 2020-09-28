@@ -32,7 +32,7 @@ const workerComponentDataMiddleware = store => next => action => {
 
 function getServiceWorkerStatus(worker) {
   const isActive = worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED;
-  const isRunning = !!worker.workerTargetFront;
+  const isRunning = !!worker.workerDescriptorFront;
 
   if (isActive && isRunning) {
     return SERVICE_WORKER_STATUSES.RUNNING;

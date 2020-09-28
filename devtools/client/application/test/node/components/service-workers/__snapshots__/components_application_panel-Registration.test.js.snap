@@ -44,7 +44,7 @@ exports[`Registration Renders the expected snapshot for a registration with a wo
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
-              "workerTargetFront": "",
+              "workerDescriptorFront": "",
             }
           }
         />
@@ -98,7 +98,7 @@ exports[`Registration Renders the expected snapshot for a registration with mult
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
-              "workerTargetFront": "",
+              "workerDescriptorFront": "",
             }
           }
         />
@@ -115,7 +115,7 @@ exports[`Registration Renders the expected snapshot for a registration with mult
               "state": 2,
               "stateText": "installed",
               "url": "http://example.com/worker.js",
-              "workerTargetFront": "",
+              "workerDescriptorFront": "",
             }
           }
         />
@@ -169,7 +169,7 @@ exports[`Registration Renders the expected snapshot when sw debugging is disable
               "state": 4,
               "stateText": "activated",
               "url": "http://example.com/worker.js",
-              "workerTargetFront": "",
+              "workerDescriptorFront": "",
             }
           }
         />

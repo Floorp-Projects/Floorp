@@ -5,8 +5,8 @@
 
 const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
 
-const workerTargetSpec = generateActorSpec({
-  typeName: "workerTarget",
+const workerDescriptorSpec = generateActorSpec({
+  typeName: "workerDescriptor",
 
   methods: {
     attach: {
@@ -17,10 +17,16 @@ const workerTargetSpec = generateActorSpec({
       request: {},
       response: RetVal("json"),
     },
+    // Backwards compatibility for FF82 servers and below.
+    // Can be deleted once FF83 is merged into release.
     connect: {
       request: {
         options: Arg(0, "json"),
       },
+      response: RetVal("json"),
+    },
+    getTarget: {
+      request: {},
       response: RetVal("json"),
     },
     push: {
@@ -30,7 +36,7 @@ const workerTargetSpec = generateActorSpec({
   },
 
   events: {
-    // WorkerTargetActor still uses old sendActorEvent function,
+    // WorkerDescriptorActor still uses old sendActorEvent function,
     // but it should use emit instead.
     // Do not emit a `close` event as Target class emit this event on destroy
     "worker-close": {
@@ -39,4 +45,4 @@ const workerTargetSpec = generateActorSpec({
   },
 });
 
-exports.workerTargetSpec = workerTargetSpec;
+exports.workerDescriptorSpec = workerDescriptorSpec;
