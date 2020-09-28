@@ -449,7 +449,7 @@ function pageEventListener(event) {
 function finish() {
   // Work around bug 467960.
   let history;
-  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     history = TestWindow.getBrowser().browsingContext?.sessionHistory;
   } else {
     history = TestWindow.getBrowser().webNavigation.sessionHistory

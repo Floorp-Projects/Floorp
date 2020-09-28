@@ -17,7 +17,7 @@
           opener.info("file_bug1300461_back.html");
           opener.is(shistory.count, 2, "check history length");
           opener.is(shistory.index, 1, "check history index");
-          if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+          if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
             opener.is(shistory.legacySHistory.requestedIndex, -1, "check requestedIndex");
           } else {
             let index = await opener.getSHRequestedIndex();

@@ -15,7 +15,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function(browser) {
-      if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         await ContentTask.spawn(browser, URL, async function(URL) {
           let history = docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory;

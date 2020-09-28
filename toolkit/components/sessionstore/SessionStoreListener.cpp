@@ -9,7 +9,6 @@
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "nsGenericHTMLElement.h"
 #include "nsDocShell.h"
 #include "nsIAppWindow.h"
@@ -20,6 +19,7 @@
 #include "nsITimer.h"
 #include "nsIWebProgress.h"
 #include "nsIXPConnect.h"
+#include "nsIXULRuntime.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "SessionStoreFunctions.h"
@@ -117,13 +117,12 @@ void ContentSessionStore::ResetStorageChanges() {
 }
 
 void ContentSessionStore::SetSHistoryChanged() {
-  mSHistoryChanged = StaticPrefs::fission_sessionHistoryInParent_AtStartup();
+  mSHistoryChanged = mozilla::SessionHistoryInParent();
 }
 
 // Request "collect sessionHistory" from the parent process
 void ContentSessionStore::SetSHistoryFromParentChanged() {
-  mSHistoryChangedFromParent =
-      StaticPrefs::fission_sessionHistoryInParent_AtStartup();
+  mSHistoryChangedFromParent = mozilla::SessionHistoryInParent();
 }
 
 void ContentSessionStore::OnDocumentStart() {
@@ -137,7 +136,7 @@ void ContentSessionStore::OnDocumentStart() {
 
   SetFullStorageNeeded();
 
-  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (mozilla::SessionHistoryInParent()) {
     mSHistoryChanged = true;
   }
 }
@@ -146,7 +145,7 @@ void ContentSessionStore::OnDocumentEnd() {
   mScrollChanged = WITH_CHANGE;
   SetFullStorageNeeded();
 
-  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (mozilla::SessionHistoryInParent()) {
     mSHistoryChanged = true;
   }
 }
@@ -227,7 +226,7 @@ nsresult TabListener::Init() {
   eventTarget->AddSystemEventListener(u"mozvisualscroll"_ns, this, false);
   eventTarget->AddSystemEventListener(u"input"_ns, this, false);
 
-  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (mozilla::SessionHistoryInParent()) {
     eventTarget->AddSystemEventListener(u"DOMTitleChanged"_ns, this, false);
   }
 
@@ -817,7 +816,7 @@ void TabListener::RemoveListeners() {
         eventTarget->RemoveSystemEventListener(u"mozvisualscroll"_ns, this,
                                                false);
         eventTarget->RemoveSystemEventListener(u"input"_ns, this, false);
-        if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+        if (mozilla::SessionHistoryInParent()) {
           eventTarget->RemoveSystemEventListener(u"DOMTitleChanged"_ns, this,
                                                  false);
         }

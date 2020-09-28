@@ -660,7 +660,7 @@ function setPropertyOfFormField(browserContext, selector, propName, newValue) {
 }
 
 function promiseOnHistoryReplaceEntryInChild(browser) {
-  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     return new Promise(resolve => {
       let sessionHistory = browser.browsingContext?.sessionHistory;
       if (sessionHistory) {

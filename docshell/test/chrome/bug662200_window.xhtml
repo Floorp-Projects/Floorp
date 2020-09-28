@@ -90,7 +90,7 @@
 
       var docshell = TestWindow.getWindow().docShell;
       let shistory;
-      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         shistory = docshell.browsingContext.sessionHistory;
       } else {
         shistory = docshell.sessionHistory.legacySHistory;

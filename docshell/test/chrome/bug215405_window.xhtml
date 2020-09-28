@@ -37,7 +37,7 @@
     function finish() {
       gBrowser.removeEventListener("pageshow", eventListener, true);
       // Work around bug 467960
-      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         var history = gBrowser.browsingContext.sessionHistory;
         history.purgeHistory(history.count);
       } else {

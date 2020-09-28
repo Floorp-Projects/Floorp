@@ -12,7 +12,7 @@
                                     .docShell
                                     .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
                                     .sessionHistory;
-        if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
           shistory.legacySHistory.evictAllContentViewers();
         } else {
           opener.evictAllContentViewers();

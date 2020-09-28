@@ -122,6 +122,7 @@
 #include "SessionStoreFunctions.h"
 #include "mozilla/dom/CrashReport.h"
 #include "nsISecureBrowserUI.h"
+#include "nsIXULRuntime.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -3519,7 +3520,7 @@ bool BrowserParent::CanCancelContentJS(
     nsIURI* aNavigationURI) const {
   // Pre-checking if we can cancel content js in the parent is only
   // supported when session history in the parent is enabled.
-  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (!mozilla::SessionHistoryInParent()) {
     // If session history in the parent isn't enabled, this check will
     // be fully done in BrowserChild::CanCancelContentJS
     return true;

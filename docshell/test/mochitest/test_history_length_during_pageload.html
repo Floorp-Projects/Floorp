@@ -30,7 +30,7 @@
     }
 
     async function runTests() {
-      await runTest(!SpecialPowers.getBoolPref("fission.sessionHistoryInParent"));
+      await runTest(!SpecialPowers.Services.appinfo.sessionHistoryInParent);
       SimpleTest.finish();
     }
   </script>

@@ -10,7 +10,7 @@ const gExpectedHistory = {
 };
 
 async function get_remote_history(browser) {
-  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     let sessionHistory = browser.browsingContext?.sessionHistory;
     if (!sessionHistory) {
       return null;

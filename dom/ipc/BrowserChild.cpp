@@ -135,6 +135,7 @@
 #include "nsViewportInfo.h"
 #include "nsWebBrowser.h"
 #include "nsWindowWatcher.h"
+#include "nsIXULRuntime.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetChild.h"
@@ -3449,7 +3450,7 @@ nsresult BrowserChild::CanCancelContentJS(
 
   // If we have session history in the parent we've already performed
   // the checks following, so we can return early.
-  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (mozilla::SessionHistoryInParent()) {
     *aCanCancel = true;
     return NS_OK;
   }

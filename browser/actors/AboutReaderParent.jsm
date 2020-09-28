@@ -8,9 +8,6 @@
 var EXPORTED_SYMBOLS = ["AboutReaderParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -21,13 +18,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "sessionHistoryInParent",
-  "fission.sessionHistoryInParent",
-  false
 );
 
 const gStringBundle = Services.strings.createBundle(
@@ -262,7 +252,7 @@ class AboutReaderParent extends JSWindowActorParent {
   }
 
   hasReaderModeEntryAtOffset(url, offset) {
-    if (sessionHistoryInParent) {
+    if (Services.appinfo.sessionHistoryInParent) {
       let browsingContext = this.browsingContext;
       if (browsingContext.childSessionHistory.canGo(offset)) {
         let shistory = browsingContext.sessionHistory;

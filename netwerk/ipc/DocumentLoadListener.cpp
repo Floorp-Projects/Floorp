@@ -40,6 +40,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIViewSourceChannel.h"
 #include "nsImportModule.h"
+#include "nsIXULRuntime.h"
 #include "nsMimeTypes.h"
 #include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"
@@ -626,8 +627,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   mSrcdocData = aLoadState->SrcdocData();
   mBaseURI = aLoadState->BaseURI();
   mOriginalUriString = aLoadState->GetOriginalURIString();
-  if (documentContext &&
-      StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (documentContext && mozilla::SessionHistoryInParent()) {
     // It's hard to know at this point whether session history will be enabled
     // in the browsing context, so we always create an entry for a load here.
     mLoadingSessionHistoryInfo =

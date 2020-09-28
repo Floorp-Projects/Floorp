@@ -28,7 +28,7 @@ var checkResult = async function(isRemote, browserKey, uri) {
     "browser.permanentKey should be correct"
   );
 
-  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     let sessionHistory =
       gBrowser.selectedBrowser.browsingContext.sessionHistory;
     let entry = sessionHistory.getEntryAtIndex(sessionHistory.count - 1);

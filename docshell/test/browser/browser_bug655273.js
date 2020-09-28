@@ -14,7 +14,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
     async function(browser) {
-      if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         await SpecialPowers.spawn(browser, [], async function() {
           let cw = content;
           let oldTitle = cw.document.title;

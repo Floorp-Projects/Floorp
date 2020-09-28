@@ -48,7 +48,7 @@ add_task(async function test_referrer() {
 // Tests that remote access to webnavigation.sessionHistory works.
 add_task(async function test_history() {
   async function checkHistoryIndex(browser, n) {
-    if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       return SpecialPowers.spawn(browser, [n], function(n) {
         let history =
           docShell.browsingContext.childSessionHistory.legacySHistory;
@@ -71,7 +71,7 @@ add_task(async function test_history() {
   browser.webNavigation.loadURI(DUMMY2, LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY2);
 
-  if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function([
       dummy1,
       dummy2,
@@ -117,7 +117,7 @@ add_task(async function test_history() {
 // Tests that load flags are passed through to the content process.
 add_task(async function test_flags() {
   async function checkHistory(browser, { count, index }) {
-    if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       return SpecialPowers.spawn(browser, [[DUMMY2, count, index]], function([
         dummy2,
         count,

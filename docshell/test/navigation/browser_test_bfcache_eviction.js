@@ -15,7 +15,7 @@ add_task(async function() {
     browser
   ) {
     let testDone = {};
-    if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       // 2.  Add a promise that will be resolved when the 'content viewer evicted' event goes off
       testDone.promise = SpecialPowers.spawn(browser, [], async function() {
         return new Promise(resolve => {

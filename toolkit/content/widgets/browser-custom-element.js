@@ -45,12 +45,6 @@
   let lazyPrefs = {};
   XPCOMUtils.defineLazyPreferenceGetter(
     lazyPrefs,
-    "sessionHistoryInParent",
-    "fission.sessionHistoryInParent",
-    false
-  );
-  XPCOMUtils.defineLazyPreferenceGetter(
-    lazyPrefs,
     "unloadTimeoutMs",
     "dom.beforeunload_timeout_ms"
   );
@@ -1183,7 +1177,7 @@
       if (
         this.isRemoteBrowser &&
         this.messageManager &&
-        !lazyPrefs.sessionHistoryInParent
+        !Services.appinfo.sessionHistoryInParent
       ) {
         this._remoteWebNavigation._canGoBack = aCanGoBack;
         this._remoteWebNavigation._canGoForward = aCanGoForward;
@@ -1231,13 +1225,13 @@
     }
 
     purgeSessionHistory() {
-      if (this.isRemoteBrowser && !lazyPrefs.sessionHistoryInParent) {
+      if (this.isRemoteBrowser && !Services.appinfo.sessionHistoryInParent) {
         this._remoteWebNavigation._canGoBack = false;
         this._remoteWebNavigation._canGoForward = false;
       }
 
       try {
-        if (lazyPrefs.sessionHistoryInParent) {
+        if (Services.appinfo.sessionHistoryInParent) {
           let sessionHistory = this.browsingContext?.sessionHistory;
           if (!sessionHistory) {
             return;
@@ -1974,7 +1968,7 @@
       // history, and performing the `resumeRedirectedLoad`, in order to get
       // sesssion state set up correctly.
       // FIXME: This probably needs to be hookable by GeckoView.
-      if (!lazyPrefs.sessionHistoryInParent) {
+      if (!Services.appinfo.sessionHistoryInParent) {
         let tabbrowser = this.getTabBrowser();
         if (tabbrowser) {
           tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);

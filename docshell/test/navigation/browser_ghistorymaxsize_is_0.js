@@ -14,7 +14,7 @@ add_task(async function() {
     browser
   ) {
     // At this point, we haven't set gHistoryMaxSize to 0, and it is still 50 (default value).
-    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       let sh = browser.browsingContext.sessionHistory;
       is(
         sh.count,
@@ -63,7 +63,7 @@ add_task(async function() {
     browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
     await promise;
 
-    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       let sh = browser.browsingContext.sessionHistory;
       is(sh.count, 0, "We should not save any entries in session history");
       is(sh.index, -1);
