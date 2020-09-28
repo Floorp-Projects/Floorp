@@ -1275,6 +1275,22 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         }
         break;
       }
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      case uint16_t(Op::RefAsNonNull): {
+        if (!env.functionReferencesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        CHECK(iter.readRefAsNonNull(&nothing));
+      }
+      case uint16_t(Op::BrOnNull): {
+        if (!env.functionReferencesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedDepth;
+        CHECK(
+            iter.readBrOnNull(&unusedDepth, &unusedType, &nothings, &nothing));
+      }
+#endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq): {
         if (!env.gcTypesEnabled()) {
