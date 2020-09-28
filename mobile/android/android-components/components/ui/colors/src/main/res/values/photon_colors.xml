@@ -113,6 +113,7 @@
 
     <!-- Violet -->
     <color name="photonViolet50">#9059FF</color>
+    <color name="photonViolet70">#592ACB</color>
 
     <!-- White -->
     <color name="photonWhite">#ffffff</color>
