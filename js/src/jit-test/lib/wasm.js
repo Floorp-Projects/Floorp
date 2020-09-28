@@ -362,3 +362,20 @@ ${expectedStacks.map(stacks => stacks.join("/")).join('\n')}`);
 function fuzzingSafe() {
     return typeof getErrorNotes == 'undefined';
 }
+
+let WasmNonNullExternrefValues = [
+    undefined,
+    true,
+    false,
+    {x:1337},
+    ["abracadabra"],
+    1337,
+    13.37,
+    "hi",
+    37n,
+    new Number(42),
+    new Boolean(true),
+    Symbol("status"),
+    () => 1337
+];
+let WasmExternrefValues = [null, ...WasmNonNullExternrefValues];

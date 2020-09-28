@@ -9,19 +9,6 @@
 //  - function parameters and returns
 //  - struct fields [for the gc feature], see externref-boxing-struct.js
 
-let VALUES = [null,
-              undefined,
-              true,
-              false,
-              {x:1337},
-              ["abracadabra"],
-              1337,
-              13.37,
-              37n,
-              "hi",
-              Symbol("status"),
-              () => 1337];
-
 // Global variables can receive values via several mechanisms:
 //
 // - on initialization when created from JS
@@ -37,7 +24,7 @@ let VALUES = [null,
 
 // Set via initialization and read via 'value'
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let g = new WebAssembly.Global({value: "externref"}, v);
     assertEq(g.value, v);
@@ -45,7 +32,7 @@ for (let v of VALUES)
 
 // Set via 'value' and read via 'value'
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let g = new WebAssembly.Global({value: "externref", mutable: true});
     g.value = v;
@@ -54,7 +41,7 @@ for (let v of VALUES)
 
 // Set via initialization, then read via global.get and returned
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let g = new WebAssembly.Global({value: "externref"}, v);
     let ins = wasmEvalText(
@@ -68,7 +55,7 @@ for (let v of VALUES)
 
 // Set via global.set, then read via 'value'
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let g = new WebAssembly.Global({value: "externref", mutable: true});
     let ins = wasmEvalText(
@@ -97,7 +84,7 @@ for (let v of VALUES)
 
 // .set() and .get()
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let t = new WebAssembly.Table({element: "externref", initial: 10});
     t.set(3, v);
@@ -106,7 +93,7 @@ for (let v of VALUES)
 
 // write with table.set, read with .get()
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
@@ -121,7 +108,7 @@ for (let v of VALUES)
 
 // write with .set(), read with table.get
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
@@ -137,7 +124,7 @@ for (let v of VALUES)
 // Imported JS functions can receive externref values as parameters and return
 // them.
 
-for (let v of VALUES)
+for (let v of WasmExternrefValues)
 {
     let returner = function () { return v; };
     let receiver = function (w) { assertEq(w, v); };
