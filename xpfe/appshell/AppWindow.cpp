@@ -2862,7 +2862,9 @@ void AppWindow::WindowDeactivated() {
   nsCOMPtr<nsPIDOMWindowOuter> window =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && window && !fm->IsTestMode()) fm->WindowLowered(window);
+  if (fm && window && !fm->IsTestMode()) {
+    fm->WindowLowered(window);
+  }
 }
 
 #ifdef USE_NATIVE_MENUS

@@ -777,9 +777,9 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
         focusInOtherContentProcess);
 }
 
-NS_IMETHODIMP
-nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
+void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
+  MOZ_ASSERT(aWindow);
+
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -801,13 +801,13 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
 
   if (XRE_IsParentProcess()) {
     if (mActiveWindow != window) {
-      return NS_OK;
+      return;
     }
   } else {
     BrowsingContext* bc = window->GetBrowsingContext();
     BrowsingContext* active = GetActiveBrowsingContext();
     if (active != bc->Top()) {
-      return NS_OK;
+      return;
     }
   }
 
@@ -856,8 +856,6 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   }
 
   mWindowBeingLowered = nullptr;
-
-  return NS_OK;
 }
 
 nsresult nsFocusManager::ContentRemoved(Document* aDocument,
