@@ -107,7 +107,7 @@ assertErrorMessage(() => wasmEvalText(`
  (func $f (param (ref null $s)) (unreachable))
  (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
@@ -116,7 +116,7 @@ assertErrorMessage(() => wasmEvalText(`
  (func $f (param (ref null $s)) (unreachable))
  (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 // Ref type mismatch in assignment to local but the prefix rule allows
 // the assignment to succeed if the structs are the same.
@@ -134,7 +134,7 @@ assertErrorMessage(() => wasmEvalText(`
  (type $t (struct (field f32)))
  (func $f (param (ref null $s)) (local (ref null $t)) (local.set 1 (local.get 0))))
 `),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
@@ -143,7 +143,7 @@ assertErrorMessage(() => wasmEvalText(`
  (func $f (param (ref null $s)) (unreachable))
  (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 // Ref type mismatch in return but the prefix rule allows the return
 // to succeed if the structs are the same.
@@ -161,7 +161,7 @@ assertErrorMessage(() => wasmEvalText(`
  (type $t (struct (field f32)))
  (func $f (param (ref null $s)) (result (ref null $t)) (local.get 0)))
 `),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
@@ -169,7 +169,7 @@ assertErrorMessage(() => wasmEvalText(`
  (type $t (struct (field (mut i32))))
  (func $f (param (ref null $s)) (result (ref null $t)) (local.get 0)))
 `),
-WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
+WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
 // Ref type can't reference a function type
 
@@ -195,4 +195,4 @@ assertErrorMessage(() => wasmEvalText(`
  (func $f (param externref) (call $g (local.get 0)))
  (func $g (param (ref null $s)) (unreachable)))
 `),
-WebAssembly.CompileError, /expression has type externref but expected ref null/);
+WebAssembly.CompileError, /expression has type externref but expected \(ref null.*\)/);
