@@ -1270,6 +1270,10 @@ add_task(async function perWindowState() {
   Assert.equal(action.getTitle(window), newGlobalTitle, "Title: old window");
   Assert.equal(action.getTitle(newWindow), newGlobalTitle, "Title: new window");
 
+  // Initialize panel nodes in the new window
+  newWindow.document.getElementById("pageActionButton").click();
+  await BrowserTestUtils.waitForEvent(newWindow.document, "popupshowing", true);
+
   // The action's panel button nodes should be updated in both windows.
   let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(
     action.id
