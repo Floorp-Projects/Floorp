@@ -61,7 +61,7 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
                                  WebRenderCanvasData* aCanvasData);
 
   /* get the size of the canvas's image */
-  nsIntSize GetCanvasSize();
+  nsIntSize GetCanvasSize() const;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
