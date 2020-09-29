@@ -20,10 +20,12 @@
 #  define CACHE_DEBUG_TRY(...)
 #endif
 
-// Cache equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
-#define CACHE_TRY_VAR_GLUE(...) \
-  QM_TRY_VAR_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
-#define CACHE_TRY_VAR(...) CACHE_TRY_VAR_GLUE(__VA_ARGS__)
+// Cache equivalents of QM_TRY_VAR, QM_TRY_INSPECT and QM_DEBUG_TRY_VAR.
+#define CACHE_TRY_VAR_GLUE(accessFunction, ...)                   \
+  QM_TRY_VAR_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), \
+                  accessFunction, ##__VA_ARGS__)
+#define CACHE_TRY_VAR(...) CACHE_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define CACHE_TRY_INSPECT(...) CACHE_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
 #  define CACHE_DEBUG_TRY_VAR(...) CACHE_TRY_VAR(__VA_ARGS__)

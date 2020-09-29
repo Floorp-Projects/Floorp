@@ -96,8 +96,8 @@ Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
   const StructuredCloneFileBase::FileType type =
       ToStructuredCloneFileType(aText.First());
 
-  IDB_TRY_VAR(
-      const auto id,
+  IDB_TRY_INSPECT(
+      const auto& id,
       ToResultGet<int32_t>(
           ToInteger, type == StructuredCloneFileBase::eBlob
                          ? aText
@@ -264,8 +264,8 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
         IndexDataValue{indexId, unique, Key{nsCString{AsChars(keyBuffer)}}};
 
     // Read sort key buffer length.
-    IDB_TRY_VAR(
-        (const auto [sortKeyBufferLength, remainderAfterSortKeyBufferLength]),
+    IDB_TRY_INSPECT(
+        (const auto& [sortKeyBufferLength, remainderAfterSortKeyBufferLength]),
         ReadCompressedNumber(remainderAfterKeyBuffer));
 
     remainder = remainderAfterSortKeyBufferLength;
@@ -303,8 +303,8 @@ nsresult ReadCompressedIndexDataValuesFromSource(
   MOZ_ASSERT(aOutIndexValues);
   MOZ_ASSERT(aOutIndexValues->IsEmpty());
 
-  IDB_TRY_VAR(const int32_t columnType,
-              MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aColumnIndex));
+  IDB_TRY_INSPECT(const int32_t& columnType,
+                  MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aColumnIndex));
 
   switch (columnType) {
     case mozIStorageStatement::VALUE_TYPE_NULL:
@@ -443,26 +443,26 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
 
-  IDB_TRY_VAR(const int32_t columnType,
-              MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aDataIndex));
+  IDB_TRY_INSPECT(const int32_t& columnType,
+                  MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aDataIndex));
 
-  IDB_TRY_VAR(const bool isNull,
-              MOZ_TO_RESULT_INVOKE(aSource, GetIsNull, aFileIdsIndex));
+  IDB_TRY_INSPECT(const bool& isNull,
+                  MOZ_TO_RESULT_INVOKE(aSource, GetIsNull, aFileIdsIndex));
 
-  IDB_TRY_VAR(const nsString fileIds, ([aSource, aFileIdsIndex, isNull] {
-                // XXX MOZ_TO_RESULT_INVOKE doesn't seem to automatically
-                // determine the necessary return success type to be
-                // nsString rather than nsAString
-                return isNull ? Result<nsString, nsresult>{VoidString()}
-                              : ToResultInvoke<nsString>(
-                                    std::mem_fn(&T::GetString), aSource,
-                                    aFileIdsIndex);
-              }()));
+  IDB_TRY_INSPECT(const nsString& fileIds, ([aSource, aFileIdsIndex, isNull] {
+                    // XXX MOZ_TO_RESULT_INVOKE doesn't seem to automatically
+                    // determine the necessary return success type to be
+                    // nsString rather than nsAString
+                    return isNull ? Result<nsString, nsresult>{VoidString()}
+                                  : ToResultInvoke<nsString>(
+                                        std::mem_fn(&T::GetString), aSource,
+                                        aFileIdsIndex);
+                  }()));
 
   switch (columnType) {
     case mozIStorageStatement::VALUE_TYPE_INTEGER: {
-      IDB_TRY_VAR(const int64_t intData,
-                  MOZ_TO_RESULT_INVOKE(aSource, GetInt64, aDataIndex));
+      IDB_TRY_INSPECT(const int64_t& intData,
+                      MOZ_TO_RESULT_INVOKE(aSource, GetInt64, aDataIndex));
 
       uint64_t uintData;
       memcpy(&uintData, &intData, sizeof(uint64_t));
