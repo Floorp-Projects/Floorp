@@ -27,8 +27,8 @@ You will need administrator permissions on your machine to install these
 prerequisites. (You can verify that you have these permissions in System
 Preferences -> Users & Groups.)
 
-See `1.1 Install Xcode and Xcode command line tools <#xcode>`_ and `1.2
-Get the local macOS SDK <#macossdk>`_ for more information on how to
+See :ref:`1.1 Install Xcode and Xcode command line tools <xcode>` and :ref:`1.2
+Get the local macOS SDK <macossdk>` for more information on how to
 install these prerequisites.
 
 .. rubric:: Getting the source
@@ -46,8 +46,8 @@ that will do the rest:
     # download the bootstrap script
     curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -o bootstrap.py
 
-If you don't have Python 3.6 or later or Mercurial installed, see `2.1a Install
-dependencies via Homebrew <#install-via-homebrew>`_ for more information on how
+If you don't have Python 3.6 or later or Mercurial installed, see :ref:`2.1a Install
+dependencies via Homebrew <#install-via-homebrew>` for more information on how
 to do so. Then in your terminal from above start the bootstrapper like this:
 
 .. code-block:: shell
@@ -62,7 +62,7 @@ source code. If you prefer to work with git, use this command instead:
     python3 bootstrap.py --vcs=git
 
 If you don't have `Homebrew <https://brew.sh/>`_ or
-`Ports <https://www.macports.org/>`_ installed - software package
+`Ports <https://www.macports.org/>`__ installed - software package
 managers that will let us install some programs we'll need - you'll be
 asked to pick one. Either will work, but most Mozilla developers use
 Homebrew.
@@ -130,20 +130,20 @@ You first need to install Xcode, for which you have two options but both
 require you to sign in with an Apple ID:
 
 -  From Apple Developer Download page - `direct
-   link <https://developer.apple.com/download/release/>`_. Install the
+   link <https://developer.apple.com/download/release/>`__. Install the
    latest **release** (non-beta) version of Xcode, open ``Xcode.xip``,
    and then **before** **running the extracted Xcode.app, move it from
    the download folder to /Applications**. (Running it from another
    location may screw up various build paths, homebrew builds, etc. Fix
    by running ``sudo xcode-select -switch /Applications/Xcode.app`` )
 -  From the Mac App Store - `direct
-   link <https://apps.apple.com/us/app/xcode>`_.
+   link <https://apps.apple.com/us/app/xcode>`__.
 
 Open /Applications/Xcode.app and let it do its initial first run and
 setup stuff.
 
 Install the Xcode command line tools by
-running \ ``xcode-select --install`` in your terminal.
+running ``xcode-select --install`` in your terminal.
 
 .. _macossdk:
 
@@ -159,7 +159,7 @@ other SDKs and that's why we recommend this specific version.
 
 To get the 10.11 SDK, first download Xcode 7.3.1 from the `More
 Downloads for Apple
-Developers <https://developer.apple.com/download/more/>`_ page. Once
+Developers <https://developer.apple.com/download/more/>`__ page. Once
 downloaded, mount the .dmg file. Then in the Terminal run the following:
 
 .. code-block:: shell
@@ -186,7 +186,7 @@ whatever package manager you prefer.
 2.1a Install dependencies via Homebrew
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`Homebrew <http://brew.sh/>`_ is "the missing package manager for
+`Homebrew <http://brew.sh/>`__ is "the missing package manager for
 macOS." It provides a simple command-line interface to install packages,
 typically by compiling them from source.
 
@@ -402,13 +402,13 @@ Software requirements
 -  **Development Environment:** Xcode. You can obtain from the App
    Store.
 -  **Package Management:** Either
-   *`MacPorts <http://www.macports.org/>`_* or Homebrew.
+   *`MacPorts <http://www.macports.org/>`__* or Homebrew.
 
 These options are specific to Mozilla builds for macOS. For a more
 general overview of build options and the ``mozconfig`` file, see
 :ref:`Configuring Build Options`. For
 specific information on configuring to build a universal binary, see
-`Mac OS X Universal Binaries <https://developer.mozilla.org/en/Mac_OS_X_Universal_Binaries>`_.
+`Mac OS X Universal Binaries <https://developer.mozilla.org/en/Mac_OS_X_Universal_Binaries>`__.
 
 -  **Compiler:** Firefox releases are no longer built with gcc-4.8 or
    earlier. A recent copy of clang is needed.
@@ -420,7 +420,7 @@ specific information on configuring to build a universal binary, see
          (Xcode 6.4 is based on pre-release of clang 3.6, that doesn't
          match to requirement.)
       -  Following the instructions in the `clang
-         website <http://clang.llvm.org/get_started.html>`_ for
+         website <http://clang.llvm.org/get_started.html>`__ for
          information on how to get it.
       -  Using some of the package managers (see above).
 
@@ -436,7 +436,7 @@ are intended to be added to your ``mozconfig`` file.
    Selecting an SDK with this option overrides the default headers and
    libraries in ``/usr/include``, ``/usr/lib``, and ``/System/Library``.
    Mac macOS SDKs are installed in ``/Developer/SDKs`` during the `Xcode
-   installation <#Software_Requirements>`_ by selecting the **Cross
+   installation <#Software_Requirements>` by selecting the **Cross
    Development** category in the installer’s **Customize** screen.
 
 .. code-block:: shell
