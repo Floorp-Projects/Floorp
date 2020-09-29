@@ -3195,7 +3195,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     // Now focus the document itself if focus is on an element within it.
     nsPIDOMWindowOuter* win = mDocument->GetWindow();
 
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm && win) {
       nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
       fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
@@ -6518,7 +6518,7 @@ PresShell::GetFocusedDOMWindowInOurWindow() {
 }
 
 already_AddRefed<nsIContent> PresShell::GetFocusedContentInOurWindow() const {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && mDocument) {
     RefPtr<Element> focusedElement;
     fm->GetFocusedElementForWindow(mDocument->GetWindow(), false, nullptr,

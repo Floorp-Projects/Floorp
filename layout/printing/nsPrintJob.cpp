@@ -2348,7 +2348,7 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
 }
 
 Document* nsPrintJob::FindFocusedDocument(Document* aDoc) const {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
   nsPIDOMWindowOuter* window = aDoc->GetOriginalDocument()->GetWindow();
