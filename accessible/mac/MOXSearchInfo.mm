@@ -213,6 +213,14 @@ using namespace mozilla::a11y;
                                : RotorRoleRule(roles::GRAPHIC);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXCheckboxSearchKey"]) {
+      RotorRoleRule rule =
+          mImmediateDescendantsOnly
+              ? RotorRoleRule(roles::CHECKBUTTON, geckoStartAcc)
+              : RotorRoleRule(roles::CHECKBUTTON);
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
