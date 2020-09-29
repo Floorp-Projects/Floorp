@@ -72,7 +72,7 @@ void MerchantValidationEvent::init(
     return;
   }
 
-  Result<nsCOMPtr<nsIURI>, nsresult> rv =
+  Result<OwningNonNull<nsIURI>, nsresult> rv =
       doc->ResolveWithBaseURI(aEventInitDict.mValidationURL);
   if (rv.isErr()) {
     aRv.ThrowTypeError("validationURL cannot be parsed");
