@@ -643,21 +643,12 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
 
 /* virtual */
 AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() const {
-  const auto& aspectRatio = StylePosition()->mAspectRatio;
-  if (!aspectRatio.auto_) {
-    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
-  }
-
   // FIXME(emilio): This should probably respect contain: size and return no
   // ratio in the case subDocRoot is non-null. Otherwise we do it by virtue of
   // using a zero-size below and reusing GetIntrinsicSize().
   if (mSubdocumentIntrinsicRatio && *mSubdocumentIntrinsicRatio) {
     // Use the intrinsic aspect ratio from the child SVG document, if available.
     return *mSubdocumentIntrinsicRatio;
-  }
-
-  if (aspectRatio.HasRatio()) {
-    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
   }
 
   // NOTE(emilio): Even though we have an intrinsic size, we may not have an

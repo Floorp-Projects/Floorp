@@ -2191,16 +2191,6 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mAlignSelf = {StyleAlignFlags::FLEX_END};
     }
   }
-
-  // FIXME: Bug 1660122: Drop this if nsIFrame::GetIntrinicRatio() takes
-  // aspect-ratio property into account.
-  // Note: We check eReplaced here because replaced elements already handle the
-  // aspect-ratio property in their GetIntrinsicRatio() implementation.
-  const StyleAspectRatio& ratio =
-      aFlexItemReflowInput.mStylePosition->mAspectRatio;
-  if (!mFrame->IsFrameOfType(nsIFrame::eReplaced) && ratio.HasFiniteRatio()) {
-    mIntrinsicRatio = ratio.ratio.AsRatio().ToLayoutRatio();
-  }
 }
 
 // Simplified constructor for creating a special "strut" FlexItem, for a child

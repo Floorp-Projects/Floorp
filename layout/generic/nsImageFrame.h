@@ -359,6 +359,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsCOMPtr<imgIContainer> mPrevImage;
   nsSize mComputedSize;
   mozilla::IntrinsicSize mIntrinsicSize;
+
+  // Stores mImage's intrinsic ratio, or a default AspectRatio if there's no
+  // intrinsic ratio.
   mozilla::AspectRatio mIntrinsicRatio;
 
   const Kind mKind;

@@ -648,11 +648,6 @@ AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
     return AspectRatio();
   }
 
-  const StyleAspectRatio& aspectRatio = StylePosition()->mAspectRatio;
-  if (!aspectRatio.auto_) {
-    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
-  }
-
   nsIntSize size(REPLACED_ELEM_FALLBACK_PX_WIDTH,
                  REPLACED_ELEM_FALLBACK_PX_HEIGHT);
 
@@ -665,9 +660,6 @@ AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
     if (Maybe<nsSize> imgSize = PosterImageSize()) {
       return AspectRatio::FromSize(imgSize->width, imgSize->height);
     }
-  } else if (aspectRatio.HasRatio()) {
-    // For aspect-ratio: "auto && <ratio>" case.
-    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
   }
 
   return AspectRatio::FromSize(size.width, size.height);
