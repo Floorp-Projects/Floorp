@@ -46,33 +46,6 @@ void AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
 void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
                     const char* pfx = "", const char* sfx = "");
 
-template <typename units>
-void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::IntRegionTyped<units>& r,
-                    const char* pfx = "", const char* sfx = "") {
-  aStream << pfx;
-
-  aStream << "< ";
-  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
-    AppendToString(aStream, iter.Get());
-    aStream << "; ";
-  }
-  aStream << ">";
-
-  aStream << sfx;
-}
-
-template <typename T>
-void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::TiledRegion<T>& r, const char* pfx = "",
-                    const char* sfx = "") {
-  aStream << pfx;
-  AppendToString(aStream, r.GetRegion());
-  aStream << " (bounds=";
-  AppendToString(aStream, r.GetBounds());
-  aStream << ", covers=" << r.CoversBounds() << ")" << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const EventRegions& e,
                     const char* pfx = "", const char* sfx = "");
 
