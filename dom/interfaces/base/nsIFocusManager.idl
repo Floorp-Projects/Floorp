@@ -257,11 +257,4 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_FIRSTDOC = 9;
   /** move focus to the last focusable document */
   const unsigned long MOVEFOCUS_LASTDOC = 10;
-
-  /**
-   * Used in a child process to indicate that the parent window is now
-   * active or deactive.
-   */
-  [noscript] void parentActivated(in mozIDOMWindowProxy aWindow,
-                                  in bool active);
 };
