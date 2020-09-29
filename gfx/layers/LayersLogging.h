@@ -58,17 +58,6 @@ void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
 
 template <class T>
 void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::MarginTyped<T>& m, const char* pfx = "",
-                    const char* sfx = "") {
-  aStream << pfx;
-  aStream << nsPrintfCString("(l=%f, t=%f, r=%f, b=%f)", m.left, m.top, m.right,
-                             m.bottom)
-                 .get();
-  aStream << sfx;
-}
-
-template <class T>
-void AppendToString(std::stringstream& aStream,
                     const mozilla::gfx::SizeTyped<T>& sz, const char* pfx = "",
                     const char* sfx = "") {
   aStream << pfx;

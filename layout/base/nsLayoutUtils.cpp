@@ -29,7 +29,6 @@
 #include "ImageRegion.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "LayersLogging.h"
 #include "LayoutLogging.h"
 #include "MobileViewportManager.h"
 #include "mozilla/AccessibleCaretEventHub.h"
@@ -1346,14 +1345,14 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     if (!hadDisplayPort) {
       MOZ_LOG(sDisplayportLog, LogLevel::Debug,
               ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
-               Stringify(aMargins).c_str(), viewID,
+               ToString(aMargins).c_str(), viewID,
                ToString(newDisplayPort).c_str()));
     } else {
       // Use verbose level logging for when an existing displayport got its
       // margins updated.
       MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
               ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
-               Stringify(aMargins).c_str(), viewID,
+               ToString(aMargins).c_str(), viewID,
                ToString(newDisplayPort).c_str()));
     }
   }

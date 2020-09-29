@@ -9,7 +9,6 @@
 #include "TouchActionHelper.h"
 #include "gfxPlatform.h"  // For gfxPlatform::UseTiling
 
-#include "LayersLogging.h"  // For Stringify
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -265,7 +264,7 @@ static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
       MOZ_LOG(
           sDisplayportLog, LogLevel::Debug,
           ("APZCCH installing displayport margins %s on scrollId=%" PRIu64 "\n",
-           Stringify(aDisplayPortMargins).c_str(), viewID));
+           ToString(aDisplayPortMargins).c_str(), viewID));
     }
   }
   nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell,
