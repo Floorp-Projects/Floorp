@@ -320,10 +320,14 @@ class UrlbarController {
       case KeyEvent.DOM_VK_TAB:
         // It's always possible to tab through results when the urlbar was
         // focused with the mouse, or has a search string.
+        // We allow tabbing without a search string when in search mode preview,
+        // since that means the user has interacted with the Urlbar since
+        // opening it.
         // When there's no search string, we want to focus the next toolbar item
         // instead, for accessibility reasons.
         let allowTabbingThroughResults =
           this.input.focusedViaMousedown ||
+          this.input.searchMode?.isPreview ||
           (this.input.value &&
             this.input.getAttribute("pageproxystate") != "valid");
         if (
