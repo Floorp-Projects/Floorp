@@ -131,7 +131,7 @@ jobs:
 
     macos-release:
         description: Runs release-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1014-r7-edid
         worker:
             # repo cloning has highly variable run time
             max-run-time: 7200
@@ -192,7 +192,7 @@ jobs:
 
     macos-debug:
         description: Runs debug-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1014-r7-edid
         worker:
             max-run-time: 3600
             env:

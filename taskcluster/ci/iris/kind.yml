@@ -110,7 +110,7 @@ job-defaults:
     worker-type:
         by-platform:
             linux64.*: t-linux-xlarge
-            osx.*: t-osx-1014
+            osx.*: t-osx-1014-r7-edid
             windows10-64.*: t-win10-64
 
 jobs:
