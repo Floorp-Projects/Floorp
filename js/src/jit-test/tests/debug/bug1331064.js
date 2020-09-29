@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-compiler=ion; exitstatus: 3; skip-if: !wasmDebuggingEnabled()
+// |jit-test| test-also=--wasm-compiler=optimizing; exitstatus: 3; skip-if: !wasmDebuggingEnabled()
 
 load(libdir + "asserts.js");
 
