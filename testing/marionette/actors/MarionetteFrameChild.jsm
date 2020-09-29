@@ -110,6 +110,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:isElementSelected":
           result = await this.isElementSelected(data);
           break;
+        case "MarionetteFrameParent:sendKeysToElement":
+          result = await this.sendKeysToElement(data);
+          break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
           break;
@@ -391,6 +394,22 @@ class MarionetteFrameChild extends JSWindowActorChild {
       el,
       capabilities["moz:accessibilityChecks"]
     );
+  }
+
+  /*
+   * Send key presses to element after focusing on it.
+   */
+  async sendKeysToElement(options = {}) {
+    const { capabilities, text, webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    const opts = {
+      strictFileInteractability: capabilities.strictFileInteractability,
+      accessibilityChecks: capabilities["moz:accessibilityChecks"],
+      webdriverClick: capabilities["moz:webdriverClick"],
+    };
+
+    return interaction.sendKeysToElement(el, text, opts);
   }
 
   /**
