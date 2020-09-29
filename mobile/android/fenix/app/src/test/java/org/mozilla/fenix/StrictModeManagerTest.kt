@@ -113,4 +113,11 @@ class StrictModeManagerTest {
 
         verify { StrictMode.setThreadPolicy(expectedPolicy) }
     }
+
+    @Test
+    fun `GIVEN we're in debug mode WHEN we suppress StrictMode THEN the suppressed count increases`() {
+        assertEquals(0, debugManager.suppressionCount)
+        debugManager.resetAfter(StrictMode.allowThreadDiskReads()) { "" }
+        assertEquals(1, debugManager.suppressionCount)
+    }
 }

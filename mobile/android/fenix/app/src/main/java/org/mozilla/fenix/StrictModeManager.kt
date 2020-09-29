@@ -6,9 +6,12 @@ package org.mozilla.fenix
 
 import android.os.Build
 import android.os.StrictMode
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.perf.Performance
 
 private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
 private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
@@ -18,8 +21,13 @@ private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
  */
 class StrictModeManager(config: Config) {
 
+    val logger = Performance.logger // public to be accessible by inline functions.
+
     // This is public so it can be used by inline functions.
     val isEnabledByBuildConfig = config.channel.isDebug
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    var suppressionCount: Long = 0
 
     /***
      * Enables strict mode for debug purposes. meant to be run only in the main process.
@@ -83,6 +91,12 @@ class StrictModeManager(config: Config) {
         // Calling resetAfter takes 1-2ms (unknown device) so we only execute it if StrictMode can
         // actually be enabled. https://github.com/mozilla-mobile/fenix/issues/11617
         return if (isEnabledByBuildConfig) {
+            // This can overflow and crash. However, it's unlikely we'll suppress StrictMode 9
+            // quintillion times in a build config where StrictMode is enabled so we don't handle it
+            // because it'd increase complexity.
+            suppressionCount += 1
+            logger.warn("StrictMode violation suppressed: #$suppressionCount")
+
             policy.resetAfter(functionBlock)
         } else {
             functionBlock()
