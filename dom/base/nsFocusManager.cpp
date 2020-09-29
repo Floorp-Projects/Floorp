@@ -1175,8 +1175,7 @@ void nsFocusManager::FireDelayedEvents(Document* aDocument) {
   }
 }
 
-NS_IMETHODIMP
-nsFocusManager::FocusPlugin(Element* aPlugin) {
+nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
   NS_ENSURE_ARG(aPlugin);
   SetFocusInner(aPlugin, 0, true, false);
   return NS_OK;

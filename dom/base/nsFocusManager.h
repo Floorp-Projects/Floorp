@@ -249,6 +249,13 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void FireDelayedEvents(Document* aDocument);
 
+  /**
+   * Indicate that a plugin wishes to take the focus. This is similar to a
+   * normal focus except that the widget focus is not changed. Updating the
+   * widget focus state is the responsibility of the caller.
+   */
+  nsresult FocusPlugin(mozilla::dom::Element* aPlugin);
+
   static uint32_t FocusOptionsToFocusManagerFlags(
       const mozilla::dom::FocusOptions& aOptions);
 
