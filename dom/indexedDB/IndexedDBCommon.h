@@ -20,11 +20,12 @@
 #  define IDB_DEBUG_TRY(...)
 #endif
 
-// IndexedDB equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
-#define IDB_TRY_VAR_GLUE(...)                                         \
+// IndexedDB equivalents of QM_TRY_VAR, QM_TRY_INSPECT and QM_DEBUG_TRY_VAR.
+#define IDB_TRY_VAR_GLUE(accessFunction, ...)                         \
   QM_TRY_VAR_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
-                  ##__VA_ARGS__)
-#define IDB_TRY_VAR(...) IDB_TRY_VAR_GLUE(__VA_ARGS__)
+                  accessFunction, ##__VA_ARGS__)
+#define IDB_TRY_VAR(...) IDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define IDB_TRY_INSPECT(...) IDB_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
 #  define IDB_DEBUG_TRY_VAR(...) IDB_TRY_VAR(__VA_ARGS__)

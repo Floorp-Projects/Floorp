@@ -63,9 +63,10 @@ PermissionRequestBase::GetCurrentPermission(nsIPrincipal& aPrincipal) {
   const nsCOMPtr<nsIPermissionManager> permMan = GetPermissionManager();
   IDB_TRY(OkIf(permMan), Err(NS_ERROR_FAILURE));
 
-  IDB_TRY_VAR(const uint32_t intPermission,
-              MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
-                                   &aPrincipal, kPermissionString));
+  IDB_TRY_INSPECT(
+      const uint32_t& intPermission,
+      MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
+                           &aPrincipal, kPermissionString));
 
   const PermissionValue permission =
       PermissionValueForIntPermission(intPermission);
@@ -106,8 +107,8 @@ nsresult PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue) {
   nsCOMPtr<Element> element = std::move(mOwnerElement);
   nsCOMPtr<nsIPrincipal> principal = std::move(mPrincipal);
 
-  IDB_TRY_VAR(const PermissionValue currentValue,
-              GetCurrentPermission(*principal));
+  IDB_TRY_INSPECT(const PermissionValue& currentValue,
+                  GetCurrentPermission(*principal));
   MOZ_ASSERT(currentValue != kPermissionDefault);
 
   if (currentValue == kPermissionPrompt) {
