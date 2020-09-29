@@ -1713,11 +1713,10 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
                    .get();
   }
   if (!GetBaseTransform().IsIdentity()) {
-    AppendToString(aStream, GetBaseTransform(), " [transform=", "]");
+    aStream << " [transform=" << GetBaseTransform() << "]";
   }
   if (!GetEffectiveTransform().IsIdentity()) {
-    AppendToString(aStream, GetEffectiveTransform(),
-                   " [effective-transform=", "]");
+    aStream << " [effective-transform=" << GetEffectiveTransform() << "]";
   }
   if (GetTransformIsPerspective()) {
     aStream << " [perspective]";
@@ -2313,8 +2312,8 @@ void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite) {
     aStream << " [shadow-clip=" << *clipRect << "]";
   }
   if (!aLayerComposite->GetShadowBaseTransform().IsIdentity()) {
-    AppendToString(aStream, aLayerComposite->GetShadowBaseTransform(),
-                   " [shadow-transform=", "]");
+    aStream << " [shadow-transform="
+            << aLayerComposite->GetShadowBaseTransform() << "]";
   }
   if (!aLayerComposite->GetLayer()->Extend3DContext() &&
       !aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {

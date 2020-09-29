@@ -5,7 +5,6 @@
 #include "HitTestingTreeNode.h"
 
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
-#include "LayersLogging.h"           // for Stringify
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/Point.h"        // for Point4D
 #include "mozilla/layers/APZUtils.h"  // for AsyncTransform, CompleteAsyncTransform
@@ -441,7 +440,7 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
        (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID)
            ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
            : "",
-       ToString(mEventRegions).c_str(), Stringify(mTransform).c_str(),
+       ToString(mEventRegions).c_str(), ToString(mTransform).c_str(),
        mClipRegion ? ToString(mClipRegion.ref()).c_str() : "none",
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));

@@ -124,9 +124,9 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
                   Stringify(aOwner.GetScrollMetadata(i)).c_str());
   }
   printf_stderr("  ancestor transform: %s\n",
-                Stringify(mAncestorTransform).c_str());
+                ToString(mAncestorTransform).c_str());
   printf_stderr("  transform: %s perspective: %d visible: %s\n",
-                Stringify(mTransform).c_str(), mTransformIsPerspective,
+                ToString(mTransform).c_str(), mTransformIsPerspective,
                 ToString(mVisibleRegion).c_str());
   printf_stderr("  event regions override: 0x%x\n", mEventRegionsOverride);
   if (mReferentId) {

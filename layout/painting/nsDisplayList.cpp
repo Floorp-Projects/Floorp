@@ -8590,7 +8590,7 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream) {
-  AppendToString(aStream, GetTransform().GetMatrix());
+  aStream << GetTransform().GetMatrix();
   if (IsTransformSeparator()) {
     aStream << " transform-separator";
   }
