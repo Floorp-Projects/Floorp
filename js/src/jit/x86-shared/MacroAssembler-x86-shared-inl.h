@@ -1917,6 +1917,11 @@ void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
 
 // Load.  See comments above regarding integer operation.
 
+void MacroAssembler::loadUnalignedSimd128(const Operand& src,
+                                          FloatRegister dest) {
+  loadUnalignedSimd128Int(src, dest);
+}
+
 void MacroAssembler::loadUnalignedSimd128(const Address& src,
                                           FloatRegister dest) {
   loadUnalignedSimd128Int(src, dest);
