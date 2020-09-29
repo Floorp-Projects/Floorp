@@ -91,7 +91,7 @@ Landing Code and Shipping Features
 
 Mozillians (those employed by MoCo and the broader community) land lots
 of code in the Mozilla repositories: fixes, enhancements, compatibility,
-new features, etc. and is managed by :ref:`Mercurial <mercurial>` (aka
+new features, etc. and is managed by :ref:`Mercurial <Mercurial Overview>` (aka
 hg). All new code is tracked in :ref:`Bugzilla <bugzilla>`, reviewed
 in :ref:`Phabricator <Phabricator>`, and then checked into the
 mozilla-central repository using :ref:`Lando <Lando>`.

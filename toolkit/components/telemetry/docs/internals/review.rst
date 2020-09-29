@@ -50,7 +50,7 @@ Considerations for all changes
 
   - Firefox Desktop:
 
-    - `The Mozilla coding style <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Coding_Style>`_
+    - :ref:`The Mozilla coding style <Coding style>`
     - `The toolkit code review guidelines <https://wiki.mozilla.org/Toolkit/Code_Review>`_
 
   - Mobile:

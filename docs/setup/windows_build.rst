@@ -402,8 +402,7 @@ Command prompt tips and caveats
 Common problems, hints, and restrictions
 ----------------------------------------
 
--  `Debugging Firefox on Windows
-   FAQ <https://developer.mozilla.org/docs/Mozilla/Debugging/Debugging_Mozilla_on_Windows_FAQ>`_:
+-  :ref:`Debugging Firefox on Windows FAQ <Debugging On Windows>`_:
    Tips on how to debug Mozilla on Windows.
 -  Your installed MozillaBuild may be too old. The build system may
    assume you have new features and bugfixes that are only present in

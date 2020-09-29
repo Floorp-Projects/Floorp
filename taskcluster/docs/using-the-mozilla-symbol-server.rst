@@ -85,6 +85,8 @@ should be similar to:
    SYMCHK: FAILED files = 4
    SYMCHK: PASSED + IGNORED files = 179
 
+.. _Downloading_symbols_on_Linux_Mac_OS_X:
+
 Downloading symbols on Linux / Mac OS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
