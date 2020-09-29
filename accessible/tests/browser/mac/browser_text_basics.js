@@ -31,6 +31,16 @@ function testUIElement(macDoc, marker, msg, expectedRole, expectedValue) {
   );
 }
 
+function testParagraph(macDoc, marker, msg, expectedParagraph) {
+  testRangeAtMarker(
+    macDoc,
+    marker,
+    "AXParagraphTextMarkerRangeForTextMarker",
+    expectedParagraph,
+    `${msg}: paragraph matches`
+  );
+}
+
 function testWords(macDoc, marker, msg, expectedLeft, expectedRight) {
   testRangeAtMarker(
     macDoc,
@@ -124,6 +134,12 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
       marker,
       `At index ${count}`,
       ...expectedMarkerValues[count].element
+    );
+    testParagraph(
+      macDoc,
+      marker,
+      `At index ${count}`,
+      expectedMarkerValues[count].paragraph
     );
 
     marker = macDoc.getParameterizedAttributeValue(

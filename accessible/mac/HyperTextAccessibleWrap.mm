@@ -270,6 +270,10 @@ void HyperTextAccessibleWrap::RangeAt(int32_t aOffset, EWhichRange aRangeType,
       LineAt(aOffset, true, aStartContainer, aStartOffset, aEndContainer,
              aEndOffset);
       break;
+    case EWhichRange::eParagraph:
+      ParagraphAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
+                  aEndOffset);
+      break;
     default:
       break;
   }
@@ -379,6 +383,41 @@ void HyperTextAccessibleWrap::LineAt(int32_t aOffset, bool aNextLine,
               ->FindTextPoint(start.mOffset, eDirNext, eSelectEndLine,
                               eDefaultBehavior);
   }
+
+  *aStartContainer = start.mContainer;
+  *aEndContainer = end.mContainer;
+  *aStartOffset = start.mOffset;
+  *aEndOffset = end.mOffset;
+}
+
+void HyperTextAccessibleWrap::ParagraphAt(int32_t aOffset,
+                                          HyperTextAccessible** aStartContainer,
+                                          int32_t* aStartOffset,
+                                          HyperTextAccessible** aEndContainer,
+                                          int32_t* aEndOffset) {
+  TextPoint here(this, aOffset);
+  TextPoint end =
+      FindTextPoint(aOffset, eDirNext, eSelectParagraph, eDefaultBehavior);
+
+  if (!end.mContainer || end < here) {
+    // If we didn't find a word end, or if we wrapped around (bug 1652833),
+    // return with no result.
+    return;
+  }
+
+  if (end.mOffset == -1 && Parent() && Parent()->IsHyperText()) {
+    // If end offset is -1 we didn't find a paragraph boundary.
+    // This must be an inline container, go to its parent to
+    // retrieve paragraph boundaries.
+    static_cast<HyperTextAccessibleWrap*>(Parent()->AsHyperText())
+        ->ParagraphAt(StartOffset(), aStartContainer, aStartOffset,
+                      aEndContainer, aEndOffset);
+    return;
+  }
+
+  TextPoint start = static_cast<HyperTextAccessibleWrap*>(end.mContainer)
+                        ->FindTextPoint(end.mOffset, eDirPrevious,
+                                        eSelectParagraph, eDefaultBehavior);
 
   *aStartContainer = start.mContainer;
   *aEndContainer = end.mContainer;
