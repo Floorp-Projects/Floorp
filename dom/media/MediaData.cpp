@@ -452,6 +452,18 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize,
       mBuffer(aData, aSize),
       mAlphaBuffer(aAlphaData, aAlphaSize) {}
 
+MediaRawData::MediaRawData(AlignedByteBuffer&& aData)
+    : MediaData(Type::RAW_DATA),
+      mCrypto(mCryptoInternal),
+      mBuffer(std::move(aData)) {}
+
+MediaRawData::MediaRawData(AlignedByteBuffer&& aData,
+                           AlignedByteBuffer&& aAlphaData)
+    : MediaData(Type::RAW_DATA),
+      mCrypto(mCryptoInternal),
+      mBuffer(std::move(aData)),
+      mAlphaBuffer(std::move(aAlphaData)) {}
+
 already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   RefPtr<MediaRawData> s = new MediaRawData;
   s->mTimecode = mTimecode;

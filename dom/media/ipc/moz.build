@@ -49,6 +49,7 @@ SOURCES += [
     'RemoteDecoderModule.cpp',
     'RemoteDecoderParent.cpp',
     'RemoteImageHolder.cpp',
+    'RemoteMediaData.cpp',
     'RemoteMediaDataDecoder.cpp',
     'RemoteVideoDecoder.cpp',
 ]
