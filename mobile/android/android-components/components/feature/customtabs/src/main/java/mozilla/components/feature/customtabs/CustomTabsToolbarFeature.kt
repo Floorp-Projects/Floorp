@@ -27,6 +27,7 @@ import mozilla.components.feature.customtabs.menu.sendWithUrl
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
@@ -166,7 +167,12 @@ class CustomTabsToolbarFeature(
     @VisibleForTesting
     internal fun addActionButton(session: Session, buttonConfig: CustomTabActionButtonConfig?) {
         buttonConfig?.let { config ->
-            val drawableIcon = config.icon.toDrawable(context.resources)
+            val drawableIcon = Bitmap.createScaledBitmap(
+                config.icon,
+                ACTION_BUTTON_DRAWABLE_WIDTH_DP.dpToPx(context.resources.displayMetrics),
+                ACTION_BUTTON_DRAWABLE_HEIGHT_DP.dpToPx(context.resources.displayMetrics),
+                true)
+                .toDrawable(context.resources)
             if (config.tint) {
                 drawableIcon.setTint(readableColor)
             }
@@ -251,5 +257,10 @@ class CustomTabsToolbarFeature(
                 true
             }
         }
+    }
+
+    companion object {
+        private const val ACTION_BUTTON_DRAWABLE_WIDTH_DP = 24
+        private const val ACTION_BUTTON_DRAWABLE_HEIGHT_DP = 24
     }
 }
