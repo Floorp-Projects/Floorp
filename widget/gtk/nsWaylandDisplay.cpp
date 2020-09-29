@@ -135,6 +135,37 @@ void nsWaylandDisplay::SetIdleInhibitManager(
   mIdleInhibitManager = aIdleInhibitManager;
 }
 
+void nsWaylandDisplay::SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf) {
+  mDmabuf = aDmabuf;
+}
+
+static void dmabuf_modifiers(void* data,
+                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                             uint32_t format, uint32_t modifier_hi,
+                             uint32_t modifier_lo) {
+  switch (format) {
+    case GBM_FORMAT_ARGB8888:
+      GetDMABufDevice()->AddFormatModifier(true, format, modifier_hi,
+                                           modifier_lo);
+      break;
+    case GBM_FORMAT_XRGB8888:
+      GetDMABufDevice()->AddFormatModifier(false, format, modifier_hi,
+                                           modifier_lo);
+      break;
+    default:
+      break;
+  }
+}
+
+static void dmabuf_format(void* data,
+                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                          uint32_t format) {
+  // XXX: deprecated
+}
+
+static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+    dmabuf_format, dmabuf_modifiers};
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -186,6 +217,18 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)subcompositor,
                        display->GetEventQueue());
     display->SetSubcompositor(subcompositor);
+  } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
+    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
+        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
+    display->SetDmabuf(dmabuf);
+    // Get formats for main thread display only
+    if (display->IsMainThreadDisplay()) {
+      GetDMABufDevice()->ResetFormatsModifiers();
+      zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+    }
+  } else if (strcmp(interface, "wl_drm") == 0) {
+    LOGDMABUF(("wl_drm is available."));
   }
 }
 
