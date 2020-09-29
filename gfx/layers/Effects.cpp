@@ -28,10 +28,9 @@ void TexturedEffect::PrintInfo(std::stringstream& aStream,
 }
 
 void EffectMask::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("EffectMask (0x%p)", this).get()
-          << " [size=" << mSize << "]";
-  AppendToString(aStream, mMaskTransform, " [mask-transform=", "]");
+  aStream << aPrefix << nsPrintfCString("EffectMask (0x%p)", this).get()
+          << " [size=" << mSize << "]"
+          << " [mask-transform=" << mMaskTransform << "]";
 }
 
 void EffectRenderTarget::PrintInfo(std::stringstream& aStream,

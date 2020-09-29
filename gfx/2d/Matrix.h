@@ -589,18 +589,19 @@ class Matrix4x4Typed {
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const Matrix4x4Typed& aMatrix) {
+    if (aMatrix.Is2D()) {
+      BaseMatrix<T> matrix = aMatrix.As2D();
+      return aStream << matrix;
+    }
     const T* f = &aMatrix._11;
-    aStream << "[ " << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " ;"
-            << std::endl;
+    aStream << "[ " << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
     f += 4;
-    aStream << "  " << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " ;"
-            << std::endl;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
     f += 4;
-    aStream << "  " << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " ;"
-            << std::endl;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
     f += 4;
-    aStream << "  " << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " ]"
-            << std::endl;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3]
+            << "; ]";
     return aStream;
   }
 
