@@ -41,6 +41,8 @@ using CachedBAxisMeasurement = nsFlexContainerFrame::CachedBAxisMeasurement;
 static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOG(...) \
   MOZ_LOG(gFlexContainerLog, LogLevel::Debug, (__VA_ARGS__));
+#define FLEX_LOGV(...) \
+  MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, (__VA_ARGS__));
 
 // XXXdholbert Some of this helper-stuff should be separated out into a general
 // "main/cross-axis utils" header, shared by grid & flexbox?
@@ -1535,6 +1537,7 @@ static nscoord PartiallyResolveAutoMinSize(
   if (specifiedSizeSuggestion != nscoord_MAX) {
     // We have the specified size suggestion. Return it now since we don't need
     // to consider transferred size suggestion.
+    FLEX_LOGV(" Specified size suggestion: %d", specifiedSizeSuggestion);
     return specifiedSizeSuggestion;
   }
 
@@ -1558,6 +1561,7 @@ static nscoord PartiallyResolveAutoMinSize(
         transferredSizeSuggestion, aFlexItem, aAxisTracker);
   }
 
+  FLEX_LOGV(" Transferred size suggestion: %d", transferredSizeSuggestion);
   return transferredSizeSuggestion;
 }
 
@@ -1613,6 +1617,9 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     // with a used flex-basis of "auto" or a min-main-size of "auto".
     return;
   }
+
+  FLEX_LOGV("Resolving auto main size or main min size for flex item %p",
+            aFlexItem.Frame());
 
   // We may be about to do computations based on our item's cross-size
   // (e.g. using it as a constraint when measuring our content in the
@@ -1724,6 +1731,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
             std::min(contentSizeSuggestion, aFlexItem.MainMaxSize());
       }
 
+      FLEX_LOGV(" Content size suggestion: %d", contentSizeSuggestion);
       resolvedMinSize = std::min(resolvedMinSize, contentSizeSuggestion);
     }
   }
