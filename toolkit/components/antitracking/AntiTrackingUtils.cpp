@@ -597,7 +597,28 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
   if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
     auto* basePrin = BasePrincipal::Cast(topWindowPrincipal);
     bool isThirdParty = true;
-    basePrin->IsThirdPartyURI(uri, &isThirdParty);
+
+    // For about:blank, we can't just compare uri to determine whether the page
+    // is third-party, so we use channel result principal instead. By doing
+    // this, an about:blank inherits the principal from its parent is considered
+    // not a third-party.
+    if (NS_IsAboutBlank(uri)) {
+      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+      if (NS_WARN_IF(!ssm)) {
+        return;
+      }
+
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv =
+          ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      basePrin->IsThirdPartyPrincipal(principal, &isThirdParty);
+    } else {
+      basePrin->IsThirdPartyURI(uri, &isThirdParty);
+    }
 
     loadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
   }
