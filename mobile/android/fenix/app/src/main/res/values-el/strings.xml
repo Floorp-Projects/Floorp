@@ -85,11 +85,15 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Απόρριψη</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Απαιτείται πρόσβαση στην κάμερα. Μεταβείτε στις Ρυθμίσεις Android, πατήστε &quot;Δικαιώματα&quot; και πατήστε &quot;Να επιτρέπεται&quot;.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Μετάβαση στις ρυθμίσεις</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Απόρριψη</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Ρυθμίστε τις ανοιχτές καρτέλες ώστε να κλείνουν αυτόματα αυτές που δεν έχουν προβληθεί την προηγούμενη ημέρα, εβδομάδα ή μήνα.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Εμφάνιση επιλογών</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -265,6 +269,8 @@
     <string name="preferences_open_links_in_a_private_tab">Άνοιγμα συνδέσμων σε ιδιωτική καρτέλα</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Να επιτρέπονται στιγμιότυπα στην ιδιωτική περιήγηση</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Αν επιτρέπεται, οι ιδιωτικές καρτέλες θα είναι επίσης ορατές όταν είναι ανοιχτές πολλές εφαρμογές</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Προσθήκη συντόμευσης ιδιωτικής περιήγησης</string>
     <!-- Preference for accessibility -->
@@ -398,16 +404,25 @@
     <string name="preferences_tracking_protection_exceptions_description">Η προστασία από καταγραφή είναι ανενεργή για αυτές τις ιστοσελίδες</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ενεργοποίηση για όλες τις σελίδες</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Οι εξαιρέσεις σας επιτρέπουν να απενεργοποιήσετε την προστασία από καταγραφή σε συγκεκριμένες σελίδες.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Μάθετε περισσότερα</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Γενικά ανενεργή, μεταβείτε στις Ρυθμίσεις για ενεργοποίηση.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Τηλεμετρία</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Δεδομένα χρήσης και τεχνικά δεδομένα</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Αποστέλλει πληροφορίες επιδόσεων, χρήσης, υλικού συσκευής και εξατομίκευσης του προγράμματος περιήγησης στη Mozilla για βελτίωση του %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Δεδομένα μάρκετινγκ</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Αποστέλλει δεδομένα σχετικά με τις λειτουργίες που χρησιμοποιείτε στο %1$s με το Leanplum, την εταιρεία μάρκετινγκ για κινητές συσκευές.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Πειράματα</string>
 
@@ -456,6 +471,16 @@
     <string name="preference_auto_battery_theme">Ορισμός από εξοικονόμηση μπαταρίας</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Χρήση θέματος συσκευής</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Τράβηγμα για ανανέωση</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Κύλιση για απόκρυψη γραμμής εργαλείων</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Ολίσθηση γραμμής εργαλείων προς τα πλάγια για εναλλαγή καρτελών</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Ολίσθηση γραμμής εργαλείων προς τα πάνω για άνοιγμα καρτελών</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1076,10 +1101,14 @@
     <string name="onboarding_tracking_protection_description_2">Οι ρυθμίσεις απορρήτου και ασφάλειας αποκλείουν ιχνηλάτες, κακόβουλο λογισμικό και εταιρείες που σας ακολουθούν.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Τυπική (προεπιλογή)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Φραγή λιγότερων ιχνηλατών. Οι σελίδες θα φορτώνονται κανονικά.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Αυστηρή (προτείνεται)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Αυστηρή</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Φραγή περισσότερων ιχνηλατών, διαφημίσεων και αναδυόμενων παραθύρων. Οι σελίδες φορτώνονται ταχύτερα, αλλά ορισμένα χαρακτηριστικά ενδέχεται να μην λειτουργούν.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1113,6 +1142,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Επιλογή θέματος</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Εξοικονόμηση μπαταρίας και προστασία ματιών με τη σκοτεινή λειτουργία.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Αυτόματο</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1216,12 +1247,20 @@
     <string name="etp_social_media_trackers_description">Περιορίζει την ικανότητα των κοινωνικών δικτύων να παρακολουθούν τη δραστηριότητά σας στο διαδίκτυο.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies ιχνηλάτησης μεταξύ ιστοσελίδων</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Αποκλείει τα cookies που χρησιμοποιούν τα δίκτυα διαφημίσεων και οι εταιρείες ανάλυσης δεδομένων για τη συλλογή δεδομένων περιήγησής σας από πολλαπλές ιστοσελίδες.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Εμποδίζει τα κακόβουλα σενάρια από το να προσπελάσουν τη συσκευή σας για εξόρυξη ψηφιακού νομίσματος.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Fingerprinters</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Διακόπτει τη συλλογή μοναδικών, αναγνωριστικών δεδομένων της συσκευής σας που μπορούν να χρησιμοποιηθούν για σκοπούς καταγραφής.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Περιεχόμενο καταγραφής</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Διακόπτει τη φόρτωση εξωτερικών διαφημίσεων, βίντεο και άλλου περιεχομένου που περιέχει κώδικα καταγραφής. Ίσως επηρεάσει τη λειτουργικότητα μερικών ιστοσελίδων.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_cfr_message">Κάθε φορά που η ασπίδα είναι μωβ, το %s έχει αποκλείσει ιχνηλάτες σε μια σελίδα. Πατήστε για περισσότερες πληροφορίες.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1246,6 +1285,9 @@
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Ανακατεύθυνση ιχνηλατών</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Διαγράφει τα cookies που τοποθετούνται από ανακατευθύνσεις σε γνωστές ιστοσελίδες καταγραφής.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Υποστήριξη</string>
@@ -1293,6 +1335,9 @@
 
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Όνομα συντόμευσης</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Μπορείτε εύκολα να προσθέσετε αυτή την ιστοσελίδα στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Συνδέσεις και κωδικοί πρόσβασης</string>
@@ -1378,6 +1423,10 @@
     <string name="saved_login_hide_password">Απόκρυψη κωδικού πρόσβασης</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Ξεκλειδώστε για να δείτε τις αποθηκευμένες συνδέσεις σας</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Προστασία στοιχείων σύνδεσης</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για προστασία των αποθηκευμένων στοιχείων σύνδεσης, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Αργότερα</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

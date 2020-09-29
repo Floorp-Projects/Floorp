@@ -142,6 +142,8 @@
     <string name="browser_menu_install_on_homescreen">Усталяваць</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Сінхранізаваныя карткі</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Сінхранізаваць ізноў</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Знайсці на старонцы</string>
     <!-- Browser menu button that creates a private tab -->
@@ -264,6 +266,8 @@
     <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Дазволіць здымкі экрана ў прыватным рэжыме</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Калі гэта дазволена, прыватныя карткі таксама будуць бачныя, калі адкрыта некалькі праграм</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Дадаць ярлык прыватнага аглядання</string>
     <!-- Preference for accessibility -->
@@ -459,6 +463,11 @@
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Пацягніце, каб абнавіць</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Пракруціце, каб схаваць панэль інструментаў</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Пасуньце ўбок панэль інструментаў, каб пераключыць карткі</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1278,6 +1287,9 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Назва ярлыка</string>
 
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Вы можаце лёгка дадаць гэты вэб-сайт на хатні экран вашай прылады, каб мець да яго імгненны доступ і аглядаць хутчэй, нібыта гэта асобная праграма.</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Лагіны і паролі</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1348,8 +1360,12 @@
     <string name="logins_site_copied">Сайт скапіяваны ў буфер абмену</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Капіяваць пароль</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Ачысціць пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Капіяваць імя карыстальніка</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Ачысціць імя карыстальніка</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Капіяваць сайт</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->

@@ -294,6 +294,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_theme">Asentel</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Asebter agejdan</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Isillifen</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Sagen</string>
     <!-- Preference description for banner about signing in -->
@@ -474,6 +476,17 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_auto_battery_theme">Asbadu n uḥraz n tbaṭrit</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ḍfer asntel n ibnek</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Zuɣer i usesfer</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Drurem i wakken ad teffreḍ agalis n yifecka</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Err agalis n yifecka deg tama i ubeddel n waccaren</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Err agalis n yifecka deg usawen i twaledyawt n waccaren</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1065,6 +1078,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_account_sign_in_header">Bdu amtawi n ticraḍ, awalen uffiren, akked waṭas-nniḍen s umiḍan n Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Issin ugar</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Aql-ak·akem teqqneḍ d %s ɣef yiminig-nniḍen n Firefox s yibenk-a. Tebɣiḍ ad teqqneḍ s umiḍan-a?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ih, qqen-iyi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1156,6 +1173,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="sign_in_with_camera">Qqen s tkamirat-ik</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Seqdec tansa n yimayl deg umḍiq-is</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ulac amiḍan? <u>Rnu yiwen</u> i umtaw n Firefox gar yibenkan.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox ad iseḥbes amtawi d umiḍan-inek, acukan ur ittekkes ara isefka-inek n tunigin seg uselkim-a.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1266,6 +1285,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | timkerḍiyin OSS </string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Welleh i yineḍfaren</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Yesfaḍay inagan n tuqqna yettusbadun s yiwellhen n yismal web n uḍfar yettwassnen.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Tallelt</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1309,6 +1334,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="add_to_homescreen_continue">Kemmel ɣer usmel web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Isem n unegzum</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Tzemreḍ s sshal ad ternuḍ asmel-a web ɣer ugdil agejdan n yibenk-inek·inem i wakken ad tesɛuḍ anekcum askudan d tunigin taruradt s termt i icuban asnas.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inekcam d wawalen uffiren</string>

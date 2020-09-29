@@ -311,7 +311,7 @@
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">შემმუშავებლის ხელსაწყოები</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">დაშორებული გამართვა USB-ით</string>
+    <string name="preferences_remote_debugging">დაშორებული USB-გამართვა</string>
 
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">საძიებო სისტემების ჩვენება</string>
@@ -336,7 +336,7 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ბმულების გახსნა პროგრამებში</string>
     <!-- Preference for open download with an external download manager app -->
-    <string name="preferences_external_download_manager">ჩამოტვირთვის გარეშე მმართველი</string>
+    <string name="preferences_external_download_manager">გარეშე მმართველი ჩამოტვირთვების</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">დამატებები</string>
 
@@ -992,7 +992,7 @@
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">გამოხვალთ ანგარიშებიდან უმეტეს საიტზე</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files">შენახული სურათებისა და ფაილების ასლები</string>
+    <string name="preferences_delete_browsing_data_cached_files">სურათები და ფაილების კეში</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">გაათავისუფლებს მეხსიერებას</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -1163,6 +1163,8 @@
     <string name="sign_in_with_camera">შედით კამერის დახმარებით</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">ელფოსტის გამოყენება სანაცვლოდ</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[არ გაქვთ ანგარიში? <u>შექმენით</u> და დაასინქრონეთ Firefox მოწყობილობებზე.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox შეწყვეტს ამ ანგარიშის სინქრონიზაციას, მაგრამ ამ მოწყობილობიდან დათვალიერების მონაცემები არ წაიშლება.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1172,7 +1174,7 @@
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">გაუქმება</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
-    <string name="bookmark_cannot_edit_root">ნაგულისხმევი საქაღალდეების ჩასწორება ვერ ხერხდება</string>
+    <string name="bookmark_cannot_edit_root">ნაგულისხმევი საქაღალდეების ჩასწორება ვერ მოხერხდება</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -1272,6 +1274,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-ბიბლიოთეკები</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">გადამმისამართებელი მეთვალყურეები</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">ასუფთავებს გადამისამართებით მიღებულ ფუნთუშებს, ცნობილი მეთვალყურეებისგან.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">მხარდაჭერა</string>

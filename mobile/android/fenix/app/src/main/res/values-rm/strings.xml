@@ -142,6 +142,8 @@
     <string name="browser_menu_install_on_homescreen">Installar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Tabs sincronisads</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Resincronisar</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tschertgar en la pagina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -263,6 +265,8 @@
     <string name="preferences_open_links_in_a_private_tab">Avrir colliaziuns en in tab privat</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permetter maletgs dal visur en il modus privat</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Sche permess, èn tabs privats era visibels en cas che pliras apps èn avertas</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agiuntar ina scursanida al modus privat</string>
     <!-- Preference for accessibility -->
@@ -283,6 +287,8 @@
     <string name="preferences_theme">Design</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Pagina iniziala</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gests</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Persunalisar</string>
     <!-- Preference description for banner about signing in -->
@@ -318,8 +324,12 @@
     <string name="preferences_search_browsing_history">Tschertgar en la cronologia da navigaziun</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Tschertgar en ils segnapaginas</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Tschertgar en ils tabs sincronisads</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Parameters dal conto</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Cumplettar automaticamain URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Avrir colliaziuns en apps</string>
     <!-- Preference for open download with an external download manager app -->
@@ -455,6 +465,16 @@
     <string name="preference_auto_battery_theme">Definì da l\'administraziun d\'energia</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Tenor il design tschernì sin l\'apparat</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Trair per actualisar</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Scrollar per zuppentar la trav d\'utensils</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Stritgar da la vart la trav d\'utensils per midar tab</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Stritgar ensi la trav d\'utensils per avrir tabs</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1045,7 +1065,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ti es annunzià sco %s en in auter navigatur da Firefox sin quest telefonin. Vuls ti t\'annunziar cun quest conto?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Ti es annunzià sco %s en in auter navigatur da Firefox sin quest apparat. Vuls ti t\'annunziar cun quest conto?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Gea, m\'annunziar</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1137,6 +1157,8 @@
     <string name="sign_in_with_camera">T\'annunzia cun tia camera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Utilisar l\'e-mail</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Nagin conto? <u>Creescha in</u> per sincronisar Firefox tranter differents apparats.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox chala da sincronisar cun tes conto, ma las datas da navigaziun restan sin quest apparat.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1294,9 +1316,6 @@
     <string name="add_to_homescreen_continue">Cuntinuar vers la website</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Num da la scursanida</string>
-
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Ti pos agiuntar a moda simpla questa website al visur da partenza da tes telefonin per avair access direct e navigar pli svelt, sco sch\'i fiss ina app.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Infurmaziuns d\'annunzia e pleds-clav</string>
@@ -1526,7 +1545,7 @@
     <string name="saved_login_duplicate">Datas d\'annunzia cun quest num d\'utilisader existan gia</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Colliar in auter apparat.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Re-autentifitgescha per plaschair.</string>
@@ -1546,8 +1565,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Cuntanschì la limita da paginas preferidas</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Per agiuntar ina nova pagina preferida stos ti l\'emprim allontanar in\'autra. Smatga ditg sin ina pagina e tscherna «Allontanar».</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, chapì</string>
 
@@ -1557,7 +1574,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Allontanar</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Rabla ora il maximum da %s.</string>
 
@@ -1565,4 +1582,9 @@
     <string name="no_collections_header1">Rimna las chaussas che t\'èn impurtantas</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Gruppescha retschertgas, paginas e tabs sumegliants per pli tard pudair acceder pli svelt.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Ti es annunzià sco %s en in auter navigatur da Firefox sin quest telefonin. Vuls ti t\'annunziar cun quest conto?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Ti pos agiuntar a moda simpla questa website al visur da partenza da tes telefonin per avair access direct e navigar pli svelt, sco sch\'i fiss ina app.</string>
+
+    </resources>
