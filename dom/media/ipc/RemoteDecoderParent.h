@@ -5,16 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifndef include_dom_media_ipc_RemoteDecoderParent_h
 #define include_dom_media_ipc_RemoteDecoderParent_h
-#include "mozilla/PRemoteDecoderParent.h"
 
-#include "mozilla/ShmemPool.h"
+#include "mozilla/PRemoteDecoderParent.h"
+#include "mozilla/ShmemRecycleAllocator.h"
 
 namespace mozilla {
 
 class RemoteDecoderManagerParent;
 using mozilla::ipc::IPCResult;
 
-class RemoteDecoderParent : public PRemoteDecoderParent {
+class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
+                            public PRemoteDecoderParent {
   friend class PRemoteDecoderParent;
 
  public:
@@ -47,7 +48,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   virtual MediaResult ProcessDecodedData(
       const MediaDataDecoder::DecodedData& aDatam,
       DecodedOutputIPDL& aDecodedData) = 0;
-  ShmemBuffer AllocateBuffer(size_t aLength);
 
   const RefPtr<RemoteDecoderManagerParent> mParent;
   const RefPtr<TaskQueue> mDecodeTaskQueue;
@@ -57,12 +57,8 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   void DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
                         DecodedOutputIPDL&& aOutput,
                         DecodeResolver&& aResolver);
-  void ReleaseBuffer(ShmemBuffer&& aBuffer);
-  void ReleaseUsedShmems();
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
   const RefPtr<nsISerialEventTarget> mManagerThread;
-  ShmemPool mDecodedFramePool;
-  AutoTArray<ShmemBuffer, 4> mUsedShmems;
 };
 
 }  // namespace mozilla
