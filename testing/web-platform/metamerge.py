@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
-from collections import defaultdict, namedtuple
+from collections import namedtuple
+
+from six import iteritems
 
 from wptrunner.wptmanifest.serializer import serialize
 from wptrunner.wptmanifest.backends import base
@@ -144,11 +146,11 @@ def compare_test(test, ancestor_manifest, new_manifest):
 
     compare_expected(changes, None, ancestor_manifest, new_manifest)
 
-    for subtest, ancestor_subtest_manifest in ancestor_manifest.child_map.iteritems():
+    for subtest, ancestor_subtest_manifest in iteritems(ancestor_manifest.child_map):
         compare_expected(changes, subtest, ancestor_subtest_manifest,
                          new_manifest.child_map.get(subtest))
 
-    for subtest, subtest_manifest in new_manifest.child_map.iteritems():
+    for subtest, subtest_manifest in iteritems(new_manifest.child_map):
         if subtest not in ancestor_manifest.child_map:
             changes.added.append((subtest, subtest_manifest))
 
@@ -156,14 +158,14 @@ def compare_test(test, ancestor_manifest, new_manifest):
 
 
 def compare_expected(changes, subtest, ancestor_manifest, new_manifest):
-    if (not (ancestor_manifest and ancestor_manifest.has_key("expected")) and
-        (new_manifest and new_manifest.has_key("expected"))):
+    if (not (ancestor_manifest and ancestor_manifest.has_key("expected")) and  # noqa W601
+        (new_manifest and new_manifest.has_key("expected"))):  # noqa W601
         changes.modified.append(ExpectedModified(subtest, ancestor_manifest, new_manifest))
-    elif (ancestor_manifest and ancestor_manifest.has_key("expected") and
-          not (new_manifest and new_manifest.has_key("expected"))):
+    elif (ancestor_manifest and ancestor_manifest.has_key("expected") and  # noqa W601
+          not (new_manifest and new_manifest.has_key("expected"))):  # noqa W601
         changes.deleted.append(subtest)
-    elif (ancestor_manifest and ancestor_manifest.has_key("expected") and
-          new_manifest and new_manifest.has_key("expected")):
+    elif (ancestor_manifest and ancestor_manifest.has_key("expected") and  # noqa W601
+          new_manifest and new_manifest.has_key("expected")):  # noqa W601
         old_expected = ancestor_manifest.get("expected")
         new_expected = new_manifest.get("expected")
         if expected_values_changed(old_expected, new_expected):
@@ -191,7 +193,7 @@ def expected_values_changed(old_expected, new_expected):
 def record_changes(ancestor_manifest, new_manifest):
     changes = Differences()
 
-    for test, test_manifest in new_manifest.child_map.iteritems():
+    for test, test_manifest in iteritems(new_manifest.child_map):
         if test not in ancestor_manifest.child_map:
             changes.added.append((test, test_manifest))
         else:
@@ -202,7 +204,7 @@ def record_changes(ancestor_manifest, new_manifest):
             if test_differences:
                 changes.modified.append(TestModified(test, test_manifest, test_differences))
 
-    for test, test_manifest in ancestor_manifest.child_map.iteritems():
+    for test, test_manifest in iteritems(ancestor_manifest.child_map):
         if test not in new_manifest.child_map:
             changes.deleted.append(test)
 
@@ -252,7 +254,6 @@ def get_parser_mergetool():
     return parser
 
 
-
 def make_changes(ancestor_manifest, current_manifest, new_manifest):
     changes = record_changes(ancestor_manifest, new_manifest)
     apply_changes(current_manifest, changes)
@@ -264,7 +265,6 @@ def run(ancestor, current, new, dest):
     ancestor_manifest = get_manifest(ancestor)
     current_manifest = get_manifest(current)
     new_manifest = get_manifest(new)
-
 
     updated_current_str = make_changes(ancestor_manifest, current_manifest, new_manifest)
 

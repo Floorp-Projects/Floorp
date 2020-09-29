@@ -14,7 +14,6 @@ from six.moves import configparser
 from mozboot.util import get_state_dir
 
 from mozlog.structured import commandline
-from wptrunner.wptcommandline import set_from_config
 
 import manifestdownload
 from wptrunner import wptcommandline
@@ -168,7 +167,8 @@ def generate_config(logger, repo_root, wpt_dir, dest_path, force_rewrite=False):
         parser.set(section, "metadata", os.path.join(wpt_dir, meta_rel_path))
         parser.set(section, "tests", os.path.join(wpt_dir, tests_rel_path))
 
-    parser.set('paths', 'prefs', os.path.abspath(os.path.join(wpt_dir, parser.get("paths", "prefs"))))
+    parser.set('paths', 'prefs', os.path.abspath(
+        os.path.join(wpt_dir, parser.get("paths", "prefs"))))
 
     with open(dest_config_path, 'wt') as config_file:
         parser.write(config_file)
@@ -182,7 +182,9 @@ def load_and_update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None,
     wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir).encode()).hexdigest()
     for url_base, paths in six.iteritems(test_paths):
         manifest_path = paths["manifest_path"]
-        this_cache_root = os.path.join(cache_root, wptdir_hash, os.path.dirname(paths["manifest_rel_path"]))
+        this_cache_root = os.path.join(cache_root,
+                                       wptdir_hash,
+                                       os.path.dirname(paths["manifest_rel_path"]))
         m = manifest.manifest.load_and_update(paths["tests_path"],
                                               manifest_path,
                                               url_base,

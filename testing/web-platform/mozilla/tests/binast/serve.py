@@ -10,12 +10,14 @@ BinASTMimeType = "application/javascript-binast"
 SourceTextExtension = ".js"
 BinASTExtension = ".binjs"
 
+
 def clientAcceptsBinAST(request):
     if "accept" not in request.headers:
         return False
 
     encodings = [s.strip().lower() for s in request.headers["accept"].split(",")]
     return BinASTMimeType in encodings
+
 
 def get_mine_type_and_extension(request, params):
     accept_binast = clientAcceptsBinAST(request)
@@ -29,7 +31,7 @@ def get_mine_type_and_extension(request, params):
             if not accept_binast:
                 raise Exception("Expect accept binast")
         else:
-            raise Exception("Bad check_header parameter: " + check_header)
+            raise Exception("Bad expect_accept parameter: " + expect_accept)
 
     if 'force_binast' in params and params['force_binast'][0] == 'true':
         return BinASTMimeType, BinASTExtension
