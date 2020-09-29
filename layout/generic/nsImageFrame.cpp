@@ -520,9 +520,9 @@ bool nsImageFrame::UpdateIntrinsicSize() {
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
-static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
-                                      bool aUseMappedRatio,
-                                      const nsImageFrame& aFrame) {
+static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
+                                         bool aUseMappedRatio,
+                                         const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
   if (style.StyleDisplay()->IsContainSize()) {
     return AspectRatio();
@@ -550,7 +550,7 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
 bool nsImageFrame::UpdateIntrinsicRatio() {
   AspectRatio oldIntrinsicRatio = mIntrinsicRatio;
   mIntrinsicRatio =
-      ComputeAspectRatio(mImage, ShouldUseMappedAspectRatio(), *this);
+      ComputeIntrinsicRatio(mImage, ShouldUseMappedAspectRatio(), *this);
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
@@ -1767,7 +1767,8 @@ static bool OldImageHasDifferentRatio(const nsImageFrame& aFrame,
   // Same if we had an image.
   const bool hasRequest = true;
 #ifdef DEBUG
-  auto currentRatioRecomputed = ComputeAspectRatio(&aImage, hasRequest, aFrame);
+  auto currentRatioRecomputed =
+      ComputeIntrinsicRatio(&aImage, hasRequest, aFrame);
   // If the image encounters an error after decoding the size (and we run
   // UpdateIntrinsicRatio) then the image will return the empty AspectRatio and
   // the aspect ratio we compute here will be different from what was computed
@@ -1781,7 +1782,7 @@ static bool OldImageHasDifferentRatio(const nsImageFrame& aFrame,
           currentRatio == currentRatioRecomputed,
       "aspect-ratio got out of sync during paint? How?");
 #endif
-  auto oldRatio = ComputeAspectRatio(aPrevImage, hasRequest, aFrame);
+  auto oldRatio = ComputeIntrinsicRatio(aPrevImage, hasRequest, aFrame);
   return oldRatio != currentRatio;
 }
 
