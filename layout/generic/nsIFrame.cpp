@@ -5963,8 +5963,29 @@ IntrinsicSize nsIFrame::GetIntrinsicSize() {
 }
 
 AspectRatio nsIFrame::GetAspectRatio() const {
-  // TODO: Consider aspect-ratio property.
-  return GetIntrinsicRatio();
+  // Per spec, 'aspect-ratio' property applies to all elements except inline
+  // boxes and internal ruby or table boxes.
+  // https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+  //
+  // Bug 1667501: If any caller is used for the elements supporting and not
+  // supporting 'aspect-ratio', we may need to add explicit exclusion to early
+  // return here.
+
+  const StyleAspectRatio& aspectRatio = StylePosition()->mAspectRatio;
+  if (!aspectRatio.auto_) {
+    // Non-auto. Return the preferred aspect ratio from the aspect-ratio style.
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  }
+
+  // The rest of the cases are when aspect-ratio has 'auto'.
+  if (auto intrinsicRatio = GetIntrinsicRatio()) {
+    return intrinsicRatio;
+  }
+  if (aspectRatio.HasRatio()) {
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  }
+
+  return AspectRatio();
 }
 
 /* virtual */
