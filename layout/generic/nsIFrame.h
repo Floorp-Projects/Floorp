@@ -2663,12 +2663,21 @@ class nsIFrame : public nsQueryFrame {
   virtual mozilla::IntrinsicSize GetIntrinsicSize();
 
   /**
-   * Get the intrinsic ratio of this element, or a default-constructed
+   * Get the preferred aspect ratio of this frame, or a default-constructed
+   * AspectRatio if it has none.
+   *
+   * https://drafts.csswg.org/css-sizing-4/#preferred-aspect-ratio
+   */
+  mozilla::AspectRatio GetAspectRatio() const;
+
+  /**
+   * Get the intrinsic aspect ratio of this frame, or a default-constructed
    * AspectRatio if it has no intrinsic ratio.
    *
    * The intrinsic ratio is the ratio of the width/height of a box with an
    * intrinsic size or the intrinsic aspect ratio of a scalable vector image
-   * without an intrinsic size.
+   * without an intrinsic size. A frame class implementing a replaced element
+   * should override this method if it has a intrinsic ratio.
    */
   virtual mozilla::AspectRatio GetIntrinsicRatio() const;
 

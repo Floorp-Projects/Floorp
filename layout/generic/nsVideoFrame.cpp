@@ -576,9 +576,8 @@ nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
   IntrinsicSize intrinsicSize(size.width, size.height);
 
-  auto intrinsicRatio = GetIntrinsicRatio();
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize,
+              aRenderingContext, aWM, intrinsicSize, GetAspectRatio(), aCBSize,
               aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }

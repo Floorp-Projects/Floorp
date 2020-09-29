@@ -362,8 +362,8 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
   }
 
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWritingMode, intrinsicSize,
-              GetIntrinsicRatio(), cbSize, aMargin, aBorderPadding, aFlags),
+              aRenderingContext, aWritingMode, intrinsicSize, GetAspectRatio(),
+              cbSize, aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
 
@@ -914,7 +914,7 @@ void SVGOuterSVGFrame::AppendDirectlyOwnedAnonBoxes(
 
 void SVGOuterSVGFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder() {
   MaybeSendIntrinsicSizeAndRatioToEmbedder(Some(GetIntrinsicSize()),
-                                           Some(GetIntrinsicRatio()));
+                                           Some(GetAspectRatio()));
 }
 
 void SVGOuterSVGFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder(

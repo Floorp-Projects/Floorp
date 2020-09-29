@@ -688,7 +688,7 @@ nsIFrame::SizeComputationResult nsSubDocumentFrame::ComputeSize(
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWM, GetIntrinsicSize(), GetIntrinsicRatio(),
+              aRenderingContext, aWM, GetIntrinsicSize(), GetAspectRatio(),
               aCBSize, aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }

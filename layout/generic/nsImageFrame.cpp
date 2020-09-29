@@ -947,7 +947,7 @@ nsIFrame::SizeComputationResult nsImageFrame::ComputeSize(
     const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   EnsureIntrinsicSizeAndRatio();
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWM, mIntrinsicSize, mIntrinsicRatio, aCBSize,
+              aRenderingContext, aWM, mIntrinsicSize, GetAspectRatio(), aCBSize,
               aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
