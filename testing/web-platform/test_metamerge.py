@@ -213,7 +213,7 @@ global-current-changed: B
 
 def test_merge():
     def get_manifest(str_data):
-        bytes_io = BytesIO(str_data)
+        bytes_io = BytesIO(str_data.encode('utf-8'))
         return metamerge.compile(bytes_io,
                                  metamerge.data_cls_getter)
     ancestor_manifest = get_manifest(ancestor)
@@ -224,6 +224,7 @@ def test_merge():
                                     current_manifest,
                                     new_manifest)
     assert result == updated
+
 
 if __name__ == '__main__':
     mozunit.main()

@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import sys
 
 
 def create_parser_wpt():
     from wptrunner import wptcommandline
-    result = wptcommandline.create_parser(["firefox", "firefox_android", "chrome", "edge", "servo"])
+    result = wptcommandline.create_parser(
+        ["firefox", "firefox_android", "chrome", "edge", "servo"])
     result.add_argument("--no-install", action="store_true", default=False,
                         help="Do not install test runner application")
     return result

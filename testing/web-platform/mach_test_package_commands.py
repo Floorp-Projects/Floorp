@@ -24,7 +24,8 @@ class WebPlatformTestsRunnerSetup(object):
     def kwargs_firefox(self, kwargs):
         from wptrunner import wptcommandline
         if kwargs["config"] is None:
-            kwargs["config"] = os.path.join(self.context.package_root, 'web-platform', 'wptrunner.ini')
+            kwargs["config"] = os.path.join(
+                self.context.package_root, 'web-platform', 'wptrunner.ini')
         if kwargs["binary"] is None:
             kwargs["binary"] = self.context.firefox_bin
         if kwargs["prefs_root"] is None:
@@ -44,7 +45,8 @@ class WebPlatformTestsRunnerSetup(object):
                 kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
         kwargs["capture_stdio"] = True
 
-        if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):
+        if (kwargs["exclude"] is None and kwargs["include"] is None
+           and not sys.platform.startswith("linux")):
             kwargs["exclude"] = ["css"]
 
         if kwargs["webdriver_binary"] is None:

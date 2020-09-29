@@ -156,8 +156,8 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
         return False
 
     if req.status_code != 200:
-        logger.warning("Downloading pregenerated manifest failed; got"
-                        "HTTP status %d" % req.status_code)
+        logger.warning("Downloading pregenerated manifest failed; got "
+                       "HTTP status %d" % req.status_code)
         return False
 
     tar = tarfile.open(mode="r:gz", fileobj=BytesIO(req.content))
@@ -175,7 +175,8 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
                 src.close()
             except IOError:
                 import traceback
-                logger.warning("Failed to decompress %s:\n%s" % (paths["manifest_rel_path"], traceback.format_exc()))
+                logger.warning("Failed to decompress %s:\n%s" %
+                               (paths["manifest_rel_path"], traceback.format_exc()))
                 return False
 
         os.utime(paths["manifest_path"], None)

@@ -6,6 +6,7 @@ import json
 from six.moves.urllib.parse import urljoin
 requests = None
 
+
 class GitHubError(Exception):
     def __init__(self, status, data):
         self.status = status

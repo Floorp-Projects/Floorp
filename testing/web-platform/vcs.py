@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+
 class Mercurial(object):
     def __init__(self, repo_root):
         self.root = os.path.abspath(repo_root)
@@ -19,7 +20,7 @@ class Mercurial(object):
         try:
             with open(os.devnull, 'w') as devnull:
                 subprocess.check_call(["hg", "root"], cwd=repo_root, stdout=devnull,
-                                        stderr=devnull)
+                                      stderr=devnull)
         except subprocess.CalledProcessError:
             return False
         except OSError:
@@ -46,7 +47,7 @@ class Git(object):
         try:
             with open(os.devnull, 'w') as devnull:
                 subprocess.check_call(["git", "rev-parse", "--show-cdup"], cwd=repo_root,
-                                        stdout=devnull, stderr=devnull)
+                                      stdout=devnull, stderr=devnull)
         except subprocess.CalledProcessError:
             return False
         except OSError:

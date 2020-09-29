@@ -9,6 +9,7 @@ from wptrunner import update as wptupdate
 
 from wptrunner.update.tree import Commit, CommitMessage, get_unique_name
 
+
 class HgTree(wptupdate.tree.HgTree):
     def __init__(self, *args, **kwargs):
         self.commit_cls = kwargs.pop("commit_cls", Commit)
@@ -16,6 +17,7 @@ class HgTree(wptupdate.tree.HgTree):
 
     # TODO: The extra methods for upstreaming patches from a
     # hg checkout
+
 
 class GitTree(wptupdate.tree.GitTree):
     def __init__(self, *args, **kwargs):
@@ -120,6 +122,7 @@ class GitTree(wptupdate.tree.GitTree):
                     if ref.startswith("refs/heads/")]
         return get_unique_name(branches, prefix)
 
+
 class Patch(object):
     def __init__(self, author, email, message, diff):
         self.author = author
@@ -146,7 +149,7 @@ class GeckoCommitMessage(CommitMessage):
     """Commit message following the Gecko conventions for identifying bug number
     and reviewer"""
 
-    # c.f. http://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hghooks/mozhghooks/commit-message.py
+    # c.f. http://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hghooks/mozhghooks/commit-message.py # noqa E501
     # which has the regexps that are actually enforced by the VCS hooks. These are
     # slightly different because we need to parse out specific parts of the message rather
     # than just enforce a general pattern.
@@ -187,4 +190,3 @@ class GeckoCommit(Commit):
         diff = self.git("show", *args)
 
         return Patch(self.author, self.email, self.message, diff)
-
