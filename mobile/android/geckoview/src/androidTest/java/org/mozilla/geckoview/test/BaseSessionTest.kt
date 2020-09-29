@@ -14,7 +14,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.json.JSONArray
-import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.rules.ErrorCollector
@@ -187,15 +186,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
-
-    @Suppress("UNCHECKED_CAST")
-    fun<V> JSONObject.asMap(): Map<String?,V?> {
-        val result = HashMap<String?,V?>()
-        for (key in this.keys()) {
-            result[key] = this[key] as V
-        }
-        return result
-    }
 
     @Suppress("UNCHECKED_CAST")
     fun<T> Any?.asJSList(): List<T> {
