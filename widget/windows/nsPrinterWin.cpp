@@ -48,8 +48,8 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
                                              mName.get(), nullptr, nullptr, 0);
     // Note that we must cast the sizeof() to a signed type so that comparison
     // with the signed, potentially-negative bytesNeeded will work!
-    MOZ_DIAGNOSTIC_ASSERT(bytesNeeded >= LONG(sizeof(DEVMODEW)),
-                          "DocumentPropertiesW failed to get valid size");
+    MOZ_ASSERT(bytesNeeded >= LONG(sizeof(DEVMODEW)),
+               "DocumentPropertiesW failed to get valid size");
     if (bytesNeeded < LONG(sizeof(DEVMODEW))) {
       return devmodeStorageW;
     }
@@ -62,7 +62,7 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
         reinterpret_cast<DEVMODEW*>(devmodeStorageWLock->Elements());
     LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), mName.get(),
                                      devmode, nullptr, DM_OUT_BUFFER);
-    MOZ_DIAGNOSTIC_ASSERT(ret == IDOK, "DocumentPropertiesW failed");
+    MOZ_ASSERT(ret == IDOK, "DocumentPropertiesW failed");
     if (ret != IDOK) {
       return devmodeStorageW;
     }
@@ -99,7 +99,7 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
   }
 
   nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
-  MOZ_DIAGNOSTIC_ASSERT(printerDc, "CreateICW failed");
+  MOZ_ASSERT(printerDc, "CreateICW failed");
   if (!printerDc) {
     return {};
   }
@@ -306,7 +306,7 @@ mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
   devmode->dmFields = DM_PAPERSIZE;
   devmode->dmPaperSize = _wtoi((const wchar_t*)aPaperId.BeginReading());
   nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
-  MOZ_DIAGNOSTIC_ASSERT(printerDc, "CreateICW failed");
+  MOZ_ASSERT(printerDc, "CreateICW failed");
   if (!printerDc) {
     return margin;
   }
