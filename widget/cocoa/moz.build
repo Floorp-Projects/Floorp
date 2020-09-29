@@ -31,7 +31,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'ComplexTextInputPanel.mm',
     'GfxInfo.mm',
-    'IconLoaderHelperCocoa.mm',
     'NativeKeyBindings.mm',
     'nsAppShell.mm',
     'nsBidiKeyboard.mm',
@@ -42,6 +41,7 @@ UNIFIED_SOURCES += [
     'nsCursorManager.mm',
     'nsDeviceContextSpecX.mm',
     'nsFilePicker.mm',
+    'nsIconLoaderService.mm',
     'nsLookAndFeel.mm',
     'nsMacCursor.mm',
     'nsMacDockSupport.mm',
