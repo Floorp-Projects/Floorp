@@ -256,7 +256,8 @@ static void linear_composite(Texture& srctex, const IntRect& srcReq,
   dest += destStride * bandOffset;
   srcUV.y += srcDUV.y * bandOffset;
   int span = dstBounds.width();
-  for (int rows = min(dstBounds.height(), bandHeight); rows > 0; rows--) {
+  for (int rows = min(dstBounds.height() - bandOffset, bandHeight); rows > 0;
+       rows--) {
     linear_row_composite((uint32_t*)dest, span, srcUV, srcDUV.x, &sampler);
     dest += destStride;
     srcUV.y += srcDUV.y;
@@ -756,7 +757,8 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
   srcUV.y += srcDUV.y * bandOffset;
   chromaUV.y += chromaDUV.y * bandOffset;
   int span = dstBounds.width();
-  for (int rows = min(dstBounds.height(), bandHeight); rows > 0; rows--) {
+  for (int rows = min(dstBounds.height() - bandOffset, bandHeight); rows > 0;
+       rows--) {
     switch (colorSpace) {
       case REC_601:
         linear_row_yuv<REC_601>((uint32_t*)dest, span, srcUV, srcDUV.x,
