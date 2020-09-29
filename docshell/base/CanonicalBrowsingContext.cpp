@@ -623,6 +623,9 @@ void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
 
 void CanonicalBrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
   nsISHistory* shistory = GetSessionHistory();
+  // In theory shistory can be null here if the method is called right after
+  // CanonicalBrowsingContext::ReplacedBy call.
+  NS_ENSURE_TRUE_VOID(shistory);
   nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(mActiveEntry);
   shistory->RemoveDynEntries(shistory->GetIndexOfEntry(root), mActiveEntry);
 }
