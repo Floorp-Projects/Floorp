@@ -11537,16 +11537,11 @@ void nsDocShell::UpdateActiveEntry(
   if (replace) {
     mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
   } else {
-    if (mBrowsingContext->IsTop()) {
-      mBrowsingContext->SetActiveSessionHistoryEntryForTop(
-          aPreviousScrollPos, mActiveEntry.get(), mLoadType);
-      // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
-    } else {
-      // FIXME We should probably just compute mChildOffset in the parent
-      //       instead of passing it over IPC here.
-      mBrowsingContext->SetActiveSessionHistoryEntryForFrame(
-          aPreviousScrollPos, mActiveEntry.get(), mChildOffset);
-    }
+    // FIXME We should probably just compute mChildOffset in the parent
+    //       instead of passing it over IPC here.
+    mBrowsingContext->SetActiveSessionHistoryEntry(
+        aPreviousScrollPos, mActiveEntry.get(), mLoadType, mChildOffset);
+    // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
   }
 }
 
