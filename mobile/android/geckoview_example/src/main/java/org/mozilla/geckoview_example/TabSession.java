@@ -1,6 +1,5 @@
 package org.mozilla.geckoview_example;
 
-import android.os.Parcel;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
