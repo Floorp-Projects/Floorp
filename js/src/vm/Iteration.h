@@ -91,8 +91,11 @@ struct NativeIterator {
  private:
   static constexpr uint32_t FlagsBits = 3;
   static constexpr uint32_t FlagsMask = (1 << FlagsBits) - 1;
+
+ public:
   static constexpr uint32_t PropCountLimit = 1 << (32 - FlagsBits);
 
+ private:
   // While in compartment->enumerators, these form a doubly linked list.
   NativeIterator* next_ = nullptr;
   NativeIterator* prev_ = nullptr;
@@ -255,17 +258,15 @@ struct NativeIterator {
 
   uint32_t initialPropertyCount() const { return flagsAndCount_ >> FlagsBits; }
 
+  static uint32_t initialFlagsAndCount(uint32_t count) {
+    // No flags are initially set.
+    MOZ_ASSERT(count < PropCountLimit);
+    return count << FlagsBits;
+  }
+
   void setFlags(uint32_t flags) {
     MOZ_ASSERT((flags & ~FlagsMask) == 0);
     flagsAndCount_ = (initialPropertyCount() << FlagsBits) | flags;
-  }
-
-  MOZ_MUST_USE bool setInitialPropertyCount(uint32_t count) {
-    if (count >= PropCountLimit) {
-      return false;
-    }
-    flagsAndCount_ = (count << FlagsBits) | flags();
-    return true;
   }
 
   void markInitialized() {
