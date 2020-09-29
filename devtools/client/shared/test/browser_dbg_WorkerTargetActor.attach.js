@@ -36,32 +36,47 @@ add_task(async function() {
   // createWorker in the tab to be resolved.
   await createWorkerInTab(tab, WORKER1_URL);
   let { workers } = await listWorkers(target);
-  let workerTargetFront1 = findWorker(workers, WORKER1_URL);
-  await workerTargetFront1.attach();
-  ok(workerTargetFront1.actorID, "front for worker in tab 1 has been attached");
+  let workerDescriptorFront1 = findWorker(workers, WORKER1_URL);
+  await workerDescriptorFront1.attach();
+  ok(
+    workerDescriptorFront1.actorID,
+    "front for worker in tab 1 has been attached"
+  );
 
   executeSoon(() => {
     BrowserTestUtils.loadURI(tab.linkedBrowser, TAB2_URL);
   });
-  await waitForWorkerClose(workerTargetFront1);
-  ok(!!workerTargetFront1.actorID, "front for worker in tab 1 has been closed");
+  await waitForWorkerClose(workerDescriptorFront1);
+  ok(
+    !!workerDescriptorFront1.actorID,
+    "front for worker in tab 1 has been closed"
+  );
 
   await createWorkerInTab(tab, WORKER2_URL);
   ({ workers } = await listWorkers(target));
-  const workerTargetFront2 = findWorker(workers, WORKER2_URL);
-  await workerTargetFront2.attach();
-  ok(workerTargetFront2.actorID, "front for worker in tab 2 has been attached");
+  const workerDescriptorFront2 = findWorker(workers, WORKER2_URL);
+  await workerDescriptorFront2.attach();
+  ok(
+    workerDescriptorFront2.actorID,
+    "front for worker in tab 2 has been attached"
+  );
 
   executeSoon(() => {
     tab.linkedBrowser.goBack();
   });
-  await waitForWorkerClose(workerTargetFront2);
-  ok(!!workerTargetFront2.actorID, "front for worker in tab 2 has been closed");
+  await waitForWorkerClose(workerDescriptorFront2);
+  ok(
+    !!workerDescriptorFront2.actorID,
+    "front for worker in tab 2 has been closed"
+  );
 
   ({ workers } = await listWorkers(target));
-  workerTargetFront1 = findWorker(workers, WORKER1_URL);
-  await workerTargetFront1.attach();
-  ok(workerTargetFront1.actorID, "front for worker in tab 1 has been attached");
+  workerDescriptorFront1 = findWorker(workers, WORKER1_URL);
+  await workerDescriptorFront1.attach();
+  ok(
+    workerDescriptorFront1.actorID,
+    "front for worker in tab 1 has been attached"
+  );
 
   await target.destroy();
   SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
