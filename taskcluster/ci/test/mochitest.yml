@@ -97,7 +97,6 @@ mochitest-a11y:
     description: "Mochitest a11y run"
     treeherder-symbol: M(a11y)
     schedules-component: mochitest-a11y
-    test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
     tier: default
     e10s: false
@@ -156,7 +155,6 @@ browser-screenshots:
         name: mochitest-browser-chrome-screenshots
     treeherder-symbol: M(ss)
     loopback-video: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
         by-test-platform:
             windows7-32(?:-pgo|-shippable)(?:-qr)?/opt: ['mozilla-central']
@@ -351,7 +349,6 @@ mochitest-valgrind:
         name: mochitest-valgrind-plain
     treeherder-symbol: M-V()
     run-on-projects: []
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
     loopback-video: true
     chunks: 40
@@ -375,7 +372,6 @@ mochitest-webgl1-core:
             android.*: []
             default: ['webgl-ipc']
     e10s: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     tier: default
     max-run-time:
@@ -407,7 +403,6 @@ mochitest-webgl1-ext:
             android.*: 2
             default: 1
     e10s: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     tier: default
     max-run-time: 2700
@@ -436,7 +431,6 @@ mochitest-webgl2-core:
             android.*: 2
             default: 1
     e10s: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     tier: default
     max-run-time: 1800
@@ -463,7 +457,6 @@ mochitest-webgl2-ext:
             default: ['webgl-ipc']
     chunks: 4
     e10s: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     tier: default
     max-run-time: 2700

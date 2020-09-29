@@ -7,6 +7,7 @@ import pytest
 from mozunit import main
 from tryselect.selectors.auto import TRY_AUTO_PARAMETERS
 
+from taskgraph.transforms.tests import CHUNK_SUITES_BLACKLIST
 from taskgraph.util.bugbug import push_schedules
 from taskgraph.util.chunking import BugbugLoader
 
@@ -44,16 +45,13 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
     for task in filter_tasks(full_task_graph, lambda t: t.kind == "test"):
         attr = task.attributes.get
 
-        if "test_manifests" in task.attributes:
+        if attr("unittest_suite") in CHUNK_SUITES_BLACKLIST:
+            assert not attr("test_manifests")
+        else:
             unimportant = [
                 t for t in attr("test_manifests") if t not in important_manifests
             ]
-
-            # Manifest scheduling is disabled for mochitest-ally.
-            if attr("unittest_suite") == "mochitest-a11y":
-                assert len(unimportant) > 0
-            else:
-                assert unimportant == []
+            assert unimportant == []
 
 
 @pytest.mark.parametrize(

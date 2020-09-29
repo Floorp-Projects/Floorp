@@ -16,7 +16,6 @@ job-defaults:
                     default: []
     webrender-run-on-projects: []
     tier: 3
-    test-manifest-loader: null  # don't load tests in the taskgraph
     target:
         by-app:
             fenix:
