@@ -27,6 +27,7 @@ _GIT_ZERO_HASHES = (
     "0000000000000000000000000000000000000000000000000000000000000000", # sha256
 )
 
+CONFIGURATIONS_WITH_DEPENDENCIES = ("implementation", "api")
 ALL_COMPONENTS = object()
 
 def get_components_changed(files_changed):
@@ -45,37 +46,31 @@ cached_deps = {}
 
 def get_upstream_deps_for_components(components):
     """Return the full list of local upstream dependencies of a component."""
-    deps = set()
-    cmd = ["./gradlew"]
-    # This is eventually going to fail if there's ever enough components to make the command line
-    # too long. If that happens, we'll need to split this list up and run gradle more than once.
-    for c in sorted(components):
-        cmd.extend(["%s:dependencies" % c, "--configuration", "implementation"])
-    # Parsing output like this is not ideal but bhearsum couldn't find a way
-    # to get the dependencies printed in a better format. If we could convince
-    # gradle to spit out JSON that would be much better.
-    # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
-    current_component = None
-    for line in subprocess.check_output(cmd).splitlines():
-        # If we find the start of a new component section, update our tracking variable
-        if line.startswith("Project"):
-            if deps:
-                logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
-            else:
-                logger.info("No direct upstream dependencies found for component '%s'" % current_component)
-            yield current_component, deps
-            deps = set()
-            current_component = line.split(":")[1]
+    component_dependencies = defaultdict(set)
 
-        # If we find a new local dependency, add it.
-        if line.startswith("+--- project"):
-            deps.add(line.split(" ")[2])
+    for configuration in CONFIGURATIONS_WITH_DEPENDENCIES:
+        logger.info("Looking for dependencies in '%s' configuration" % configuration)
 
-    if deps:
-        logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
-    else:
-        logger.info("No direct upstream dependencies found for component '%s'" % current_component)
-    yield current_component, deps
+        cmd = ["./gradlew"]
+        # This is eventually going to fail if there's ever enough components to make the command line
+        # too long. If that happens, we'll need to split this list up and run gradle more than once.
+        for c in sorted(components):
+            cmd.extend(["%s:dependencies" % c, "--configuration", configuration])
+        # Parsing output like this is not ideal but bhearsum couldn't find a way
+        # to get the dependencies printed in a better format. If we could convince
+        # gradle to spit out JSON that would be much better.
+        # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
+        current_component = None
+        for line in subprocess.check_output(cmd).splitlines():
+            # If we find the start of a new component section, update our tracking variable
+            if line.startswith("Project"):
+                current_component = line.split(":")[1]
+
+            # If we find a new local dependency, add it.
+            if line.startswith("+--- project") or line.startswith("\--- project"):
+                component_dependencies[current_component].add(line.split(" ")[2])
+
+    return [(k, sorted(component_dependencies[k])) for k in sorted(component_dependencies)]
 
 
 def get_affected_components(files_changed, files_affecting_components, upstream_component_dependencies, downstream_component_dependencies):
@@ -116,6 +111,10 @@ def loader(kind, path, config, params, loaded_tasks):
     downstream_component_dependencies = defaultdict(set)
 
     for component, deps in get_upstream_deps_for_components([c["name"] for c in get_components()]):
+        if deps:
+            logger.info("Found direct upstream dependencies for component '%s': %s" % (component, deps))
+        else:
+            logger.info("No direct upstream dependencies found for component '%s'" % component)
         upstream_component_dependencies[component] = deps
         for d in deps:
             downstream_component_dependencies[d].add(component)
