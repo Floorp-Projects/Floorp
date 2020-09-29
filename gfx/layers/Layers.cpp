@@ -227,6 +227,16 @@ Layer::Layer(LayerManager* aManager, void* aImplData)
 
 Layer::~Layer() = default;
 
+void Layer::SetEventRegions(const EventRegions& aRegions) {
+  if (mEventRegions != aRegions) {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(
+        this, ("Layer::Mutated(%p) eventregions were %s, now %s", this,
+               mEventRegions.ToString().get(), aRegions.ToString().get()));
+    mEventRegions = aRegions;
+    Mutated();
+  }
+}
+
 void Layer::SetCompositorAnimations(
     const LayersId& aLayersId,
     const CompositorAnimations& aCompositorAnimations) {
