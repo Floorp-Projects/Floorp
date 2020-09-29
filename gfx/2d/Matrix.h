@@ -68,6 +68,9 @@ class BaseMatrix {
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const BaseMatrix& aMatrix) {
+    if (aMatrix.IsIdentity()) {
+      return aStream << "[ I ]";
+    }
     return aStream << "[ " << aMatrix._11 << " " << aMatrix._12 << "; "
                    << aMatrix._21 << " " << aMatrix._22 << "; " << aMatrix._31
                    << " " << aMatrix._32 << "; ]";

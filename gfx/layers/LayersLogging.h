@@ -56,9 +56,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
                     const char* pfx = "", const char* sfx = "");
 
-void AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix& m,
-                    const char* pfx = "", const char* sfx = "");
-
 template <class SourceUnits, class TargetUnits>
 void AppendToString(
     std::stringstream& aStream,
@@ -66,7 +63,7 @@ void AppendToString(
     const char* pfx = "", const char* sfx = "") {
   if (m.Is2D()) {
     mozilla::gfx::Matrix matrix = m.As2D();
-    AppendToString(aStream, matrix, pfx, sfx);
+    aStream << pfx << matrix << sfx;
     return;
   }
 

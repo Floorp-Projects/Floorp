@@ -120,19 +120,6 @@ void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
           << sfx;
 }
 
-void AppendToString(std::stringstream& aStream, const Matrix& m,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  if (m.IsIdentity()) {
-    aStream << "[ I ]";
-  } else {
-    aStream << nsPrintfCString("[ %g %g; %g %g; %g %g; ]", m._11, m._12, m._21,
-                               m._22, m._31, m._32)
-                   .get();
-  }
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const Matrix5x4& m,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
