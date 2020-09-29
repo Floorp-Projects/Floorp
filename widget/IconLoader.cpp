@@ -27,10 +27,15 @@ IconLoader::IconLoader(Helper* aHelper, nsINode* aContent,
       mLoadedIcon(false),
       mHelper(aHelper) {}
 
-IconLoader::~IconLoader() {
+IconLoader::~IconLoader() { Destroy(); }
+
+void IconLoader::Destroy() {
   if (mIconRequest) {
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
+  }
+  if (mHelper) {
+    mHelper = nullptr;
   }
 }
 
