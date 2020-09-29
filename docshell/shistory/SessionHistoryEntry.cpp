@@ -51,13 +51,22 @@ SessionHistoryInfo::SessionHistoryInfo(
   MaybeUpdateTitleFromURI();
 }
 
-SessionHistoryInfo::SessionHistoryInfo(nsIURI* aURI, const nsID& aDocShellID,
-                                       nsIPrincipal* aTriggeringPrincipal,
-                                       nsIContentSecurityPolicy* aCsp,
-                                       const nsACString& aContentType)
+SessionHistoryInfo::SessionHistoryInfo(
+    const SessionHistoryInfo* aSharedStateFrom, nsIURI* aURI,
+    const nsID& aDocShellID, nsIPrincipal* aTriggeringPrincipal,
+    nsIPrincipal* aPrincipalToInherit,
+    nsIPrincipal* aPartitionedPrincipalToInherit,
+    nsIContentSecurityPolicy* aCsp, const nsACString& aContentType)
     : mURI(aURI),
-      mSharedState(SharedState::Create(aTriggeringPrincipal, nullptr, nullptr,
-                                       aCsp, aContentType)) {
+      mSharedState(aSharedStateFrom ? SomeRef(aSharedStateFrom->mSharedState)
+                                    : Nothing()) {
+  mSharedState.Get()->mTriggeringPrincipal = aTriggeringPrincipal;
+  mSharedState.Get()->mPrincipalToInherit = aPrincipalToInherit;
+  mSharedState.Get()->mPartitionedPrincipalToInherit =
+      aPartitionedPrincipalToInherit;
+  mSharedState.Get()->mCsp = aCsp;
+  mSharedState.Get()->mContentType = aContentType;
+
   MaybeUpdateTitleFromURI();
 }
 
@@ -141,6 +150,10 @@ uint32_t SessionHistoryInfo::GetCacheKey() const {
   return mSharedState.Get()->mCacheKey;
 }
 
+void SessionHistoryInfo::SetCacheKey(uint32_t aCacheKey) {
+  mSharedState.Get()->mCacheKey = aCacheKey;
+}
+
 bool SessionHistoryInfo::IsSubFrame() const {
   return mSharedState.Get()->mIsFrameNavigation;
 }
@@ -197,23 +210,19 @@ SessionHistoryInfo::SharedState SessionHistoryInfo::SharedState::Create(
       aCsp, aContentType));
 }
 
-SessionHistoryInfo::SharedState::SharedState() {
-  if (XRE_IsParentProcess()) {
-    new (&mParent)
-        RefPtr<SHEntrySharedParentState>(new SHEntrySharedParentState());
-  } else {
-    new (&mChild)
-        UniquePtr<SHEntrySharedState>(MakeUnique<SHEntrySharedState>());
-  }
-}
+SessionHistoryInfo::SharedState::SharedState() { Init(); }
 
 SessionHistoryInfo::SharedState::SharedState(
     const SessionHistoryInfo::SharedState& aOther) {
-  if (XRE_IsParentProcess()) {
-    new (&mParent) RefPtr<SHEntrySharedParentState>(aOther.mParent);
+  Init(aOther);
+}
+
+SessionHistoryInfo::SharedState::SharedState(
+    const Maybe<const SessionHistoryInfo::SharedState&>& aOther) {
+  if (aOther.isSome()) {
+    Init(aOther.ref());
   } else {
-    new (&mChild) UniquePtr<SHEntrySharedState>(
-        MakeUnique<SHEntrySharedState>(*aOther.mChild));
+    Init();
   }
 }
 
@@ -251,6 +260,26 @@ void SessionHistoryInfo::SharedState::ChangeId(uint64_t aId) {
     mParent->ChangeId(aId);
   } else {
     mChild->mId = aId;
+  }
+}
+
+void SessionHistoryInfo::SharedState::Init() {
+  if (XRE_IsParentProcess()) {
+    new (&mParent)
+        RefPtr<SHEntrySharedParentState>(new SHEntrySharedParentState());
+  } else {
+    new (&mChild)
+        UniquePtr<SHEntrySharedState>(MakeUnique<SHEntrySharedState>());
+  }
+}
+
+void SessionHistoryInfo::SharedState::Init(
+    const SessionHistoryInfo::SharedState& aOther) {
+  if (XRE_IsParentProcess()) {
+    new (&mParent) RefPtr<SHEntrySharedParentState>(aOther.mParent);
+  } else {
+    new (&mChild) UniquePtr<SHEntrySharedState>(
+        MakeUnique<SHEntrySharedState>(*aOther.mChild));
   }
 }
 
