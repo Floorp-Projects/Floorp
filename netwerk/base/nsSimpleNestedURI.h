@@ -46,10 +46,6 @@ class nsSimpleNestedURI : public nsSimpleURI, public nsINestedURI {
   NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
   NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
 
-  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
-  // nsISerializable impl works right.
-  NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) override;
-
  protected:
   nsCOMPtr<nsIURI> mInnerURI;
 

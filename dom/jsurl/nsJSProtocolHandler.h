@@ -77,12 +77,6 @@ class nsJSURI final : public mozilla::net::nsSimpleURI {
   NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
   NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
 
-  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
-  // nsISerializable impl works right.
-  NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) override;
-  // NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr )
-  // override;
-
  protected:
   nsJSURI() = default;
   explicit nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}

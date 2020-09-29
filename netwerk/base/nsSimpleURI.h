@@ -24,10 +24,7 @@ namespace net {
     }                                                \
   }
 
-class nsSimpleURI : public nsIURI,
-                    public nsISerializable,
-                    public nsIClassInfo,
-                    public nsISizeOf {
+class nsSimpleURI : public nsIURI, public nsISerializable, public nsISizeOf {
  protected:
   nsSimpleURI();
   virtual ~nsSimpleURI() = default;
@@ -36,7 +33,6 @@ class nsSimpleURI : public nsIURI,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
 
   static already_AddRefed<nsSimpleURI> From(nsIURI* aURI);
 
