@@ -26,7 +26,7 @@
         role: ROLE_LISTITEM,
         children: [
           {
-            role: ROLE_STATICTEXT,
+            role: ROLE_LISTITEM_MARKER,
             children: [],
           },
           {
@@ -87,7 +87,7 @@
       this.onProcessed = function textReplaceProcessor_onProcessed() {
         var tree = {
           LISTITEM: [
-            { STATICTEXT: [] },
+            { LISTITEM_MARKER: [] },
             { TEXT_LEAF: [] },
           ],
         };

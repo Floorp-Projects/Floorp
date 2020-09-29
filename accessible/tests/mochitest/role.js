@@ -55,6 +55,7 @@ const ROLE_LINK = nsIAccessibleRole.ROLE_LINK;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_LISTBOX = nsIAccessibleRole.ROLE_LISTBOX;
 const ROLE_LISTITEM = nsIAccessibleRole.ROLE_LISTITEM;
+const ROLE_LISTITEM_MARKER = nsIAccessibleRole.ROLE_LISTITEM_MARKER;
 const ROLE_MARK = nsIAccessibleRole.ROLE_MARK;
 const ROLE_MATHML_MATH = nsIAccessibleRole.ROLE_MATHML_MATH;
 const ROLE_MATHML_IDENTIFIER = nsIAccessibleRole.ROLE_MATHML_IDENTIFIER;
