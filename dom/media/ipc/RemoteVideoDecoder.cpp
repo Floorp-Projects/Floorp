@@ -242,8 +242,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
 }
 
 MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
-    const MediaDataDecoder::DecodedData& aData,
-    DecodedOutputIPDL& aDecodedData) {
+    MediaDataDecoder::DecodedData&& aData, DecodedOutputIPDL& aDecodedData) {
   MOZ_ASSERT(OnManagerThread());
 
   // If the video decoder bridge has shut down, stop.

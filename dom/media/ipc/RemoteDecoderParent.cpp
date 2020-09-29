@@ -68,18 +68,34 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit(
 
 void RemoteDecoderParent::DecodeNextSample(
     const RefPtr<ArrayOfRemoteMediaRawData>& aData, size_t aIndex,
-    DecodedOutputIPDL&& aOutput, DecodeResolver&& aResolver) {
+    MediaDataDecoder::DecodedData&& aOutput, DecodeResolver&& aResolver) {
   MOZ_ASSERT(OnManagerThread());
 
+  if (!CanRecv()) {
+    // Avoid unnecessarily creating shmem objects later.
+    return;
+  }
+
+  if (!mDecoder) {
+    // We got shutdown or the child got destroyed.
+    aResolver(MediaResult(NS_ERROR_ABORT, __func__));
+    return;
+  }
+
   if (aData->Count() == aIndex) {
-    aResolver(std::move(aOutput));
+    DecodedOutputIPDL result;
+    MediaResult rv = ProcessDecodedData(std::move(aOutput), result);
+    if (NS_FAILED(rv)) {
+      aResolver(std::move(rv));  // Out of Memory.
+    } else {
+      aResolver(std::move(result));
+    }
     return;
   }
 
   RefPtr<MediaRawData> rawData = aData->ElementAt(aIndex);
   if (!rawData) {
     // OOM
-    ReleaseAllBuffers();
     aResolver(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return;
   }
@@ -90,25 +106,16 @@ void RemoteDecoderParent::DecodeNextSample(
        resolver = std::move(aResolver)](
           MediaDataDecoder::DecodePromise::ResolveOrRejectValue&&
               aValue) mutable {
-        if (!CanRecv()) {
-          ReleaseAllBuffers();
-          return;
-        }
         if (aValue.IsReject()) {
-          ReleaseAllBuffers();
           resolver(aValue.RejectValue());
           return;
         }
 
-        MediaResult rv = ProcessDecodedData(aValue.ResolveValue(), output);
-        if (NS_FAILED(rv)) {
-          ReleaseAllBuffers();
-          resolver(rv);
-        } else {
-          // Call again in case we have more data to decode.
-          DecodeNextSample(aData, aIndex + 1, std::move(output),
-                           std::move(resolver));
-        }
+        output.AppendElements(std::move(aValue.ResolveValue()));
+
+        // Call again in case we have more data to decode.
+        DecodeNextSample(aData, aIndex + 1, std::move(output),
+                         std::move(resolver));
       });
 }
 
@@ -124,7 +131,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
   // used by the child. We can mark all previously sent ShmemBuffer as
   // available again.
   ReleaseAllBuffers();
-  DecodedOutputIPDL output;
+  MediaDataDecoder::DecodedData output;
   DecodeNextSample(aData, 0, std::move(output), std::move(aResolver));
 
   return IPC_OK();
@@ -167,7 +174,8 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDrain(
           return;
         }
         DecodedOutputIPDL output;
-        MediaResult rv = ProcessDecodedData(aValue.ResolveValue(), output);
+        MediaResult rv =
+            ProcessDecodedData(std::move(aValue.ResolveValue()), output);
         if (NS_FAILED(rv)) {
           resolver(rv);
         } else {
