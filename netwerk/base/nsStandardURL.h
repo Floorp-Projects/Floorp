@@ -13,7 +13,6 @@
 #include "mozilla/Encoding.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
-#include "nsIClassInfo.h"
 #include "nsISizeOf.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
@@ -43,7 +42,6 @@ namespace net {
 class nsStandardURL : public nsIFileURL,
                       public nsIStandardURL,
                       public nsISerializable,
-                      public nsIClassInfo,
                       public nsISizeOf,
                       public nsISensitiveInfoHiddenURI
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -62,7 +60,6 @@ class nsStandardURL : public nsIFileURL,
   NS_DECL_NSIFILEURL
   NS_DECL_NSISTANDARDURL
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
   NS_DECL_NSISENSITIVEINFOHIDDENURI
 
   // nsISizeOf
