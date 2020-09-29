@@ -17,19 +17,17 @@ var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testNormalExecution() {
-  const {
-    client,
-    tab,
-    workerDescriptorFront,
-    toolbox,
-  } = await initWorkerDebugger(TAB_URL, WORKER_URL);
+  const { client, tab, workerTargetFront, toolbox } = await initWorkerDebugger(
+    TAB_URL,
+    WORKER_URL
+  );
 
   const hud = await getSplitConsole(toolbox);
   await executeAndWaitForMessage(hud, "this.location.toString()", WORKER_URL);
   ok(true, "Evaluating the global's location works");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerDescriptorFront);
+  await waitForWorkerClose(workerTargetFront);
   await toolbox.destroy();
   await close(client);
   await removeTab(tab);

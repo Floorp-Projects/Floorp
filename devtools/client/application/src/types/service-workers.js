@@ -11,7 +11,7 @@ const worker = {
   state: PropTypes.number.isRequired,
   stateText: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
-  workerDescriptorFront: PropTypes.object,
+  workerTargetFront: PropTypes.object,
   registrationFront: PropTypes.object,
 };
 

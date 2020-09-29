@@ -66,11 +66,10 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
         registrationFront.installingWorker,
         registrationFront.evaluatingWorker,
       ]
-        // filter out non-existing workers
-        .filter(w => !!w)
-        // build a worker object with its WorkerDescriptorFront
+        .filter(w => !!w) // filter out non-existing workers
+        // build a worker object with its WorkerTargetFront
         .map(workerFront => {
-          const workerDescriptorFront = allWorkers.find(
+          const workerTargetFront = allWorkers.find(
             targetFront => targetFront.id === workerFront.id
           );
 
@@ -80,7 +79,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
             state: workerFront.state,
             stateText: workerFront.stateText,
             url: workerFront.url,
-            workerDescriptorFront,
+            workerTargetFront,
           };
         });
 
@@ -137,7 +136,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
         id: front.id,
         url: front.url,
         name: front.url,
-        workerDescriptorFront: front,
+        workerTargetFront: front,
       };
 
       switch (front.type) {
@@ -275,7 +274,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     if (!worker) {
       return null;
     }
-    return worker.workerDescriptorFront || worker.registrationFront;
+    return worker.workerTargetFront || worker.registrationFront;
   }
 
   /**

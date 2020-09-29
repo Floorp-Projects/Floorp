@@ -12,7 +12,7 @@ const {
 } = require("devtools/shared/protocol");
 
 types.addDictType("root.listWorkers", {
-  workers: "array:workerDescriptor",
+  workers: "array:workerTarget",
 });
 types.addDictType("root.listServiceWorkerRegistrations", {
   registrations: "array:serviceWorkerRegistration",

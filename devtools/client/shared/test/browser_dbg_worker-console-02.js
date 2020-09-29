@@ -18,8 +18,8 @@ var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testWhilePaused() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
-  const { client, tab, workerDescriptorFront, toolbox } = dbg;
-  const workerThreadFront = await workerDescriptorFront.getFront("thread");
+  const { client, tab, workerTargetFront, toolbox } = dbg;
+  const workerThreadFront = await workerTargetFront.getFront("thread");
 
   // Execute some basic math to make sure evaluations are working.
   const hud = await getSplitConsole(toolbox);
@@ -58,7 +58,7 @@ add_task(async function testWhilePaused() {
   await resume(dbg);
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerDescriptorFront);
+  await waitForWorkerClose(workerTargetFront);
   await toolbox.destroy();
   await close(client);
   await removeTab(tab);

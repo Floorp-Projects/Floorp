@@ -12,7 +12,7 @@ const {
 
 types.addDictType("contentProcessTarget.workers", {
   error: "nullable:string",
-  workers: "nullable:array:workerDescriptor",
+  workers: "nullable:array:workerTarget",
 });
 
 const contentProcessTargetSpec = generateActorSpec({

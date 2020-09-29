@@ -106,7 +106,7 @@ async function testWorkerOnMockedRemoteClient(
     [propertyName]: [
       {
         name: workerName,
-        workerDescriptorFront: {
+        workerTargetFront: {
           actorID: workerName,
         },
       },
