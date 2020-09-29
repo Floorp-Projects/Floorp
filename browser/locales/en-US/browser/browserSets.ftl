@@ -146,16 +146,19 @@ bookmark-this-page-shortcut =
 # Verify what shortcut for that operation
 # are recommended by the Human Interface Guidelines
 # of each platform for your locale.
-bookmark-show-all-shortcut =
-    .key = { PLATFORM() ->
-        [linux] O
-       *[other] B
-    }
+bookmark-show-library-shortcut =
+    .key = O
 
 # Verify what shortcut for that operation
 # are recommended by the Human Interface Guidelines
 # of each platform for your locale.
 bookmark-show-sidebar-shortcut =
+    .key = B
+
+# Verify what shortcut for that operation
+# are recommended by the Human Interface Guidelines
+# of each platform for your locale.
+bookmark-show-toolbar-shortcut =
     .key = B
 
 ## All `-alt*` messages are alternative acceleration keys for zoom.
