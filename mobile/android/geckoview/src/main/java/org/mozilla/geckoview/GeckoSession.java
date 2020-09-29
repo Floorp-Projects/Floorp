@@ -1072,46 +1072,6 @@ public class GeckoSession {
         @WrapForJNI(dispatchTo = "proxy", stubName = "Close")
         private native void nativeClose();
 
-        // Assign a new set of Java session objects to the underlying Gecko window.
-        // This replaces previously assigned objects from open() or transfer() calls.
-        public synchronized void transfer(final GeckoSession owner,
-                                          final NativeQueue queue,
-                                          final Compositor compositor,
-                                          final EventDispatcher dispatcher,
-                                          final SessionAccessibility.NativeProvider sessionAccessibility,
-                                          final GeckoBundle initData) {
-            if (mNativeQueue == null) {
-                // Already closed.
-                return;
-            }
-
-            final GeckoSession oldOwner = mOwner.get();
-            if (oldOwner != null && owner != oldOwner) {
-                oldOwner.abandonWindow();
-            }
-
-            mOwner = new WeakReference<>(owner);
-
-            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                nativeTransfer(queue, compositor, dispatcher, sessionAccessibility, initData);
-            } else {
-                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                        this, "nativeTransfer",
-                        NativeQueue.class, queue,
-                        Compositor.class, compositor,
-                        EventDispatcher.class, dispatcher,
-                        SessionAccessibility.NativeProvider.class, sessionAccessibility,
-                        GeckoBundle.class, initData);
-            }
-
-            if (mNativeQueue != queue) {
-                // Reset the old queue to prevent old events from affecting this window.
-                // Gecko will call onReady later with the new queue if needed.
-                mNativeQueue.reset(State.INITIAL);
-                mNativeQueue = queue;
-            }
-        }
-
         @WrapForJNI(dispatchTo = "proxy", stubName = "Transfer")
         private native void nativeTransfer(NativeQueue queue, Compositor compositor,
                                            EventDispatcher dispatcher,
@@ -1275,36 +1235,6 @@ public class GeckoSession {
         onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ true);
         mWindow = null;
         onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
-    }
-
-    private void transferFrom(final Window window,
-                              final GeckoSessionSettings settings,
-                              final String id) {
-        if (isOpen()) {
-            // We will leak the existing Window if we transfer in another one.
-            throw new IllegalStateException("Session is open");
-        }
-
-        if (window != null) {
-            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ true);
-        }
-
-        mWindow = window;
-        mSettings = new GeckoSessionSettings(settings, this);
-        mId = id;
-
-        if (mWindow != null) {
-            mWindow.transfer(this, mNativeQueue, mCompositor,
-                    mEventDispatcher, mAccessibility != null ? mAccessibility.nativeProvider : null,
-                    createInitData());
-            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
-            mWebExtensionController.setRuntime(mWindow.runtime);
-        }
-    }
-
-    /* package */ void transferFrom(final GeckoSession session) {
-        transferFrom(session.mWindow, session.mSettings, session.mId);
-        session.mWindow = null;
     }
 
     /* package */ boolean equalsId(final GeckoSession other) {
