@@ -21,12 +21,12 @@
 #include "TextureSourceProviderMLGPU.h"
 #include "TreeTraversal.h"
 #include "FrameBuilder.h"
-#include "LayersLogging.h"
 #include "UtilityMLGPU.h"
 #include "CompositionRecorder.h"
 #include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/TextRenderer.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/ToString.h"
 
 #ifdef XP_WIN
 #  include "mozilla/widget/WinCompositorWidget.h"
@@ -449,7 +449,7 @@ void LayerManagerMLGPU::DrawDebugOverlay() {
       (texture->GetSize().width > kDebugOverlayMaxWidth ||
        texture->GetSize().height > kDebugOverlayMaxHeight)) {
     gfxCriticalNote << "Diagnostic overlay exceeds invalidation area: %s"
-                    << Stringify(texture->GetSize()).c_str();
+                    << ToString(texture->GetSize()).c_str();
   }
 
   struct DebugRect {

@@ -56,15 +56,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
                     const char* pfx = "", const char* sfx = "");
 
-template <class T>
-void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::IntSizeTyped<T>& sz,
-                    const char* pfx = "", const char* sfx = "") {
-  aStream << pfx;
-  aStream << nsPrintfCString("(w=%d, h=%d)", sz.width, sz.height).get();
-  aStream << sfx;
-}
-
 template <class src, class dst>
 void AppendToString(std::stringstream& aStream,
                     const mozilla::gfx::ScaleFactors2D<src, dst>& scale,
