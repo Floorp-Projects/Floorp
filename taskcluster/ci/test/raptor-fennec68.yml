@@ -16,6 +16,7 @@ job-defaults:
                 index: gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-api-16-release-opt
                 name: build/target.apk
     virtualization: hardware
+    test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         script: raptor_script.py
         config:
