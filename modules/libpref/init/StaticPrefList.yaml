@@ -3602,7 +3602,7 @@
 # `useRemoteSubframes` flag set.
 - name: fission.remoteObjectEmbed
   type: bool
-  value: true
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
