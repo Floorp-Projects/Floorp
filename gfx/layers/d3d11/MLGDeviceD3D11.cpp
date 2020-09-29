@@ -1898,8 +1898,7 @@ void MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
   IntRect destBounds(IntPoint(0, 0), aDest->GetSize());
   if (!destBounds.Contains(IntRect(aTarget, aRect.Size()))) {
     gfxWarning() << "Attempt to write out-of-bounds in CopySubresourceRegion: "
-                 << destBounds << ", " << aTarget << ", "
-                 << Stringify(aRect.Size());
+                 << destBounds << ", " << aTarget << ", " << aRect.Size();
     return;
   }
 
