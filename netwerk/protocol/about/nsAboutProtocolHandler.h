@@ -65,8 +65,6 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   // Override StartClone(), the nsISerializable methods, and
-  // GetClassIDNoAlloc; this last is needed to make our nsISerializable impl
-  // work right.
   virtual nsSimpleURI* StartClone(RefHandlingEnum aRefHandlingMode,
                                   const nsACString& newRef) override;
   NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
@@ -75,10 +73,6 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
   // nsISerializable
   NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
   NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
-
-  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
-  // nsISerializable impl works right.
-  NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) override;
 
   nsIURI* GetBaseURI() const { return mBaseURI; }
 

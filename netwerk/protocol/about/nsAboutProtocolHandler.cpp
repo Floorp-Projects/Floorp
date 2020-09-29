@@ -20,6 +20,7 @@
 #include "nsIChannel.h"
 #include "nsIScriptError.h"
 #include "nsIEnterprisePolicies.h"
+#include "nsIClassInfoImpl.h"
 
 #include "mozilla/ipc/URIUtils.h"
 
@@ -338,10 +339,17 @@ nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char* scheme,
 
 ////////////////////////////////////////////////////////////
 // nsNestedAboutURI implementation
+
+NS_IMPL_CLASSINFO(nsNestedAboutURI, nullptr, nsIClassInfo::THREADSAFE,
+                  NS_NESTEDABOUTURI_CID);
+// Empty CI getter. We only need nsIClassInfo for Serialization
+NS_IMPL_CI_INTERFACE_GETTER0(nsNestedAboutURI)
+
 NS_INTERFACE_MAP_BEGIN(nsNestedAboutURI)
   if (aIID.Equals(kNestedAboutURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else
+    NS_IMPL_QUERY_CLASSINFO(nsNestedAboutURI)
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
 
 // nsISerializable
@@ -474,13 +482,6 @@ nsNestedAboutURI::Mutate(nsIURIMutator** aMutator) {
     return rv;
   }
   mutator.forget(aMutator);
-  return NS_OK;
-}
-
-// nsIClassInfo
-NS_IMETHODIMP
-nsNestedAboutURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
-  *aClassIDNoAlloc = kNestedAboutURICID;
   return NS_OK;
 }
 
