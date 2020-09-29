@@ -410,9 +410,9 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
 
   if (ins->access().type() == Scalar::Int64) {
     auto* lir = new (alloc()) LWasmCompareExchangeI64(
-        useRegister(memoryBase), useRegister(base),
-        useInt64Fixed(ins->oldValue(), Register64(edx, eax)),
-        useInt64Fixed(ins->newValue(), Register64(ecx, ebx)));
+        useRegisterAtStart(memoryBase), useRegisterAtStart(base),
+        useInt64FixedAtStart(ins->oldValue(), Register64(edx, eax)),
+        useInt64FixedAtStart(ins->newValue(), Register64(ecx, ebx)));
     defineInt64Fixed(lir, ins,
                      LInt64Allocation(LAllocation(AnyRegister(edx)),
                                       LAllocation(AnyRegister(eax))));
