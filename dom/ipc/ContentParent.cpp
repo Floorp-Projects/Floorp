@@ -7045,10 +7045,12 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
 mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
-    uint32_t aLoadType, int32_t aChildOffset, const nsID& aChangeID) {
+    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey,
+    const nsID& aChangeID) {
   if (!aContext.IsDiscarded()) {
     aContext.get_canonical()->SetActiveSessionHistoryEntry(
-        aPreviousScrollPos, &aInfo, aLoadType, aChildOffset, aChangeID);
+        aPreviousScrollPos, &aInfo, aLoadType, aChildOffset, aUpdatedCacheKey,
+        aChangeID);
   }
   return IPC_OK();
 }

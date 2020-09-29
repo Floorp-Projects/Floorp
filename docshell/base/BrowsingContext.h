@@ -668,12 +668,19 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Set a new active entry on this browsing context. This is used for
   // implementing history.pushState/replaceState and same document navigations.
+  // The new active entry will be linked to the current active entry through
+  // its shared state.
+  // aPreviousScrollPos is the scroll position that needs to be saved on the
+  // previous active entry.
+  // aUpdatedCacheKey is the cache key to set on the new active entry. If
+  // aUpdatedCacheKey is 0 then it will be ignored.
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
-                                    uint32_t aLoadType, int32_t aChildOffset);
+                                    uint32_t aLoadType, int32_t aChildOffset,
+                                    uint32_t aUpdatedCacheKey);
 
   // Replace the active entry for this browsing context. This is used for
-  // implementing history.replaceState.
+  // implementing history.replaceState and same document navigations.
   void ReplaceActiveSessionHistoryEntry(SessionHistoryInfo* aInfo);
 
   // Removes dynamic child entries of the active entry.

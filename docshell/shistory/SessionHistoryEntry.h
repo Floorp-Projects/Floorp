@@ -36,8 +36,11 @@ class SessionHistoryInfo {
   SessionHistoryInfo(const SessionHistoryInfo& aInfo) = default;
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   SessionHistoryInfo(const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI);
-  SessionHistoryInfo(nsIURI* aURI, const nsID& aDocShellID,
+  SessionHistoryInfo(const SessionHistoryInfo* aSharedStateFrom, nsIURI* aURI,
+                     const nsID& aDocShellID,
                      nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aPrincipalToInherit,
+                     nsIPrincipal* aPartitionedPrincipalToInherit,
                      nsIContentSecurityPolicy* aCsp,
                      const nsACString& aContentType);
 
@@ -106,6 +109,7 @@ class SessionHistoryInfo {
   nsIContentSecurityPolicy* GetCsp() const;
 
   uint32_t GetCacheKey() const;
+  void SetCacheKey(uint32_t aCacheKey);
 
   bool IsSubFrame() const;
 
@@ -144,6 +148,7 @@ class SessionHistoryInfo {
   union SharedState {
     SharedState();
     explicit SharedState(const SharedState& aOther);
+    explicit SharedState(const Maybe<const SharedState&>& aOther);
     ~SharedState();
 
     SharedState& operator=(const SharedState& aOther);
@@ -165,6 +170,9 @@ class SessionHistoryInfo {
         : mParent(aParent) {}
     explicit SharedState(UniquePtr<SHEntrySharedState>&& aChild)
         : mChild(std::move(aChild)) {}
+
+    void Init();
+    void Init(const SharedState& aOther);
 
     // In the parent process this holds a strong reference to the refcounted
     // SHEntrySharedParentState. In the child processes this holds an owning

@@ -566,7 +566,8 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
 
 void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, int32_t aChildOffset, const nsID& aChangeID) {
+    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey,
+    const nsID& aChangeID) {
   RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
   if (aPreviousScrollPos.isSome() && oldActiveEntry) {
     oldActiveEntry->SetScrollPosition(aPreviousScrollPos.ref().x,
@@ -574,7 +575,10 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
   }
   mActiveEntry = new SessionHistoryEntry(aInfo);
   mActiveEntry->SetDocshellID(GetHistoryID());
-
+  mActiveEntry->AdoptBFCacheEntry(oldActiveEntry);
+  if (aUpdatedCacheKey != 0) {
+    mActiveEntry->SharedInfo()->mCacheKey = aUpdatedCacheKey;
+  }
   nsISHistory* shistory = GetSessionHistory();
   if (IsTop()) {
     if (shistory) {
