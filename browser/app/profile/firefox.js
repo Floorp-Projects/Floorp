@@ -1376,14 +1376,19 @@ pref("browser.newtabpage.activity-stream.asrouter.useRemoteL10n", true);
 pref("browser.newtabpage.activity-stream.discoverystream.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout", false);
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
-// List of locales that get stories by default, regardless of region.
+
+// List of regions that do not get stories, regardless of locale-list-config.
+pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "FR");
+// List of locales that get stories, regardless of region-stories-config.
 pref("browser.newtabpage.activity-stream.discoverystream.locale-list-config", "");
 // List of regions that get stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA,GB,IE,CH,AT,BE");
+
 // List of regions that get spocs by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US,CA,DE");
 // List of regions that get the 7 row layout.
 pref("browser.newtabpage.activity-stream.discoverystream.region-layout-config", "US,CA,GB,DE,IE,CH,AT,BE");
+
 // Allows Pocket story collections to be dismissed.
 pref("browser.newtabpage.activity-stream.discoverystream.isCollectionDismissible", true);
 pref("browser.newtabpage.activity-stream.discoverystream.personalization.version", 1);
