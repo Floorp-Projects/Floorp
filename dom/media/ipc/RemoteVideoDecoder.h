@@ -54,7 +54,7 @@ class RemoteVideoDecoderParent final : public RemoteDecoderParent {
       bool* aSuccess, nsCString* aErrorDescription);
 
  protected:
-  MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,
+  MediaResult ProcessDecodedData(MediaDataDecoder::DecodedData&& aData,
                                  DecodedOutputIPDL& aDecodedData) override;
 
  private:

@@ -45,9 +45,8 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
 
   bool OnManagerThread();
 
-  virtual MediaResult ProcessDecodedData(
-      const MediaDataDecoder::DecodedData& aDatam,
-      DecodedOutputIPDL& aDecodedData) = 0;
+  virtual MediaResult ProcessDecodedData(MediaDataDecoder::DecodedData&& aData,
+                                         DecodedOutputIPDL& aDecodedData) = 0;
 
   const RefPtr<RemoteDecoderManagerParent> mParent;
   const RefPtr<TaskQueue> mDecodeTaskQueue;
@@ -55,7 +54,7 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
 
  private:
   void DecodeNextSample(const RefPtr<ArrayOfRemoteMediaRawData>& aData,
-                        size_t aIndex, DecodedOutputIPDL&& aOutput,
+                        size_t aIndex, MediaDataDecoder::DecodedData&& aOutput,
                         DecodeResolver&& aResolver);
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
   const RefPtr<nsISerialEventTarget> mManagerThread;
