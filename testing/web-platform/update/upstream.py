@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from six.moves import input
 from six.moves.urllib import parse as urlparse
 
 from wptrunner.update.tree import get_unique_name
@@ -22,10 +23,11 @@ def rewrite_patch(patch, strip_dir):
     """
 
     if not strip_dir.startswith("/"):
-        strip_dir = "/%s"% strip_dir
+        strip_dir = "/%s" % strip_dir
 
     new_diff = []
-    line_starts = [("diff ", True), ("+++ ", True), ("--- ", True), ("rename from ", False), ("rename to ", False)]
+    line_starts = [("diff ", True), ("+++ ", True), ("--- ", True),
+                   ("rename from ", False), ("rename to ", False)]
     for line in patch.diff.split("\n"):
         for start, leading_slash in line_starts:
             strip = strip_dir if leading_slash else strip_dir[1:]
@@ -41,12 +43,13 @@ def rewrite_patch(patch, strip_dir):
 
     return Patch(patch.author, patch.email, rewrite_message(patch), new_diff)
 
+
 def rewrite_message(patch):
     if patch.message.bug is not None:
         return "\n".join([patch.message.summary,
                           patch.message.body,
                           "",
-                          "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s [ci skip]" %
+                          "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s [ci skip]" % # noqa E501
                           patch.message.bug])
 
     return "\n".join([patch.message.full_summary, "%s\n[ci skip]\n" % patch.message.body])
@@ -64,7 +67,7 @@ class SyncToUpstream(Step):
             return exit_clean
 
         try:
-            import requests
+            import requests # noqa F401
         except ImportError:
             self.logger.error("Upstream sync requires the requests module to be installed")
             return exit_clean
@@ -79,6 +82,7 @@ class SyncToUpstream(Step):
             state.token = kwargs["token"]
             runner = SyncToUpstreamRunner(self.logger, state)
             runner.run()
+
 
 class GetLastSyncData(Step):
     """Find the gecko commit at which we last performed a sync with upstream and the upstream
@@ -100,10 +104,11 @@ class GetLastSyncData(Step):
         state.old_upstream_rev = items["upstream"]
 
         if not state.local_tree.contains_commit(state.last_sync_commit):
-            self.logger.error("Could not find last sync commit %s" % last_sync_sha1)
+            self.logger.error("Could not find last sync commit %s" % state.last_sync_commit.sha1)
             return exit_clean
 
-        self.logger.info("Last sync to web-platform-tests happened in %s" % state.last_sync_commit.sha1)
+        self.logger.info("Last sync to web-platform-tests happened in %s" %
+                         state.last_sync_commit.sha1)
 
 
 class CheckoutBranch(Step):
@@ -153,7 +158,7 @@ class LoadCommits(Step):
                 continue
 
             elif commit.message.backouts:
-                #TODO: Add support for collapsing backouts
+                # TODO: Add support for collapsing backouts
                 state.has_backouts = True
 
             elif not commit.message.bug:
@@ -162,6 +167,7 @@ class LoadCommits(Step):
                 return exit_unclean
 
         self.logger.debug("Source commits: %s" % state.source_commits)
+
 
 class SelectCommits(Step):
     """Provide a UI to select which commits to upstream"""
@@ -172,27 +178,29 @@ class SelectCommits(Step):
             for i, commit in enumerate(commits):
                 print("{}:\t{}".format(i, commit.message.summary))
 
-            remove = raw_input("Provide a space-separated list of any commits numbers to remove from the list to upstream:\n").strip()
+            remove = input("Provide a space-separated list of any commits numbers "
+                           "to remove from the list to upstream:\n").strip()
             remove_idx = set()
             for item in remove.split(" "):
                 try:
                     item = int(item)
-                except:
+                except ValueError:
                     continue
                 if item < 0 or item >= len(commits):
                     continue
                 remove_idx.add(item)
 
-            keep_commits = [(i,cmt) for i,cmt in enumerate(commits) if i not in remove_idx]
-            #TODO: consider printed removed commits
+            keep_commits = [(i, cmt) for i, cmt in enumerate(commits) if i not in remove_idx]
+            # TODO: consider printed removed commits
             print("Selected the following commits to keep:")
             for i, commit in keep_commits:
                 print("{}:\t{}".format(i, commit.message.summary))
-            confirm = raw_input("Keep the above commits? y/n\n").strip().lower()
+            confirm = input("Keep the above commits? y/n\n").strip().lower()
 
             if confirm == "y":
                 state.source_commits = [item[1] for item in keep_commits]
                 break
+
 
 class MovePatches(Step):
     """Convert gecko commits into patches against upstream and commit these to the sync tree."""
@@ -231,7 +239,7 @@ class MovePatches(Step):
                 continue
             try:
                 state.sync_tree.import_patch(stripped_patch)
-            except:
+            except Exception:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".diff") as f:
                     f.write(stripped_patch.diff)
                     print("""Patch failed to apply. Diff saved in {}
@@ -240,7 +248,7 @@ Fix this file so it applies and run with --continue""".format(f.name))
                     print(state.patch)
                 sys.exit(1)
             state.commits_loaded = i
-        raw_input("Check for differences with upstream")
+        input("Check for differences with upstream")
 
 
 class RebaseCommits(Step):
@@ -250,6 +258,7 @@ class RebaseCommits(Step):
     In that case the conflicts can be fixed up locally and the sync process restarted
     with --continue.
     """
+
     def create(self, state):
         self.logger.info("Rebasing local commits")
         continue_rebase = False
@@ -265,9 +274,11 @@ class RebaseCommits(Step):
         try:
             state.sync_tree.rebase(state.base_commit, continue_rebase=continue_rebase)
         except subprocess.CalledProcessError:
-            self.logger.info("Rebase failed, fix merge and run %s again with --continue" % sys.argv[0])
+            self.logger.info(
+                "Rebase failed, fix merge and run %s again with --continue" % sys.argv[0])
             raise
         self.logger.info("Rebase successful")
+
 
 class CheckRebase(Step):
     """Check if there are any commits remaining after rebase"""
@@ -278,6 +289,7 @@ class CheckRebase(Step):
         if not state.rebased_commits:
             self.logger.info("Nothing to upstream, exiting")
             return exit_clean
+
 
 class MergeUpstream(Step):
     """Run steps to push local commits as seperate PRs and merge upstream."""
@@ -302,6 +314,7 @@ class MergeUpstream(Step):
                     return rv
             state.merge_index += 1
 
+
 class UpdateLastSyncData(Step):
     """Update the gecko commit at which we last performed a sync with upstream."""
 
@@ -316,6 +329,7 @@ class UpdateLastSyncData(Step):
                 f.write("%s: %s\n" % (key, value))
         # This gets added to the patch later on
 
+
 class MergeLocalBranch(Step):
     """Create a local branch pointing at the commit to upstream"""
 
@@ -327,6 +341,7 @@ class MergeLocalBranch(Step):
 
         state.sync_tree.create_branch(local_branch, state.commit)
         state.local_branch = local_branch
+
 
 class MergeRemoteBranch(Step):
     """Get an unused remote branch name to use for the PR"""
@@ -342,11 +357,13 @@ class MergeRemoteBranch(Step):
 
 class PushUpstream(Step):
     """Push local branch to remote"""
+
     def create(self, state):
         self.logger.info("Pushing commit upstream")
         state.sync_tree.push(state.gh_repo.url,
                              state.local_branch,
                              state.remote_branch)
+
 
 class CreatePR(Step):
     """Create a PR for the remote branch"""
@@ -364,6 +381,7 @@ class CreatePR(Step):
 
 class PRAddComment(Step):
     """Add an issue comment indicating that the code has been reviewed already"""
+
     def create(self, state):
         state.pr.issue.add_comment("Code reviewed upstream.")
 

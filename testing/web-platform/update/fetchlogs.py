@@ -6,7 +6,6 @@ import argparse
 import os
 import requests
 import urlparse
-from multiprocessing import Pool
 
 treeherder_base = "https://treeherder.mozilla.org/"
 
@@ -75,7 +74,7 @@ def get_blobber_url(branch, job):
             for item in job_data["results"]:
                 if item["value"] == "wpt_raw.log" or item["value"] == "log_raw.log":
                     return item["url"]
-        except:
+        except Exception:
             return None
 
 
@@ -103,17 +102,19 @@ def get_structured_logs(branch, commit, dest=None):
             job_type_name.startswith("test-") and "-web-platform-tests-" in job_type_name):
             url = get_blobber_url(branch, result)
             if url:
-                prefix = result["platform"] # platform
+                prefix = result["platform"]  # platform
                 tasks.append((url, prefix, None))
 
     for task in tasks:
         download(*task)
+
 
 def main():
     parser = create_parser()
     args = parser.parse_args()
 
     get_structured_logs(args.branch, args.commit)
+
 
 if __name__ == "__main__":
     main()

@@ -152,7 +152,7 @@ def get_dir_manifest(path):
     """
     try:
         with open(path) as f:
-            return compile(f, data_cls_getter=lambda x,y: DirectoryManifest)
+            return compile(f, data_cls_getter=lambda x, y: DirectoryManifest)
     except IOError:
         return None
 
@@ -262,10 +262,10 @@ def add_metadata(target, key, metadata):
         target = target[part]
 
     for prop in simple_props:
-        if metadata.has_key(prop):
+        if metadata.has_key(prop): # noqa W601
             target[prop] = get_condition_value_list(metadata, prop)
 
-    if metadata.has_key("expected"):
+    if metadata.has_key("expected"): # noqa W601
         intermittent = []
         values = metadata.get("expected")
         by_status = defaultdict(list)
@@ -302,10 +302,10 @@ def get_condition_value_list(metadata, key):
 
 
 def is_interesting(metadata):
-    if any(metadata.has_key(prop) for prop in simple_props):
+    if any(metadata.has_key(prop) for prop in simple_props): # noqa W601
         return True
 
-    if metadata.has_key("expected"):
+    if metadata.has_key("expected"): # noqa W601
         for expected_value in metadata.get("expected"):
             # Include both expected and known intermittent values
             if isinstance(expected_value, tuple):
@@ -331,6 +331,7 @@ def update_wpt_meta(logger, meta_root, data):
                 add_test_data(logger, wpt_meta, dir_path, test, None, test_data)
                 for subtest, subtest_data in test_data.get("_subtests", {}).iteritems():
                     add_test_data(logger, wpt_meta, dir_path, test, subtest, subtest_data)
+
 
 def add_test_data(logger, wpt_meta, dir_path, test, subtest, test_data):
     triage_keys = ["bug"]
@@ -433,11 +434,11 @@ class WptMeta(object):
                            "results": []}
             self.data["links"].append(target_link)
 
-        if not "results" in target_link:
+        if "results" not in target_link:
             target_link["results"] = []
 
         has_result = any((result["test"] == test and result.get("subtest") == subtest)
-                          for result in target_link["results"])
+                         for result in target_link["results"])
         if not has_result:
             data = {"test": test.encode("utf8")}
             if subtest:

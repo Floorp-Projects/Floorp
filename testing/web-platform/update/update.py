@@ -11,6 +11,7 @@ from wptrunner.update.tree import NoVCSTree
 from .tree import GitTree, HgTree, GeckoCommit
 from .upstream import SyncToUpstream
 
+
 class LoadTrees(Step):
     """Load gecko tree and sync tree containing web-platform-tests"""
 

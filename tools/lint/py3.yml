@@ -16,7 +16,7 @@ py3:
         - testing/gtest
         - testing/mozharness
         - testing/tps
-        - testing/web-platform
+        - testing/web-platform/tests
         - toolkit
         - xpcom/idl-parser
     extensions: ['py']

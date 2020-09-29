@@ -34,6 +34,7 @@ def check_args(kwargs):
     del kwargs["token_file"]
     return kwargs
 
+
 def parse_args():
     parser = create_parser()
     kwargs = vars(parser.parse_args())
