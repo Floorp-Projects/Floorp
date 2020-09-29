@@ -259,11 +259,6 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
-   * Called when a window has been lowered.
-   */
-  [noscript] void windowLowered(in mozIDOMWindowProxy aWindow);
-
-  /**
    * Called when a new document in a window is shown.
    *
    * If aNeedsFocus is true, then focus events are expected to be fired on the
