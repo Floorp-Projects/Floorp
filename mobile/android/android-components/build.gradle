@@ -269,11 +269,11 @@ subprojects {
                     def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
                     def mainSrc = "$project.projectDir/src/main/java"
 
-                    sourceDirectories = files([mainSrc])
-                    classDirectories = files([kotlinDebugTree, javaDebugTree])
-                    executionData = fileTree(dir: project.buildDir, includes: [
+                    sourceDirectories.setFrom(files([mainSrc]))
+                    classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+                    executionData.setFrom(fileTree(dir: project.buildDir, includes: [
                             'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-                    ])
+                    ]))
                 }
 
                 android {
