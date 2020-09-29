@@ -2670,7 +2670,7 @@ class nsIFrame : public nsQueryFrame {
    * intrinsic size or the intrinsic aspect ratio of a scalable vector image
    * without an intrinsic size.
    */
-  virtual mozilla::AspectRatio GetIntrinsicRatio();
+  virtual mozilla::AspectRatio GetIntrinsicRatio() const;
 
   /**
    * Compute the size that a frame will occupy.  Called while

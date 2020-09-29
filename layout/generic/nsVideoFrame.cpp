@@ -638,7 +638,7 @@ Maybe<nsSize> nsVideoFrame::PosterImageSize() const {
   return Nothing();
 }
 
-AspectRatio nsVideoFrame::GetIntrinsicRatio() {
+AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
   if (!HasVideoElement()) {
     // Audio elements have no intrinsic ratio.
     return AspectRatio();

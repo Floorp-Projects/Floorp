@@ -84,7 +84,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   mozilla::AspectRatio GetComputedIntrinsicRatio() const {
     return mIntrinsicRatio;
   }
-  mozilla::AspectRatio GetIntrinsicRatio() final {
+  mozilla::AspectRatio GetIntrinsicRatio() const final {
     return GetComputedIntrinsicRatio();
   }
   void Reflow(nsPresContext*, ReflowOutput&, const ReflowInput&,

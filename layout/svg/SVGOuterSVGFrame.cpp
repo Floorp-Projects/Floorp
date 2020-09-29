@@ -246,7 +246,7 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
 }
 
 /* virtual */
-AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() {
+AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() const {
   if (IsReplacedAndContainSize(this)) {
     return AspectRatio();
   }

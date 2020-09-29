@@ -5963,7 +5963,7 @@ IntrinsicSize nsIFrame::GetIntrinsicSize() {
 }
 
 /* virtual */
-AspectRatio nsIFrame::GetIntrinsicRatio() { return AspectRatio(); }
+AspectRatio nsIFrame::GetIntrinsicRatio() const { return AspectRatio(); }
 
 static nscoord ComputeInlineSizeFromAspectRatio(
     WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aBlockSize,
