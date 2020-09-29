@@ -543,7 +543,8 @@ urlbar:
         type of the selected result in the urlbar panel. One of:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
-          "keywordoffer", "canonized", "tip", "tiphelp", "formhistory", "none"
+          "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
+          "tabtosearch", "none"
   abandonment:
     objects: ["blur"]
     release_channel_collection: opt-out
