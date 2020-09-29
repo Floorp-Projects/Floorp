@@ -155,3 +155,31 @@ add_task(function test_ipv6() {
   // Hopefully this will change after bug 1603199.
   equal(uri.host, "2001::1");
 });
+
+add_task(function test_serialization() {
+  let uri = stringToDefaultURI("http://example.org/path");
+  let str = serialize_to_escaped_string(uri);
+  let other = deserialize_from_escaped_string(str).QueryInterface(Ci.nsIURI);
+  equal(other.spec, uri.spec);
+});
+
+// This test assumes the serialization never changes, which might not be true.
+// It's OK to change the test if we ever make changes to the serialization
+// code and this starts failing.
+add_task(function test_deserialize_from_string() {
+  let payload =
+    "%04DZ%A0%FD%27L%99%BDAk%E61%8A%E9%2C%00%00%00%00%00%00%00" +
+    "%00%C0%00%00%00%00%00%00F%00%00%00%13scheme%3Astuff/to/say";
+  equal(
+    deserialize_from_escaped_string(payload).QueryInterface(Ci.nsIURI).spec,
+    stringToDefaultURI("scheme:stuff/to/say").spec
+  );
+
+  let payload2 =
+    "%04DZ%A0%FD%27L%99%BDAk%E61%8A%E9%2C%00%00%00%00%00%00%00" +
+    "%00%C0%00%00%00%00%00%00F%00%00%00%17http%3A//example.org/path";
+  equal(
+    deserialize_from_escaped_string(payload2).QueryInterface(Ci.nsIURI).spec,
+    stringToDefaultURI("http://example.org/path").spec
+  );
+});
