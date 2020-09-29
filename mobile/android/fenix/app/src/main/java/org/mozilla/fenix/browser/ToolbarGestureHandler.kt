@@ -90,27 +90,27 @@ class ToolbarGestureHandler(
         when (getDestination()) {
             is Destination.Tab -> {
                 // Restrict the range of motion for the views so you can't start a swipe in one direction
-                // then move your finger far enough in the other direction and make the content visually
-                // start sliding off screen the other way.
+                // then move your finger far enough or in the other direction and make the content visually
+                // start sliding off screen.
                 tabPreview.translationX = when (gestureDirection) {
                     GestureDirection.RIGHT_TO_LEFT -> min(
                         windowWidth.toFloat() + previewOffset,
                         tabPreview.translationX - distanceX
-                    )
+                    ).coerceAtLeast(0f)
                     GestureDirection.LEFT_TO_RIGHT -> max(
                         -windowWidth.toFloat() - previewOffset,
                         tabPreview.translationX - distanceX
-                    )
+                    ).coerceAtMost(0f)
                 }
                 contentLayout.translationX = when (gestureDirection) {
                     GestureDirection.RIGHT_TO_LEFT -> min(
                         0f,
                         contentLayout.translationX - distanceX
-                    )
+                    ).coerceAtLeast(-windowWidth.toFloat() - previewOffset)
                     GestureDirection.LEFT_TO_RIGHT -> max(
                         0f,
                         contentLayout.translationX - distanceX
-                    )
+                    ).coerceAtMost(windowWidth.toFloat() + previewOffset)
                 }
             }
             is Destination.None -> {
