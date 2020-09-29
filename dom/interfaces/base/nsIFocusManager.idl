@@ -259,11 +259,6 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
-   * Fire any events that have been delayed due to synchronized actions.
-   */
-  [noscript] void fireDelayedEvents(in Document aDocument);
-
-  /**
    * Indicate that a plugin wishes to take the focus. This is similar to a
    * normal focus except that the widget focus is not changed. Updating the
    * widget focus state is the responsibility of the caller.
