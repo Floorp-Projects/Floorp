@@ -1015,6 +1015,14 @@ add_task(function mainTest() {
   });
 });
 
+function check_round_trip_serialization(spec) {
+  dump(`checking ${spec}\n`);
+  let uri = gIoService.newURI(spec);
+  let str = serialize_to_escaped_string(uri);
+  let other = deserialize_from_escaped_string(str).QueryInterface(Ci.nsIURI);
+  equal(other.spec, uri.spec);
+}
+
 add_task(function test_iconURI_serialization() {
   // URIs taken from test_moz_icon_uri.js
 
@@ -1026,13 +1034,9 @@ add_task(function test_iconURI_serialization() {
     "moz-icon://file://foo.txt",
   ];
 
-  function check_round_trip_serialization(spec) {
-    dump(`checking ${spec}\n`);
-    let uri = gIoService.newURI(spec);
-    let str = serialize_to_escaped_string(uri);
-    let other = deserialize_from_escaped_string(str).QueryInterface(Ci.nsIURI);
-    equal(other.spec, uri.spec);
-  }
-
   tests.forEach(str => check_round_trip_serialization(str));
+});
+
+add_task(function test_jarURI_serialization() {
+  check_round_trip_serialization("jar:http://example.com/bar.jar!/");
 });
