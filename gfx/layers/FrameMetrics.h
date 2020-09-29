@@ -678,6 +678,9 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
 ));
 // clang-format on
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const OverscrollBehavior& aBehavior);
+
 struct OverscrollBehaviorInfo {
   OverscrollBehaviorInfo();
 
@@ -686,6 +689,8 @@ struct OverscrollBehaviorInfo {
       StyleOverscrollBehavior aBehaviorX, StyleOverscrollBehavior aBehaviorY);
 
   bool operator==(const OverscrollBehaviorInfo& aOther) const;
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const OverscrollBehaviorInfo& aInfo);
 
   OverscrollBehavior mBehaviorX;
   OverscrollBehavior mBehaviorY;

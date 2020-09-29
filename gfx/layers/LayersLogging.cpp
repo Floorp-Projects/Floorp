@@ -53,26 +53,6 @@ void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
   aStream << sfx;
 }
 
-void AppendToString(std::stringstream& aStream, OverscrollBehavior aBehavior,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  switch (aBehavior) {
-    case OverscrollBehavior::Auto: {
-      aStream << "auto";
-      break;
-    }
-    case OverscrollBehavior::Contain: {
-      aStream << "contain";
-      break;
-    }
-    case OverscrollBehavior::None: {
-      aStream << "none";
-      break;
-    }
-  }
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
@@ -87,20 +67,9 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   if (m.HasMaskLayer()) {
     aStream << "] [mask=" << m.ScrollClip().GetMaskLayerIndex().value();
   }
-  OverscrollBehavior overscrollX = m.GetOverscrollBehavior().mBehaviorX;
-  OverscrollBehavior overscrollY = m.GetOverscrollBehavior().mBehaviorY;
-  if (overscrollX == overscrollY && overscrollX != OverscrollBehavior::Auto) {
-    AppendToString(aStream, overscrollX, "] [overscroll=");
-  } else {
-    if (overscrollX != OverscrollBehavior::Auto) {
-      AppendToString(aStream, overscrollX, "] [overscroll-x=");
-    }
-    if (overscrollY != OverscrollBehavior::Auto) {
-      AppendToString(aStream, overscrollY, "] [overscroll-y=");
-    }
-  }
-  aStream << "] [" << m.GetScrollUpdates().Length() << " scrollupdates";
-  aStream << "] }" << sfx;
+  aStream << "] [overscroll=" << m.GetOverscrollBehavior() << "] ["
+          << m.GetScrollUpdates().Length() << " scrollupdates"
+          << "] }" << sfx;
 }
 
 void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
