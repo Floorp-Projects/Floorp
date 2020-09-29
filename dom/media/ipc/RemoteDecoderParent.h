@@ -31,7 +31,7 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
 
   // PRemoteDecoderParent
   IPCResult RecvInit(InitResolver&& aResolver);
-  IPCResult RecvDecode(nsTArray<MediaRawDataIPDL>&& aData,
+  IPCResult RecvDecode(ArrayOfRemoteMediaRawData* aData,
                        DecodeResolver&& aResolver);
   IPCResult RecvFlush(FlushResolver&& aResolver);
   IPCResult RecvDrain(DrainResolver&& aResolver);
@@ -54,8 +54,8 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
   RefPtr<MediaDataDecoder> mDecoder;
 
  private:
-  void DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
-                        DecodedOutputIPDL&& aOutput,
+  void DecodeNextSample(const RefPtr<ArrayOfRemoteMediaRawData>& aData,
+                        size_t aIndex, DecodedOutputIPDL&& aOutput,
                         DecodeResolver&& aResolver);
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
   const RefPtr<nsISerialEventTarget> mManagerThread;

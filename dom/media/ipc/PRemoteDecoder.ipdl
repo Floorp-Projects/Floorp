@@ -11,6 +11,7 @@ using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::MediaResult from "MediaResult.h";
+using refcounted class mozilla::ArrayOfRemoteMediaRawData from "mozilla/RemoteMediaData.h";
 using refcounted class mozilla::ArrayOfRemoteVideoData from "mozilla/RemoteMediaData.h";
 include PMediaDecoderParams;
 include LayersSurfaces;
@@ -72,7 +73,7 @@ parent:
   // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but
   // must be released explicitly using DeallocateSurfaceDescriptorGPUVideo
   // on the manager protocol.
-  async Decode(MediaRawDataIPDL[] data) returns (DecodeResultIPDL result);
+  async Decode(ArrayOfRemoteMediaRawData data) returns (DecodeResultIPDL result);
   async Flush() returns (MediaResult error);
   async Drain() returns (DecodeResultIPDL result);
   async Shutdown() returns (bool unused);
