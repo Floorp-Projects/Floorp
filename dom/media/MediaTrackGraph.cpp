@@ -2446,6 +2446,7 @@ SourceMediaTrack::SourceMediaTrack(MediaSegment::Type aType,
   mUpdateTrack->mData = UniquePtr<MediaSegment>(mSegment->CreateEmptyClone());
   mUpdateTrack->mEnded = false;
   mUpdateTrack->mPullingEnabled = false;
+  mUpdateTrack->mInForcedShutdown = false;
 }
 
 nsresult SourceMediaTrack::OpenAudioInput(CubebUtils::AudioDeviceID aID,
@@ -2687,7 +2688,8 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   MOZ_DIAGNOSTIC_ASSERT(aSegment->GetType() == mType);
   TrackTime appended = 0;
   auto graph = GraphImpl();
-  if (!mUpdateTrack || mUpdateTrack->mEnded || !graph) {
+  if (!mUpdateTrack || mUpdateTrack->mEnded ||
+      mUpdateTrack->mInForcedShutdown || !graph) {
     aSegment->Clear();
     return appended;
   }
