@@ -6,8 +6,8 @@
 
 #include "MobileViewportManager.h"
 
-#include "LayersLogging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
@@ -500,7 +500,7 @@ void MobileViewportManager::UpdateVisualViewportSize(
   ScreenSize compositionSize = ScreenSize(GetCompositionSize(aDisplaySize));
 
   CSSSize compSize = compositionSize / aZoom;
-  MVM_LOG("%p: Setting VVPS %s\n", this, Stringify(compSize).c_str());
+  MVM_LOG("%p: Setting VVPS %s\n", this, ToString(compSize).c_str());
   mContext->SetVisualViewportSize(compSize);
 }
 
@@ -566,7 +566,7 @@ void MobileViewportManager::UpdateSizesBeforeReflow() {
 
     mDisplaySize = *newDisplaySize;
     MVM_LOG("%p: Reflow starting, display size updated to %s\n", this,
-            Stringify(mDisplaySize).c_str());
+            ToString(mDisplaySize).c_str());
 
     if (mDisplaySize.width == 0 || mDisplaySize.height == 0) {
       return;
@@ -577,7 +577,7 @@ void MobileViewportManager::UpdateSizesBeforeReflow() {
     nsViewportInfo viewportInfo = mContext->GetViewportInfo(displaySize);
     mMobileViewportSize = viewportInfo.GetSize();
     MVM_LOG("%p: MVSize updated to %s\n", this,
-            Stringify(mMobileViewportSize).c_str());
+            ToString(mMobileViewportSize).c_str());
   }
 }
 
@@ -637,7 +637,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
           viewportInfo.IsDefaultZoomValid());
 
   CSSSize viewport = viewportInfo.GetSize();
-  MVM_LOG("%p: Computed CSS viewport %s\n", this, Stringify(viewport).c_str());
+  MVM_LOG("%p: Computed CSS viewport %s\n", this, ToString(viewport).c_str());
 
   if (!mIsFirstPaint && mMobileViewportSize == viewport) {
     // Nothing changed, so no need to do a reflow
@@ -680,7 +680,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
   // Kick off a reflow.
   MVM_LOG("%p: Triggering reflow with viewport %s\n", this,
-          Stringify(viewport).c_str());
+          ToString(viewport).c_str());
   mContext->Reflow(viewport);
 
   // We are going to fit the content to the display width if the initial-scale
@@ -713,7 +713,7 @@ void MobileViewportManager::ShrinkToDisplaySizeIfNeeded() {
   if (Maybe<CSSRect> scrollableRect =
           mContext->CalculateScrollableRectForRSF()) {
     MVM_LOG("%p: ShrinkToDisplaySize using scrollableRect %s\n", this,
-            Stringify(scrollableRect->Size()).c_str());
+            ToString(scrollableRect->Size()).c_str());
     UpdateResolutionForContentSizeChange(scrollableRect->Size());
   }
 }

@@ -90,8 +90,8 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     }
     AppendToString(aStream, m.GetZoom(), "] [z=", "] }");
   } else {
-    AppendToString(aStream, m.GetRootCompositionSize(), "] [rcs=");
-    aStream << "] [v=" << m.GetLayoutViewport()
+    aStream << "] [rcs=" << m.GetRootCompositionSize()
+            << "] [v=" << m.GetLayoutViewport()
             << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
                                m.GetDevPixelsPerCSSPixel().scale,
                                m.GetPresShellResolution())
