@@ -5,19 +5,7 @@
 
 const TEST_URL = "data:text/html,<html><body></body></html>";
 
-// This code can be consolidated in the EventUtils module (bug 1126772).
-const isWindows = AppConstants.platform == "win";
-const isMac = AppConstants.platform == "macosx";
-const mouseDown = isWindows ? 2 : isMac ? 1 : 4; // eslint-disable-line no-nested-ternary
-const mouseUp = isWindows ? 4 : isMac ? 2 : 7; // eslint-disable-line no-nested-ternary
-const utils = window.windowUtils;
-const scale = utils.screenPixelsPerCSSPixel;
-function synthesizeNativeMouseClick(aElement) {
-  let rect = aElement.getBoundingClientRect();
-  let win = aElement.ownerGlobal;
-  let x = win.mozInnerScreenX + (rect.left + rect.right) / 2;
-  let y = win.mozInnerScreenY + (rect.top + rect.bottom) / 2;
-
+function synthesizeNativeMouseClickAtCenterAsync(aElement) {
   // Wait for the mouseup event to occur before continuing.
   return new Promise((resolve, reject) => {
     function eventOccurred(e) {
@@ -27,8 +15,7 @@ function synthesizeNativeMouseClick(aElement) {
 
     aElement.addEventListener("mouseup", eventOccurred, true);
 
-    utils.sendNativeMouseEvent(x * scale, y * scale, mouseDown, 0, null);
-    utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
+    EventUtils.synthesizeNativeMouseClickAtCenter(aElement, resolve);
   });
 }
 
@@ -63,7 +50,9 @@ add_task(async function test_PanelMultiView_toggle_with_other_popup() {
       // 3. Click the button to which the main menu is anchored. We need a native
       // mouse event to simulate the exact platform behavior with popups.
       let clickFn = () =>
-        synthesizeNativeMouseClick(document.getElementById("PanelUI-button"));
+        synthesizeNativeMouseClickAtCenterAsync(
+          document.getElementById("PanelUI-button")
+        );
 
       if (AppConstants.platform == "win") {
         // On Windows, the operation will close both popups.
