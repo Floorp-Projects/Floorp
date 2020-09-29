@@ -1751,9 +1751,10 @@ pref("privacy.userContext.extension", "");
 // tab in the default container
 pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) || defined(XP_WIN) || defined(XP_MACOSX)
 // Set to true to allow the user to silence all notifications when
-// sharing the screen.
+// sharing the screen. Only shipping on Windows and macOS out to
+// release. Enabled for all desktop platforms on Nightly.
 pref("privacy.webrtc.allowSilencingNotifications", true);
 // Set to true to use the legacy WebRTC global indicator
 pref("privacy.webrtc.legacyGlobalIndicator", false);
