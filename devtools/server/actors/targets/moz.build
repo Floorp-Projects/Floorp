@@ -13,4 +13,5 @@ DevToolsModules(
     'parent-process.js',
     'target-actor-registry.jsm',
     'webextension.js',
+    'worker.js',
 )
