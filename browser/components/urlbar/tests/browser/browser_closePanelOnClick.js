@@ -8,29 +8,6 @@
 
 "use strict";
 
-function synthesizeNativeMouseClick(elt) {
-  let rect = elt.getBoundingClientRect();
-  let win = elt.ownerGlobal;
-  let x =
-    (win.mozInnerScreenX + (rect.left + rect.right) / 2) *
-    win.windowUtils.screenPixelsPerCSSPixel;
-  let y =
-    (win.mozInnerScreenY + (rect.top + rect.bottom) / 2) *
-    win.windowUtils.screenPixelsPerCSSPixel;
-  let nativeMessageMouseDown = 4;
-  let nativeMessageMouseUp = 7;
-  if (AppConstants.platform == "win") {
-    nativeMessageMouseDown = 2;
-    nativeMessageMouseUp = 4;
-  } else if (AppConstants.platform == "macosx") {
-    nativeMessageMouseDown = 1;
-    nativeMessageMouseUp = 2;
-  }
-
-  win.windowUtils.sendNativeMouseEvent(x, y, nativeMessageMouseDown, 0, null);
-  win.windowUtils.sendNativeMouseEvent(x, y, nativeMessageMouseUp, 0, null);
-}
-
 add_task(async function() {
   await BrowserTestUtils.withNewTab("about:robots", async () => {
     for (let elt of [
@@ -46,7 +23,7 @@ add_task(async function() {
       // Must have at least one test.
       Assert.ok(!!elt, "Found a valid element: " + (elt.id || elt.localName));
       await UrlbarTestUtils.promisePopupClose(window, () =>
-        synthesizeNativeMouseClick(elt)
+        EventUtils.synthesizeNativeMouseClickAtCenter(elt)
       );
     }
   });
