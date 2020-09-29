@@ -26,6 +26,12 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PluralForm",
+  "resource://gre/modules/PluralForm.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gScreenManager",
@@ -74,9 +80,8 @@ const WebRTCIndicator = {
     this.loaded = false;
     this.isClosingInternally = false;
 
-    if (AppConstants.platform == "macosx") {
-      this.macOSIndicator = new MacOSWebRTCStatusbarIndicator();
-    }
+    this.statusBar = null;
+    this.statusBarMenus = new Set();
 
     if (
       Services.prefs.getBoolPref("privacy.webrtc.hideGlobalIndicator", false)
@@ -91,9 +96,6 @@ const WebRTCIndicator = {
    * update itself when sharing states have changed.
    */
   updateIndicatorState() {
-    if (this.macOSIndicator) {
-      this.macOSIndicator.updateIndicatorState();
-    }
     // It's possible that we were called externally before the indicator
     // finished loading. If so, then bail out - we're going to call
     // updateIndicatorState ourselves automatically once the load
@@ -107,12 +109,32 @@ const WebRTCIndicator = {
     // state updates as window movement caused by the user.
     this.updatingIndicatorState = true;
 
-    this.updateWindowAttr("sharingvideo", webrtcUI.showCameraIndicator);
-    this.updateWindowAttr("sharingaudio", webrtcUI.showMicrophoneIndicator);
+    let showCameraIndicator = webrtcUI.showCameraIndicator;
+    let showMicrophoneIndicator = webrtcUI.showMicrophoneIndicator;
+    let showScreenSharingIndicator = webrtcUI.showScreenSharingIndicator;
+    if (this.statusBar) {
+      let statusMenus = new Map([
+        ["Camera", showCameraIndicator],
+        ["Microphone", showMicrophoneIndicator],
+        ["Screen", showScreenSharingIndicator],
+      ]);
 
-    let sharingScreen = webrtcUI.showScreenSharingIndicator.startsWith(
-      "Screen"
-    );
+      for (let [name, shouldShow] of statusMenus) {
+        let menu = document.getElementById(`webRTC-sharing${name}-menu`);
+        if (shouldShow && !this.statusBarMenus.has(menu)) {
+          this.statusBar.addItem(menu);
+          this.statusBarMenus.add(menu);
+        } else if (!shouldShow && this.statusBarMenus.has(menu)) {
+          this.statusBar.removeItem(menu);
+          this.statusBarMenus.delete(menu);
+        }
+      }
+    }
+
+    this.updateWindowAttr("sharingvideo", showCameraIndicator);
+    this.updateWindowAttr("sharingaudio", showMicrophoneIndicator);
+
+    let sharingScreen = showScreenSharingIndicator.startsWith("Screen");
     this.updateWindowAttr("sharingscreen", sharingScreen);
 
     // We don't currently support the browser-tab sharing case, so we don't
@@ -120,9 +142,7 @@ const WebRTCIndicator = {
 
     // We special-case sharing a window, because we want to have a slightly
     // different UI if we're sharing a browser window.
-    let sharingWindow = webrtcUI.showScreenSharingIndicator.startsWith(
-      "Window"
-    );
+    let sharingWindow = showScreenSharingIndicator.startsWith("Window");
     this.updateWindowAttr("sharingwindow", sharingWindow);
 
     if (sharingWindow) {
@@ -284,17 +304,43 @@ const WebRTCIndicator = {
         }
         break;
       }
+      case "popupshowing": {
+        this.onPopupShowing(event);
+        break;
+      }
+      case "popuphiding": {
+        this.onPopupHiding(event);
+        break;
+      }
+      case "command": {
+        this.onCommand(event);
+        break;
+      }
     }
   },
 
   onLoad() {
     this.loaded = true;
 
+    if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
+      this.statusBar = Cc["@mozilla.org/widget/systemstatusbar;1"].getService(
+        Ci.nsISystemStatusBar
+      );
+    }
+
     this.updateIndicatorState();
 
     window.addEventListener("click", this);
     window.addEventListener("change", this);
     window.addEventListener("sizemodechange", this);
+
+    if (this.statusBar) {
+      // We only want these events for the system status bar menus.
+      window.addEventListener("popupshowing", this);
+      window.addEventListener("popuphiding", this);
+      window.addEventListener("command", this);
+    }
+
     window.windowRoot.addEventListener("MozUpdateWindowPos", this);
 
     // Alert accessibility implementations stuff just changed. We only need to do
@@ -314,9 +360,10 @@ const WebRTCIndicator = {
     Services.ppmm.sharedData.set("WebRTC:GlobalMicrophoneMute", false);
     Services.ppmm.sharedData.flush();
 
-    if (this.macOSIndicator) {
-      this.macOSIndicator.close();
-      this.macOSIndicator = null;
+    if (this.statusBar) {
+      for (let menu of this.statusBarMenus) {
+        this.statusBar.removeItem(menu);
+      }
     }
 
     if (!this.isClosingInternally) {
@@ -380,6 +427,87 @@ const WebRTCIndicator = {
         break;
       }
     }
+  },
+
+  onPopupShowing(event) {
+    let menupopup = event.target;
+    let type = menupopup.getAttribute("type");
+
+    if (!["Camera", "Microphone", "Screen"].includes(type)) {
+      return;
+    }
+
+    let activeStreams;
+    if (type == "Camera") {
+      activeStreams = webrtcUI.getActiveStreams(true, false, false);
+    } else if (type == "Microphone") {
+      activeStreams = webrtcUI.getActiveStreams(false, true, false);
+    } else if (type == "Screen") {
+      activeStreams = webrtcUI.getActiveStreams(false, false, true);
+      type = webrtcUI.showScreenSharingIndicator;
+    }
+
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/webrtcIndicator.properties"
+    );
+
+    if (activeStreams.length == 1) {
+      let stream = activeStreams[0];
+
+      let menuitem = document.createXULElement("menuitem");
+      let labelId = `webrtcIndicator.sharing${type}With.menuitem`;
+      let label = stream.browser.contentTitle || stream.uri;
+      menuitem.setAttribute(
+        "label",
+        bundle.formatStringFromName(labelId, [label])
+      );
+      menuitem.setAttribute("disabled", "true");
+      menupopup.appendChild(menuitem);
+
+      menuitem = document.createXULElement("menuitem");
+      menuitem.setAttribute(
+        "label",
+        bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem")
+      );
+      menuitem.stream = stream;
+      menuitem.addEventListener("command", this);
+
+      menupopup.appendChild(menuitem);
+      return;
+    }
+
+    // We show a different menu when there are several active streams.
+    let menuitem = document.createXULElement("menuitem");
+    let labelId = `webrtcIndicator.sharing${type}WithNTabs.menuitem`;
+    let count = activeStreams.length;
+    let label = PluralForm.get(
+      count,
+      bundle.GetStringFromName(labelId)
+    ).replace("#1", count);
+    menuitem.setAttribute("label", label);
+    menuitem.setAttribute("disabled", "true");
+    menupopup.appendChild(menuitem);
+
+    for (let stream of activeStreams) {
+      let item = document.createXULElement("menuitem");
+      labelId = "webrtcIndicator.controlSharingOn.menuitem";
+      label = stream.browser.contentTitle || stream.uri;
+      item.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
+      item.stream = stream;
+      item.addEventListener("command", this);
+      menupopup.appendChild(item);
+    }
+  },
+
+  onPopupHiding(event) {
+    let menu = event.target;
+    while (menu.firstChild) {
+      menu.firstChild.remove();
+    }
+  },
+
+  onCommand(event) {
+    webrtcUI.showSharingDoorhanger(event.target.stream);
   },
 
   /**
