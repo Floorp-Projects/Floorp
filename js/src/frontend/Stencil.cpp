@@ -444,8 +444,18 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
 
   if (compilationInfo.input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(compilationInfo.input.lazy);
-    return JSScript::fullyInitFromStencil(cx, compilationInfo, gcOutput,
-                                          gcOutput.script, script, fun);
+
+    if (!JSScript::fullyInitFromStencil(cx, compilationInfo, gcOutput,
+                                        gcOutput.script, script, fun)) {
+      return false;
+    }
+
+    if (script.allowRelazify) {
+      MOZ_ASSERT(gcOutput.script->isRelazifiable());
+      gcOutput.script->setAllowRelazify();
+    }
+
+    return true;
   }
 
   gcOutput.script =
