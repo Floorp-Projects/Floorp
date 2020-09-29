@@ -279,6 +279,8 @@ def get_repack_configs(repackRepo, token):
 
 
 def get_attribution_config(manifestRepo, token):
+    log.debug("Skipping for 81.x")
+    return {}
     log.debug("Querying for manifest attribution_config.yml in %s", manifestRepo)
     owner, repo = get_repo_params(manifestRepo)
     query = MANIFEST_QUERY % {'owner': owner, 'repo': repo, 'file': 'attribution_config.yml'}
