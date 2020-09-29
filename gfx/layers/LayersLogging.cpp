@@ -53,28 +53,6 @@ void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
   aStream << sfx;
 }
 
-void AppendToString(std::stringstream& aStream, const EventRegions& e,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx << "{";
-  if (!e.mHitRegion.IsEmpty()) {
-    aStream << " hitregion=" << e.mHitRegion << "";
-  }
-  if (!e.mDispatchToContentHitRegion.IsEmpty()) {
-    aStream << " dispatchtocontentregion=" << e.mDispatchToContentHitRegion
-            << "";
-  }
-  if (!e.mNoActionRegion.IsEmpty()) {
-    aStream << " NoActionRegion=" << e.mNoActionRegion << "";
-  }
-  if (!e.mHorizontalPanRegion.IsEmpty()) {
-    aStream << " HorizontalPanRegion=" << e.mHorizontalPanRegion << "";
-  }
-  if (!e.mVerticalPanRegion.IsEmpty()) {
-    aStream << " VerticalPanRegion=" << e.mVerticalPanRegion << "";
-  }
-  aStream << "}" << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, OverscrollBehavior aBehavior,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
