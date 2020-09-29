@@ -72,8 +72,6 @@ class nsWaylandDisplay {
   MessageLoop* GetThreadLoop() { return mThreadLoop; }
   void ShutdownThreadLoop();
 
-  void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
-  zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
  private:
