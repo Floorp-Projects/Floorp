@@ -8627,8 +8627,8 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
           aLoadState->GetLoadingSessionHistoryInfo()->mInfo);
     }
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("nsDocShell %p NavBetweenSameDoc=%d", this,
-             aState.mHistoryNavBetweenSameDoc));
+            ("nsDocShell::IsSameDocumentNavigation %p NavBetweenSameDoc=%d",
+             this, aState.mHistoryNavBetweenSameDoc));
   } else {
     if (mOSHE && aLoadState->LoadIsFromSessionHistory()) {
       // We're doing a history load.
@@ -8682,6 +8682,14 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
     return true;
   }
 
+  MOZ_LOG(
+      gSHLog, LogLevel::Debug,
+      ("nsDocShell::IsSameDocumentNavigation %p !LoadIsFromSessionHistory=%s "
+       "!PostDataStream: %s mSameExceptHashes: %s mNewURIHasRef: %s",
+       this, !aLoadState->LoadIsFromSessionHistory() ? "true" : "false",
+       !aLoadState->PostDataStream() ? "true" : "false",
+       aState.mSameExceptHashes ? "true" : "false",
+       aState.mNewURIHasRef ? "true" : "false"));
   return !aLoadState->LoadIsFromSessionHistory() &&
          !aLoadState->PostDataStream() && aState.mSameExceptHashes &&
          aState.mNewURIHasRef;
@@ -8694,6 +8702,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   MOZ_ASSERT(IsSameDocumentNavigation(aLoadState, state));
 #endif
 
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("nsDocShell::HandleSameDocumentNavigation %p %s -> %s", this,
+           mCurrentURI->GetSpecOrDefault().get(),
+           aLoadState->URI()->GetSpecOrDefault().get()));
   nsCOMPtr<nsIURI> currentURI = mCurrentURI;
 
   // Save the position of the scrollers.
@@ -8778,26 +8790,18 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   uint32_t cacheKey = 0;
 
   bool scrollRestorationIsManual = false;
-  if (mozilla::SessionHistoryInParent() ? !!mActiveEntry : !!mOSHE) {
-    if (mozilla::SessionHistoryInParent()) {
-      // FIXME Need to set scroll position on mActiveEntry.
-      scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
-    } else {
+  if (!mozilla::SessionHistoryInParent()) {
+    if (mOSHE) {
       /* save current position of scroller(s) (bug 59774) */
       mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
-    }
-    // Get the postdata and page ident from the current page, if
-    // the new load is being done via normal means.  Note that
-    // "normal means" can be checked for just by checking for
-    // LOAD_CMD_NORMAL, given the loadType and allowScroll check
-    // above -- it filters out some LOAD_CMD_NORMAL cases that we
-    // wouldn't want here.
-    if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
-      if (mozilla::SessionHistoryInParent()) {
-        postData = mActiveEntry->GetPostData();
-        cacheKey = mActiveEntry->GetCacheKey();
-      } else {
+      // Get the postdata and page ident from the current page, if
+      // the new load is being done via normal means.  Note that
+      // "normal means" can be checked for just by checking for
+      // LOAD_CMD_NORMAL, given the loadType and allowScroll check
+      // above -- it filters out some LOAD_CMD_NORMAL cases that we
+      // wouldn't want here.
+      if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
         postData = mOSHE->GetPostData();
         cacheKey = mOSHE->GetCacheKey();
       }
@@ -8805,14 +8809,6 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // Link our new SHEntry to the old SHEntry's back/forward
       // cache data, since the two SHEntries correspond to the
       // same document.
-      if (mLoadingEntry && !mLoadingEntry->mLoadIsFromSessionHistory) {
-        // If we're not doing a history load, scroll restoration
-        // should be inherited from the previous session history entry.
-        // XXX This needs most probably tweaks once fragment navigation is fixed
-        // to work with session-history-in-parent.
-        SetScrollRestorationIsManualOnHistoryEntry(nullptr,
-                                                   scrollRestorationIsManual);
-      }
       if (mLSHE) {
         if (!aLoadState->LoadIsFromSessionHistory()) {
           // If we're not doing a history load, scroll restoration
@@ -8821,6 +8817,17 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
                                                      scrollRestorationIsManual);
         }
         mLSHE->AdoptBFCacheEntry(mOSHE);
+      }
+    }
+  } else {
+    if (mLoadingEntry) {
+      if (!mLoadingEntry->mLoadIsFromSessionHistory) {
+        // If we're not doing a history load, scroll restoration
+        // should be inherited from the previous session history entry.
+        // XXX This needs most probably tweaks once fragment navigation is
+        // fixed to work with session-history-in-parent.
+        SetScrollRestorationIsManualOnHistoryEntry(nullptr,
+                                                   scrollRestorationIsManual);
       }
     }
   }
@@ -8840,57 +8847,118 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
    * by OnNewURI() for normal loads or aLoadState->SHEntry() for history
    * loads.
    */
-  if (mLSHE) {
-    SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
-    // Save the postData obtained from the previous page
-    // in to the session history entry created for the
-    // anchor page, so that any history load of the anchor
-    // page will restore the appropriate postData.
-    if (postData) {
-      mOSHE->SetPostData(postData);
-    }
-
-    // Make sure we won't just repost without hitting the
-    // cache first
-    if (cacheKey != 0) {
-      // XXX Ensure this method is still called when fragment navigation is
-      //     fixed to work with session history in parent.
-      SetCacheKeyOnHistoryEntry(mOSHE, cacheKey);
-    }
-  }
-  if (mozilla::SessionHistoryInParent() && mLoadingEntry) {
-    MOZ_LOG(
-        gSHLog, LogLevel::Debug,
-        ("Moving the loading entry to the active entry on nsDocShell %p to %s",
-         this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
-    mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
-    nsID changeID = {};
-    if (XRE_IsParentProcess()) {
-      mBrowsingContext->Canonical()->SessionHistoryCommit(
-          mLoadingEntry->mLoadId, changeID, mLoadType);
-    } else {
-      RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-      if (rootSH) {
-        // This is a load from session history, so we can update
-        // index and length immediately.
-        rootSH->SetIndexAndLength(mLoadingEntry->mRequestedIndex,
-                                  mLoadingEntry->mSessionHistoryLength,
-                                  changeID);
+  if (!mozilla::SessionHistoryInParent()) {
+    if (mLSHE) {
+      SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
+      // Save the postData obtained from the previous page
+      // in to the session history entry created for the
+      // anchor page, so that any history load of the anchor
+      // page will restore the appropriate postData.
+      if (postData) {
+        mOSHE->SetPostData(postData);
       }
-      ContentChild* cc = ContentChild::GetSingleton();
-      mozilla::Unused << cc->SendHistoryCommit(
-          mBrowsingContext, mLoadingEntry->mLoadId, changeID, mLoadType);
+
+      // Make sure we won't just repost without hitting the
+      // cache first
+      if (cacheKey != 0) {
+        mOSHE->SetCacheKey(cacheKey);
+      }
+    }
+
+    /* Set the title for the SH entry for this target url so that
+     * SH menus in go/back/forward buttons won't be empty for this.
+     * Note, this happens on mOSHE (and mActiveEntry in the future) because of
+     * the code above.
+     * XXX HandleSameDocumentNavigation needs to be made work with
+     *     session-history-in-parent, and then this might not be needed.
+     */
+    SetTitleOnHistoryEntry();
+  } else {
+    if (aLoadState->LoadIsFromSessionHistory()) {
+      MOZ_LOG(
+          gSHLog, LogLevel::Debug,
+          ("Moving the loading entry to the active entry on nsDocShell %p to "
+           "%s",
+           this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
+      mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
+      nsID changeID = {};
+      if (XRE_IsParentProcess()) {
+        mBrowsingContext->Canonical()->SessionHistoryCommit(
+            mLoadingEntry->mLoadId, changeID, mLoadType);
+      } else {
+        RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
+        if (rootSH) {
+          // This is a load from session history, so we can update
+          // index and length immediately.
+          rootSH->SetIndexAndLength(mLoadingEntry->mRequestedIndex,
+                                    mLoadingEntry->mSessionHistoryLength,
+                                    changeID);
+        }
+        ContentChild* cc = ContentChild::GetSingleton();
+        mozilla::Unused << cc->SendHistoryCommit(
+            mBrowsingContext, mLoadingEntry->mLoadId, changeID, mLoadType);
+      }
+      // FIXME Need to set postdata.
+      SetCacheKeyOnHistoryEntry(nullptr, cacheKey);
+
+      // Set the title for the SH entry for this target url so that
+      // SH menus in go/back/forward buttons won't be empty for this.
+      SetTitleOnHistoryEntry();
+    } else {
+      Maybe<bool> scrollRestorationIsManual;
+      if (mActiveEntry) {
+        scrollRestorationIsManual.emplace(
+            mActiveEntry->GetScrollRestorationIsManual());
+
+        // Get the postdata and page ident from the current page, if the new
+        // load is being done via normal means.  Note that "normal means" can be
+        // checked for just by checking for LOAD_CMD_NORMAL, given the loadType
+        // and allowScroll check above -- it filters out some LOAD_CMD_NORMAL
+        // cases that we wouldn't want here.
+        if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
+          postData = mActiveEntry->GetPostData();
+          cacheKey = mActiveEntry->GetCacheKey();
+        }
+      }
+
+      MOZ_LOG(gSHLog, LogLevel::Debug,
+              ("Creating an active entry on nsDocShell %p to %s", this,
+               aLoadState->URI()->GetSpecOrDefault().get()));
+      mActiveEntry = MakeUnique<SessionHistoryInfo>(
+          mActiveEntry.get(), aLoadState->URI(), HistoryID(),
+          newURITriggeringPrincipal, newURIPrincipalToInherit,
+          newURIPartitionedPrincipalToInherit, newCsp, mContentTypeHint);
+
+      // Save the postData obtained from the previous page in to the session
+      // history entry created for the anchor page, so that any history load of
+      // the anchor page will restore the appropriate postData.
+      if (postData) {
+        mActiveEntry->SetPostData(postData);
+      }
+
+      // Make sure we won't just repost without hitting the
+      // cache first
+      if (cacheKey != 0) {
+        mActiveEntry->SetCacheKey(cacheKey);
+      }
+
+      // Set the title for the SH entry for this target url so that
+      // SH menus in go/back/forward buttons won't be empty for this.
+      mActiveEntry->SetTitle(mTitle);
+
+      if (scrollRestorationIsManual.isSome()) {
+        mActiveEntry->SetScrollRestorationIsManual(
+            scrollRestorationIsManual.value());
+      }
+
+      // FIXME We should probably just compute mChildOffset in the parent
+      //       instead of passing it over IPC here.
+      mBrowsingContext->SetActiveSessionHistoryEntry(
+          Some(scrollPos), mActiveEntry.get(), mLoadType, mChildOffset,
+          cacheKey);
+      // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
     }
   }
-
-  /* Set the title for the SH entry for this target url so that
-   * SH menus in go/back/forward buttons won't be empty for this.
-   * Note, this happens on mOSHE (and mActiveEntry in the future) because of
-   * the code above.
-   * XXX HandleSameDocumentNavigation needs to be made work with
-   *     session-history-in-parent
-   */
-  SetTitleOnHistoryEntry();
 
   /* Restore the original LSHE if we were loading something
    * while same document navigation was initiated.
@@ -10590,6 +10658,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
       nsresult rv = httpChannel->GetResponseStatus(&responseStatus);
       if (mLSHE && NS_SUCCEEDED(rv) && responseStatus >= 400) {
         mLSHE->AbandonBFCacheEntry();
+        // FIXME Do the same for mLoadingEntry
       }
     }
   }
@@ -10681,7 +10750,6 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     // If we already have a loading history entry, store the new cache key
     // in it.  Otherwise, since we're doing a reload and won't be updating
     // our history entry, store the cache key in our current history entry.
-
     SetCacheKeyOnHistoryEntry(mLSHE ? mLSHE : mOSHE, cacheKey);
 
     if (!mozilla::SessionHistoryInParent()) {
@@ -11224,6 +11292,7 @@ void nsDocShell::SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
   }
 
   if (mActiveEntry && mBrowsingContext) {
+    mActiveEntry->SetCacheKey(aCacheKey);
     if (XRE_IsParentProcess()) {
       SessionHistoryEntry* entry =
           mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
@@ -11523,7 +11592,8 @@ void nsDocShell::UpdateActiveEntry(
     //       mDynamicallyCreated are correct?
   } else {
     mActiveEntry = MakeUnique<SessionHistoryInfo>(
-        aURI, HistoryID(), aTriggeringPrincipal, aCsp, mContentTypeHint);
+        nullptr, aURI, HistoryID(), aTriggeringPrincipal, nullptr, nullptr,
+        aCsp, mContentTypeHint);
   }
   mActiveEntry->SetOriginalURI(aOriginalURI);
   mActiveEntry->SetTitle(aTitle);
@@ -11540,7 +11610,8 @@ void nsDocShell::UpdateActiveEntry(
     // FIXME We should probably just compute mChildOffset in the parent
     //       instead of passing it over IPC here.
     mBrowsingContext->SetActiveSessionHistoryEntry(
-        aPreviousScrollPos, mActiveEntry.get(), mLoadType, mChildOffset);
+        aPreviousScrollPos, mActiveEntry.get(), mLoadType, mChildOffset,
+        /* aCacheKey = */ 0);
     // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
   }
 }

@@ -120,9 +120,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                              Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
                              Maybe<bool>& aReloadActiveEntry);
 
+  // See BrowsingContext::SetActiveSessionHistoryEntry.
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
                                     uint32_t aLoadType, int32_t aChildOffset,
+                                    uint32_t aUpdatedCacheKey,
                                     const nsID& aChangeID);
 
   void ReplaceActiveSessionHistoryEntry(SessionHistoryInfo* aInfo);

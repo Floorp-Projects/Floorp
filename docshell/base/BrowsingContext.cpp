@@ -2681,18 +2681,24 @@ bool BrowsingContext::IsPopupAllowed() {
 
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, int32_t aChildOffset) {
+    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey) {
   if (XRE_IsContentProcess()) {
+    if (aUpdatedCacheKey != 0) {
+      aInfo->SetCacheKey(aUpdatedCacheKey);
+    }
+
     nsID changeID = {};
     RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
     if (shistory) {
       changeID = shistory->AddPendingHistoryChange(1, 1);
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
-        this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset, changeID);
+        this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset,
+        aUpdatedCacheKey, changeID);
   } else {
     Canonical()->SetActiveSessionHistoryEntry(aPreviousScrollPos, aInfo,
-                                              aLoadType, aChildOffset, nsID());
+                                              aLoadType, aChildOffset,
+                                              aUpdatedCacheKey, nsID());
   }
 }
 
