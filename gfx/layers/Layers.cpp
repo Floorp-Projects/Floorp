@@ -2149,7 +2149,7 @@ void RefLayer::DumpPacket(layerscope::LayersPacket* aPacket,
 
 void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
-  AppendToString(aStream, mSize, " [size=", "]");
+  aStream << " [size=" << mSize << "]";
   if (mBackgroundLayer) {
     aStream << " [backgroundLayer="
             << nsPrintfCString("%p", mBackgroundLayer).get() << "]";

@@ -1492,8 +1492,8 @@ already_AddRefed<gfx::DataSourceSurface> TextureClient::GetAsSurface() {
 
 void TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   aStream << aPrefix;
-  aStream << nsPrintfCString("TextureClient (0x%p)", this).get();
-  AppendToString(aStream, GetSize(), " [size=", "]");
+  aStream << nsPrintfCString("TextureClient (0x%p)", this).get()
+          << " [size=" << GetSize() << "]";
   AppendToString(aStream, GetFormat(), " [format=", "]");
   AppendToString(aStream, mFlags, " [flags=", "]");
 
