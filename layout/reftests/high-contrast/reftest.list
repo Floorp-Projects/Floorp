@@ -33,6 +33,8 @@ pref(browser.display.document_color_use,0) needs-focus != selection-001.html sel
 
 == color-transparent-001.html about:blank
 != color-transparent-002.html about:blank
+!= semi-transparent-overlay.html about:blank
+!= semi-transparent-overlay.html semi-transparent-background.html
 
 == links.html links-ref.html
 == links-2.html links-ref.html
