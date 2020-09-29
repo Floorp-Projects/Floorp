@@ -88,22 +88,21 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     if (m.IsRootContent()) {
       aStream << "] [rcd";
     }
-    AppendToString(aStream, m.GetZoom(), "] [z=", "] }");
+    aStream << "] [z=" << m.GetZoom() << "] }";
   } else {
     aStream << "] [rcs=" << m.GetRootCompositionSize()
             << "] [v=" << m.GetLayoutViewport()
             << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
                                m.GetDevPixelsPerCSSPixel().scale,
                                m.GetPresShellResolution())
-                   .get();
-    AppendToString(aStream, m.GetCumulativeResolution(), " cr=");
-    AppendToString(aStream, m.GetZoom(), " z=");
-    AppendToString(aStream, m.GetExtraResolution(), " er=");
-    aStream << nsPrintfCString(")] [u=(%d %" PRIu32 ")",
+                   .get()
+            << " cr=" << m.GetCumulativeResolution() << " z=" << m.GetZoom()
+            << " er=" << m.GetExtraResolution()
+            << nsPrintfCString(")] [u=(%d %" PRIu32 ")",
                                m.GetVisualScrollUpdateType(),
                                m.GetScrollGeneration())
-                   .get();
-    aStream << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
+                   .get()
+            << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
                                m.GetPresShellId(), m.GetScrollId(),
                                m.IsRootContent())
                    .get();
