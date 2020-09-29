@@ -813,7 +813,7 @@ unsafe extern "C" fn reverse_transform(
     return prev_transform;
 }
 unsafe extern "C" fn qcms_modular_transform_create_mAB(
-    mut lut: *mut lutmABType,
+    mut lut: &mut lutmABType,
 ) -> *mut qcms_modular_transform {
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
@@ -824,7 +824,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
         let mut clut: *mut f32;
         // If the A curve is present this also implies the
         // presence of a CLUT.
-        if (*lut).clut_table.is_null() {
+        if (*lut).clut_table.is_none() {
             current_block = 7590209878260659629;
         } else {
             // Prepare A curve.
@@ -869,7 +869,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                         } else {
                             memcpy(
                                 clut as *mut libc::c_void,
-                                (*lut).clut_table as *const libc::c_void,
+                                (*lut).clut_table.as_ref().unwrap().as_ptr() as *const libc::c_void,
                                 clut_length,
                             );
                             (*transform).r_clut = clut.offset(0isize);
@@ -1106,12 +1106,12 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
             append_transform(lut_transform, &mut next_transform);
             current_block = 10692455896603418738;
         }
-    } else if !(*in_0).mAB.is_null()
-        && (*(*in_0).mAB).num_in_channels as i32 == 3
-        && (*(*in_0).mAB).num_out_channels as i32 == 3
+    } else if !(*in_0).mAB.is_none()
+        && (*(*in_0).mAB.as_deref().unwrap()).num_in_channels as i32 == 3
+        && (*(*in_0).mAB.as_deref().unwrap()).num_out_channels as i32 == 3
     {
         let mut mAB_transform: *mut qcms_modular_transform =
-            qcms_modular_transform_create_mAB((*in_0).mAB);
+            qcms_modular_transform_create_mAB((*in_0).mAB.as_deref_mut().unwrap());
         if mAB_transform.is_null() {
             current_block = 8903102000210989603;
         } else {
@@ -1210,12 +1210,12 @@ unsafe extern "C" fn qcms_modular_transform_create_output(
             append_transform(lut_transform, &mut next_transform);
             current_block = 13131896068329595644;
         }
-    } else if !(*out).mBA.is_null()
-        && (*(*out).mBA).num_in_channels as i32 == 3
-        && (*(*out).mBA).num_out_channels as i32 == 3
+    } else if !(*out).mBA.is_none()
+        && (*(*out).mBA.as_deref().unwrap()).num_in_channels as i32 == 3
+        && (*(*out).mBA.as_deref().unwrap()).num_out_channels as i32 == 3
     {
         let mut lut_transform_0: *mut qcms_modular_transform =
-            qcms_modular_transform_create_mAB((*out).mBA);
+            qcms_modular_transform_create_mAB((*out).mBA.as_deref_mut().unwrap());
         if lut_transform_0.is_null() {
             current_block = 15713701561912628542;
         } else {
