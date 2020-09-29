@@ -4,17 +4,15 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const {
-  workerDescriptorSpec,
-} = require("devtools/shared/specs/descriptors/worker");
+const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
 const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
 const { TargetMixin } = require("devtools/client/fronts/targets/target-mixin");
 
-class WorkerDescriptorFront extends TargetMixin(
-  FrontClassWithSpec(workerDescriptorSpec)
+class WorkerTargetFront extends TargetMixin(
+  FrontClassWithSpec(workerTargetSpec)
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
@@ -62,11 +60,6 @@ class WorkerDescriptorFront extends TargetMixin(
   }
 
   async attach() {
-    // temporary, will be moved once we have a target actor
-    return this.getTarget();
-  }
-
-  async getTarget() {
     if (this._attach) {
       return this._attach;
     }
@@ -91,16 +84,9 @@ class WorkerDescriptorFront extends TargetMixin(
         return;
       }
 
-      // Immediately retrieve console and thread actors that will be later used by Target.
-      let connectResponse;
-      if (this.actorID.includes("workerDescriptor")) {
-        connectResponse = await super.getTarget();
-      } else {
-        // Backwards compatibility for FF82 servers and below.
-        // Can be deleted once FF83 is merged into release.
-        connectResponse = await this.connect({});
-      }
-
+      // Immediately call `connect` in other to fetch console and thread actors
+      // that will be later used by Target.
+      const connectResponse = await this.connect({});
       // Set the console actor ID on the form to expose it to Target.attachConsole
       // Set the ThreadActor on the target form so it is accessible by getFront
       this.targetForm.consoleActor = connectResponse.consoleActor;
@@ -149,5 +135,5 @@ class WorkerDescriptorFront extends TargetMixin(
   }
 }
 
-exports.WorkerDescriptorFront = WorkerDescriptorFront;
-registerFront(exports.WorkerDescriptorFront);
+exports.WorkerTargetFront = WorkerTargetFront;
+registerFront(exports.WorkerTargetFront);

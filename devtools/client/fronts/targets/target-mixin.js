@@ -391,7 +391,7 @@ function TargetMixin(parentClass) {
     }
 
     get isWorkerTarget() {
-      return this.typeName === "workerDescriptor";
+      return this.typeName === "workerTarget";
     }
 
     get isLegacyAddon() {

@@ -31,7 +31,7 @@ Array [
                 "state": 4,
                 "stateText": "activated",
                 "url": "http://example.com/worker.js",
-                "workerDescriptorFront": "",
+                "workerTargetFront": "",
               },
             ],
           }
@@ -89,7 +89,7 @@ Array [
                 "state": 4,
                 "stateText": "activated",
                 "url": "http://example.com/worker.js",
-                "workerDescriptorFront": "",
+                "workerTargetFront": "",
               },
             ],
           }
@@ -110,7 +110,7 @@ Array [
                 "state": 2,
                 "stateText": "installed",
                 "url": "http://example.com/worker.js",
-                "workerDescriptorFront": "",
+                "workerTargetFront": "",
               },
             ],
           }
@@ -131,7 +131,7 @@ Array [
                 "state": 4,
                 "stateText": "activated",
                 "url": "http://example.com/worker.js",
-                "workerDescriptorFront": "",
+                "workerTargetFront": "",
               },
             ],
           }
