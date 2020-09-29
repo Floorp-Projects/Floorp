@@ -230,6 +230,14 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void WindowLowered(mozIDOMWindowProxy* aWindow);
 
+  /**
+   * Called when a new document in a window is shown.
+   *
+   * If aNeedsFocus is true, then focus events are expected to be fired on the
+   * window if this window is in the focused window chain.
+   */
+  void WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus);
+
   static uint32_t FocusOptionsToFocusManagerFlags(
       const mozilla::dom::FocusOptions& aOptions);
 

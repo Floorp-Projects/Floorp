@@ -943,9 +943,12 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
+void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
+                                 bool aNeedsFocus) {
+  if (!aWindow) {
+    return;
+  }
+
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -974,7 +977,7 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
   }
 
   if (mFocusedWindow != window) {
-    return NS_OK;
+    return;
   }
 
   if (aNeedsFocus) {
@@ -1001,8 +1004,6 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
     // When the window becomes visible, make sure the right widget is focused.
     EnsureCurrentWidgetFocused(CallerType::System);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
