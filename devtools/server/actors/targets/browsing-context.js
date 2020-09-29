@@ -58,8 +58,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "WorkerTargetActorList",
-  "devtools/server/actors/worker/worker-target-actor-list",
+  "WorkerDescriptorActorList",
+  "devtools/server/actors/worker/worker-descriptor-actor-list",
   true
 );
 loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
@@ -294,9 +294,9 @@ const browsingContextTargetPrototype = {
       navigation: true,
     };
 
-    this._workerTargetActorList = null;
-    this._workerTargetActorPool = null;
-    this._onWorkerTargetActorListChanged = this._onWorkerTargetActorListChanged.bind(
+    this._workerDescriptorActorList = null;
+    this._workerDescriptorActorPool = null;
+    this._onWorkerDescriptorActorListChanged = this._onWorkerDescriptorActorListChanged.bind(
       this
     );
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
@@ -744,18 +744,21 @@ const browsingContextTargetPrototype = {
     return { frames: windows };
   },
 
-  ensureWorkerTargetActorList() {
-    if (this._workerTargetActorList === null) {
-      this._workerTargetActorList = new WorkerTargetActorList(this.conn, {
-        type: Ci.nsIWorkerDebugger.TYPE_DEDICATED,
-        window: this.window,
-      });
+  ensureWorkerDescriptorActorList() {
+    if (this._workerDescriptorActorList === null) {
+      this._workerDescriptorActorList = new WorkerDescriptorActorList(
+        this.conn,
+        {
+          type: Ci.nsIWorkerDebugger.TYPE_DEDICATED,
+          window: this.window,
+        }
+      );
     }
-    return this._workerTargetActorList;
+    return this._workerDescriptorActorList;
   },
 
   pauseWorkersUntilAttach(shouldPause) {
-    this.ensureWorkerTargetActorList().workerPauser.setPauseMatching(
+    this.ensureWorkerDescriptorActorList().workerPauser.setPauseMatching(
       shouldPause
     );
   },
@@ -767,7 +770,7 @@ const browsingContextTargetPrototype = {
       };
     }
 
-    return this.ensureWorkerTargetActorList()
+    return this.ensureWorkerDescriptorActorList()
       .getList()
       .then(actors => {
         const pool = new Pool(this.conn, "worker-targets");
@@ -777,12 +780,12 @@ const browsingContextTargetPrototype = {
 
         // Do not destroy the pool before transfering ownership to the newly created
         // pool, so that we do not accidently destroy actors that are still in use.
-        if (this._workerTargetActorPool) {
-          this._workerTargetActorPool.destroy();
+        if (this._workerDescriptorActorPool) {
+          this._workerDescriptorActorPool.destroy();
         }
 
-        this._workerTargetActorPool = pool;
-        this._workerTargetActorList.onListChanged = this._onWorkerTargetActorListChanged;
+        this._workerDescriptorActorPool = pool;
+        this._workerDescriptorActorList.onListChanged = this._onWorkerDescriptorActorListChanged;
 
         return {
           workers: actors,
@@ -808,8 +811,8 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  _onWorkerTargetActorListChanged() {
-    this._workerTargetActorList.onListChanged = null;
+  _onWorkerDescriptorActorListChanged() {
+    this._workerDescriptorActorList.onListChanged = null;
     this.emit("workerListChanged");
   },
 
@@ -1050,14 +1053,14 @@ const browsingContextTargetPrototype = {
     }
 
     // Make sure that no more workerListChanged notifications are sent.
-    if (this._workerTargetActorList !== null) {
-      this._workerTargetActorList.destroy();
-      this._workerTargetActorList = null;
+    if (this._workerDescriptorActorList !== null) {
+      this._workerDescriptorActorList.destroy();
+      this._workerDescriptorActorList = null;
     }
 
-    if (this._workerTargetActorPool !== null) {
-      this._workerTargetActorPool.destroy();
-      this._workerTargetActorPool = null;
+    if (this._workerDescriptorActorPool !== null) {
+      this._workerDescriptorActorPool.destroy();
+      this._workerDescriptorActorPool = null;
     }
 
     if (this._dbg) {
