@@ -23,7 +23,7 @@ const {
   ServiceWorkerRegistrationActorList,
 } = require("devtools/server/actors/worker/service-worker-registration-list");
 const {
-  WorkerTargetActorList,
+  WorkerDescriptorActorList,
 } = require("devtools/server/actors/worker/worker-target-actor-list");
 
 const { ProcessActorList } = require("devtools/server/actors/process");
@@ -43,7 +43,7 @@ exports.createRootActor = function createRootActor(aConnection) {
   const parameters = {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
-    workerList: new WorkerTargetActorList(aConnection, {}),
+    workerList: new WorkerDescriptorActorList(aConnection, {}),
     serviceWorkerRegistrationList: new ServiceWorkerRegistrationActorList(
       aConnection
     ),
