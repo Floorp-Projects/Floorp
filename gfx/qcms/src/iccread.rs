@@ -90,8 +90,8 @@ pub struct qcms_profile {
     pub grayTRC: Option<Box<curveType>>,
     pub A2B0: Option<Box<lutType>>,
     pub B2A0: Option<Box<lutType>>,
-    pub mAB: *mut lutmABType,
-    pub mBA: *mut lutmABType,
+    pub mAB: Option<Box<lutmABType>>,
+    pub mBA: Option<Box<lutmABType>>,
     pub chromaticAdaption: matrix,
     pub output_table_r: *mut precache_output,
     pub output_table_g: *mut precache_output,
@@ -110,18 +110,12 @@ impl Drop for qcms_profile {
             if !self.output_table_b.is_null() {
                 precache_release(self.output_table_b);
             }
-            if !self.mAB.is_null() {
-                mAB_release(self.mAB);
-            }
-            if !self.mBA.is_null() {
-                mAB_release(self.mBA);
-            }
         }
     }
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct lutmABType {
     pub num_in_channels: u8,
     pub num_out_channels: u8,
@@ -139,11 +133,10 @@ pub struct lutmABType {
     pub e22: s15Fixed16Number,
     pub e23: s15Fixed16Number,
     pub reversed: bool,
-    pub clut_table: *mut f32,
+    pub clut_table: Option<Vec<f32>>,
     pub a_curves: [Option<Box<curveType>>; 10],
     pub b_curves: [Option<Box<curveType>>; 10],
     pub m_curves: [Option<Box<curveType>>; 10],
-    pub clut_table_data: [f32; 0],
 }
 
 #[repr(C)]
@@ -484,8 +477,8 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
     }
     if !(*profile).A2B0.is_none()
         || !(*profile).B2A0.is_none()
-        || !(*profile).mAB.is_null()
-        || !(*profile).mBA.is_null()
+        || !(*profile).mAB.is_none()
+        || !(*profile).mBA.is_none()
     {
         return false;
     }
@@ -726,23 +719,9 @@ fn read_nested_curveType(
         }
     }
 }
-unsafe extern "C" fn mAB_release(mut lut: *mut lutmABType) {
-    let mut i: u8;
-    i = 0u8;
-    while (i as i32) < (*lut).num_in_channels as i32 {
-        (*lut).a_curves[i as usize] = None;
-        i = i + 1
-    }
-    i = 0u8;
-    while (i as i32) < (*lut).num_out_channels as i32 {
-        (*lut).b_curves[i as usize] = None;
-        (*lut).m_curves[i as usize] = None;
-        i = i + 1
-    }
-    free(lut as *mut libc::c_void);
-}
+
 /* See section 10.10 for specs */
-unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutmABType {
+fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutmABType>> {
     let mut offset: u32 = (*tag).offset;
     let mut a_curve_offset: u32;
     let mut b_curve_offset: u32;
@@ -754,22 +733,22 @@ unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut l
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut num_in_channels: u8;
     let mut num_out_channels: u8;
-    let mut lut: *mut lutmABType;
+    let mut lut: Box<lutmABType>;
     let mut i: u32;
     if type_0 != LUT_MAB_TYPE && type_0 != LUT_MBA_TYPE {
-        return 0 as *mut lutmABType;
+        return None;
     }
     num_in_channels = read_u8(src, (offset + 8) as usize);
     num_out_channels = read_u8(src, (offset + 9) as usize);
     if num_in_channels as i32 > 10 || num_out_channels as i32 > 10 {
-        return 0 as *mut lutmABType;
+        return None;
     }
     // We require 3in/out channels since we only support RGB->XYZ (or RGB->LAB)
     // XXX: If we remove this restriction make sure that the number of channels
     //      is less or equal to the maximum number of mAB curves in qcmsint.h
     //      also check for clut_size overflow. Also make sure it's != 0
     if num_in_channels as i32 != 3 || num_out_channels as i32 != 3 {
-        return 0 as *mut lutmABType;
+        return None;
     }
     // some of this data is optional and is denoted by a zero offset
     // we also use this to track their existance
@@ -812,17 +791,11 @@ unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut l
     // 24bits * 3 won't overflow either
     clut_size = clut_size * num_out_channels as libc::c_uint;
     if clut_size > 500000 {
-        return 0 as *mut lutmABType;
+        return None;
     }
-    lut = malloc(
-        ::std::mem::size_of::<lutmABType>() + clut_size as usize * ::std::mem::size_of::<f32>(),
-    ) as *mut lutmABType;
-    if lut.is_null() {
-        return 0 as *mut lutmABType;
-    }
-    // we'll fill in the rest below
-    std::ptr::write_bytes(lut, 0, 1);
-    (*lut).clut_table = (*lut).clut_table_data.as_mut_ptr().offset(0isize) as *mut f32;
+
+    lut = Box::new(lutmABType::default());
+
     if clut_offset != 0 {
         i = 0;
         while i < num_in_channels as libc::c_uint {
@@ -866,33 +839,31 @@ unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut l
     }
     if clut_offset != 0 {
         clut_precision = read_u8(src, (clut_offset + 16) as usize);
+        let mut clut_table = Vec::with_capacity(clut_size as usize);
         if clut_precision as i32 == 1 {
-            i = 0;
-            while i < clut_size {
-                *(*lut).clut_table.offset(i as isize) = uInt8Number_to_float(read_uInt8Number(
+            for i in 0..clut_size {
+                clut_table.push(uInt8Number_to_float(read_uInt8Number(
                     src,
                     (clut_offset + 20 + i * 1) as usize,
-                ));
-                i = i + 1
+                )));
             }
+            lut.clut_table = Some(clut_table);
         } else if clut_precision as i32 == 2 {
-            i = 0;
-            while i < clut_size {
-                *(*lut).clut_table.offset(i as isize) = uInt16Number_to_float(read_uInt16Number(
+            for i in 0..clut_size {
+                clut_table.push(uInt16Number_to_float(read_uInt16Number(
                     src,
                     (clut_offset + 20 + i * 2) as usize,
-                ));
-                i = i + 1
+                )));
             }
+            lut.clut_table = Some(clut_table);
         } else {
             invalid_source(src, "Invalid clut precision");
         }
     }
     if !(*src).valid {
-        mAB_release(lut);
-        return 0 as *mut lutmABType;
+        return None;
     }
-    return lut;
+    return Some(lut);
 }
 fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutType>> {
     let mut offset: u32 = (*tag).offset;
