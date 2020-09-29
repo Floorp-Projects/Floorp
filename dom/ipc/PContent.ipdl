@@ -1697,13 +1697,10 @@ parent:
                              nsID? aAgentClusterId)
       returns (BlobURLDataRequestResult aResult);
 
-    async SetActiveSessionHistoryEntryForTop(MaybeDiscardedBrowsingContext aContext,
+    async SetActiveSessionHistoryEntry(MaybeDiscardedBrowsingContext context,
                                        nsPoint? previousScrollPosition,
                                        SessionHistoryInfo info, uint32_t loadType,
-                                       nsID changeID);
-    async SetActiveSessionHistoryEntryForFrame(
-        MaybeDiscardedBrowsingContext aContext, nsPoint? previousScrollPosition,
-        SessionHistoryInfo info, int32_t childOffset, nsID changeID);
+                                       int32_t childOffset, nsID changeID);
     async ReplaceActiveSessionHistoryEntry(
         MaybeDiscardedBrowsingContext aContext, SessionHistoryInfo info);
 

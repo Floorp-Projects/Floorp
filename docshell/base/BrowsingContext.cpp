@@ -2679,37 +2679,20 @@ bool BrowsingContext::IsPopupAllowed() {
   return false;
 }
 
-void BrowsingContext::SetActiveSessionHistoryEntryForTop(
+void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType) {
+    uint32_t aLoadType, int32_t aChildOffset) {
   if (XRE_IsContentProcess()) {
     nsID changeID = {};
     RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
     if (shistory) {
       changeID = shistory->AddPendingHistoryChange(1, 1);
     }
-    ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntryForTop(
-        this, aPreviousScrollPos, *aInfo, aLoadType, changeID);
+    ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
+        this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset, changeID);
   } else {
-    Canonical()->SetActiveSessionHistoryEntryForTop(aPreviousScrollPos, aInfo,
-                                                    aLoadType, nsID());
-  }
-}
-
-void BrowsingContext::SetActiveSessionHistoryEntryForFrame(
-    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    int32_t aChildOffset) {
-  if (XRE_IsContentProcess()) {
-    nsID changeID = {};
-    RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
-    if (shistory) {
-      changeID = shistory->AddPendingHistoryChange(1, 1);
-    }
-    ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntryForFrame(
-        this, aPreviousScrollPos, *aInfo, aChildOffset, changeID);
-  } else {
-    Canonical()->SetActiveSessionHistoryEntryForFrame(aPreviousScrollPos, aInfo,
-                                                      aChildOffset, nsID());
+    Canonical()->SetActiveSessionHistoryEntry(aPreviousScrollPos, aInfo,
+                                              aLoadType, aChildOffset, nsID());
   }
 }
 

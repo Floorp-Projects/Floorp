@@ -666,19 +666,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // context or any of its ancestors.
   bool IsPopupAllowed();
 
-  // Set a new active entry on this browsing context. Should only be called if
-  // IsTop() returns true. This is used for implementing
-  // history.pushState/replaceState.
-  void SetActiveSessionHistoryEntryForTop(
-      const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-      uint32_t aLoadType);
-
-  // Set a new active entry on this browsing context. Should only be called if
-  // IsTop() returns false. This is used for implementing
-  // history.pushState/replaceState.
-  void SetActiveSessionHistoryEntryForFrame(
-      const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-      int32_t aChildOffset);
+  // Set a new active entry on this browsing context. This is used for
+  // implementing history.pushState/replaceState and same document navigations.
+  void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
+                                    SessionHistoryInfo* aInfo,
+                                    uint32_t aLoadType, int32_t aChildOffset);
 
   // Replace the active entry for this browsing context. This is used for
   // implementing history.replaceState.
