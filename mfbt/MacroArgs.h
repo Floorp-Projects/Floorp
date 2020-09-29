@@ -92,5 +92,6 @@
 #define MOZ_ARG_6(a1, a2, a3, a4, a5, a6, ...) a6
 #define MOZ_ARG_7(a1, a2, a3, a4, a5, a6, a7, ...) a7
 #define MOZ_ARG_8(a1, a2, a3, a4, a5, a6, a7, a8, ...) a8
+#define MOZ_ARG_9(a1, a2, a3, a4, a5, a6, a7, a8, a9, ...) a9
 
 #endif /* mozilla_MacroArgs_h */

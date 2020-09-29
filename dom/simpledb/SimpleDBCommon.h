@@ -20,11 +20,12 @@
 #  define SDB_DEBUG_TRY(...)
 #endif
 
-// SimpleDB equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
-#define SDB_TRY_VAR_GLUE(...)                                        \
+// SimpleDB equivalents of QM_TRY_VAR, QM_TRY_INSPECT and QM_DEBUG_TRY_VAR.
+#define SDB_TRY_VAR_GLUE(accessFunction, ...)                        \
   QM_TRY_VAR_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
-                  ##__VA_ARGS__)
-#define SDB_TRY_VAR(...) SDB_TRY_VAR_GLUE(__VA_ARGS__)
+                  accessFunction, ##__VA_ARGS__)
+#define SDB_TRY_VAR(...) SDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define SDB_TRY_INSPECT(...) SDB_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
 #  define SDB_DEBUG_TRY_VAR(...) SDB_TRY_VAR(__VA_ARGS__)
