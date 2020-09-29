@@ -58,13 +58,13 @@ class AddonManager(
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
 
-            // Make sure all pending actions are completed
+            // Make sure all pending actions are completed.
             if (waitForPendingActions) {
                 pendingAddonActions.awaitAll()
             }
 
-            // Get all available/supported addons from provider and add state if
-            // installed. NB: We're keeping only the translations of the default
+            // Get all available/supported addons from provider and add state if installed.
+            // NB: We're keeping translations only for the default locale.
             val locales = listOf(Locale.getDefault().language)
             val supportedAddons = addonsProvider.getAvailableAddons()
                 .map { addon -> addon.filterTranslations(locales) }
@@ -83,13 +83,24 @@ class AddonManager(
                 .map { extensionEntry ->
                     val extension: WebExtension = extensionEntry.value
                     val name = extension.getMetadata()?.name ?: extension.id
-                    val installedState =
+                    val description = extension.getMetadata()?.description ?: extension.id
+
+                    // Temporary add-ons should be treated as supported
+                    val installedState = if (extension.getMetadata()?.temporary == true) {
+                        extension.toInstalledState()
+                    } else {
                         extension.toInstalledState().copy(enabled = false, supported = false)
+                    }
+
                     Addon(
                         id = extension.id,
                         translatableName = mapOf(Addon.DEFAULT_LOCALE to name),
+                        translatableDescription = mapOf(Addon.DEFAULT_LOCALE to description),
+                        // We don't have a summary for unsupported add-ons, let's re-use description
+                        translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
                         siteUrl = extension.url,
-                        installedState = installedState
+                        installedState = installedState,
+                        updatedAt = "1970-01-01T00:00:00Z"
                     )
                 }
 

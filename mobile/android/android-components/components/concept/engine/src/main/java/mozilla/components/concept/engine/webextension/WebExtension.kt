@@ -403,7 +403,13 @@ data class Metadata(
      * Base URL for pages of this extension. Can be used to determine if a page
      * is from / belongs to this extension.
      */
-    val baseUrl: String
+    val baseUrl: String,
+
+    /**
+     * Whether or not this extension is temporary i.e. installed using a debug tool
+     * such as web-ext, and won't be retained when the application exits.
+     */
+    val temporary: Boolean = false
 )
 
 /**

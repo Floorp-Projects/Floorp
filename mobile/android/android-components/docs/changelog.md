@@ -30,6 +30,7 @@ permalink: /changelog/
             maxCacheAgeInMinutes = DAY_IN_MINUTES
         )
     }
+  * Temporary add-ons installed via web-ext are no longer displayed as unsupported.  
   * 🚒 Bug fixed [issue #8267](https://github.com/mozilla-mobile/android-components/issues/8267) Devtools permission had wrong translation.
   ```
 * **concept-menu**

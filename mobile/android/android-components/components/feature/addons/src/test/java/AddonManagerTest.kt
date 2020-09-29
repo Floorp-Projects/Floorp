@@ -113,15 +113,18 @@ class AddonManagerTest {
         whenever(newlySupportedExtension.getMetadata()).thenReturn(metadata)
         WebExtensionSupport.installedExtensions["ext3"] = newlySupportedExtension
 
+        // Add unsupported extension
         val unsupportedExtension: WebExtension = mock()
         val unsupportedExtensionMetadata: Metadata = mock()
         whenever(unsupportedExtensionMetadata.name).thenReturn("name")
+        whenever(unsupportedExtensionMetadata.description).thenReturn("description")
         whenever(unsupportedExtension.id).thenReturn("unsupported_ext")
         whenever(unsupportedExtension.url).thenReturn("site_url")
         whenever(unsupportedExtension.getMetadata()).thenReturn(unsupportedExtensionMetadata)
         WebExtensionSupport.installedExtensions["unsupported_ext"] = unsupportedExtension
 
         // Verify add-ons were updated with state provided by the engine/store
+        // Extension (ext1) should be installed
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
         assertEquals(4, addons.size)
         assertEquals("ext1", addons[0].id)
@@ -132,11 +135,11 @@ class AddonManagerTest {
         assertNull(addons[0].installedState!!.optionsPageUrl)
         assertFalse(addons[0].installedState!!.openOptionsPageInTab)
 
+        // Extension (ext2) should not be installed
         assertEquals("ext2", addons[1].id)
         assertNull(addons[1].installedState)
 
-        // This extension should now be marked as supported but still be
-        // disabled as unsupported.
+        // Extension (ext3) should now be marked as supported but still be disabled as unsupported.
         assertEquals("ext3", addons[2].id)
         assertNotNull(addons[2].installedState)
         assertEquals("ext3", addons[2].installedState!!.id)
@@ -146,12 +149,51 @@ class AddonManagerTest {
         assertEquals("http://options-page.moz", addons[2].installedState!!.optionsPageUrl)
         assertTrue(addons[2].installedState!!.openOptionsPageInTab)
 
-        // Verify the unsupported add-on was included in addons
+        // Extension (unsupported_ext) should be included but marked as unsupported
         assertEquals("unsupported_ext", addons[3].id)
         assertEquals(1, addons[3].translatableName.size)
         assertNotNull(addons[3].translatableName[addons[3].defaultLocale])
         assertTrue(addons[3].translatableName.containsValue("name"))
+        assertTrue(addons[3].translatableDescription.containsValue("description"))
+        assertTrue(addons[3].translatableSummary.containsValue("description"))
         assertFalse(addons[3].installedState!!.supported)
+    }
+
+    @Test
+    fun `getAddons - returns temporary add-ons as supported`() = runBlocking {
+        val addonsProvider: AddonsProvider = mock()
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null))).thenReturn(listOf())
+
+        // Prepare engine
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(emptyList())
+        }
+
+        val store = BrowserStore()
+        WebExtensionSupport.initialize(engine, store)
+
+        // Add temporary extension
+        val temporaryExtension: WebExtension = mock()
+        val temporaryExtensionMetadata: Metadata = mock()
+        whenever(temporaryExtensionMetadata.temporary).thenReturn(true)
+        whenever(temporaryExtensionMetadata.name).thenReturn("name")
+        whenever(temporaryExtension.id).thenReturn("temp_ext")
+        whenever(temporaryExtension.url).thenReturn("site_url")
+        whenever(temporaryExtension.getMetadata()).thenReturn(temporaryExtensionMetadata)
+        WebExtensionSupport.installedExtensions["temp_ext"] = temporaryExtension
+
+        val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
+        assertEquals(1, addons.size)
+
+        // Temporary extension should be returned and marked as supported
+        assertEquals("temp_ext", addons[0].id)
+        assertEquals(1, addons[0].translatableName.size)
+        assertNotNull(addons[0].translatableName[addons[0].defaultLocale])
+        assertTrue(addons[0].translatableName.containsValue("name"))
+        assertNotNull(addons[0].installedState)
+        assertTrue(addons[0].isSupported())
     }
 
     @Test(expected = AddonManagerException::class)

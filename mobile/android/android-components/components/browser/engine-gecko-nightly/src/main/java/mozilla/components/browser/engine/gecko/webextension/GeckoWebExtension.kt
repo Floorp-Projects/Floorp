@@ -354,7 +354,8 @@ class GeckoWebExtension(
                 disabledFlags = DisabledFlags.select(it.disabledFlags),
                 optionsPageUrl = it.optionsPageUrl,
                 openOptionsPageInTab = it.openOptionsPageInTab,
-                baseUrl = it.baseUrl
+                baseUrl = it.baseUrl,
+                temporary = it.temporary
             )
         }
     }
