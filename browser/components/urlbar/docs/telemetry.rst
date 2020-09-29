@@ -166,6 +166,9 @@ urlbar.searchmode.*
   - ``tabmenu``
     Used when the user selects the Search Tabs menu item in the tab overflow
     menu.
+  - ``tabtosearch``
+    Used when the user selects a tab-to-search result. These results suggest a
+    search engine when the search engine's domain is autofilled.
   - ``topsites_newtab``
     Used when the user selects a search shortcut Top Site from the New Tab Page.
   - ``topsites_urlbar``
@@ -267,7 +270,11 @@ Event Extra
     It can be one of: ``none``, ``autofill``, ``visit``, ``bookmark``,
     ``history``, ``keyword``, ``search``, ``searchsuggestion``, ``switchtab``,
     ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``, ``canonized``,
-    ``tip``, ``tiphelp``, ``formhistory``
+    ``tip``, ``tiphelp``, ``formhistory``, ``tabtosearch``
+    In practice, ``tabtosearch`` should not appear in real event telemetry.
+    Opening a tab-to-search result enters search mode and entering search mode
+    does not currently mark the end of an engagement. It is noted here for
+    completeness.
   - ``selIndex``
     Index of the selected result in the urlbar panel, or -1 for no selection.
     There won't be a selection when a one-off button is the only selection, and

@@ -124,6 +124,7 @@ var UrlbarUtils = {
     topsite: 13,
     formhistory: 14,
     dynamic: 15,
+    tabtosearch: 16,
     // n_values = 32, so you'll need to create a new histogram if you need more.
   },
 
@@ -206,6 +207,7 @@ var UrlbarUtils = {
     "other",
     "shortcut",
     "tabmenu",
+    "tabtosearch",
     "topsites_newtab",
     "topsites_urlbar",
     "touchbar",

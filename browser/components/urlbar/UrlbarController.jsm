@@ -381,7 +381,7 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_RIGHT:
       case KeyEvent.DOM_VK_END:
-        this.input.maybePromoteKeywordToSearchMode({
+        this.input.maybePromoteResultToSearchMode({
           entry: "typed",
         });
       // Fall through.
@@ -541,6 +541,8 @@ class UrlbarController {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         if (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
           telemetryType = "formhistory";
+        } else if (result.providerName == "TabToSearch") {
+          telemetryType = "tabtosearch";
         } else {
           telemetryType = result.payload.suggestion
             ? "searchsuggestion"
@@ -916,6 +918,9 @@ class TelemetryEvent {
         case UrlbarUtils.RESULT_TYPE.SEARCH:
           if (row.result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
             return "formhistory";
+          }
+          if (row.result.providerName == "TabToSearch") {
+            return "tabtosearch";
           }
           return row.result.payload.suggestion ? "searchsuggestion" : "search";
         case UrlbarUtils.RESULT_TYPE.URL:
