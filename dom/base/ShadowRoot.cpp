@@ -537,7 +537,7 @@ ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent& aContent) {
   // Note that if slot attribute is missing, assign it to the first default
   // slot, if exists.
   if (Element* element = Element::FromNode(aContent)) {
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
+    element->GetAttr(nsGkAtoms::slot, slotName);
   }
 
   SlotArray* slots = mSlotMap.Get(slotName);
@@ -548,29 +548,30 @@ ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent& aContent) {
   HTMLSlotElement* slot = (*slots)->ElementAt(0);
   MOZ_ASSERT(slot);
 
-  // Find the appropriate position in the assigned node list for the
-  // newly assigned content.
+  if (!aContent.GetNextSibling()) {
+    // aContent is the last child, no need to loop through the assigned nodes,
+    // we're necessarily the last one.
+    //
+    // This prevents multiple appends into the host from getting quadratic.
+    return {slot, Nothing()};
+  }
+
+  // Find the appropriate position in the assigned node list for the newly
+  // assigned content.
   const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
   nsIContent* currentContent = GetHost()->GetFirstChild();
-  Maybe<uint32_t> insertionIndex;
   for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
     // Seek through the host's explicit children until the
     // assigned content is found.
     while (currentContent && currentContent != assignedNodes[i]) {
       if (currentContent == &aContent) {
-        insertionIndex.emplace(i);
-        break;
+        return {slot, Some(i)};
       }
-
       currentContent = currentContent->GetNextSibling();
-    }
-
-    if (insertionIndex) {
-      break;
     }
   }
 
-  return {slot, insertionIndex};
+  return {slot, Nothing()};
 }
 
 void ShadowRoot::MaybeReassignElement(Element& aElement) {
