@@ -121,8 +121,6 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
 
     case layers::TextureType::AndroidNativeWindow:
 #ifdef MOZ_WIDGET_ANDROID
-      if (XRE_IsParentProcess() && !StaticPrefs::webgl_enable_surface_texture())
-        return nullptr;
       return MakeUnique<SurfaceFactory_SurfaceTexture>(gl);
 #else
       return nullptr;
