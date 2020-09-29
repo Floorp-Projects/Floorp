@@ -9893,7 +9893,7 @@
 
 - name: webgl.enable-surface-texture
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: webgl.enable-ahardwarebuffer
