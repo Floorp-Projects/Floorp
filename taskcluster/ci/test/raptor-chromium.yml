@@ -15,6 +15,7 @@ job-defaults:
         by-test-platform:
             windows10-64-ccov/.*: virtual
             default: hardware
+    test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         script: raptor_script.py
         config:

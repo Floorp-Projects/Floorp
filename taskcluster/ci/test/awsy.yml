@@ -33,6 +33,7 @@ job-defaults:
             .*-devedition/.*: []  # don't run on devedition
             (linux|win|mac)(?!.*shippable).*/opt: []
             default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    test-manifest-loader: null  # don't load tests in the taskgraph
     fission-run-on-projects:
         by-test-platform:
             linux1804-64-shippable-qr/opt: ['mozilla-central']
