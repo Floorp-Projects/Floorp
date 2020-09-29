@@ -175,6 +175,10 @@ void ScrollSnapInfo::InitializeScrollSnapStrictness(
   }
 }
 
+OverscrollBehaviorInfo::OverscrollBehaviorInfo()
+    : mBehaviorX(OverscrollBehavior::Auto),
+      mBehaviorY(OverscrollBehavior::Auto) {}
+
 static OverscrollBehavior ToOverscrollBehavior(
     StyleOverscrollBehavior aBehavior) {
   switch (aBehavior) {
@@ -195,6 +199,11 @@ OverscrollBehaviorInfo OverscrollBehaviorInfo::FromStyleConstants(
   result.mBehaviorX = ToOverscrollBehavior(aBehaviorX);
   result.mBehaviorY = ToOverscrollBehavior(aBehaviorY);
   return result;
+}
+
+bool OverscrollBehaviorInfo::operator==(
+    const OverscrollBehaviorInfo& aOther) const {
+  return mBehaviorX == aOther.mBehaviorX && mBehaviorY == aOther.mBehaviorY;
 }
 
 void ScrollMetadata::SetBackgroundColor(
