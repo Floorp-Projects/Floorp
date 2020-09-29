@@ -15388,7 +15388,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["nika@mozilla.com"],
-    "expires_in_version": "82",
+    "expires_in_version": "89",
     "kind": "categorical",
     "labels": [
       "EnabledByAutostart",
