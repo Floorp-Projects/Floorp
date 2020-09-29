@@ -7,14 +7,25 @@
 #ifndef mozilla_dom_media_ipc_RemoteMediaData_h
 #define mozilla_dom_media_ipc_RemoteMediaData_h
 
+#include <functional>
+
+#include "MediaData.h"
 #include "PlatformDecoderModule.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/PMediaDecoderParams.h"
 #include "mozilla/RemoteImageHolder.h"
+#include "mozilla/ShmemPool.h"
 #include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
+
+class ShmemPool;
+
+namespace ipc {
+class IProtocol;
+class Shmem;
+}  // namespace ipc
 
 //-----------------------------------------------------------------------------
 // Declaration of the IPDL type |struct RemoteVideoData|
@@ -23,9 +34,7 @@ namespace mozilla {
 // (see bug 1664362)
 class RemoteVideoData final {
  private:
-  typedef mozilla::MediaDataIPDL MediaDataIPDL;
   typedef mozilla::gfx::IntSize IntSize;
-  typedef mozilla::RemoteImageHolder RemoteImageHolder;
 
  public:
   RemoteVideoData() = default;
@@ -74,7 +83,7 @@ class ArrayOfRemoteVideoData final {
   ArrayOfRemoteVideoData(const ArrayOfRemoteVideoData& aOther) {
     MOZ_CRASH("Should never be used but declared by generated IPDL binding");
   }
-  ArrayOfRemoteVideoData& operator=(ArrayOfRemoteVideoData&& aOther) {
+  ArrayOfRemoteVideoData& operator=(ArrayOfRemoteVideoData&& aOther) noexcept {
     if (this != &aOther) {
       mArray = std::move(aOther.mArray);
     }
@@ -98,6 +107,143 @@ class ArrayOfRemoteVideoData final {
   ~ArrayOfRemoteVideoData() = default;
   friend struct ipc::IPDLParamTraits<mozilla::ArrayOfRemoteVideoData*>;
   nsTArray<RemoteVideoData> mArray;
+};
+
+/* The class will pack either an array of AlignedBuffer or MediaByteBuffer
+ * into a single Shmem objects. */
+class RemoteArrayOfByteBuffer {
+ public:
+  RemoteArrayOfByteBuffer();
+  template <typename Type>
+  RemoteArrayOfByteBuffer(const nsTArray<AlignedBuffer<Type>>& aArray,
+                          std::function<ShmemBuffer(size_t)>& aAllocator) {
+    // Determine the total size we will need for this object.
+    size_t totalSize = 0;
+    for (auto& buffer : aArray) {
+      totalSize += buffer.Size();
+    }
+    if (totalSize) {
+      if (!AllocateShmem(totalSize, aAllocator)) {
+        return;
+      }
+    }
+    size_t offset = 0;
+    for (auto& buffer : aArray) {
+      if (totalSize && buffer && buffer.Size()) {
+        Write(offset, buffer.Data(), buffer.Size());
+      }
+      mOffsets.AppendElement(OffsetEntry{offset, buffer.Size()});
+      offset += buffer.Size();
+    }
+    mIsValid = true;
+  }
+
+  RemoteArrayOfByteBuffer(const nsTArray<RefPtr<MediaByteBuffer>>& aArray,
+                          std::function<ShmemBuffer(size_t)>& aAllocator);
+  RemoteArrayOfByteBuffer& operator=(RemoteArrayOfByteBuffer&& aOther) noexcept;
+
+  // Return the packed aIndexth buffer as an AlignedByteBuffer.
+  // The operation is fallible should an out of memory be encountered. The
+  // result should be tested accordingly.
+  template <typename Type>
+  AlignedBuffer<Type> AlignedBufferAt(size_t aIndex) const {
+    MOZ_ASSERT(aIndex < Count());
+    const OffsetEntry& entry = mOffsets[aIndex];
+    size_t entrySize = Get<1>(entry);
+    if (!mBuffers || !entrySize) {
+      // It's an empty one.
+      return AlignedBuffer<Type>();
+    }
+    if (!Check(Get<0>(entry), entrySize)) {
+      // This Shmem is corrupted and can't contain the data we are about to
+      // retrieve. We return an empty array instead of asserting to allow for
+      // recovery.
+      return AlignedBuffer<Type>();
+    }
+    if (0 != entrySize % sizeof(Type)) {
+      // There's an error, that entry can't represent this data.
+      return AlignedBuffer<Type>();
+    }
+    return AlignedBuffer<Type>(
+        reinterpret_cast<Type*>(BuffersStartAddress() + Get<0>(entry)),
+        entrySize / sizeof(Type));
+  }
+
+  // Return the packed aIndexth buffer as aMediaByteBuffer.
+  // Will return nullptr if the packed buffer was originally empty.
+  already_AddRefed<MediaByteBuffer> MediaByteBufferAt(size_t aIndex) const;
+  // Return the size of the aIndexth buffer.
+  size_t SizeAt(size_t aIndex) const { return Get<1>(mOffsets[aIndex]); }
+  // Return false if an out of memory error was encountered during construction.
+  bool IsValid() const { return mIsValid; };
+  // Return the number of buffers packed into this entity.
+  size_t Count() const { return mOffsets.Length(); }
+  virtual ~RemoteArrayOfByteBuffer();
+
+ private:
+  friend struct ipc::IPDLParamTraits<RemoteArrayOfByteBuffer>;
+  // Allocate shmem, false if an error occurred.
+  bool AllocateShmem(size_t aSize,
+                     std::function<ShmemBuffer(size_t)>& aAllocator);
+  // The starting address of the Shmem
+  uint8_t* BuffersStartAddress() const;
+  // Check that the allocated Shmem can contain such range.
+  bool Check(size_t aOffset, size_t aSizeInBytes) const;
+  void Write(size_t aOffset, const void* aSourceAddr, size_t aSizeInBytes);
+  // Set to false is the buffer isn't initialized yet or a memory error occurred
+  // during construction.
+  bool mIsValid = false;
+  // The packed data. The Maybe will be empty if all buffers packed were
+  // orignally empty.
+  Maybe<ipc::Shmem> mBuffers;
+  // The offset to the start of the individual buffer and its size (all in
+  // bytes)
+  typedef Tuple<size_t, size_t> OffsetEntry;
+  nsTArray<OffsetEntry> mOffsets;
+};
+
+/* The class will pack an array of MediaRawData using at most three Shmem
+ * objects. Under the most common scenaria, only two Shmems will be used as
+ * there are few videos with an alpha channel in the wild.
+ * We unfortunately can't populate the array at construction nor present an
+ * interface similar to an actual nsTArray or the ArrayOfRemoteVideoData above
+ * as currently IPC serialization is always non-fallible. So we must create the
+ * object first, fill it to determine if we ran out of memory and then send the
+ * object over IPC.
+ */
+class ArrayOfRemoteMediaRawData {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ArrayOfRemoteMediaRawData)
+ public:
+  // Fill the content, return false if an OOM occurred.
+  bool Fill(const nsTArray<RefPtr<MediaRawData>>& aData,
+            std::function<ShmemBuffer(size_t)>&& aAllocator);
+
+  // Return the aIndexth MediaRawData or nullptr if a memory error occurred.
+  already_AddRefed<MediaRawData> ElementAt(size_t aIndex) const;
+
+  // Return the number of MediaRawData stored in this container.
+  size_t Count() const { return mSamples.Length(); }
+  bool IsEmpty() const { return Count() == 0; }
+  bool IsValid() const {
+    return mBuffers.IsValid() && mAlphaBuffers.IsValid() &&
+           mExtraDatas.IsValid();
+  }
+
+  struct RemoteMediaRawData {
+    MediaDataIPDL mBase;
+    bool mEOS;
+    uint32_t mDiscardPadding;
+    Maybe<media::TimeInterval> mOriginalPresentationWindow;
+  };
+
+ private:
+  friend struct ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData*>;
+  virtual ~ArrayOfRemoteMediaRawData() = default;
+
+  nsTArray<RemoteMediaRawData> mSamples;
+  RemoteArrayOfByteBuffer mBuffers;
+  RemoteArrayOfByteBuffer mAlphaBuffers;
+  RemoteArrayOfByteBuffer mExtraDatas;
 };
 
 namespace ipc {
@@ -126,15 +272,15 @@ struct IPDLParamTraits<RemoteVideoData> {
 };
 
 template <>
-struct IPDLParamTraits<mozilla::ArrayOfRemoteVideoData*> {
-  typedef mozilla::ArrayOfRemoteVideoData paramType;
+struct IPDLParamTraits<ArrayOfRemoteVideoData*> {
+  typedef ArrayOfRemoteVideoData paramType;
   static void Write(IPC::Message* aMsg, mozilla::ipc::IProtocol* aActor,
                     paramType* aVar) {
     WriteIPDLParam(aMsg, aActor, std::move(aVar->mArray));
   }
 
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   mozilla::ipc::IProtocol* aActor, RefPtr<paramType>* aVar) {
+                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar) {
     nsTArray<RemoteVideoData> array;
     if (!ReadIPDLParam(aMsg, aIter, aActor, &array)) {
       return false;
@@ -143,6 +289,38 @@ struct IPDLParamTraits<mozilla::ArrayOfRemoteVideoData*> {
     *aVar = std::move(results);
     return true;
   }
+};
+
+template <>
+struct IPDLParamTraits<RemoteArrayOfByteBuffer> {
+  typedef RemoteArrayOfByteBuffer paramType;
+  // We do not want to move the RemoteArrayOfByteBuffer as we want to recycle
+  // the shmem it contains for another time.
+  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+                    const paramType& aVar);
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   ipc::IProtocol* aActor, paramType* aVar);
+};
+
+template <>
+struct IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData> {
+  typedef ArrayOfRemoteMediaRawData::RemoteMediaRawData paramType;
+  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+                    const paramType& aVar);
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   ipc::IProtocol* aActor, paramType* aVar);
+};
+
+template <>
+struct IPDLParamTraits<ArrayOfRemoteMediaRawData*> {
+  typedef ArrayOfRemoteMediaRawData paramType;
+  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+                    paramType* aVar);
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar);
 };
 
 }  // namespace ipc

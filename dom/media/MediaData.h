@@ -610,6 +610,8 @@ class MediaRawData final : public MediaData {
   MediaRawData(const uint8_t* aData, size_t aSize);
   MediaRawData(const uint8_t* aData, size_t aSize, const uint8_t* aAlphaData,
                size_t aAlphaSize);
+  explicit MediaRawData(AlignedByteBuffer&& aData);
+  MediaRawData(AlignedByteBuffer&& aData, AlignedByteBuffer&& aAlphaData);
 
   // Pointer to data or null if not-yet allocated
   const uint8_t* Data() const { return mBuffer.Data(); }
@@ -658,6 +660,7 @@ class MediaRawData final : public MediaData {
 
  private:
   friend class MediaRawDataWriter;
+  friend class ArrayOfRemoteMediaRawData;
   AlignedByteBuffer mBuffer;
   AlignedByteBuffer mAlphaBuffer;
   CryptoSample mCryptoInternal;
