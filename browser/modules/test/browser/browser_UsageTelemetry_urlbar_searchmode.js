@@ -11,6 +11,7 @@
 
 const SCALAR_PREFIX = "urlbar.searchmode.";
 const ENGINE_NAME = "MozSearch";
+const ENGINE_DOMAIN = "example.com";
 const ENGINE_ALIAS = "alias";
 const TEST_QUERY = "test";
 
@@ -72,7 +73,7 @@ add_task(async function setup() {
   await Services.search.addEngineWithDetails(ENGINE_NAME, {
     alias: ENGINE_ALIAS,
     method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+    template: `http://${ENGINE_DOMAIN}/?q={searchTerms}`,
   });
 
   // Make it the default search engine.
@@ -426,4 +427,57 @@ add_task(async function test_touchbar() {
   });
   assertSearchModeScalar("touchbar", "history");
   await UrlbarTestUtils.exitSearchMode(window);
+});
+
+// Enters search mode by selecting a tab-to-search result.
+// Tests that tab-to-search results preview search mode when highlighted. These
+// results are worth testing separately since they do not set the
+// payload.keyword parameter.
+add_task(async function test_tabtosearch() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2.tabToComplete", true]],
+  });
+  await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: ENGINE_DOMAIN.slice(0, 4),
+  });
+  let tabToSearchResult = (
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+  ).result;
+  Assert.equal(
+    tabToSearchResult.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+  Assert.equal(
+    tabToSearchResult.payload.engine,
+    ENGINE_NAME,
+    "The tab-to-search result is for the correct engine."
+  );
+  await UrlbarTestUtils.assertSearchMode(window, null);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    1,
+    "Sanity check: The second result is selected."
+  );
+  // Select the tab-to-search result.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: ENGINE_NAME,
+    entry: "tabtosearch",
+  });
+
+  assertSearchModeScalar("tabtosearch", "other");
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
 });

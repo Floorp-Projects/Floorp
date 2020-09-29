@@ -992,7 +992,7 @@ class UrlbarInput {
       ) {
         // Enter search mode without starting a query. This will just preview
         // search mode.
-        let enteredSearchMode = this.maybePromoteKeywordToSearchMode({
+        let enteredSearchMode = this.maybePromoteResultToSearchMode({
           result,
           checkValue: false,
           startQuery: false,
@@ -1105,7 +1105,7 @@ class UrlbarInput {
       firstResult.heuristic &&
       firstResult.payload.keyword &&
       !firstResult.payload.keywordOffer &&
-      this.maybePromoteKeywordToSearchMode({
+      this.maybePromoteResultToSearchMode({
         result: firstResult,
         entry: "typed",
         checkValue: false,
@@ -1682,7 +1682,7 @@ class UrlbarInput {
    * @returns {boolean}
    *   True if we entered search mode and false if not.
    */
-  maybePromoteKeywordToSearchMode({
+  maybePromoteResultToSearchMode({
     entry,
     result = this._resultForCurrentValue,
     checkValue = true,
@@ -2478,10 +2478,17 @@ class UrlbarInput {
       if (entry) {
         searchMode.entry = entry;
       } else {
-        searchMode.entry =
-          result.providerName == "UrlbarProviderTopSites"
-            ? "topsites_urlbar"
-            : "keywordoffer";
+        switch (result.providerName) {
+          case "UrlbarProviderTopSites":
+            searchMode.entry = "topsites_urlbar";
+            break;
+          case "TabToSearch":
+            searchMode.entry = "tabtosearch";
+            break;
+          default:
+            searchMode.entry = "keywordoffer";
+            break;
+        }
       }
     }
 

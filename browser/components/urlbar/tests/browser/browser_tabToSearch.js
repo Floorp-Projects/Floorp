@@ -98,8 +98,7 @@ add_task(async function basic() {
   );
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
-    // FIXME: Update this to "tabtosearch" in Part 2 of this patch.
-    entry: "keywordoffer",
+    entry: "tabtosearch",
     isPreview: true,
   });
 

@@ -9,6 +9,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+const TEST_ENGINE_NAME = "Test";
+const TEST_ENGINE_ALIAS = "@test";
+const TEST_ENGINE_DOMAIN = "example.com";
+
 function copyToClipboard(str) {
   return new Promise((resolve, reject) => {
     waitForClipboard(
@@ -564,7 +568,7 @@ const tests = [
       value: "@",
       fireInputEvent: true,
     });
-    while (win.gURLBar.untrimmedValue != "@test ") {
+    while (win.gURLBar.untrimmedValue != `${TEST_ENGINE_ALIAS} `) {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
@@ -600,7 +604,7 @@ const tests = [
       fireInputEvent: true,
     });
 
-    while (win.gURLBar.searchMode?.engineName != "Test") {
+    while (win.gURLBar.searchMode?.engineName != TEST_ENGINE_NAME) {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
@@ -1018,6 +1022,72 @@ const tests = [
   },
 
   async function(win) {
+    info("Open search mode from a tab-to-search result.");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2", true],
+        ["browser.urlbar.update2.tabToComplete", true],
+      ],
+    });
+
+    await PlacesUtils.history.clear();
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
+    }
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    });
+
+    let tabToSearchResult = (
+      await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1)
+    ).result;
+    Assert.equal(
+      tabToSearchResult.providerName,
+      "TabToSearch",
+      "The second result is a tab-to-search result."
+    );
+
+    // Select the tab-to-search result.
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
+    EventUtils.synthesizeKey("KEY_Enter");
+    await searchPromise;
+    await UrlbarTestUtils.assertSearchMode(win, {
+      engineName: TEST_ENGINE_NAME,
+      entry: "tabtosearch",
+    });
+
+    // Execute a search to finish the engagement.
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      value: "moz",
+      fireInputEvent: true,
+    });
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await promise;
+
+    await PlacesUtils.history.clear();
+    await SpecialPowers.popPrefEnv();
+
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        numWords: "1",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
+  async function(win) {
     info("Sanity check we are not stuck on 'returned'");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -1187,6 +1257,7 @@ const tests = [
 
   async function(win) {
     info("Open the panel with DOWN, don't type, blur it.");
+    await addTopSite("http://example.org/");
     win.gURLBar.value = "";
     win.gURLBar.select();
     await UrlbarTestUtils.promisePopupOpen(win, () => {
@@ -1262,7 +1333,9 @@ const tests = [
 
     // To avoid needing to add a custom search shortcut Top Site, we just
     // abandon this interaction.
-    win.gURLBar.blur();
+    await UrlbarTestUtils.promisePopupClose(win, () => {
+      win.gURLBar.blur();
+    });
 
     await SpecialPowers.popPrefEnv();
     return {
@@ -1270,6 +1343,66 @@ const tests = [
       method: "abandonment",
       object: "blur",
       value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+        numWords: "0",
+      },
+    };
+  },
+
+  async function(win) {
+    info("Open search mode from a tab-to-search result.");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2", true],
+        ["browser.urlbar.update2.tabToComplete", true],
+      ],
+    });
+
+    await PlacesUtils.history.clear();
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
+    }
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    });
+
+    let tabToSearchResult = (
+      await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1)
+    ).result;
+    Assert.equal(
+      tabToSearchResult.providerName,
+      "TabToSearch",
+      "The second result is a tab-to-search result."
+    );
+
+    // Select the tab-to-search result.
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
+    EventUtils.synthesizeKey("KEY_Enter");
+    await searchPromise;
+    await UrlbarTestUtils.assertSearchMode(win, {
+      engineName: TEST_ENGINE_NAME,
+      entry: "tabtosearch",
+    });
+
+    // Abandon the interaction since simply entering search mode is not
+    // considered the end of an engagement.
+    await UrlbarTestUtils.promisePopupClose(win, () => {
+      win.gURLBar.blur();
+    });
+
+    await PlacesUtils.history.clear();
+    await SpecialPowers.popPrefEnv();
+
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "typed",
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
@@ -1364,10 +1497,13 @@ add_task(async function test() {
   await Services.search.setDefault(engine);
   await Services.search.moveEngine(engine, 0);
 
-  let aliasEngine = await Services.search.addEngineWithDetails("Test", {
-    alias: "@test",
-    template: "http://example.com/?search={searchTerms}",
-  });
+  let aliasEngine = await Services.search.addEngineWithDetails(
+    TEST_ENGINE_NAME,
+    {
+      alias: TEST_ENGINE_ALIAS,
+      template: `http://${TEST_ENGINE_DOMAIN}/?search={searchTerms}`,
+    }
+  );
 
   // Add a bookmark and a keyword.
   let bm = await PlacesUtils.bookmarks.insert({
