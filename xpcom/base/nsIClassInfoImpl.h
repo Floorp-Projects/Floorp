@@ -178,6 +178,11 @@ class GenericClassInfo : public nsIClassInfo {
   NS_IMPL_QUERY_INTERFACE_CI_GUTS(aClass, __VA_ARGS__)            \
   NS_INTERFACE_MAP_END_INHERITING(aSuper)
 
+#define NS_IMPL_QUERY_INTERFACE_CI_INHERITED0(aClass, aSuper) \
+  NS_INTERFACE_MAP_BEGIN(aClass)                              \
+    NS_IMPL_QUERY_CLASSINFO(aClass)                           \
+  NS_INTERFACE_MAP_END_INHERITING(aSuper)
+
 #define NS_IMPL_ISUPPORTS_CI(aClass, ...)         \
   NS_IMPL_ADDREF(aClass)                          \
   NS_IMPL_RELEASE(aClass)                         \
