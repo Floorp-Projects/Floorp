@@ -912,7 +912,8 @@ class Document : public nsINode,
   /**
    * Resolves a URI based on the document's base URI.
    */
-  Result<nsCOMPtr<nsIURI>, nsresult> ResolveWithBaseURI(const nsAString& aURI);
+  Result<OwningNonNull<nsIURI>, nsresult> ResolveWithBaseURI(
+      const nsAString& aURI);
 
   /**
    * Return the URL data which style system needs for resolving url value.
