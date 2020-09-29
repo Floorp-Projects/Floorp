@@ -8,5 +8,6 @@ DevToolsModules(
     'process.js',
     'tab.js',
     'webextension.js',
+    'worker.js',
 )
 
