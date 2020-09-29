@@ -1348,116 +1348,67 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    private fun loadUriHeaderTest(headers: Map<String?,String?>,
-                                  additional: Map<String?, String?>) {
-        // First collect default headers with no override
-        sessionRule.session.loadUri("$TEST_ENDPOINT/anything")
-        sessionRule.session.waitForPageStop()
+    @Test fun loadUriHeader() {
+        val headers = mapOf<String, String>("Header1" to "Value", "Header2" to "Value1, Value2")
 
-        val defaultContent = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
-        val defaultBody = JSONObject(defaultContent)
-        val defaultHeaders = defaultBody.getJSONObject("headers").asMap<String>()
-
-        val expected = defaultHeaders.plus(additional)
-
-        // Now load the page with the header override
         sessionRule.session.loadUri("$TEST_ENDPOINT/anything", headers)
         sessionRule.session.waitForPageStop()
 
         val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
         val body = JSONObject(content)
-        val actualHeaders = body.getJSONObject("headers").asMap<String>()
 
-        assertThat("Headers should match", actualHeaders, equalTo(expected))
+        MatcherAssert.assertThat("Headers should match", body.getJSONObject("headers")
+                .getString("Header1"), equalTo("Value"))
+        MatcherAssert.assertThat("Headers should match", body.getJSONObject("headers")
+                .getString("Header2"), equalTo("Value1, Value2"))
     }
 
-    @Test fun loadUriHeader() {
-        // Basic test
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value", "Header2" to "Value1, Value2"),
-                mapOf("Header1" to "Value", "Header2" to "Value1, Value2")
-        )
+    @Ignore("HttpBin incorrectly filters empty field values")
+    @Test fun loadUriHeaderEmptyFieldValue() {
+        val headers = mapOf<String?, String?>(
+                "ValueLess1" to "",
+                "ValueLess2" to null)
 
-        // Empty value headers are ignored
-        loadUriHeaderTest(
-                mapOf("ValueLess1" to "", "ValueLess2" to null),
-                mapOf()
-        )
+        sessionRule.session.loadUri("$TEST_ENDPOINT/anything", headers)
+        sessionRule.session.waitForPageStop()
 
-        // Null key or special headers are ignored
-        loadUriHeaderTest(
-                mapOf(null to "BadNull",
-                      "Connection" to "BadConnection",
-                      "Host" to "BadHost"),
-                mapOf()
-        )
+        val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
+        val body = JSONObject(content)
+        val headersJSON = body.getJSONObject("headers")
 
-        // Key or value cannot contain '\r\n'
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value",
-                      "Header2" to "Value1, Value2",
-                      "this\r\nis invalid" to "test value",
-                      "test key" to "this\r\n is a no-no",
-                      "what" to "what\r\nhost:amazon.com",
-                      "Header3" to "Value1, Value2, Value3"
-                ),
-                mapOf("Header1" to "Value",
-                      "Header2" to "Value1, Value2",
-                      "Header3" to "Value1, Value2, Value3")
-        )
+        MatcherAssert.assertThat("Header with no field value should be included",
+                headersJSON.has("ValueLess1"))
+        MatcherAssert.assertThat("Header with no field value should be included",
+                headersJSON.has("ValueLess2"))
+    }
 
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value",
-                      "Header2" to "Value1, Value2",
-                      "what" to "what\r\nhost:amazon.com"),
-                mapOf("Header1" to "Value", "Header2" to "Value1, Value2")
-        )
+    @Test fun loadUriHeaderBadOverrides() {
+        val headers = mapOf<String?, String?>(
+                null to "BadNull",
+                "Connection" to "BadConnection",
+                "Host" to "BadHost")
 
-        loadUriHeaderTest(
-                mapOf("what" to "what\r\nhost:amazon.com"),
-                mapOf()
-        )
+        sessionRule.session.loadUri("$TEST_ENDPOINT/anything", headers)
+        sessionRule.session.waitForPageStop()
 
-        loadUriHeaderTest(
-                mapOf("this\r\n" to "yes"),
-                mapOf()
-        )
+        val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
+        val body = JSONObject(content)
+        val headersJSON = body.getJSONObject("headers")
 
-        // Connection and Host cannot be overriden, no matter the case spelling
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value1", "ConnEction" to "test", "connection" to "test2"),
-                mapOf("Header1" to "Value1")
-        )
+        headersJSON.keys().forEach { key ->
+            MatcherAssert.assertThat( "No value field should be empty or null",
+                    headersJSON.optString(key), not(isEmptyOrNullString()))
+            MatcherAssert.assertThat( "No value field should be only whitespace",
+                    headersJSON.getString(key).trim(), not(isEmptyOrNullString()))
+            MatcherAssert.assertThat( "BadNull should not exist as a header value",
+                    headersJSON.getString(key), not("BadNull"))
+        }
 
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value1", "connection" to "test2"),
-                mapOf("Header1" to "Value1")
-        )
+        MatcherAssert.assertThat("Headers should not match", headersJSON
+                .getString("Connection"), not("BadConnection"))
+        MatcherAssert.assertThat("Headers should not match", headersJSON
+                .getString("Host"), not("BadHost"))
 
-        loadUriHeaderTest(
-                mapOf("Header1   " to "Value1", "host" to "test2"),
-                mapOf("Header1" to "Value1")
-        )
-
-        loadUriHeaderTest(
-                mapOf("Header1" to "Value1", "host" to "test2"),
-                mapOf("Header1" to "Value1")
-        )
-
-        // Adding white space at the end of a forbidden header still prevents override
-        loadUriHeaderTest(
-                mapOf("host" to "amazon.com",
-                      "host " to "amazon.com",
-                      "host\r" to "amazon.com",
-                      "host\r\n" to "amazon.com"),
-                mapOf()
-        )
-
-        // '\r' or '\n' are forbidden character even when not following each other
-        loadUriHeaderTest(
-                mapOf("abc\ra\n" to "amazon.com"),
-                mapOf()
-        )
     }
 
     @Test(expected = GeckoResult.UncaughtException::class)

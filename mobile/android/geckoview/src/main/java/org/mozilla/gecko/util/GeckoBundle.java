@@ -22,7 +22,6 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * A lighter-weight version of Bundle that adds support for type coercion (e.g.
