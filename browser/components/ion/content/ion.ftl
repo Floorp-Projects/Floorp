@@ -24,7 +24,14 @@ ion-accept-leave = Accept and Leave
 ion-cancel = Cancel
 ion-consent-notice = { -ion-brand-short-name } Privacy Notice
 ion-consent-study-notice = { -ion-brand-short-name } Study Privacy Consent Notice
-ion-leave = Leaving { -ion-brand-short-name }
+
+leave-ion-consent-title = You’re leaving?
+leave-ion-consent-bullet-thanks = Thank you for participating.
+leave-ion-consent-bullet-manage = We’re sorry to see you go. Once you leave { -ion-brand-short-name }, we will stop all data collection and unenroll you from any active studies. We will also delete the data you’ve contributed, where applicable. <a data-l10n-name="privacy-policy">Learn more about managing your { -ion-brand-short-name } data</a>.
+
+leave-study-consent-title = Withdraw your contribution to this study?
+leave-study-consent-bullet-manage = If you unenroll while this study is still active, { -ion-brand-short-name } will rescind your contribution to this research effort and will delete any data you’ve already contributed. <a data-l10n-name="privacy-policy">Learn more about managing your { -ion-brand-short-name } data</a>.
+
 ion-consent-study-title = Leaving Study
 ion-consent-study-join = Accept and Join Study
 ion-consent-study-leave = Accept and Leave Study
