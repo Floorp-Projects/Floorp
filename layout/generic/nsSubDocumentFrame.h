@@ -56,7 +56,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   mozilla::IntrinsicSize GetIntrinsicSize() override;
-  mozilla::AspectRatio GetIntrinsicRatio() override;
+  mozilla::AspectRatio GetIntrinsicRatio() const override;
 
   mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,

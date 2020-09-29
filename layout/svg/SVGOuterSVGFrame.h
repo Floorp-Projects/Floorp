@@ -60,7 +60,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   virtual IntrinsicSize GetIntrinsicSize() override;
-  virtual AspectRatio GetIntrinsicRatio() override;
+  AspectRatio GetIntrinsicRatio() const override;
 
   SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
                                     WritingMode aWritingMode,
