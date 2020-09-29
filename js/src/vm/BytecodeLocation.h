@@ -78,6 +78,8 @@ class BytecodeLocation {
   // Return true if this bytecode location is within the bounds of the
   // bytecode for a given script.
   bool isInBounds(const JSScript* script) const;
+
+  const JSScript* getDebugOnlyScript() const;
 #endif
 
   inline uint32_t bytecodeToOffset(const JSScript* script) const;
