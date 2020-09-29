@@ -352,15 +352,25 @@ describe("ActivityStream", () => {
     afterEach(() => clock.restore());
 
     it("should set false with unexpected geo", () => {
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("NOGEO");
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs("browser.search.region")
+        .returns("NOGEO");
 
       as._updateDynamicPrefs();
+
       clock.tick(1);
 
       assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should set true with expected geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+        )
+        .returns("US");
+
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
@@ -373,7 +383,35 @@ describe("ActivityStream", () => {
     });
     it("should not change default even with expected geo and locale", () => {
       as._defaultPrefs.set("feeds.system.topstories", false);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+        )
+        .returns("US");
+
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "en-US");
+
+      as._updateDynamicPrefs();
+      clock.tick(1);
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
+    });
+    it("should set false with geo blocked", () => {
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+        )
+        .returns("US")
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-block"
+        )
+        .returns("US");
+
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
