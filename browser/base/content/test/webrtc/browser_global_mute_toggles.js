@@ -22,7 +22,6 @@ add_task(async function setup() {
     [PREF_VIDEO_LOOPBACK, ""],
     [PREF_FAKE_STREAMS, true],
     [PREF_FOCUS_SOURCE, false],
-    ["privacy.webrtc.globalMuteToggles", true],
   ];
   await SpecialPowers.pushPrefEnv({ set: prefs });
 });
