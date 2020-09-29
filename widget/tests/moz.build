@@ -77,7 +77,7 @@ with Files("*key_event_counts*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
 with Files("*imestate*"):
-    BUG_COMPONENT = ("Core", "Internationalization")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("*mouse_scroll*"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
