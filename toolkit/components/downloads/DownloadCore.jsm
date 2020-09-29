@@ -1114,11 +1114,7 @@ Download.prototype = {
         changeMade = true;
       }
 
-      if (
-        this.hasProgress &&
-        this.target &&
-        !this.target.partFileExists
-      ) {
+      if (this.hasProgress && this.target && !this.target.partFileExists) {
         this.target.refreshPartFileState();
       }
     }
