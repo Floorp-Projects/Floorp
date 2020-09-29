@@ -9,6 +9,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 
 /**
  * Internal DAO for accessing [PinnedSiteEntity] instances.
@@ -22,6 +23,16 @@ internal interface PinnedSiteDao {
     @WorkerThread
     @Delete
     fun deletePinnedSite(site: PinnedSiteEntity)
+
+    @WorkerThread
+    @Transaction
+    fun insertAllPinnedSites(sites: List<PinnedSiteEntity>): List<Long> {
+        return sites.map { entity ->
+            val id = insertPinnedSite(entity)
+            entity.id = id
+            id
+        }
+    }
 
     @WorkerThread
     @Query("SELECT * FROM top_sites")

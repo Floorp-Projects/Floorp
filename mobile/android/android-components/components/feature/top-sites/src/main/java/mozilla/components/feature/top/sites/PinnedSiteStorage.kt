@@ -5,7 +5,6 @@
 package mozilla.components.feature.top.sites
 
 import android.content.Context
-import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
@@ -31,17 +30,15 @@ class PinnedSiteStorage(context: Context) {
         topSites: List<Pair<String, String>>,
         isDefault: Boolean = false
     ) = withContext(IO) {
-        database.value.withTransaction {
-            topSites.forEach { (title, url) ->
-                val entity = PinnedSiteEntity(
-                    title = title,
-                    url = url,
-                    isDefault = isDefault,
-                    createdAt = System.currentTimeMillis()
-                )
-                entity.id = pinnedSiteDao.insertPinnedSite(entity)
-            }
+        val siteEntities = topSites.map { (title, url) ->
+            PinnedSiteEntity(
+                title = title,
+                url = url,
+                isDefault = isDefault,
+                createdAt = System.currentTimeMillis()
+            )
         }
+        pinnedSiteDao.insertAllPinnedSites(siteEntities)
     }
 
     /**

@@ -20,7 +20,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ExecutorService
@@ -61,7 +60,6 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    @Ignore("Perma failure: https://github.com/mozilla-mobile/android-components/issues/8471")
     fun testAddingAllDefaultSites() = runBlocking {
         val defaultTopSites = listOf(
             Pair("Mozilla", "https://www.mozilla.org"),
