@@ -206,12 +206,18 @@ Once these flags are set, your Fenix builds will include any local modifications
 
 See a [demo of auto-publication workflow in action](https://www.youtube.com/watch?v=qZKlBzVvQGc).
 
+In order to build successfully, you need to check out a commit in the dependency repository that has no breaking changes. The two best ways to do this are:
+- Run the `<android-components>/tools/list_compatible_dependency_versions.py` script to output a compatible commit
+- Check out the latest commit from master in this repository and the dependency repository. However, this may fail if there were breaking changes added recently to the dependency.
+
 ### GeckoView
 Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,
 and optional a path to m-c object directory via `dependencySubstitutions.geckoviewTopobjdir`.
 
 If these are configured, local builds of GeckoView will be used instead of what's configured in Dependencies.kt.
 For more details, see https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/geckoview-quick-start.html#include-geckoview-as-a-dependency
+
+See notes on building successfully in the `android-components` auto-publication section.
 
 ## License
 
