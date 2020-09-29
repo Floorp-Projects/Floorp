@@ -152,6 +152,8 @@ void SharedSurface_AndroidHardwareBuffer::WaitForBufferOwnership() {
     gfxCriticalNote << "Failed to create EGLSync from fd";
     return;
   }
+  // Release fd here, since it is owned by EGLSync
+  Unused << rawFD.release();
 
   egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
   egl->fDestroySync(sync);
