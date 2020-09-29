@@ -11,6 +11,7 @@
 #include "nsStringFwd.h"
 
 class nsIContent;
+class nsINode;
 class nsAttrValue;
 class nsTextNode;
 
@@ -67,10 +68,21 @@ void SetDirectionalityOnDescendants(mozilla::dom::Element* aElement,
 void WalkDescendantsResetAutoDirection(mozilla::dom::Element* aElement);
 
 /**
- * In case a slot element was added or removed or its assigned nodes changed,
- * it may change the directionality of ancestors or assigned nodes.
+ * In case a slot element was added or removed it may change the directionality
+ * of ancestors or assigned nodes.
+ *
+ * aAllAssignedNodesChanged forces the computation of the state for all of the
+ * assigned descendants.
  */
-void SlotStateChanged(mozilla::dom::HTMLSlotElement* aSlot);
+void SlotStateChanged(dom::HTMLSlotElement* aSlot,
+                      bool aAllAssignedNodesChanged = true);
+
+/**
+ * When only a single node in a slot is reassigned we can save some work
+ * compared to the above.
+ */
+void SlotAssignedNodeChanged(dom::HTMLSlotElement* aSlot,
+                             nsIContent& aAssignedNode);
 
 /**
  * After setting dir=auto on an element, walk its descendants in tree order.

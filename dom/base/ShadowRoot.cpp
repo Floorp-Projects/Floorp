@@ -229,9 +229,8 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
     for (nsIContent* child = GetHost()->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       nsAutoString slotName;
-      if (child->IsElement()) {
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::slot,
-                                    slotName);
+      if (auto* element = Element::FromNode(*child)) {
+        element->GetAttr(nsGkAtoms::slot, slotName);
       }
       if (!child->IsSlotable() || !slotName.Equals(name)) {
         continue;
@@ -604,8 +603,8 @@ void ShadowRoot::MaybeReassignElement(Element& aElement) {
     assignment.mSlot->EnqueueSlotChangeEvent();
   }
 
-  SlotStateChanged(oldSlot);
-  SlotStateChanged(assignment.mSlot);
+  SlotAssignedNodeChanged(oldSlot, aElement);
+  SlotAssignedNodeChanged(assignment.mSlot, aElement);
 }
 
 Element* ShadowRoot::GetActiveElement() {
@@ -701,7 +700,7 @@ void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
     assignment.mSlot->AppendAssignedNode(aChild);
   }
   assignment.mSlot->EnqueueSlotChangeEvent();
-  SlotStateChanged(assignment.mSlot);
+  SlotAssignedNodeChanged(assignment.mSlot, aChild);
 }
 
 ServoStyleRuleMap& ShadowRoot::ServoStyleRuleMap() {
