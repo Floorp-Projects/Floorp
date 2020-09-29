@@ -173,7 +173,17 @@ nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retva
     return rv;
   }
 
-  InitPrintSettingsFromPrefs(*_retval, false, nsIPrintSettings::kInitSaveAll);
+  auto globalPrintSettings =
+      nsIPrintSettings::kInitSaveShrinkToFit | nsIPrintSettings::kInitSaveHeaderLeft |
+      nsIPrintSettings::kInitSaveHeaderCenter | nsIPrintSettings::kInitSaveHeaderRight |
+      nsIPrintSettings::kInitSaveFooterLeft | nsIPrintSettings::kInitSaveFooterCenter |
+      nsIPrintSettings::kInitSaveFooterRight | nsIPrintSettings::kInitSaveEdges |
+      nsIPrintSettings::kInitSaveReversed | nsIPrintSettings::kInitSaveInColor;
+
+  // XXX Why is Mac special? Why are we copying global print settings here?
+  // nsPrintSettingsService::InitPrintSettingsFromPrefs already gets the few
+  // global defaults that we want, doesn't it?
+  InitPrintSettingsFromPrefs(*_retval, false, globalPrintSettings);
   return rv;
 }
 
