@@ -193,3 +193,28 @@ uint16_t RotorUnvisitedLinkRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 
   return result;
 }
+
+// Rotor Static Text Rule
+
+RotorStaticTextRule::RotorStaticTextRule(
+    AccessibleOrProxy& aDirectDescendantsFrom)
+    : RotorRule(aDirectDescendantsFrom){};
+
+RotorStaticTextRule::RotorStaticTextRule() : RotorRule(){};
+
+uint16_t RotorStaticTextRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = RotorRule::Match(aAccOrProxy);
+
+  // if a match was found in the base-class's Match function,
+  // it is valid to consider that match again here. if it is
+  // not of the desired role, we flip the match bit to "unmatch"
+  // otherwise, the match persists.
+  if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
+    mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy);
+    if (![[nativeMatch moxRole] isEqualToString:@"AXStaticText"]) {
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+
+  return result;
+}
