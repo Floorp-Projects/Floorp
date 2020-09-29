@@ -1,7 +1,6 @@
 {
     "configure-args": "--enable-rust-simd",
     "debug": true,
-    "compiler": "clang",
     "env": {
         "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
     },
