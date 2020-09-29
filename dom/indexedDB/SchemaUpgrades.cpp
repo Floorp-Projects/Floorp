@@ -107,11 +107,8 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   {
     mozStorageStatementScoper scoper(stmt);
 
-    bool hasResults;
-    rv = stmt->ExecuteStep(&hasResults);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(const bool hasResults, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+
     if (NS_WARN_IF(!hasResults)) {
       return NS_ERROR_FAILURE;
     }
@@ -2303,11 +2300,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   {
     mozStorageStatementScoper scoper(stmt);
 
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResult)) {
       MOZ_ASSERT(false, "This should never be possible!");

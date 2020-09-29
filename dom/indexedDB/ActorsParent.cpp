@@ -7557,11 +7557,8 @@ nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
 
   const auto borrowedStatement = aCachedStatement.Borrow();
 
-  bool hasResult;
-  rv = borrowedStatement->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const DebugOnly<bool> hasResult,
+              MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
 
   MOZ_ASSERT(hasResult);
 
@@ -8200,11 +8197,9 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
       return rv;
     }
 
-    bool hasResult;
-    rv = borrowedSelectStatement->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(
+        const bool& hasResult,
+        MOZ_TO_RESULT_INVOKE(&*borrowedSelectStatement, ExecuteStep));
 
     if (!hasResult) {
       // Don't have to create the journal here, we can create all at once,
@@ -14813,10 +14808,7 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
         return rv;
       }
 
-      rv = stmt->ExecuteStep(&foreignKeyError);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY_VAR(foreignKeyError, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
     }
 
     if (!foreignKeysWereEnabled) {
@@ -15724,11 +15716,7 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
     return rv;
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   *aHasIndexes = hasResult;
   return NS_OK;
@@ -17025,11 +17013,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
     return rv;
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     return NS_ERROR_FILE_CORRUPTED;
@@ -17974,9 +17958,9 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
       return;
     }
 
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep),
+                QM_VOID);
+    if (NS_WARN_IF(!hasResult)) {
       return;
     }
 
@@ -17997,11 +17981,8 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
     return;
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep),
+              QM_VOID);
 
   if (NS_WARN_IF(!hasResult)) {
     return;
@@ -20515,11 +20496,8 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
     return rv;
   }
 
-  bool hasResult;
-  rv = indexValuesStmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult,
+              MOZ_TO_RESULT_INVOKE(&*indexValuesStmt, ExecuteStep));
 
   if (hasResult) {
     IndexDataValuesAutoArray existingIndexValues;
@@ -21451,11 +21429,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     MOZ_ASSERT(false, "This should never be possible!");
@@ -21814,11 +21788,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     MOZ_ASSERT(false, "This should never be possible!");
@@ -22192,11 +22162,7 @@ void IndexOpenOpHelper<CursorType>::PrepareIndexKeyConditionClause(
 template <IDBCursorType CursorType>
 nsresult CommonOpenOpHelper<CursorType>::ProcessStatementSteps(
     mozIStorageStatement* const aStmt) {
-  bool hasResult;
-  nsresult rv = aStmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
 
   if (!hasResult) {
     SetResponse(void_t{});
@@ -22688,11 +22654,8 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   // TODO: Why do we query the records we don't need and skip them here, rather
   // than using a OFFSET clause in the query?
   for (uint32_t index = 0; index < advanceCount; index++) {
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(const bool hasResult,
+                MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
     if (!hasResult) {
       mResponse = void_t();
