@@ -238,6 +238,12 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus);
 
+  /**
+   * Called when a document in a window has been hidden or otherwise can no
+   * longer accept focus.
+   */
+  void WindowHidden(mozIDOMWindowProxy* aWindow);
+
   static uint32_t FocusOptionsToFocusManagerFlags(
       const mozilla::dom::FocusOptions& aOptions);
 

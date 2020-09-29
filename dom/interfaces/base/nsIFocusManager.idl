@@ -259,12 +259,6 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
-   * Called when a document in a window has been hidden or otherwise can no
-   * longer accept focus.
-   */
-  [noscript] void windowHidden(in mozIDOMWindowProxy aWindow);
-
-  /**
    * Fire any events that have been delayed due to synchronized actions.
    */
   [noscript] void fireDelayedEvents(in Document aDocument);
