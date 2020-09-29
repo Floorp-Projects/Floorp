@@ -749,7 +749,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
 }
 
 // Check that changing nested/about URIs works correctly.
-function check_nested_mutations() {
+add_task(function check_nested_mutations() {
   // nsNestedAboutURI
   let uri1 = gIoService.newURI("about:blank#");
   let uri2 = gIoService.newURI("about:blank");
@@ -868,9 +868,9 @@ function check_nested_mutations() {
     .setPathQueryRef("blank?query#ref")
     .finalize();
   do_check_uri_eq(uri3, uri1);
-}
+});
 
-function check_space_escaping() {
+add_task(function check_space_escaping() {
   let uri = gIoService.newURI("data:text/plain,hello%20world#space hash");
   Assert.equal(uri.spec, "data:text/plain,hello%20world#space%20hash");
   uri = gIoService.newURI("data:text/plain,hello%20world#space%20hash");
@@ -881,9 +881,9 @@ function check_space_escaping() {
   Assert.equal(uri.spec, "data:text/plain,hello world#space%20hash");
   uri = gIoService.newURI("http://example.com/test path#test path");
   uri = gIoService.newURI("http://example.com/test%20path#test%20path");
-}
+});
 
-function check_schemeIsNull() {
+add_task(function check_schemeIsNull() {
   let uri = gIoService.newURI("data:text/plain,aaa");
   Assert.ok(!uri.schemeIs(null));
   uri = gIoService.newURI("http://example.com");
@@ -894,10 +894,10 @@ function check_schemeIsNull() {
   Assert.ok(!uri.schemeIs(null));
   uri = gIoService.newURI("moz-icon://.unknown?size=32");
   Assert.ok(!uri.schemeIs(null));
-}
+});
 
 // Check that characters in the query of moz-extension aren't improperly unescaped (Bug 1547882)
-function check_mozextension_query() {
+add_task(function check_mozextension_query() {
   let uri = gIoService.newURI(
     "moz-extension://a7d1572e-3beb-4d93-a920-c408fa09e8ea/_source/holding.html"
   );
@@ -914,15 +914,15 @@ function check_mozextension_query() {
     "moz-extension://a7d1572e-3beb-4d93-a920-c408fa09e8ea/_source/holding.html?u=https%3A%2F%2Fnews.ycombinator.com%2F"
   );
   Assert.equal(uri.query, "u=https%3A%2F%2Fnews.ycombinator.com%2F");
-}
+});
 
-function check_resolve() {
+add_task(function check_resolve() {
   let base = gIoService.newURI("http://example.com");
   let uri = gIoService.newURI("tel::+371 27028456", "utf-8", base);
   Assert.equal(uri.spec, "tel::+371 27028456");
-}
+});
 
-function test_extra_protocols() {
+add_task(function test_extra_protocols() {
   // dweb://
   let url = gIoService.newURI("dweb://example.com/test");
   Assert.equal(url.host, "example.com");
@@ -968,18 +968,11 @@ function test_extra_protocols() {
   Assert.equal(url.scheme, "wtp");
   Assert.equal(url.host, "951ead31d09e4049fc1f21f137e233dd0589fcbd");
   Assert.equal(url.filePath, "/blog/vim-tips/");
-}
+});
 
 // TEST MAIN FUNCTION
 // ------------------
-function run_test() {
-  check_nested_mutations();
-  check_space_escaping();
-  check_schemeIsNull();
-  check_mozextension_query();
-  check_resolve();
-  test_extra_protocols();
-
+add_task(function mainTest() {
   // UTF-8 check - From bug 622981
   // ASCII
   let base = gIoService.newURI("http://example.org/xenia?");
@@ -1020,4 +1013,26 @@ function run_test() {
       }
     }
   });
-}
+});
+
+add_task(function test_iconURI_serialization() {
+  // URIs taken from test_moz_icon_uri.js
+
+  let tests = [
+    "moz-icon://foo.html?contentType=bar&size=button&state=normal",
+    "moz-icon://foo.html?size=3",
+    "moz-icon://stock/foo",
+    "moz-icon:file://foo.txt",
+    "moz-icon://file://foo.txt",
+  ];
+
+  function check_round_trip_serialization(spec) {
+    dump(`checking ${spec}\n`);
+    let uri = gIoService.newURI(spec);
+    let str = serialize_to_escaped_string(uri);
+    let other = deserialize_from_escaped_string(str).QueryInterface(Ci.nsIURI);
+    equal(other.spec, uri.spec);
+  }
+
+  tests.forEach(str => check_round_trip_serialization(str));
+});
