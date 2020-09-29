@@ -8,6 +8,7 @@
 
 #include "nsJARURI.h"
 #include "nsNetUtil.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIIOService.h"
 #include "nsIStandardURL.h"
 #include "nsCRT.h"
@@ -24,6 +25,10 @@ static NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_CLASSINFO(nsJARURI, nullptr, nsIClassInfo::THREADSAFE, NS_JARURI_CID)
+// Empty CI getter. We only need nsIClassInfo for Serialization
+NS_IMPL_CI_INTERFACE_GETTER0(nsJARURI)
+
 nsJARURI::nsJARURI() {}
 
 nsJARURI::~nsJARURI() {}
@@ -37,7 +42,7 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsIURL)
   NS_INTERFACE_MAP_ENTRY(nsIJARURI)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+  NS_IMPL_QUERY_CLASSINFO(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsINestedURI)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsJARURI)
 NS_INTERFACE_MAP_END
@@ -126,52 +131,6 @@ nsJARURI::Write(nsIObjectOutputStream* aOutputStream) {
 
   rv = aOutputStream->WriteStringZ(mCharsetHint.get());
   return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIClassInfo methods:
-
-NS_IMETHODIMP
-nsJARURI::GetInterfaces(nsTArray<nsIID>& array) {
-  array.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::GetScriptableHelper(nsIXPCScriptable** _retval) {
-  *_retval = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::GetContractID(nsACString& aContractID) {
-  aContractID.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::GetClassDescription(nsACString& aClassDescription) {
-  aClassDescription.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::GetClassID(nsCID** aClassID) {
-  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
-  return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP
-nsJARURI::GetFlags(uint32_t* aFlags) {
-  // XXX We implement THREADSAFE addref/release, but probably shouldn't.
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
-  *aClassIDNoAlloc = kJARURICID;
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
