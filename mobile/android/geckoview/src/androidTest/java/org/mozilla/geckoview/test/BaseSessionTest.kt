@@ -109,21 +109,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.loadTestPath(path: String) =
             this.loadUri(createTestUrl(path))
 
-    inline fun GeckoSession.toParcel(lambda: (Parcel) -> Unit) {
-        val parcel = Parcel.obtain()
-        try {
-            val pos = parcel.dataPosition()
-            parcel.setDataPosition(0)
-
-            lambda(parcel)
-
-            assertThat("Read parcel matches written parcel",
-                       parcel.dataPosition(), Matchers.equalTo(pos))
-        } finally {
-            parcel.recycle()
-        }
-    }
-
     inline fun GeckoRuntimeSettings.toParcel(lambda: (Parcel) -> Unit) {
         val parcel = Parcel.obtain()
         try {
