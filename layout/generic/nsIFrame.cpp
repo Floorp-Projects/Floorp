@@ -5962,6 +5962,11 @@ IntrinsicSize nsIFrame::GetIntrinsicSize() {
   return IntrinsicSize();  // default is width/height set to eStyleUnit_None
 }
 
+AspectRatio nsIFrame::GetAspectRatio() const {
+  // TODO: Consider aspect-ratio property.
+  return GetIntrinsicRatio();
+}
+
 /* virtual */
 AspectRatio nsIFrame::GetIntrinsicRatio() const { return AspectRatio(); }
 
