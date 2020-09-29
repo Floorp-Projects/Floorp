@@ -126,6 +126,12 @@ function _augmentSrc(src, assertions) {
          i64.const ${expected}
          i64.eq`;
                     break;
+                case 'v128':
+                    newSrc += `
+         v128.const ${expected}
+         i8x16.eq
+         i8x16.all_true`;
+                    break;
                 default:
                     throw new Error("unexpected usage of wasmAssert");
             }
