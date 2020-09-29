@@ -67,7 +67,6 @@ class ShareFragment : AppCompatDialogFragment() {
         shareInteractor = ShareInteractor(
             DefaultShareController(
                 context = requireContext(),
-                metrics = requireComponents.analytics.metrics,
                 shareSubject = args.shareSubject,
                 shareData = shareData,
                 snackbar = FenixSnackbar.make(
