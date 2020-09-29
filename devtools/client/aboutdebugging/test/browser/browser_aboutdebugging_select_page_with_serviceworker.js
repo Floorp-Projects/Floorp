@@ -35,7 +35,7 @@ add_task(async function() {
     serviceWorkers: [
       {
         name: WORKER_NAME,
-        workerDescriptorFront: { actorID: WORKER_NAME },
+        workerTargetFront: { actorID: WORKER_NAME },
       },
     ],
     sharedWorkers: [],

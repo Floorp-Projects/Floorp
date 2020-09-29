@@ -78,11 +78,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/descriptors/webextension",
   },
   {
-    types: ["workerDescriptor"],
-    spec: "devtools/shared/specs/descriptors/worker",
-    front: "devtools/client/fronts/descriptors/worker",
-  },
-  {
     types: ["device"],
     spec: "devtools/shared/specs/device",
     front: "devtools/client/fronts/device",
@@ -285,7 +280,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
-    front: null,
+    front: "devtools/client/fronts/targets/worker",
   },
   {
     types: ["thread"],

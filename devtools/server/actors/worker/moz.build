@@ -10,5 +10,5 @@ DevToolsModules(
     'service-worker-registration-list.js',
     'service-worker-registration.js',
     'service-worker.js',
-    'worker-descriptor-actor-list.js',
+    'worker-target-actor-list.js',
 )

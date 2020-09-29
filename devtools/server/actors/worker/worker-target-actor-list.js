@@ -8,8 +8,8 @@ const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(
   this,
-  "WorkerDescriptorActor",
-  "devtools/server/actors/descriptors/worker",
+  "WorkerTargetActor",
+  "devtools/server/actors/targets/worker",
   true
 );
 
@@ -48,7 +48,7 @@ function matchServiceWorker(dbg, origin) {
 // When a new worker appears, in some cases (i.e. the debugger is running) we
 // want it to pause during registration until a later time (i.e. the debugger
 // finishes attaching to the worker). This is an optional WorkderDebuggerManager
-// listener that can be installed in addition to the WorkerDescriptorActorList
+// listener that can be installed in addition to the WorkerTargetActorList
 // listener. It always listens to new workers and pauses any matching filters
 // which have been set on it.
 //
@@ -60,7 +60,7 @@ function matchServiceWorker(dbg, origin) {
 // setPauseServiceWorkers(origin) will pause all service workers which have the
 // specified origin.
 //
-// FIXME Bug 1601279 separate WorkerPauser from WorkerDescriptorActorList and give
+// FIXME Bug 1601279 separate WorkerPauser from WorkerTargetActorList and give
 // it a more consistent interface.
 function WorkerPauser(options) {
   this._options = options;
@@ -99,7 +99,7 @@ WorkerPauser.prototype = {
   },
 };
 
-function WorkerDescriptorActorList(conn, options) {
+function WorkerTargetActorList(conn, options) {
   this._conn = conn;
   this._options = options;
   this._actors = new Map();
@@ -110,7 +110,7 @@ function WorkerDescriptorActorList(conn, options) {
   this.onUnregister = this.onUnregister.bind(this);
 }
 
-WorkerDescriptorActorList.prototype = {
+WorkerTargetActorList.prototype = {
   destroy() {
     this.onListChanged = null;
     if (this._workerPauser) {
@@ -138,7 +138,7 @@ WorkerDescriptorActorList.prototype = {
     // Create an actor for each debugger for which we don't have one.
     for (const dbg of dbgs) {
       if (!this._actors.has(dbg)) {
-        this._actors.set(dbg, new WorkerDescriptorActor(this._conn, dbg));
+        this._actors.set(dbg, new WorkerTargetActor(this._conn, dbg));
       }
     }
 
@@ -209,4 +209,4 @@ WorkerDescriptorActorList.prototype = {
   },
 };
 
-exports.WorkerDescriptorActorList = WorkerDescriptorActorList;
+exports.WorkerTargetActorList = WorkerTargetActorList;

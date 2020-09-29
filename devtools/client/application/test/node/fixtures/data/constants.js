@@ -11,7 +11,7 @@ const EMPTY_WORKER_LIST = [];
 
 const WORKER_RUNNING = {
   id: "id-worker-1-example",
-  workerDescriptorFront: true,
+  workerTargetFront: true,
   url: "http://example.com/worker.js",
   state: 4,
   stateText: "activated",
@@ -19,7 +19,7 @@ const WORKER_RUNNING = {
 
 const WORKER_STOPPED = {
   id: "id-worker-1-example",
-  workerDescriptorFront: false,
+  workerTargetFront: false,
   url: "http://example.com/worker.js",
   state: 4,
   stateText: "activated",
@@ -27,7 +27,7 @@ const WORKER_STOPPED = {
 
 const WORKER_WAITING = {
   id: "id-worker-1-example",
-  workerDescriptorFront: false,
+  workerTargetFront: false,
   url: "http://example.com/worker.js",
   state: 2,
   stateText: "installed",
@@ -40,7 +40,7 @@ const REGISTRATION_SINGLE_WORKER = {
   workers: [
     {
       id: "id-worker-1-example",
-      workerDescriptorFront: "",
+      workerTargetFront: "",
       url: "http://example.com/worker.js",
       state: 4,
       stateText: "activated",
@@ -55,14 +55,14 @@ const REGISTRATION_MULTIPLE_WORKERS = {
   workers: [
     {
       id: "id-worker-1-example",
-      workerDescriptorFront: "",
+      workerTargetFront: "",
       url: "http://example.com/worker.js",
       state: 4,
       stateText: "activated",
     },
     {
       id: "id-worker-2-example",
-      workerDescriptorFront: "",
+      workerTargetFront: "",
       url: "http://example.com/worker.js",
       state: 2,
       stateText: "installed",
@@ -78,7 +78,7 @@ const SINGLE_WORKER_DEFAULT_DOMAIN_LIST = [
     workers: [
       {
         id: "id-worker-1-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -95,7 +95,7 @@ const SINGLE_WORKER_DIFFERENT_DOMAIN_LIST = [
     workers: [
       {
         id: "id-worker-1-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://different-example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -112,7 +112,7 @@ const MULTIPLE_WORKER_LIST = [
     workers: [
       {
         id: "id-worker-1-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -126,7 +126,7 @@ const MULTIPLE_WORKER_LIST = [
     workers: [
       {
         id: "id-worker-2-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 2,
         stateText: "installed",
@@ -140,7 +140,7 @@ const MULTIPLE_WORKER_LIST = [
     workers: [
       {
         id: "id-worker-3-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -157,7 +157,7 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     workers: [
       {
         id: "id-worker-1-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -171,7 +171,7 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     workers: [
       {
         id: "id-worker-2-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://example.com/worker.js",
         state: 4,
         stateText: "activated",
@@ -185,7 +185,7 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     workers: [
       {
         id: "id-worker-3-example",
-        workerDescriptorFront: "",
+        workerTargetFront: "",
         url: "http://different-example.com/worker.js",
         state: 4,
         stateText: "activated",

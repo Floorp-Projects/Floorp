@@ -8,4 +8,5 @@ DevToolsModules(
     'browsing-context.js',
     'content-process.js',
     'target-mixin.js',
+    'worker.js',
 )

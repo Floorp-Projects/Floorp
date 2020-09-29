@@ -31,7 +31,7 @@ function buildWorkerDataFromFronts({ registration, workers }) {
       state: worker.state,
       stateText: worker.stateText,
       registrationFront: registration,
-      workerDescriptorFront: worker.workerDescriptorFront,
+      workerTargetFront: worker.workerTargetFront,
     })),
   };
 }

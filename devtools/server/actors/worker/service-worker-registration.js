@@ -228,7 +228,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
      */
     preventShutdown() {
       if (!swm.isParentInterceptEnabled()) {
-        // In non parent-intercept mode, this is handled by the WorkerDescriptorActor attach().
+        // In non parent-intercept mode, this is handled by the WorkerTargetActor attach().
         throw new Error(
           "ServiceWorkerRegistrationActor.preventShutdown can only be used " +
             "in parent-intercept mode"
@@ -252,7 +252,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
      */
     allowShutdown() {
       if (!swm.isParentInterceptEnabled()) {
-        // In non parent-intercept mode, this is handled by the WorkerDescriptorActor detach().
+        // In non parent-intercept mode, this is handled by the WorkerTargetActor detach().
         throw new Error(
           "ServiceWorkerRegistrationActor.allowShutdown can only be used " +
             "in parent-intercept mode"

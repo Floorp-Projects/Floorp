@@ -34,16 +34,16 @@ class ApplicationServices {
     return this._toolbox.selectTool(toolId, REASON);
   }
 
-  async openWorkerInDebugger(workerDescriptorFront) {
+  async openWorkerInDebugger(workerTargetFront) {
     const debuggerPanel = await this.selectTool("jsdebugger");
-    debuggerPanel.selectWorker(workerDescriptorFront);
+    debuggerPanel.selectWorker(workerTargetFront);
   }
 
-  async viewWorkerSource(workerDescriptorFront) {
+  async viewWorkerSource(workerTargetFront) {
     // NOTE: this falls back to view-source: if the source can't be inspected
     //       within the debugger.
     this._toolbox.viewSourceInDebugger(
-      workerDescriptorFront.url,
+      workerTargetFront.url,
       1,
       1,
       null,

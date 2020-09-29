@@ -71,7 +71,7 @@ class Worker extends PureComponent {
       return;
     }
 
-    services.openWorkerInDebugger(this.props.worker.workerDescriptorFront);
+    services.openWorkerInDebugger(this.props.worker.workerTargetFront);
   }
 
   viewSource() {
@@ -82,7 +82,7 @@ class Worker extends PureComponent {
       return;
     }
 
-    services.viewWorkerSource(this.props.worker.workerDescriptorFront);
+    services.viewWorkerSource(this.props.worker.workerTargetFront);
   }
 
   start() {
@@ -96,7 +96,7 @@ class Worker extends PureComponent {
 
   isRunning() {
     // We know the worker is running if it has a worker actor.
-    return !!this.props.worker.workerDescriptorFront;
+    return !!this.props.worker.workerTargetFront;
   }
 
   isActive() {
