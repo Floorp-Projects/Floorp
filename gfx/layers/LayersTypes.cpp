@@ -76,6 +76,27 @@ bool EventRegions::operator!=(const EventRegions& aRegions) const {
   return !(*this == aRegions);
 }
 
+std::ostream& operator<<(std::ostream& aStream, const EventRegions& e) {
+  aStream << "{";
+  if (!e.mHitRegion.IsEmpty()) {
+    aStream << " Hit=" << e.mHitRegion;
+  }
+  if (!e.mDispatchToContentHitRegion.IsEmpty()) {
+    aStream << " DispatchToContent=" << e.mDispatchToContentHitRegion;
+  }
+  if (!e.mNoActionRegion.IsEmpty()) {
+    aStream << " NoAction=" << e.mNoActionRegion;
+  }
+  if (!e.mHorizontalPanRegion.IsEmpty()) {
+    aStream << " HorizontalPan=" << e.mHorizontalPanRegion;
+  }
+  if (!e.mVerticalPanRegion.IsEmpty()) {
+    aStream << " VerticalPan=" << e.mVerticalPanRegion;
+  }
+  aStream << " }";
+  return aStream;
+}
+
 void EventRegions::ApplyTranslationAndScale(float aXTrans, float aYTrans,
                                             float aXScale, float aYScale) {
   mHitRegion.ScaleRoundOut(aXScale, aYScale);
@@ -131,13 +152,6 @@ void EventRegions::SetEmpty() {
   mNoActionRegion.SetEmpty();
   mHorizontalPanRegion.SetEmpty();
   mVerticalPanRegion.SetEmpty();
-}
-
-nsCString EventRegions::ToString() const {
-  nsCString result = mHitRegion.ToString();
-  result.AppendLiteral(";dispatchToContent=");
-  result.Append(mDispatchToContentHitRegion.ToString());
-  return result;
 }
 
 }  // namespace layers

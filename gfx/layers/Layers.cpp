@@ -231,7 +231,7 @@ void Layer::SetEventRegions(const EventRegions& aRegions) {
   if (mEventRegions != aRegions) {
     MOZ_LAYERS_LOG_IF_SHADOWABLE(
         this, ("Layer::Mutated(%p) eventregions were %s, now %s", this,
-               mEventRegions.ToString().get(), aRegions.ToString().get()));
+               ToString(mEventRegions).c_str(), ToString(aRegions).c_str()));
     mEventRegions = aRegions;
     Mutated();
   }
@@ -1728,7 +1728,7 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
     aStream << " [not visible]";
   }
   if (!mEventRegions.IsEmpty()) {
-    AppendToString(aStream, mEventRegions, " ", "");
+    aStream << " " << mEventRegions;
   }
   if (1.0 != GetOpacity()) {
     aStream << nsPrintfCString(" [opacity=%g]", GetOpacity()).get();
