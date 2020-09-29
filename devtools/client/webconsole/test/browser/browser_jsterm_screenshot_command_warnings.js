@@ -25,7 +25,6 @@ add_task(async function() {
 
   await testTruncationWarning(hud);
   await testDPRWarning(hud);
-  await testErrorMessage(hud);
 });
 
 async function testTruncationWarning(hud) {
@@ -64,16 +63,7 @@ async function testTruncationWarning(hud) {
 }
 
 async function testDPRWarning(hud) {
-  info("Check that fullpage screenshots are taken at dpr 1");
-
-  // This is only relevant on machines that actually have a dpr that's higher than 1. If
-  // the current test machine already has a dpr of 1, then the command won't change it and
-  // no warning will be displayed in the console.
-  const machineDPR = await getMachineDPR();
-  if (machineDPR <= 1) {
-    info("This machine already has a dpr of 1, no need to test this");
-    return;
-  }
+  info("Check that DPR is reduced to 1 after failure");
 
   const onMessages = waitForMessages({
     hud,
@@ -89,26 +79,10 @@ async function testDPRWarning(hud) {
       },
     ],
   });
-  execute(hud, ":screenshot --clipboard --fullpage");
+  execute(hud, ":screenshot --clipboard --fullpage --dpr 1000");
   await onMessages;
 
-  ok(true, "Expected messages were displayed");
-}
-
-async function testErrorMessage(hud) {
-  info("Check that when a screenshot fails, an error message is displayed");
-
-  await executeAndWaitForMessage(
-    hud,
-    ":screenshot --clipboard --dpr 1000",
-    "Error creating the image. The resulting image was probably too large."
-  );
-}
-
-function getMachineDPR() {
-  return SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [],
-    () => content.devicePixelRatio
-  );
+  const { width, height } = await getImageSizeFromClipboard();
+  is(width, 10000, "The resulting image is 10000px wide");
+  is(height, 10000, "The resulting image is 10000px high");
 }

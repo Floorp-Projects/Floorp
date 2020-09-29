@@ -96,18 +96,6 @@ function createScreenshotDataURL(document, args) {
     height -= scrollbarHeight.value;
   }
 
-  let ratio;
-  if (args.fullpage) {
-    // Always take fullpage screenshots at dpr=1 to avoid failures.
-    ratio = 1;
-    // Warn the user if they had provided a higher dpr or have a high resolution monitor.
-    if ((args.dpr && args.dpr > 1) || window.devicePixelRatio > 1) {
-      logWarningInPage(L10N.getStr("screenshotDPRDecreasedWarning"), window);
-    }
-  } else {
-    ratio = args.dpr ? args.dpr : window.devicePixelRatio;
-  }
-
   // Truncate the width and height if necessary.
   if (width > MAX_IMAGE_WIDTH || height > MAX_IMAGE_HEIGHT) {
     width = Math.min(width, MAX_IMAGE_WIDTH);
@@ -118,23 +106,37 @@ function createScreenshotDataURL(document, args) {
     );
   }
 
+  const ratio = args.dpr ? args.dpr : window.devicePixelRatio;
+
   const canvas = document.createElementNS(
     "http://www.w3.org/1999/xhtml",
     "canvas"
   );
   const ctx = canvas.getContext("2d");
 
-  // Even after decreasing width, height and ratio, there may still be cases where the
-  // hardware fails at creating the image. Let's catch this so we can at least show an
-  // error message to the user.
-  let data = null;
-  try {
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-    ctx.scale(ratio, ratio);
-    ctx.drawWindow(window, left, top, width, height, "#fff");
-    data = canvas.toDataURL("image/png", "");
-  } catch (e) {
+  const drawToCanvas = actualRatio => {
+    // Even after decreasing width, height and ratio, there may still be cases where the
+    // hardware fails at creating the image. Let's catch this so we can at least show an
+    // error message to the user.
+    try {
+      canvas.width = width * actualRatio;
+      canvas.height = height * actualRatio;
+      ctx.scale(actualRatio, actualRatio);
+      ctx.drawWindow(window, left, top, width, height, "#fff");
+      return canvas.toDataURL("image/png", "");
+    } catch (e) {
+      return null;
+    }
+  };
+
+  let data = drawToCanvas(ratio);
+  if (!data && ratio > 1.0) {
+    // If the user provided DPR or the window.devicePixelRatio was higher than 1,
+    // try again with a reduced ratio.
+    logWarningInPage(L10N.getStr("screenshotDPRDecreasedWarning"), window);
+    data = drawToCanvas(1.0);
+  }
+  if (!data) {
     logErrorInPage(L10N.getStr("screenshotRenderingError"), window);
   }
 
