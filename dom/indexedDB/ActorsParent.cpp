@@ -15395,8 +15395,6 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
   DatabaseConnection::CachedStatement insertUniqueStmt;
   DatabaseConnection::CachedStatement insertStmt;
 
-  nsresult rv;
-
   for (uint32_t index = 0; index < count; index++) {
     const IndexDataValue& info = aIndexValues[index];
 
@@ -15428,54 +15426,40 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
 
     const auto borrowedStmt = stmt.Borrow();
 
-    rv = borrowedStmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        borrowedStmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId));
+    IDB_TRY(
+        info.mPosition.BindToStatement(&*borrowedStmt, kStmtParamNameValue));
+    IDB_TRY(info.mLocaleAwarePosition.BindToStatement(
+        &*borrowedStmt, kStmtParamNameValueLocale));
+    IDB_TRY(borrowedStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                          aObjectStoreId));
+    IDB_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
+                                            kStmtParamNameObjectDataKey));
 
-    rv = info.mPosition.BindToStatement(&*borrowedStmt, kStmtParamNameValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(MOZ_TO_RESULT_INVOKE(&*borrowedStmt, Execute)
+                .orElse([&info, index, &aIndexValues](nsresult rv)
+                            -> mozilla::Result<mozilla::Ok, nsresult> {
+                  if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
+                    // If we're inserting multiple entries for the same unique
+                    // index, then we might have failed to insert due to
+                    // colliding with another entry for the same index in which
+                    // case we should ignore it.
+                    for (int32_t index2 = int32_t(index) - 1;
+                         index2 >= 0 &&
+                         aIndexValues[index2].mIndexId == info.mIndexId;
+                         --index2) {
+                      if (info.mPosition == aIndexValues[index2].mPosition) {
+                        // We found a key with the same value for the same
+                        // index. So we must have had a collision with a value
+                        // we just inserted.
+                        return mozilla::Ok{};
+                      }
+                    }
+                  }
 
-    rv = info.mLocaleAwarePosition.BindToStatement(&*borrowedStmt,
-                                                   kStmtParamNameValueLocale);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = borrowedStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                       aObjectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = aObjectStoreKey.BindToStatement(&*borrowedStmt,
-                                         kStmtParamNameObjectDataKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = borrowedStmt->Execute();
-    if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
-      // If we're inserting multiple entries for the same unique index, then
-      // we might have failed to insert due to colliding with another entry for
-      // the same index in which case we should ignore it.
-      for (int32_t index2 = int32_t(index) - 1;
-           index2 >= 0 && aIndexValues[index2].mIndexId == info.mIndexId;
-           --index2) {
-        if (info.mPosition == aIndexValues[index2].mPosition) {
-          // We found a key with the same value for the same index. So we
-          // must have had a collision with a value we just inserted.
-          rv = NS_OK;
-          break;
-        }
-      }
-    }
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+                  return Err(rv);
+                }));
   }
 
   return NS_OK;
