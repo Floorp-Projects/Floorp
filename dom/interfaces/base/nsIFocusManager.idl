@@ -259,11 +259,6 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
-   * Called when a window has been raised.
-   */
-  [noscript] void windowRaised(in mozIDOMWindowProxy aWindow);
-
-  /**
    * Called when a window has been lowered.
    */
   [noscript] void windowLowered(in mozIDOMWindowProxy aWindow);
