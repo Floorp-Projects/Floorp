@@ -71,11 +71,6 @@ interface nsIFocusManager : nsISupports
   attribute mozIDOMWindowProxy focusedWindow;
 
   /**
-   * Setter for focusedWindow with CallerType
-   */
-  [noscript] void SetFocusedWindowWithCallerType(in mozIDOMWindowProxy aWindow, in CallerType aCallerType);
-
-  /**
    * The element that is currently focused. This will always be an element
    * within the document loaded in focusedWindow or null if no element in that
    * document is focused.
