@@ -528,18 +528,18 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
     return AspectRatio();
   }
 
-  const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
-  if (!ratio.auto_) {
-    return ratio.ratio.AsRatio().ToLayoutRatio();
-  }
   if (aImage) {
     if (Maybe<AspectRatio> fromImage = aImage->GetIntrinsicRatio()) {
       return *fromImage;
     }
   }
-  if (aUseMappedRatio && ratio.HasRatio()) {
-    // For aspect-ratio: "auto && <ratio>" case.
-    return ratio.ratio.AsRatio().ToLayoutRatio();
+  if (aUseMappedRatio) {
+    const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
+    if (ratio.auto_ && ratio.HasRatio()) {
+      // Return the mapped intrinsic aspect ratio stored in
+      // nsStylePosition::mAspectRatio.
+      return ratio.ratio.AsRatio().ToLayoutRatio();
+    }
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
     return AspectRatio(1.0f);
