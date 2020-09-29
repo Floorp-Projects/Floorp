@@ -79,7 +79,7 @@ template <>
 struct ParamTraits<mozilla::a11y::EWhichRange>
     : public ContiguousEnumSerializerInclusive<
           mozilla::a11y::EWhichRange, mozilla::a11y::EWhichRange::eLeftWord,
-          mozilla::a11y::EWhichRange::eParagraph> {};
+          mozilla::a11y::EWhichRange::eStyle> {};
 
 }  // namespace IPC
 

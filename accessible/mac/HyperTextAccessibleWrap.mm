@@ -274,6 +274,10 @@ void HyperTextAccessibleWrap::RangeAt(int32_t aOffset, EWhichRange aRangeType,
       ParagraphAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
                   aEndOffset);
       break;
+    case EWhichRange::eStyle:
+      StyleAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
+              aEndOffset);
+      break;
     default:
       break;
   }
@@ -423,6 +427,29 @@ void HyperTextAccessibleWrap::ParagraphAt(int32_t aOffset,
   *aEndContainer = end.mContainer;
   *aStartOffset = start.mOffset;
   *aEndOffset = end.mOffset;
+}
+
+void HyperTextAccessibleWrap::StyleAt(int32_t aOffset,
+                                      HyperTextAccessible** aStartContainer,
+                                      int32_t* aStartOffset,
+                                      HyperTextAccessible** aEndContainer,
+                                      int32_t* aEndOffset) {
+  // Get the range of the text leaf at this offset.
+  // A text leaf represents a stretch of like-styled text.
+  auto leaf = LeafAtOffset(aOffset);
+  if (!leaf) {
+    return;
+  }
+
+  MOZ_ASSERT(leaf->Parent()->IsHyperText());
+  HyperTextAccessibleWrap* container =
+      static_cast<HyperTextAccessibleWrap*>(leaf->Parent()->AsHyperText());
+  if (!container) {
+    return;
+  }
+
+  *aStartContainer = *aEndContainer = container;
+  container->RangeOfChild(leaf, aStartOffset, aEndOffset);
 }
 
 void HyperTextAccessibleWrap::NextClusterAt(
