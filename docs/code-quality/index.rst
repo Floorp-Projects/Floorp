@@ -30,17 +30,17 @@ In this document, we try to list these all tools.
      -
    * - Clang-Tidy
      - Yes
-     - `bug 712350 <https://bugzilla.mozilla.org/show_bug.cgi?id=712350>`_
+     - `bug 712350 <https://bugzilla.mozilla.org/show_bug.cgi?id=712350>`__
      - :ref:`Static analysis <Mach static analysis>`
      - https://clang.llvm.org/extra/clang-tidy/checks/list.html
    * - Clang analyzer
      -
-     - `bug 712350 <https://bugzilla.mozilla.org/show_bug.cgi?id=712350>`_
+     - `bug 712350 <https://bugzilla.mozilla.org/show_bug.cgi?id=712350>`__
      -
      - https://clang-analyzer.llvm.org/
    * - Coverity
      -
-     - `bug 1230156 <https://bugzilla.mozilla.org/show_bug.cgi?id=1230156>`_
+     - `bug 1230156 <https://bugzilla.mozilla.org/show_bug.cgi?id=1230156>`__
      -
      -
    * - cpp virtual final
@@ -50,12 +50,12 @@ In this document, we try to list these all tools.
      -
    * - Semmle/LGTM
      -
-     - `bug 1458117 <https://bugzilla.mozilla.org/show_bug.cgi?id=1458117>`_
+     - `bug 1458117 <https://bugzilla.mozilla.org/show_bug.cgi?id=1458117>`__
      -
      -
    * - clang-format
      - Yes
-     - `bug 1188202 <https://bugzilla.mozilla.org/show_bug.cgi?id=1188202>`_
+     - `bug 1188202 <https://bugzilla.mozilla.org/show_bug.cgi?id=1188202>`__
      - :ref:`Formatting C++ Code With clang-format`
      - https://clang.llvm.org/docs/ClangFormat.html
 
@@ -70,17 +70,17 @@ In this document, we try to list these all tools.
      - Upstream
    * - Eslint
      - Yes
-     - `bug 1229856 <https://bugzilla.mozilla.org/show_bug.cgi?id=1229856>`_
+     - `bug 1229856 <https://bugzilla.mozilla.org/show_bug.cgi?id=1229856>`__
      - :ref:`ESLint`
      - https://eslint.org/
    * - Mozilla ESLint
      -
-     - `bug 1229856 <https://bugzilla.mozilla.org/show_bug.cgi?id=1229856>`_
+     - `bug 1229856 <https://bugzilla.mozilla.org/show_bug.cgi?id=1229856>`__
      - :ref:`Mozilla ESLint Plugin`
      -
    * - Prettier
      - Yes
-     - `bug 1558517 <https://bugzilla.mozilla.org/show_bug.cgi?id=1558517>`_
+     - `bug 1558517 <https://bugzilla.mozilla.org/show_bug.cgi?id=1558517>`__
      - :ref:`JavaScript Coding style`
      - https://prettier.io/
 
@@ -97,22 +97,22 @@ In this document, we try to list these all tools.
      - Upstream
    * - Flake8
      - Yes (with `autopep8 <https://github.com/hhatto/autopep8>`_)
-     - `bug 1155970 <https://bugzilla.mozilla.org/show_bug.cgi?id=1155970>`_
+     - `bug 1155970 <https://bugzilla.mozilla.org/show_bug.cgi?id=1155970>`__
      - :ref:`Flake8`
      - http://flake8.pycqa.org/
    * - black
      - Yes
-     - `bug 1555560 <https://bugzilla.mozilla.org/show_bug.cgi?id=1555560>`_
+     - `bug 1555560 <https://bugzilla.mozilla.org/show_bug.cgi?id=1555560>`__
      - :ref:`black`
      - https://black.readthedocs.io/en/stable
    * - pylint
      -
-     - `bug 1623024 <https://bugzilla.mozilla.org/show_bug.cgi?id=1623024>`_
+     - `bug 1623024 <https://bugzilla.mozilla.org/show_bug.cgi?id=1623024>`__
      - :ref:`pylint`
      - https://www.pylint.org/
    * - Python 2/3 compatibility check
      -
-     - `bug 1496527 <https://bugzilla.mozilla.org/show_bug.cgi?id=1496527>`_
+     - `bug 1496527 <https://bugzilla.mozilla.org/show_bug.cgi?id=1496527>`__
      - :ref:`Python 2/3 compatibility check`
      -
 
@@ -128,12 +128,12 @@ In this document, we try to list these all tools.
      - Upstream
    * - Rustfmt
      - Yes
-     - `bug 1454764 <https://bugzilla.mozilla.org/show_bug.cgi?id=1454764>`_
+     - `bug 1454764 <https://bugzilla.mozilla.org/show_bug.cgi?id=1454764>`__
      - :ref:`Rustfmt`
      - https://github.com/rust-lang/rustfmt
    * - Clippy
      -
-     - `bug 1361342 <https://bugzilla.mozilla.org/show_bug.cgi?id=1361342>`_
+     - `bug 1361342 <https://bugzilla.mozilla.org/show_bug.cgi?id=1361342>`__
      - :ref:`clippy`
      - https://github.com/rust-lang/rust-clippy
 
@@ -148,7 +148,7 @@ In this document, we try to list these all tools.
      - Upstream
    * - Infer
      -
-     - `bug 1175203 <https://bugzilla.mozilla.org/show_bug.cgi?id=1175203>`_
+     - `bug 1175203 <https://bugzilla.mozilla.org/show_bug.cgi?id=1175203>`__
      -
      - https://github.com/facebook/infer
 

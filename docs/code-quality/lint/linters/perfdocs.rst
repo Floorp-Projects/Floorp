@@ -80,5 +80,5 @@ Note that there needs to be a FrameworkGatherer implemented for the framework be
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/perfdocs.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/perfdocs>`_
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/perfdocs.yml>`__
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/perfdocs>`__
