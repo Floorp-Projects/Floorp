@@ -48,6 +48,7 @@
 
 # Possible startup regressions
 *Application.kt @mozilla-mobile/Performance
+*StrictMode*kt @mozilla-mobile/Performance
 
 # We want to be aware of new features behind flags as well as features
 # about to be enabled.
