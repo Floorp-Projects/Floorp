@@ -813,7 +813,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (Document* doc = parentWindow->GetDoc()) {
         // Save sandbox flags for copying to new browsing context (docShell).
         activeDocsSandboxFlags = doc->GetSandboxFlags();
-        if (activeDocsSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
+        // Check to see if this frame is allowed to navigate, but don't check if
+        // we're printing, as that's not a real navigation.
+        if (aPrintKind == PRINT_NONE &&
+            (activeDocsSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION)) {
           return NS_ERROR_DOM_INVALID_ACCESS_ERR;
         }
       }
