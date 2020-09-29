@@ -122,7 +122,7 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       protocol.Actor.prototype.destroy.call(this);
     },
 
-    getTarget() {
+    async getTarget() {
       if (!this._attached) {
         return { error: "wrongState" };
       }
@@ -134,23 +134,27 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         };
       }
 
-      return connectToWorker(this.conn, this._dbg, this.actorID, {}).then(
-        ({ threadActor, transport, consoleActor }) => {
-          this._threadActor = threadActor;
-          this._transport = transport;
-          this._consoleActor = consoleActor;
+      try {
+        const { transport, workerTargetForm } = await connectToWorker(
+          this.conn,
+          this._dbg,
+          this.actorID,
+          {}
+        );
 
-          return {
-            type: "connected",
-            threadActor: this._threadActor,
-            consoleActor: this._consoleActor,
-            url: this._dbg.url,
-          };
-        },
-        error => {
-          return { error: error.toString() };
-        }
-      );
+        this._threadActor = workerTargetForm.threadActor;
+        this._consoleActor = workerTargetForm.consoleActor;
+        this._transport = transport;
+
+        return {
+          type: "connected",
+          threadActor: this._threadActor,
+          consoleActor: this._consoleActor,
+          url: this._dbg.url,
+        };
+      } catch (error) {
+        return { error: error.toString() };
+      }
     },
 
     push() {
