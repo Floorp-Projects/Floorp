@@ -209,6 +209,16 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
       .CreateAXTextMarkerRange();
 }
 
+- (id)moxParagraphTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  return geckoTextMarker.Range(EWhichRange::eParagraph)
+      .CreateAXTextMarkerRange();
+}
+
 - (id)moxNextTextMarkerForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
   if (!geckoTextMarker.IsValid()) {

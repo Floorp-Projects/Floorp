@@ -420,6 +420,10 @@
 - (id _Nullable)moxRightLineTextMarkerRangeForTextMarker:
     (id _Nonnull)textMarker;
 
+// AXParagraphTextMarkerRangeForTextMarker
+- (id _Nullable)moxParagraphTextMarkerRangeForTextMarker:
+    (id _Nonnull)textMarker;
+
 #pragma mark - TextAttributeSetters
 
 // AXSelectedTextMarkerRange

@@ -73,6 +73,10 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void LineAt(int32_t aOffset, bool aNextLine,
               HyperTextAccessible** aStartContainer, int32_t* aStartOffset,
               HyperTextAccessible** aEndContainer, int32_t* aEndOffset);
+
+  void ParagraphAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
+                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
+                   int32_t* aEndOffset);
 };
 
 }  // namespace a11y
