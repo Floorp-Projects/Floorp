@@ -8,8 +8,8 @@ const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(
   this,
-  "WorkerTargetActor",
-  "devtools/server/actors/targets/worker",
+  "WorkerDescriptorActor",
+  "devtools/server/actors/descriptors/worker",
   true
 );
 
@@ -138,7 +138,7 @@ WorkerTargetActorList.prototype = {
     // Create an actor for each debugger for which we don't have one.
     for (const dbg of dbgs) {
       if (!this._actors.has(dbg)) {
-        this._actors.set(dbg, new WorkerTargetActor(this._conn, dbg));
+        this._actors.set(dbg, new WorkerDescriptorActor(this._conn, dbg));
       }
     }
 

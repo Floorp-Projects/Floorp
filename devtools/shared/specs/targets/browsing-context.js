@@ -35,7 +35,7 @@ types.addDictType("browsingContextTarget.window", {
 });
 
 types.addDictType("browsingContextTarget.workers", {
-  workers: "array:workerTarget",
+  workers: "array:workerDescriptor",
 });
 
 types.addDictType("browsingContextTarget.reload", {

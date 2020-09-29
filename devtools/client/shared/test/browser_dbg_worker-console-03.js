@@ -19,7 +19,7 @@ var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 // Test to see if creating the pause from the console works.
 add_task(async function testPausedByConsole() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
-  const { client, tab, workerTargetFront, toolbox } = dbg;
+  const { client, tab, workerDescriptorFront, toolbox } = dbg;
 
   const console = await getSplitConsole(toolbox);
   let executed = await executeAndWaitForMessage(console, "10000+1", "10001");
@@ -42,7 +42,7 @@ add_task(async function testPausedByConsole() {
   ok(executed, "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerTargetFront);
+  await waitForWorkerClose(workerDescriptorFront);
   await toolbox.destroy();
   await close(client);
   await removeTab(tab);
