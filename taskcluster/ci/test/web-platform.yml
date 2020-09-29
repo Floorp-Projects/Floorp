@@ -105,7 +105,6 @@ web-platform-tests-backlog:
     variants: []
     e10s: true
     run-on-projects: ['mozilla-central']
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
     mozharness:
         chunked: true
@@ -154,7 +153,6 @@ web-platform-tests-reftest-backlog:
     variants: []
     e10s: true
     run-on-projects: ['mozilla-central']
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
     mozharness:
         extra-options:
@@ -285,7 +283,6 @@ web-platform-tests-print-reftest:
     schedules-component: web-platform-tests-print-reftest
     treeherder-symbol: W(Wp)
     chunks: 1
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier:
         by-test-platform:
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
@@ -312,7 +309,6 @@ test-verify-wpt:
             # do not run on beta or release: usually just confirms earlier results
             default: ['integration']
     built-projects-only: true
-    test-manifest-loader: null  # don't load tests in the taskgraph
     optimization:
         test-verify: ["test-verify-wpt"]
     tier: 2
@@ -332,7 +328,6 @@ test-coverage-wpt:
         by-test-platform:
             .*-ccov/.*: built-projects
             default: []
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
     mozharness:
         extra-options:

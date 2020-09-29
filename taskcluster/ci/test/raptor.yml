@@ -16,7 +16,6 @@ job-defaults:
                     .*-ux/.*: 2400
                     default: 1800
     suite: raptor
-    test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
         by-app:
             firefox:

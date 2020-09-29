@@ -13,7 +13,6 @@ job-defaults:
         by-test-platform:
             linux.*shippable[^-qr].*: ['mozilla-central']
             default: []
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
     fission-tier: 3
     virtualization:

@@ -32,7 +32,6 @@ job-defaults:
                     - talos/linux64_config_taskcluster.py
                 default:
                     - talos/linux_config.py
-    test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
         by-test-name:
             talos-.*-profiling:

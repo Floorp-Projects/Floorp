@@ -20,7 +20,6 @@ job-defaults:
             - --setpref=toolkit.asyncshutdown.log=true
 
     run-on-projects: built-projects
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: default
     fission-run-on-projects:
         by-test-platform:

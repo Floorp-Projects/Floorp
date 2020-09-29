@@ -10,7 +10,6 @@ job-defaults:
             default: 1800
     suite: raptor
     run-on-projects: []
-    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
     virtualization:
         by-test-platform:

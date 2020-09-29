@@ -4,7 +4,6 @@
 ---
 job-defaults:
     e10s: false
-    test-manifest-loader: null  # don't load tests in the taskgraph
     virtualization:
         by-test-platform:
             windows10-64.*: hardware

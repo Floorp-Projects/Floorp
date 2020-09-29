@@ -18,7 +18,6 @@ job-defaults:
             android-hw-.*-qr/opt: ['mozilla-central', 'autoland']
             windows10-aarch64/.*: []  # Specific repos enabled below
             default: built-projects
-    test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         script:
             by-test-platform:
