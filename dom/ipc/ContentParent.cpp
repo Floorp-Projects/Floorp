@@ -7042,24 +7042,13 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntryForTop(
+mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
-    uint32_t aLoadType, const nsID& aChangeID) {
+    uint32_t aLoadType, int32_t aChildOffset, const nsID& aChangeID) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->SetActiveSessionHistoryEntryForTop(
-        aPreviousScrollPos, &aInfo, aLoadType, aChangeID);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntryForFrame(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
-    int32_t aChildOffset, const nsID& aChangeID) {
-  if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->SetActiveSessionHistoryEntryForFrame(
-        aPreviousScrollPos, &aInfo, aChildOffset, aChangeID);
+    aContext.get_canonical()->SetActiveSessionHistoryEntry(
+        aPreviousScrollPos, &aInfo, aLoadType, aChildOffset, aChangeID);
   }
   return IPC_OK();
 }
