@@ -679,17 +679,13 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
 // clang-format on
 
 struct OverscrollBehaviorInfo {
-  OverscrollBehaviorInfo()
-      : mBehaviorX(OverscrollBehavior::Auto),
-        mBehaviorY(OverscrollBehavior::Auto) {}
+  OverscrollBehaviorInfo();
 
   // Construct from StyleOverscrollBehavior values.
   static OverscrollBehaviorInfo FromStyleConstants(
       StyleOverscrollBehavior aBehaviorX, StyleOverscrollBehavior aBehaviorY);
 
-  bool operator==(const OverscrollBehaviorInfo& aOther) const {
-    return mBehaviorX == aOther.mBehaviorX && mBehaviorY == aOther.mBehaviorY;
-  }
+  bool operator==(const OverscrollBehaviorInfo& aOther) const;
 
   OverscrollBehavior mBehaviorX;
   OverscrollBehavior mBehaviorY;
