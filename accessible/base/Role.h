@@ -1071,13 +1071,7 @@ enum Role {
    */
   TIME_EDITOR = 183,
 
-  /**
-   * Represents the marker associated with a list item. In unordered lists,
-   * this is a bullet, while in ordered lists this is a number.
-   */
-  LISTITEM_MARKER = 184,
-
-  LAST_ROLE = LISTITEM_MARKER
+  LAST_ROLE = TIME_EDITOR
 };
 
 }  // namespace roles
