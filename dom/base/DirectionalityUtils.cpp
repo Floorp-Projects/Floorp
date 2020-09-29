@@ -818,28 +818,62 @@ void WalkAncestorsResetAutoDirection(Element* aElement, bool aNotify) {
   }
 }
 
-void SlotStateChanged(HTMLSlotElement* aSlot) {
+static void RecomputeSlottedNodeDirection(HTMLSlotElement& aSlot,
+                                          nsINode& aNode) {
+  auto* assignedElement = Element::FromNode(aNode);
+  if (!assignedElement) {
+    return;
+  }
+
+  if (assignedElement->HasValidDir() || assignedElement->HasDirAuto()) {
+    return;
+  }
+
+  // Try to optimize out state changes when possible.
+  if (assignedElement->GetDirectionality() == aSlot.GetDirectionality()) {
+    return;
+  }
+
+  assignedElement->SetDirectionality(aSlot.GetDirectionality(), true);
+  SetDirectionalityOnDescendantsInternal(assignedElement,
+                                         aSlot.GetDirectionality(), true);
+}
+
+void SlotAssignedNodeChanged(HTMLSlotElement* aSlot,
+                             nsIContent& aAssignedNode) {
   if (!aSlot) {
     return;
   }
+
+  if (aSlot->NodeOrAncestorHasDirAuto()) {
+    // The directionality of the assigned node may impact the directionality of
+    // the slot. So recompute everything.
+    SlotStateChanged(aSlot, /* aAllAssignedNodesChanged = */ false);
+  }
+
+  if (aAssignedNode.GetAssignedSlot() == aSlot) {
+    RecomputeSlottedNodeDirection(*aSlot, aAssignedNode);
+  }
+}
+
+void SlotStateChanged(HTMLSlotElement* aSlot, bool aAllAssignedNodesChanged) {
+  if (!aSlot) {
+    return;
+  }
+
+  Directionality oldDir = aSlot->GetDirectionality();
+
   if (aSlot->HasDirAuto()) {
     ResetAutoDirection(aSlot, true);
   }
+
   if (aSlot->NodeOrAncestorHasDirAuto()) {
     WalkAncestorsResetAutoDirection(aSlot, true);
   }
 
-  const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
-  for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
-    nsINode* node = assignedNodes[i];
-    Element* assignedElement = node->IsElement() ? node->AsElement() : nullptr;
-    // Try to optimize out state changes when possible.
-    if (assignedElement && !assignedElement->HasValidDir() &&
-        !assignedElement->HasDirAuto() &&
-        assignedElement->GetDirectionality() != aSlot->GetDirectionality()) {
-      assignedElement->SetDirectionality(aSlot->GetDirectionality(), true);
-      SetDirectionalityOnDescendantsInternal(assignedElement,
-                                             aSlot->GetDirectionality(), true);
+  if (aAllAssignedNodesChanged || oldDir != aSlot->GetDirectionality()) {
+    for (nsINode* node : aSlot->AssignedNodes()) {
+      RecomputeSlottedNodeDirection(*aSlot, *node);
     }
   }
 }
