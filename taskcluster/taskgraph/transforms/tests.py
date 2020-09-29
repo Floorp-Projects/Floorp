@@ -289,43 +289,6 @@ TEST_VARIANTS = {
 }
 
 
-CHUNK_SUITES_BLACKLIST = (
-    'awsy',
-    'cppunittest',
-    'crashtest',
-    'crashtest-qr',
-    'firefox-ui-functional-local',
-    'firefox-ui-functional-remote',
-    'geckoview-junit',
-    'gtest',
-    'jittest',
-    'jsreftest',
-    'marionette',
-    'mochitest-browser-chrome-screenshots',
-    'mochitest-browser-chrome-thunderbird',
-    'mochitest-valgrind-plain',
-    'mochitest-webgl1-core',
-    'mochitest-webgl1-ext',
-    'mochitest-webgl2-core',
-    'mochitest-webgl2-ext',
-    'raptor',
-    'reftest',
-    'reftest-qr',
-    'reftest-gpu',
-    'reftest-no-accel',
-    'talos',
-    'telemetry-tests-client',
-    'test-coverage',
-    'test-coverage-wpt',
-    'test-verify',
-    'test-verify-gpu',
-    'test-verify-wpt',
-    'web-platform-tests-backlog',
-    'web-platform-tests-print-reftest',
-    'web-platform-tests-reftest-backlog',
-)
-"""These suites will be chunked at test runtime rather than here in the taskgraph."""
-
 DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
 """The approximate time each test chunk should take to run."""
 
@@ -1504,10 +1467,6 @@ def set_test_manifests(config, tasks):
     """Determine the set of test manifests that should run in this task."""
 
     for task in tasks:
-        if task['suite'] in CHUNK_SUITES_BLACKLIST:
-            yield task
-            continue
-
         # When a task explicitly requests no 'test_manifest_loader', test
         # resolving will happen at test runtime rather than in the taskgraph.
         if 'test-manifest-loader' in task and task['test-manifest-loader'] is None:

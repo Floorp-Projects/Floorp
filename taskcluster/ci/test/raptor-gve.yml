@@ -12,6 +12,7 @@ job-defaults:
             android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
             default: ['mozilla-central']
     target: geckoview_example.apk
+    test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 1
     virtualization: hardware
     mozharness:
