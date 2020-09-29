@@ -2,58 +2,32 @@
 Mozilla ESLint Plugin
 =====================
 
+This is the documentation of Mozilla ESLint PLugin.
+
 Environments
 ============
 
-These environments are available by specifying a comment at the top of the file,
-e.g.
+The plugin implements the following environments:
 
-.. code-block:: js
 
-   /* eslint-env mozilla/chrome-worker */
+.. toctree::
+   :maxdepth: 2
 
-There are also built-in ESLint environments available as well:
-http://eslint.org/docs/user-guide/configuring#specifying-environments
-
-browser-window
---------------
-
-Defines the environment for scripts that are in the main browser.xhtml scope.
-
-chrome-worker
--------------
-
-Defines the environment for chrome workers. This differs from normal workers by
-the fact that `ctypes` can be accessed as well.
-
-frame-script
-------------
-
-Defines the environment for frame scripts.
-
-jsm
----
-
-Defines the environment for jsm files (javascript modules).
+   eslint-plugin-mozilla/environment
 
 Rules
 =====
 
-avoid-Date-timing
------------------
+The plugin implements the following rules:
 
-Rejects grabbing the current time via Date.now() or new Date() for timing
-purposes when the less problematic performance.now() can be used instead.
+.. toctree::
+   :maxdepth: 1
 
-The performance.now() function returns milliseconds since page load. To
-convert that to milliseconds since the epoch, use:
-
-.. code-block:: js
-
-    performance.timing.navigationStart + performance.now()
-
-Often timing relative to the page load is adequate and that conversion may not
-be necessary.
+   eslint-plugin-mozilla/avoid-Date-timing
+   eslint-plugin-mozilla/no-define-cc-etc
+   eslint-plugin-mozilla/no-throw-cr-literal
+   eslint-plugin-mozilla/no-useless-parameters
+   eslint-plugin-mozilla/use-chromeutils-import
 
 avoid-removeChild
 -----------------
@@ -169,51 +143,6 @@ Checks that boolean expressions do not compare against literal values
 of `true` or `false`. This is to prevent overly verbose code such as
 `if (isEnabled == true)` when `if (isEnabled)` would suffice.
 
-no-define-cc-etc
-----------------
-
-This disallows statements such as:
-
-.. code-block:: js
-
-   var Cc = Components.classes;
-   var Ci = Components.interfaces;
-   var {Ci: interfaces, Cc: classes, Cu: utils} = Components;
-
-These used to be necessary but have now been defined globally for all chrome
-contexts.
-
-no-throw-cr-literal
--------------------
-
-This is similar to the ESLint built-in rule no-throw-literal.
-It disallows statements such as:
-
-.. code-block:: js
-
-   throw Cr.NS_ERROR_UNEXPECTED;
-   throw Components.results.NS_ERROR_ABORT;
-   throw new Error(Cr.NS_ERROR_NO_INTERFACE);
-
-Throwing bare literals is inferior to throwing Exception objects, which provide
-stack information.  Cr.ERRORs should be be passed as the second argument to
-``Components.Exception()`` to create an Exception object with stack info, and
-the correct result property corresponding to the NS_ERROR that other code
-expects.
-Using a regular ``new Error()`` to wrap just turns it into a string and doesn't
-set the result property, so the errors can't be recognised.
-
-This option can be autofixed (``--fix``).
-
-no-useless-parameters
----------------------
-
-Reject common XPCOM methods called with useless optional parameters (eg.
-``Services.io.newURI(url, null, null)``, or non-existent parameters (eg.
-``Services.obs.removeObserver(name, observer, false)``).
-
-This option can be autofixed (``--fix``).
-
 no-useless-removeEventListener
 ------------------------------
 
@@ -241,32 +170,12 @@ This takes an option, a regular expression.  Invocations of
 regexp; and if it matches, the ``require`` use is flagged.
 
 
-this-top-level-scope
---------------------
-
-Treats top-level assignments like ``this.mumble = value`` as declaring a global.
-
-Note: These are string matches so we will miss situations where the parent
-object is assigned to another variable e.g.:
-
-.. code-block:: js
-
-   var b = gBrowser;
-   b.content // Would not be detected as a CPOW.
-
 use-cc-etc
 ----------
 
 This requires using ``Cc`` rather than ``Components.classes``, and the same for
 ``Components.interfaces``, ``Components.results`` and ``Components.utils``. This has
 a slight performance advantage by avoiding the use of the dot.
-
-use-chromeutils-import
-----------------------
-
-Require use of ``ChromeUtils.import`` and ``ChromeUtils.defineModuleGetter``
-rather than ``Components.utils.import`` and
-``XPCOMUtils.defineLazyModuleGetter``.
 
 use-default-preference-values
 -----------------------------
@@ -300,32 +209,6 @@ var-only-at-top-level
 
 Marks all var declarations that are not at the top level invalid.
 
-
-Example
-=======
-
-+-------+-----------------------+
-| Possible values for all rules |
-+-------+-----------------------+
-| Value | Meaning               |
-+-------+-----------------------+
-| 0     | Deactivated           |
-+-------+-----------------------+
-| 1     | Warning               |
-+-------+-----------------------+
-| 2     | Error                 |
-+-------+-----------------------+
-
-Example configuration:
-
-.. code-block:: js
-
-   "rules": {
-     "mozilla/balanced-listeners": 2,
-     "mozilla/mark-test-function-used": 1,
-     "mozilla/var-only-at-top-level": 1,
-   }
-
 Tests
 =====
 
@@ -337,6 +220,9 @@ of the tests use the `ESLint Rule Unit Test framework`_.
 
 Running Tests
 -------------
+
+The tests for eslint-plugin-mozilla are run via `mochajs`_ on top of node. Most
+of the tests use the `ESLint Rule Unit Test framework`_.
 
 The rules have some self tests, these can be run via:
 
@@ -350,9 +236,8 @@ Disabling tests
 ---------------
 
 In the unlikely event of needing to disable a test, currently the only way is
-by commenting-out. Please file a bug if you have to do this.
+by commenting-out. Please file a bug if you have to do this. Bugs should be filed
+in the *Testing* product under *Lint*.
 
-Filing Bugs
-===========
-
-Bugs should be filed in the Testing product under Lint.
+.. _mochajs: https://mochajs.org/
+.. _ESLint Rule Unit Test Framework: http://eslint.org/docs/developer-guide/working-with-rules#rule-unit-tests
