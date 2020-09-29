@@ -4187,10 +4187,16 @@ JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
 
   RootedValue elementValue(cx);
   if (!JS_GetProperty(cx, infoObject, "element", &elementValue)) {
-    return nullptr;
+    // This shouldn't happen in the shell, as ParseCompileOptions always
+    // creates the infoObject with this property. In any case, this callback
+    // must not leave an exception pending, so:
+    MOZ_CRASH("error getting source element");
   }
 
-  return elementValue.toObjectOrNull();
+  if (elementValue.isObject()) {
+    return &elementValue.toObject();
+  }
+  return nullptr;
 }
 
 static void WorkerMain(WorkerInput* input) {
