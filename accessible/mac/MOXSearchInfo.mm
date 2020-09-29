@@ -233,6 +233,13 @@ using namespace mozilla::a11y;
               : RotorRoleRule(roles::CHECKBUTTON);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXStaticTextSearchKey"]) {
+      RotorStaticTextRule rule = mImmediateDescendantsOnly
+                                     ? RotorStaticTextRule(geckoStartAcc)
+                                     : RotorStaticTextRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
