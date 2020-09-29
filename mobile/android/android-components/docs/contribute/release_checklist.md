@@ -32,7 +32,7 @@ Making a minor release has a couple extra steps to do before a regular release:
 
 - Send release message to the [Matrix channel](https://chat.mozilla.org/#/room/#android-components:mozilla.org):
 ```
-*Android Components 0.17 Release* (:ocean:)
+**Android Components 0.17 Release (:ocean:)**
 Release notes: https://mozilla-mobile.github.io/android-components/changelog/
 Milestone: https://github.com/mozilla-mobile/android-components/milestone/15?closed=1
 ```
