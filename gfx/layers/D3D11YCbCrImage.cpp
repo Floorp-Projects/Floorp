@@ -287,13 +287,20 @@ class AutoCheckLockD3D11Texture final {
 
     // Test to see if the keyed mutex has been released
     HRESULT hr = mMutex->AcquireSync(0, 0);
-    if (SUCCEEDED(hr)) {
+    if (hr == S_OK || hr == WAIT_ABANDONED) {
       mIsLocked = true;
+      // According to Microsoft documentation:
+      // WAIT_ABANDONED - The shared surface and keyed mutex are no longer in a
+      // consistent state. If AcquireSync returns this value, you should release
+      // and recreate both the keyed mutex and the shared surface
+      // So even if we do get WAIT_ABANDONED, the keyed mutex will have to be
+      // released.
+      mSyncAcquired = true;
     }
   }
 
   ~AutoCheckLockD3D11Texture() {
-    if (!mMutex) {
+    if (!mSyncAcquired) {
       return;
     }
     HRESULT hr = mMutex->ReleaseSync(0);
@@ -306,6 +313,7 @@ class AutoCheckLockD3D11Texture final {
 
  private:
   bool mIsLocked;
+  bool mSyncAcquired = false;
   RefPtr<IDXGIKeyedMutex> mMutex;
 };
 
