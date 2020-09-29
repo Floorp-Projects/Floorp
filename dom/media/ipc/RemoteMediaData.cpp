@@ -236,4 +236,101 @@ ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData>::Read(
          ReadIPDLParam(aMsg, aIter, aActor, &aVar->mOriginalPresentationWindow);
 };
 
+bool ArrayOfRemoteAudioData::Fill(
+    const nsTArray<RefPtr<AudioData>>& aData,
+    std::function<ShmemBuffer(size_t)>&& aAllocator) {
+  nsTArray<AlignedAudioBuffer> dataBuffers(aData.Length());
+  for (auto&& entry : aData) {
+    dataBuffers.AppendElement(std::move(entry->mAudioData));
+    mSamples.AppendElement(RemoteAudioData{
+        MediaDataIPDL(entry->mOffset, entry->mTime, entry->mTimecode,
+                      entry->mDuration, entry->mKeyframe),
+        entry->mChannels, entry->mRate, uint32_t(entry->mChannelMap),
+        entry->mOriginalTime, entry->mTrimWindow, entry->mFrames,
+        entry->mDataOffset});
+  }
+  mBuffers = RemoteArrayOfByteBuffer(dataBuffers, aAllocator);
+  if (!mBuffers.IsValid()) {
+    return false;
+  }
+  return true;
+}
+
+already_AddRefed<AudioData> ArrayOfRemoteAudioData::ElementAt(
+    size_t aIndex) const {
+  if (!IsValid()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(aIndex < Count());
+  MOZ_DIAGNOSTIC_ASSERT(mBuffers.Count() == Count(),
+                        "Something ain't right here");
+  const auto& sample = mSamples[aIndex];
+  AlignedAudioBuffer data = mBuffers.AlignedBufferAt<AudioDataValue>(aIndex);
+  if (mBuffers.SizeAt(aIndex) && !data) {
+    // OOM
+    return nullptr;
+  }
+  auto audioData = MakeRefPtr<AudioData>(
+      sample.mBase.offset(), sample.mBase.time(), std::move(data),
+      sample.mChannels, sample.mRate, sample.mChannelMap);
+  // An AudioData's duration is set at construction time based on the size of
+  // the provided buffer. However, if a trim window is set, this value will be
+  // incorrect. We have to re-set it to what it actually was.
+  audioData->mDuration = sample.mBase.duration();
+  audioData->mOriginalTime = sample.mOriginalTime;
+  audioData->mTrimWindow = sample.mTrimWindow;
+  audioData->mFrames = sample.mFrames;
+  audioData->mDataOffset = sample.mDataOffset;
+  return audioData.forget();
+}
+
+/*static */ void ipc::IPDLParamTraits<ArrayOfRemoteAudioData*>::Write(
+    IPC::Message* aMsg, ipc::IProtocol* aActor, ArrayOfRemoteAudioData* aVar) {
+  WriteIPDLParam(aMsg, aActor, std::move(aVar->mSamples));
+  WriteIPDLParam(aMsg, aActor, std::move(aVar->mBuffers));
+}
+
+/* static */ bool ipc::IPDLParamTraits<ArrayOfRemoteAudioData*>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter,
+    mozilla::ipc::IProtocol* aActor, RefPtr<ArrayOfRemoteAudioData>* aVar) {
+  auto array = MakeRefPtr<ArrayOfRemoteAudioData>();
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &array->mSamples) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &array->mBuffers)) {
+    return false;
+  }
+  *aVar = std::move(array);
+  return true;
+}
+
+/* static */ void
+ipc::IPDLParamTraits<ArrayOfRemoteAudioData::RemoteAudioData>::Write(
+    IPC::Message* aMsg, ipc::IProtocol* aActor, const paramType& aVar) {
+  WriteIPDLParam(aMsg, aActor, aVar.mBase);
+  WriteIPDLParam(aMsg, aActor, aVar.mChannels);
+  WriteIPDLParam(aMsg, aActor, aVar.mRate);
+  WriteIPDLParam(aMsg, aActor, aVar.mChannelMap);
+  WriteIPDLParam(aMsg, aActor, aVar.mOriginalTime);
+  WriteIPDLParam(aMsg, aActor, aVar.mTrimWindow);
+  WriteIPDLParam(aMsg, aActor, aVar.mFrames);
+  WriteIPDLParam(aMsg, aActor, aVar.mDataOffset);
+}
+
+/* static */ bool
+ipc::IPDLParamTraits<ArrayOfRemoteAudioData::RemoteAudioData>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, ipc::IProtocol* aActor,
+    paramType* aVar) {
+  MediaDataIPDL mBase;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &aVar->mBase) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mChannels) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mRate) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mChannelMap) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mOriginalTime) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mTrimWindow) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mFrames) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mDataOffset)) {
+    return false;
+  }
+  return true;
+};
+
 }  // namespace mozilla

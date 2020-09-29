@@ -12,27 +12,16 @@ using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::MediaResult from "MediaResult.h";
 using refcounted class mozilla::ArrayOfRemoteMediaRawData from "mozilla/RemoteMediaData.h";
+using refcounted class mozilla::ArrayOfRemoteAudioData from "mozilla/RemoteMediaData.h";
 using refcounted class mozilla::ArrayOfRemoteVideoData from "mozilla/RemoteMediaData.h";
 include PMediaDecoderParams;
 include LayersSurfaces;
 
 namespace mozilla {
 
-struct RemoteAudioDataIPDL
-{
-  MediaDataIPDL base;
-  uint32_t channels;
-  uint32_t rate;
-  uint32_t channelMap;
-  // Pass along buffer size since we're using ShmemPool
-  // and we can receive buffers larger than requested size.
-  int64_t audioDataBufferSize;
-  Shmem buffer;
-};
-
 union DecodedOutputIPDL
 {
-  RemoteAudioDataIPDL[];
+  ArrayOfRemoteAudioData;
   ArrayOfRemoteVideoData;
 };
 

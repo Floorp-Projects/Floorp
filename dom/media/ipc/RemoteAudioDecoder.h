@@ -33,7 +33,7 @@ class RemoteAudioDecoderParent final : public RemoteDecoderParent {
                            nsCString* aErrorDescription);
 
  protected:
-  MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,
+  MediaResult ProcessDecodedData(MediaDataDecoder::DecodedData&& aData,
                                  DecodedOutputIPDL& aDecodedData) override;
 
  private:

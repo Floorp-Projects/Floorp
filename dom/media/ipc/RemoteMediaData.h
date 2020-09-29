@@ -246,6 +246,49 @@ class ArrayOfRemoteMediaRawData {
   RemoteArrayOfByteBuffer mExtraDatas;
 };
 
+/* The class will pack an array of MediaAudioData using at most a single Shmem
+ * objects.
+ * We unfortunately can't populate the array at construction nor present an
+ * interface similar to an actual nsTArray or the ArrayOfRemoteVideoData above
+ * as currently IPC serialization is always non-fallible. So we must create the
+ * object first, fill it to determine if we ran out of memory and then send the
+ * object over IPC.
+ */
+class ArrayOfRemoteAudioData final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ArrayOfRemoteAudioData)
+ public:
+  // Fill the content, return false if an OOM occurred.
+  bool Fill(const nsTArray<RefPtr<AudioData>>& aData,
+            std::function<ShmemBuffer(size_t)>&& aAllocator);
+
+  // Return the aIndexth MediaRawData or nullptr if a memory error occurred.
+  already_AddRefed<AudioData> ElementAt(size_t aIndex) const;
+
+  // Return the number of MediaRawData stored in this container.
+  size_t Count() const { return mSamples.Length(); }
+  bool IsEmpty() const { return Count() == 0; }
+  bool IsValid() const { return mBuffers.IsValid(); }
+
+  struct RemoteAudioData {
+    friend struct ipc::IPDLParamTraits<RemoteVideoData>;
+    MediaDataIPDL mBase;
+    uint32_t mChannels;
+    uint32_t mRate;
+    uint32_t mChannelMap;
+    media::TimeUnit mOriginalTime;
+    Maybe<media::TimeInterval> mTrimWindow;
+    uint32_t mFrames;
+    size_t mDataOffset;
+  };
+
+ private:
+  friend struct ipc::IPDLParamTraits<ArrayOfRemoteAudioData*>;
+  ~ArrayOfRemoteAudioData() = default;
+
+  nsTArray<RemoteAudioData> mSamples;
+  RemoteArrayOfByteBuffer mBuffers;
+};
+
 namespace ipc {
 
 template <>
@@ -323,6 +366,25 @@ struct IPDLParamTraits<ArrayOfRemoteMediaRawData*> {
                    ipc::IProtocol* aActor, RefPtr<paramType>* aVar);
 };
 
+template <>
+struct IPDLParamTraits<ArrayOfRemoteAudioData::RemoteAudioData> {
+  typedef ArrayOfRemoteAudioData::RemoteAudioData paramType;
+  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+                    const paramType& aVar);
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   ipc::IProtocol* aActor, paramType* aVar);
+};
+
+template <>
+struct IPDLParamTraits<ArrayOfRemoteAudioData*> {
+  typedef ArrayOfRemoteAudioData paramType;
+  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+                    paramType* aVar);
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar);
+};
 }  // namespace ipc
 
 }  // namespace mozilla
