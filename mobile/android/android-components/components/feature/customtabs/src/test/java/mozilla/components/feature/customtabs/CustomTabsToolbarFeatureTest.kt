@@ -315,6 +315,39 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `action button is scaled to 24 width and 24 height`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(testContext))
+        val captor = argumentCaptor<Toolbar.ActionButton>()
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+        val customTabConfig: CustomTabConfig = mock()
+        val actionConfig: CustomTabActionButtonConfig = mock()
+        val size = 48 // this should be different than 24 to see the scaling is performed
+        val actionButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
+        val pendingIntent: PendingIntent = mock()
+
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(session.url).thenReturn("https://example.com")
+
+        feature.addActionButton(session, null)
+
+        verify(toolbar, never()).addBrowserAction(any())
+
+        `when`(customTabConfig.actionButtonConfig).thenReturn(actionConfig)
+        `when`(actionConfig.description).thenReturn("test desc")
+        `when`(actionConfig.pendingIntent).thenReturn(pendingIntent)
+        `when`(actionConfig.icon).thenReturn(actionButtonIcon)
+
+        feature.addActionButton(session, actionConfig)
+
+        verify(toolbar).addBrowserAction(captor.capture())
+
+        val button = captor.value.createView(FrameLayout(testContext))
+        assertEquals(24, (button as ImageButton).drawable.intrinsicHeight)
+        assertEquals(24, button.drawable.intrinsicWidth)
+    }
+
+    @Test
     fun `initialize calls addMenuItems when config has items`() {
         val session: Session = mock()
         val toolbar = BrowserToolbar(testContext)
