@@ -218,12 +218,10 @@ if word_bits is None:
 
 if 'compiler' in variant:
     compiler = variant['compiler']
-elif platform.system() == 'Darwin':
-    compiler = 'clang'
 elif platform.system() == 'Windows':
-    compiler = 'cl'
+    compiler = 'clang-cl'
 else:
-    compiler = 'gcc'
+    compiler = 'clang'
 
 # Need a platform name to use as a key in variant files.
 if args.platform:
@@ -240,7 +238,10 @@ else:
 
 info("using compiler '{}'".format(compiler))
 
-cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
+cxx = {'clang': 'clang++',
+       'gcc': 'g++',
+       'cl': 'cl',
+       'clang-cl': 'clang-cl'}.get(compiler)
 
 compiler_dir = env.get('GCCDIR', os.path.join(DIR.fetches, compiler))
 info("looking for compiler under {}/".format(compiler_dir))
