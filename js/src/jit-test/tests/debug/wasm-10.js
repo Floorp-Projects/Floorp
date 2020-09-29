@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-compiler=ion; skip-if: !wasmDebuggingEnabled()
+// |jit-test| test-also=--wasm-compiler=optimizing; skip-if: !wasmDebuggingEnabled()
 // Tests that wasm module scripts has inspectable locals.
 
 load(libdir + "wasm.js");

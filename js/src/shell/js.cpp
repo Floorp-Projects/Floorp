@@ -10292,20 +10292,26 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsmJS = !op.getBoolOption("no-asmjs");
 
   // Default values for wasm.
+#ifdef JS_CODEGEN_ARM64
+  bool* enableDefaultOptimizing = &enableWasmCranelift;
+#else
+  bool* enableDefaultOptimizing = &enableWasmIon;
+#endif
   enableWasm = true;
   enableWasmBaseline = true;
-#ifdef JS_CODEGEN_ARM64
-  enableWasmCranelift = true;
-#else
-  enableWasmIon = true;
-#endif
+  *enableDefaultOptimizing = true;
+
   if (const char* str = op.getStringOption("wasm-compiler")) {
     if (strcmp(str, "none") == 0) {
       enableWasm = false;
     } else if (strcmp(str, "baseline") == 0) {
-      // Baseline is enabled by default.
+      MOZ_ASSERT(enableWasmBaseline);
       enableWasmIon = false;
       enableWasmCranelift = false;
+    } else if (strcmp(str, "optimizing") == 0 ||
+               strcmp(str, "optimized") == 0) {
+      enableWasmBaseline = false;
+      MOZ_ASSERT(*enableDefaultOptimizing);
     } else if (strcmp(str, "ion") == 0) {
       enableWasmBaseline = false;
       enableWasmIon = true;
@@ -10314,12 +10320,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       enableWasmBaseline = false;
       enableWasmIon = false;
       enableWasmCranelift = true;
+    } else if (strcmp(str, "baseline+optimizing") == 0 ||
+               strcmp(str, "baseline+optimized") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      MOZ_ASSERT(*enableDefaultOptimizing);
     } else if (strcmp(str, "baseline+ion") == 0) {
-      // Baseline is enabled by default.
+      MOZ_ASSERT(enableWasmBaseline);
       enableWasmIon = true;
       enableWasmCranelift = false;
     } else if (strcmp(str, "baseline+cranelift") == 0) {
-      // Baseline is enabled by default.
+      MOZ_ASSERT(enableWasmBaseline);
       enableWasmIon = false;
       enableWasmCranelift = true;
     } else {

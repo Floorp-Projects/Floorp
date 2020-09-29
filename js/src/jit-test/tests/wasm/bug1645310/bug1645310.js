@@ -1,4 +1,4 @@
-// |jit-test| --wasm-compiler=ion; skip-if: !wasmIsSupported()
+// |jit-test| --wasm-compiler=optimizing; skip-if: !wasmIsSupported()
 
 // In this case we're setting things up so that wasm can't be compiled, as the
 // only available compiler is Ion, and enabling the Debugger will disable Ion.
