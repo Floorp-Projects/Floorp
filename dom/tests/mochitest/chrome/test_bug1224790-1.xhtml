@@ -36,9 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
     synthesizeMouseAtCenter(button, { type: 'mousemove' }, window);
     function click() {
       // The bug is not reproducible with synthesizeMouseAtCenter.
-      // Need to emulate native mouse event.
-      synthesizeNativeOSXClick(button.screenX + button.getBoundingClientRect().width / 2,
-                               button.screenY + button.getBoundingClientRect().height / 2);
+      synthesizeNativeMouseClickAtCenter(button);
     }
     click();
     // On debug build, it's possible that the click event handler is not

@@ -12,13 +12,13 @@
  *  synthesizeMouseAtCenter
  *  synthesizeNativeMouseMove
  *  synthesizeNativeMouseClick
+ *  synthesizeNativeMouseClickAtCenter
  *  synthesizeWheel
  *  synthesizeWheelAtPoint
  *  synthesizeKey
  *  synthesizeNativeKey
  *  synthesizeMouseExpectEvent
  *  synthesizeKeyExpectEvent
- *  synthesizeNativeOSXClick
  *  synthesizeDragOver
  *  synthesizeDropAfterDragOver
  *  synthesizeDrop
@@ -1073,6 +1073,21 @@ function synthesizeNativeMouseClick(
         observer
       );
     }
+  );
+}
+
+function synthesizeNativeMouseClickAtCenter(
+  aTarget,
+  aCallback,
+  aWindow = window
+) {
+  let rect = aTarget.getBoundingClientRect();
+  return synthesizeNativeMouseClick(
+    aTarget,
+    rect.width / 2,
+    rect.height / 2,
+    aCallback,
+    aWindow
   );
 }
 
@@ -2387,133 +2402,6 @@ function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow) {
   }
   var flags = aReverse ? SELECTION_SET_FLAG_REVERSE : 0;
   return utils.sendSelectionSetEvent(aOffset, aLength, flags);
-}
-
-/*
- * Synthesize a native mouse click event at a particular point in screen.
- * This function should be used only for testing native event loop.
- * Use synthesizeMouse instead for most case.
- *
- * This works only on OS X.  Throws an error on other OS.  Also throws an error
- * when the library or any of function are not found, or something goes wrong
- * in native functions.
- */
-function synthesizeNativeOSXClick(x, y) {
-  var { ctypes } = _EU_Cu.import("resource://gre/modules/ctypes.jsm", {});
-
-  // Library
-  var CoreFoundation = ctypes.open(
-    "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
-  );
-  var CoreGraphics = ctypes.open(
-    "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
-  );
-
-  // Contants
-  var kCGEventLeftMouseDown = 1;
-  var kCGEventLeftMouseUp = 2;
-  var kCGEventSourceStateHIDSystemState = 1;
-  var kCGHIDEventTap = 0;
-  var kCGMouseButtonLeft = 0;
-  var kCGMouseEventClickState = 1;
-
-  // Types
-  var CGEventField = ctypes.uint32_t;
-  var CGEventRef = ctypes.voidptr_t;
-  var CGEventSourceRef = ctypes.voidptr_t;
-  var CGEventSourceStateID = ctypes.uint32_t;
-  var CGEventTapLocation = ctypes.uint32_t;
-  var CGEventType = ctypes.uint32_t;
-  var CGFloat = ctypes.voidptr_t.size == 4 ? ctypes.float : ctypes.double;
-  var CGMouseButton = ctypes.uint32_t;
-
-  var CGPoint = new ctypes.StructType("CGPoint", [
-    { x: CGFloat },
-    { y: CGFloat },
-  ]);
-
-  // Functions
-  var CGEventSourceCreate = CoreGraphics.declare(
-    "CGEventSourceCreate",
-    ctypes.default_abi,
-    CGEventSourceRef,
-    CGEventSourceStateID
-  );
-  var CGEventCreateMouseEvent = CoreGraphics.declare(
-    "CGEventCreateMouseEvent",
-    ctypes.default_abi,
-    CGEventRef,
-    CGEventSourceRef,
-    CGEventType,
-    CGPoint,
-    CGMouseButton
-  );
-  var CGEventSetIntegerValueField = CoreGraphics.declare(
-    "CGEventSetIntegerValueField",
-    ctypes.default_abi,
-    ctypes.void_t,
-    CGEventRef,
-    CGEventField,
-    ctypes.int64_t
-  );
-  var CGEventPost = CoreGraphics.declare(
-    "CGEventPost",
-    ctypes.default_abi,
-    ctypes.void_t,
-    CGEventTapLocation,
-    CGEventRef
-  );
-  var CFRelease = CoreFoundation.declare(
-    "CFRelease",
-    ctypes.default_abi,
-    ctypes.void_t,
-    CGEventRef
-  );
-
-  var source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-  if (!source) {
-    throw new Error("CGEventSourceCreate returns null");
-  }
-
-  var loc = new CGPoint({ x, y });
-  var event = CGEventCreateMouseEvent(
-    source,
-    kCGEventLeftMouseDown,
-    loc,
-    kCGMouseButtonLeft
-  );
-  if (!event) {
-    throw new Error("CGEventCreateMouseEvent returns null");
-  }
-  CGEventSetIntegerValueField(
-    event,
-    kCGMouseEventClickState,
-    new ctypes.Int64(1)
-  );
-  CGEventPost(kCGHIDEventTap, event);
-  CFRelease(event);
-
-  event = CGEventCreateMouseEvent(
-    source,
-    kCGEventLeftMouseUp,
-    loc,
-    kCGMouseButtonLeft
-  );
-  if (!event) {
-    throw new Error("CGEventCreateMouseEvent returns null");
-  }
-  CGEventSetIntegerValueField(
-    event,
-    kCGMouseEventClickState,
-    new ctypes.Int64(1)
-  );
-  CGEventPost(kCGHIDEventTap, event);
-  CFRelease(event);
-
-  CFRelease(source);
-
-  CoreFoundation.close();
-  CoreGraphics.close();
 }
 
 /**
