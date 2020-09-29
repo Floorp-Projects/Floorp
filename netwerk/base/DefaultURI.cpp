@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DefaultURI.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-
 namespace mozilla {
 namespace net {
 
@@ -25,11 +25,25 @@ namespace net {
 
 static NS_DEFINE_CID(kDefaultURICID, NS_DEFAULTURI_CID);
 
+//----------------------------------------------------------------------------
+// nsIClassInfo
+//----------------------------------------------------------------------------
+
+NS_IMPL_CLASSINFO(DefaultURI, nullptr, nsIClassInfo::THREADSAFE,
+                  NS_DEFAULTURI_CID)
+// Empty CI getter. We only need nsIClassInfo for Serialization
+NS_IMPL_CI_INTERFACE_GETTER0(DefaultURI)
+
+//----------------------------------------------------------------------------
+// nsISupports
+//----------------------------------------------------------------------------
+
 NS_IMPL_ADDREF(DefaultURI)
 NS_IMPL_RELEASE(DefaultURI)
 NS_INTERFACE_TABLE_HEAD(DefaultURI)
-  NS_INTERFACE_TABLE(DefaultURI, nsIURI, nsISerializable, nsIClassInfo)
+  NS_INTERFACE_TABLE(DefaultURI, nsIURI, nsISerializable)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_IMPL_QUERY_CLASSINFO(DefaultURI)
   if (aIID.Equals(kDefaultURICID)) {
     foundInterface = static_cast<nsIURI*>(this);
   } else
@@ -48,45 +62,6 @@ NS_IMETHODIMP DefaultURI::Read(nsIObjectInputStream* aInputStream) {
 NS_IMETHODIMP DefaultURI::Write(nsIObjectOutputStream* aOutputStream) {
   nsAutoCString spec(mURL->Spec());
   return aOutputStream->WriteStringZ(spec.get());
-}
-
-//----------------------------------------------------------------------------
-// nsIClassInfo
-//----------------------------------------------------------------------------
-
-NS_IMETHODIMP DefaultURI::GetInterfaces(nsTArray<nsIID>& aInterfaces) {
-  aInterfaces.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP DefaultURI::GetScriptableHelper(nsIXPCScriptable** _retval) {
-  *_retval = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DefaultURI::GetContractID(nsACString& aContractID) {
-  aContractID.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP DefaultURI::GetClassDescription(nsACString& aClassDescription) {
-  aClassDescription.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP DefaultURI::GetClassID(nsCID** aClassID) {
-  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
-  return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP DefaultURI::GetFlags(uint32_t* aFlags) {
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DefaultURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
-  *aClassIDNoAlloc = kDefaultURICID;
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------------
