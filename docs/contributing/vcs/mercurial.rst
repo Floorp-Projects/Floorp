@@ -9,8 +9,6 @@ Installation
 
 See `Mercurial Page <https://www.mercurial-scm.org/downloads>`__ for installation.
 
-`More information <https://developer.mozilla.org/docs/Mozilla/Mercurial/Installing_Mercurial>`__
-
 
 Using `hg clone`
 ----------------
@@ -112,6 +110,13 @@ previous releases).
 
 URL: https://hg.mozilla.org/releases/mozilla-release/
 
+autoland
+--------
+
+This is the integration tree for Firefox. Patches land in this repository first,
+and then are merged by the sheriffs in mozilla-central.
+
+URL: https://hg.mozilla.org/integration/autoland/
 
 L10n repos
 ----------
@@ -145,12 +150,10 @@ Building
 --------
 
 By default with no configuration a similar-to-release build is done. If
-you wish you can
-`configure <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`__
-the build using a ``.mozconfig`` file and ``mach build``.
+you wish you can :ref:`configure <Configuring Build Options>` the build using a ``.mozconfig`` file
+and ``mach build``.
 Different OSs have different prerequisites for a successful build,
-please refer to the `build
-documentation <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions>`__
+please refer to the :ref:`build documentation <Getting Set Up To Work On The Firefox Codebase>`
 to verify they are available on your build machine.
 
 Extensions
@@ -198,31 +201,9 @@ Configuring the try repository
 
 About `Try Server <Try Server>`__.
 
-Further reading
----------------
-
-The `Mercurial
-tag <https://developer.mozilla.org/docs/tag/Mercurial>`__ lists
-the Mercurial-related articles on MDN.
-
-And on wiki.mozilla.org, these helpful pages:
-
--  `Creating Mercurial User
-   Repositories <https://developer.mozilla.org/docs/Creating_Mercurial_User_Repositories>`__ , If you have a LDAP account that allows you to push to hg.mozilla.org
-   you can also create your own user repositories on the server to share
-   work.
-
 Learning to use Mercurial
 -------------------------
 
 If you are new to Mercurial, you should start with the `official guide <https://www.mercurial-scm.org/guide>`__.
 
-Then, move on to `Mercurial basics <https://developer.mozilla.org/docs/Mercurial_basics>`__ and the `version control tool docs <https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/>`__ for Mozilla-centric Mercurial information.
-
-More documentation about mercurial
-----------------------------------
-https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Mercurial
-
-https://developer.mozilla.org/docs/Mozilla/Mercurial
-
-https://developer.mozilla.org/docs/Mozilla/Mercurial/Basics
+Then, move on to the `version control tool docs <https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/>`__ for Mozilla-centric Mercurial information.

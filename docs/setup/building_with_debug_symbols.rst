@@ -7,7 +7,7 @@ Building with Debug Symbols
 
 By default, a release build of Firefox will not generate debug symbols
 suitable for debugging or post-processing into the
-`breakpad <https://developer.mozilla.org/docs/Mozilla/Projects/Crash_reporting>`__ symbol format. Use the
+:ref:`breakpad <Crash reporting>` symbol format. Use the
 following :ref:`mozconfig <Configuring Build Options>` settings
 to do a build with symbols:
 
@@ -36,7 +36,7 @@ Breakpad symbol files
 ~~~~~~~~~~~~~~~~~~~~~
 
 After the build is complete, run the following command to generate an
-archive of `Breakpad <https://developer.mozilla.org/docs/Mozilla/Projects/Crash_reporting>`__ symbol files:
+archive of :ref:`Breakpad <Crash reporting>` symbol files:
 
 .. code:: bash
 

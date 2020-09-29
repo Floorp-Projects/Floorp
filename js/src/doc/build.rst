@@ -11,7 +11,7 @@ computer:**
 
 This guide shows you how to build SpiderMonkey using ``mach``, which is Mozilla's multipurpose build tool.
 For builds using ``configure && make``, and translations into other languages see
-`these instructions on MDN <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Build_Documentation>`__.
+:ref:`these instructions on MDN <Building SpiderMonkey>`.
 
 These instructions assume you have a clone of `mozilla-central` and are interested
 in building the JS shell.

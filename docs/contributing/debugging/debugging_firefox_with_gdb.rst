@@ -28,13 +28,11 @@ How do I run Firefox under gdb?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The preferred method, is using the
-`mach <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach>`__ command-line tool to run the
+:ref:`mach` command-line tool to run the
 debugger, which can bypass several optional defaults. Use "mach help
 run" to get more details. If inside the source directory, you would use
-"./mach". If you have previously `added mach to your
-path <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach#Adding_mach_to_your_shell's_search_path>`__,
-then just use "mach". Please note that `mach is aware of
-mozconfigs <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach#mach_and_mozconfigs>`__.
+"./mach". If you have previously :ref:`added mach to your path <Adding_mach_to_your_shell>`,
+then just use "mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
 
 .. code:: bash
 

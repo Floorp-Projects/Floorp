@@ -152,7 +152,7 @@ Essentials
 Documentation & Contacts
 ------------------------
 
-- `Normal process for submitting a patch <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/How_to_Submit_a_Patch>`__
+- :ref:`Normal process for submitting a patch <How to submit a patch>`
 - `How to file a security bug <https://wiki.mozilla.org/Security/Fileabug>`__
 - `Handling Mozilla security bugs (policy) <https://www.mozilla.org/en-US/about/governance/policies/security-group/bugs/>`__
 - `Security Bug Approval Process <security-approval>`__

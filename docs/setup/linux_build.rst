@@ -58,7 +58,7 @@ You’re ready; now we can tie it all together. In your terminal:
 If you are not working on the C/C++ files you can also opt for
 :ref:`Artifact Builds <Understanding Artifact Builds>`
 which are much faster. To enable artifact build set up a
-`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`_
+:ref:`mozconfig <Configuring Build Options>`
 file with the following options:
 
 .. code-block:: shell
@@ -71,7 +71,7 @@ file with the following options:
    mk_add_options MOZ_OBJDIR=./objdir-frontend
 
 If you plan to walk through code with a debugger, set up a
-`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`_
+:ref:`.mozconfig <Configuring Build Options>`
 file with the following options:
 
 .. code-block:: shell
@@ -230,8 +230,7 @@ Hoye <mailto:mhoye@mozilla.com>` directly for help. Please include the
 error message and some details about your operating system.
 
 If you have already checked out the source code via Mercurial or Git you
-can also use `mach <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach>`_ with the
-bootstrap command:
+can also use :ref:`mach` with the bootstrap command:
 
 .. code-block:: shell
 
@@ -280,5 +279,4 @@ More info
 ---------
 
 The above bootstrap script supports popular Linux distributions. If it
-doesn't work for you, see `Linux build
-prerequisites <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Linux_Prerequisites>`_ for more.
+doesn't work for you, see :ref:`Linux build prerequisites <Building Firefox On Linux>` for more.

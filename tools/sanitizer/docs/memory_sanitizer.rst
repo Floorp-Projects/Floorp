@@ -55,9 +55,8 @@ Building Firefox
 Getting the source
 ^^^^^^^^^^^^^^^^^^
 
-If you don't have a source code repository clone yet, you need to `get
-yourself a clone of
-Mozilla-central <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__.
+If you don't have a source code repository clone yet, you need to :ref:`get
+yourself a clone of Mozilla-central <Mercurial Overview>`.
 
 Adjusting the build configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

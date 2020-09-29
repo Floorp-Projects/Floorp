@@ -11,7 +11,7 @@ with compiled code (see "Restrictions" below). Artifacts are typically
 fetched from `mozilla-central <https://hg.mozilla.org/mozilla-central/>`__.
 
 To automatically download and use pre-built binary artifacts, add the
-following lines into your :ref:`mozconfig <Configuring Build Options#using-a-mozconfig-configuration-file>`
+following lines into your :ref:`mozconfig <Configuring Build Options>`
 file:
 
 .. code-block:: shell

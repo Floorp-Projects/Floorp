@@ -33,7 +33,7 @@ Firefox provides a mechanism to install all dependencies; in the source tree:
      $ ./mach bootstrap
 
 The default options are recommended.
-If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Artifact builds>`
+If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Understanding Artifact Builds>`
 and follow the instructions at the end of the bootstrap for creating a mozconfig file.
 
 More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
@@ -72,9 +72,9 @@ This will take a while; a few minutes to a few hours depending on your hardware.
 .. note::
 
     The default build is a compiled build with optimizations. Check out the
-    `mozconfig file documentation <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`__
+    :ref:`mozconfig file documentation <Configuring Build Options>`
     to see other build options. If you don't plan to change C++ or Rust code,
-    an :ref:`artifact build <Artifact builds>` will be faster.
+    an :ref:`artifact build <Understanding Artifact Builds>` will be faster.
 
 To run it:
 
@@ -256,8 +256,7 @@ the reviewer identified, add the *Check-in Needed* tag to the review
 
 The landing procedure will automatically close the review and the bug.
 
-`More
-information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/How_to_Submit_a_Patch#Submitting_the_patch>`__
+:ref:`More information <How to submit a patch>`
 
 Contributing to GeckoView
 -------------------------

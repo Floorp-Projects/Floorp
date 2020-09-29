@@ -211,7 +211,7 @@ Managing more debug tabs may require different approaches.
 Using Android Studio on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can now use `artifact builds <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds>`_
+You can now use :ref:`artifact builds <Understanding Artifact Builds>`
 mode on `MozillaBuild environment <https://wiki.mozilla.org/MozillaBuild>`_ even if you are
 not using WSL. If you want to debug GeckoView using Android Studio on
 Windows, you have to set an additional environment variable via the
