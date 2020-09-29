@@ -35,7 +35,6 @@
 #include "ImageContainer.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "LayersLogging.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -859,7 +858,7 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShowDirectBitmap(
 
   PLUGIN_LOG_DEBUG(
       ("   (RecvShowDirectBitmap received shmem=%p stride=%d size=%s dirty=%s)",
-       buffer.get<unsigned char>(), stride, Stringify(size).c_str(),
+       buffer.get<unsigned char>(), stride, ToString(size).c_str(),
        ToString(dirty).c_str()));
   return IPC_OK();
 }
