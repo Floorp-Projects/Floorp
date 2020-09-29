@@ -31,7 +31,11 @@ import java.util.concurrent.TimeUnit
 private const val DAY_IN_MINUTES = 24 * 60L
 
 /**
- * Provides access to all components.
+ * Provides access to all components. This class is an implementation of the Service Locator
+ * pattern, which helps us manage the dependencies in our app.
+ *
+ * Note: these aren't just "components" from "android-components": they're any "component" that
+ * can be considered a building block of our app.
  */
 @Mockable
 class Components(private val context: Context) {
