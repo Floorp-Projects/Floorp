@@ -161,7 +161,7 @@ void HTMLDialogElement::FocusDialog() {
       return;
     }
   } else {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       // Clear the focus which ends up making the body gets focused
       fm->ClearFocus(OwnerDoc()->GetWindow());
