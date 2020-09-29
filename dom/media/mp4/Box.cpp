@@ -176,9 +176,10 @@ bool Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const {
 }
 
 ByteSlice Box::ReadAsSlice() {
-  if (!mContext) {
+  if (!mContext || mRange.IsEmpty()) {
     return ByteSlice{nullptr, 0};
   }
+
   int64_t length;
   if (!mContext->mSource->Length(&length)) {
     // The HTTP server didn't give us a length to work with.
