@@ -2384,6 +2384,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Load
 
+  inline void loadUnalignedSimd128(const Operand& src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
   inline void loadUnalignedSimd128(const Address& src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
