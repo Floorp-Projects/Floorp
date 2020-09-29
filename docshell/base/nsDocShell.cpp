@@ -7847,7 +7847,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     if (failedURI) {
       errorOnLocationChangeNeeded =
           OnNewURI(failedURI, failedChannel, triggeringPrincipal, nullptr,
-                   nullptr, mLoadType, nullptr, false, false, false);
+                   nullptr, nullptr, false, false, false);
     }
 
     // Be sure to have a correct mLSHE, it may have been cleared by
@@ -7875,8 +7875,8 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
   if (finalURI) {
     // Pass false for aCloneSHChildren, since we're loading a new page here.
     onLocationChangeNeeded =
-        OnNewURI(finalURI, aOpenedChannel, nullptr, nullptr, nullptr, mLoadType,
-                 nullptr, false, true, false);
+        OnNewURI(finalURI, aOpenedChannel, nullptr, nullptr, nullptr, nullptr,
+                 false, true, false);
   }
 
   // let's try resetting the load group if we need to...
@@ -8772,7 +8772,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // doSameDocumentNavigation in this scope.
   OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
            newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
-           mLoadType, newCsp, true, true, true);
+           newCsp, true, true, true);
 
   nsCOMPtr<nsIInputStream> postData;
   uint32_t cacheKey = 0;
@@ -10542,7 +10542,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                           nsIPrincipal* aTriggeringPrincipal,
                           nsIPrincipal* aPrincipalToInherit,
                           nsIPrincipal* aPartitionedPrincipalToInherit,
-                          uint32_t aLoadType, nsIContentSecurityPolicy* aCsp,
+                          nsIContentSecurityPolicy* aCsp,
                           bool aFireOnLocationChange, bool aAddToGlobalHistory,
                           bool aCloneSHChildren) {
   MOZ_ASSERT(aURI, "uri is null");
@@ -10562,7 +10562,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
             ("nsDocShell[%p]::OnNewURI(\"%s\", [%s], 0x%x)\n", this,
-             aURI->GetSpecOrDefault().get(), chanName.get(), aLoadType));
+             aURI->GetSpecOrDefault().get(), chanName.get(), mLoadType));
   }
 #endif
 
@@ -10595,11 +10595,11 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   }
 
   // Determine if this type of load should update history.
-  bool updateGHistory = ShouldUpdateGlobalHistory(aLoadType);
+  bool updateGHistory = ShouldUpdateGlobalHistory(mLoadType);
 
   // We don't update session history on reload unless we're loading
   // an iframe in shift-reload case.
-  bool updateSHistory = mBrowsingContext->ShouldUpdateSessionHistory(aLoadType);
+  bool updateSHistory = mBrowsingContext->ShouldUpdateSessionHistory(mLoadType);
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
   // root browsing context.
@@ -10667,7 +10667,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
    * for the page. Save the new cacheKey in Session History.
    * see bug 90098
    */
-  if (aChannel && IsForceReloadType(aLoadType)) {
+  if (aChannel && IsForceReloadType(mLoadType)) {
     MOZ_ASSERT(!updateSHistory || IsFrame(),
                "We shouldn't be updating session history for forced"
                " reloads unless we're in a newly created iframe!");
@@ -10693,9 +10693,9 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
   if (!mozilla::SessionHistoryInParent()) {
     // Clear subframe history on refresh.
-    // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in
+    // XXX: history.go(0) won't go this path as mLoadType is LOAD_HISTORY in
     // this case. One should re-validate after bug 1331865 fixed.
-    if (aLoadType == LOAD_REFRESH) {
+    if (mLoadType == LOAD_REFRESH) {
       ClearFrameHistory(mLSHE);
       ClearFrameHistory(mOSHE);
     }
@@ -10728,7 +10728,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
 
-    if (aLoadType & LOAD_CMD_RELOAD) {
+    if (mLoadType & LOAD_CMD_RELOAD) {
       // On a reload request, we don't set redirecting flags.
       previousURI = aURI;
     } else {
