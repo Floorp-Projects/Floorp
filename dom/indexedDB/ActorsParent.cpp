@@ -7483,64 +7483,59 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
     // Freeing pages is a journaled operation, so it will require additional WAL
     // space. However, we're idle and are about to checkpoint anyway, so doing a
     // RESTART checkpoint here should allow us to reuse any existing space.
-    nsresult rv = CheckpointInternal(CheckpointMode::Restart);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(CheckpointInternal(CheckpointMode::Restart));
   }
 
   // Start the write transaction.
-  nsresult rv = beginImmediateStmt.Borrow()->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(beginImmediateStmt.Borrow()->Execute());
 
   mInWriteTransaction = true;
 
   bool freedSomePages = false;
 
-  while (aFreelistCount) {
-    if (NS_HasPendingEvents(currentThread)) {
-      // Something else wants to use the thread so roll back this transaction.
-      // It's ok if we never make progress here because the idle service should
-      // eventually reclaim this space.
-      rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      break;
-    }
+  IDB_TRY(
+      CollectWhile(
+          [&aFreelistCount]() -> mozilla::Result<bool, nsresult> {
+            return aFreelistCount != 0;
+          },
+          [&aFreelistStatement, &aFreelistCount, currentThread,
+           &incrementalVacuumStmt, &freedSomePages,
+           this]() -> mozilla::Result<mozilla::Ok, nsresult> {
+            // Fail if something else wants to use the thread, and
+            // roll back this transaction. It's ok if we never make
+            // progress here because the idle service should
+            // eventually reclaim this space.
+            IDB_TRY(OkIf(!NS_HasPendingEvents(currentThread)),
+                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
 
-    rv = incrementalVacuumStmt.Borrow()->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
-    }
+            IDB_TRY(incrementalVacuumStmt.Borrow()->Execute());
 
-    freedSomePages = true;
+            freedSomePages = true;
 
-    rv = GetFreelistCount(aFreelistStatement, &aFreelistCount);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
-    }
-  }
+            IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
 
-  if (NS_SUCCEEDED(rv) && freedSomePages) {
-    // Commit the write transaction.
-    rv = commitStmt.Borrow()->Execute();
-    if (NS_SUCCEEDED(rv)) {
-      mInWriteTransaction = false;
-    } else {
-      NS_WARNING("Failed to commit!");
-    }
-  }
+            return mozilla::Ok{};
+          })
+          .andThen([&commitStmt, &freedSomePages, this](
+                       mozilla::Ok) -> mozilla::Result<mozilla::Ok, nsresult> {
+            if (freedSomePages) {
+              // Commit the write transaction.
+              IDB_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
+                      [](const auto&) { NS_WARNING("Failed to commit!"); });
 
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(mInWriteTransaction);
+              mInWriteTransaction = false;
+            }
 
-    // Something failed, make sure we roll everything back.
-    Unused << aRollbackStatement.Borrow()->Execute();
+            return mozilla::Ok{};
+          }),
+      QM_PROPAGATE, ([&aRollbackStatement, this](const auto&) {
+        MOZ_ASSERT(mInWriteTransaction);
 
-    mInWriteTransaction = false;
+        // Something failed, make sure we roll everything back.
+        Unused << aRollbackStatement.Borrow()->Execute();
 
-    return rv;
-  }
+        mInWriteTransaction = false;
+      }));
 
   *aFreedSomePages = freedSomePages;
   return NS_OK;
