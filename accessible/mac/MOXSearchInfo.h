@@ -13,7 +13,7 @@ using namespace mozilla::a11y;
 @interface MOXSearchInfo : NSObject {
   // The MOX accessible of the web area, we need a reference
   // to set the pivot's root. This is a weak ref.
-  MOXWebAreaAccessible* mWebArea;
+  MOXAccessibleBase* mRoot;
 
   // The MOX accessible we should start searching from.
   // This is a weak ref.
@@ -32,8 +32,7 @@ using namespace mozilla::a11y;
   BOOL mImmediateDescendantsOnly;
 }
 
-- (id)initWithParameters:(NSDictionary*)params
-                 andRoot:(MOXWebAreaAccessible*)root;
+- (id)initWithParameters:(NSDictionary*)params andRoot:(MOXAccessibleBase*)root;
 
 - (NSArray*)performSearch;
 
