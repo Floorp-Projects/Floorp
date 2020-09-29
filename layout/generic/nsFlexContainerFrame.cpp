@@ -1527,14 +1527,14 @@ static nscoord PartiallyResolveAutoMinSize(
     }
   }
 
-  // Clamp specified size suggestion by the max main-size property if it’s
-  // definite.
-  if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
-    specifiedSizeSuggestion =
-        std::min(specifiedSizeSuggestion, aFlexItem.MainMaxSize());
-  }
-
   if (specifiedSizeSuggestion != nscoord_MAX) {
+    // Clamp specified size suggestion by the max main-size property if it's
+    // definite.
+    if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
+      specifiedSizeSuggestion =
+          std::min(specifiedSizeSuggestion, aFlexItem.MainMaxSize());
+    }
+
     // We have the specified size suggestion. Return it now since we don't need
     // to consider transferred size suggestion.
     FLEX_LOGV(" Specified size suggestion: %d", specifiedSizeSuggestion);
