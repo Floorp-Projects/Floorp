@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 
@@ -22,6 +23,11 @@ static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
 NS_IMPL_ADDREF_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
 
+NS_IMPL_CLASSINFO(BlobURL, nullptr, nsIClassInfo::THREADSAFE,
+                  NS_HOSTOBJECTURI_CID);
+// Empty CI getter. We only need nsIClassInfo for Serialization
+NS_IMPL_CI_INTERFACE_GETTER0(BlobURL)
+
 NS_INTERFACE_MAP_BEGIN(BlobURL)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -32,6 +38,7 @@ NS_INTERFACE_MAP_BEGIN(BlobURL)
     *aInstancePtr = nullptr;
     return NS_NOINTERFACE;
   } else
+    NS_IMPL_QUERY_CLASSINFO(BlobURL)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 
 BlobURL::BlobURL() : mRevoked(false) {}
@@ -162,53 +169,5 @@ BlobURL::Mutate(nsIURIMutator** aMutator) {
     return rv;
   }
   mutator.forget(aMutator);
-  return NS_OK;
-}
-
-// nsIClassInfo methods:
-NS_IMETHODIMP
-BlobURL::GetInterfaces(nsTArray<nsIID>& array) {
-  array.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetScriptableHelper(nsIXPCScriptable** _retval) {
-  *_retval = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetContractID(nsACString& aContractID) {
-  // Make sure to modify any subclasses as needed if this ever
-  // changes.
-  aContractID.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetClassDescription(nsACString& aClassDescription) {
-  aClassDescription.SetIsVoid(true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetClassID(nsCID** aClassID) {
-  // Make sure to modify any subclasses as needed if this ever
-  // changes to not call the virtual GetClassIDNoAlloc.
-  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
-
-  return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP
-BlobURL::GetFlags(uint32_t* aFlags) {
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
-  *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;
 }

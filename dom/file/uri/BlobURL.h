@@ -40,7 +40,6 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
 
   // Override CloneInternal() and EqualsInternal()
   virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,

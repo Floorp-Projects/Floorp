@@ -16,7 +16,15 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS_INHERITED(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
+NS_IMPL_CLASSINFO(nsSimpleNestedURI, nullptr, nsIClassInfo::THREADSAFE,
+                  NS_SIMPLENESTEDURI_CID)
+// Empty CI getter. We only need nsIClassInfo for Serialization
+NS_IMPL_CI_INTERFACE_GETTER0(nsSimpleNestedURI)
+
+NS_IMPL_ADDREF_INHERITED(nsSimpleNestedURI, nsSimpleURI)
+NS_IMPL_RELEASE_INHERITED(nsSimpleNestedURI, nsSimpleURI)
+NS_IMPL_QUERY_INTERFACE_CI_INHERITED(nsSimpleNestedURI, nsSimpleURI,
+                                     nsINestedURI)
 
 nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI) : mInnerURI(innerURI) {
   NS_ASSERTION(innerURI, "Must have inner URI");
@@ -197,16 +205,6 @@ nsSimpleURI* nsSimpleNestedURI::StartClone(
   SetRefOnClone(url, refHandlingMode, newRef);
 
   return url;
-}
-
-// nsIClassInfo overrides
-
-NS_IMETHODIMP
-nsSimpleNestedURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
-  static NS_DEFINE_CID(kSimpleNestedURICID, NS_SIMPLENESTEDURI_CID);
-
-  *aClassIDNoAlloc = kSimpleNestedURICID;
-  return NS_OK;
 }
 
 // Queries this list of interfaces. If none match, it queries mURI.
