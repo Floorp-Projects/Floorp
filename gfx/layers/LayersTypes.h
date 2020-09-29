@@ -7,6 +7,7 @@
 #ifndef GFX_LAYERSTYPES_H
 #define GFX_LAYERSTYPES_H
 
+#include <iosfwd>    // for ostream
 #include <stdint.h>  // for uint32_t
 #include <stdio.h>   // FILE
 
@@ -251,6 +252,7 @@ struct EventRegions {
 
   bool operator==(const EventRegions& aRegions) const;
   bool operator!=(const EventRegions& aRegions) const;
+  friend std::ostream& operator<<(std::ostream& aStream, const EventRegions& e);
 
   void ApplyTranslationAndScale(float aXTrans, float aYTrans, float aXScale,
                                 float aYScale);
@@ -259,8 +261,6 @@ struct EventRegions {
 
   bool IsEmpty() const;
   void SetEmpty();
-
-  nsCString ToString() const;
 };
 
 // Bit flags that go on a RefLayer and override the

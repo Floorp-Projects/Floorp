@@ -441,7 +441,7 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
        (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID)
            ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
            : "",
-       Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
+       ToString(mEventRegions).c_str(), Stringify(mTransform).c_str(),
        mClipRegion ? ToString(mClipRegion.ref()).c_str() : "none",
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));
