@@ -177,7 +177,6 @@ def old_configure_options(*options):
     '--includedir',
     '--libdir',
     '--prefix',
-    '--with-android-distribution-directory',
     '--with-android-max-sdk',
     '--with-android-min-sdk',
     '--with-branding',
