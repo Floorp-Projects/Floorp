@@ -173,6 +173,12 @@ class MOZ_STACK_CLASS mozStorageStatementScoper {
     if (mStatement) mStatement->Reset();
   }
 
+  mozStorageStatementScoper(mozStorageStatementScoper&&) = default;
+  mozStorageStatementScoper& operator=(mozStorageStatementScoper&&) = default;
+  mozStorageStatementScoper(const mozStorageStatementScoper&) = delete;
+  mozStorageStatementScoper& operator=(const mozStorageStatementScoper&) =
+      delete;
+
   /**
    * Call this to make the statement not reset. You might do this if you know
    * that the statement has been reset.

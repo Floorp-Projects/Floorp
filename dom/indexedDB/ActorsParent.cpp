@@ -1213,6 +1213,31 @@ class DatabaseConnection final {
   class CachedStatement;
   class UpdateRefcountFunction;
 
+  class MOZ_STACK_CLASS BorrowedStatement : mozStorageStatementScoper {
+   public:
+    mozIStorageStatement& operator*() const;
+
+    MOZ_NONNULL_RETURN mozIStorageStatement* operator->() const
+        MOZ_NO_ADDREF_RELEASE_ON_RETURN;
+
+    BorrowedStatement(BorrowedStatement&& aOther) = default;
+
+    // No funny business allowed.
+    BorrowedStatement& operator=(BorrowedStatement&&) = delete;
+    BorrowedStatement(const BorrowedStatement&) = delete;
+    BorrowedStatement& operator=(const BorrowedStatement&) = delete;
+
+   private:
+    friend class CachedStatement;
+
+    BorrowedStatement(NotNull<mozIStorageStatement*> aStatement,
+                      const nsACString& aQuery)
+        : mozStorageStatementScoper(aStatement),
+          mExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery} {}
+
+    ScopedLogExtraInfo mExtraInfo;
+  };
+
  private:
   InitializedOnce<const NotNull<nsCOMPtr<mozIStorageConnection>>>
       mStorageConnection;
@@ -1256,6 +1281,9 @@ class DatabaseConnection final {
   }
 
   mozilla::Result<CachedStatement, nsresult> GetCachedStatement(
+      const nsACString& aQuery);
+
+  mozilla::Result<BorrowedStatement, nsresult> BorrowCachedStatement(
       const nsACString& aQuery);
 
   template <typename BindFunctor>
@@ -1334,7 +1362,10 @@ class DatabaseConnection::CachedStatement final {
   friend class DatabaseConnection;
 
   nsCOMPtr<mozIStorageStatement> mStatement;
-  Maybe<mozStorageStatementScoper> mScoper;
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  nsCString mQuery;
+#endif
 
 #ifdef DEBUG
   DatabaseConnection* mDEBUGConnection;
@@ -1360,22 +1391,22 @@ class DatabaseConnection::CachedStatement final {
 
   explicit operator bool() const;
 
-  mozIStorageStatement& operator*() const;
-
-  mozIStorageStatement* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
-
-  void Reset();
+  BorrowedStatement Borrow() const;
 
  private:
   // Only called by DatabaseConnection.
   CachedStatement(DatabaseConnection* aConnection,
-                  nsCOMPtr<mozIStorageStatement> aStatement);
+                  nsCOMPtr<mozIStorageStatement> aStatement,
+                  const nsACString& aQuery);
 
  public:
 #if defined(NS_BUILD_REFCNT_LOGGING)
   CachedStatement(CachedStatement&& aOther)
-      : mStatement(std::move(aOther.mStatement)),
-        mScoper(std::move(aOther.mScoper))
+      : mStatement(std::move(aOther.mStatement))
+#  if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+        ,
+        mQuery(std::move(aOther.mQuery))
+#  endif
 #  ifdef DEBUG
         ,
         mDEBUGConnection(aOther.mDEBUGConnection)
@@ -7066,35 +7097,47 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
   nsCOMPtr<mozIStorageStatement> stmt;
 
   if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
-    nsresult rv =
-        (*mStorageConnection)->CreateStatement(aQuery, getter_AddRefs(stmt));
-    if (NS_FAILED(rv)) {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+
+    IDB_TRY_VAR(
+        stmt,
+        ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+            std::mem_fn(&mozIStorageConnection::CreateStatement),
+            *mStorageConnection, aQuery),
+        QM_PROPAGATE,
+        ([&aQuery, &storageConnection = **mStorageConnection](const auto&) {
 #ifdef DEBUG
-      nsCString msg;
-      MOZ_ALWAYS_SUCCEEDS((*mStorageConnection)->GetLastErrorString(msg));
+          nsCString msg;
+          MOZ_ALWAYS_SUCCEEDS(storageConnection.GetLastErrorString(msg));
 
-      nsAutoCString error = "The statement '"_ns + aQuery +
-                            "' failed to compile with the error message '"_ns +
-                            msg + "'."_ns;
+          nsAutoCString error =
+              "The statement '"_ns + aQuery +
+              "' failed to compile with the error message '"_ns + msg + "'."_ns;
 
-      NS_WARNING(error.get());
+          NS_WARNING(error.get());
+#else
+          (void)aQuery;
 #endif
-      return Err(rv);
-    }
+        }));
 
     mCachedStatements.Put(aQuery, stmt);
   }
 
-  return CachedStatement{this, std::move(stmt)};
+  return CachedStatement{this, std::move(stmt), aQuery};
+}
+
+Result<DatabaseConnection::BorrowedStatement, nsresult>
+DatabaseConnection::BorrowCachedStatement(const nsACString& aQuery) {
+  IDB_TRY_VAR(auto cachedStatement, GetCachedStatement(aQuery));
+
+  return cachedStatement.Borrow();
 }
 
 template <typename BindFunctor>
 nsresult DatabaseConnection::ExecuteCachedStatement(
     const nsACString& aQuery, const BindFunctor& aBindFunctor) {
-  const auto queryInfo =
-      ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
-
-  IDB_TRY_VAR(const auto stmt, GetCachedStatement(aQuery));
+  IDB_TRY_INSPECT(const auto& stmt, BorrowCachedStatement(aQuery));
   IDB_TRY(aBindFunctor(*stmt));
   IDB_TRY(stmt->Execute());
 
@@ -7142,7 +7185,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   // NS_ERROR_STORAGE_BUSY, we could actually use ExecuteCachedStatement and
   // simplify this.
   IDB_TRY_INSPECT(const auto& beginStmt,
-                  GetCachedStatement("BEGIN IMMEDIATE;"_ns));
+                  BorrowCachedStatement("BEGIN IMMEDIATE;"_ns));
 
   rv = beginStmt->Execute();
   if (rv == NS_ERROR_STORAGE_BUSY) {
@@ -7202,7 +7245,7 @@ void DatabaseConnection::RollbackWriteTransaction() {
     return;
   }
 
-  IDB_TRY_INSPECT(const auto& stmt, GetCachedStatement("ROLLBACK;"_ns),
+  IDB_TRY_INSPECT(const auto& stmt, BorrowCachedStatement("ROLLBACK;"_ns),
                   QM_VOID);
 
   // This may fail if SQLite already rolled back the transaction so ignore any
@@ -7294,7 +7337,7 @@ nsresult DatabaseConnection::RollbackSavepoint() {
   mUpdateRefcountFunction->RollbackSavepoint();
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  GetCachedStatement("ROLLBACK TO "_ns SAVEPOINT_CLAUSE));
+                  BorrowCachedStatement("ROLLBACK TO "_ns SAVEPOINT_CLAUSE));
 
   // This may fail if SQLite already rolled back the savepoint so ignore any
   // errors.
@@ -7367,7 +7410,7 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
     // Release the connection's normal transaction. It's possible that it could
     // fail, but that isn't a problem here.
-    Unused << rollbackStmt->Execute();
+    Unused << rollbackStmt.Borrow()->Execute();
 
     mInReadTransaction = false;
   }
@@ -7394,11 +7437,11 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   // Finally try to restart the read transaction if we rolled it back earlier.
   if (beginStmt) {
-    rv = beginStmt->Execute();
+    rv = beginStmt.Borrow()->Execute();
     if (NS_SUCCEEDED(rv)) {
       mInReadTransaction = true;
     } else {
-      NS_WARNING("Falied to restart read transaction!");
+      NS_WARNING("Failed to restart read transaction!");
     }
   }
 }
@@ -7452,7 +7495,7 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
   }
 
   // Start the write transaction.
-  nsresult rv = beginImmediateStmt->Execute();
+  nsresult rv = beginImmediateStmt.Borrow()->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7470,7 +7513,7 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
       break;
     }
 
-    rv = incrementalVacuumStmt->Execute();
+    rv = incrementalVacuumStmt.Borrow()->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }
@@ -7485,7 +7528,7 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
 
   if (NS_SUCCEEDED(rv) && freedSomePages) {
     // Commit the write transaction.
-    rv = commitStmt->Execute();
+    rv = commitStmt.Borrow()->Execute();
     if (NS_SUCCEEDED(rv)) {
       mInWriteTransaction = false;
     } else {
@@ -7497,7 +7540,7 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
     MOZ_ASSERT(mInWriteTransaction);
 
     // Something failed, make sure we roll everything back.
-    Unused << aRollbackStatement->Execute();
+    Unused << aRollbackStatement.Borrow()->Execute();
 
     mInWriteTransaction = false;
 
@@ -7522,20 +7565,18 @@ nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
                 GetCachedStatement("PRAGMA freelist_count;"_ns));
   }
 
+  const auto borrowedStatement = aCachedStatement.Borrow();
+
   bool hasResult;
-  rv = aCachedStatement->ExecuteStep(&hasResult);
+  rv = borrowedStatement->ExecuteStep(&hasResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   MOZ_ASSERT(hasResult);
 
-  // Make sure this statement is reset when leaving this function since we're
-  // not using the normal stack-based protection of CachedStatement.
-  mozStorageStatementScoper scoper(&*aCachedStatement);
-
   int32_t freelistCount;
-  rv = aCachedStatement->GetInt32(0, &freelistCount);
+  rv = borrowedStatement->GetInt32(0, &freelistCount);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7682,34 +7723,37 @@ DatabaseConnection::CachedStatement::operator bool() const {
   return mStatement;
 }
 
-mozIStorageStatement& DatabaseConnection::CachedStatement::operator*() const {
+mozIStorageStatement& DatabaseConnection::BorrowedStatement::operator*() const {
   return *operator->();
 }
 
-mozIStorageStatement* DatabaseConnection::CachedStatement::operator->() const {
-  AssertIsOnConnectionThread();
+mozIStorageStatement* DatabaseConnection::BorrowedStatement::operator->()
+    const {
   MOZ_ASSERT(mStatement);
 
   return mStatement;
 }
 
-void DatabaseConnection::CachedStatement::Reset() {
+DatabaseConnection::BorrowedStatement
+DatabaseConnection::CachedStatement::Borrow() const {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT_IF(mStatement, mScoper);
 
-  if (mStatement) {
-    mScoper.reset();
-    mScoper.emplace(mStatement);
-  }
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  return BorrowedStatement{WrapNotNull(mStatement), mQuery};
+#else
+  return BorrowedStatement{WrapNotNull(mStatement), EmptyCString()};
+#endif
 }
 
 DatabaseConnection::CachedStatement::CachedStatement(
-    DatabaseConnection* aConnection, nsCOMPtr<mozIStorageStatement> aStatement)
-    : mStatement(std::move(aStatement)),
-      mScoper(mStatement
-                  ? Maybe<mozStorageStatementScoper>{std::in_place, mStatement}
-                  : Nothing{})
-#ifdef DEBUG
+    DatabaseConnection* aConnection, nsCOMPtr<mozIStorageStatement> aStatement,
+    const nsACString& aQuery)
+    : mStatement(std::move(aStatement))
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+      ,
+      mQuery(aQuery)
+#endif
+#if defined(DEBUG)
       ,
       mDEBUGConnection(aConnection)
 #endif
@@ -7718,6 +7762,7 @@ DatabaseConnection::CachedStatement::CachedStatement(
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
 #endif
+  MOZ_ASSERT(mStatement);
   AssertIsOnConnectionThread();
 
   MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
@@ -8123,21 +8168,23 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
                                       "WHERE id = :id"_ns));
   }
 
-  mozStorageStatementScoper updateScoper(&*mUpdateStatement);
+  {
+    const auto borrowedUpdateStatement = mUpdateStatement.Borrow();
 
-  rv = mUpdateStatement->BindInt32ByIndex(0, aDelta);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = borrowedUpdateStatement->BindInt32ByIndex(0, aDelta);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = mUpdateStatement->BindInt64ByIndex(1, aId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = borrowedUpdateStatement->BindInt64ByIndex(1, aId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = mUpdateStatement->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    rv = borrowedUpdateStatement->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   int32_t rows;
@@ -8156,15 +8203,15 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
                                                  "WHERE id = :id"_ns));
     }
 
-    mozStorageStatementScoper selectScoper(&*mSelectStatement);
+    const auto borrowedSelectStatement = mSelectStatement.Borrow();
 
-    rv = mSelectStatement->BindInt64ByIndex(0, aId);
+    rv = borrowedSelectStatement->BindInt64ByIndex(0, aId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     bool hasResult;
-    rv = mSelectStatement->ExecuteStep(&hasResult);
+    rv = borrowedSelectStatement->ExecuteStep(&hasResult);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8186,19 +8233,19 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
                     "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
   }
 
-  mozStorageStatementScoper insertScoper(&*mInsertStatement);
+  const auto borrowedInsertStatement = mInsertStatement.Borrow();
 
-  rv = mInsertStatement->BindInt64ByIndex(0, aId);
+  rv = borrowedInsertStatement->BindInt64ByIndex(0, aId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mInsertStatement->BindInt32ByIndex(1, aDelta);
+  rv = borrowedInsertStatement->BindInt32ByIndex(1, aDelta);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mInsertStatement->Execute();
+  rv = borrowedInsertStatement->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -15373,9 +15420,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     DatabaseConnection::CachedStatement& stmt =
         info.mUnique ? insertUniqueStmt : insertStmt;
 
-    if (stmt) {
-      stmt.Reset();
-    } else {
+    if (!stmt) {
       IDB_TRY_VAR(
           stmt,
           aConnection->GetCachedStatement(
@@ -15398,33 +15443,37 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                         kStmtParamNameValueLocale + ");"_ns));
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId);
+    const auto borrowedStmt = stmt.Borrow();
+
+    rv = borrowedStmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = info.mPosition.BindToStatement(&*stmt, kStmtParamNameValue);
+    rv = info.mPosition.BindToStatement(&*borrowedStmt, kStmtParamNameValue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = info.mLocaleAwarePosition.BindToStatement(&*stmt,
+    rv = info.mLocaleAwarePosition.BindToStatement(&*borrowedStmt,
                                                    kStmtParamNameValueLocale);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
+    rv = borrowedStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                       aObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameObjectDataKey);
+    rv = aObjectStoreKey.BindToStatement(&*borrowedStmt,
+                                         kStmtParamNameObjectDataKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->Execute();
+    rv = borrowedStmt->Execute();
     if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
       // If we're inserting multiple entries for the same unique index, then
       // we might have failed to insert due to colliding with another entry for
@@ -15475,9 +15524,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     DatabaseConnection::CachedStatement& stmt =
         indexValue.mUnique ? deleteUniqueStmt : deleteStmt;
 
-    if (stmt) {
-      stmt.Reset();
-    } else {
+    if (!stmt) {
       IDB_TRY_VAR(
           stmt,
           aConnection->GetCachedStatement(
@@ -15491,24 +15538,29 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
                         kStmtParamNameObjectDataKey + ";"_ns));
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameIndexId, indexValue.mIndexId);
+    const auto borrowedStmt = stmt.Borrow();
+
+    rv = borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
+                                       indexValue.mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = indexValue.mPosition.BindToStatement(&*stmt, kStmtParamNameValue);
+    rv = indexValue.mPosition.BindToStatement(&*borrowedStmt,
+                                              kStmtParamNameValue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     if (!indexValue.mUnique) {
-      rv = aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameObjectDataKey);
+      rv = aObjectStoreKey.BindToStatement(&*borrowedStmt,
+                                           kStmtParamNameObjectDataKey);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = stmt->Execute();
+    rv = borrowedStmt->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -15542,40 +15594,42 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   nsresult rv;
   Key objectStoreKey;
-  DatabaseConnection::CachedStatement selectStmt;
+  IDB_TRY_VAR(
+      const auto selectStmt,
+      ([singleRowOnly, &aConnection, &objectStoreKey, &aKeyRange]()
+           -> Result<DatabaseConnection::BorrowedStatement, nsresult> {
+        if (singleRowOnly) {
+          IDB_TRY_VAR(auto selectStmt,
+                      aConnection->BorrowCachedStatement(
+                          "SELECT index_data_values "
+                          "FROM object_data "
+                          "WHERE object_store_id = :"_ns +
+                          kStmtParamNameObjectStoreId + " AND key = :"_ns +
+                          kStmtParamNameKey + ";"_ns));
 
-  if (singleRowOnly) {
-    IDB_TRY_VAR(selectStmt,
-                aConnection->GetCachedStatement("SELECT index_data_values "
-                                                "FROM object_data "
-                                                "WHERE object_store_id = :"_ns +
-                                                kStmtParamNameObjectStoreId +
-                                                " AND key = :"_ns +
-                                                kStmtParamNameKey + ";"_ns));
+          objectStoreKey = aKeyRange.ref().lower();
 
-    objectStoreKey = aKeyRange.ref().lower();
+          IDB_TRY(
+              objectStoreKey.BindToStatement(&*selectStmt, kStmtParamNameKey));
 
-    rv = objectStoreKey.BindToStatement(&*selectStmt, kStmtParamNameKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    const auto keyRangeClause =
-        MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
+          return selectStmt;
+        }
 
-    IDB_TRY_VAR(selectStmt,
-                aConnection->GetCachedStatement(
-                    "SELECT index_data_values, "_ns + kColumnNameKey +
-                    " FROM object_data WHERE object_store_id = :"_ns +
-                    kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
+        const auto keyRangeClause =
+            MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
-    if (aKeyRange.isSome()) {
-      rv = BindKeyRangeToStatement(aKeyRange.ref(), &*selectStmt);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-  }
+        IDB_TRY_VAR(auto selectStmt,
+                    aConnection->BorrowCachedStatement(
+                        "SELECT index_data_values, "_ns + kColumnNameKey +
+                        " FROM object_data WHERE object_store_id = :"_ns +
+                        kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
+
+        if (aKeyRange.isSome()) {
+          IDB_TRY(BindKeyRangeToStatement(aKeyRange.ref(), &*selectStmt));
+        }
+
+        return selectStmt;
+      }()));
 
   rv = selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -15600,9 +15654,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         IDB_TRY(
             DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues));
 
-        if (deleteStmt) {
-          MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
-        } else {
+        if (!deleteStmt) {
           IDB_TRY_VAR(deleteStmt,
                       aConnection->GetCachedStatement(
                           "DELETE FROM object_data "
@@ -15611,11 +15663,13 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
                           kStmtParamNameKey + ";"_ns));
         }
 
-        IDB_TRY(deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                            aObjectStoreId));
-        IDB_TRY(
-            objectStoreKey.BindToStatement(&*deleteStmt, kStmtParamNameKey));
-        IDB_TRY(deleteStmt->Execute());
+        const auto borrowedDeleteStmt = deleteStmt.Borrow();
+
+        IDB_TRY(borrowedDeleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                                    aObjectStoreId));
+        IDB_TRY(objectStoreKey.BindToStatement(&*borrowedDeleteStmt,
+                                               kStmtParamNameKey));
+        IDB_TRY(borrowedDeleteStmt->Execute());
 
         resultCountDEBUG++;
 
@@ -15691,7 +15745,7 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
   MOZ_ASSERT(aHasIndexes);
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(
+                  aConnection->BorrowCachedStatement(
                       "SELECT id "
                       "FROM object_store_index "
                       "WHERE object_store_id = :"_ns +
@@ -18644,9 +18698,7 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
       MOZ_ASSERT(!metadata->mDeleted);
       MOZ_ASSERT(metadata->mNextAutoIncrementId > 1);
 
-      if (stmt) {
-        MOZ_ALWAYS_SUCCEEDS(stmt->Reset());
-      } else {
+      if (!stmt) {
         // The parameter names are not used, parameters are bound by index only
         // locally in the same function.
         IDB_TRY_VAR(stmt, connection->GetCachedStatement(
@@ -18655,17 +18707,19 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
                               "= :object_store_id;"_ns));
       }
 
-      rv = stmt->BindInt64ByIndex(1, metadata->mCommonMetadata.id());
+      const auto borrowedStmt = stmt.Borrow();
+
+      rv = borrowedStmt->BindInt64ByIndex(1, metadata->mCommonMetadata.id());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = stmt->BindInt64ByIndex(0, metadata->mNextAutoIncrementId);
+      rv = borrowedStmt->BindInt64ByIndex(0, metadata->mNextAutoIncrementId);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = stmt->Execute();
+      rv = borrowedStmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -18708,27 +18762,34 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::Mode::ReadOnly);
 
-  IDB_DEBUG_TRY_VAR(const auto pragmaStmt,
-                    aConnection->GetCachedStatement("PRAGMA foreign_keys;"_ns),
-                    QM_VOID);
+  {
+    IDB_DEBUG_TRY_VAR(
+        const auto pragmaStmt,
+        aConnection->BorrowCachedStatement("PRAGMA foreign_keys;"_ns), QM_VOID);
 
-  bool hasResult;
-  MOZ_ALWAYS_SUCCEEDS(pragmaStmt->ExecuteStep(&hasResult));
+    bool hasResult;
+    MOZ_ALWAYS_SUCCEEDS(pragmaStmt->ExecuteStep(&hasResult));
 
-  MOZ_ASSERT(hasResult);
+    MOZ_ASSERT(hasResult);
 
-  int32_t foreignKeysEnabled;
-  MOZ_ALWAYS_SUCCEEDS(pragmaStmt->GetInt32(0, &foreignKeysEnabled));
+    int32_t foreignKeysEnabled;
+    MOZ_ALWAYS_SUCCEEDS(pragmaStmt->GetInt32(0, &foreignKeysEnabled));
 
-  MOZ_ASSERT(foreignKeysEnabled, "Database doesn't have foreign keys enabled!");
+    MOZ_ASSERT(foreignKeysEnabled,
+               "Database doesn't have foreign keys enabled!");
+  }
 
-  IDB_DEBUG_TRY_VAR(
-      const auto checkStmt,
-      aConnection->GetCachedStatement("PRAGMA foreign_key_check;"_ns), QM_VOID);
+  {
+    IDB_DEBUG_TRY_VAR(
+        const auto checkStmt,
+        aConnection->BorrowCachedStatement("PRAGMA foreign_key_check;"_ns),
+        QM_VOID);
 
-  MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
+    bool hasResult;
+    MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
 
-  MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
+    MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
+  }
 }
 
 #endif  // DEBUG
@@ -19107,7 +19168,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(
+    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->BorrowCachedStatement(
                                            "SELECT name "
                                            "FROM object_store "
                                            "WHERE name = :name;"_ns));
@@ -19197,7 +19258,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
-    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(
+    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->BorrowCachedStatement(
                                            "SELECT id FROM object_store;"_ns));
 
     bool foundThisObjectStore = false;
@@ -19377,7 +19438,7 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
+                      aConnection->BorrowCachedStatement(
                           "SELECT name "
                           "FROM object_store "
                           "WHERE name = :name AND id != :id;"_ns));
@@ -19561,7 +19622,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // locally in the same function.
     IDB_DEBUG_TRY_VAR(
         const auto stmt,
-        aConnection->GetCachedStatement(
+        aConnection->BorrowCachedStatement(
             "SELECT name "
             "FROM object_store_index "
             "WHERE object_store_id = :object_store_id AND name = :name;"_ns));
@@ -19866,7 +19927,7 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
     // There is no need to parse the previous entry in the index_data_values
     // column if this is the last index. Simply set it to NULL.
     IDB_TRY_INSPECT(const auto& stmt,
-                    aConnection->GetCachedStatement(
+                    aConnection->BorrowCachedStatement(
                         "UPDATE object_data "
                         "SET index_data_values = NULL "
                         "WHERE object_store_id = :"_ns +
@@ -19937,7 +19998,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
+                      aConnection->BorrowCachedStatement(
                           "SELECT id "
                           "FROM object_store_index "
                           "WHERE object_store_id = :object_store_id;"_ns));
@@ -19988,7 +20049,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // The cost of having an index on this field is too high.
   IDB_TRY_VAR(
       const auto selectStmt,
-      aConnection->GetCachedStatement(
+      aConnection->BorrowCachedStatement(
           mUnique
               ? (mIsLastIndex
                      ? "/* do not warn (bug someone else) */ "
@@ -20098,9 +20159,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
         }
 
         // Now delete the index row.
-        if (deleteIndexRowStmt) {
-          MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
-        } else {
+        if (!deleteIndexRowStmt) {
           IDB_TRY_VAR(
               deleteIndexRowStmt,
               aConnection->GetCachedStatement(
@@ -20116,18 +20175,22 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                                 kStmtParamNameObjectDataKey + ";"_ns));
         }
 
-        IDB_TRY(deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId,
-                                                    mIndexId));
+        {
+          const auto borrowedDeleteIndexRowStmt = deleteIndexRowStmt.Borrow();
 
-        IDB_TRY(indexKey.BindToStatement(&*deleteIndexRowStmt,
-                                         kStmtParamNameValue));
+          IDB_TRY(borrowedDeleteIndexRowStmt->BindInt64ByName(
+              kStmtParamNameIndexId, mIndexId));
 
-        if (!mUnique) {
-          IDB_TRY(lastObjectStoreKey.BindToStatement(
-              &*deleteIndexRowStmt, kStmtParamNameObjectDataKey));
+          IDB_TRY(indexKey.BindToStatement(&*borrowedDeleteIndexRowStmt,
+                                           kStmtParamNameValue));
+
+          if (!mUnique) {
+            IDB_TRY(lastObjectStoreKey.BindToStatement(
+                &*borrowedDeleteIndexRowStmt, kStmtParamNameObjectDataKey));
+          }
+
+          IDB_TRY(borrowedDeleteIndexRowStmt->Execute());
         }
-
-        IDB_TRY(deleteIndexRowStmt->Execute());
 
         return mozilla::Ok{};
       }));
@@ -20189,7 +20252,7 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
+                      aConnection->BorrowCachedStatement(
                           "SELECT name "
                           "FROM object_store_index "
                           "WHERE object_store_id = :object_store_id "
@@ -20467,7 +20530,7 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
 #endif
 
   IDB_TRY_INSPECT(const auto& indexValuesStmt,
-                  aConnection->GetCachedStatement(
+                  aConnection->BorrowCachedStatement(
                       "SELECT index_data_values "
                       "FROM object_data "
                       "WHERE object_store_id = :"_ns +
@@ -20653,7 +20716,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   const auto optReplaceDirective =
       (!mOverwrite || keyUnset) ? ""_ns : "OR REPLACE "_ns;
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(
+                  aConnection->BorrowCachedStatement(
                       "INSERT "_ns + optReplaceDirective +
                       "INTO object_data "
                       "(object_store_id, key, file_ids, data) "
@@ -21040,7 +21103,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
       limitClause;
 
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
   nsresult rv =
       stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
@@ -21199,7 +21262,7 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
       limitClause;
 
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
   nsresult rv =
       stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
@@ -21415,13 +21478,12 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameKey);
 
-  const nsCString query =
-      "SELECT count(*) "
-      "FROM object_data "
-      "WHERE object_store_id = :"_ns +
-      kStmtParamNameObjectStoreId + keyRangeClause;
-
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt,
+                  aConnection->BorrowCachedStatement(
+                      "SELECT count(*) "
+                      "FROM object_data "
+                      "WHERE object_store_id = :"_ns +
+                      kStmtParamNameObjectStoreId + keyRangeClause));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
                                       mParams.objectStoreId());
@@ -21567,20 +21629,19 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     limitClause.AppendInt(mLimit);
   }
 
-  const nsCString query =
-      "SELECT file_ids, data "
-      "FROM object_data "
-      "INNER JOIN "_ns +
-      indexTable +
-      "AS index_table "
-      "ON object_data.object_store_id = "
-      "index_table.object_store_id "
-      "AND object_data.key = "
-      "index_table.object_data_key "
-      "WHERE index_id = :"_ns +
-      kStmtParamNameIndexId + keyRangeClause + limitClause;
-
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt,
+                  aConnection->BorrowCachedStatement(
+                      "SELECT file_ids, data "
+                      "FROM object_data "
+                      "INNER JOIN "_ns +
+                      indexTable +
+                      "AS index_table "
+                      "ON object_data.object_store_id = "
+                      "index_table.object_store_id "
+                      "AND object_data.key = "
+                      "index_table.object_data_key "
+                      "WHERE index_id = :"_ns +
+                      kStmtParamNameIndexId + keyRangeClause + limitClause));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
                                       mMetadata->mCommonMetadata.id());
@@ -21719,7 +21780,7 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
       keyRangeClause + limitClause;
 
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
                                       mMetadata->mCommonMetadata.id());
@@ -21798,7 +21859,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
       keyRangeClause;
 
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->GetCachedStatement(query));
+  IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
                                       mMetadata->mCommonMetadata.id());
@@ -22250,7 +22311,7 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
                                ToAutoCString(1 + GetCursor().mMaxExtraCount);
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(firstQuery));
+                  aConnection->BorrowCachedStatement(firstQuery));
 
   nsresult rv =
       stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
@@ -22299,7 +22360,7 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStoreKey>::DoDatabaseWork(
       queryStart + keyRangeClause + directionClause + kOpenLimit + "1"_ns;
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(firstQuery));
+                  aConnection->BorrowCachedStatement(firstQuery));
 
   nsresult rv =
       stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
@@ -22390,7 +22451,7 @@ nsresult OpenOpHelper<IDBCursorType::Index>::DoDatabaseWork(
                                ToAutoCString(1 + GetCursor().mMaxExtraCount);
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(firstQuery));
+                  aConnection->BorrowCachedStatement(firstQuery));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -22478,7 +22539,7 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
       queryStart + keyRangeClause + directionClause + kOpenLimit + "1"_ns;
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(firstQuery));
+                  aConnection->BorrowCachedStatement(firstQuery));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -22630,7 +22691,7 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   const uint32_t maxExtraCount = hasContinueKey ? 0 : mCursor->mMaxExtraCount;
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->GetCachedStatement(
+                  aConnection->BorrowCachedStatement(
                       mCursor->mContinueQueries->GetContinueQuery(
                           hasContinueKey, hasContinuePrimaryKey)));
 
