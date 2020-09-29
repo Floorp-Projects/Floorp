@@ -22,9 +22,8 @@ post.
 
 The in-tree ``.lldbinit`` should be loaded automatically in most cases
 when running lldb from the command line (e.g. using
-```mach`` <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach>`__), but **not**
-when using XCode. See `Debugging on Mac OS
-X <https://developer.mozilla.org/en-US/docs/Debugging_on_Mac_OS_X>`__ for information on setting up
+:ref:`mach`), but **not**
+when using XCode. See :ref:`Debugging on Mac OS X` for information on setting up
 XCode.
 
 .. warning::

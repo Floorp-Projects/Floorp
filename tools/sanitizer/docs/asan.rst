@@ -90,7 +90,7 @@ On Windows, ASan is supported only in 64-bit builds.
 
 Run ``mach bootstrap`` to get an updated clang-cl in your
 ``~/.mozbuild`` directory, then use the following
-`mozconfig <https://wiki.developer.mozilla.org/docs/Configuring_Build_Options>`__:
+:ref:`mozconfig <Configuring Build Options>`:
 
 ::
 
@@ -108,8 +108,7 @@ Run ``mach bootstrap`` to get an updated clang-cl in your
    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
    export LIB=$LIB:$CLANG_LIB_DIR
 
-If you want to use a different LLVM (see the `clang-cl
-instructions <https://wiki.developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Building_Firefox_on_Windows_with_clang-cl>`__),
+If you want to use a different LLVM (see the :ref:`clang-cl instructions <Building Firefox On Windows>`),
 alter CLANG_LIB_DIR as appropriate.
 
 If you launch an ASan build under WinDbg, you may see spurious

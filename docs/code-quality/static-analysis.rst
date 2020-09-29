@@ -249,8 +249,3 @@ By definition, there are currently false positives in the static
 analyzer. A lot of these are due to the analyzer having difficulties
 following the relatively complicated error handling in various
 preprocessor macros.
-
-.. See also
-   --------
-   -  `Configuring Build Options </en/Configuring_Build_Options>`__
-   -  `Developer Guide </En/Developer_Guide>`__
