@@ -596,10 +596,9 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
                   ToResultGet<nsCOMPtr<nsIFileProtocolHandler>>(
                       MOZ_SELECT_OVERLOAD(do_QueryInterface), protocolHandler));
 
-  IDB_TRY_INSPECT(const auto& mutator,
-                  ToResultInvoke<nsCOMPtr<nsIURIMutator>>(
-                      std::mem_fn(&nsIFileProtocolHandler::NewFileURIMutator),
-                      fileHandler, &aDatabaseFile));
+  IDB_TRY_INSPECT(const auto& mutator, MOZ_TO_RESULT_INVOKE_TYPED(
+                                           nsCOMPtr<nsIURIMutator>, fileHandler,
+                                           NewFileURIMutator, &aDatabaseFile));
 
   // aDirectoryLockId should only be -1 when we are called from
   // FileManager::InitDirectory when the temporary storage hasn't been
@@ -686,10 +685,9 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
 Result<nsCOMPtr<mozIStorageStatement>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString) {
-  IDB_TRY_VAR(auto stmt,
-              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                  std::mem_fn(&mozIStorageConnection::CreateStatement),
-                  aConnection, aStatementString));
+  IDB_TRY_VAR(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
+                             nsCOMPtr<mozIStorageStatement>, aConnection,
+                             CreateStatement, aStatementString));
 
   IDB_TRY_VAR(const DebugOnly<bool> hasResult,
               MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
@@ -1016,12 +1014,12 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_VAR(
-          const auto stmt,
-          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
-              "INSERT INTO database (name, origin) "
-              "VALUES (:name, :origin)"_ns));
+      IDB_TRY_INSPECT(
+          const auto& stmt,
+          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, connection,
+                                     CreateStatement,
+                                     "INSERT INTO database (name, origin) "
+                                     "VALUES (:name, :origin)"_ns));
 
       IDB_TRY(stmt->BindStringByIndex(0, aName));
       IDB_TRY(stmt->BindUTF8StringByIndex(1, aOrigin));
@@ -1070,8 +1068,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
         IDB_TRY_INSPECT(
             const auto& journalMode,
-            ToResultInvoke<nsCString>(
-                std::mem_fn(&mozIStorageStatement::GetUTF8String), stmt, 0));
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
 
         if (journalMode.EqualsLiteral("delete")) {
           // Successfully set to rollback journal mode so changing the page size
@@ -1109,13 +1106,13 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_VAR(
-          const auto vacuumTimeStmt,
-          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
-              "UPDATE database "
-              "SET last_vacuum_time = :time"
-              ", last_vacuum_size = :size;"_ns));
+      IDB_TRY_INSPECT(
+          const auto& vacuumTimeStmt,
+          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, connection,
+                                     CreateStatement,
+                                     "UPDATE database "
+                                     "SET last_vacuum_time = :time"
+                                     ", last_vacuum_size = :size;"_ns));
 
       IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime));
       IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(1, fileSize));
@@ -5931,9 +5928,8 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
-  IDB_TRY_VAR(auto markerFile,
-              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
-                                                aBaseDirectory));
+  IDB_TRY_VAR(auto markerFile, MOZ_TO_RESULT_INVOKE_TYPED(
+                                   nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
 
   IDB_TRY(markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
@@ -6047,9 +6043,9 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
                      aQuotaManager, aPersistenceType, aGroup, aOrigin,
                      Idempotency::Yes));
 
-  IDB_TRY_INSPECT(const auto& fmDirectory,
-                  ToResultInvoke<nsCOMPtr<nsIFile>>(
-                      std::mem_fn(&nsIFile::Clone), aBaseDirectory));
+  IDB_TRY_INSPECT(
+      const auto& fmDirectory,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
 
   // The files directory counts towards quota.
   IDB_TRY(fmDirectory->Append(aDatabaseFilenameBase +
@@ -7097,9 +7093,9 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 
     IDB_TRY_VAR(
         stmt,
-        ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-            std::mem_fn(&mozIStorageConnection::CreateStatement),
-            *mStorageConnection, aQuery),
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                   **mStorageConnection, CreateStatement,
+                                   aQuery),
         QM_PROPAGATE,
         ([&aQuery, &storageConnection = **mStorageConnection](const auto&) {
 #ifdef DEBUG
@@ -12666,18 +12662,14 @@ nsresult FileManager::Init(nsIFile* aDirectory,
       IDB_TRY(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755));
     }
 
-    // XXX It would be nice if MOZ_TO_RESULT_INVOKE worked with a string:
-    // IDB_TRY_VAR(nsString path,
-    //            MOZ_TO_RESULT_INVOKE(aDirectory, GetPath));
-    IDB_TRY_VAR(auto path, ToResultInvoke<nsString>(
-                               std::mem_fn(&nsIFile::GetPath), aDirectory));
+    IDB_TRY_VAR(auto path,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, aDirectory, GetPath));
 
     mDirectoryPath.init(std::move(path));
   }
 
   IDB_TRY_VAR(auto journalDirectory,
-              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
-                                                aDirectory));
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
 
@@ -12688,17 +12680,16 @@ nsresult FileManager::Init(nsIFile* aDirectory,
   Unused << existsAsDirectory;
 
   {
-    IDB_TRY_VAR(auto path,
-                ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetPath),
-                                         journalDirectory));
+    IDB_TRY_VAR(auto path, MOZ_TO_RESULT_INVOKE_TYPED(
+                               nsString, journalDirectory, GetPath));
 
     mJournalDirectoryPath.init(std::move(path));
   }
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                      std::mem_fn(&mozIStorageConnection::CreateStatement),
-                      aConnection, "SELECT id, refcount FROM file"_ns));
+                  MOZ_TO_RESULT_INVOKE_TYPED(
+                      nsCOMPtr<mozIStorageStatement>, aConnection,
+                      CreateStatement, "SELECT id, refcount FROM file"_ns));
 
   IDB_TRY(CollectWhileHasResult(
       *stmt, [this](auto& stmt) -> Result<mozilla::Ok, nsresult> {
@@ -12800,8 +12791,7 @@ nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   id.AppendInt(aId);
 
   IDB_TRY_VAR(auto file,
-              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
-                                                aDirectory),
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone),
               nullptr);
 
   IDB_TRY(file->Append(id), nullptr);
@@ -12847,9 +12837,9 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
     IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
   }
 
-  IDB_TRY_INSPECT(const auto& journalDirectory,
-                  ToResultInvoke<nsCOMPtr<nsIFile>>(
-                      std::mem_fn(&nsIFile::Clone), aDirectory));
+  IDB_TRY_INSPECT(
+      const auto& journalDirectory,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
 
@@ -12861,23 +12851,23 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
                     MOZ_TO_RESULT_INVOKE(journalDirectory, IsDirectory));
     IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
 
-    IDB_TRY_VAR(
-        const auto entries,
-        ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
-            std::mem_fn(&nsIFile::GetDirectoryEntries), journalDirectory));
+    IDB_TRY_INSPECT(
+        const auto& entries,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                   journalDirectory, GetDirectoryEntries));
 
     bool hasJournals = false;
 
     IDB_TRY(CollectEach(
         [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-          IDB_TRY_RETURN(ToResultInvoke<nsCOMPtr<nsIFile>>(
-              std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+          IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                    GetNextFile));
         },
         [&hasJournals](
             const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
-          IDB_TRY_INSPECT(const auto& leafName,
-                          ToResultInvoke<nsString>(
-                              std::mem_fn(&nsIFile::GetLeafName), file));
+          IDB_TRY_INSPECT(
+              const auto& leafName,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
 
           nsresult rv;
           leafName.ToInteger64(&rv);
@@ -12905,13 +12895,13 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
       // locally in the same function.
       IDB_TRY_VAR(
           auto stmt,
-          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
+          MOZ_TO_RESULT_INVOKE_TYPED(
+              nsCOMPtr<mozIStorageStatement>, *connection, CreateStatement,
               "SELECT name, (name IN (SELECT id FROM file)) FROM fs WHERE path = :path"_ns));
 
-      IDB_TRY_INSPECT(const auto& path,
-                      ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetPath),
-                                               journalDirectory));
+      IDB_TRY_INSPECT(
+          const auto& path,
+          MOZ_TO_RESULT_INVOKE_TYPED(nsString, journalDirectory, GetPath));
 
       IDB_TRY(stmt->BindStringByIndex(0, path));
 
@@ -12932,8 +12922,8 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
             if (!flag) {
               IDB_TRY_INSPECT(const auto& file,
-                              ToResultInvoke<nsCOMPtr<nsIFile>>(
-                                  std::mem_fn(&nsIFile::Clone), aDirectory));
+                              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
+                                                         aDirectory, Clone));
 
               IDB_TRY(file->Append(name));
 
@@ -12942,10 +12932,9 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
               }
             }
 
-            IDB_TRY_INSPECT(
-                const auto& journalFile,
-                ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
-                                                  journalDirectory));
+            IDB_TRY_INSPECT(const auto& journalFile,
+                            MOZ_TO_RESULT_INVOKE_TYPED(
+                                nsCOMPtr<nsIFile>, journalDirectory, Clone));
 
             IDB_TRY(journalFile->Append(name));
 
@@ -12976,20 +12965,19 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
   }
 
   IDB_TRY_INSPECT(const auto& entries,
-                  ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
-                      std::mem_fn(&nsIFile::GetDirectoryEntries), aDirectory));
+                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                             aDirectory, GetDirectoryEntries));
 
   FileUsageType usage;
 
   IDB_TRY(CollectEach(
       [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        IDB_TRY_RETURN(ToResultInvoke<nsCOMPtr<nsIFile>>(
-            std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                  GetNextFile));
       },
       [&usage](const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
-        IDB_TRY_VAR(
-            const auto leafName,
-            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), file));
+        IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
+                                                  nsString, file, GetLeafName));
 
         if (leafName.Equals(kJournalDirectoryName)) {
           return mozilla::Ok{};
@@ -17302,9 +17290,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
         if (!writeStmt) {
           IDB_TRY_VAR(
               writeStmt,
-              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                  std::mem_fn(&mozIStorageConnection::CreateStatement),
-                  aConnection,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
                   "UPDATE "_ns + indexTable + "SET value_locale = :"_ns +
                       kStmtParamNameValueLocale + " WHERE index_id = :"_ns +
                       kStmtParamNameIndexId + " AND value = :"_ns +
