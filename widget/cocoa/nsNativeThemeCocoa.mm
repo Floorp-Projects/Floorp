@@ -1206,6 +1206,20 @@ void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBo
 
 void nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext, const CGRect& inBoxRect,
                                            const MenuItemParams& aParams) {
+  // Workaround for visual artifacts issues with
+  // HIThemeDrawMenuSeparator on macOS Big Sur.
+  if (nsCocoaFeatures::OnBigSurOrLater()) {
+    CGRect separatorRect = inBoxRect;
+    separatorRect.size.height = 1;
+    separatorRect.size.width -= 42;
+    separatorRect.origin.x += 21;
+    // Use a gray color similar to the native separator
+    DeviceColor color = ToDeviceColor(mozilla::gfx::sRGBColor::FromU8(193, 208, 208, 255));
+    CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
+    CGContextFillRect(cgContext, separatorRect);
+    return;
+  }
+
   ThemeMenuState menuState;
   if (aParams.disabled) {
     menuState = kThemeMenuDisabled;
@@ -3524,6 +3538,12 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
       result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
+   case StyleAppearance::Menuarrow:
+      if (nsCocoaFeatures::OnBigSurOrLater()) {
+        result.SizeTo(0, 0, 0, 28);
+      }
+      break;
+
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
       SInt32 frameOutset = 0;
@@ -3614,6 +3634,13 @@ bool nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* a
     case StyleAppearance::Radio:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
+
+    case StyleAppearance::Menuarrow:
+      if (nsCocoaFeatures::OnBigSurOrLater()) {
+        return true;
+      }
+      break;
+
     default:
       break;
   }
