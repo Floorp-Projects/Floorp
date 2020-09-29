@@ -10,7 +10,6 @@
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIClassInfo.h"
 #include "nsINestedURI.h"
 #include "nsIURIMutator.h"
 
@@ -27,15 +26,13 @@ class Encoding;
 
 class nsMozIconURI final : public nsIMozIconURI,
                            public nsINestedURI,
-                           public nsISerializable,
-                           public nsIClassInfo {
+                           public nsISerializable {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
   NS_DECL_NSINESTEDURI
   NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
 
  protected:
   nsMozIconURI();
