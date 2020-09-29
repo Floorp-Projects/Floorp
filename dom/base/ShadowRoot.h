@@ -105,8 +105,6 @@ class ShadowRoot final : public DocumentFragment,
   nsresult Bind();
 
  private:
-  bool IsStaticUAWidget() const { return mIsStaticUAWidget; }
-
   void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&,
                                  const nsTArray<RefPtr<StyleSheet>>&);
 
@@ -202,20 +200,10 @@ class ShadowRoot final : public DocumentFragment,
 
   bool IsUAWidget() const { return mIsUAWidget; }
 
-  // Whether we should clone this shadow root for printing. We usually don't
-  // clone UA widgets (because they're attached and setup on bind), but we need
-  // to clone "static" UA widgets, which don't.
-  bool ShouldStaticClone() const { return !IsUAWidget() || IsStaticUAWidget(); }
-
   void SetIsUAWidget() {
     MOZ_ASSERT(!HasChildren());
     SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
     mIsUAWidget = true;
-  }
-
-  void SetIsStaticUAWidget() {
-    MOZ_ASSERT(IsUAWidget());
-    mIsStaticUAWidget = true;
   }
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
@@ -287,9 +275,6 @@ class ShadowRoot final : public DocumentFragment,
   nsTArray<const Element*> mParts;
 
   bool mIsUAWidget : 1;
-  // Whether this shadow root is "static" and should be cloned for static
-  // documents.
-  bool mIsStaticUAWidget : 1;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
