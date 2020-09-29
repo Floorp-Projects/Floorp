@@ -10,9 +10,9 @@
 namespace mozilla {
 
 RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
-    : mThread(RemoteDecoderManagerChild::GetManagerThread()),
-      mRecreatedOnCrash(aRecreatedOnCrash),
-      mRawFramePool(1, ShmemPool::PoolType::DynamicPool) {}
+    : ShmemRecycleAllocator(this),
+      mThread(RemoteDecoderManagerChild::GetManagerThread()),
+      mRecreatedOnCrash(aRecreatedOnCrash) {}
 
 void RemoteDecoderChild::HandleRejectionError(
     const ipc::ResponseRejectReason& aReason,
@@ -44,7 +44,7 @@ void RemoteDecoderChild::HandleRejectionError(
 // ActorDestroy is called if the channel goes down while waiting for a response.
 void RemoteDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   mDecodedData.Clear();
-  mRawFramePool.Cleanup(this);
+  CleanupShmemRecycleAllocator();
   RecordShutdownTelemetry(aWhy == AbnormalShutdown);
 }
 
@@ -101,22 +101,17 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   AssertOnManagerThread();
 
   nsTArray<MediaRawDataIPDL> samples;
-  nsTArray<Shmem> mems;
   for (auto&& sample : aSamples) {
     // TODO: It would be nice to add an allocator method to
     // MediaDataDecoder so that the demuxer could write directly
     // into shmem rather than requiring a copy here.
-    ShmemBuffer buffer = mRawFramePool.Get(this, sample->Size(),
-                                           ShmemPool::AllocationPolicy::Unsafe);
+    ShmemBuffer buffer = AllocateBuffer(sample->Size());
     if (!buffer.Valid()) {
       return MediaDataDecoder::DecodePromise::CreateAndReject(
           NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
     }
 
     memcpy(buffer.Get().get<uint8_t>(), sample->Data(), sample->Size());
-    // Make a copy of the Shmem to re-use it later as IDPL will move the one
-    // used in the MediaRawDataIPDL.
-    mems.AppendElement(buffer.Get());
     MediaRawDataIPDL rawSample(
         MediaDataIPDL(sample->mOffset, sample->mTime, sample->mTimecode,
                       sample->mDuration, sample->mKeyframe),
@@ -128,20 +123,15 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   RefPtr<RemoteDecoderChild> self = this;
   SendDecode(std::move(samples))
       ->Then(mThread, __func__,
-             [self, this, mems = std::move(mems)](
-                 PRemoteDecoderChild::DecodePromise::ResolveOrRejectValue&&
-                     aValue) {
-               // We no longer need the ShmemBuffer as the data has been
+             [self,
+              this](PRemoteDecoderChild::DecodePromise::ResolveOrRejectValue&&
+                        aValue) {
+               // We no longer need the samples as the data has been
                // processed by the parent.
-               if (self->CanSend()) {
-                 for (auto&& mem : mems) {
-                   mRawFramePool.Put(ShmemBuffer(std::move(mem)));
-                 }
-               } else {
-                 for (auto mem : mems) {
-                   self->DeallocShmem(mem);
-                 }
-               }
+               // If the parent died, the error being fatal will cause the
+               // decoder to be torn down and all shmem in the pool will be
+               // deallocated.
+               ReleaseAllBuffers();
 
                if (aValue.IsReject()) {
                  HandleRejectionError(
