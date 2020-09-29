@@ -133,9 +133,12 @@ async function checkInput(inputStr) {
     inputStr.replace("\\", "/"),
     "Should be displaying the correct text"
   );
+  let [action] = await document.l10n.formatValues([
+    { id: "urlbar-result-action-visit" },
+  ]);
   Assert.equal(
     result.displayed.action,
-    UrlbarUtils.strings.GetStringFromName("visit"),
+    action,
     "Should be displaying the correct action text"
   );
 }

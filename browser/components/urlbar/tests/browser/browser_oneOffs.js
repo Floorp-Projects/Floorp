@@ -306,16 +306,6 @@ add_task(async function editedView() {
     );
   }
 
-  // TODO: (Bug 1658629) We haven't decided what kind of heuristic action text
-  // local one-offs should show. This subtest will start failing if we introduce
-  // action text for local one-offs, at which point this array and its uses
-  // below can be removed.
-  const localOneOffIds = [
-    "urlbar-engine-one-off-item-bookmarks",
-    "urlbar-engine-one-off-item-tabs",
-    "urlbar-engine-one-off-item-history",
-  ];
-
   // Key down through each one-off.
   let numButtons = oneOffSearchButtons.getSelectableButtons(true).length;
   for (let i = 0; i < numButtons; i++) {
@@ -325,7 +315,7 @@ add_task(async function editedView() {
       BrowserTestUtils.is_visible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
         "search-setting-button-compact"
-      ) && !localOneOffIds.includes(oneOffSearchButtons.selectedButton.id),
+      ),
       "The heuristic action should be visible when a one-off button is selected"
     );
   }
@@ -347,7 +337,7 @@ add_task(async function editedView() {
       BrowserTestUtils.is_visible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
         "search-setting-button-compact"
-      ) && !localOneOffIds.includes(oneOffSearchButtons.selectedButton.id),
+      ),
       "The heuristic action should be visible when a one-off button is selected"
     );
   }

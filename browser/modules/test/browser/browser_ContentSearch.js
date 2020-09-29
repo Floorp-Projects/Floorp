@@ -483,12 +483,8 @@ var currentStateObj = async function(isPrivateWindowValue, hiddenEngine = "") {
 
 async function constructEngineObj(engine) {
   let uriFavicon = engine.getIconURLBySize(16, 16);
-  let bundle = Services.strings.createBundle(
-    "chrome://global/locale/autocomplete.properties"
-  );
   return {
     name: engine.name,
-    placeholder: bundle.formatStringFromName("searchWithEngine", [engine.name]),
     iconData: await iconDataFromURI(uriFavicon),
     isAppProvided: engine.isAppProvided,
   };

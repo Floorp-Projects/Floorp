@@ -1115,42 +1115,63 @@ class UrlbarView {
       );
     }
 
-    let action = "";
+    let action = item._elements.get("action");
+    let actionSetter = null;
     let isVisitAction = false;
     let setURL = false;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        action = UrlbarUtils.strings.GetStringFromName("switchToTab2");
+        actionSetter = () => {
+          this.document.l10n.setAttributes(
+            action,
+            "urlbar-result-action-switch-tab"
+          );
+        };
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        action = result.payload.device;
+        actionSetter = () => {
+          action.removeAttribute("data-l10n-id");
+          action.textContent = result.payload.device;
+        };
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         if (result.payload.inPrivateWindow) {
           if (result.payload.isPrivateEngine) {
-            action = UrlbarUtils.strings.formatStringFromName(
-              "searchInPrivateWindowWithEngine",
-              [result.payload.engine]
-            );
+            actionSetter = () => {
+              this.document.l10n.setAttributes(
+                action,
+                "urlbar-result-action-search-in-private-w-engine",
+                { engine: result.payload.engine }
+              );
+            };
           } else {
-            action = UrlbarUtils.strings.GetStringFromName(
-              "searchInPrivateWindow"
-            );
+            actionSetter = () => {
+              this.document.l10n.setAttributes(
+                action,
+                "urlbar-result-action-search-in-private"
+              );
+            };
           }
         } else {
-          action = UrlbarUtils.strings.formatStringFromName(
-            "searchWithEngine",
-            [result.payload.engine]
-          );
+          actionSetter = () => {
+            this.document.l10n.setAttributes(
+              action,
+              "urlbar-result-action-search-w-engine",
+              { engine: result.payload.engine }
+            );
+          };
         }
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         isVisitAction = result.payload.input.trim() == result.payload.keyword;
         break;
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-        action = result.payload.content;
+        actionSetter = () => {
+          action.removeAttribute("data-l10n-id");
+          action.textContent = result.payload.content;
+        };
         break;
       default:
         if (result.heuristic) {
@@ -1180,12 +1201,22 @@ class UrlbarView {
     }
 
     if (isVisitAction) {
-      action = UrlbarUtils.strings.GetStringFromName("visit");
+      actionSetter = () => {
+        this.document.l10n.setAttributes(action, "urlbar-result-action-visit");
+      };
       title.setAttribute("isurl", "true");
     } else {
       title.removeAttribute("isurl");
     }
-    item._elements.get("action").textContent = action;
+
+    if (actionSetter) {
+      actionSetter();
+      item._originalActionSetter = actionSetter;
+    } else {
+      action.removeAttribute("data-l10n-id");
+      action.textContent = "";
+      item._originalActionSetter = undefined;
+    }
 
     if (!title.hasAttribute("isurl")) {
       title.setAttribute("dir", "auto");
@@ -1193,16 +1224,14 @@ class UrlbarView {
       title.removeAttribute("dir");
     }
 
-    item._elements.get("titleSeparator").hidden = !action && !setURL;
+    item._elements.get("titleSeparator").hidden = !actionSetter && !setURL;
   }
 
-  _iconForSearchResult(result, engineOverride = null) {
+  _iconForSearchResult(result, iconUrlOverride = null) {
     return (
       (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY &&
         UrlbarUtils.ICON.HISTORY) ||
-      (engineOverride &&
-        engineOverride.iconURI &&
-        engineOverride.iconURI.spec) ||
+      iconUrlOverride ||
       result.payload.icon ||
       UrlbarUtils.ICON.SEARCH_GLASS
     );
@@ -1708,12 +1737,82 @@ class UrlbarView {
 
     // Update all search suggestion results to use the newly selected engine, or
     // if no engine is selected, revert to their original engines.
-    let engine =
-      this.oneOffSearchButtons.selectedButton &&
-      this.oneOffSearchButtons.selectedButton.engine;
+    let engine = this.oneOffSearchButtons.selectedButton?.engine;
+    let source = this.oneOffSearchButtons.selectedButton?.source;
+    switch (source) {
+      case UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
+        source = {
+          attribute: "bookmarks",
+          l10nId: "urlbar-result-action-search-bookmarks",
+          icon: "chrome://browser/skin/bookmark.svg",
+        };
+        break;
+      case UrlbarUtils.RESULT_SOURCE.HISTORY:
+        source = {
+          attribute: "history",
+          l10nId: "urlbar-result-action-search-history",
+          icon: "chrome://browser/skin/history.svg",
+        };
+        break;
+      case UrlbarUtils.RESULT_SOURCE.TABS:
+        source = {
+          attribute: "tabs",
+          l10nId: "urlbar-result-action-search-tabs",
+          icon: "chrome://browser/skin/tab.svg",
+        };
+        break;
+      default:
+        source = null;
+        break;
+    }
 
     for (let item of this._rows.children) {
       let result = item.result;
+
+      if (!result.heuristic && result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
+        continue;
+      }
+
+      let action = item.querySelector(".urlbarView-action");
+      let favicon = item.querySelector(".urlbarView-favicon");
+
+      // If a one-off button is the only selection, force the heuristic result
+      // to show its action text, so the engine name is visible.
+      if (result.heuristic && !this.selectedElement && (source || engine)) {
+        item.setAttribute("show-action-text", "true");
+      } else {
+        item.removeAttribute("show-action-text");
+      }
+
+      if (source) {
+        // Update the result action text.
+        this.document.l10n.setAttributes(action, source.l10nId);
+        item._actionOverride = true;
+        // Update the result favicon.
+        if (result.heuristic) {
+          item.setAttribute("source", source.attribute);
+          favicon.src = this._iconForSearchResult(result, source?.icon);
+        }
+        // When a local one-off is selected we're done.
+        continue;
+      }
+
+      // If we replaced the action while a local one-off button was selected,
+      // now it should be restored. This happens for example if a local one-off
+      // is selected, and then the user presses DOWN to go to the next result.
+      if (item._actionOverride) {
+        if (item._originalActionSetter) {
+          item._originalActionSetter();
+          if (result.heuristic) {
+            favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
+          }
+        } else {
+          Cu.reportError("An item is missing the action setter");
+        }
+        item._actionOverride = false;
+        item.removeAttribute("source");
+      }
+
       if (
         result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
         (!result.heuristic &&
@@ -1734,18 +1833,13 @@ class UrlbarView {
         result.payload.engine = result.payload.originalEngine;
         delete result.payload.originalEngine;
       }
-      // If a one-off button is the only selection, force the heuristic result
-      // to show its action text, so the engine name is visible.
-      if (result.heuristic && engine && !this.selectedElement) {
-        item.setAttribute("show-action-text", "true");
-      } else {
-        item.removeAttribute("show-action-text");
-      }
+
+      // Update the result action text.
       if (!result.payload.inPrivateWindow) {
-        let action = item.querySelector(".urlbarView-action");
-        action.textContent = UrlbarUtils.strings.formatStringFromName(
-          "searchWithEngine",
-          [(engine && engine.name) || result.payload.engine]
+        this.document.l10n.setAttributes(
+          action,
+          "urlbar-result-action-search-w-engine",
+          { engine: (engine && engine.name) || result.payload.engine }
         );
       }
 
@@ -1761,15 +1855,7 @@ class UrlbarView {
         // icon, then make sure the result now uses the new engine's icon or
         // failing that the default icon.  If we changed it back to the original
         // engine, go back to the original or default icon.
-        let favicon = item.querySelector(".urlbarView-favicon");
-        if (engine && result.payload.icon) {
-          favicon.src =
-            (engine.iconURI && engine.iconURI.spec) ||
-            UrlbarUtils.ICON.SEARCH_GLASS;
-        } else if (!engine) {
-          favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
-        }
-        favicon.src = this._iconForSearchResult(result, engine);
+        favicon.src = this._iconForSearchResult(result, engine?.iconURI?.spec);
       }
     }
   }
