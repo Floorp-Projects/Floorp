@@ -63,6 +63,7 @@ elif toolkit == 'cocoa':
         'nsIMacSharingService.idl',
         'nsIMacWebAppUtils.idl',
         'nsIStandaloneNativeMenu.idl',
+        'nsISystemStatusBar.idl',
         'nsITaskbarProgress.idl',
         'nsITouchBarHelper.idl',
         'nsITouchBarInput.idl',
@@ -119,7 +120,6 @@ XPIDL_SOURCES += [
     'nsIScreenManager.idl',
     'nsISharePicker.idl',
     'nsISound.idl',
-    'nsISystemStatusBar.idl',
     'nsITransferable.idl',
     'nsIUserIdleService.idl',
     'nsIUserIdleServiceInternal.idl',
@@ -176,7 +176,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.widget += [
     'CompositorWidget.h',
-    'IconLoader.h',
     'IMEData.h',
     'InProcessCompositorWidget.h',
     'MediaKeysEventSourceFactory.h',
@@ -194,7 +193,6 @@ UNIFIED_SOURCES += [
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
-    'IconLoader.cpp',
     'IMEData.cpp',
     'InProcessCompositorWidget.cpp',
     'InputData.cpp',

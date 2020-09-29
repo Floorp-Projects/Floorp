@@ -104,11 +104,6 @@ experimental-features-graphics-desktop-zooming =
     .label = Graphics: Smooth Pinch Zoom
 experimental-features-graphics-desktop-zooming-description = Enable support for smooth pinch zooming on touchscreens and precision touch pads.
 
-# WebRTC global mute toggle controls
-experimental-features-webrtc-global-mute-toggles =
-    .label = WebRTC Global Mute Toggles
-experimental-features-webrtc-global-mute-toggles-description = Add controls to the WebRTC global sharing indicator that allow users to globally mute their microphone and camera feeds.
-
 # JS JIT Warp project
 experimental-features-js-warp =
     .label = JavaScript JIT: Warp
