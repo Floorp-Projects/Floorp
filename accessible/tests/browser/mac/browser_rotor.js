@@ -1343,3 +1343,25 @@ addAccessibleTask(
     // );
   }
 );
+
+/**
+ * Test search with non-webarea root
+ */
+addAccessibleTask(
+  `<div id="searchroot"><p>hello</p><p>world</p></div><div><p>goodybe</p></div>`,
+  async (browser, accDoc) => {
+    let searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const searchRoot = getNativeInterface(accDoc, "searchroot");
+    const resultCount = searchRoot.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(resultCount, 2, "Found 2 items");
+  }
+);

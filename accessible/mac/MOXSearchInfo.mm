@@ -17,13 +17,15 @@ using namespace mozilla::a11y;
 @interface MOXSearchInfo ()
 - (NSMutableArray*)getMatchesForRule:(PivotRule&)rule;
 
+- (AccessibleOrProxy)rootGeckoAccessible;
+
 - (AccessibleOrProxy)startGeckoAccessible;
 @end
 
 @implementation MOXSearchInfo
 
 - (id)initWithParameters:(NSDictionary*)params
-                 andRoot:(MOXWebAreaAccessible*)root {
+                 andRoot:(MOXAccessibleBase*)root {
   if (id searchKeyParam = [params objectForKey:@"AXSearchKey"]) {
     mSearchKeys = [searchKeyParam isKindOfClass:[NSString class]]
                       ? @[ searchKeyParam ]
@@ -36,7 +38,7 @@ using namespace mozilla::a11y;
     mStartElem = root;
   }
 
-  mWebArea = root;
+  mRoot = root;
 
   mResultLimit = [[params objectForKey:@"AXResultsLimit"] intValue];
 
@@ -49,6 +51,15 @@ using namespace mozilla::a11y;
   return [super init];
 }
 
+- (AccessibleOrProxy)rootGeckoAccessible {
+  id root =
+      [mRoot isKindOfClass:[mozAccessible class]] ? mRoot : [mRoot moxParent];
+
+  MOZ_ASSERT([mRoot isKindOfClass:[mozAccessible class]]);
+
+  return [static_cast<mozAccessible*>(root) geckoAccessible];
+}
+
 - (AccessibleOrProxy)startGeckoAccessible {
   if ([mStartElem isKindOfClass:[mozAccessible class]]) {
     return [static_cast<mozAccessible*>(mStartElem) geckoAccessible];
@@ -57,14 +68,15 @@ using namespace mozilla::a11y;
   // If it isn't a mozAccessible, it doesn't have a gecko accessible
   // this is most likely the root group. Use the gecko doc as the start
   // accessible.
-  return [mWebArea geckoAccessible];
+  return [self rootGeckoAccessible];
 }
 
 - (NSMutableArray*)getMatchesForRule:(PivotRule&)rule {
   int resultLimit = mResultLimit;
   NSMutableArray* matches = [[NSMutableArray alloc] init];
-  Pivot p = Pivot([mWebArea geckoAccessible]);
+  AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
   AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
+  Pivot p = Pivot(geckoRootAcc);
   AccessibleOrProxy match = mSearchForward ? p.Next(geckoStartAcc, rule)
                                            : p.Prev(geckoStartAcc, rule);
   while (!match.IsNull() && resultLimit != 0) {
