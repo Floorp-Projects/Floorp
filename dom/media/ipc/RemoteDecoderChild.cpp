@@ -100,62 +100,46 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
     const nsTArray<RefPtr<MediaRawData>>& aSamples) {
   AssertOnManagerThread();
 
-  nsTArray<MediaRawDataIPDL> samples;
-  for (auto&& sample : aSamples) {
-    // TODO: It would be nice to add an allocator method to
-    // MediaDataDecoder so that the demuxer could write directly
-    // into shmem rather than requiring a copy here.
-    ShmemBuffer buffer = AllocateBuffer(sample->Size());
-    if (!buffer.Valid()) {
-      return MediaDataDecoder::DecodePromise::CreateAndReject(
-          NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
-    }
-
-    memcpy(buffer.Get().get<uint8_t>(), sample->Data(), sample->Size());
-    MediaRawDataIPDL rawSample(
-        MediaDataIPDL(sample->mOffset, sample->mTime, sample->mTimecode,
-                      sample->mDuration, sample->mKeyframe),
-        sample->mEOS, sample->mDiscardPadding, sample->Size(),
-        std::move(buffer.Get()));
-    samples.AppendElement(std::move(rawSample));
+  auto samples = MakeRefPtr<ArrayOfRemoteMediaRawData>();
+  if (!samples->Fill(aSamples,
+                     [&](size_t aSize) { return AllocateBuffer(aSize); })) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        NS_ERROR_OUT_OF_MEMORY, __func__);
   }
+  SendDecode(samples)->Then(
+      mThread, __func__,
+      [self = RefPtr{this}, this](
+          PRemoteDecoderChild::DecodePromise::ResolveOrRejectValue&& aValue) {
+        // We no longer need the samples as the data has been
+        // processed by the parent.
+        // If the parent died, the error being fatal will cause the
+        // decoder to be torn down and all shmem in the pool will be
+        // deallocated.
+        ReleaseAllBuffers();
 
-  RefPtr<RemoteDecoderChild> self = this;
-  SendDecode(std::move(samples))
-      ->Then(mThread, __func__,
-             [self,
-              this](PRemoteDecoderChild::DecodePromise::ResolveOrRejectValue&&
-                        aValue) {
-               // We no longer need the samples as the data has been
-               // processed by the parent.
-               // If the parent died, the error being fatal will cause the
-               // decoder to be torn down and all shmem in the pool will be
-               // deallocated.
-               ReleaseAllBuffers();
-
-               if (aValue.IsReject()) {
-                 HandleRejectionError(
-                     aValue.RejectValue(), [self](const MediaResult& aError) {
-                       self->mDecodePromise.RejectIfExists(aError, __func__);
-                     });
-                 return;
-               }
-               if (mDecodePromise.IsEmpty()) {
-                 // We got flushed.
-                 return;
-               }
-               auto response = std::move(aValue.ResolveValue());
-               if (response.type() == DecodeResultIPDL::TMediaResult &&
-                   NS_FAILED(response.get_MediaResult())) {
-                 mDecodePromise.Reject(response.get_MediaResult(), __func__);
-                 return;
-               }
-               if (response.type() == DecodeResultIPDL::TDecodedOutputIPDL) {
-                 ProcessOutput(std::move(response.get_DecodedOutputIPDL()));
-               }
-               mDecodePromise.Resolve(std::move(mDecodedData), __func__);
-               mDecodedData = MediaDataDecoder::DecodedData();
-             });
+        if (aValue.IsReject()) {
+          HandleRejectionError(
+              aValue.RejectValue(), [self](const MediaResult& aError) {
+                self->mDecodePromise.RejectIfExists(aError, __func__);
+              });
+          return;
+        }
+        if (mDecodePromise.IsEmpty()) {
+          // We got flushed.
+          return;
+        }
+        auto response = std::move(aValue.ResolveValue());
+        if (response.type() == DecodeResultIPDL::TMediaResult &&
+            NS_FAILED(response.get_MediaResult())) {
+          mDecodePromise.Reject(response.get_MediaResult(), __func__);
+          return;
+        }
+        if (response.type() == DecodeResultIPDL::TDecodedOutputIPDL) {
+          ProcessOutput(std::move(response.get_DecodedOutputIPDL()));
+        }
+        mDecodePromise.Resolve(std::move(mDecodedData), __func__);
+        mDecodedData = MediaDataDecoder::DecodedData();
+      });
 
   return mDecodePromise.Ensure(__func__);
 }

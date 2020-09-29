@@ -5,9 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderParent.h"
 
-#include "mozilla/Unused.h"
-
 #include "RemoteDecoderManagerParent.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -67,41 +66,27 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit(
   return IPC_OK();
 }
 
-void RemoteDecoderParent::DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
-                                           DecodedOutputIPDL&& aOutput,
-                                           DecodeResolver&& aResolver) {
-  if (aData.IsEmpty()) {
+void RemoteDecoderParent::DecodeNextSample(
+    const RefPtr<ArrayOfRemoteMediaRawData>& aData, size_t aIndex,
+    DecodedOutputIPDL&& aOutput, DecodeResolver&& aResolver) {
+  MOZ_ASSERT(OnManagerThread());
+
+  if (aData->Count() == aIndex) {
     aResolver(std::move(aOutput));
     return;
   }
 
-  const MediaRawDataIPDL& rawData = aData[0];
-  RefPtr<MediaRawData> data = new MediaRawData(
-      rawData.buffer().get<uint8_t>(),
-      std::min((unsigned long)rawData.bufferSize(),
-               (unsigned long)rawData.buffer().Size<uint8_t>()));
-  // if MediaRawData's size is less than the actual buffer size recorded
-  // in MediaRawDataIPDL, consider it an OOM situation.
-  if ((int64_t)data->Size() < rawData.bufferSize()) {
+  RefPtr<MediaRawData> rawData = aData->ElementAt(aIndex);
+  if (!rawData) {
     // OOM
     ReleaseAllBuffers();
     aResolver(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
     return;
   }
-  data->mOffset = rawData.base().offset();
-  data->mTime = rawData.base().time();
-  data->mTimecode = rawData.base().timecode();
-  data->mDuration = rawData.base().duration();
-  data->mKeyframe = rawData.base().keyframe();
-  data->mEOS = rawData.eos();
-  data->mDiscardPadding = rawData.discardPadding();
 
-  aData.RemoveElementAt(0);
-
-  RefPtr<RemoteDecoderParent> self = this;
-  mDecoder->Decode(data)->Then(
+  mDecoder->Decode(rawData)->Then(
       mManagerThread, __func__,
-      [self, this, aData = std::move(aData), output = std::move(aOutput),
+      [self = RefPtr{this}, this, aData, aIndex, output = std::move(aOutput),
        resolver = std::move(aResolver)](
           MediaDataDecoder::DecodePromise::ResolveOrRejectValue&&
               aValue) mutable {
@@ -121,14 +106,14 @@ void RemoteDecoderParent::DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
           resolver(rv);
         } else {
           // Call again in case we have more data to decode.
-          DecodeNextSample(std::move(aData), std::move(output),
+          DecodeNextSample(aData, aIndex + 1, std::move(output),
                            std::move(resolver));
         }
       });
 }
 
 mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
-    nsTArray<MediaRawDataIPDL>&& aData, DecodeResolver&& aResolver) {
+    ArrayOfRemoteMediaRawData* aData, DecodeResolver&& aResolver) {
   MOZ_ASSERT(OnManagerThread());
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
   // we'd just take ownership of the shmem.
@@ -140,7 +125,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
   // available again.
   ReleaseAllBuffers();
   DecodedOutputIPDL output;
-  DecodeNextSample(std::move(aData), std::move(output), std::move(aResolver));
+  DecodeNextSample(aData, 0, std::move(output), std::move(aResolver));
 
   return IPC_OK();
 }
