@@ -68,3 +68,11 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 };
+
+class RotorStaticTextRule : public RotorRule {
+ public:
+  explicit RotorStaticTextRule();
+  explicit RotorStaticTextRule(AccessibleOrProxy& aDirectDescendantsFrom);
+
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
