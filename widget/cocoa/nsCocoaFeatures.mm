@@ -22,8 +22,8 @@
 #define MACOS_VERSION_10_13_HEX 0x000A0D00
 #define MACOS_VERSION_10_14_HEX 0x000A0E00
 #define MACOS_VERSION_10_15_HEX 0x000A0F00
-//#define MACOS_VERSION_10_16_HEX 0x000A1000
-//#define MACOS_VERSION_11_0_HEX 0x000B0000
+#define MACOS_VERSION_10_16_HEX 0x000A1000
+#define MACOS_VERSION_11_0_HEX 0x000B0000
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
@@ -175,6 +175,13 @@ bool Gecko_OnHighSierraOrLater() { return nsCocoaFeatures::OnHighSierraOrLater()
 
 /* static */ bool nsCocoaFeatures::OnCatalinaOrLater() {
   return (macOSVersion() >= MACOS_VERSION_10_15_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnBigSurOrLater() {
+  // Account for the version being 10.16 (which occurs when the
+  // application is linked with an older SDK) or 11.0 on Big Sur.
+  return ((macOSVersion() >= MACOS_VERSION_10_16_HEX) ||
+          (macOSVersion() >= MACOS_VERSION_11_0_HEX));
 }
 
 /* static */ bool nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor,
