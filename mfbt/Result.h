@@ -104,15 +104,11 @@ class ResultImplementationNullIsOkBase {
 
   static constexpr auto kNullValue = UnusedZero<E>::nullValue;
 
-  // This is static function rather than a static data member in order to avoid
-  // that gcc emits lots of static constructors. It may be changed to a static
-  // constexpr data member with C++20.
-  static inline auto GetMovedFromMarker() {
-    return UnusedZero<E>::GetDefaultValue();
-  }
-
   static_assert(std::is_trivially_copyable_v<ErrorStorageType>);
-  static_assert(kNullValue == decltype(kNullValue)(0));
+
+  // XXX This can't be statically asserted in general, if ErrorStorageType is
+  // not a basic type. With C++20 bit_cast, we could probably re-add such as
+  // assertion. static_assert(kNullValue == decltype(kNullValue)(0));
 
   CompactPair<AlignedStorageOrEmpty<V>, ErrorStorageType> mValue;
 
@@ -147,12 +143,10 @@ class ResultImplementationNullIsOkBase {
 
   ResultImplementationNullIsOkBase(ResultImplementationNullIsOkBase&& aOther)
       : mValue(std::piecewise_construct, std::tuple<>(),
-               std::tuple(std::move(aOther.mValue.second()))) {
+               std::tuple(aOther.mValue.second())) {
     if constexpr (!std::is_empty_v<V>) {
       if (isOk()) {
         new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
-        aOther.mValue.first().addr()->~V();
-        aOther.mValue.second() = GetMovedFromMarker();
       }
     }
   }
@@ -167,8 +161,6 @@ class ResultImplementationNullIsOkBase {
     if constexpr (!std::is_empty_v<V>) {
       if (isOk()) {
         new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
-        aOther.mValue.first().addr()->~V();
-        aOther.mValue.second() = GetMovedFromMarker();
       }
     }
     return *this;
@@ -182,7 +174,7 @@ class ResultImplementationNullIsOkBase {
   const E& inspectErr() const {
     return UnusedZero<E>::Inspect(mValue.second());
   }
-  E unwrapErr() { return UnusedZero<E>::Unwrap(std::move(mValue.second())); }
+  E unwrapErr() { return UnusedZero<E>::Unwrap(mValue.second()); }
 };
 
 template <typename V, typename E,

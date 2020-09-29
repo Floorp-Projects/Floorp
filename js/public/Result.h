@@ -214,9 +214,6 @@ struct UnusedZero {
 
   static constexpr bool value = true;
   static constexpr StorageType nullValue = 0;
-  static constexpr StorageType GetDefaultValue() {
-    return T::ErrorKind::Unspecified;
-  }
 
   static constexpr void AssertValid(StorageType aValue) {}
   static constexpr T Inspect(const StorageType& aValue) {
