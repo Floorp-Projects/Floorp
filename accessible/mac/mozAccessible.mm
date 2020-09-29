@@ -751,11 +751,8 @@ struct RoleDescrComparator {
   // params. The init function does additional parsing. We pass a
   // reference to the web area to use as a start element if one is not
   // specified.
-  MOXWebAreaAccessible* webArea = static_cast<MOXWebAreaAccessible*>(
-      GetNativeFromGeckoAccessible([self geckoDocument]));
   MOXSearchInfo* search =
-      [[MOXSearchInfo alloc] initWithParameters:searchPredicate
-                                        andRoot:webArea];
+      [[MOXSearchInfo alloc] initWithParameters:searchPredicate andRoot:self];
 
   return [search performSearch];
 }
