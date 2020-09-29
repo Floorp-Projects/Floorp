@@ -1037,15 +1037,7 @@ class Layer {
    * CONSTRUCTION PHASE ONLY
    * Set the event handling region.
    */
-  void SetEventRegions(const EventRegions& aRegions) {
-    if (mEventRegions != aRegions) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(
-          this, ("Layer::Mutated(%p) eventregions were %s, now %s", this,
-                 mEventRegions.ToString().get(), aRegions.ToString().get()));
-      mEventRegions = aRegions;
-      Mutated();
-    }
-  }
+  void SetEventRegions(const EventRegions& aRegions);
 
   /**
    * CONSTRUCTION PHASE ONLY
