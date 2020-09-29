@@ -145,8 +145,8 @@ struct BaseMargin {
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const BaseMargin& aMargin) {
-    return aStream << '(' << aMargin.top << ',' << aMargin.right << ','
-                   << aMargin.bottom << ',' << aMargin.left << ')';
+    return aStream << "(t=" << aMargin.top << ", r=" << aMargin.right
+                   << ", b=" << aMargin.bottom << ", l=" << aMargin.left << ')';
   }
 };
 
