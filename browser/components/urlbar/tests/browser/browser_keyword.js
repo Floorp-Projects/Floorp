@@ -88,11 +88,10 @@ add_task(async function test_display_keyword_without_query() {
     "https://example.com/browser/browser/components/urlbar/tests/browser/print_postdata.sjs?q=",
     "Node should contain the url of the bookmark"
   );
-  Assert.equal(
-    result.displayed.action,
-    UrlbarUtils.strings.GetStringFromName("visit"),
-    "Should have visit indicated"
-  );
+  let [action] = await document.l10n.formatValues([
+    { id: "urlbar-result-action-visit" },
+  ]);
+  Assert.equal(result.displayed.action, action, "Should have visit indicated");
 });
 
 add_task(async function test_keyword_using_get() {

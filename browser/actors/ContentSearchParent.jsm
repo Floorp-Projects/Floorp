@@ -116,9 +116,6 @@ let ContentSearch = {
       Services.obs.addObserver(this, "browser-search-service");
       Services.obs.addObserver(this, "shutdown-leaks-before-check");
       Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
-      this._stringBundle = Services.strings.createBundle(
-        "chrome://global/locale/autocomplete.properties"
-      );
 
       this.initialized = true;
     }
@@ -531,13 +528,8 @@ let ContentSearch = {
     let engine =
       Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
     let favicon = engine.getIconURLBySize(16, 16);
-    let placeholder = this._stringBundle.formatStringFromName(
-      "searchWithEngine",
-      [engine.name]
-    );
     let obj = {
       name: engine.name,
-      placeholder,
       iconData: await this._maybeConvertURIToArrayBuffer(favicon),
       isAppProvided: engine.isAppProvided,
     };

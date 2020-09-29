@@ -432,6 +432,32 @@ urlbar-page-action-button =
 urlbar-pocket-button =
   .tooltiptext = Save to { -pocket-brand-name }
 
+## Action text shown in urlbar results, usually appended after the search
+## string or the url, like "result value - action text".
+
+# Used when the private browsing engine differs from the default engine.
+# The "with" format was chosen because the search engine name can end with
+# "Search", and we would like to avoid strings like "Search MSN Search".
+# Variables
+#  $engine (String): the name of a search engine
+urlbar-result-action-search-in-private-w-engine = Search with { $engine } in a Private Window
+# Used when the private browsing engine is the same as the default engine.
+urlbar-result-action-search-in-private = Search in a Private Window
+# The "with" format was chosen because the search engine name can end with
+# "Search", and we would like to avoid strings like "Search MSN Search".
+# Variables
+#  $engine (String): the name of a search engine
+urlbar-result-action-search-w-engine = Search with { $engine }
+urlbar-result-action-switch-tab = Switch to Tab
+urlbar-result-action-visit = Visit
+
+## Action text shown in urlbar results, usually appended after the search
+## string or the url, like "result value - action text".
+## In these actions "Search" is a verb, followed by where the search is performed.
+
+urlbar-result-action-search-bookmarks = Search Bookmarks
+urlbar-result-action-search-history = Search History
+urlbar-result-action-search-tabs = Search Tabs
 
 ## Full Screen and Pointer Lock UI
 
