@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleColorInlines.h"
 #include "mozilla/UniquePtr.h"
@@ -1447,6 +1448,20 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   bool IsInternalTableStyleExceptCell() const {
     return IsInnerTableStyle() && mozilla::StyleDisplay::TableCell != mDisplay;
+  }
+
+  bool IsXULDisplayStyle() const {
+    // -moz-{inline-}box is XUL, unless we're emulating it with flexbox.
+    if (!mozilla::StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
+        DisplayInside() == mozilla::StyleDisplayInside::MozBox) {
+      return true;
+    }
+
+#ifdef MOZ_XUL
+    return DisplayOutside() == mozilla::StyleDisplayOutside::XUL;
+#else
+    return false;
+#endif
   }
 
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }
