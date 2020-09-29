@@ -43,9 +43,10 @@ defaults = {
 @run_job_using("generic-worker", "mach", schema=mach_schema, defaults=defaults)
 def configure_mach(config, job, taskdesc):
     run = job['run']
+    worker = job['worker']
 
     additional_prefix = []
-    if job['worker-type'].endswith('1014'):
+    if worker['os'] == 'macosx':
         additional_prefix = [
             'LC_ALL=en_US.UTF-8',
             'LANG=en_US.UTF-8'

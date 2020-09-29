@@ -8,7 +8,7 @@ job-defaults:
     worker-type:
         by-platform:
             linux1804-64.*: t-linux-xlarge-source
-            macosx1014-64.*: t-osx-1014
+            macosx1014-64.*: t-osx-1014-r7-edid
             windows10-64.*: t-win10-64-source
     worker:
         by-platform:
