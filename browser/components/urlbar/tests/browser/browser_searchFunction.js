@@ -110,7 +110,10 @@ add_task(async function searchRestriction() {
 
 add_task(async function historyRestriction() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
@@ -130,7 +133,10 @@ add_task(async function historyRestriction() {
 
 add_task(async function historyRestrictionWithString() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
   gURLBar.blur();
   // The leading and trailing spaces are intentional to verify that search()
