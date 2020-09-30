@@ -234,8 +234,9 @@ uintptr_t* Simulator::addressOfStackLimit() {
 
 
 bool Simulator::overRecursed(uintptr_t newsp) const {
-  if (newsp)
+  if (newsp == 0) {
     newsp = get_sp();
+  }
   return newsp <= stackLimit();
 }
 
