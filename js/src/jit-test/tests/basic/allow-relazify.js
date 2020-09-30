@@ -1,3 +1,4 @@
+// |jit-test| skip-if: isLcovEnabled()
 function f() {
   return 1;
 }
