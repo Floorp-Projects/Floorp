@@ -1622,60 +1622,6 @@ module.exports = g;
 
 /***/ }),
 
-/***/ 183:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const {
-  PrefsHelper
-} = __webpack_require__(424);
-
-const KeyShortcuts = __webpack_require__(425);
-
-const {
-  ZoomKeys
-} = __webpack_require__(426);
-
-const EventEmitter = __webpack_require__(65);
-
-const asyncStorage = __webpack_require__(427);
-
-const asyncStoreHelper = __webpack_require__(516);
-
-const SourceUtils = __webpack_require__(428);
-
-const Telemetry = __webpack_require__(429);
-
-const {
-  getUnicodeHostname,
-  getUnicodeUrlPath,
-  getUnicodeUrl
-} = __webpack_require__(430);
-
-const PluralForm = __webpack_require__(501);
-
-const saveAs = __webpack_require__(520);
-
-module.exports = {
-  KeyShortcuts,
-  PrefsHelper,
-  ZoomKeys,
-  asyncStorage,
-  asyncStoreHelper,
-  EventEmitter,
-  SourceUtils,
-  Telemetry,
-  getUnicodeHostname,
-  getUnicodeUrlPath,
-  getUnicodeUrl,
-  PluralForm,
-  saveAs
-};
-
-/***/ }),
-
 /***/ 184:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2226,7 +2172,7 @@ var devtoolsContextmenu = _interopRequireWildcard(__webpack_require__(420));
 
 var devtoolsEnvironment = _interopRequireWildcard(__webpack_require__(102));
 
-var devtoolsModules = _interopRequireWildcard(__webpack_require__(183));
+var devtoolsModules = _interopRequireWildcard(__webpack_require__(538));
 
 var devtoolsUtils = _interopRequireWildcard(__webpack_require__(7));
 
@@ -2834,1532 +2780,6 @@ function buildMenu(items) {
 module.exports = {
   showMenu,
   buildMenu
-};
-
-/***/ }),
-
-/***/ 422:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/*
- * A sham for https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Promise.jsm
- */
-
-/**
- * Promise.jsm is mostly the Promise web API with a `defer` method. Just drop this in here,
- * and use the native web API (although building with webpack/babel, it may replace this
- * with it's own version if we want to target environments that do not have `Promise`.
- */
-let p = typeof window != "undefined" ? window.Promise : Promise;
-
-p.defer = function defer() {
-  var resolve, reject;
-  var promise = new Promise(function () {
-    resolve = arguments[0];
-    reject = arguments[1];
-  });
-  return {
-    resolve: resolve,
-    reject: reject,
-    promise: promise
-  };
-};
-
-module.exports = p;
-
-/***/ }),
-
-/***/ 424:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const Services = __webpack_require__(37);
-
-const EventEmitter = __webpack_require__(65);
-/**
- * Shortcuts for lazily accessing and setting various preferences.
- * Usage:
- *   let prefs = new Prefs("root.path.to.branch", {
- *     myIntPref: ["Int", "leaf.path.to.my-int-pref"],
- *     myCharPref: ["Char", "leaf.path.to.my-char-pref"],
- *     myJsonPref: ["Json", "leaf.path.to.my-json-pref"],
- *     myFloatPref: ["Float", "leaf.path.to.my-float-pref"]
- *     ...
- *   });
- *
- * Get/set:
- *   prefs.myCharPref = "foo";
- *   let aux = prefs.myCharPref;
- *
- * Observe:
- *   prefs.registerObserver();
- *   prefs.on("pref-changed", (prefName, prefValue) => {
- *     ...
- *   });
- *
- * @param string prefsRoot
- *        The root path to the required preferences branch.
- * @param object prefsBlueprint
- *        An object containing { accessorName: [prefType, prefName, prefDefault] } keys.
- */
-
-
-function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
-  EventEmitter.decorate(this);
-  let cache = new Map();
-
-  for (let accessorName in prefsBlueprint) {
-    let [prefType, prefName, prefDefault] = prefsBlueprint[accessorName];
-    map(this, cache, accessorName, prefType, prefsRoot, prefName, prefDefault);
-  }
-
-  let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
-
-  this.registerObserver = () => observer.register();
-
-  this.unregisterObserver = () => observer.unregister();
-}
-/**
- * Helper method for getting a pref value.
- *
- * @param Map cache
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @return any
- */
-
-
-function get(cache, prefType, prefsRoot, prefName) {
-  let cachedPref = cache.get(prefName);
-
-  if (cachedPref !== undefined) {
-    return cachedPref;
-  }
-
-  let value = Services.prefs["get" + prefType + "Pref"]([prefsRoot, prefName].join("."));
-  cache.set(prefName, value);
-  return value;
-}
-/**
- * Helper method for setting a pref value.
- *
- * @param Map cache
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @param any value
- */
-
-
-function set(cache, prefType, prefsRoot, prefName, value) {
-  Services.prefs["set" + prefType + "Pref"]([prefsRoot, prefName].join("."), value);
-  cache.set(prefName, value);
-}
-/**
- * Maps a property name to a pref, defining lazy getters and setters.
- * Supported types are "Bool", "Char", "Int", "Float" (sugar around "Char"
- * type and casting), and "Json" (which is basically just sugar for "Char"
- * using the standard JSON serializer).
- *
- * @param PrefsHelper self
- * @param Map cache
- * @param string accessorName
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @param string prefDefault
- * @param array serializer [optional]
- */
-
-
-function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault, serializer = {
-  in: e => e,
-  out: e => e
-}) {
-  if (prefName in self) {
-    throw new Error(`Can't use ${prefName} because it overrides a property` + "on the instance.");
-  }
-
-  if (prefType == "Json") {
-    map(self, cache, accessorName, "String", prefsRoot, prefName, prefDefault, {
-      in: JSON.parse,
-      out: JSON.stringify
-    });
-    return;
-  }
-
-  if (prefType == "Float") {
-    map(self, cache, accessorName, "Char", prefsRoot, prefName, prefDefault, {
-      in: Number.parseFloat,
-      out: n => n + ""
-    });
-    return;
-  }
-
-  Object.defineProperty(self, accessorName, {
-    get: () => {
-      try {
-        return serializer.in(get(cache, prefType, prefsRoot, prefName));
-      } catch (e) {
-        if (typeof prefDefault !== 'undefined') {
-          return prefDefault;
-        }
-
-        throw e;
-      }
-    },
-    set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
-  });
-}
-/**
- * Finds the accessor for the provided pref, based on the blueprint object
- * used in the constructor.
- *
- * @param PrefsHelper self
- * @param object prefsBlueprint
- * @return string
- */
-
-
-function accessorNameForPref(somePrefName, prefsBlueprint) {
-  for (let accessorName in prefsBlueprint) {
-    let [, prefName] = prefsBlueprint[accessorName];
-
-    if (somePrefName == prefName) {
-      return accessorName;
-    }
-  }
-
-  return "";
-}
-/**
- * Creates a pref observer for `self`.
- *
- * @param PrefsHelper self
- * @param Map cache
- * @param string prefsRoot
- * @param object prefsBlueprint
- * @return object
- */
-
-
-function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
-  return {
-    register: function () {
-      this._branch = Services.prefs.getBranch(prefsRoot + ".");
-
-      this._branch.addObserver("", this);
-    },
-    unregister: function () {
-      this._branch.removeObserver("", this);
-    },
-    observe: function (subject, topic, prefName) {
-      // If this particular pref isn't handled by the blueprint object,
-      // even though it's in the specified branch, ignore it.
-      let accessorName = accessorNameForPref(prefName, prefsBlueprint);
-
-      if (!(accessorName in self)) {
-        return;
-      }
-
-      cache.delete(prefName);
-      self.emit("pref-changed", accessorName, self[accessorName]);
-    }
-  };
-}
-
-exports.PrefsHelper = PrefsHelper;
-
-/***/ }),
-
-/***/ 425:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const {
-  appinfo
-} = __webpack_require__(37);
-
-const EventEmitter = __webpack_require__(65);
-
-const isOSX = appinfo.OS === "Darwin"; // List of electron keys mapped to DOM API (DOM_VK_*) key code
-
-const ElectronKeysMapping = {
-  "F1": "DOM_VK_F1",
-  "F2": "DOM_VK_F2",
-  "F3": "DOM_VK_F3",
-  "F4": "DOM_VK_F4",
-  "F5": "DOM_VK_F5",
-  "F6": "DOM_VK_F6",
-  "F7": "DOM_VK_F7",
-  "F8": "DOM_VK_F8",
-  "F9": "DOM_VK_F9",
-  "F10": "DOM_VK_F10",
-  "F11": "DOM_VK_F11",
-  "F12": "DOM_VK_F12",
-  "F13": "DOM_VK_F13",
-  "F14": "DOM_VK_F14",
-  "F15": "DOM_VK_F15",
-  "F16": "DOM_VK_F16",
-  "F17": "DOM_VK_F17",
-  "F18": "DOM_VK_F18",
-  "F19": "DOM_VK_F19",
-  "F20": "DOM_VK_F20",
-  "F21": "DOM_VK_F21",
-  "F22": "DOM_VK_F22",
-  "F23": "DOM_VK_F23",
-  "F24": "DOM_VK_F24",
-  "Space": "DOM_VK_SPACE",
-  "Backspace": "DOM_VK_BACK_SPACE",
-  "Delete": "DOM_VK_DELETE",
-  "Insert": "DOM_VK_INSERT",
-  "Return": "DOM_VK_RETURN",
-  "Enter": "DOM_VK_RETURN",
-  "Up": "DOM_VK_UP",
-  "Down": "DOM_VK_DOWN",
-  "Left": "DOM_VK_LEFT",
-  "Right": "DOM_VK_RIGHT",
-  "Home": "DOM_VK_HOME",
-  "End": "DOM_VK_END",
-  "PageUp": "DOM_VK_PAGE_UP",
-  "PageDown": "DOM_VK_PAGE_DOWN",
-  "Escape": "DOM_VK_ESCAPE",
-  "Esc": "DOM_VK_ESCAPE",
-  "Tab": "DOM_VK_TAB",
-  "VolumeUp": "DOM_VK_VOLUME_UP",
-  "VolumeDown": "DOM_VK_VOLUME_DOWN",
-  "VolumeMute": "DOM_VK_VOLUME_MUTE",
-  "PrintScreen": "DOM_VK_PRINTSCREEN"
-};
-/**
- * Helper to listen for keyboard events decribed in .properties file.
- *
- * let shortcuts = new KeyShortcuts({
- *   window
- * });
- * shortcuts.on("Ctrl+F", event => {
- *   // `event` is the KeyboardEvent which relates to the key shortcuts
- * });
- *
- * @param DOMWindow window
- *        The window object of the document to listen events from.
- * @param DOMElement target
- *        Optional DOM Element on which we should listen events from.
- *        If omitted, we listen for all events fired on `window`.
- */
-
-function KeyShortcuts({
-  window,
-  target
-}) {
-  this.window = window;
-  this.target = target || window;
-  this.keys = new Map();
-  this.eventEmitter = new EventEmitter();
-  this.target.addEventListener("keydown", this);
-}
-/*
- * Parse an electron-like key string and return a normalized object which
- * allow efficient match on DOM key event. The normalized object matches DOM
- * API.
- *
- * @param DOMWindow window
- *        Any DOM Window object, just to fetch its `KeyboardEvent` object
- * @param String str
- *        The shortcut string to parse, following this document:
- *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
- */
-
-
-KeyShortcuts.parseElectronKey = function (window, str) {
-  let modifiers = str.split("+");
-  let key = modifiers.pop();
-  let shortcut = {
-    ctrl: false,
-    meta: false,
-    alt: false,
-    shift: false,
-    // Set for character keys
-    key: undefined,
-    // Set for non-character keys
-    keyCode: undefined
-  };
-
-  for (let mod of modifiers) {
-    if (mod === "Alt") {
-      shortcut.alt = true;
-    } else if (["Command", "Cmd"].includes(mod)) {
-      shortcut.meta = true;
-    } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
-      if (isOSX) {
-        shortcut.meta = true;
-      } else {
-        shortcut.ctrl = true;
-      }
-    } else if (["Control", "Ctrl"].includes(mod)) {
-      shortcut.ctrl = true;
-    } else if (mod === "Shift") {
-      shortcut.shift = true;
-    } else {
-      console.error("Unsupported modifier:", mod, "from key:", str);
-      return null;
-    }
-  } // Plus is a special case. It's a character key and shouldn't be matched
-  // against a keycode as it is only accessible via Shift/Capslock
-
-
-  if (key === "Plus") {
-    key = "+";
-  }
-
-  if (typeof key === "string" && key.length === 1) {
-    // Match any single character
-    shortcut.key = key.toLowerCase();
-  } else if (key in ElectronKeysMapping) {
-    // Maps the others manually to DOM API DOM_VK_*
-    key = ElectronKeysMapping[key];
-    shortcut.keyCode = window.KeyboardEvent[key]; // Used only to stringify the shortcut
-
-    shortcut.keyCodeString = key;
-    shortcut.key = key;
-  } else {
-    console.error("Unsupported key:", key);
-    return null;
-  }
-
-  return shortcut;
-};
-
-KeyShortcuts.stringify = function (shortcut) {
-  let list = [];
-
-  if (shortcut.alt) {
-    list.push("Alt");
-  }
-
-  if (shortcut.ctrl) {
-    list.push("Ctrl");
-  }
-
-  if (shortcut.meta) {
-    list.push("Cmd");
-  }
-
-  if (shortcut.shift) {
-    list.push("Shift");
-  }
-
-  let key;
-
-  if (shortcut.key) {
-    key = shortcut.key.toUpperCase();
-  } else {
-    key = shortcut.keyCodeString;
-  }
-
-  list.push(key);
-  return list.join("+");
-};
-
-KeyShortcuts.prototype = {
-  destroy() {
-    this.target.removeEventListener("keydown", this);
-    this.keys.clear();
-  },
-
-  doesEventMatchShortcut(event, shortcut) {
-    if (shortcut.meta != event.metaKey) {
-      return false;
-    }
-
-    if (shortcut.ctrl != event.ctrlKey) {
-      return false;
-    }
-
-    if (shortcut.alt != event.altKey) {
-      return false;
-    } // Shift is a special modifier, it may implicitely be required if the
-    // expected key is a special character accessible via shift.
-
-
-    if (shortcut.shift != event.shiftKey && event.key && event.key.match(/[a-zA-Z]/)) {
-      return false;
-    }
-
-    if (shortcut.keyCode) {
-      return event.keyCode == shortcut.keyCode;
-    } else if (event.key in ElectronKeysMapping) {
-      return ElectronKeysMapping[event.key] === shortcut.key;
-    } // get the key from the keyCode if key is not provided.
-
-
-    let key = event.key || String.fromCharCode(event.keyCode); // For character keys, we match if the final character is the expected one.
-    // But for digits we also accept indirect match to please azerty keyboard,
-    // which requires Shift to be pressed to get digits.
-
-    return key.toLowerCase() == shortcut.key || shortcut.key.match(/^[0-9]$/) && event.keyCode == shortcut.key.charCodeAt(0);
-  },
-
-  handleEvent(event) {
-    for (let [key, shortcut] of this.keys) {
-      if (this.doesEventMatchShortcut(event, shortcut)) {
-        this.eventEmitter.emit(key, event);
-      }
-    }
-  },
-
-  on(key, listener) {
-    if (typeof listener !== "function") {
-      throw new Error("KeyShortcuts.on() expects a function as " + "second argument");
-    }
-
-    if (!this.keys.has(key)) {
-      let shortcut = KeyShortcuts.parseElectronKey(this.window, key); // The key string is wrong and we were unable to compute the key shortcut
-
-      if (!shortcut) {
-        return;
-      }
-
-      this.keys.set(key, shortcut);
-    }
-
-    this.eventEmitter.on(key, listener);
-  },
-
-  off(key, listener) {
-    this.eventEmitter.off(key, listener);
-  }
-
-};
-module.exports = KeyShortcuts;
-
-/***/ }),
-
-/***/ 426:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * Empty shim for "devtools/client/shared/zoom-keys" module
- *
- * Based on nsIMarkupDocumentViewer.fullZoom API
- * https://developer.mozilla.org/en-US/Firefox/Releases/3/Full_page_zoom
- */
-
-exports.register = function (window) {};
-
-/***/ }),
-
-/***/ 427:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- *
- * Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/shared/js/async_storage.js
- * (converted to use Promises instead of callbacks).
- *
- * This file defines an asynchronous version of the localStorage API, backed by
- * an IndexedDB database.  It creates a global asyncStorage object that has
- * methods like the localStorage object.
- *
- * To store a value use setItem:
- *
- *   asyncStorage.setItem("key", "value");
- *
- * This returns a promise in case you want confirmation that the value has been stored.
- *
- *  asyncStorage.setItem("key", "newvalue").then(function() {
- *    console.log("new value stored");
- *  });
- *
- * To read a value, call getItem(), but note that you must wait for a promise
- * resolution for the value to be retrieved.
- *
- *  asyncStorage.getItem("key").then(function(value) {
- *    console.log("The value of key is:", value);
- *  });
- *
- * Note that unlike localStorage, asyncStorage does not allow you to store and
- * retrieve values by setting and querying properties directly. You cannot just
- * write asyncStorage.key; you have to explicitly call setItem() or getItem().
- *
- * removeItem(), clear(), length(), and key() are like the same-named methods of
- * localStorage, and all return a promise.
- *
- * The asynchronous nature of getItem() makes it tricky to retrieve multiple
- * values. But unlike localStorage, asyncStorage does not require the values you
- * store to be strings.  So if you need to save multiple values and want to
- * retrieve them together, in a single asynchronous operation, just group the
- * values into a single object. The properties of this object may not include
- * DOM elements, but they may include things like Blobs and typed arrays.
- *
- */
-
-
-const DBNAME = "devtools-async-storage";
-const DBVERSION = 1;
-const STORENAME = "keyvaluepairs";
-var db = null;
-
-function withStore(type, onsuccess, onerror) {
-  if (db) {
-    const transaction = db.transaction(STORENAME, type);
-    const store = transaction.objectStore(STORENAME);
-    onsuccess(store);
-  } else {
-    const openreq = indexedDB.open(DBNAME, DBVERSION);
-
-    openreq.onerror = function withStoreOnError() {
-      onerror();
-    };
-
-    openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
-      // First time setup: create an empty object store
-      openreq.result.createObjectStore(STORENAME);
-    };
-
-    openreq.onsuccess = function withStoreOnSuccess() {
-      db = openreq.result;
-      const transaction = db.transaction(STORENAME, type);
-      const store = transaction.objectStore(STORENAME);
-      onsuccess(store);
-    };
-  }
-}
-
-function getItem(itemKey) {
-  return new Promise((resolve, reject) => {
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        let value = req.result;
-
-        if (value === undefined) {
-          value = null;
-        }
-
-        resolve(value);
-      };
-
-      req = store.get(itemKey);
-
-      req.onerror = function getItemOnError() {
-        reject("Error in asyncStorage.getItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-function setItem(itemKey, value) {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.put(value, itemKey);
-
-      req.onerror = function setItemOnError() {
-        reject("Error in asyncStorage.setItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-function removeItem(itemKey) {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.delete(itemKey);
-
-      req.onerror = function removeItemOnError() {
-        reject("Error in asyncStorage.removeItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-function clear() {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.clear();
-
-      req.onerror = function clearOnError() {
-        reject("Error in asyncStorage.clear(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-function length() {
-  return new Promise((resolve, reject) => {
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        resolve(req.result);
-      };
-
-      req = store.count();
-
-      req.onerror = function lengthOnError() {
-        reject("Error in asyncStorage.length(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-function key(n) {
-  return new Promise((resolve, reject) => {
-    if (n < 0) {
-      resolve(null);
-      return;
-    }
-
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        const cursor = req.result;
-        resolve(cursor ? cursor.key : null);
-      };
-
-      let advanced = false;
-      req = store.openCursor();
-
-      req.onsuccess = function keyOnSuccess() {
-        const cursor = req.result;
-
-        if (!cursor) {
-          // this means there weren"t enough keys
-          return;
-        }
-
-        if (n === 0 || advanced) {
-          // Either 1) we have the first key, return it if that's what they
-          // wanted, or 2) we"ve got the nth key.
-          return;
-        } // Otherwise, ask the cursor to skip ahead n records
-
-
-        advanced = true;
-        cursor.advance(n);
-      };
-
-      req.onerror = function keyOnError() {
-        reject("Error in asyncStorage.key(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
-
-exports.getItem = getItem;
-exports.setItem = setItem;
-exports.removeItem = removeItem;
-exports.clear = clear;
-exports.length = length;
-exports.key = key;
-
-/***/ }),
-
-/***/ 428:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// TODO : Localize this (was l10n.getStr("frame.unknownSource"))
-const UNKNOWN_SOURCE_STRING = "(unknown)"; // Character codes used in various parsing helper functions.
-
-const CHAR_CODE_A = "a".charCodeAt(0);
-const CHAR_CODE_B = "b".charCodeAt(0);
-const CHAR_CODE_C = "c".charCodeAt(0);
-const CHAR_CODE_D = "d".charCodeAt(0);
-const CHAR_CODE_E = "e".charCodeAt(0);
-const CHAR_CODE_F = "f".charCodeAt(0);
-const CHAR_CODE_H = "h".charCodeAt(0);
-const CHAR_CODE_I = "i".charCodeAt(0);
-const CHAR_CODE_J = "j".charCodeAt(0);
-const CHAR_CODE_L = "l".charCodeAt(0);
-const CHAR_CODE_M = "m".charCodeAt(0);
-const CHAR_CODE_N = "n".charCodeAt(0);
-const CHAR_CODE_O = "o".charCodeAt(0);
-const CHAR_CODE_P = "p".charCodeAt(0);
-const CHAR_CODE_R = "r".charCodeAt(0);
-const CHAR_CODE_S = "s".charCodeAt(0);
-const CHAR_CODE_T = "t".charCodeAt(0);
-const CHAR_CODE_U = "u".charCodeAt(0);
-const CHAR_CODE_W = "w".charCodeAt(0);
-const CHAR_CODE_COLON = ":".charCodeAt(0);
-const CHAR_CODE_DASH = "-".charCodeAt(0);
-const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
-const CHAR_CODE_SLASH = "/".charCodeAt(0);
-const CHAR_CODE_CAP_S = "S".charCodeAt(0); // The cache used in the `parseURL` function.
-
-const gURLStore = new Map(); // The cache used in the `getSourceNames` function.
-
-const gSourceNamesStore = new Map();
-/**
-* Takes a string and returns an object containing all the properties
-* available on an URL instance, with additional properties (fileName),
-* Leverages caching.
-*
-* @param {String} location
-* @return {Object?} An object containing most properties available
-*                   in https://developer.mozilla.org/en-US/docs/Web/API/URL
-*/
-
-function parseURL(location) {
-  let url = gURLStore.get(location);
-
-  if (url !== void 0) {
-    return url;
-  }
-
-  try {
-    url = new URL(location); // The callers were generally written to expect a URL from
-    // sdk/url, which is subtly different.  So, work around some
-    // important differences here.
-
-    url = {
-      href: url.href,
-      protocol: url.protocol,
-      host: url.host,
-      hostname: url.hostname,
-      port: url.port || null,
-      pathname: url.pathname,
-      search: url.search,
-      hash: url.hash,
-      username: url.username,
-      password: url.password,
-      origin: url.origin
-    }; // Definitions:
-    // Example: https://foo.com:8888/file.js
-    // `hostname`: "foo.com"
-    // `host`: "foo.com:8888"
-
-    let isChrome = isChromeScheme(location);
-    url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
-
-    if (isChrome) {
-      url.hostname = null;
-      url.host = null;
-    }
-
-    gURLStore.set(location, url);
-    return url;
-  } catch (e) {
-    gURLStore.set(location, null);
-    return null;
-  }
-}
-/**
-* Parse a source into a short and long name as well as a host name.
-*
-* @param {String} source
-*        The source to parse. Can be a URI or names like "(eval)" or
-*        "self-hosted".
-* @return {Object}
-*         An object with the following properties:
-*           - {String} short: A short name for the source.
-*             - "http://page.com/test.js#go?q=query" -> "test.js"
-*           - {String} long: The full, long name for the source, with
-              hash/query stripped.
-*             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
-*           - {String?} host: If available, the host name for the source.
-*             - "http://page.com/test.js#go?q=query" -> "page.com"
-*/
-
-
-function getSourceNames(source) {
-  let data = gSourceNamesStore.get(source);
-
-  if (data) {
-    return data;
-  }
-
-  let short, long, host;
-  const sourceStr = source ? String(source) : ""; // If `data:...` uri
-
-  if (isDataScheme(sourceStr)) {
-    let commaIndex = sourceStr.indexOf(",");
-
-    if (commaIndex > -1) {
-      // The `short` name for a data URI becomes `data:` followed by the actual
-      // encoded content, omitting the MIME type, and charset.
-      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
-      let result = {
-        short,
-        long: sourceStr
-      };
-      gSourceNamesStore.set(source, result);
-      return result;
-    }
-  }
-
-  const parsedUrl = parseURL(sourceStr);
-
-  if (!parsedUrl) {
-    // Malformed URI.
-    long = sourceStr;
-    short = sourceStr.slice(0, 100);
-  } else {
-    host = parsedUrl.host;
-    long = parsedUrl.href;
-
-    if (parsedUrl.hash) {
-      long = long.replace(parsedUrl.hash, "");
-    }
-
-    if (parsedUrl.search) {
-      long = long.replace(parsedUrl.search, "");
-    }
-
-    short = parsedUrl.fileName; // If `short` is just a slash, and we actually have a path,
-    // strip the slash and parse again to get a more useful short name.
-    // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
-
-    if (short === "/" && parsedUrl.pathname !== "/") {
-      short = parseURL(long.replace(/\/$/, "")).fileName;
-    }
-  }
-
-  if (!short) {
-    if (!long) {
-      long = UNKNOWN_SOURCE_STRING;
-    }
-
-    short = long.slice(0, 100);
-  }
-
-  let result = {
-    short,
-    long,
-    host
-  };
-  gSourceNamesStore.set(source, result);
-  return result;
-} // For the functions below, we assume that we will never access the location
-// argument out of bounds, which is indeed the vast majority of cases.
-//
-// They are written this way because they are hot. Each frame is checked for
-// being content or chrome when processing the profile.
-
-
-function isColonSlashSlash(location, i = 0) {
-  return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
-}
-
-function isDataScheme(location, i = 0) {
-  return location.charCodeAt(i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_COLON;
-}
-
-function isContentScheme(location, i = 0) {
-  let firstChar = location.charCodeAt(i);
-
-  switch (firstChar) {
-    // "http://" or "https://"
-    case CHAR_CODE_H:
-      if (location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_P) {
-        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
-          ++i;
-        }
-
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-    // "file://"
-
-    case CHAR_CODE_F:
-      if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-    // "app://"
-
-    case CHAR_CODE_A:
-      if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-    // "blob:"
-
-    case CHAR_CODE_B:
-      if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
-        return isContentScheme(location, i + 1);
-      }
-
-      return false;
-
-    default:
-      return false;
-  }
-}
-
-function isChromeScheme(location, i = 0) {
-  let firstChar = location.charCodeAt(i);
-
-  switch (firstChar) {
-    // "chrome://"
-    case CHAR_CODE_C:
-      if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-    // "resource://"
-
-    case CHAR_CODE_R:
-      if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-    // "jar:file://"
-
-    case CHAR_CODE_J:
-      if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-
-      return false;
-
-    default:
-      return false;
-  }
-}
-
-function isWASM(location, i = 0) {
-  return (// "wasm-function["
-    location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
-  );
-}
-/**
-* A utility method to get the file name from a sourcemapped location
-* The sourcemap location can be in any form. This method returns a
-* formatted file name for different cases like Windows or OSX.
-* @param source
-* @returns String
-*/
-
-
-function getSourceMappedFile(source) {
-  // If sourcemapped source is a OSX path, return
-  // the characters after last "/".
-  // If sourcemapped source is a Windowss path, return
-  // the characters after last "\\".
-  if (source.lastIndexOf("/") >= 0) {
-    source = source.slice(source.lastIndexOf("/") + 1);
-  } else if (source.lastIndexOf("\\") >= 0) {
-    source = source.slice(source.lastIndexOf("\\") + 1);
-  }
-
-  return source;
-}
-
-module.exports = {
-  parseURL,
-  getSourceNames,
-  isChromeScheme,
-  isContentScheme,
-  isWASM,
-  isDataScheme,
-  getSourceMappedFile
-};
-
-/***/ }),
-
-/***/ 429:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/**
- * This is a stub of the DevTools telemetry module and will be replaced by the
- * full version of the file by Webpack for running inside Firefox.
- */
-class Telemetry {
-  /**
-   * Time since the system wide epoch. This is not a monotonic timer but
-   * can be used across process boundaries.
-   */
-  get msSystemNow() {
-    return 0;
-  }
-  /**
-   * Starts a timer associated with a telemetry histogram. The timer can be
-   * directly associated with a histogram, or with a pair of a histogram and
-   * an object.
-   *
-   * @param {String} histogramId
-   *        A string which must be a valid histogram name.
-   * @param {Object} obj
-   *        Optional parameter. If specified, the timer is associated with this
-   *        object, meaning that multiple timers for the same histogram may be
-   *        run concurrently, as long as they are associated with different
-   *        objects.
-   *
-   * @returns {Boolean}
-   *          True if the timer was successfully started, false otherwise. If a
-   *          timer already exists, it can't be started again, and the existing
-   *          one will be cleared in order to avoid measurements errors.
-   */
-
-
-  start(histogramId, obj) {
-    return true;
-  }
-  /**
-   * Starts a timer associated with a keyed telemetry histogram. The timer can
-   * be directly associated with a histogram and its key. Similarly to
-   * TelemetryStopwatch.start the histogram and its key can be associated
-   * with an object. Each key may have multiple associated objects and each
-   * object can be associated with multiple keys.
-   *
-   * @param {String} histogramId
-   *        A string which must be a valid histogram name.
-   * @param {String} key
-   *        A string which must be a valid histgram key.
-   * @param {Object} obj
-   *        Optional parameter. If specified, the timer is associated with this
-   *        object, meaning that multiple timers for the same histogram may be
-   *        run concurrently,as long as they are associated with different
-   *        objects.
-   *
-   * @returns {Boolean}
-   *          True if the timer was successfully started, false otherwise. If a
-   *          timer already exists, it can't be started again, and the existing
-   *          one will be cleared in order to avoid measurements errors.
-   */
-
-
-  startKeyed(histogramId, key, obj) {
-    return true;
-  }
-  /**
-   * Stops the timer associated with the given histogram (and object),
-   * calculates the time delta between start and finish, and adds the value
-   * to the histogram.
-   *
-   * @param {String} histogramId
-   *        A string which must be a valid histogram name.
-   * @param {Object} obj
-   *        Optional parameter which associates the histogram timer with the
-   *        given object.
-   * @param {Boolean} canceledOkay
-   *        Optional parameter which will suppress any warnings that normally
-   *        fire when a stopwatch is finished after being cancelled.
-   *        Defaults to false.
-   *
-   * @returns {Boolean}
-   *          True if the timer was succesfully stopped and the data was added
-   *          to the histogram, False otherwise.
-   */
-
-
-  finish(histogramId, obj, canceledOkay) {
-    return true;
-  }
-  /**
-   * Stops the timer associated with the given keyed histogram (and object),
-   * calculates the time delta between start and finish, and adds the value
-   * to the keyed histogram.
-   *
-   * @param {String} histogramId
-   *        A string which must be a valid histogram name.
-   * @param {String} key
-   *        A string which must be a valid histogram key.
-   * @param {Object} obj
-   *        Optional parameter which associates the histogram timer with the
-   *        given object.
-   * @param {Boolean} canceledOkay
-   *        Optional parameter which will suppress any warnings that normally
-   *        fire when a stopwatch is finished after being cancelled.
-   *        Defaults to false.
-   *
-   * @returns {Boolean}
-   *          True if the timer was succesfully stopped and the data was added
-   *          to the histogram, False otherwise.
-   */
-
-
-  finishKeyed(histogramId, key, obj, cancelledOkay) {
-    return true;
-  }
-  /**
-   * Log a value to a histogram.
-   *
-   * @param  {String} histogramId
-   *         Histogram in which the data is to be stored.
-   */
-
-
-  getHistogramById(histogramId) {
-    return {
-      add: () => {}
-    };
-  }
-  /**
-   * Get a keyed histogram.
-   *
-   * @param  {String} histogramId
-   *         Histogram in which the data is to be stored.
-   */
-
-
-  getKeyedHistogramById(histogramId) {
-    return {
-      add: () => {}
-    };
-  }
-  /**
-   * Log a value to a scalar.
-   *
-   * @param  {String} scalarId
-   *         Scalar in which the data is to be stored.
-   * @param  value
-   *         Value to store.
-   */
-
-
-  scalarSet(scalarId, value) {}
-  /**
-   * Log a value to a count scalar.
-   *
-   * @param  {String} scalarId
-   *         Scalar in which the data is to be stored.
-   * @param  value
-   *         Value to store.
-   */
-
-
-  scalarAdd(scalarId, value) {}
-  /**
-   * Log a value to a keyed count scalar.
-   *
-   * @param  {String} scalarId
-   *         Scalar in which the data is to be stored.
-   * @param  {String} key
-   *         The key within the  scalar.
-   * @param  value
-   *         Value to store.
-   */
-
-
-  keyedScalarAdd(scalarId, key, value) {}
-  /**
-   * Event telemetry is disabled by default. Use this method to enable it for
-   * a particular category.
-   *
-   * @param {Boolean} enabled
-   *        Enabled: true or false.
-   */
-
-
-  setEventRecordingEnabled(enabled) {
-    return enabled;
-  }
-  /**
-   * Telemetry events often need to make use of a number of properties from
-   * completely different codepaths. To make this possible we create a
-   * "pending event" along with an array of property names that we need to wait
-   * for before sending the event.
-   *
-   * As each property is received via addEventProperty() we check if all
-   * properties have been received. Once they have all been received we send the
-   * telemetry event.
-   *
-   * @param {Object} obj
-   *        The telemetry event or ping is associated with this object, meaning
-   *        that multiple events or pings for the same histogram may be run
-   *        concurrently, as long as they are associated with different objects.
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {Array} expected
-   *        An array of the properties needed before sending the telemetry
-   *        event e.g.
-   *        [
-   *          "host",
-   *          "width"
-   *        ]
-   */
-
-
-  preparePendingEvent(obj, method, object, value, expected = []) {}
-  /**
-   * Adds an expected property for either a current or future pending event.
-   * This means that if preparePendingEvent() is called before or after sending
-   * the event properties they will automatically added to the event.
-   *
-   * @param {Object} obj
-   *        The telemetry event or ping is associated with this object, meaning
-   *        that multiple events or pings for the same histogram may be run
-   *        concurrently, as long as they are associated with different objects.
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {String} pendingPropName
-   *        The pending property name
-   * @param {String} pendingPropValue
-   *        The pending property value
-   */
-
-
-  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {}
-  /**
-   * Adds expected properties for either a current or future pending event.
-   * This means that if preparePendingEvent() is called before or after sending
-   * the event properties they will automatically added to the event.
-   *
-   * @param {Object} obj
-   *        The telemetry event or ping is associated with this object, meaning
-   *        that multiple events or pings for the same histogram may be run
-   *        concurrently, as long as they are associated with different objects.
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {String} pendingObject
-   *        An object containing key, value pairs that should be added to the
-   *        event as properties.
-   */
-
-
-  addEventProperties(obj, method, object, value, pendingObject) {}
-  /**
-   * A private method that is not to be used externally. This method is used to
-   * prepare a pending telemetry event for sending and then send it via
-   * recordEvent().
-   *
-   * @param {Object} obj
-   *        The telemetry event or ping is associated with this object, meaning
-   *        that multiple events or pings for the same histogram may be run
-   *        concurrently, as long as they are associated with different objects.
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   */
-
-
-  _sendPendingEvent(obj, method, object, value) {}
-  /**
-   * Send a telemetry event.
-   *
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {Object} extra
-   *        The telemetry event extra object containing the properties that will
-   *        be sent with the event e.g.
-   *        {
-   *          host: "bottom",
-   *          width: "1024"
-   *        }
-   */
-
-
-  recordEvent(method, object, value, extra) {}
-  /**
-   * Sends telemetry pings to indicate that a tool has been opened.
-   *
-   * @param {String} id
-   *        The ID of the tool opened.
-   * @param {String} sessionId
-   *        Toolbox session id used when we need to ensure a tool really has a
-   *        timer before calculating a delta.
-   * @param {Object} obj
-   *        The telemetry event or ping is associated with this object, meaning
-   *        that multiple events or pings for the same histogram may be run
-   *        concurrently, as long as they are associated with different objects.
-   */
-
-
-  toolOpened(id, sessionId, obj) {}
-  /**
-   * Sends telemetry pings to indicate that a tool has been closed.
-   *
-   * @param {String} id
-   *        The ID of the tool opened.
-   */
-
-
-  toolClosed(id, sessionId, obj) {}
-
-}
-
-module.exports = Telemetry;
-
-/***/ }),
-
-/***/ 430:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// This file is a chrome-API-free version of the module
-// devtools/client/shared/unicode-url.js in the mozilla-central repository, so
-// that it can be used in Chrome-API-free applications, such as the Launchpad.
-// But because of this, it cannot take advantage of utilizing chrome APIs and
-// should implement the similar functionalities on its own.
-//
-// Please keep in mind that if the feature in this file has changed, don't
-// forget to also change that accordingly in
-// devtools/client/shared/unicode-url.js in the mozilla-central repository.
-
-
-const punycode = __webpack_require__(62);
-/**
- * Gets a readble Unicode hostname from a hostname.
- *
- * If the `hostname` is a readable ASCII hostname, such as example.org, then
- * this function will simply return the original `hostname`.
- *
- * If the `hostname` is a Punycode hostname representing a Unicode domain name,
- * such as xn--g6w.xn--8pv, then this function will return the readable Unicode
- * domain name by decoding the Punycode hostname.
- *
- * @param {string}  hostname
- *                  the hostname from which the Unicode hostname will be
- *                  parsed, such as example.org, xn--g6w.xn--8pv.
- * @return {string} The Unicode hostname. It may be the same as the `hostname`
- *                  passed to this function if the `hostname` itself is
- *                  a readable ASCII hostname or a Unicode hostname.
- */
-
-
-function getUnicodeHostname(hostname) {
-  try {
-    return punycode.toUnicode(hostname);
-  } catch (err) {}
-
-  return hostname;
-}
-/**
- * Gets a readble Unicode URL pathname from a URL pathname.
- *
- * If the `urlPath` is a readable ASCII URL pathname, such as /a/b/c.js, then
- * this function will simply return the original `urlPath`.
- *
- * If the `urlPath` is a URI-encoded pathname, such as %E8%A9%A6/%E6%B8%AC.js,
- * then this function will return the readable Unicode pathname.
- *
- * If the `urlPath` is a malformed URL pathname, then this function will simply
- * return the original `urlPath`.
- *
- * @param {string}  urlPath
- *                  the URL path from which the Unicode URL path will be parsed,
- *                  such as /a/b/c.js, %E8%A9%A6/%E6%B8%AC.js.
- * @return {string} The Unicode URL Path. It may be the same as the `urlPath`
- *                  passed to this function if the `urlPath` itself is a readable
- *                  ASCII url or a Unicode url.
- */
-
-
-function getUnicodeUrlPath(urlPath) {
-  try {
-    return decodeURIComponent(urlPath);
-  } catch (err) {}
-
-  return urlPath;
-}
-/**
- * Gets a readable Unicode URL from a URL.
- *
- * If the `url` is a readable ASCII URL, such as http://example.org/a/b/c.js,
- * then this function will simply return the original `url`.
- *
- * If the `url` includes either an unreadable Punycode domain name or an
- * unreadable URI-encoded pathname, such as
- * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
- * the readable URL by decoding all its unreadable URL components to Unicode
- * characters.
- *
- * If the `url` is a malformed URL, then this function will return the original
- * `url`.
- *
- * If the `url` is a data: URI, then this function will return the original
- * `url`.
- *
- * @param {string}  url
- *                  the full URL, or a data: URI. from which the readable URL
- *                  will be parsed, such as, http://example.org/a/b/c.js,
- *                  http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js
- * @return {string} The readable URL. It may be the same as the `url` passed to
- *                  this function if the `url` itself is readable.
- */
-
-
-function getUnicodeUrl(url) {
-  try {
-    const {
-      protocol,
-      hostname
-    } = new URL(url);
-
-    if (protocol === "data:") {
-      // Never convert a data: URI.
-      return url;
-    }
-
-    const readableHostname = getUnicodeHostname(hostname);
-    url = decodeURIComponent(url);
-    return url.replace(hostname, readableHostname);
-  } catch (err) {}
-
-  return url;
-}
-
-module.exports = {
-  getUnicodeHostname,
-  getUnicodeUrlPath,
-  getUnicodeUrl
 };
 
 /***/ }),
@@ -6212,7 +4632,1715 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_491__;
 
 /***/ }),
 
-/***/ 501:
+/***/ 537:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+var EventEmitter = function EventEmitter() {};
+
+module.exports = EventEmitter;
+
+const promise = __webpack_require__(540);
+/**
+ * Decorate an object with event emitter functionality.
+ *
+ * @param Object aObjectToDecorate
+ *        Bind all public methods of EventEmitter to
+ *        the aObjectToDecorate object.
+ */
+
+
+EventEmitter.decorate = function EventEmitter_decorate(aObjectToDecorate) {
+  let emitter = new EventEmitter();
+  aObjectToDecorate.on = emitter.on.bind(emitter);
+  aObjectToDecorate.off = emitter.off.bind(emitter);
+  aObjectToDecorate.once = emitter.once.bind(emitter);
+  aObjectToDecorate.emit = emitter.emit.bind(emitter);
+};
+
+EventEmitter.prototype = {
+  /**
+   * Connect a listener.
+   *
+   * @param string aEvent
+   *        The event name to which we're connecting.
+   * @param function aListener
+   *        Called when the event is fired.
+   */
+  on: function EventEmitter_on(aEvent, aListener) {
+    if (!this._eventEmitterListeners) this._eventEmitterListeners = new Map();
+
+    if (!this._eventEmitterListeners.has(aEvent)) {
+      this._eventEmitterListeners.set(aEvent, []);
+    }
+
+    this._eventEmitterListeners.get(aEvent).push(aListener);
+  },
+
+  /**
+   * Listen for the next time an event is fired.
+   *
+   * @param string aEvent
+   *        The event name to which we're connecting.
+   * @param function aListener
+   *        (Optional) Called when the event is fired. Will be called at most
+   *        one time.
+   * @return promise
+   *        A promise which is resolved when the event next happens. The
+   *        resolution value of the promise is the first event argument. If
+   *        you need access to second or subsequent event arguments (it's rare
+   *        that this is needed) then use aListener
+   */
+  once: function EventEmitter_once(aEvent, aListener) {
+    let deferred = promise.defer();
+
+    let handler = (aEvent, aFirstArg, ...aRest) => {
+      this.off(aEvent, handler);
+
+      if (aListener) {
+        aListener.apply(null, [aEvent, aFirstArg, ...aRest]);
+      }
+
+      deferred.resolve(aFirstArg);
+    };
+
+    handler._originalListener = aListener;
+    this.on(aEvent, handler);
+    return deferred.promise;
+  },
+
+  /**
+   * Remove a previously-registered event listener.  Works for events
+   * registered with either on or once.
+   *
+   * @param string aEvent
+   *        The event name whose listener we're disconnecting.
+   * @param function aListener
+   *        The listener to remove.
+   */
+  off: function EventEmitter_off(aEvent, aListener) {
+    if (!this._eventEmitterListeners) return;
+
+    let listeners = this._eventEmitterListeners.get(aEvent);
+
+    if (listeners) {
+      this._eventEmitterListeners.set(aEvent, listeners.filter(l => {
+        return l !== aListener && l._originalListener !== aListener;
+      }));
+    }
+  },
+
+  /**
+   * Emit an event.  All arguments to this method will
+   * be sent to listener functions.
+   */
+  emit: function EventEmitter_emit(aEvent) {
+    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent)) {
+      return;
+    }
+
+    let originalListeners = this._eventEmitterListeners.get(aEvent);
+
+    for (let listener of this._eventEmitterListeners.get(aEvent)) {
+      // If the object was destroyed during event emission, stop
+      // emitting.
+      if (!this._eventEmitterListeners) {
+        break;
+      } // If listeners were removed during emission, make sure the
+      // event handler we're going to fire wasn't removed.
+
+
+      if (originalListeners === this._eventEmitterListeners.get(aEvent) || this._eventEmitterListeners.get(aEvent).some(l => l === listener)) {
+        try {
+          listener.apply(null, arguments);
+        } catch (ex) {
+          // Prevent a bad listener from interfering with the others.
+          let msg = ex + ": " + ex.stack; //console.error(msg);
+
+          console.log(msg);
+        }
+      }
+    }
+  }
+};
+
+/***/ }),
+
+/***/ 538:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  PrefsHelper
+} = __webpack_require__(539);
+
+const KeyShortcuts = __webpack_require__(541);
+
+const {
+  ZoomKeys
+} = __webpack_require__(542);
+
+const EventEmitter = __webpack_require__(537);
+
+const asyncStorage = __webpack_require__(543);
+
+const asyncStoreHelper = __webpack_require__(549);
+
+const SourceUtils = __webpack_require__(544);
+
+const Telemetry = __webpack_require__(545);
+
+const {
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+} = __webpack_require__(546);
+
+const PluralForm = __webpack_require__(547);
+
+const saveAs = __webpack_require__(548);
+
+module.exports = {
+  KeyShortcuts,
+  PrefsHelper,
+  ZoomKeys,
+  asyncStorage,
+  asyncStoreHelper,
+  EventEmitter,
+  SourceUtils,
+  Telemetry,
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl,
+  PluralForm,
+  saveAs
+};
+
+/***/ }),
+
+/***/ 539:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Services = __webpack_require__(37);
+const EventEmitter = __webpack_require__(537);
+
+/**
+ * Shortcuts for lazily accessing and setting various preferences.
+ * Usage:
+ *   let prefs = new Prefs("root.path.to.branch", {
+ *     myIntPref: ["Int", "leaf.path.to.my-int-pref"],
+ *     myCharPref: ["Char", "leaf.path.to.my-char-pref"],
+ *     myJsonPref: ["Json", "leaf.path.to.my-json-pref"],
+ *     myFloatPref: ["Float", "leaf.path.to.my-float-pref"]
+ *     ...
+ *   });
+ *
+ * Get/set:
+ *   prefs.myCharPref = "foo";
+ *   let aux = prefs.myCharPref;
+ *
+ * Observe:
+ *   prefs.registerObserver();
+ *   prefs.on("pref-changed", (prefName, prefValue) => {
+ *     ...
+ *   });
+ *
+ * @param string prefsRoot
+ *        The root path to the required preferences branch.
+ * @param object prefsBlueprint
+ *        An object containing { accessorName: [prefType, prefName, prefDefault] } keys.
+ */
+function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
+  EventEmitter.decorate(this);
+
+  let cache = new Map();
+
+  for (let accessorName in prefsBlueprint) {
+    let [prefType, prefName, prefDefault] = prefsBlueprint[accessorName];
+    map(this, cache, accessorName, prefType, prefsRoot, prefName, prefDefault);
+  }
+
+  let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
+  this.registerObserver = () => observer.register();
+  this.unregisterObserver = () => observer.unregister();
+}
+
+/**
+ * Helper method for getting a pref value.
+ *
+ * @param Map cache
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @return any
+ */
+function get(cache, prefType, prefsRoot, prefName) {
+  let cachedPref = cache.get(prefName);
+  if (cachedPref !== undefined) {
+    return cachedPref;
+  }
+  let value = Services.prefs["get" + prefType + "Pref"](
+    [prefsRoot, prefName].join(".")
+  );
+  cache.set(prefName, value);
+  return value;
+}
+
+/**
+ * Helper method for setting a pref value.
+ *
+ * @param Map cache
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @param any value
+ */
+function set(cache, prefType, prefsRoot, prefName, value) {
+  Services.prefs["set" + prefType + "Pref"](
+    [prefsRoot, prefName].join("."),
+    value
+  );
+  cache.set(prefName, value);
+}
+
+/**
+ * Maps a property name to a pref, defining lazy getters and setters.
+ * Supported types are "Bool", "Char", "Int", "Float" (sugar around "Char"
+ * type and casting), and "Json" (which is basically just sugar for "Char"
+ * using the standard JSON serializer).
+ *
+ * @param PrefsHelper self
+ * @param Map cache
+ * @param string accessorName
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @param string prefDefault
+ * @param array serializer [optional]
+ */
+function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault,
+             serializer = { in: e => e, out: e => e }) {
+  if (prefName in self) {
+    throw new Error(`Can't use ${prefName} because it overrides a property` +
+                    "on the instance.");
+  }
+  if (prefType == "Json") {
+    map(self, cache, accessorName, "String", prefsRoot, prefName, prefDefault, {
+      in: JSON.parse,
+      out: JSON.stringify
+    });
+    return;
+  }
+  if (prefType == "Float") {
+    map(self, cache, accessorName, "Char", prefsRoot, prefName, prefDefault, {
+      in: Number.parseFloat,
+      out: (n) => n + ""
+    });
+    return;
+  }
+
+  Object.defineProperty(self, accessorName, {
+    get: () => {
+      try {
+        return serializer.in(get(cache, prefType, prefsRoot, prefName));
+      } catch (e) {
+        if (typeof prefDefault !== 'undefined') {
+          return prefDefault;
+        }
+        throw e;
+      }
+    },
+    set: (e) => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
+  });
+}
+
+/**
+ * Finds the accessor for the provided pref, based on the blueprint object
+ * used in the constructor.
+ *
+ * @param PrefsHelper self
+ * @param object prefsBlueprint
+ * @return string
+ */
+function accessorNameForPref(somePrefName, prefsBlueprint) {
+  for (let accessorName in prefsBlueprint) {
+    let [, prefName] = prefsBlueprint[accessorName];
+    if (somePrefName == prefName) {
+      return accessorName;
+    }
+  }
+  return "";
+}
+
+/**
+ * Creates a pref observer for `self`.
+ *
+ * @param PrefsHelper self
+ * @param Map cache
+ * @param string prefsRoot
+ * @param object prefsBlueprint
+ * @return object
+ */
+function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
+  return {
+    register: function() {
+      this._branch = Services.prefs.getBranch(prefsRoot + ".");
+      this._branch.addObserver("", this);
+    },
+    unregister: function() {
+      this._branch.removeObserver("", this);
+    },
+    observe: function(subject, topic, prefName) {
+      // If this particular pref isn't handled by the blueprint object,
+      // even though it's in the specified branch, ignore it.
+      let accessorName = accessorNameForPref(prefName, prefsBlueprint);
+      if (!(accessorName in self)) {
+        return;
+      }
+      cache.delete(prefName);
+      self.emit("pref-changed", accessorName, self[accessorName]);
+    }
+  };
+}
+
+exports.PrefsHelper = PrefsHelper;
+
+
+/***/ }),
+
+/***/ 540:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * A sham for https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Promise.jsm
+ */
+
+/**
+ * Promise.jsm is mostly the Promise web API with a `defer` method. Just drop this in here,
+ * and use the native web API (although building with webpack/babel, it may replace this
+ * with it's own version if we want to target environments that do not have `Promise`.
+ */
+let p = typeof window != "undefined" ? window.Promise : Promise;
+
+p.defer = function defer() {
+  var resolve, reject;
+  var promise = new Promise(function () {
+    resolve = arguments[0];
+    reject = arguments[1];
+  });
+  return {
+    resolve: resolve,
+    reject: reject,
+    promise: promise
+  };
+};
+
+module.exports = p;
+
+/***/ }),
+
+/***/ 541:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  appinfo
+} = __webpack_require__(37);
+
+const EventEmitter = __webpack_require__(537);
+
+const isOSX = appinfo.OS === "Darwin"; // List of electron keys mapped to DOM API (DOM_VK_*) key code
+
+const ElectronKeysMapping = {
+  "F1": "DOM_VK_F1",
+  "F2": "DOM_VK_F2",
+  "F3": "DOM_VK_F3",
+  "F4": "DOM_VK_F4",
+  "F5": "DOM_VK_F5",
+  "F6": "DOM_VK_F6",
+  "F7": "DOM_VK_F7",
+  "F8": "DOM_VK_F8",
+  "F9": "DOM_VK_F9",
+  "F10": "DOM_VK_F10",
+  "F11": "DOM_VK_F11",
+  "F12": "DOM_VK_F12",
+  "F13": "DOM_VK_F13",
+  "F14": "DOM_VK_F14",
+  "F15": "DOM_VK_F15",
+  "F16": "DOM_VK_F16",
+  "F17": "DOM_VK_F17",
+  "F18": "DOM_VK_F18",
+  "F19": "DOM_VK_F19",
+  "F20": "DOM_VK_F20",
+  "F21": "DOM_VK_F21",
+  "F22": "DOM_VK_F22",
+  "F23": "DOM_VK_F23",
+  "F24": "DOM_VK_F24",
+  "Space": "DOM_VK_SPACE",
+  "Backspace": "DOM_VK_BACK_SPACE",
+  "Delete": "DOM_VK_DELETE",
+  "Insert": "DOM_VK_INSERT",
+  "Return": "DOM_VK_RETURN",
+  "Enter": "DOM_VK_RETURN",
+  "Up": "DOM_VK_UP",
+  "Down": "DOM_VK_DOWN",
+  "Left": "DOM_VK_LEFT",
+  "Right": "DOM_VK_RIGHT",
+  "Home": "DOM_VK_HOME",
+  "End": "DOM_VK_END",
+  "PageUp": "DOM_VK_PAGE_UP",
+  "PageDown": "DOM_VK_PAGE_DOWN",
+  "Escape": "DOM_VK_ESCAPE",
+  "Esc": "DOM_VK_ESCAPE",
+  "Tab": "DOM_VK_TAB",
+  "VolumeUp": "DOM_VK_VOLUME_UP",
+  "VolumeDown": "DOM_VK_VOLUME_DOWN",
+  "VolumeMute": "DOM_VK_VOLUME_MUTE",
+  "PrintScreen": "DOM_VK_PRINTSCREEN"
+};
+/**
+ * Helper to listen for keyboard events decribed in .properties file.
+ *
+ * let shortcuts = new KeyShortcuts({
+ *   window
+ * });
+ * shortcuts.on("Ctrl+F", event => {
+ *   // `event` is the KeyboardEvent which relates to the key shortcuts
+ * });
+ *
+ * @param DOMWindow window
+ *        The window object of the document to listen events from.
+ * @param DOMElement target
+ *        Optional DOM Element on which we should listen events from.
+ *        If omitted, we listen for all events fired on `window`.
+ */
+
+function KeyShortcuts({
+  window,
+  target
+}) {
+  this.window = window;
+  this.target = target || window;
+  this.keys = new Map();
+  this.eventEmitter = new EventEmitter();
+  this.target.addEventListener("keydown", this);
+}
+/*
+ * Parse an electron-like key string and return a normalized object which
+ * allow efficient match on DOM key event. The normalized object matches DOM
+ * API.
+ *
+ * @param DOMWindow window
+ *        Any DOM Window object, just to fetch its `KeyboardEvent` object
+ * @param String str
+ *        The shortcut string to parse, following this document:
+ *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
+ */
+
+
+KeyShortcuts.parseElectronKey = function (window, str) {
+  let modifiers = str.split("+");
+  let key = modifiers.pop();
+  let shortcut = {
+    ctrl: false,
+    meta: false,
+    alt: false,
+    shift: false,
+    // Set for character keys
+    key: undefined,
+    // Set for non-character keys
+    keyCode: undefined
+  };
+
+  for (let mod of modifiers) {
+    if (mod === "Alt") {
+      shortcut.alt = true;
+    } else if (["Command", "Cmd"].includes(mod)) {
+      shortcut.meta = true;
+    } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
+      if (isOSX) {
+        shortcut.meta = true;
+      } else {
+        shortcut.ctrl = true;
+      }
+    } else if (["Control", "Ctrl"].includes(mod)) {
+      shortcut.ctrl = true;
+    } else if (mod === "Shift") {
+      shortcut.shift = true;
+    } else {
+      console.error("Unsupported modifier:", mod, "from key:", str);
+      return null;
+    }
+  } // Plus is a special case. It's a character key and shouldn't be matched
+  // against a keycode as it is only accessible via Shift/Capslock
+
+
+  if (key === "Plus") {
+    key = "+";
+  }
+
+  if (typeof key === "string" && key.length === 1) {
+    // Match any single character
+    shortcut.key = key.toLowerCase();
+  } else if (key in ElectronKeysMapping) {
+    // Maps the others manually to DOM API DOM_VK_*
+    key = ElectronKeysMapping[key];
+    shortcut.keyCode = window.KeyboardEvent[key]; // Used only to stringify the shortcut
+
+    shortcut.keyCodeString = key;
+    shortcut.key = key;
+  } else {
+    console.error("Unsupported key:", key);
+    return null;
+  }
+
+  return shortcut;
+};
+
+KeyShortcuts.stringify = function (shortcut) {
+  let list = [];
+
+  if (shortcut.alt) {
+    list.push("Alt");
+  }
+
+  if (shortcut.ctrl) {
+    list.push("Ctrl");
+  }
+
+  if (shortcut.meta) {
+    list.push("Cmd");
+  }
+
+  if (shortcut.shift) {
+    list.push("Shift");
+  }
+
+  let key;
+
+  if (shortcut.key) {
+    key = shortcut.key.toUpperCase();
+  } else {
+    key = shortcut.keyCodeString;
+  }
+
+  list.push(key);
+  return list.join("+");
+};
+
+KeyShortcuts.prototype = {
+  destroy() {
+    this.target.removeEventListener("keydown", this);
+    this.keys.clear();
+  },
+
+  doesEventMatchShortcut(event, shortcut) {
+    if (shortcut.meta != event.metaKey) {
+      return false;
+    }
+
+    if (shortcut.ctrl != event.ctrlKey) {
+      return false;
+    }
+
+    if (shortcut.alt != event.altKey) {
+      return false;
+    } // Shift is a special modifier, it may implicitely be required if the
+    // expected key is a special character accessible via shift.
+
+
+    if (shortcut.shift != event.shiftKey && event.key && event.key.match(/[a-zA-Z]/)) {
+      return false;
+    }
+
+    if (shortcut.keyCode) {
+      return event.keyCode == shortcut.keyCode;
+    } else if (event.key in ElectronKeysMapping) {
+      return ElectronKeysMapping[event.key] === shortcut.key;
+    } // get the key from the keyCode if key is not provided.
+
+
+    let key = event.key || String.fromCharCode(event.keyCode); // For character keys, we match if the final character is the expected one.
+    // But for digits we also accept indirect match to please azerty keyboard,
+    // which requires Shift to be pressed to get digits.
+
+    return key.toLowerCase() == shortcut.key || shortcut.key.match(/^[0-9]$/) && event.keyCode == shortcut.key.charCodeAt(0);
+  },
+
+  handleEvent(event) {
+    for (let [key, shortcut] of this.keys) {
+      if (this.doesEventMatchShortcut(event, shortcut)) {
+        this.eventEmitter.emit(key, event);
+      }
+    }
+  },
+
+  on(key, listener) {
+    if (typeof listener !== "function") {
+      throw new Error("KeyShortcuts.on() expects a function as " + "second argument");
+    }
+
+    if (!this.keys.has(key)) {
+      let shortcut = KeyShortcuts.parseElectronKey(this.window, key); // The key string is wrong and we were unable to compute the key shortcut
+
+      if (!shortcut) {
+        return;
+      }
+
+      this.keys.set(key, shortcut);
+    }
+
+    this.eventEmitter.on(key, listener);
+  },
+
+  off(key, listener) {
+    this.eventEmitter.off(key, listener);
+  }
+
+};
+module.exports = KeyShortcuts;
+
+/***/ }),
+
+/***/ 542:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Empty shim for "devtools/client/shared/zoom-keys" module
+ *
+ * Based on nsIMarkupDocumentViewer.fullZoom API
+ * https://developer.mozilla.org/en-US/Firefox/Releases/3/Full_page_zoom
+ */
+
+exports.register = function (window) {};
+
+/***/ }),
+
+/***/ 543:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ *
+ * Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/shared/js/async_storage.js
+ * (converted to use Promises instead of callbacks).
+ *
+ * This file defines an asynchronous version of the localStorage API, backed by
+ * an IndexedDB database.  It creates a global asyncStorage object that has
+ * methods like the localStorage object.
+ *
+ * To store a value use setItem:
+ *
+ *   asyncStorage.setItem("key", "value");
+ *
+ * This returns a promise in case you want confirmation that the value has been stored.
+ *
+ *  asyncStorage.setItem("key", "newvalue").then(function() {
+ *    console.log("new value stored");
+ *  });
+ *
+ * To read a value, call getItem(), but note that you must wait for a promise
+ * resolution for the value to be retrieved.
+ *
+ *  asyncStorage.getItem("key").then(function(value) {
+ *    console.log("The value of key is:", value);
+ *  });
+ *
+ * Note that unlike localStorage, asyncStorage does not allow you to store and
+ * retrieve values by setting and querying properties directly. You cannot just
+ * write asyncStorage.key; you have to explicitly call setItem() or getItem().
+ *
+ * removeItem(), clear(), length(), and key() are like the same-named methods of
+ * localStorage, and all return a promise.
+ *
+ * The asynchronous nature of getItem() makes it tricky to retrieve multiple
+ * values. But unlike localStorage, asyncStorage does not require the values you
+ * store to be strings.  So if you need to save multiple values and want to
+ * retrieve them together, in a single asynchronous operation, just group the
+ * values into a single object. The properties of this object may not include
+ * DOM elements, but they may include things like Blobs and typed arrays.
+ *
+ */
+
+
+const DBNAME = "devtools-async-storage";
+const DBVERSION = 1;
+const STORENAME = "keyvaluepairs";
+var db = null;
+
+function withStore(type, onsuccess, onerror) {
+  if (db) {
+    const transaction = db.transaction(STORENAME, type);
+    const store = transaction.objectStore(STORENAME);
+    onsuccess(store);
+  } else {
+    const openreq = indexedDB.open(DBNAME, DBVERSION);
+
+    openreq.onerror = function withStoreOnError() {
+      onerror();
+    };
+
+    openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
+      // First time setup: create an empty object store
+      openreq.result.createObjectStore(STORENAME);
+    };
+
+    openreq.onsuccess = function withStoreOnSuccess() {
+      db = openreq.result;
+      const transaction = db.transaction(STORENAME, type);
+      const store = transaction.objectStore(STORENAME);
+      onsuccess(store);
+    };
+  }
+}
+
+function getItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        let value = req.result;
+
+        if (value === undefined) {
+          value = null;
+        }
+
+        resolve(value);
+      };
+
+      req = store.get(itemKey);
+
+      req.onerror = function getItemOnError() {
+        reject("Error in asyncStorage.getItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function setItem(itemKey, value) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.put(value, itemKey);
+
+      req.onerror = function setItemOnError() {
+        reject("Error in asyncStorage.setItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function removeItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.delete(itemKey);
+
+      req.onerror = function removeItemOnError() {
+        reject("Error in asyncStorage.removeItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function clear() {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.clear();
+
+      req.onerror = function clearOnError() {
+        reject("Error in asyncStorage.clear(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function length() {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        resolve(req.result);
+      };
+
+      req = store.count();
+
+      req.onerror = function lengthOnError() {
+        reject("Error in asyncStorage.length(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function key(n) {
+  return new Promise((resolve, reject) => {
+    if (n < 0) {
+      resolve(null);
+      return;
+    }
+
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        const cursor = req.result;
+        resolve(cursor ? cursor.key : null);
+      };
+
+      let advanced = false;
+      req = store.openCursor();
+
+      req.onsuccess = function keyOnSuccess() {
+        const cursor = req.result;
+
+        if (!cursor) {
+          // this means there weren"t enough keys
+          return;
+        }
+
+        if (n === 0 || advanced) {
+          // Either 1) we have the first key, return it if that's what they
+          // wanted, or 2) we"ve got the nth key.
+          return;
+        } // Otherwise, ask the cursor to skip ahead n records
+
+
+        advanced = true;
+        cursor.advance(n);
+      };
+
+      req.onerror = function keyOnError() {
+        reject("Error in asyncStorage.key(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+exports.getItem = getItem;
+exports.setItem = setItem;
+exports.removeItem = removeItem;
+exports.clear = clear;
+exports.length = length;
+exports.key = key;
+
+/***/ }),
+
+/***/ 544:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// TODO : Localize this (was l10n.getStr("frame.unknownSource"))
+const UNKNOWN_SOURCE_STRING = "(unknown)"; // Character codes used in various parsing helper functions.
+
+const CHAR_CODE_A = "a".charCodeAt(0);
+const CHAR_CODE_B = "b".charCodeAt(0);
+const CHAR_CODE_C = "c".charCodeAt(0);
+const CHAR_CODE_D = "d".charCodeAt(0);
+const CHAR_CODE_E = "e".charCodeAt(0);
+const CHAR_CODE_F = "f".charCodeAt(0);
+const CHAR_CODE_H = "h".charCodeAt(0);
+const CHAR_CODE_I = "i".charCodeAt(0);
+const CHAR_CODE_J = "j".charCodeAt(0);
+const CHAR_CODE_L = "l".charCodeAt(0);
+const CHAR_CODE_M = "m".charCodeAt(0);
+const CHAR_CODE_N = "n".charCodeAt(0);
+const CHAR_CODE_O = "o".charCodeAt(0);
+const CHAR_CODE_P = "p".charCodeAt(0);
+const CHAR_CODE_R = "r".charCodeAt(0);
+const CHAR_CODE_S = "s".charCodeAt(0);
+const CHAR_CODE_T = "t".charCodeAt(0);
+const CHAR_CODE_U = "u".charCodeAt(0);
+const CHAR_CODE_W = "w".charCodeAt(0);
+const CHAR_CODE_COLON = ":".charCodeAt(0);
+const CHAR_CODE_DASH = "-".charCodeAt(0);
+const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
+const CHAR_CODE_SLASH = "/".charCodeAt(0);
+const CHAR_CODE_CAP_S = "S".charCodeAt(0); // The cache used in the `parseURL` function.
+
+const gURLStore = new Map(); // The cache used in the `getSourceNames` function.
+
+const gSourceNamesStore = new Map();
+/**
+* Takes a string and returns an object containing all the properties
+* available on an URL instance, with additional properties (fileName),
+* Leverages caching.
+*
+* @param {String} location
+* @return {Object?} An object containing most properties available
+*                   in https://developer.mozilla.org/en-US/docs/Web/API/URL
+*/
+
+function parseURL(location) {
+  let url = gURLStore.get(location);
+
+  if (url !== void 0) {
+    return url;
+  }
+
+  try {
+    url = new URL(location); // The callers were generally written to expect a URL from
+    // sdk/url, which is subtly different.  So, work around some
+    // important differences here.
+
+    url = {
+      href: url.href,
+      protocol: url.protocol,
+      host: url.host,
+      hostname: url.hostname,
+      port: url.port || null,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      username: url.username,
+      password: url.password,
+      origin: url.origin
+    }; // Definitions:
+    // Example: https://foo.com:8888/file.js
+    // `hostname`: "foo.com"
+    // `host`: "foo.com:8888"
+
+    let isChrome = isChromeScheme(location);
+    url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
+
+    if (isChrome) {
+      url.hostname = null;
+      url.host = null;
+    }
+
+    gURLStore.set(location, url);
+    return url;
+  } catch (e) {
+    gURLStore.set(location, null);
+    return null;
+  }
+}
+/**
+* Parse a source into a short and long name as well as a host name.
+*
+* @param {String} source
+*        The source to parse. Can be a URI or names like "(eval)" or
+*        "self-hosted".
+* @return {Object}
+*         An object with the following properties:
+*           - {String} short: A short name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "test.js"
+*           - {String} long: The full, long name for the source, with
+              hash/query stripped.
+*             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
+*           - {String?} host: If available, the host name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "page.com"
+*/
+
+
+function getSourceNames(source) {
+  let data = gSourceNamesStore.get(source);
+
+  if (data) {
+    return data;
+  }
+
+  let short, long, host;
+  const sourceStr = source ? String(source) : ""; // If `data:...` uri
+
+  if (isDataScheme(sourceStr)) {
+    let commaIndex = sourceStr.indexOf(",");
+
+    if (commaIndex > -1) {
+      // The `short` name for a data URI becomes `data:` followed by the actual
+      // encoded content, omitting the MIME type, and charset.
+      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
+      let result = {
+        short,
+        long: sourceStr
+      };
+      gSourceNamesStore.set(source, result);
+      return result;
+    }
+  }
+
+  const parsedUrl = parseURL(sourceStr);
+
+  if (!parsedUrl) {
+    // Malformed URI.
+    long = sourceStr;
+    short = sourceStr.slice(0, 100);
+  } else {
+    host = parsedUrl.host;
+    long = parsedUrl.href;
+
+    if (parsedUrl.hash) {
+      long = long.replace(parsedUrl.hash, "");
+    }
+
+    if (parsedUrl.search) {
+      long = long.replace(parsedUrl.search, "");
+    }
+
+    short = parsedUrl.fileName; // If `short` is just a slash, and we actually have a path,
+    // strip the slash and parse again to get a more useful short name.
+    // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
+
+    if (short === "/" && parsedUrl.pathname !== "/") {
+      short = parseURL(long.replace(/\/$/, "")).fileName;
+    }
+  }
+
+  if (!short) {
+    if (!long) {
+      long = UNKNOWN_SOURCE_STRING;
+    }
+
+    short = long.slice(0, 100);
+  }
+
+  let result = {
+    short,
+    long,
+    host
+  };
+  gSourceNamesStore.set(source, result);
+  return result;
+} // For the functions below, we assume that we will never access the location
+// argument out of bounds, which is indeed the vast majority of cases.
+//
+// They are written this way because they are hot. Each frame is checked for
+// being content or chrome when processing the profile.
+
+
+function isColonSlashSlash(location, i = 0) {
+  return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
+}
+
+function isDataScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_COLON;
+}
+
+function isContentScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "http://" or "https://"
+    case CHAR_CODE_H:
+      if (location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_P) {
+        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
+          ++i;
+        }
+
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+    // "file://"
+
+    case CHAR_CODE_F:
+      if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+    // "app://"
+
+    case CHAR_CODE_A:
+      if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+    // "blob:"
+
+    case CHAR_CODE_B:
+      if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
+        return isContentScheme(location, i + 1);
+      }
+
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isChromeScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "chrome://"
+    case CHAR_CODE_C:
+      if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+    // "resource://"
+
+    case CHAR_CODE_R:
+      if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+    // "jar:file://"
+
+    case CHAR_CODE_J:
+      if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isWASM(location, i = 0) {
+  return (// "wasm-function["
+    location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
+  );
+}
+/**
+* A utility method to get the file name from a sourcemapped location
+* The sourcemap location can be in any form. This method returns a
+* formatted file name for different cases like Windows or OSX.
+* @param source
+* @returns String
+*/
+
+
+function getSourceMappedFile(source) {
+  // If sourcemapped source is a OSX path, return
+  // the characters after last "/".
+  // If sourcemapped source is a Windowss path, return
+  // the characters after last "\\".
+  if (source.lastIndexOf("/") >= 0) {
+    source = source.slice(source.lastIndexOf("/") + 1);
+  } else if (source.lastIndexOf("\\") >= 0) {
+    source = source.slice(source.lastIndexOf("\\") + 1);
+  }
+
+  return source;
+}
+
+module.exports = {
+  parseURL,
+  getSourceNames,
+  isChromeScheme,
+  isContentScheme,
+  isWASM,
+  isDataScheme,
+  getSourceMappedFile
+};
+
+/***/ }),
+
+/***/ 545:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * This is a stub of the DevTools telemetry module and will be replaced by the
+ * full version of the file by Webpack for running inside Firefox.
+ */
+class Telemetry {
+  /**
+   * Time since the system wide epoch. This is not a monotonic timer but
+   * can be used across process boundaries.
+   */
+  get msSystemNow() {
+    return 0;
+  }
+  /**
+   * Starts a timer associated with a telemetry histogram. The timer can be
+   * directly associated with a histogram, or with a pair of a histogram and
+   * an object.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {Object} obj
+   *        Optional parameter. If specified, the timer is associated with this
+   *        object, meaning that multiple timers for the same histogram may be
+   *        run concurrently, as long as they are associated with different
+   *        objects.
+   *
+   * @returns {Boolean}
+   *          True if the timer was successfully started, false otherwise. If a
+   *          timer already exists, it can't be started again, and the existing
+   *          one will be cleared in order to avoid measurements errors.
+   */
+
+
+  start(histogramId, obj) {
+    return true;
+  }
+  /**
+   * Starts a timer associated with a keyed telemetry histogram. The timer can
+   * be directly associated with a histogram and its key. Similarly to
+   * TelemetryStopwatch.start the histogram and its key can be associated
+   * with an object. Each key may have multiple associated objects and each
+   * object can be associated with multiple keys.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {String} key
+   *        A string which must be a valid histgram key.
+   * @param {Object} obj
+   *        Optional parameter. If specified, the timer is associated with this
+   *        object, meaning that multiple timers for the same histogram may be
+   *        run concurrently,as long as they are associated with different
+   *        objects.
+   *
+   * @returns {Boolean}
+   *          True if the timer was successfully started, false otherwise. If a
+   *          timer already exists, it can't be started again, and the existing
+   *          one will be cleared in order to avoid measurements errors.
+   */
+
+
+  startKeyed(histogramId, key, obj) {
+    return true;
+  }
+  /**
+   * Stops the timer associated with the given histogram (and object),
+   * calculates the time delta between start and finish, and adds the value
+   * to the histogram.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {Object} obj
+   *        Optional parameter which associates the histogram timer with the
+   *        given object.
+   * @param {Boolean} canceledOkay
+   *        Optional parameter which will suppress any warnings that normally
+   *        fire when a stopwatch is finished after being cancelled.
+   *        Defaults to false.
+   *
+   * @returns {Boolean}
+   *          True if the timer was succesfully stopped and the data was added
+   *          to the histogram, False otherwise.
+   */
+
+
+  finish(histogramId, obj, canceledOkay) {
+    return true;
+  }
+  /**
+   * Stops the timer associated with the given keyed histogram (and object),
+   * calculates the time delta between start and finish, and adds the value
+   * to the keyed histogram.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {String} key
+   *        A string which must be a valid histogram key.
+   * @param {Object} obj
+   *        Optional parameter which associates the histogram timer with the
+   *        given object.
+   * @param {Boolean} canceledOkay
+   *        Optional parameter which will suppress any warnings that normally
+   *        fire when a stopwatch is finished after being cancelled.
+   *        Defaults to false.
+   *
+   * @returns {Boolean}
+   *          True if the timer was succesfully stopped and the data was added
+   *          to the histogram, False otherwise.
+   */
+
+
+  finishKeyed(histogramId, key, obj, cancelledOkay) {
+    return true;
+  }
+  /**
+   * Log a value to a histogram.
+   *
+   * @param  {String} histogramId
+   *         Histogram in which the data is to be stored.
+   */
+
+
+  getHistogramById(histogramId) {
+    return {
+      add: () => {}
+    };
+  }
+  /**
+   * Get a keyed histogram.
+   *
+   * @param  {String} histogramId
+   *         Histogram in which the data is to be stored.
+   */
+
+
+  getKeyedHistogramById(histogramId) {
+    return {
+      add: () => {}
+    };
+  }
+  /**
+   * Log a value to a scalar.
+   *
+   * @param  {String} scalarId
+   *         Scalar in which the data is to be stored.
+   * @param  value
+   *         Value to store.
+   */
+
+
+  scalarSet(scalarId, value) {}
+  /**
+   * Log a value to a count scalar.
+   *
+   * @param  {String} scalarId
+   *         Scalar in which the data is to be stored.
+   * @param  value
+   *         Value to store.
+   */
+
+
+  scalarAdd(scalarId, value) {}
+  /**
+   * Log a value to a keyed count scalar.
+   *
+   * @param  {String} scalarId
+   *         Scalar in which the data is to be stored.
+   * @param  {String} key
+   *         The key within the  scalar.
+   * @param  value
+   *         Value to store.
+   */
+
+
+  keyedScalarAdd(scalarId, key, value) {}
+  /**
+   * Event telemetry is disabled by default. Use this method to enable it for
+   * a particular category.
+   *
+   * @param {Boolean} enabled
+   *        Enabled: true or false.
+   */
+
+
+  setEventRecordingEnabled(enabled) {
+    return enabled;
+  }
+  /**
+   * Telemetry events often need to make use of a number of properties from
+   * completely different codepaths. To make this possible we create a
+   * "pending event" along with an array of property names that we need to wait
+   * for before sending the event.
+   *
+   * As each property is received via addEventProperty() we check if all
+   * properties have been received. Once they have all been received we send the
+   * telemetry event.
+   *
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   * @param {Array} expected
+   *        An array of the properties needed before sending the telemetry
+   *        event e.g.
+   *        [
+   *          "host",
+   *          "width"
+   *        ]
+   */
+
+
+  preparePendingEvent(obj, method, object, value, expected = []) {}
+  /**
+   * Adds an expected property for either a current or future pending event.
+   * This means that if preparePendingEvent() is called before or after sending
+   * the event properties they will automatically added to the event.
+   *
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   * @param {String} pendingPropName
+   *        The pending property name
+   * @param {String} pendingPropValue
+   *        The pending property value
+   */
+
+
+  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {}
+  /**
+   * Adds expected properties for either a current or future pending event.
+   * This means that if preparePendingEvent() is called before or after sending
+   * the event properties they will automatically added to the event.
+   *
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   * @param {String} pendingObject
+   *        An object containing key, value pairs that should be added to the
+   *        event as properties.
+   */
+
+
+  addEventProperties(obj, method, object, value, pendingObject) {}
+  /**
+   * A private method that is not to be used externally. This method is used to
+   * prepare a pending telemetry event for sending and then send it via
+   * recordEvent().
+   *
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   */
+
+
+  _sendPendingEvent(obj, method, object, value) {}
+  /**
+   * Send a telemetry event.
+   *
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   * @param {Object} extra
+   *        The telemetry event extra object containing the properties that will
+   *        be sent with the event e.g.
+   *        {
+   *          host: "bottom",
+   *          width: "1024"
+   *        }
+   */
+
+
+  recordEvent(method, object, value, extra) {}
+  /**
+   * Sends telemetry pings to indicate that a tool has been opened.
+   *
+   * @param {String} id
+   *        The ID of the tool opened.
+   * @param {String} sessionId
+   *        Toolbox session id used when we need to ensure a tool really has a
+   *        timer before calculating a delta.
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
+   */
+
+
+  toolOpened(id, sessionId, obj) {}
+  /**
+   * Sends telemetry pings to indicate that a tool has been closed.
+   *
+   * @param {String} id
+   *        The ID of the tool opened.
+   */
+
+
+  toolClosed(id, sessionId, obj) {}
+
+}
+
+module.exports = Telemetry;
+
+/***/ }),
+
+/***/ 546:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This file is a chrome-API-free version of the module
+// devtools/client/shared/unicode-url.js in the mozilla-central repository, so
+// that it can be used in Chrome-API-free applications, such as the Launchpad.
+// But because of this, it cannot take advantage of utilizing chrome APIs and
+// should implement the similar functionalities on its own.
+//
+// Please keep in mind that if the feature in this file has changed, don't
+// forget to also change that accordingly in
+// devtools/client/shared/unicode-url.js in the mozilla-central repository.
+
+
+const punycode = __webpack_require__(62);
+/**
+ * Gets a readble Unicode hostname from a hostname.
+ *
+ * If the `hostname` is a readable ASCII hostname, such as example.org, then
+ * this function will simply return the original `hostname`.
+ *
+ * If the `hostname` is a Punycode hostname representing a Unicode domain name,
+ * such as xn--g6w.xn--8pv, then this function will return the readable Unicode
+ * domain name by decoding the Punycode hostname.
+ *
+ * @param {string}  hostname
+ *                  the hostname from which the Unicode hostname will be
+ *                  parsed, such as example.org, xn--g6w.xn--8pv.
+ * @return {string} The Unicode hostname. It may be the same as the `hostname`
+ *                  passed to this function if the `hostname` itself is
+ *                  a readable ASCII hostname or a Unicode hostname.
+ */
+
+
+function getUnicodeHostname(hostname) {
+  try {
+    return punycode.toUnicode(hostname);
+  } catch (err) {}
+
+  return hostname;
+}
+/**
+ * Gets a readble Unicode URL pathname from a URL pathname.
+ *
+ * If the `urlPath` is a readable ASCII URL pathname, such as /a/b/c.js, then
+ * this function will simply return the original `urlPath`.
+ *
+ * If the `urlPath` is a URI-encoded pathname, such as %E8%A9%A6/%E6%B8%AC.js,
+ * then this function will return the readable Unicode pathname.
+ *
+ * If the `urlPath` is a malformed URL pathname, then this function will simply
+ * return the original `urlPath`.
+ *
+ * @param {string}  urlPath
+ *                  the URL path from which the Unicode URL path will be parsed,
+ *                  such as /a/b/c.js, %E8%A9%A6/%E6%B8%AC.js.
+ * @return {string} The Unicode URL Path. It may be the same as the `urlPath`
+ *                  passed to this function if the `urlPath` itself is a readable
+ *                  ASCII url or a Unicode url.
+ */
+
+
+function getUnicodeUrlPath(urlPath) {
+  try {
+    return decodeURIComponent(urlPath);
+  } catch (err) {}
+
+  return urlPath;
+}
+/**
+ * Gets a readable Unicode URL from a URL.
+ *
+ * If the `url` is a readable ASCII URL, such as http://example.org/a/b/c.js,
+ * then this function will simply return the original `url`.
+ *
+ * If the `url` includes either an unreadable Punycode domain name or an
+ * unreadable URI-encoded pathname, such as
+ * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
+ * the readable URL by decoding all its unreadable URL components to Unicode
+ * characters.
+ *
+ * If the `url` is a malformed URL, then this function will return the original
+ * `url`.
+ *
+ * If the `url` is a data: URI, then this function will return the original
+ * `url`.
+ *
+ * @param {string}  url
+ *                  the full URL, or a data: URI. from which the readable URL
+ *                  will be parsed, such as, http://example.org/a/b/c.js,
+ *                  http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js
+ * @return {string} The readable URL. It may be the same as the `url` passed to
+ *                  this function if the `url` itself is readable.
+ */
+
+
+function getUnicodeUrl(url) {
+  try {
+    const {
+      protocol,
+      hostname
+    } = new URL(url);
+
+    if (protocol === "data:") {
+      // Never convert a data: URI.
+      return url;
+    }
+
+    const readableHostname = getUnicodeHostname(hostname);
+    url = decodeURIComponent(url);
+    return url.replace(hostname, readableHostname);
+  } catch (err) {}
+
+  return url;
+}
+
+module.exports = {
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+};
+
+/***/ }),
+
+/***/ 547:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -6344,7 +6472,17 @@ module.exports = PluralForm;
 
 /***/ }),
 
-/***/ 516:
+/***/ 548:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+module.exports = () => {};
+
+/***/ }),
+
+/***/ 549:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6353,7 +6491,7 @@ module.exports = PluralForm;
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 
-const asyncStorage = __webpack_require__(427);
+const asyncStorage = __webpack_require__(543);
 /*
  * asyncStoreHelper wraps asyncStorage so that it is easy to define project
  * specific properties. It is similar to PrefsHelper.
@@ -6401,13 +6539,6 @@ function asyncStoreHelper(root, mappings) {
 }
 
 module.exports = asyncStoreHelper;
-
-/***/ }),
-
-/***/ 520:
-/***/ (function(module, exports) {
-
-module.exports = () => {};
 
 /***/ }),
 
@@ -6955,142 +7086,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
 }(this));
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22)(module), __webpack_require__(15)))
-
-/***/ }),
-
-/***/ 65:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-var EventEmitter = function EventEmitter() {};
-
-module.exports = EventEmitter;
-
-const promise = __webpack_require__(422);
-/**
- * Decorate an object with event emitter functionality.
- *
- * @param Object aObjectToDecorate
- *        Bind all public methods of EventEmitter to
- *        the aObjectToDecorate object.
- */
-
-
-EventEmitter.decorate = function EventEmitter_decorate(aObjectToDecorate) {
-  let emitter = new EventEmitter();
-  aObjectToDecorate.on = emitter.on.bind(emitter);
-  aObjectToDecorate.off = emitter.off.bind(emitter);
-  aObjectToDecorate.once = emitter.once.bind(emitter);
-  aObjectToDecorate.emit = emitter.emit.bind(emitter);
-};
-
-EventEmitter.prototype = {
-  /**
-   * Connect a listener.
-   *
-   * @param string aEvent
-   *        The event name to which we're connecting.
-   * @param function aListener
-   *        Called when the event is fired.
-   */
-  on: function EventEmitter_on(aEvent, aListener) {
-    if (!this._eventEmitterListeners) this._eventEmitterListeners = new Map();
-
-    if (!this._eventEmitterListeners.has(aEvent)) {
-      this._eventEmitterListeners.set(aEvent, []);
-    }
-
-    this._eventEmitterListeners.get(aEvent).push(aListener);
-  },
-
-  /**
-   * Listen for the next time an event is fired.
-   *
-   * @param string aEvent
-   *        The event name to which we're connecting.
-   * @param function aListener
-   *        (Optional) Called when the event is fired. Will be called at most
-   *        one time.
-   * @return promise
-   *        A promise which is resolved when the event next happens. The
-   *        resolution value of the promise is the first event argument. If
-   *        you need access to second or subsequent event arguments (it's rare
-   *        that this is needed) then use aListener
-   */
-  once: function EventEmitter_once(aEvent, aListener) {
-    let deferred = promise.defer();
-
-    let handler = (aEvent, aFirstArg, ...aRest) => {
-      this.off(aEvent, handler);
-
-      if (aListener) {
-        aListener.apply(null, [aEvent, aFirstArg, ...aRest]);
-      }
-
-      deferred.resolve(aFirstArg);
-    };
-
-    handler._originalListener = aListener;
-    this.on(aEvent, handler);
-    return deferred.promise;
-  },
-
-  /**
-   * Remove a previously-registered event listener.  Works for events
-   * registered with either on or once.
-   *
-   * @param string aEvent
-   *        The event name whose listener we're disconnecting.
-   * @param function aListener
-   *        The listener to remove.
-   */
-  off: function EventEmitter_off(aEvent, aListener) {
-    if (!this._eventEmitterListeners) return;
-
-    let listeners = this._eventEmitterListeners.get(aEvent);
-
-    if (listeners) {
-      this._eventEmitterListeners.set(aEvent, listeners.filter(l => {
-        return l !== aListener && l._originalListener !== aListener;
-      }));
-    }
-  },
-
-  /**
-   * Emit an event.  All arguments to this method will
-   * be sent to listener functions.
-   */
-  emit: function EventEmitter_emit(aEvent) {
-    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent)) {
-      return;
-    }
-
-    let originalListeners = this._eventEmitterListeners.get(aEvent);
-
-    for (let listener of this._eventEmitterListeners.get(aEvent)) {
-      // If the object was destroyed during event emission, stop
-      // emitting.
-      if (!this._eventEmitterListeners) {
-        break;
-      } // If listeners were removed during emission, make sure the
-      // event handler we're going to fire wasn't removed.
-
-
-      if (originalListeners === this._eventEmitterListeners.get(aEvent) || this._eventEmitterListeners.get(aEvent).some(l => l === listener)) {
-        try {
-          listener.apply(null, arguments);
-        } catch (ex) {
-          // Prevent a bad listener from interfering with the others.
-          let msg = ex + ": " + ex.stack; //console.error(msg);
-
-          console.log(msg);
-        }
-      }
-    }
-  }
-};
 
 /***/ }),
 

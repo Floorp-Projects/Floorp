@@ -1,0 +1,37 @@
+{
+  "name": "devtools-modules",
+  "version": "1.1.9",
+  "description": "DevTools Modules from M-C",
+  "main": "index.js",
+  "scripts": {
+    "license-check": "devtools-license-check",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "punycode": "^2.1.0",
+    "devtools-services": "0.0.1"
+  },
+  "devDependencies": {
+    "jest": "^23.0.0"
+  },
+  "files": [
+    "src"
+  ],
+  "jest": {
+    "rootDir": "src",
+    "testMatch": [
+      "**/tests/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/helpers/local-storage-mock.js"
+    ],
+    "transformIgnorePatterns": [],
+    "setupFiles": [
+      "<rootDir>/tests/helpers/local-storage-mock.js"
+    ],
+    "moduleNameMapper": {},
+    "testURL": "http://localhost/"
+  }
+}
