@@ -354,6 +354,7 @@ add_task(async function test_non_addable_uri_errors() {
     "data:,Hello%2C%20World!",
     "javascript:alert('hello wolrd!');",
     "blob:foo",
+    "moz-extension://f49fb5b3-a1e7-cd41-85e1-d61a3950f5e4/index.html",
   ];
   let places = [];
   URLS.forEach(function(url) {
