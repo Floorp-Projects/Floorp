@@ -7,6 +7,7 @@
 #define mozilla_widget_IconLoaderHelperWin_h
 
 #include "mozilla/widget/IconLoader.h"
+#include "nsISupports.h"
 
 namespace mozilla::widget {
 
@@ -15,11 +16,12 @@ namespace mozilla::widget {
  * IconLoaderListenerWin, and implement the OnComplete() method,
  * which will be called once the load of the icon has completed.
  */
-class IconLoaderListenerWin {
+class IconLoaderListenerWin : public nsISupports {
  public:
   IconLoaderListenerWin() = default;
 
-  NS_INLINE_DECL_REFCOUNTING(mozilla::widget::IconLoaderListenerWin)
+  // IconLoaderListenerWin needs to implement nsISupports in order for its
+  // subclasses to participate in cycle collection.
 
   virtual nsresult OnComplete() = 0;
 
@@ -35,6 +37,11 @@ class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
  public:
   explicit IconLoaderHelperWin(
       mozilla::widget::IconLoaderListenerWin* aLoadListener);
+
+  // IconLoaderHelperWin needs to implement nsISupports in order for its
+  // subclasses to participate in cycle collection.
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(IconLoaderHelperWin)
 
   nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
 

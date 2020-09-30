@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIContentPolicy.h"
+#include "nsISupports.h"
 
 class nsIURI;
 class nsINode;
@@ -32,9 +33,10 @@ class IconLoader : public imgINotificationObserver {
    * Helper needs to implement the OnComplete method in order to handle the
    * imgIContainer of the loaded icon.
    */
-  class Helper {
+  class Helper : public nsISupports {
    public:
-    NS_INLINE_DECL_REFCOUNTING(mozilla::widget::IconLoader::Helper)
+    // Helper needs to implement nsISupports in order for its subclasses to
+    // participate in cycle collection
     virtual nsresult OnComplete(imgIContainer* aContainer,
                                 const nsIntRect& aRect) = 0;
 
@@ -46,8 +48,9 @@ class IconLoader : public imgINotificationObserver {
              const nsIntRect& aImageRegionRect);
 
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
+  NS_DECL_CYCLE_COLLECTION_CLASS(IconLoader)
 
   // LoadIcon will start a load request for the icon.
   // The request may not complete until after LoadIcon returns.
