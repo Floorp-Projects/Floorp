@@ -261,7 +261,7 @@ class MouseInput : public InputData {
   bool IsLeftButton() const;
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
-  WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
+  WidgetMouseEvent ToWidgetEvent(nsIWidget* aWidget) const;
 
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
@@ -351,7 +351,7 @@ class PanGestureInput : public InputData {
 
   bool IsMomentum() const;
 
-  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
+  WidgetWheelEvent ToWidgetEvent(nsIWidget* aWidget) const;
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
@@ -473,7 +473,7 @@ class PinchGestureInput : public InputData {
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
-  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
+  WidgetWheelEvent ToWidgetEvent(nsIWidget* aWidget) const;
 
   double ComputeDeltaY(nsIWidget* aWidget) const;
 
@@ -514,7 +514,7 @@ class PinchGestureInput : public InputData {
   ScreenCoord mPreviousSpan;
 
   // We accumulate (via GetIntegerDeltaForEvent) the deltaY that would be
-  // computed by ToWidgetWheelEvent, and then whenever we get a whole integer
+  // computed by ToWidgetEvent, and then whenever we get a whole integer
   // value we put it in mLineOrPageDeltaY. Since we only ever use deltaY we
   // don't need a mLineOrPageDeltaX. This field is used to dispatch legacy mouse
   // events which are only dispatched when the corresponding field on
@@ -616,7 +616,7 @@ class ScrollWheelInput : public InputData {
   static uint32_t DeltaModeForDeltaType(ScrollDeltaType aDeltaType);
   static mozilla::ScrollUnit ScrollUnitForDeltaType(ScrollDeltaType aDeltaType);
 
-  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
+  WidgetWheelEvent ToWidgetEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   bool IsCustomizedByUserPrefs() const;
