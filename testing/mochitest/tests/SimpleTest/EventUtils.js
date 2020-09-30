@@ -506,11 +506,12 @@ function _parseModifiers(aEvent, aWindow = window) {
  * aOffsetY. This allows mouse clicks to be simulated by calling this method.
  *
  * aEvent is an object which may contain the properties:
- *   accelKey, shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount,
- *   button, type
+ *   `shiftKey`, `ctrlKey`, `altKey`, `metaKey`, `accessKey`, `clickCount`,
+ *   `button`, `type`.
+ *   For valid `type`s see nsIDOMWindowUtils' `sendMouseEvent`.
  *
  * If the type is specified, an mouse event of that type is fired. Otherwise,
- * a mousedown followed by a mouse up is performed.
+ * a mousedown followed by a mouseup is performed.
  *
  * aWindow is optional, and defaults to the current window object.
  *
@@ -539,10 +540,12 @@ function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
  * Synthesize a mouse event at a particular point in aWindow.
  *
  * aEvent is an object which may contain the properties:
- *   shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount, button, type
+ *   `shiftKey`, `ctrlKey`, `altKey`, `metaKey`, `accessKey`, `clickCount`,
+ *   `button`, `type`.
+ *   For valid `type`s see nsIDOMWindowUtils' `sendMouseEvent`.
  *
  * If the type is specified, an mouse event of that type is fired. Otherwise,
- * a mousedown followed by a mouse up is performed.
+ * a mousedown followed by a mouseup is performed.
  *
  * aWindow is optional, and defaults to the current window object.
  */
