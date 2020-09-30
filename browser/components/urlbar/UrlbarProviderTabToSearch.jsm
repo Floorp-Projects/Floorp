@@ -78,7 +78,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    // engineForDomainPrefix only matches against engine domains.
+    // enginesForDomainPrefix only matches against engine domains.
     // Remove trailing slashes and www. from the search string and check if the
     // resulting string is worth matching.
     // The muxer will verify that the found result matches the autofilled value.
@@ -90,24 +90,24 @@ class ProviderTabToSearch extends UrlbarProvider {
       }
     );
 
-    let engine = await UrlbarSearchUtils.engineForDomainPrefix(searchStr);
-    if (!engine) {
-      return;
+    // Add all matching engines. The muxer will pick the one that matches
+    // autofill, if any.
+    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr);
+    for (let engine of engines) {
+      let result = new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          engine: engine.name,
+          url: engine.getResultDomain(),
+          keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+          icon: engine.iconURI?.spec,
+          query: "",
+        })
+      );
+      result.suggestedIndex = 1;
+      addCallback(this, result);
     }
-
-    let result = new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        engine: engine.name,
-        url: engine.getResultDomain(),
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-        icon: engine.iconURI?.spec,
-        query: "",
-      })
-    );
-    result.suggestedIndex = 1;
-    addCallback(this, result);
   }
 }
 
