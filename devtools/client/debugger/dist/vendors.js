@@ -2166,7 +2166,7 @@ exports.vendored = void 0;
 
 var devtoolsComponents = _interopRequireWildcard(__webpack_require__(108));
 
-var devtoolsConfig = _interopRequireWildcard(__webpack_require__(415));
+var devtoolsConfig = _interopRequireWildcard(__webpack_require__(550));
 
 var devtoolsContextmenu = _interopRequireWildcard(__webpack_require__(420));
 
@@ -2231,74 +2231,6 @@ const vendored = {
   "react-transition-group/Transition": transition
 };
 exports.vendored = vendored;
-
-/***/ }),
-
-/***/ 415:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const feature = __webpack_require__(416);
-
-module.exports = feature;
-
-/***/ }),
-
-/***/ 416:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const {
-  get: pick,
-  set: put
-} = __webpack_require__(417);
-
-const fs = __webpack_require__(418);
-
-const path = __webpack_require__(419);
-
-let config;
-/**
- * Gets a config value for a given key
- * e.g "chrome.webSocketPort"
- */
-
-function getValue(key) {
-  return pick(config, key);
-}
-
-function setValue(key, value) {
-  return put(config, key, value);
-}
-
-function setConfig(value) {
-  config = value;
-}
-
-function getConfig() {
-  return config;
-}
-
-function updateLocalConfig(relativePath) {
-  const localConfigPath = path.resolve(relativePath, "../configs/local.json");
-  const output = JSON.stringify(config, null, 2);
-  fs.writeFileSync(localConfigPath, output, {
-    flag: "w"
-  });
-  return output;
-}
-
-module.exports = {
-  getValue,
-  setValue,
-  getConfig,
-  setConfig,
-  updateLocalConfig
-};
 
 /***/ }),
 
@@ -6539,6 +6471,74 @@ function asyncStoreHelper(root, mappings) {
 }
 
 module.exports = asyncStoreHelper;
+
+/***/ }),
+
+/***/ 550:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const feature = __webpack_require__(551);
+
+module.exports = feature;
+
+/***/ }),
+
+/***/ 551:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  get: pick,
+  set: put
+} = __webpack_require__(417);
+
+const fs = __webpack_require__(418);
+
+const path = __webpack_require__(419);
+
+let config;
+/**
+ * Gets a config value for a given key
+ * e.g "chrome.webSocketPort"
+ */
+
+function getValue(key) {
+  return pick(config, key);
+}
+
+function setValue(key, value) {
+  return put(config, key, value);
+}
+
+function setConfig(value) {
+  config = value;
+}
+
+function getConfig() {
+  return config;
+}
+
+function updateLocalConfig(relativePath) {
+  const localConfigPath = path.resolve(relativePath, "../configs/local.json");
+  const output = JSON.stringify(config, null, 2);
+  fs.writeFileSync(localConfigPath, output, {
+    flag: "w"
+  });
+  return output;
+}
+
+module.exports = {
+  getValue,
+  setValue,
+  getConfig,
+  setConfig,
+  updateLocalConfig
+};
 
 /***/ }),
 

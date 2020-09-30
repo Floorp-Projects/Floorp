@@ -1,0 +1,26 @@
+{
+  "name": "devtools-config",
+  "version": "0.0.16",
+  "description": "Devtools Local Configuration System",
+  "main": "index.js",
+  "directories": {
+    "test": "jest"
+  },
+  "scripts": {
+    "license-check": "devtools-license-check",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MPL-2.0",
+  "jest": {
+    "rootDir": "",
+    "testMatch": [
+      "**/tests/*.js"
+    ],
+    "setupFiles": [],
+    "moduleNameMapper": {}
+  },
+  "devDependencies": {
+    "jest": "^20.0.4"
+  }
+}
