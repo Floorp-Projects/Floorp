@@ -1,0 +1,9 @@
+{
+  "name": "devtools-environment",
+  "version": "0.0.6",
+  "description": "Devtools Environment Check",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "MPL-2.0"
+}
