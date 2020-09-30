@@ -9632,7 +9632,7 @@
 
 - name: ui.touch.radius.enabled
   type: bool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 - name: ui.touch.radius.topmm
