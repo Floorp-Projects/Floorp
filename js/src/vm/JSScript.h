@@ -46,7 +46,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::RuntimeScriptData
+#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData
 #include "vm/Time.h"
 
 namespace JS {
@@ -1483,7 +1483,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 //              +-----------------------------------------------+
 //                                v
 //              +-------------------------------------+
-//              | RuntimeScriptData                   |
+//              | ImmutableScriptData                 |
 //              |   Provides:   Bytecode              |
 //              |   Engine:     Interpreter           |
 //              +-------------------------------------+
@@ -1560,7 +1560,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // Shareable script data. This includes runtime-wide atom pointers, bytecode,
   // and various script note structures. If the script is currently lazy, this
   // will be nullptr.
-  RefPtr<js::RuntimeScriptData> sharedData_ = {};
+  RefPtr<js::SharedImmutableScriptData> sharedData_ = {};
 
   // End of fields.
 
@@ -1849,8 +1849,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     return data_->getMemberInitializers();
   }
 
-  RuntimeScriptData* sharedData() const { return sharedData_; }
-  void initSharedData(RuntimeScriptData* data) {
+  SharedImmutableScriptData* sharedData() const { return sharedData_; }
+  void initSharedData(SharedImmutableScriptData* data) {
     MOZ_ASSERT(sharedData_ == nullptr);
     sharedData_ = data;
   }

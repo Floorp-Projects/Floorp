@@ -31,7 +31,7 @@
 #include "vm/JSScript.h"                  // MemberInitializers
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"  // ScopeKind
-#include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex, js::RuntimeScriptData
+#include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex, js::SharedImmutableScriptData
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 
 namespace js {
@@ -453,7 +453,7 @@ class ScriptStencil {
   ScriptThingsVector gcThings;
 
   // See `BaseScript::sharedData_`.
-  RefPtr<js::RuntimeScriptData> sharedData = {};
+  RefPtr<js::SharedImmutableScriptData> sharedData = {};
 
   // The location of this script in the source.
   SourceExtent extent = {};
