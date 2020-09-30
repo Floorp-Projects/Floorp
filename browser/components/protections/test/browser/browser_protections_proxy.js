@@ -13,6 +13,7 @@ add_task(async function setup() {
     set: [
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", false],
     ],
   });
 });
