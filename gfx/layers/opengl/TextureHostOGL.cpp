@@ -871,7 +871,11 @@ bool AndroidHardwareBufferTextureHost::Lock() {
       // Release fd here, since it is owned by EGLSync
       Unused << rawFD.release();
 
-      egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
+      if (egl->IsExtensionSupported(gl::EGLExtension::KHR_wait_sync)) {
+        egl->fWaitSync(sync, 0);
+      } else {
+        egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
+      }
       egl->fDestroySync(sync);
     } else {
       gfxCriticalNote << "Failed to create EGLSync from acquire fence fd";
