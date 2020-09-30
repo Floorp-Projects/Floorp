@@ -72,16 +72,12 @@ class TestWebMWriter : public WebMWriter {
   void AppendDummyFrame(EncodedFrame::FrameType aFrameType,
                         uint64_t aDuration) {
     nsTArray<RefPtr<EncodedFrame>> encodedVideoData;
-    nsTArray<uint8_t> frameData;
-    RefPtr<EncodedFrame> videoData = new EncodedFrame();
+    auto frameData = MakeRefPtr<EncodedFrame::FrameData>();
     // Create dummy frame data.
-    frameData.SetLength(FIXED_FRAMESIZE);
-    videoData->mFrameType = aFrameType;
-    videoData->mTime = mTimestamp;
-    videoData->mDuration = aDuration;
-    videoData->mDurationBase = PR_USEC_PER_SEC;
-    videoData->SwapInFrameData(frameData);
-    encodedVideoData.AppendElement(videoData);
+    frameData->SetLength(FIXED_FRAMESIZE);
+    encodedVideoData.AppendElement(
+        MakeRefPtr<EncodedFrame>(mTimestamp, aDuration, PR_USEC_PER_SEC,
+                                 aFrameType, std::move(frameData)));
     WriteEncodedTrack(encodedVideoData, 0);
     mTimestamp += aDuration;
   }

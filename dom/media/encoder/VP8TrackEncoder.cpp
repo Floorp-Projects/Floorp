@@ -226,14 +226,14 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     nsTArray<RefPtr<EncodedFrame>>& aData) {
   vpx_codec_iter_t iter = nullptr;
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
-  nsTArray<uint8_t> frameData;
+  auto frameData = MakeRefPtr<EncodedFrame::FrameData>();
   const vpx_codec_cx_pkt_t* pkt = nullptr;
   while ((pkt = vpx_codec_get_cx_data(mVPXContext.get(), &iter)) != nullptr) {
     switch (pkt->kind) {
       case VPX_CODEC_CX_FRAME_PKT: {
         // Copy the encoded data from libvpx to frameData
-        frameData.AppendElements((uint8_t*)pkt->data.frame.buf,
-                                 pkt->data.frame.sz);
+        frameData->AppendElements((uint8_t*)pkt->data.frame.buf,
+                                  pkt->data.frame.sz);
         break;
       }
       default: {
@@ -249,18 +249,13 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     }
   }
 
-  if (!frameData.IsEmpty()) {
-    // Copy the encoded data to aData.
-    EncodedFrame* videoData = new EncodedFrame();
-    videoData->mFrameType = frameType;
-
+  if (!frameData->IsEmpty()) {
     // Convert the timestamp and duration to Usecs.
     CheckedInt64 timestamp = FramesToUsecs(pkt->data.frame.pts, mTrackRate);
     if (!timestamp.isValid()) {
       NS_ERROR("Microsecond timestamp overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
-    videoData->mTime = (uint64_t)timestamp.value();
 
     mExtractedDuration += pkt->data.frame.duration;
     if (!mExtractedDuration.isValid()) {
@@ -282,14 +277,16 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     }
 
     mExtractedDurationUs = totalDuration;
-    videoData->mDuration = (uint64_t)duration.value();
-    videoData->mDurationBase = PR_USEC_PER_SEC;
-    videoData->SwapInFrameData(frameData);
+
     VP8LOG(LogLevel::Verbose,
            "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64
            ", FrameType %d",
-           videoData->mTime, videoData->mDuration, videoData->mFrameType);
-    aData.AppendElement(videoData);
+           timestamp.value(), duration.value(), frameType);
+
+    // Copy the encoded data to aData.
+    aData.AppendElement(MakeRefPtr<EncodedFrame>(
+        timestamp.value(), duration.value(), PR_USEC_PER_SEC, frameType,
+        std::move(frameData)));
   }
 
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -513,23 +510,32 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
       // because this frame will be skipped.
       VP8LOG(LogLevel::Warning,
              "MediaRecorder lagging behind. Skipping a frame.");
-      RefPtr<EncodedFrame> last = aData.LastElement();
-      if (last) {
-        mExtractedDuration += chunk.mDuration;
-        if (!mExtractedDuration.isValid()) {
-          NS_ERROR("skipped duration overflow");
-          return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
-        }
 
-        CheckedInt64 totalDuration =
-            FramesToUsecs(mExtractedDuration.value(), mTrackRate);
-        CheckedInt64 skippedDuration = totalDuration - mExtractedDurationUs;
-        mExtractedDurationUs = totalDuration;
-        if (!skippedDuration.isValid()) {
-          NS_ERROR("skipped duration overflow");
-          return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
-        }
-        last->mDuration += static_cast<uint64_t>(skippedDuration.value());
+      mExtractedDuration += chunk.mDuration;
+      if (!mExtractedDuration.isValid()) {
+        NS_ERROR("skipped duration overflow");
+        return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      }
+
+      CheckedInt64 totalDuration =
+          FramesToUsecs(mExtractedDuration.value(), mTrackRate);
+      CheckedInt64 skippedDuration = totalDuration - mExtractedDurationUs;
+      mExtractedDurationUs = totalDuration;
+      if (!skippedDuration.isValid()) {
+        NS_ERROR("skipped duration overflow");
+        return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+      }
+
+      {
+        auto& last = aData.LastElement();
+        MOZ_DIAGNOSTIC_ASSERT(aData.LastElement());
+        uint64_t longerDuration =
+            last->mDuration + static_cast<uint64_t>(skippedDuration.value());
+        auto longerFrame = MakeRefPtr<EncodedFrame>(
+            last->mTime, longerDuration, last->mDurationBase, last->mFrameType,
+            last->mFrameData);
+        std::swap(last, longerFrame);
+        MOZ_ASSERT(last->mDuration == longerDuration);
       }
     }
 

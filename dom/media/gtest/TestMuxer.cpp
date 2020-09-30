@@ -50,21 +50,17 @@ static RefPtr<TrackMetadataBase> CreateVP8Metadata(int32_t aWidth,
 static RefPtr<EncodedFrame> CreateFrame(EncodedFrame::FrameType aType,
                                         uint64_t aTimeUs, uint64_t aDurationUs,
                                         size_t aDataSize) {
-  auto frame = MakeRefPtr<EncodedFrame>();
-  frame->mTime = aTimeUs;
+  auto data = MakeRefPtr<EncodedFrame::FrameData>();
+  data->SetLength(aDataSize);
   if (aType == EncodedFrame::OPUS_AUDIO_FRAME) {
     // Opus duration is in samples, so figure out how many samples will put us
     // closest to aDurationUs without going over.
-    frame->mDuration = UsecsToFrames(aDurationUs, 48000).value();
-  } else {
-    frame->mDuration = aDurationUs;
+    return MakeRefPtr<EncodedFrame>(aTimeUs,
+                                    UsecsToFrames(aDurationUs, 48000).value(),
+                                    48000, aType, std::move(data));
   }
-  frame->mFrameType = aType;
-
-  nsTArray<uint8_t> data;
-  data.SetLength(aDataSize);
-  frame->SwapInFrameData(data);
-  return frame;
+  return MakeRefPtr<EncodedFrame>(aTimeUs, aDurationUs, PR_USEC_PER_SEC, aType,
+                                  std::move(data));
 }
 
 namespace testing {
