@@ -27,14 +27,8 @@ function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({ set: prefs });
 }
 
-// eslint-disable-next-line no-unused-vars
-async function setDefaultTopSites() {
-  // The pref for TopSites is empty by default.
-  await pushPrefs([
-    "browser.newtabpage.activity-stream.default.sites",
-    "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/",
-  ]);
-  // Toggle the feed off and on as a workaround to read the new prefs.
+// Toggle the feed off and on as a workaround to read the new prefs.
+async function toggleTopsitesPref() {
   await pushPrefs([
     "browser.newtabpage.activity-stream.feeds.system.topsites",
     false,
@@ -43,10 +37,35 @@ async function setDefaultTopSites() {
     "browser.newtabpage.activity-stream.feeds.system.topsites",
     true,
   ]);
+}
+
+// eslint-disable-next-line no-unused-vars
+async function setDefaultTopSites() {
+  // The pref for TopSites is empty by default.
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.default.sites",
+    "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/",
+  ]);
+  await toggleTopsitesPref();
   await pushPrefs([
     "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
     true,
   ]);
+}
+
+// eslint-disable-next-line no-unused-vars
+async function setTestTopSites() {
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+    false,
+  ]);
+  // The pref for TopSites is empty by default.
+  // Using a topsite with example.com allows us to open the topsite without a network request.
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.default.sites",
+    "https://example.com/",
+  ]);
+  await toggleTopsitesPref();
 }
 
 // eslint-disable-next-line no-unused-vars

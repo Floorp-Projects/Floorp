@@ -209,7 +209,7 @@ describe("PlacesFeed", () => {
         pocket_id: undefined,
       });
     });
-    it("should call openTrustedLinkIn with the correct url and where on OPEN_NEW_WINDOW", () => {
+    it("should call openTrustedLinkIn with the correct url, where and params on OPEN_NEW_WINDOW", () => {
       const openTrustedLinkIn = sinon.stub();
       const openWindowAction = {
         type: at.OPEN_NEW_WINDOW,
@@ -224,8 +224,9 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", false);
+      assert.propertyVal(params, "fromChrome", false);
     });
-    it("should call openTrustedLinkIn with the correct url, where and privacy args on OPEN_PRIVATE_WINDOW", () => {
+    it("should call openTrustedLinkIn with the correct url, where, params and privacy args on OPEN_PRIVATE_WINDOW", () => {
       const openTrustedLinkIn = sinon.stub();
       const openWindowAction = {
         type: at.OPEN_PRIVATE_WINDOW,
@@ -240,8 +241,9 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", true);
+      assert.propertyVal(params, "fromChrome", false);
     });
-    it("should open link on OPEN_LINK", () => {
+    it("should call openTrustedLinkIn with the correct url, where and params on OPEN_LINK", () => {
       const openTrustedLinkIn = sinon.stub();
       const openLinkAction = {
         type: at.OPEN_LINK,
@@ -260,6 +262,7 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "current");
       assert.propertyVal(params, "private", false);
+      assert.propertyVal(params, "fromChrome", false);
     });
     it("should open link with referrer on OPEN_LINK", () => {
       const openTrustedLinkIn = sinon.stub();
@@ -353,7 +356,7 @@ describe("PlacesFeed", () => {
       });
       const openLinkAction = {
         type: at.OPEN_LINK,
-        data: { url: "file://,foo.com" },
+        data: { url: "file:///foo.com" },
         _target: {
           browser: {
             ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
