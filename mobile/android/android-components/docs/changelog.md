@@ -4,7 +4,7 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 61.0.0-SNAPSHOT (In Development)
+# 62.0.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/122?closed=1)
