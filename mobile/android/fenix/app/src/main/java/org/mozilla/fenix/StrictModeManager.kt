@@ -10,12 +10,14 @@
 package org.mozilla.fenix
 
 import android.os.Build
+import android.os.Looper
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.perf.Performance
 
 private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
@@ -24,9 +26,19 @@ private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 /**
  * Manages strict mode settings for the application.
  */
-class StrictModeManager(config: Config) {
+class StrictModeManager(
+    config: Config,
+
+    // Ideally, we'd pass in a more specific value but there is a circular dependency: StrictMode
+    // is passed into Core but we'd need to pass in Core here. Instead, we take components and later
+    // fetch the value we need from it.
+    //
+    // Public to be accessible by inline functions.
+    val components: Components
+) {
 
     val logger = Performance.logger // public to be accessible by inline functions.
+    val mainLooper = Looper.getMainLooper() // public to be accessible by inline functions.
 
     // This is public so it can be used by inline functions.
     val isEnabledByBuildConfig = config.channel.isDebug
@@ -111,6 +123,9 @@ class StrictModeManager(config: Config) {
             // because it'd increase complexity.
             suppressionCount += 1
             logger.warn("StrictMode violation suppressed: #$suppressionCount")
+            if (Thread.currentThread() == mainLooper.thread) { // markers only supported on main thread.
+                components.core.engine.profiler?.addMarker("StrictMode.suppression", "Count: $suppressionCount")
+            }
 
             policy.resetAfter(functionBlock)
         } else {

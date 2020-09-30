@@ -21,6 +21,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -36,13 +37,15 @@ class StrictModeManagerTest {
         MockKAnnotations.init(this)
         mockkStatic(StrictMode::class)
 
+        val components: Components = mockk(relaxed = true)
+
         // These tests log a warning that mockk couldn't set the backing field of Config.channel
         // but it doesn't seem to impact their correctness so I'm ignoring it.
         val debugConfig: Config = mockk { every { channel } returns ReleaseChannel.Debug }
-        debugManager = StrictModeManager(debugConfig)
+        debugManager = StrictModeManager(debugConfig, components)
 
         val releaseConfig: Config = mockk { every { channel } returns ReleaseChannel.Release }
-        releaseManager = StrictModeManager(releaseConfig)
+        releaseManager = StrictModeManager(releaseConfig, components)
     }
 
     @After
