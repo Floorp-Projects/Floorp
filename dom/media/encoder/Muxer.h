@@ -57,9 +57,6 @@ class Muxer {
   MediaQueue<EncodedFrame> mEncodedVideoFrames;
   // The writer for the specific container we're recording into.
   UniquePtr<ContainerWriter> mWriter;
-  // How much each audio time stamp should be delayed in microseconds. Used to
-  // adjust for opus codec delay.
-  uint64_t mAudioCodecDelay = 0;
   // True once metadata has been set in the muxer.
   bool mMetadataSet = false;
   // True once metadata has been written to file.
