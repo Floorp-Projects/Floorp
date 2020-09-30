@@ -46,6 +46,8 @@ var localProviderModules = {
   UrlbarProviderSearchTips: "resource:///modules/UrlbarProviderSearchTips.jsm",
   UrlbarProviderSearchSuggestions:
     "resource:///modules/UrlbarProviderSearchSuggestions.jsm",
+  UrlbarProviderTabToSearch:
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarProviderTokenAliasEngines:
     "resource:///modules/UrlbarProviderTokenAliasEngines.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",

@@ -386,6 +386,12 @@ add_task(async function clickAndFillAlias() {
   let testEngineItem;
   for (let i = 0; !testEngineItem; i++) {
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.equal(
+      details.displayed.title,
+      `Search with ${details.searchParams.engine}`,
+      "The result's title is set correctly."
+    );
+    Assert.ok(!details.action, "The result should have no action text.");
     if (details.searchParams && details.searchParams.keyword == ALIAS) {
       testEngineItem = await UrlbarTestUtils.waitForAutocompleteResultAt(
         window,
