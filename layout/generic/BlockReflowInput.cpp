@@ -402,8 +402,7 @@ void BlockReflowInput::AppendPushedFloatChain(nsIFrame* aFloatCont) {
     if (!aFloatCont || aFloatCont->GetParent() != mBlock) {
       break;
     }
-    DebugOnly<nsresult> rv = mBlock->StealFrame(aFloatCont);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
+    mBlock->StealFrame(aFloatCont);
   }
 }
 
@@ -1019,8 +1018,7 @@ void BlockReflowInput::PushFloatPastBreak(nsIFrame* aFloat) {
 
   // Put the float on the pushed floats list, even though it
   // isn't actually a continuation.
-  DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
+  mBlock->StealFrame(aFloat);
   AppendPushedFloatChain(aFloat);
   mReflowStatus.SetOverflowIncomplete();
 }

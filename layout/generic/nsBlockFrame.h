@@ -328,7 +328,7 @@ class nsBlockFrame : public nsContainerFrame {
    */
   bool DrainSelfOverflowList() override;
 
-  nsresult StealFrame(nsIFrame* aChild) override;
+  void StealFrame(nsIFrame* aChild) override;
 
   void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
                              bool aDeletingEmptyFrames) override;
