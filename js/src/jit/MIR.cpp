@@ -3592,6 +3592,36 @@ static void AssertKnownClass(TempAllocator& alloc, MInstruction* ins,
 #endif
 }
 
+MDefinition* MBoxNonStrictThis::foldsTo(TempAllocator& alloc) {
+  MDefinition* in = input();
+  if (in->isBox()) {
+    in = in->toBox()->input();
+  }
+
+  if (in->type() == MIRType::Object) {
+    return in;
+  }
+
+  return this;
+}
+
+MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
+  MDefinition* rval = getValue();
+  if (rval->isBox()) {
+    rval = rval->toBox()->input();
+  }
+
+  if (rval->type() == MIRType::Object) {
+    return rval;
+  }
+
+  if (rval->type() != MIRType::Value) {
+    return getObject();
+  }
+
+  return this;
+}
+
 MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
   if (!input()->isBox()) {
     return this;
