@@ -176,6 +176,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.widget += [
     'CompositorWidget.h',
+    'IconLoader.h',
     'IMEData.h',
     'InProcessCompositorWidget.h',
     'MediaKeysEventSourceFactory.h',
@@ -193,6 +194,7 @@ UNIFIED_SOURCES += [
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
+    'IconLoader.cpp',
     'IMEData.cpp',
     'InProcessCompositorWidget.cpp',
     'InputData.cpp',
