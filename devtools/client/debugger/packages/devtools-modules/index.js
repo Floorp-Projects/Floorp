@@ -5,8 +5,6 @@
 const { PrefsHelper } = require("./src/prefs");
 const KeyShortcuts = require("./src/key-shortcuts");
 const EventEmitter = require("./src/utils/event-emitter");
-const asyncStorage = require("./src/async-storage");
-const asyncStoreHelper = require("./src/async-store-helper");
 const Telemetry = require("./src/utils/telemetry");
 const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } =
   require("./src/unicode-url");
@@ -16,8 +14,6 @@ const saveAs = require("./src/saveAs")
 module.exports = {
   KeyShortcuts,
   PrefsHelper,
-  asyncStorage,
-  asyncStoreHelper,
   EventEmitter,
   Telemetry,
   getUnicodeHostname,

@@ -69,8 +69,6 @@ const VENDORS = [
 
 const moduleMapping = {
   Telemetry: "devtools/client/shared/telemetry",
-  asyncStoreHelper: "devtools/client/shared/async-store-helper",
-  asyncStorage: "devtools/shared/async-storage",
   PluralForm: "devtools/shared/plural-form",
   DevToolsUtils: "devtools/shared/DevToolsUtils",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
