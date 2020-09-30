@@ -271,6 +271,23 @@ input[type="text"] {
   margin-bottom: 8px;
 }
 
+.vertical-margins,
+.horizontal-margins {
+  display: flex;
+  gap: 20px;
+  margin-block: 5px;
+}
+
+.margin-input {
+  width: 6em !important;
+}
+
+.margin-descriptor {
+  text-align: center;
+  display: block;
+  margin-top: 2px;
+}
+
 input[type="number"]:invalid {
   border: 1px solid #D70022;
   box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3);

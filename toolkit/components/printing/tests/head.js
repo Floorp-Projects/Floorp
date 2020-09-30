@@ -57,7 +57,15 @@ class PrintHelper {
     await dialog._closingPromise;
   }
 
+  resetSettings() {
+    this.win.PrintEventHandler.settings = this.win.PrintEventHandler.defaultSettings;
+    this.win.PrintEventHandler.saveSettingsToPrefs(
+      this.win.PrintEventHandler.kInitSaveAll
+    );
+  }
+
   async closeDialog() {
+    this.resetSettings();
     await this.withClosingFn(() => this.dialog.close());
   }
 
@@ -142,7 +150,15 @@ class PrintHelper {
     await BrowserTestUtils.waitForEvent(this.doc, "preview-updated");
   }
 
-  click(el) {
+  async waitForSettingsEvent() {
+    await BrowserTestUtils.waitForEvent(this.doc, "print-settings");
+  }
+
+  click(el, { scroll = true } = {}) {
+    if (scroll) {
+      el.scrollIntoView();
+    }
+    ok(BrowserTestUtils.is_visible(el), "Element must be visible to click");
     EventUtils.synthesizeMouseAtCenter(el, {}, this.win);
   }
 
@@ -171,6 +187,32 @@ class PrintHelper {
 
   get viewSettings() {
     return this.win.PrintEventHandler.viewSettings;
+  }
+
+  assertSettingsMatch(expected) {
+    let { settings } = this;
+    for (let [setting, value] of Object.entries(expected)) {
+      is(settings[setting], value, `${setting} matches`);
+    }
+  }
+
+  async assertSettingsChanged(from, to, changeFn) {
+    is(
+      Object.keys(from).length,
+      Object.keys(to).length,
+      "Got the same number of settings to check"
+    );
+    ok(
+      Object.keys(from).every(s => s in to),
+      "Checking the same setting names"
+    );
+    this.assertSettingsMatch(from);
+    await changeFn();
+    this.assertSettingsMatch(to);
+  }
+
+  async assertSettingsNotChanged(settings, changeFn) {
+    await this.assertSettingsChanged(settings, settings, changeFn);
   }
 
   awaitAnimationFrame() {
