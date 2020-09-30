@@ -79,8 +79,6 @@ class nsWaylandDisplay {
   MessageLoop* GetThreadLoop() { return mThreadLoop; }
   void ShutdownThreadLoop();
 
-  void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
-  zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
  private:
@@ -100,7 +98,6 @@ class nsWaylandDisplay {
   zwp_primary_selection_device_manager_v1* mPrimarySelectionDeviceManagerZwpV1;
   zwp_idle_inhibit_manager_v1* mIdleInhibitManager;
   wl_registry* mRegistry;
-  zwp_linux_dmabuf_v1* mDmabuf;
   bool mExplicitSync;
 };
 
