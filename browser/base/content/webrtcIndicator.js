@@ -83,12 +83,39 @@ const WebRTCIndicator = {
     this.statusBar = null;
     this.statusBarMenus = new Set();
 
-    if (
-      Services.prefs.getBoolPref("privacy.webrtc.hideGlobalIndicator", false)
-    ) {
-      let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-      baseWin.visibility = false;
+    this.showGlobalMuteToggles = Services.prefs.getBoolPref(
+      "privacy.webrtc.globalMuteToggles",
+      false
+    );
+
+    this.hideGlobalIndicator = Services.prefs.getBoolPref(
+      "privacy.webrtc.hideGlobalIndicator",
+      false
+    );
+
+    if (this.hideGlobalIndicator) {
+      this.setVisibility(false);
     }
+  },
+
+  /**
+   * Controls the visibility of the global indicator. Also sets the value of
+   * a "visible" attribute on the document element to "true" or "false".
+   *
+   * @param isVisible (boolean)
+   *   Whether or not the global indicator should be visible.
+   */
+  setVisibility(isVisible) {
+    let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+    baseWin.visibility = isVisible;
+    // AppWindow::GetVisibility _always_ returns true (see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=306245), so we'll set an
+    // attribute on the document to make it easier for tests to know that the
+    // indicator is not visible.
+    document.documentElement.setAttribute("visible", isVisible);
+    // This will hide the indicator from the Window menu on macOS when
+    // not visible.
+    document.documentElement.setAttribute("inwindowmenu", isVisible);
   },
 
   /**
@@ -131,8 +158,16 @@ const WebRTCIndicator = {
       }
     }
 
-    this.updateWindowAttr("sharingvideo", showCameraIndicator);
-    this.updateWindowAttr("sharingaudio", showMicrophoneIndicator);
+    if (!this.showGlobalMuteToggles && !webrtcUI.showScreenSharingIndicator) {
+      this.setVisibility(false);
+    } else if (!this.hideGlobalIndicator) {
+      this.setVisibility(true);
+    }
+
+    if (this.showGlobalMuteToggles) {
+      this.updateWindowAttr("sharingvideo", showCameraIndicator);
+      this.updateWindowAttr("sharingaudio", showMicrophoneIndicator);
+    }
 
     let sharingScreen = showScreenSharingIndicator.startsWith("Screen");
     this.updateWindowAttr("sharingscreen", sharingScreen);
@@ -435,6 +470,14 @@ const WebRTCIndicator = {
 
     if (!["Camera", "Microphone", "Screen"].includes(type)) {
       return;
+    }
+
+    // When the indicator is hidden by default, opening the menu from the
+    // system tray _might_ cause the indicator to try to become visible again.
+    // We work around this by re-hiding it if it wasn't already visible.
+    if (document.documentElement.getAttribute("visible") != "true") {
+      let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+      baseWin.visibility = false;
     }
 
     let activeStreams;
