@@ -10417,10 +10417,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   // First check some options that set default warm-up thresholds, so these
   // thresholds can be overridden below by --ion-eager and other flags.
   if (op.getBoolOption("no-warp")) {
-    MOZ_ASSERT(!jit::JitOptions.warpBuilder,
-               "WarpBuilder is disabled by default");
-  } else if (op.getBoolOption("warp")) {
-    jit::JitOptions.setWarpEnabled(true);
+    jit::JitOptions.setWarpEnabled(false);
   }
   if (op.getBoolOption("fast-warmup")) {
     jit::JitOptions.setFastWarmUp();
@@ -11187,8 +11184,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-ion", "Disable IonMonkey") ||
       !op.addBoolOption('\0', "no-ion-for-main-context",
                         "Disable IonMonkey for the main context only") ||
-      !op.addBoolOption('\0', "warp", "Use WarpBuilder as MIR builder") ||
-      !op.addBoolOption('\0', "no-warp", "Disable WarpBuilder (default)") ||
+      !op.addBoolOption('\0', "warp", "Enable WarpBuilder (default)") ||
+      !op.addBoolOption('\0', "no-warp", "Disable WarpBuilder") ||
       !op.addIntOption('\0', "inlining-entry-threshold", "COUNT",
                        "The minimum stub entry count before trial-inlining a"
                        " call",
