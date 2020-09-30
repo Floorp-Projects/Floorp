@@ -7,7 +7,7 @@ const SUPPORT_FILES_PATH =
 const BLOCKED_PAGE = `${SUPPORT_FILES_PATH}/policy_websitefilter_block.html`;
 const EXCEPTION_PAGE = `${SUPPORT_FILES_PATH}/policy_websitefilter_exception.html`;
 
-add_task(async function test() {
+add_task(async function test_http() {
   await setupPolicyEngineWithJson({
     policies: {
       WebsiteFilter: {
@@ -19,4 +19,30 @@ add_task(async function test() {
 
   await checkBlockedPage(BLOCKED_PAGE, true);
   await checkBlockedPage(EXCEPTION_PAGE, false);
+});
+
+add_task(async function test_http_mixed_case() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      WebsiteFilter: {
+        Block: ["*://mochi.test/*policy_websitefilter_*"],
+        Exceptions: ["*://mochi.test/*_websitefilter_exception*"],
+      },
+    },
+  });
+
+  await checkBlockedPage(BLOCKED_PAGE.toUpperCase(), true);
+  await checkBlockedPage(EXCEPTION_PAGE.toUpperCase(), false);
+});
+
+add_task(async function test_file() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      WebsiteFilter: {
+        Block: ["file:///*"],
+      },
+    },
+  });
+
+  await checkBlockedPage("file:///this_should_be_blocked", true);
 });
