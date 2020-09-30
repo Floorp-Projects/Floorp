@@ -3736,6 +3736,27 @@ static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
   return true;
 }
 
+// There is no need to guard on the shape. Global lexical bindings are
+// non-configurable and can not be shadowed.
+static bool IsGlobalLexicalSetGName(JSOp op, NativeObject* obj,
+                                    HandleShape shape) {
+  // Ensure that the env can't change.
+  if (op != JSOp::SetGName && op != JSOp::StrictSetGName) {
+    return false;
+  }
+
+  if (!obj->is<LexicalEnvironmentObject>() ||
+      !obj->as<LexicalEnvironmentObject>().isGlobal()) {
+    return false;
+  }
+
+  // Uninitialized let bindings use a RuntimeLexicalErrorObject.
+  MOZ_ASSERT(!obj->getSlot(shape->slot()).isMagic());
+  MOZ_ASSERT(shape->writable());
+  MOZ_ASSERT(!shape->configurable());
+  return true;
+}
+
 AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                                           ObjOperandId objId,
                                                           HandleId id,
@@ -3767,7 +3788,9 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   if (typeCheckInfo_.needsTypeBarrier()) {
     writer.guardGroupForTypeBarrier(objId, nobj->group());
   }
-  TestMatchingNativeReceiver(writer, nobj, objId);
+  if (!IsGlobalLexicalSetGName(JSOp(*pc_), nobj, propShape)) {
+    TestMatchingNativeReceiver(writer, nobj, objId);
+  }
 
   if (IsPreliminaryObject(obj)) {
     preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
