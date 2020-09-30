@@ -609,7 +609,7 @@ var PrintUtils = {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
-      printSettings = PSSVC.globalPrintSettings;
+      printSettings = PSSVC.newPrintSettings;
       if (aPrinterName) {
         printSettings.printerName = aPrinterName;
       }
