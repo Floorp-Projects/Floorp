@@ -35,6 +35,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':support-utils')
+    implementation project(':service-location')
 
     implementation Dependencies.kotlin_stdlib
 

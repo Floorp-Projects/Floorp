@@ -27,6 +27,7 @@ dependencies {
 
     implementation project(':concept-fetch')
     implementation project(':support-ktx')
+    implementation project(':support-ktx')
     implementation project(':support-base')
 
     // For providing a SearchLocalizationProvider` implementation
