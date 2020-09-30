@@ -54,7 +54,7 @@ class SavedLoginsStorageControllerTest {
 
         controller = SavedLoginsStorageController(
             passwordsStorage = passwordsStorage,
-            viewLifecycleScope = scope,
+            lifecycleScope = scope,
             navController = navController,
             loginsFragmentStore = loginsFragmentStore,
             ioDispatcher = ioDispatcher

@@ -86,7 +86,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
         interactor = LoginDetailInteractor(
             SavedLoginsStorageController(
                 passwordsStorage = requireContext().components.core.passwordsStorage,
-                viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
+                lifecycleScope = lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = savedLoginsStore
             )

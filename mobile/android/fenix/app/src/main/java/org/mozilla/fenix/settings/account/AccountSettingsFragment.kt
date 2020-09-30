@@ -233,7 +233,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
                     SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue)
-                    viewLifecycleOwner.lifecycleScope.launch {
+                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
+                    lifecycleScope.launch {
                         context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
                     }
                 }

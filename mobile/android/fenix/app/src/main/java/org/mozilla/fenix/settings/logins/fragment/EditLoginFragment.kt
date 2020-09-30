@@ -76,7 +76,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         interactor = EditLoginInteractor(
             SavedLoginsStorageController(
                 passwordsStorage = requireContext().components.core.passwordsStorage,
-                viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
+                lifecycleScope = lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = loginsFragmentStore
             )

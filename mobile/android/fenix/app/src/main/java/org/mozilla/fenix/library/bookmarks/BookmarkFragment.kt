@@ -365,7 +365,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                     pendingBookmarkDeletionJob = getDeleteOperation(Event.RemoveBookmarkFolder)
                     dialog.dismiss()
                     val snackbarMessage = getRemoveBookmarksSnackBarMessage(selected, containsFolders = true)
-                    viewLifecycleOwner.lifecycleScope.allowUndo(
+                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
+                    lifecycleScope.allowUndo(
                         requireView(),
                         snackbarMessage,
                         getString(R.string.bookmark_undo_deletion),

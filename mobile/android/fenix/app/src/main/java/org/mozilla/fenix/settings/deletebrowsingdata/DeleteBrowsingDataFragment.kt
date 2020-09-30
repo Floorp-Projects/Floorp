@@ -142,7 +142,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     private fun deleteSelected() {
         startDeletion()
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
+        lifecycleScope.launch(IO) {
             getCheckboxes().mapIndexed { i, v ->
                 if (v.isChecked) {
                     when (i) {

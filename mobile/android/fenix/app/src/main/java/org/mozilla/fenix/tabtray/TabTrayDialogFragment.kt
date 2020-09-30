@@ -417,7 +417,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
             AlertDialog.Builder(it).setTitle(R.string.tab_tray_add_new_collection)
                 .setView(customLayout).setPositiveButton(android.R.string.ok) { dialog, _ ->
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    lifecycleScope.launch(Dispatchers.IO) {
                         tabCollectionStorage.createCollection(
                             collectionNameEditText.text.toString(),
                             sessionList

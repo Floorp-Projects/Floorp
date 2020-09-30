@@ -267,7 +267,8 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
                     historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
-                    viewLifecycleOwner.lifecycleScope.launch(IO) {
+                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
+                    lifecycleScope.launch(IO) {
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
                         requireComponents.core.historyStorage.deleteEverything()

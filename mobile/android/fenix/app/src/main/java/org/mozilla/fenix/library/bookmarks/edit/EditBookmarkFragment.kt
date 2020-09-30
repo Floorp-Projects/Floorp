@@ -182,7 +182,8 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                    viewLifecycleOwner.lifecycleScope.launch(IO) {
+                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
+                    lifecycleScope.launch(IO) {
                         requireComponents.core.bookmarksStorage.deleteNode(args.guidToEdit)
                         requireComponents.analytics.metrics.track(Event.RemoveBookmark)
 

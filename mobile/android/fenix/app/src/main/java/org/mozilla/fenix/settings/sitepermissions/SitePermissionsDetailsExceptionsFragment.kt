@@ -92,7 +92,8 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun clearSitePermissions() {
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
+        // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
+        lifecycleScope.launch(IO) {
             requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
             withContext(Main) {
                 requireView().findNavController().popBackStack()
