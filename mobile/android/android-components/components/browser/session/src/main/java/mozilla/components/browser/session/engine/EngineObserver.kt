@@ -38,7 +38,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.state.Store
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.net.isInScope
 import mozilla.components.support.ktx.kotlin.isSameOriginAs
 
@@ -75,10 +74,7 @@ internal class EngineObserver(
         }
 
         if (!session.url.isSameOriginAs(url)) {
-            session.contentPermissionRequest.consume {
-                it.reject()
-                true
-            }
+            store?.dispatch(ContentAction.ClearPermissionRequests(session.id))
         }
         session.url = url
 
@@ -255,15 +251,30 @@ internal class EngineObserver(
     }
 
     override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
+        store?.dispatch(
+            ContentAction.UpdatePermissionsRequest(
+                session.id,
+                permissionRequest
+            )
+        )
     }
 
     override fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) {
-        session.contentPermissionRequest = Consumable.empty()
+        store?.dispatch(
+            ContentAction.ConsumePermissionsRequest(
+                session.id,
+                permissionRequest
+            )
+        )
     }
 
     override fun onAppPermissionRequest(permissionRequest: PermissionRequest) {
-        session.appPermissionRequest = Consumable.from(permissionRequest)
+        store?.dispatch(
+            ContentAction.UpdateAppPermissionsRequest(
+                session.id,
+                permissionRequest
+            )
+        )
     }
 
     override fun onPromptRequest(promptRequest: PromptRequest) {

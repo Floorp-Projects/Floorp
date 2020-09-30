@@ -6,24 +6,27 @@ package mozilla.components.feature.sitepermissions
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.core.net.toUri
+import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import mozilla.components.browser.session.SelectionAwareSessionObserver
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSession
-import mozilla.components.browser.session.runWithSessionIdOrSelected
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
@@ -42,19 +45,20 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-import java.lang.IllegalStateException
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import java.security.InvalidParameterException
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 
 /**
- * This feature will subscribe to the currently selected [Session] and display
- * a suitable dialogs based on [Session.Observer.onAppPermissionRequested] or
- * [Session.Observer.onContentPermissionRequested]  events.
+ * This feature will collect [PermissionRequest] from [ContentState] and display
+ * suitable [SitePermissionsDialogFragment].
  * Once the dialog is closed the [PermissionRequest] will be consumed.
  *
  * @property context a reference to the context.
@@ -72,7 +76,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
  * the ActivityCompat.shouldShowRequestPermissionRationale or the Fragment.shouldShowRequestPermissionRationale values.
  **/
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class SitePermissionsFeature(
     private val context: Context,
     private val sessionManager: SessionManager,
@@ -83,18 +87,21 @@ class SitePermissionsFeature(
     var promptsStyling: PromptsStyling? = null,
     private val dialogConfig: DialogConfig? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
-    val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean
+    val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean,
+    private val store: BrowserStore,
+    private val customTabId: String? = null
 ) : LifecycleAwareFeature, PermissionsFeature {
 
-    private val observer = SitePermissionsRequestObserver(sessionManager, feature = this)
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
 
     internal var coroutineScopeInitializer = {
         CoroutineScope(Dispatchers.IO)
     }
+    private var sitePermissionScope: CoroutineScope? = null
+    private var appPermissionScope: CoroutineScope? = null
 
+    @ExperimentalCoroutinesApi
     override fun start() {
-        observer.observeIdOrSelected(sessionId)
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [SitePermissionsDialogFragment] visible from the last time. Re-attach
             // this feature so that the fragment can invoke the callback on this feature once the user
@@ -102,10 +109,83 @@ class SitePermissionsFeature(
             // the activity and fragments get recreated.
             reattachFragment(fragment as SitePermissionsDialogFragment)
         }
+
+        setupPermissionRequestsCollector()
+        setupAppPermissionRequestsCollector()
+    }
+
+    @VisibleForTesting
+    internal fun setupAppPermissionRequestsCollector() {
+        appPermissionScope =
+            store.flowScoped { flow ->
+                flow.mapNotNull { state ->
+                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.appPermissionRequestsList
+                }
+                    .filterChanged { it }
+                    .collect { appPermissionRequest ->
+                        val permissions = appPermissionRequest.permissions.map { it.id ?: "" }
+                        onNeedToRequestPermissions(permissions.toTypedArray())
+                    }
+            }
+    }
+
+    @VisibleForTesting
+    internal fun setupPermissionRequestsCollector() {
+        sitePermissionScope =
+            store.flowScoped { flow ->
+                flow.mapNotNull { state ->
+                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.permissionRequestsList
+                }
+                    .filterChanged { it }
+                    .collect { permissionRequest ->
+
+                        val host =
+                            getCurrentContentState()?.url
+                                ?: ""
+
+                        if (permissionRequest.permissions.all { it.isSupported() }) {
+                            onContentPermissionRequested(
+                                permissionRequest,
+                                host.tryGetHostFromUrl()
+                            )
+                        } else {
+                            consumePermissionRequest(permissionRequest)
+                            permissionRequest.reject()
+                        }
+                    }
+            }
+    }
+
+    @VisibleForTesting
+    internal fun consumePermissionRequest(
+        permissionRequest: PermissionRequest,
+        optionalSessionId: String? = null
+    ) {
+        val thisSessionId = optionalSessionId ?: sessionId
+        thisSessionId?.let { sessionId ->
+            store.dispatch(ContentAction.ConsumePermissionsRequest(sessionId, permissionRequest))
+        }
+    }
+
+    @VisibleForTesting
+    internal fun consumeAppPermissionRequest(
+        appPermissionRequest: PermissionRequest,
+        optionalSessionId: String? = null
+    ) {
+        val thisSessionId = optionalSessionId ?: sessionId
+        thisSessionId?.let { sessionId ->
+            store.dispatch(
+                ContentAction.ConsumeAppPermissionsRequest(
+                    sessionId,
+                    appPermissionRequest
+                )
+            )
+        }
     }
 
     override fun stop() {
-        observer.stop()
+        sitePermissionScope?.cancel()
+        appPermissionScope?.cancel()
     }
 
     /**
@@ -114,207 +194,234 @@ class SitePermissionsFeature(
      * @param grantResults the grant results for the corresponding permissions
      * @see [onNeedToRequestPermissions].
      */
-    @Suppress("MaxLineLength")
+    @Suppress("NestedBlockDepth")
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
-        sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
-            session.appPermissionRequest.consume { permissionsRequest ->
+        val currentContentSate = getCurrentContentState()
+        val appPermissionRequest = findRequestedAppPermission(permissions)
 
-                val allPermissionWereGranted = grantResults.all { grantResult ->
-                    grantResult == PackageManager.PERMISSION_GRANTED
-                }
+        if (appPermissionRequest != null && currentContentSate != null) {
+            val allPermissionWereGranted = grantResults.all { grantResult ->
+                grantResult == PackageManager.PERMISSION_GRANTED
+            }
 
-                if (grantResults.isNotEmpty() && allPermissionWereGranted) {
-                    permissionsRequest.grant()
-                } else {
-                    permissionsRequest.reject()
-                    permissions.forEach { systemPermission ->
-                        if (!onShouldShowRequestPermissionRationale(systemPermission)) {
-                            // The system permission is denied permanently
-                            val appPermission = listOf(permissionsRequest.permissions.find { it.id == systemPermission }
-                                    ?: throw IllegalStateException("$systemPermission is not part of the permission request"))
-                            storeSitePermissions(session, permissionsRequest, appPermission, status = BLOCKED)
-                        }
+            if (grantResults.isNotEmpty() && allPermissionWereGranted) {
+                appPermissionRequest.grant()
+            } else {
+                appPermissionRequest.reject()
+                permissions.forEach { systemPermission ->
+                    if (!onShouldShowRequestPermissionRationale(systemPermission)) {
+                        // The system permission is denied permanently
+                        storeSitePermissions(
+                            currentContentSate,
+                            appPermissionRequest,
+                            status = BLOCKED
+                        )
                     }
                 }
-                true
             }
+            consumeAppPermissionRequest(appPermissionRequest)
         }
     }
 
-    /**
-     * Notifies that the list of [grantedPermissions] have been granted for the [session].
-     *
-     * @param session the session which requested the permissions.
-     * @param grantedPermissions the list of [grantedPermissions] that have been granted.
-     * @param shouldStore indicates weather the permission should be stored.
-     * If it's true none prompt will show otherwise the prompt will be shown.
-     */
+    @VisibleForTesting
+    internal fun getCurrentContentState() =
+        store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content
+
+    @VisibleForTesting
+    internal fun findRequestedAppPermission(permissions: Array<String>): PermissionRequest? {
+        return getCurrentContentState()?.appPermissionRequestsList?.find {
+            permissions.contains(it.permissions.first().id)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun findRequestedPermission(permissionId: String): PermissionRequest? {
+        return getCurrentContentState()?.permissionRequestsList?.find {
+            it.id == permissionId
+        }
+    }
+
+    @VisibleForTesting
     internal fun onContentPermissionGranted(
-        session: Session,
-        grantedPermissions: List<Permission>,
+        permissionRequest: PermissionRequest,
         shouldStore: Boolean
     ) {
-        session.contentPermissionRequest.consume { request ->
-            request.grant()
-
-            if (shouldStore) {
-                storeSitePermissions(session, request, grantedPermissions, ALLOWED)
-            }
-            true
-        }
-    }
-
-    internal fun onPositiveButtonPress(sessionId: String, shouldStore: Boolean) {
-        sessionManager.runWithSession(sessionId) { session ->
-            session.contentPermissionRequest.consume {
-                onContentPermissionGranted(session, it.permissions, shouldStore)
-                true
+        permissionRequest.grant()
+        if (shouldStore) {
+            getCurrentContentState()?.let { contentState ->
+                storeSitePermissions(contentState, permissionRequest, ALLOWED)
             }
         }
     }
 
-    internal fun onNegativeButtonPress(sessionId: String, shouldStore: Boolean) {
-        sessionManager.runWithSession(sessionId) { session ->
-            session.contentPermissionRequest.consume {
-                onContentPermissionDeny(session, shouldStore)
-                true
-            }
+    internal fun onPositiveButtonPress(
+        permissionId: String,
+        sessionId: String,
+        shouldStore: Boolean
+    ) {
+        findRequestedPermission(permissionId)?.let { permissionRequest ->
+            consumePermissionRequest(permissionRequest, sessionId)
+            onContentPermissionGranted(permissionRequest, shouldStore)
         }
     }
 
-    internal fun onDismiss(sessionId: String) {
-        sessionManager.runWithSession(sessionId) { session ->
-            session.contentPermissionRequest.consume {
-                onContentPermissionDeny(session, false)
-                true
-            }
+    internal fun onNegativeButtonPress(
+        permissionId: String,
+        sessionId: String,
+        shouldStore: Boolean
+    ) {
+        findRequestedPermission(permissionId)?.let { permissionRequest ->
+            consumePermissionRequest(permissionRequest, sessionId)
+            onContentPermissionDeny(permissionRequest, shouldStore)
+        }
+    }
+
+    internal fun onDismiss(
+        permissionId: String,
+        sessionId: String
+    ) {
+        findRequestedPermission(permissionId)?.let { permissionRequest ->
+            consumePermissionRequest(permissionRequest, sessionId)
+            onContentPermissionDeny(permissionRequest, false)
         }
     }
 
     internal fun storeSitePermissions(
-        session: Session,
+        contentState: ContentState,
         request: PermissionRequest,
-        permissions: List<Permission> = request.permissions,
-        status: SitePermissions.Status
+        status: SitePermissions.Status,
+        coroutineScope: CoroutineScope = ioCoroutineScope
     ) {
-        if (session.private) {
+        if (contentState.private) {
             return
         }
-        ioCoroutineScope.launch {
+        coroutineScope.launch {
             synchronized(storage) {
-                var sitePermissions = storage.findSitePermissionsBy(request.getHost(session))
+                val host = contentState.url.tryGetHostFromUrl()
+                var sitePermissions =
+                    storage.findSitePermissionsBy(host)
 
                 if (sitePermissions == null) {
-                    sitePermissions = request.toSitePermissions(session, status = status, permissions = permissions)
+                    sitePermissions =
+                        request.toSitePermissions(
+                            host,
+                            status = status,
+                            permissions = request.permissions
+                        )
                     storage.save(sitePermissions)
                 } else {
-                    sitePermissions = request.toSitePermissions(session, status, sitePermissions)
+                    sitePermissions = request.toSitePermissions(host, status, sitePermissions)
                     storage.update(sitePermissions)
                 }
             }
         }
     }
 
-    /**
-     * Notifies that the permissions requested by this [session] were rejected.
-     *
-     * @param session the session which requested the permissions.
-     * @param shouldStore indicates weather the permission should be stored.
-     */
-    internal fun onContentPermissionDeny(session: Session, shouldStore: Boolean) {
-        session.contentPermissionRequest.consume { request ->
-            request.reject()
-
-            if (shouldStore) {
-                storeSitePermissions(session, request = request, status = BLOCKED)
+    internal fun onContentPermissionDeny(
+        permissionRequest: PermissionRequest,
+        shouldStore: Boolean
+    ) {
+        permissionRequest.reject()
+        if (shouldStore) {
+            getCurrentContentState()?.let { contentState ->
+                storeSitePermissions(contentState, permissionRequest, BLOCKED)
             }
-            true
         }
     }
 
     internal suspend fun onContentPermissionRequested(
-        session: Session,
-        request: PermissionRequest
+        permissionRequest: PermissionRequest,
+        host: String,
+        coroutineScope: CoroutineScope = ioCoroutineScope
     ): SitePermissionsDialogFragment? {
-
         // We want to warranty that all media permissions have the required system
         // permissions are granted first, otherwise, we reject the request
-        if (request.isMedia && !request.areAllMediaPermissionsGranted) {
-            request.reject()
-            session.contentPermissionRequest.consume { true }
+        if (permissionRequest.isMedia && !permissionRequest.areAllMediaPermissionsGranted) {
+            permissionRequest.reject()
+            consumePermissionRequest(permissionRequest)
             return null
         }
 
-        val permissionFromStorage = withContext(ioCoroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(request.getHost(session))
+        val permissionFromStorage = withContext(coroutineScope.coroutineContext) {
+            storage.findSitePermissionsBy(host)
         }
 
         val prompt = if (shouldApplyRules(permissionFromStorage) ||
-            request.isForAutoplay()) {
-            handleRuledFlow(request, session)
+            permissionRequest.isForAutoplay()
+        ) {
+            handleRuledFlow(permissionRequest, host)
         } else {
-            handleNoRuledFlow(permissionFromStorage, request, session)
+            handleNoRuledFlow(permissionFromStorage, permissionRequest, host)
         }
         prompt?.show(fragmentManager, FRAGMENT_TAG)
         return prompt
     }
 
-    private fun handleNoRuledFlow(
+    @VisibleForTesting
+    internal fun handleNoRuledFlow(
         permissionFromStorage: SitePermissions?,
         permissionRequest: PermissionRequest,
-        session: Session
+        host: String
     ): SitePermissionsDialogFragment? {
         return if (shouldShowPrompt(permissionRequest, permissionFromStorage)) {
-            createPrompt(permissionRequest, session)
+            createPrompt(permissionRequest, host)
         } else {
             if (permissionFromStorage.isGranted(permissionRequest)) {
                 permissionRequest.grant()
             } else {
                 permissionRequest.reject()
             }
-            session.contentPermissionRequest.consume { true }
+            consumePermissionRequest(permissionRequest)
             null
         }
     }
 
-    private fun shouldShowPrompt(
+    @VisibleForTesting
+    internal fun shouldShowPrompt(
         permissionRequest: PermissionRequest,
         permissionFromStorage: SitePermissions?
     ): Boolean {
-        return (permissionFromStorage == null || !permissionRequest.doNotAskAgain(permissionFromStorage))
+        return (permissionFromStorage == null || !permissionRequest.doNotAskAgain(
+            permissionFromStorage
+        ))
     }
 
-    private fun handleRuledFlow(
+    @VisibleForTesting
+    internal fun handleRuledFlow(
         permissionRequest: PermissionRequest,
-        session: Session
+        host: String
     ): SitePermissionsDialogFragment? {
         // For now we only support autoplay via sitePermissionsRules until we add support for
         // autoplay for specific sites see Fenix issue  #8603
         return if (permissionRequest.isForAutoplay() && sitePermissionsRules == null) {
             permissionRequest.reject()
-            session.contentPermissionRequest.consume { true }
+            consumePermissionRequest(permissionRequest)
             null
         } else {
-            val action = requireNotNull(sitePermissionsRules).getActionFrom(permissionRequest)
-            when (action) {
+            when (sitePermissionsRules?.getActionFrom(permissionRequest)) {
                 SitePermissionsRules.Action.ALLOWED -> {
                     permissionRequest.grant()
-                    session.contentPermissionRequest.consume { true }
+                    consumePermissionRequest(permissionRequest)
                     null
                 }
                 SitePermissionsRules.Action.BLOCKED -> {
                     permissionRequest.reject()
-                    session.contentPermissionRequest.consume { true }
+                    consumePermissionRequest(permissionRequest)
                     null
                 }
                 SitePermissionsRules.Action.ASK_TO_ALLOW -> {
-                    createPrompt(permissionRequest, session)
+                    createPrompt(permissionRequest, host)
+                }
+                null -> {
+                    consumePermissionRequest(permissionRequest)
+                    null
                 }
             }
         }
     }
 
-    private fun shouldApplyRules(permissionFromStorage: SitePermissions?) =
+    @VisibleForTesting
+    internal fun shouldApplyRules(permissionFromStorage: SitePermissions?) =
         sitePermissionsRules != null && permissionFromStorage == null
 
     private fun PermissionRequest.doNotAskAgain(permissionFromStore: SitePermissions): Boolean {
@@ -341,9 +448,9 @@ class SitePermissionsFeature(
     }
 
     private fun PermissionRequest.toSitePermissions(
-        session: Session,
+        host: String,
         status: SitePermissions.Status,
-        initialSitePermission: SitePermissions = getInitialSitePermissions(session, this),
+        initialSitePermission: SitePermissions = getInitialSitePermissions(host),
         permissions: List<Permission> = this.permissions
     ): SitePermissions {
         var sitePermissions = initialSitePermission
@@ -353,16 +460,23 @@ class SitePermissionsFeature(
         return sitePermissions
     }
 
-    internal fun getInitialSitePermissions(session: Session, request: PermissionRequest): SitePermissions {
+    @VisibleForTesting
+    internal fun getInitialSitePermissions(
+        host: String
+    ): SitePermissions {
         val rules = sitePermissionsRules
-        return rules?.toSitePermissions(request.getHost(session), savedAt = System.currentTimeMillis())
-                ?: SitePermissions(request.getHost(session), savedAt = System.currentTimeMillis())
+        return rules?.toSitePermissions(
+            host,
+            savedAt = System.currentTimeMillis()
+        )
+            ?: SitePermissions(host, savedAt = System.currentTimeMillis())
     }
 
     private fun PermissionRequest.isForAutoplay() =
         this.permissions.any { it is ContentAutoPlayInaudible || it is ContentAutoPlayAudible }
 
-    private fun updateSitePermissionsStatus(
+    @VisibleForTesting
+    internal fun updateSitePermissionsStatus(
         status: SitePermissions.Status,
         permission: Permission,
         sitePermissions: SitePermissions
@@ -394,19 +508,19 @@ class SitePermissionsFeature(
         }
     }
 
-    private fun createPrompt(
+    @VisibleForTesting
+    internal fun createPrompt(
         permissionRequest: PermissionRequest,
-        session: Session
+        host: String
     ): SitePermissionsDialogFragment {
-        val host = permissionRequest.getHost(session)
         return if (!permissionRequest.containsVideoAndAudioSources()) {
             val permission = permissionRequest.permissions.first()
-            handlingSingleContentPermissions(session.id, permission, host)
+            handlingSingleContentPermissions(permissionRequest, permission, host)
         } else {
             createSinglePermissionPrompt(
                 context,
-                session.id,
                 host,
+                permissionRequest,
                 R.string.mozac_feature_sitepermissions_camera_and_microphone,
                 R.drawable.mozac_ic_microphone,
                 showDoNotAskAgainCheckBox = true,
@@ -416,8 +530,9 @@ class SitePermissionsFeature(
         }
     }
 
-    private fun handlingSingleContentPermissions(
-        sessionId: String,
+    @VisibleForTesting
+    internal fun handlingSingleContentPermissions(
+        permissionRequest: PermissionRequest,
         permission: Permission,
         host: String
     ): SitePermissionsDialogFragment {
@@ -425,8 +540,8 @@ class SitePermissionsFeature(
             is ContentGeoLocation -> {
                 createSinglePermissionPrompt(
                     context,
-                    sessionId,
                     host,
+                    permissionRequest,
                     R.string.mozac_feature_sitepermissions_location_title,
                     R.drawable.mozac_ic_location,
                     showDoNotAskAgainCheckBox = true,
@@ -437,8 +552,8 @@ class SitePermissionsFeature(
             is ContentNotification -> {
                 createSinglePermissionPrompt(
                     context,
-                    sessionId,
                     host,
+                    permissionRequest,
                     R.string.mozac_feature_sitepermissions_notification_title,
                     R.drawable.mozac_ic_notification,
                     showDoNotAskAgainCheckBox = false,
@@ -449,8 +564,8 @@ class SitePermissionsFeature(
             is ContentAudioCapture, is ContentAudioMicrophone -> {
                 createSinglePermissionPrompt(
                     context,
-                    sessionId,
                     host,
+                    permissionRequest,
                     R.string.mozac_feature_sitepermissions_microfone_title,
                     R.drawable.mozac_ic_microphone,
                     showDoNotAskAgainCheckBox = true,
@@ -461,8 +576,8 @@ class SitePermissionsFeature(
             is ContentVideoCamera, is ContentVideoCapture -> {
                 createSinglePermissionPrompt(
                     context,
-                    sessionId,
                     host,
+                    permissionRequest,
                     R.string.mozac_feature_sitepermissions_camera_title,
                     R.drawable.mozac_ic_video,
                     showDoNotAskAgainCheckBox = true,
@@ -473,8 +588,8 @@ class SitePermissionsFeature(
             is ContentPersistentStorage -> {
                 createSinglePermissionPrompt(
                     context,
-                    sessionId,
                     host,
+                    permissionRequest,
                     R.string.mozac_feature_sitepermissions_persistent_storage_title,
                     R.drawable.mozac_ic_storage,
                     showDoNotAskAgainCheckBox = false,
@@ -487,11 +602,11 @@ class SitePermissionsFeature(
     }
 
     @Suppress("LongParameterList")
-    @SuppressLint("VisibleForTests")
-    private fun createSinglePermissionPrompt(
+    @VisibleForTesting
+    internal fun createSinglePermissionPrompt(
         context: Context,
-        sessionId: String,
         host: String,
+        permissionRequest: PermissionRequest,
         @StringRes titleId: Int,
         @DrawableRes iconId: Int,
         showDoNotAskAgainCheckBox: Boolean,
@@ -500,24 +615,20 @@ class SitePermissionsFeature(
     ): SitePermissionsDialogFragment {
         val title = context.getString(titleId, host)
 
+        val currentSessionId: String =
+            sessionManager.selectedSessionOrThrow.id
+
         return SitePermissionsDialogFragment.newInstance(
-            sessionId,
+            currentSessionId,
             title,
             iconId,
+            permissionRequest.id,
             this,
             showDoNotAskAgainCheckBox,
             isNotificationRequest = isNotificationRequest,
             shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice
         )
     }
-
-    private fun onAppPermissionRequested(permissionRequest: PermissionRequest): Boolean {
-        val permissions = permissionRequest.permissions.map { it.id ?: "" }
-        onNeedToRequestPermissions(permissions.toTypedArray())
-        return false
-    }
-
-    private fun PermissionRequest.getHost(session: Session) = (uri?.toUri()?.host ?: session.url.toUri().host ?: "")
 
     private val PermissionRequest.isMedia: Boolean
         get() {
@@ -543,28 +654,6 @@ class SitePermissionsFeature(
             }
             return systemPermissions.all { context.isPermissionGranted((it)) }
         }
-
-    internal class SitePermissionsRequestObserver(
-        sessionManager: SessionManager,
-        private val feature: SitePermissionsFeature
-    ) : SelectionAwareSessionObserver(sessionManager) {
-
-        override fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
-            runBlocking {
-                if (permissionRequest.permissions.all { it.isSupported() }) {
-                    feature.onContentPermissionRequested(session, permissionRequest)
-                } else {
-                    session.contentPermissionRequest.consume { true }
-                    permissionRequest.reject()
-                }
-            }
-            return false
-        }
-
-        override fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
-            return feature.onAppPermissionRequested(permissionRequest)
-        }
-    }
 
     data class PromptsStyling(
         val gravity: Int,
@@ -594,19 +683,25 @@ class SitePermissionsFeature(
      */
     private fun reattachFragment(fragment: SitePermissionsDialogFragment) {
         val session = sessionManager.findSessionById(fragment.sessionId)
-        if (session == null ||
-            session.contentPermissionRequest.isConsumed() &&
-            session.appPermissionRequest.isConsumed()
+        val contentState = getCurrentContentState()
+
+        if (session == null || contentState == null ||
+            (noPermissionRequests(contentState))
         ) {
             fragmentManager.beginTransaction()
                 .remove(fragment)
                 .commitAllowingStateLoss()
-            return
+        } else {
+            // Re-assign the feature instance so that the fragment can invoke us once the
+            // user makes a selection or cancels the dialog.
+            fragment.feature = this
         }
-        // Re-assign the feature instance so that the fragment can invoke us once the user makes a selection or cancels
-        // the dialog.
-        fragment.feature = this
     }
+
+    @VisibleForTesting
+    internal fun noPermissionRequests(contentState: ContentState) =
+        contentState.appPermissionRequestsList.isEmpty() &&
+                contentState.permissionRequestsList.isEmpty()
 }
 
 internal fun SitePermissions?.isGranted(permissionRequest: PermissionRequest): Boolean {
@@ -619,7 +714,8 @@ internal fun SitePermissions?.isGranted(permissionRequest: PermissionRequest): B
     }
 }
 
-private fun isPermissionGranted(
+@VisibleForTesting
+internal fun isPermissionGranted(
     permission: Permission,
     permissionFromStorage: SitePermissions
 ): Boolean {

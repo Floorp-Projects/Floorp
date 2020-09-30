@@ -22,16 +22,19 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
+import java.util.UUID
 
 /**
  * Gecko-based implementation of [PermissionRequest].
  *
  * @property permissions the list of requested permissions.
  * @property callback the callback to grant/reject the requested permissions.
+ * @property id a unique identifier for the request.
  */
 sealed class GeckoPermissionRequest constructor(
     override val permissions: List<Permission>,
-    private val callback: PermissionDelegate.Callback? = null
+    private val callback: PermissionDelegate.Callback? = null,
+    override val id: String = UUID.randomUUID().toString()
 ) : PermissionRequest {
 
     /**

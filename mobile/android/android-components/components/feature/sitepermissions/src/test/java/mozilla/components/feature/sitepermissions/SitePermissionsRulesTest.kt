@@ -7,6 +7,7 @@ package mozilla.components.feature.sitepermissions
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
@@ -51,7 +52,8 @@ class SitePermissionsRulesTest {
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
             fragmentManager = mock(),
-            onShouldShowRequestPermissionRationale = mock()
+            onShouldShowRequestPermissionRationale = mock(),
+            store = BrowserStore()
         )
     }
 

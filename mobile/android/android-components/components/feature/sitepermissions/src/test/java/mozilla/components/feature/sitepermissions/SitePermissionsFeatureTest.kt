@@ -4,49 +4,56 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.Manifest
-import android.content.pm.PackageManager.PERMISSION_DENIED
-import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
+import mozilla.components.concept.engine.permission.Permission.AppAudio
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
-import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
-import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.security.InvalidParameterException
@@ -54,550 +61,565 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsFeatureTest {
-
     private lateinit var mockSessionManager: SessionManager
     private lateinit var sitePermissionFeature: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
     private lateinit var mockFragmentManager: FragmentManager
+    private lateinit var mockStore: BrowserStore
+    private lateinit var mockContentState: ContentState
+    private lateinit var mockPermissionRequest: PermissionRequest
+    private lateinit var mockAppPermissionRequest: PermissionRequest
+    private lateinit var mockSitePermissionRules: SitePermissionsRules
+
+    private val testCoroutineDispatcher = TestCoroutineDispatcher()
+    private val testScope = CoroutineScope(testCoroutineDispatcher)
+
+    companion object {
+        const val SESSION_ID = "testSessionId"
+        const val URL = "http://www.example.com"
+        const val PERMISSION_ID = "PERMISSION_ID"
+    }
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testCoroutineDispatcher)
         val engine = mock<Engine>()
-        mockSessionManager = Mockito.spy(SessionManager(engine))
+        mockSessionManager = spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
         mockFragmentManager = mockFragmentManager()
+        mockStore = mock()
+        mockContentState = mock()
+        mockPermissionRequest = mock()
+        mockAppPermissionRequest = mock()
+        mockSitePermissionRules = mock()
 
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-            storage = mockStorage,
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
+        sitePermissionFeature = spy(
+            SitePermissionsFeature(
+                context = testContext,
+                sessionManager = mockSessionManager,
+                sitePermissionsRules = mockSitePermissionRules,
+                onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
+                storage = mockStorage,
+                fragmentManager = mockFragmentManager,
+                onShouldShowRequestPermissionRationale = { false },
+                store = mockStore,
+                sessionId = SESSION_ID
+            )
+        )
+    }
+
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testCoroutineDispatcher.cleanupTestCoroutines()
+    }
+
+    @Test
+    fun `GIVEN a sessionId WHEN calling consumePermissionRequest THEN dispatch ConsumePermissionsRequest action with given id`() {
+        // when
+        sitePermissionFeature.consumePermissionRequest(mockPermissionRequest, "sessionIdTest")
+
+        // then
+        verify(mockStore).dispatch(
+            ContentAction.ConsumePermissionsRequest
+                ("sessionIdTest", mockPermissionRequest)
         )
     }
 
     @Test
-    fun `a new onAppPermissionRequested will call onNeedToRequestPermissions`() {
+    fun `GIVEN no sessionId WHEN calling consumePermissionRequest THEN dispatch ConsumePermissionsRequest action with feature sessionId`() {
+        // when
+        sitePermissionFeature.consumePermissionRequest(mockPermissionRequest)
 
-        val session = getSelectedSession()
-
-        var wasCalled = false
-
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = {
-                wasCalled = true
-            },
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
+        // then
+        verify(mockStore).dispatch(
+            ContentAction.ConsumePermissionsRequest
+                (SESSION_ID, mockPermissionRequest)
         )
-
-        sitePermissionFeature.start()
-
-        val mockPermissionRequest: PermissionRequest = mock()
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        assertTrue(wasCalled)
     }
 
     @Test
-    fun `when users click the deny & don't ask again button in a system permission dialog, we must store the site permission`() {
-        val session = getSelectedSession()
-        var wasCalled = false
+    fun `GIVEN a sessionId WHEN calling consumeAppPermissionRequest THEN dispatch ConsumeAppPermissionsRequest action with given id`() {
+        // when
+        sitePermissionFeature.consumeAppPermissionRequest(mockAppPermissionRequest, "sessionIdTest")
+
+        // then
+        verify(mockStore).dispatch(
+            ContentAction.ConsumeAppPermissionsRequest
+                ("sessionIdTest", mockAppPermissionRequest)
+        )
+    }
+
+    @Test
+    fun `GIVEN no sessionId WHEN calling consumeAppPermissionRequest THEN dispatch ConsumeAppPermissionsRequest action with feature sessionId`() {
+        // when
+        sitePermissionFeature.consumeAppPermissionRequest(mockAppPermissionRequest)
+
+        // then
+        verify(mockStore).dispatch(
+            ContentAction.ConsumeAppPermissionsRequest
+                (SESSION_ID, mockAppPermissionRequest)
+        )
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest with all granted permissions WHEN onPermissionsResult() THEN grant() and consumeAppPermissionRequest() are called`() {
+        // given
+        doReturn(mockContentState).`when`(sitePermissionFeature)
+            .getCurrentContentState()
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(arrayOf("permission"), arrayOf(0).toIntArray())
+
+        // then
+        verify(mockAppPermissionRequest).grant()
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest with blocked permissions and !onShouldShowRequestPermissionRationale WHEN onPermissionsResult() THEN reject(), storeSitePermissions, consume are called`() {
+        // given
+        doReturn(mockContentState).`when`(sitePermissionFeature)
+            .getCurrentContentState()
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+        doNothing().`when`(sitePermissionFeature)
+            .storeSitePermissions(any(), any(), any(), any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(
+            arrayOf("permission1", "permission2"),
+            arrayOf(-1, -1).toIntArray()
+        )
+
+        // then
+        verify(mockAppPermissionRequest).reject()
+        verify(sitePermissionFeature, times(2))
+            .storeSitePermissions(mockContentState, mockAppPermissionRequest, BLOCKED)
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN shouldStore true WHEN onContentPermissionGranted() THEN storeSitePermissions() called`() {
+        // given
+        doNothing().`when`(sitePermissionFeature)
+            .storeSitePermissions(any(), any(), any(), any())
+        doReturn(mockContentState).`when`(sitePermissionFeature)
+            .getCurrentContentState()
+
+        // when
+        sitePermissionFeature.onContentPermissionGranted(mockPermissionRequest, true)
+
+        // then
+        verify(sitePermissionFeature)
+            .storeSitePermissions(mockContentState, mockPermissionRequest, ALLOWED)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest WHEN onPositiveButtonPress() THEN consumePermissionRequest, onContentPermissionGranted are called`() {
+        // given
+        doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+        doNothing().`when`(sitePermissionFeature)
+            .onContentPermissionGranted(mockPermissionRequest, true)
+        doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
+            anyString())
+
+        // when
+        sitePermissionFeature.onPositiveButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+        // then
+        verify(sitePermissionFeature)
+            .consumePermissionRequest(mockPermissionRequest, SESSION_ID)
+        verify(sitePermissionFeature)
+            .onContentPermissionGranted(mockPermissionRequest, true)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest WHEN onNegativeButtonPress() THEN consumePermissionRequest, onContentPermissionDeny are called`() {
+        // given
+        doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+        doNothing().`when`(sitePermissionFeature)
+            .onContentPermissionDeny(mockPermissionRequest, true)
+        doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
+            anyString())
+
+        // when
+        sitePermissionFeature.onNegativeButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+        // then
+        verify(sitePermissionFeature)
+            .consumePermissionRequest(mockPermissionRequest, SESSION_ID)
+        verify(sitePermissionFeature)
+            .onContentPermissionDeny(mockPermissionRequest, true)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest WHEN onDismiss() THEN consumePermissionRequest, onContentPermissionDeny are called`() {
+        // given
+        doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+        doNothing().`when`(sitePermissionFeature)
+            .onContentPermissionDeny(mockPermissionRequest, false)
+        doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
+            anyString())
+
+        // when
+        sitePermissionFeature.onDismiss(PERMISSION_ID, SESSION_ID)
+
+        // then
+        verify(sitePermissionFeature)
+            .consumePermissionRequest(mockPermissionRequest, SESSION_ID)
+        verify(sitePermissionFeature)
+            .onContentPermissionDeny(mockPermissionRequest, false)
+    }
+
+    @Test
+    fun `GIVEN a new permissionRequest WHEN storeSitePermissions() THEN save(permissionRequest) is called`() {
+        // given
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        doReturn(null).`when`(mockStorage).findSitePermissionsBy(ArgumentMatchers.anyString())
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(Permission.AppAudio(id = "permission")))
         }
-        val feature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onShouldShowRequestPermissionRationale = {
-                wasCalled = true
-                false
-            },
-            fragmentManager = mockFragmentManager,
-            onNeedToRequestPermissions = mock(),
-            storage = mockStorage
-        )
-        runBlocking {
-            feature.coroutineScopeInitializer = { this }
-            session.appPermissionRequest = Consumable.from(mockPermissionRequest)
+        doReturn(sitePermissions).`when`(sitePermissionFeature)
+            .updateSitePermissionsStatus(any(), any(), any())
+        whenever(mockContentState.url).thenReturn(URL)
 
-            feature.onPermissionsResult(arrayOf("permission"), arrayOf<Int>().toIntArray())
-            assertTrue(wasCalled)
-        }
-        verify(mockStorage).findSitePermissionsBy(anyString())
-        verify(mockStorage).save(any())
+        // when
+        sitePermissionFeature.storeSitePermissions(
+            mockContentState,
+            mockPermissionRequest,
+            ALLOWED,
+            testScope
+        )
+
+        // then
+        verify(mockStorage).save(sitePermissions)
     }
 
     @Test
-    fun `requesting an invalid content permission request will reject the permission request`() {
-        val session = getSelectedSession()
+    fun `GIVEN an already saved permissionRequest WHEN storeSitePermissions() THEN update(permissionRequest) is called`() {
+        // given
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        doReturn(sitePermissions).`when`(mockStorage)
+            .findSitePermissionsBy(ArgumentMatchers.anyString())
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(AppAudio(id = "permission")))
+        }
+        doReturn(sitePermissions).`when`(sitePermissionFeature)
+            .updateSitePermissionsStatus(any(), any(), any())
+        whenever(mockContentState.url).thenReturn(URL)
 
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = {
-            },
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
+        // when
+        sitePermissionFeature.storeSitePermissions(
+            mockContentState,
+            mockPermissionRequest,
+            ALLOWED,
+            testScope
         )
 
-        sitePermissionFeature.start()
+        // then
+        verify(mockStorage).update(sitePermissions)
+    }
 
-        val mockPermissionRequest: PermissionRequest = mock()
+    @Test
+    fun `GIVEN permissionRequest WHEN onContentPermissionDeny THEN reject(), storeSitePermissions are called`() {
+        // given
+        doNothing().`when`(mockPermissionRequest).reject()
+        doReturn(mockContentState).`when`(sitePermissionFeature).getCurrentContentState()
+        doNothing().`when`(sitePermissionFeature).storeSitePermissions(any(), any(), any(), any())
 
-        doReturn(listOf(Generic("", ""))).`when`(mockPermissionRequest).permissions
+        // then
+        sitePermissionFeature.onContentPermissionDeny(mockPermissionRequest, true)
 
-        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
-
+        // when
         verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).storeSitePermissions(
+            mockContentState,
+            mockPermissionRequest,
+            BLOCKED
+        )
     }
 
     @Test
-    fun `after calling stop the feature will not be notified by new incoming permissionRequests`() {
+    fun `GIVEN a media permissionRequest without all media permissions granted WHEN onContentPermissionRequested() THEN reject, consumePermissionRequest are called `() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentVideoCamera(id = "permission")))
+        }
+        doNothing().`when`(mockPermissionRequest).reject()
 
-        val session = getSelectedSession()
+        // when
+        runBlockingTest {
+            sitePermissionFeature.onContentPermissionRequested(mockPermissionRequest, URL)
+        }
 
-        var wasCalled = false
-
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = {
-                wasCalled = true
-            },
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
-        )
-
-        sitePermissionFeature.start()
-
-        val mockPermissionRequest: PermissionRequest = mock()
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        assertTrue(wasCalled)
-
-        wasCalled = false
-
-        sitePermissionFeature.stop()
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        assertFalse(wasCalled)
+        // then
+        verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
     }
 
     @Test
-    fun `providing a custom session id to the feature will notified on new incoming permissionRequests`() {
-        val customTabSession = Session("customTabSessionId")
-        val selectedSession = Session("")
+    fun `GIVEN location permissionRequest and shouldApplyRules is true WHEN onContentPermissionRequested() THEN handleRuledFlow is called`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+        }
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        val mockedSitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(true).`when`(sitePermissionFeature).shouldApplyRules(any())
+        doReturn(mockedSitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .handleRuledFlow(mockPermissionRequest, URL)
 
-        mockSessionManager.add(selectedSession)
-        mockSessionManager.select(selectedSession)
-        mockSessionManager.add(customTabSession)
+        // when
+        runBlockingTest {
+            sitePermissionFeature.onContentPermissionRequested(
+                mockPermissionRequest,
+                URL,
+                testScope
+            )
+        }
 
-        var wasCalled = false
-
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = {
-                wasCalled = true
-            },
-            sessionId = customTabSession.id,
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
-        )
-
-        sitePermissionFeature.start()
-
-        val mockPermissionRequest: PermissionRequest = mock()
-        customTabSession.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        assertTrue(wasCalled)
+        // then
+        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(sitePermissionFeature).handleRuledFlow(mockPermissionRequest, URL)
     }
 
     @Test
-    fun `granting a content permission must call grant and consume contentPermissionRequest`() {
-        val permissions = listOf(
-            ContentVideoCapture("", "back camera"),
-            ContentVideoCamera("", "front camera"),
-            ContentGeoLocation(),
-            ContentNotification(),
-            ContentAudioCapture(),
-            ContentAudioMicrophone()
-        )
-
-        permissions.forEach { permission ->
-            val session = getSelectedSession()
-            var grantWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun grant(permissions: List<Permission>) {
-                    grantWasCalled = true
-                }
-
-                override fun reject() = Unit
-            }
-
-            mockStorage = mock()
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            grantPermission(Manifest.permission.CAMERA)
-            grantPermission(Manifest.permission.RECORD_AUDIO)
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-                assertNotNull(prompt)
-                sitePermissionFeature.onPositiveButtonPress(session.id, false)
-                assertTrue(grantWasCalled)
-                assertTrue(session.contentPermissionRequest.isConsumed())
-            }
+    fun `GIVEN location permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
         }
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(false).`when`(sitePermissionFeature).shouldApplyRules(any())
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
+
+        // when
+        runBlockingTest {
+            sitePermissionFeature.onContentPermissionRequested(
+                mockPermissionRequest,
+                URL,
+                testScope
+            )
+        }
+
+        // then
+        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(sitePermissionFeature).handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
     }
 
     @Test
-    fun `onContentPermissionRequested with rules must behave according to the rules object`() {
-        val permissions = listOf(
-            ContentGeoLocation(),
-            ContentNotification(),
-            ContentAudioCapture(),
-            ContentAudioMicrophone(),
-            ContentPersistentStorage()
-        )
+    fun `GIVEN shouldShowPrompt true WHEN handleNoRuledFlow THEN createPrompt is called`() {
+        // given
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        doReturn(true).`when`(sitePermissionFeature)
+            .shouldShowPrompt(mockPermissionRequest, sitePermissions)
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .createPrompt(any(), any())
 
-        val rules = SitePermissionsRules(
-            location = SitePermissionsRules.Action.BLOCKED,
-            camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
-            notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
-            microphone = SitePermissionsRules.Action.BLOCKED,
-            autoplayAudible = SitePermissionsRules.Action.BLOCKED,
-            autoplayInaudible = SitePermissionsRules.Action.ASK_TO_ALLOW,
-            persistentStorage = SitePermissionsRules.Action.BLOCKED
-        )
+        // when
+        sitePermissionFeature.handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
 
-        sitePermissionFeature.sitePermissionsRules = rules
-        grantPermission(Manifest.permission.RECORD_AUDIO)
-        permissions.forEach { permission ->
-            val session = getSelectedSession()
-            var grantWasCalled = false
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun grant(permissions: List<Permission>) {
-                    grantWasCalled = true
-                }
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-            }
-
-            mockStorage = mock()
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                when (permission) {
-                    is ContentGeoLocation, is ContentAudioCapture, is ContentAudioMicrophone,
-                    is ContentPersistentStorage -> {
-                        assertTrue(rejectWasCalled)
-                        assertFalse(grantWasCalled)
-                        assertNull(prompt)
-                        assertTrue(session.contentPermissionRequest.isConsumed())
-                    }
-                    is ContentVideoCamera, is ContentVideoCapture, is ContentNotification -> {
-                        assertFalse(rejectWasCalled)
-                        assertFalse(grantWasCalled)
-                        assertNotNull(prompt)
-                    }
-
-                    else -> throw InvalidParameterException()
-                }
-            }
-        }
+        // then
+        verify(sitePermissionFeature).createPrompt(mockPermissionRequest, URL)
     }
 
     @Test
-    fun `only autoplay requests should use default rules instead of site rules`() {
-        val siteRules = SitePermissions(
-            location = BLOCKED,
-            camera = BLOCKED,
-            notification = BLOCKED,
-            microphone = BLOCKED,
-            autoplayAudible = BLOCKED,
-            autoplayInaudible = BLOCKED,
-            localStorage = BLOCKED,
-            origin = "any",
-            savedAt = 1
-        )
-        val defaultRules = SitePermissionsRules(
-            location = SitePermissionsRules.Action.ALLOWED,
-            camera = SitePermissionsRules.Action.ALLOWED,
-            notification = SitePermissionsRules.Action.ALLOWED,
-            microphone = SitePermissionsRules.Action.ALLOWED,
-            autoplayAudible = SitePermissionsRules.Action.ALLOWED,
-            autoplayInaudible = SitePermissionsRules.Action.ALLOWED,
-            persistentStorage = SitePermissionsRules.Action.ALLOWED
-        )
+    fun `GIVEN shouldShowPrompt false and permissionFromStorage not granted WHEN handleNoRuledFlow THEN reject, consumePermissionRequest are called `() {
+        // given
+        doReturn(false).`when`(sitePermissionFeature).shouldShowPrompt(mockPermissionRequest, null)
 
-        doReturn(siteRules).`when`(mockStorage).findSitePermissionsBy(anyString())
-        sitePermissionFeature.sitePermissionsRules = defaultRules
+        // when
+        sitePermissionFeature.handleNoRuledFlow(null, mockPermissionRequest, URL)
 
-        fun testPermission(permission: Permission, shouldUseDefaultRules: Boolean) {
-            var grantWasCalled = false
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun grant(permissions: List<Permission>) {
-                    grantWasCalled = true
-                }
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-            }
-
-            mockStorage = mock()
-            val session = getSelectedSession()
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                assertTrue(grantWasCalled == shouldUseDefaultRules)
-                assertTrue(rejectWasCalled != shouldUseDefaultRules)
-                assertNull(prompt)
-            }
-        }
-
-        listOf(ContentAutoPlayInaudible(), ContentAutoPlayAudible()).forEach {
-            testPermission(permission = it, shouldUseDefaultRules = true)
-        }
-        listOf(
-            ContentGeoLocation(),
-            ContentNotification(),
-            ContentAudioCapture(),
-            ContentAudioMicrophone()
-        ).forEach {
-            testPermission(permission = it, shouldUseDefaultRules = false)
-        }
+        // then
+        verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
     }
 
     @Test
-    fun `autoplay requests should be denied if sitePermissionsRules is null`() {
-        val siteRules = SitePermissions(
-            location = ALLOWED,
-            camera = ALLOWED,
-            notification = ALLOWED,
-            microphone = ALLOWED,
-            autoplayAudible = ALLOWED,
-            autoplayInaudible = ALLOWED,
-            origin = "any",
-            savedAt = 1
-        )
-
-        doReturn(siteRules).`when`(mockStorage).findSitePermissionsBy(anyString())
-        sitePermissionFeature.sitePermissionsRules = null
-
-        fun assertPermissionRejected(permission: Permission) {
-            var grantWasCalled = false
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun grant(permissions: List<Permission>) {
-                    grantWasCalled = true
-                }
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-            }
-
-            mockStorage = mock()
-            val session = getSelectedSession()
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                assertFalse(grantWasCalled)
-                assertTrue(rejectWasCalled)
-                assertNull(prompt)
-            }
+    fun `GIVEN shouldShowPrompt false and permissionFromStorage granted WHEN handleNoRuledFlow THEN grant, consumePermissionRequest are called `() {
+        // given
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0, location = ALLOWED)
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
         }
+        doReturn(false).`when`(sitePermissionFeature)
+            .shouldShowPrompt(mockPermissionRequest, sitePermissions)
 
-        listOf(ContentAutoPlayInaudible(), ContentAutoPlayAudible()).forEach {
-            assertPermissionRejected(permission = it)
-        }
+        // when
+        sitePermissionFeature.handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
+
+        // then
+        verify(mockPermissionRequest, atLeastOnce()).grant()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
     }
 
     @Test
-    fun `storing a new SitePermissions must call save on the store`() {
-        val sitePermissionsList = listOf(ContentGeoLocation())
-        val request: PermissionRequest = mock()
-        val mockSession: Session = mock {
-            whenever(url).thenReturn(" http://mozilla.org")
-        }
-        runBlocking {
-            sitePermissionFeature.coroutineScopeInitializer = {
-                this
-            }
-            sitePermissionFeature.storeSitePermissions(mockSession, request, sitePermissionsList, ALLOWED)
-        }
-        verify(mockStorage).findSitePermissionsBy(anyString())
-        verify(mockStorage).save(any())
-    }
-
-    @Test
-    fun `storing a SitePermissions with a private session must NOT call save on the store`() {
-        val sitePermissionsList = listOf(ContentGeoLocation())
-        val request: PermissionRequest = mock()
-        val session: Session = mock()
-
-        doReturn(true).`when`(session).private
-
-        runBlocking {
-            sitePermissionFeature.coroutineScopeInitializer = {
-                this
-            }
-            sitePermissionFeature.storeSitePermissions(session, request, sitePermissionsList, ALLOWED)
+    fun `GIVEN permissionRequest with isForAutoplay true and sitePermissionsRules null WHEN handleRuledFlow THEN reject, consumePermissionRequest are called`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
         }
 
-        verify(mockStorage, times(0)).save(any())
-    }
-
-    @Test
-    fun `storing an already existing SitePermissions must call update on the store`() {
-        val sitePermissionsList = listOf(
-            ContentGeoLocation(),
-            ContentNotification(),
-            ContentAudioCapture(),
-            ContentAudioMicrophone(),
-            ContentAutoPlayAudible(),
-            ContentAutoPlayInaudible(),
-            Generic(id = null)
-        )
-
-        var exceptionThrown = false
-
-        sitePermissionsList.forEachIndexed { index, permission ->
-            val mockRequest: PermissionRequest = mock()
-            val sitePermissionFromStorage: SitePermissions = mock()
-            val permissions = listOf(permission)
-            val mockSession: Session = mock {
-                whenever(url).thenReturn(" http://mozilla.org")
-            }
-            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
-            doReturn(permissions).`when`(mockRequest).permissions
-
-            val feature = SitePermissionsFeature(
+        val sitePermissionFeature = spy(
+            SitePermissionsFeature(
                 context = testContext,
                 sessionManager = mockSessionManager,
-                fragmentManager = mockFragmentManager,
+                sitePermissionsRules = null,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
                 storage = mockStorage,
-                onShouldShowRequestPermissionRationale = mock()
+                fragmentManager = mockFragmentManager,
+                onShouldShowRequestPermissionRationale = { false },
+                store = mockStore,
+                sessionId = SESSION_ID
+            )
+        )
+
+        // when
+        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
+
+        // then
+        verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest with isForAutoplay false and ALLOWED WHEN handleRuledFlow THEN grant, consumePermissionRequest are called`() {
+        // given
+        val mockPermissionsRules: SitePermissionsRules = mock()
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+        }
+        doReturn(mockPermissionsRules).`when`(sitePermissionFeature).sitePermissionsRules
+        doReturn(SitePermissionsRules.Action.ALLOWED).`when`(mockPermissionsRules)
+            .getActionFrom(mockPermissionRequest)
+
+        // when
+        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
+
+        // then
+        verify(mockPermissionRequest).grant()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest with isForAutoplay false and BLOCKED WHEN handleRuledFlow THEN reject, consumePermissionRequest are called`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+        }
+        doReturn(mockSitePermissionRules).`when`(sitePermissionFeature).sitePermissionsRules
+        doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockSitePermissionRules)
+            .getActionFrom(mockPermissionRequest)
+
+        // when
+        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
+
+        // then
+        verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest with isForAutoplay false and ASK_TO_ALLOW WHEN handleRuledFlow THEN createPrompt is called`() {
+        // given
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+        }
+        doReturn(mockSitePermissionRules).`when`(sitePermissionFeature).sitePermissionsRules
+        doReturn(SitePermissionsRules.Action.ASK_TO_ALLOW).`when`(mockSitePermissionRules)
+            .getActionFrom(mockPermissionRequest)
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .createPrompt(mockPermissionRequest, URL)
+
+        // when
+        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
+
+        // then
+        verify(sitePermissionFeature).createPrompt(mockPermissionRequest, URL)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest and containsVideoAndAudioSources false WHEN createPrompt THEN handlingSingleContentPermissions is called`() {
+        // given
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+        }
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .handlingSingleContentPermissions(any(), any(), any())
+
+        // when
+        sitePermissionFeature.createPrompt(mockPermissionRequest, URL)
+
+        // then
+        verify(sitePermissionFeature).handlingSingleContentPermissions(
+            mockPermissionRequest, ContentGeoLocation(id = "permission"), URL
+        )
+    }
+
+    @Test
+    fun `GIVEN permissionRequest and containsVideoAndAudioSources true WHEN createPrompt THEN createSinglePermissionPrompt is called`() {
+        // given
+        val permissionRequest: PermissionRequest = object : PermissionRequest {
+            override val uri: String?
+                get() = "http://www.mozilla.org"
+            override val id: String
+                get() = PERMISSION_ID
+
+            override val permissions: List<Permission>
+                get() = listOf(
+                    ContentVideoCapture("", "back camera"),
+                    ContentVideoCamera("", "front camera"),
+                    ContentAudioMicrophone()
+                )
+
+            override fun grant(permissions: List<Permission>) {
+            }
+
+            override fun containsVideoAndAudioSources() = true
+
+            override fun reject() = Unit
+        }
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+            .createSinglePermissionPrompt(
+                any(),
+                ArgumentMatchers.anyString(),
+                any(),
+                ArgumentMatchers.anyInt(),
+                ArgumentMatchers.anyInt(),
+                ArgumentMatchers.anyBoolean(),
+                ArgumentMatchers.anyBoolean(),
+                ArgumentMatchers.anyBoolean()
             )
 
-            try {
-                runBlocking {
-                    feature.coroutineScopeInitializer = { this }
-                    feature.storeSitePermissions(mockSession, mockRequest, permissions, ALLOWED)
-                }
-                verify(mockStorage, times(index + 1)).findSitePermissionsBy(anyString())
-                verify(mockStorage, times(index + 1)).update(any())
-            } catch (e: InvalidParameterException) {
-                exceptionThrown = true
-            }
-        }
-        assertTrue(exceptionThrown)
-    }
+        // when
+        sitePermissionFeature.createPrompt(permissionRequest, URL)
 
-    @Test
-    fun `requesting a content permissions with an already stored allowed permissions will auto granted it and not show a prompt`() {
-        val request: PermissionRequest = mock()
-        val mockSession: Session = mock {
-            whenever(url).thenReturn(" http://mozilla.org")
-        }
-        val mockConsumable: Consumable<PermissionRequest> = mock()
-        val sitePermissionFromStorage: SitePermissions = mock()
-        val permissionList = listOf(ContentGeoLocation())
-
-        doReturn(permissionList).`when`(request).permissions
-        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
-        doReturn(ALLOWED).`when`(sitePermissionFromStorage).location
-        doReturn(mockConsumable).`when`(mockSession).contentPermissionRequest
-        doReturn(true).`when`(mockConsumable).consume { true }
-
-        runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(mockSession, request)
-            verify(mockStorage).findSitePermissionsBy(anyString())
-            verify(request).grant(permissionList)
-            assertNull(prompt)
-        }
-    }
-
-    @Test
-    fun `requesting a content permissions with an already stored blocked permission will auto block it and not show a prompt`() {
-        val request: PermissionRequest = mock()
-        val mockSession: Session = mock { whenever(url).thenReturn(" http://mozilla.org") }
-        val mockConsumable: Consumable<PermissionRequest> = mock()
-        val sitePermissionFromStorage: SitePermissions = mock()
-        val permissionList = listOf(ContentGeoLocation())
-
-        doReturn(permissionList).`when`(request).permissions
-        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
-        doReturn(BLOCKED).`when`(sitePermissionFromStorage).location
-        doReturn(mockConsumable).`when`(mockSession).contentPermissionRequest
-        doReturn(true).`when`(mockConsumable).consume { true }
-
-        runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(mockSession, request)
-            verify(mockStorage).findSitePermissionsBy(anyString())
-            verify(request).reject()
-            assertNull(prompt)
-        }
-    }
-
-    @Test
-    fun `requesting a content permissions with already permissions and doNotAskAgain equals false on the store, will show a prompt`() {
-        val request: PermissionRequest = mock()
-        val sitePermissionFromStorage: SitePermissions = mock()
-        val permissionList = listOf(ContentGeoLocation())
-
-        doReturn(permissionList).`when`(request).permissions
-        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
-        doReturn(NO_DECISION).`when`(sitePermissionFromStorage).location
-
-        runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(getSelectedSession(), request)
-            verify(mockStorage).findSitePermissionsBy(anyString())
-            verify(request, times(0)).grant(permissionList)
-            assertNotNull(prompt)
-        }
+        // then
+        verify(sitePermissionFeature).createSinglePermissionPrompt(
+            any(),
+            ArgumentMatchers.anyString(),
+            any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.anyBoolean(),
+            ArgumentMatchers.anyBoolean(),
+            ArgumentMatchers.anyBoolean()
+        )
     }
 
     @Test
@@ -662,272 +684,15 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `dismissing a permission request must call reject and consume contentPermissionRequest`() {
-        val permissions = listOf(
-                ContentGeoLocation(),
-                ContentNotification(),
-                ContentAudioCapture(),
-                ContentAudioMicrophone()
-        )
-
-        permissions.forEach { permission ->
-            val session = getSelectedSession()
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-
-                override fun grant(permissions: List<Permission>) = Unit
-            }
-            grantPermission(Manifest.permission.RECORD_AUDIO)
-
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                sitePermissionFeature.onDismiss(session.id)
-
-                assertNotNull(prompt)
-                assertTrue(rejectWasCalled)
-                assertTrue(session.contentPermissionRequest.isConsumed())
-            }
-        }
-    }
-
-    @Test
-    fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
-        val permissions = listOf(
-            ContentGeoLocation(),
-            ContentNotification(),
-            ContentAudioCapture(),
-            ContentAudioMicrophone()
-        )
-
-        permissions.forEach { permission ->
-            val session = getSelectedSession()
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-                override val permissions: List<Permission>
-                    get() = listOf(permission)
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-
-                override fun grant(permissions: List<Permission>) = Unit
-            }
-            grantPermission(Manifest.permission.RECORD_AUDIO)
-
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                sitePermissionFeature.onNegativeButtonPress(session.id, false)
-
-                assertNotNull(prompt)
-                assertTrue(rejectWasCalled)
-                assertTrue(session.contentPermissionRequest.isConsumed())
-            }
-        }
-    }
-
-    @Test
-    fun `rejecting a camera content permission must call reject and consume contentPermissionRequest`() {
-
-        val permissions = listOf(
-            ContentVideoCapture("", "back camera"),
-            ContentVideoCamera("", "front camera")
-        )
-
-        permissions.forEachIndexed { index, _ ->
-
-            val session = getSelectedSession()
-            var rejectWasCalled = false
-
-            val permissionRequest: PermissionRequest = object : PermissionRequest {
-                override val uri: String?
-                    get() = "http://www.mozilla.org"
-
-                override val permissions: List<Permission>
-                    get() = if (index > 0) permissions.reversed() else permissions
-
-                override fun reject() {
-                    rejectWasCalled = true
-                }
-
-                override fun grant(permissions: List<Permission>) = Unit
-            }
-
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
-            grantPermission(Manifest.permission.CAMERA)
-            runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-                sitePermissionFeature.onNegativeButtonPress(session.id, false)
-
-                assertNotNull(prompt)
-                assertTrue(rejectWasCalled)
-                assertTrue(session.contentPermissionRequest.isConsumed())
-            }
-        }
-    }
-
-    @Test
-    fun `granting a camera and microphone permission must call grant and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var grantWasCalled = false
-        val permissionRequest: PermissionRequest = object : PermissionRequest {
-            override val uri: String?
-                get() = "http://www.mozilla.org"
-
-            override val permissions: List<Permission>
-                get() = listOf(
-                    ContentVideoCapture("", "back camera"),
-                    ContentVideoCamera("", "front camera"),
-                    ContentAudioMicrophone()
-                )
-
-            override fun grant(permissions: List<Permission>) {
-                grantWasCalled = true
-            }
-
-            override fun containsVideoAndAudioSources() = true
-
-            override fun reject() = Unit
-        }
-
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
-        grantPermission(Manifest.permission.CAMERA)
-        grantPermission(Manifest.permission.RECORD_AUDIO)
-
-        runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-            sitePermissionFeature.onPositiveButtonPress(session.id, false)
-
-            assertNotNull(prompt)
-            assertTrue(grantWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
-        }
-    }
-
-    @Test
-    fun `rejecting a camera and microphone permission must call reject and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var rejectWasCalled = false
-        val permissionRequest: PermissionRequest = object : PermissionRequest {
-            override val uri: String?
-                get() = "http://www.mozilla.org"
-
-            override val permissions: List<Permission>
-                get() = listOf(
-                    ContentVideoCapture("", "back camera"),
-                    ContentVideoCamera("", "front camera"),
-                    ContentAudioMicrophone()
-                )
-
-            override fun reject() {
-                rejectWasCalled = true
-            }
-
-            override fun containsVideoAndAudioSources() = true
-
-            override fun grant(permissions: List<Permission>) = Unit
-        }
-
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
-        grantPermission(Manifest.permission.CAMERA)
-        grantPermission(Manifest.permission.RECORD_AUDIO)
-
-        runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-            sitePermissionFeature.onNegativeButtonPress(session.id, false)
-
-            assertNotNull(prompt)
-            assertTrue(rejectWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
-        }
-    }
-
-    @Test
-    fun `calling onPermissionsResult with all permissions granted will call grant on the permissionsRequest and consume it`() {
-        val session = getSelectedSession()
-        val mockPermissionRequest: PermissionRequest = mock()
-
-        sitePermissionFeature.start()
-
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_GRANTED))
-
-        verify(mockPermissionRequest).grant(emptyList())
-        assertTrue(session.appPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun `calling onPermissionsResult on a feature session with a sessionId will call grant on the permissionsRequest and consume it`() {
-        val session = Session("", id = "sessionIdCustomTabs")
-        sitePermissionFeature = SitePermissionsFeature(
-            context = testContext,
-            sessionId = "sessionIdCustomTabs",
-            sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-            storage = mockStorage,
-            fragmentManager = mockFragmentManager,
-            onShouldShowRequestPermissionRationale = mock()
-        )
-
-        mockSessionManager.add(session)
-
-        val mockPermissionRequest: PermissionRequest = mock()
-
-        sitePermissionFeature.start()
-
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_GRANTED))
-
-        verify(mockPermissionRequest).grant(emptyList())
-        assertTrue(session.appPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun `calling onPermissionsResult with NOT all permissions granted will call reject on the permissionsRequest and consume it`() {
-        val session = getSelectedSession()
-        val mockPermissionRequest: PermissionRequest = mock()
-
-        sitePermissionFeature.start()
-
-        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_DENIED))
-
-        verify(mockPermissionRequest).reject()
-        assertTrue(session.appPermissionRequest.isConsumed())
-    }
-
-    @Test
     fun `feature will re-attach to already existing fragment`() {
-        val mockPermissionRequest: PermissionRequest = mock()
+        doReturn(mockContentState).`when`(sitePermissionFeature).getCurrentContentState()
+        doReturn(false).`when`(sitePermissionFeature).noPermissionRequests(any())
+
         val session = getSelectedSession().apply {
-            appPermissionRequest = Consumable.from(mockPermissionRequest)
         }
 
         val fragment: SitePermissionsDialogFragment = mock()
         doReturn(session.id).`when`(fragment).sessionId
-
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
 
         sitePermissionFeature.start()
@@ -936,19 +701,23 @@ class SitePermissionsFeatureTest {
 
     @Test
     fun `already existing fragment will be removed if session has none permissions request set anymore`() {
+        // given
         val session = getSelectedSession()
-
         val fragment: SitePermissionsDialogFragment = mock()
-
         doReturn(session.id).`when`(fragment).sessionId
-
         val transaction: FragmentTransaction = mock()
-
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
         doReturn(transaction).`when`(mockFragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
+        doReturn(mockContentState).`when`(sitePermissionFeature)
+            .getCurrentContentState()
+        doNothing().`when`(sitePermissionFeature).setupPermissionRequestsCollector()
+        doNothing().`when`(sitePermissionFeature).setupAppPermissionRequestsCollector()
 
+        // when
         sitePermissionFeature.start()
+
+        // then
         verify(mockFragmentManager).beginTransaction()
         verify(transaction).remove(fragment)
     }
@@ -957,6 +726,10 @@ class SitePermissionsFeatureTest {
     fun `already existing fragment will be removed if session does not exist anymore`() {
         val fragment: SitePermissionsDialogFragment = mock()
         doReturn(UUID.randomUUID().toString()).`when`(fragment).sessionId
+        doReturn(mockContentState).`when`(sitePermissionFeature)
+            .getCurrentContentState()
+        doNothing().`when`(sitePermissionFeature).setupPermissionRequestsCollector()
+        doNothing().`when`(sitePermissionFeature).setupAppPermissionRequestsCollector()
 
         val transaction: FragmentTransaction = mock()
 
@@ -984,13 +757,9 @@ class SitePermissionsFeatureTest {
 
         sitePermissionFeature.sitePermissionsRules = rules
 
-        val mockPermissionRequest: PermissionRequest = mock {
-            whenever(uri).thenReturn(" http://mozilla.org")
-        }
+        val sitePermissions = sitePermissionFeature.getInitialSitePermissions(URL)
 
-        val sitePermissions = sitePermissionFeature.getInitialSitePermissions(mock(), mockPermissionRequest)
-
-        assertEquals("mozilla.org", sitePermissions.origin)
+        assertEquals(URL, sitePermissions.origin)
         assertEquals(BLOCKED, sitePermissions.location)
         assertEquals(NO_DECISION, sitePermissions.camera)
         assertEquals(NO_DECISION, sitePermissions.notification)
@@ -1010,12 +779,13 @@ class SitePermissionsFeatureTest {
         )
 
         permissions.forEach { permission ->
-            val session = getSelectedSession()
             var grantWasCalled = false
 
             val permissionRequest: PermissionRequest = object : PermissionRequest {
                 override val uri: String?
                     get() = "http://www.mozilla.org"
+                override val id: String
+                    get() = PERMISSION_ID
                 override val permissions: List<Permission>
                     get() = listOf(permission)
 
@@ -1027,13 +797,12 @@ class SitePermissionsFeatureTest {
             }
 
             mockStorage = mock()
-            session.contentPermissionRequest = Consumable.from(permissionRequest)
 
             runBlocking {
-                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                val prompt = sitePermissionFeature
+                    .onContentPermissionRequested(permissionRequest, URL)
                 assertNull(prompt)
                 assertFalse(grantWasCalled)
-                assertTrue(session.contentPermissionRequest.isConsumed())
             }
         }
     }
@@ -1046,7 +815,7 @@ class SitePermissionsFeatureTest {
     }
 
     private fun getSelectedSession(): Session {
-        val session = Session("")
+        val session = Session("", id = "test")
         mockSessionManager.add(session)
         mockSessionManager.select(session)
         return session

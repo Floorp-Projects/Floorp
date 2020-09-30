@@ -26,6 +26,8 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsDialogFragmentTest {
 
+    private val permissionRequestId = "permissionID"
+
     @Test
     fun `build dialog`() {
         val fragment = spy(
@@ -33,7 +35,8 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mock(),
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true
             )
         )
@@ -56,8 +59,9 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mock(),
-                true,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = true,
                 shouldSelectDoNotAskAgainCheckBox = false
             )
         )
@@ -80,7 +84,8 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mock(),
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
                 shouldSelectDoNotAskAgainCheckBox = true
             )
@@ -104,7 +109,8 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mock(),
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false
             )
         )
@@ -123,13 +129,13 @@ class SitePermissionsDialogFragmentTest {
     @Test
     fun `clicking on positive button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
-
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mockFeature,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
                 shouldSelectDoNotAskAgainCheckBox = false
             )
@@ -145,22 +151,22 @@ class SitePermissionsDialogFragmentTest {
 
         val positiveButton = dialog.findViewById<Button>(R.id.allow_button)
         positiveButton.performClick()
-        verify(mockFeature).onPositiveButtonPress("sessionId", false)
+        verify(mockFeature).onPositiveButtonPress(permissionRequestId, "sessionId", false)
     }
 
     @Test
     fun `dismissing the dialog notifies the feature`() {
         val mockFeature: SitePermissionsFeature = mock()
-
         val fragment = spy(
-                SitePermissionsDialogFragment.newInstance(
-                        "sessionId",
-                        "title",
-                        R.drawable.notification_icon_background,
-                        mockFeature,
-                        shouldShowDoNotAskAgainCheckBox = false,
-                        shouldSelectDoNotAskAgainCheckBox = false
-                )
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldSelectDoNotAskAgainCheckBox = false
+            )
         )
 
         fragment.feature = mockFeature
@@ -170,19 +176,19 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.onDismiss(mock())
 
-        verify(mockFeature).onDismiss("sessionId")
+        verify(mockFeature).onDismiss(permissionRequestId, "sessionId")
     }
 
     @Test
     fun `clicking on negative button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
-
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mockFeature,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
                 shouldSelectDoNotAskAgainCheckBox = false
             )
@@ -198,19 +204,20 @@ class SitePermissionsDialogFragmentTest {
 
         val positiveButton = dialog.findViewById<Button>(R.id.deny_button)
         positiveButton.performClick()
-        verify(mockFeature).onNegativeButtonPress("sessionId", false)
+        verify(mockFeature)
+            .onNegativeButtonPress(permissionRequestId, "sessionId", false)
     }
 
     @Test
     fun `clicking on positive button notifies the feature (permanent)`() {
         val mockFeature: SitePermissionsFeature = mock()
-
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mockFeature,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
                 shouldSelectDoNotAskAgainCheckBox = true
             )
@@ -226,19 +233,20 @@ class SitePermissionsDialogFragmentTest {
 
         val positiveButton = dialog.findViewById<Button>(R.id.allow_button)
         positiveButton.performClick()
-        verify(mockFeature).onPositiveButtonPress("sessionId", true)
+        verify(mockFeature)
+            .onPositiveButtonPress(permissionRequestId, "sessionId", true)
     }
 
     @Test
     fun `clicking on negative button notifies the feature (permanent)`() {
         val mockFeature: SitePermissionsFeature = mock()
-
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mockFeature,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
                 shouldSelectDoNotAskAgainCheckBox = true
             )
@@ -254,7 +262,8 @@ class SitePermissionsDialogFragmentTest {
 
         val positiveButton = dialog.findViewById<Button>(R.id.deny_button)
         positiveButton.performClick()
-        verify(mockFeature).onNegativeButtonPress("sessionId", true)
+        verify(mockFeature)
+            .onNegativeButtonPress(permissionRequestId, "sessionId", true)
     }
 
     @Test
@@ -268,7 +277,8 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mockFeature,
+                permissionRequestId = permissionRequestId,
+                feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false
             )
         )
@@ -292,7 +302,8 @@ class SitePermissionsDialogFragmentTest {
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
-                mock(),
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
                 shouldSelectDoNotAskAgainCheckBox = false,
                 isNotificationRequest = true

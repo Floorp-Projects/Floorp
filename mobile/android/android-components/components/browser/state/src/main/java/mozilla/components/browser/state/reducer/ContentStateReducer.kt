@@ -6,6 +6,7 @@ package mozilla.components.browser.state.reducer
 
 import android.net.Uri
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.ext.containsPermission
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
@@ -127,6 +128,66 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateHistoryStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(history = HistoryState(action.historyList, action.currentIndex))
+            }
+            is ContentAction.UpdatePermissionsRequest -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                if (!it.permissionRequestsList.containsPermission(action.permissionRequest)) {
+                    it.copy(
+                        permissionRequestsList = it.permissionRequestsList + action.permissionRequest
+                    )
+                } else {
+                    it
+                }
+            }
+            is ContentAction.ConsumePermissionsRequest -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                if (it.permissionRequestsList.containsPermission(action.permissionRequest)) {
+                    it.copy(
+                        permissionRequestsList = it.permissionRequestsList - action.permissionRequest
+                    )
+                } else {
+                    it
+                }
+            }
+            is ContentAction.UpdateAppPermissionsRequest -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                if (!it.appPermissionRequestsList.containsPermission(action.appPermissionRequest)) {
+                    it.copy(
+                        appPermissionRequestsList = it.appPermissionRequestsList + action.appPermissionRequest
+                    )
+                } else {
+                    it
+                }
+            }
+            is ContentAction.ConsumeAppPermissionsRequest -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                if (it.appPermissionRequestsList.containsPermission(action.appPermissionRequest)) {
+                    it.copy(
+                        appPermissionRequestsList = it.appPermissionRequestsList - action.appPermissionRequest
+                    )
+                } else {
+                    it
+                }
+            }
+            is ContentAction.ClearPermissionRequests -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                it.copy(permissionRequestsList = emptyList())
+            }
+            is ContentAction.ClearAppPermissionRequests -> updateContentState(
+                state,
+                action.sessionId
+            ) {
+                it.copy(appPermissionRequestsList = emptyList())
             }
             is ContentAction.UpdateLoadRequestAction -> updateContentState(state, action.sessionId) {
                 it.copy(loadRequest = action.loadRequest)

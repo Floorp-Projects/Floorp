@@ -15,6 +15,11 @@ interface PermissionRequest {
     val uri: String?
 
     /**
+     * A unique identifier for the request.
+     */
+    val id: String
+
+    /**
      * List of requested permissions.
      */
     val permissions: List<Permission>

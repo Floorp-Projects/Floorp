@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.HistoryState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -43,6 +44,8 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property firstContentfulPaint whether or not the first contentful paint has happened.
  * @property pictureInPictureEnabled True if the session is being displayed in PIP mode.
  * @property loadRequest last [LoadRequestState] if this session.
+ * @property permissionRequestsList Holds unprocessed content requests.
+ * @property appPermissionRequestsList Holds unprocessed app requests.
  */
 data class ContentState(
     val url: String,
@@ -67,6 +70,8 @@ data class ContentState(
     val webAppManifest: WebAppManifest? = null,
     val firstContentfulPaint: Boolean = false,
     val history: HistoryState = HistoryState(),
+    val permissionRequestsList: List<PermissionRequest> = emptyList(),
+    val appPermissionRequestsList: List<PermissionRequest> = emptyList(),
     val pictureInPictureEnabled: Boolean = false,
     val loadRequest: LoadRequestState? = null
 )

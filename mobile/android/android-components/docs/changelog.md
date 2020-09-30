@@ -83,6 +83,7 @@ permalink: /changelog/
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: The `SitePermissionsRules`'s constructor, now requires a new parameter `persistentStorage`.
   * 🌟 Added support for the local storage site permission see [#3153](https://github.com/mozilla-mobile/android-components/issues/3153).
+  * 🌟 Moved sitePermissionsFeature from using session to using kotlin flow for observing content and app permission requests[#8554](https://github.com/mozilla-mobile/android-components/issues/8554)
 
 * **browser-toolbar**
   * 🌟 Added API to add a click listener to the iconView.

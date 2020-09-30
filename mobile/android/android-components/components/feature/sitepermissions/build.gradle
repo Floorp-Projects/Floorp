@@ -44,6 +44,13 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
+
 dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
@@ -66,6 +73,7 @@ dependencies {
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
 
     androidTestImplementation project(':support-android-test')
 

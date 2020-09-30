@@ -8,6 +8,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
@@ -29,7 +31,6 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
@@ -42,6 +43,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -308,30 +310,30 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverClearsContentPermissionRequestIfNewPageStartsLoading() {
-        val session = Session("https://www.mozilla.org")
-        val permissionRequest: PermissionRequest = mock()
-        val observer = EngineObserver(session, mock())
+        val session = Session("https://www.mozilla.org", id = "sessionId")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+        val action = ContentAction.ClearPermissionRequests("sessionId")
+        doReturn(Job()).`when`(store).dispatch(action)
 
-        observer.onContentPermissionRequest(permissionRequest)
-
-        observer.onLocationChange("https://getpocket.com")
-
-        assertTrue(session.contentPermissionRequest.isConsumed())
-        verify(permissionRequest).reject()
+        runBlockingTest {
+            observer.onLocationChange("https://getpocket.com")
+            verify(store).dispatch(action)
+        }
     }
 
     @Test
     fun engineObserverDoesNotClearContentPermissionRequestIfSamePageStartsLoading() {
         val session = Session("https://www.mozilla.org")
-        val permissionRequest: PermissionRequest = mock()
-        val observer = EngineObserver(session, mock())
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+        val action = ContentAction.ClearPermissionRequests("sessionId")
+        doReturn(Job()).`when`(store).dispatch(action)
 
-        observer.onContentPermissionRequest(permissionRequest)
-
-        observer.onLocationChange("https://www.mozilla.org/hello.html")
-
-        assertFalse(session.contentPermissionRequest.isConsumed())
-        verify(permissionRequest, never()).reject()
+        runBlockingTest {
+            observer.onLocationChange("https://www.mozilla.org/hello.html")
+            verify(store, never()).dispatch(action)
+        }
     }
 
     @Test
@@ -509,39 +511,36 @@ class EngineObserverTest {
     @Test
     fun engineSessionObserverWithContentPermissionRequests() {
         val permissionRequest = mock(PermissionRequest::class.java)
-        val session = Session("")
-        val observer = EngineObserver(session, mock())
+        val session = Session("url", id = "id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+        val action = ContentAction.UpdatePermissionsRequest(
+            session.id,
+            permissionRequest
+        )
+        doReturn(Job()).`when`(store).dispatch(action)
 
-        assertTrue(session.contentPermissionRequest.isConsumed())
-        observer.onContentPermissionRequest(permissionRequest)
-        assertFalse(session.contentPermissionRequest.isConsumed())
-
-        observer.onCancelContentPermissionRequest(permissionRequest)
-        assertTrue(session.contentPermissionRequest.isConsumed())
+        runBlockingTest {
+            observer.onContentPermissionRequest(permissionRequest)
+            verify(store).dispatch(action)
+        }
     }
 
     @Test
     fun engineSessionObserverWithAppPermissionRequests() {
         val permissionRequest = mock(PermissionRequest::class.java)
         val session = Session("")
-        val observer = EngineObserver(session, mock())
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+        val action = ContentAction.UpdateAppPermissionsRequest(
+            session.id,
+            permissionRequest
+        )
 
-        assertTrue(session.appPermissionRequest.isConsumed())
-        observer.onAppPermissionRequest(permissionRequest)
-        assertFalse(session.appPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun engineObserverConsumesContentPermissionRequestIfNewPageStartsLoading() {
-        val permissionRequest = mock(PermissionRequest::class.java)
-        val session = Session("https://www.mozilla.org")
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-        val observer = EngineObserver(session, mock())
-        observer.onLocationChange("https://getpocket.com")
-
-        verify(permissionRequest).reject()
-        assertTrue(session.contentPermissionRequest.isConsumed())
+        runBlockingTest {
+            observer.onAppPermissionRequest(permissionRequest)
+            verify(store).dispatch(action)
+        }
     }
 
     @Test

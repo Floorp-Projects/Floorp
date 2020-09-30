@@ -22,7 +22,6 @@ import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -578,61 +577,6 @@ class SessionTest {
         defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())
         defaultObserver.onRecordingDevicesChanged(session, emptyList())
-    }
-
-    @Test
-    fun `permission requests will be set on session if no observer consumes them`() {
-        val contentPermissionRequest: PermissionRequest = mock()
-        val appPermissionRequest: PermissionRequest = mock()
-
-        val session = Session("https://www.mozilla.org")
-        session.contentPermissionRequest = Consumable.from(contentPermissionRequest)
-        session.appPermissionRequest = Consumable.from(appPermissionRequest)
-        assertFalse(session.contentPermissionRequest.isConsumed())
-
-        var contentPermissionRequestIsSet = false
-        var appPermissionRequestIsSet = false
-        session.contentPermissionRequest.consume {
-            contentPermissionRequestIsSet = true
-            true
-        }
-        session.appPermissionRequest.consume {
-            appPermissionRequestIsSet = true
-            true
-        }
-        assertTrue(contentPermissionRequestIsSet)
-        assertTrue(appPermissionRequestIsSet)
-    }
-
-    @Test
-    fun `permission requests will not be set on session if consumed by observer`() {
-        var contentPermissionCallbackExecuted = false
-        var appPermissionCallbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
-                contentPermissionCallbackExecuted = true
-                return true
-            }
-
-            override fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
-                appPermissionCallbackExecuted = true
-                return true
-            }
-        })
-
-        val contentPermissionRequest: PermissionRequest = mock()
-        session.contentPermissionRequest = Consumable.from(contentPermissionRequest)
-
-        val appPermissionRequestIsSet: PermissionRequest = mock()
-        session.appPermissionRequest = Consumable.from(appPermissionRequestIsSet)
-
-        assertTrue(contentPermissionCallbackExecuted)
-        assertTrue(session.contentPermissionRequest.isConsumed())
-
-        assertTrue(appPermissionCallbackExecuted)
-        assertTrue(session.appPermissionRequest.isConsumed())
     }
 
     @Test

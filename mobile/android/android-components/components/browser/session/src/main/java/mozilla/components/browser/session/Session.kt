@@ -29,7 +29,6 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.util.UUID
@@ -275,29 +274,6 @@ class Session(
         // This is a workaround until all callers are migrated to use browser-state. Until then
         // we try to lookup the icon from an attached BrowserStore if possible.
         get() = store?.state?.findTabOrCustomTab(id)?.content?.icon
-
-    /**
-     * [Consumable] permission request from web content. A [PermissionRequest]
-     * must be consumed i.e. either [PermissionRequest.grant] or
-     * [PermissionRequest.reject] must be called. A content permission request
-     * can also be cancelled, which will result in a new empty [Consumable].
-     */
-    var contentPermissionRequest: Consumable<PermissionRequest> by Delegates.vetoable(Consumable.empty()) {
-        _, _, request ->
-            val consumers = wrapConsumers<PermissionRequest> { onContentPermissionRequested(this@Session, it) }
-            !request.consumeBy(consumers)
-    }
-
-    /**
-     * [Consumable] permission request for the app. A [PermissionRequest]
-     * must be consumed i.e. either [PermissionRequest.grant] or
-     * [PermissionRequest.reject] must be called.
-     */
-    var appPermissionRequest: Consumable<PermissionRequest> by Delegates.vetoable(Consumable.empty()) {
-        _, _, request ->
-            val consumers = wrapConsumers<PermissionRequest> { onAppPermissionRequested(this@Session, it) }
-            !request.consumeBy(consumers)
-    }
 
     /**
      * List of recording devices (e.g. camera or microphone) currently in use by web content.

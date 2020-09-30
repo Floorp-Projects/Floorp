@@ -17,6 +17,7 @@ import android.webkit.PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID
  */
 class SystemPermissionRequest(private val nativeRequest: android.webkit.PermissionRequest) : PermissionRequest {
     override val uri: String = nativeRequest.origin.toString()
+    override val id: String = java.util.UUID.randomUUID().toString()
 
     override val permissions = nativeRequest.resources.map { resource ->
         permissionsMap.getOrElse(resource) { Permission.Generic(resource) }

@@ -34,6 +34,7 @@ private const val KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX = "KEY_SHOULD_SHOW_D
 private const val KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX = "KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX"
 private const val KEY_IS_NOTIFICATION_REQUEST = "KEY_IS_NOTIFICATION_REQUEST"
 private const val DEFAULT_VALUE = Int.MAX_VALUE
+private const val KEY_PERMISSION_ID = "KEY_PERMISSION_ID"
 
 internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
 
@@ -65,6 +66,8 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         safeArguments.getBoolean(KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX, true)
     internal val shouldPreselectDoNotAskAgainCheckBox: Boolean get() =
         safeArguments.getBoolean(KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX, false)
+    internal val permissionRequestId: String get() =
+        safeArguments.getString(KEY_PERMISSION_ID, "")
 
     // State
 
@@ -100,7 +103,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        feature?.onDismiss(sessionId)
+        feature?.onDismiss(permissionRequestId, sessionId)
     }
 
     private fun Dialog.setContainerView(rootView: View) {
@@ -131,7 +134,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         val negativeButton = rootView.findViewById<Button>(R.id.deny_button)
 
         positiveButton.setOnClickListener {
-            feature?.onPositiveButtonPress(sessionId, userSelectionCheckBox)
+            feature?.onPositiveButtonPress(permissionRequestId, sessionId, userSelectionCheckBox)
             dismiss()
         }
 
@@ -146,7 +149,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         }
 
         negativeButton.setOnClickListener {
-            feature?.onNegativeButtonPress(sessionId, userSelectionCheckBox)
+            feature?.onNegativeButtonPress(permissionRequestId, sessionId, userSelectionCheckBox)
             dismiss()
         }
         if (isNotificationRequest) {
@@ -177,6 +180,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             sessionId: String,
             title: String,
             titleIcon: Int,
+            permissionRequestId: String = "",
             feature: SitePermissionsFeature,
             shouldShowDoNotAskAgainCheckBox: Boolean,
             shouldSelectDoNotAskAgainCheckBox: Boolean = false,
@@ -190,6 +194,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
                 putString(KEY_SESSION_ID, sessionId)
                 putString(KEY_TITLE, title)
                 putInt(KEY_TITLE_ICON, titleIcon)
+                putString(KEY_PERMISSION_ID, permissionRequestId)
 
                 putBoolean(KEY_IS_NOTIFICATION_REQUEST, isNotificationRequest)
                 if (isNotificationRequest) {
