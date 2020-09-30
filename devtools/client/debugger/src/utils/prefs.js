@@ -4,7 +4,7 @@
 
 // @flow
 
-import { PrefsHelper, asyncStoreHelper } from "devtools-modules";
+import { PrefsHelper } from "devtools-modules";
 
 import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
@@ -161,13 +161,10 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   frameStep: ["Bool", "frame-step"],
 });
 
-export const asyncStore = asyncStoreHelper("debugger", {
-  pendingBreakpoints: ["pending-breakpoints", {}],
-  tabs: ["tabs", []],
-  xhrBreakpoints: ["xhr-breakpoints", []],
-  eventListenerBreakpoints: ["event-listener-breakpoints", undefined],
-  tabsBlackBoxed: ["tabsBlackBoxed", []],
-});
+// Import the asyncStore already spawned by the TargetMixin class
+// $FlowIgnore
+const ThreadUtils = require("devtools/client/shared/thread-utils");
+export const asyncStore = ThreadUtils.asyncStore;
 
 export function resetSchemaVersion(): void {
   prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
