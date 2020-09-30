@@ -31,6 +31,11 @@ const ALLOW_SILENCING_NOTIFICATIONS = Services.prefs.getBoolPref(
   false
 );
 
+const SHOW_GLOBAL_MUTE_TOGGLES = Services.prefs.getBoolPref(
+  "privacy.webrtc.globalMuteToggles",
+  false
+);
+
 const INDICATOR_PATH = USING_LEGACY_INDICATOR
   ? "chrome://browser/content/webrtcLegacyIndicator.xhtml"
   : "chrome://browser/content/webrtcIndicator.xhtml";
@@ -194,6 +199,19 @@ async function assertWebRTCIndicatorStatus(expected) {
       // are able to remove the tests for the legacy indicator.
       expected.screen = null;
       expected.window = true;
+    }
+
+    if (!USING_LEGACY_INDICATOR && !SHOW_GLOBAL_MUTE_TOGGLES) {
+      expected.video = false;
+      expected.audio = false;
+
+      let visible = docElt.getAttribute("visible") == "true";
+
+      if (!expected.screen && !expected.window && !expected.browserwindow) {
+        ok(!visible, "Indicator should not be visible in this configuation.");
+      } else {
+        ok(visible, "Indicator should be visible.");
+      }
     }
 
     for (let item of ["video", "audio", "screen", "window", "browserwindow"]) {
