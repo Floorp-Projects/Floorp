@@ -226,7 +226,7 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
   MOZ_TRY(XDRSourceExtent(xdr, &stencil.extent));
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
-    MOZ_TRY(RuntimeScriptData::XDR<mode>(xdr, stencil.sharedData));
+    MOZ_TRY(SharedImmutableScriptData::XDR<mode>(xdr, stencil.sharedData));
   }
 
   for (ScriptThingVariant& thing : stencil.gcThings) {
