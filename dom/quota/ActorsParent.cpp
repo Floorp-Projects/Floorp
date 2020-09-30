@@ -3549,6 +3549,10 @@ QuotaManager::~QuotaManager() {
 nsresult QuotaManager::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+  ScopedLogExtraInfo::Initialize();
+#endif
+
   nsresult rv = Observer::Initialize();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
