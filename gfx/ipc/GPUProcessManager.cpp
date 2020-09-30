@@ -537,11 +537,12 @@ void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
 
 void GPUProcessManager::FallbackToSoftware(const char* aMessage) {
   gfxConfig::SetFailed(Feature::HW_COMPOSITING, FeatureStatus::Blocked,
-                       aMessage);
+                       aMessage, "GPU_PROCESS_FALLBACK_TO_SOFTWARE"_ns);
 #ifdef XP_WIN
   gfxConfig::SetFailed(Feature::D3D11_COMPOSITING, FeatureStatus::Blocked,
-                       aMessage);
-  gfxConfig::SetFailed(Feature::DIRECT2D, FeatureStatus::Blocked, aMessage);
+                       aMessage, "GPU_PROCESS_FALLBACK_TO_SOFTWARE"_ns);
+  gfxConfig::SetFailed(Feature::DIRECT2D, FeatureStatus::Blocked, aMessage,
+                       "GPU_PROCESS_FALLBACK_TO_SOFTWARE"_ns);
 #endif
 }
 
