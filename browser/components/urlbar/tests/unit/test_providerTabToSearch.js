@@ -179,3 +179,80 @@ add_task(async function ignoreWww() {
 
   await Services.search.removeEngine(wwwTestEngine);
 });
+
+// Tests that when a user's query causes autofill to replace one engine's domain
+// with another, the correct tab-to-search results are shown.
+add_task(async function conflictingEngines() {
+  for (let i = 0; i < 3; i++) {
+    await PlacesTestUtils.addVisits([
+      "https://foobar.com/",
+      "https://foo.com/",
+    ]);
+  }
+  let fooBarTestEngine = await Services.search.addEngineWithDetails(
+    "TestFooBar",
+    { template: "https://foobar.com/?search={searchTerms}" }
+  );
+  let fooTestEngine = await Services.search.addEngineWithDetails("TestFoo", {
+    template: "https://foo.com/?search={searchTerms}",
+  });
+
+  // Search for "foo", autofilling foo.com. Observe that the foo.com
+  // tab-to-search result is shown, even though the foobar.com engine was added
+  // first (and thus enginesForDomainPrefix puts it earlier in its returned
+  // array.)
+  let context = createContext("foo", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "foo.com/",
+    completed: "https://foo.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://foo.com/",
+        title: "https://foo.com",
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+      makeSearchResult(context, {
+        engineName: fooTestEngine.name,
+        uri: fooTestEngine.getResultDomain(),
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        query: "",
+        providerName: "TabToSearch",
+      }),
+      makeVisitResult(context, {
+        uri: "https://foobar.com/",
+        title: "test visit for https://foobar.com/",
+        providerName: "UnifiedComplete",
+      }),
+    ],
+  });
+
+  // Search for "foob", autofilling foobar.com. Observe that the foo.com
+  // tab-to-search result is replaced with the foobar.com tab-to-search result.
+  context = createContext("foob", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "foobar.com/",
+    completed: "https://foobar.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://foobar.com/",
+        title: "https://foobar.com",
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+      makeSearchResult(context, {
+        engineName: fooBarTestEngine.name,
+        uri: fooBarTestEngine.getResultDomain(),
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        query: "",
+        providerName: "TabToSearch",
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+  await Services.search.removeEngine(fooTestEngine);
+  await Services.search.removeEngine(fooBarTestEngine);
+});

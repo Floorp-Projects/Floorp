@@ -55,22 +55,23 @@ class SearchUtils {
   }
 
   /**
-   * Gets the engine whose domain matches a given prefix.
+   * Gets the engines whose domains match a given prefix.
    *
    * @param {string} prefix
-   *   String containing the first part of the matching domain name.
-   * @returns {nsISearchEngine}
-   *   The matching engine or null if there isn't one.
+   *   String containing the first part of the matching domain name(s).
+   * @returns {Array<nsISearchEngine>}
+   *   An array of all matching engines. An empty array if there are none.
    */
-  async engineForDomainPrefix(prefix) {
+  async enginesForDomainPrefix(prefix) {
     await this.init();
+    let engines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
       let domain = engine.getResultDomain();
       if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
-        return engine;
+        engines.push(engine);
       }
     }
-    return null;
+    return engines;
   }
 
   /**

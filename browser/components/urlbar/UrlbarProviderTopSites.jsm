@@ -200,7 +200,9 @@ class ProviderTopSites extends UrlbarProvider {
               host = new URL(site.url).hostname;
             } catch (err) {}
             if (host) {
-              engine = await UrlbarSearchUtils.engineForDomainPrefix(host);
+              engine = (
+                await UrlbarSearchUtils.enginesForDomainPrefix(host)
+              )[0];
             }
           }
 

@@ -655,7 +655,7 @@ class ProviderAutofill extends UrlbarProvider {
       return null;
     }
 
-    // engineForDomainPrefix only matches against engine domains.
+    // enginesForDomainPrefix only matches against engine domains.
     // Remove an eventual trailing slash from the search string (without the
     // prefix) and check if the resulting string is worth matching.
     // Later, we'll verify that the found result matches the original
@@ -671,7 +671,9 @@ class ProviderAutofill extends UrlbarProvider {
       return null;
     }
 
-    let engine = await UrlbarSearchUtils.engineForDomainPrefix(searchStr);
+    // Since we are autofilling, we can only pick one matching engine. Use the
+    // first.
+    let engine = (await UrlbarSearchUtils.enginesForDomainPrefix(searchStr))[0];
     if (!engine) {
       return null;
     }
