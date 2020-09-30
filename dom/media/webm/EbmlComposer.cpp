@@ -134,7 +134,7 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
 
   bool needClusterHeader = !WritingCluster();
   auto block = mCurrentCluster.AppendElement();
-  block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
+  block->SetLength(aFrame->mFrameData->Length() + DEFAULT_HEADER_SIZE);
 
   EbmlGlobal ebml;
   ebml.offset = 0;
@@ -155,11 +155,10 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
 
   writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode),
                    isVP8IFrame, 0, 0,
-                   (unsigned char*)aFrame->GetFrameData().Elements(),
-                   aFrame->GetFrameData().Length());
-  MOZ_ASSERT(
-      ebml.offset <= DEFAULT_HEADER_SIZE + aFrame->GetFrameData().Length(),
-      "write more data > EBML_BUFFER_SIZE");
+                   (unsigned char*)aFrame->mFrameData->Elements(),
+                   aFrame->mFrameData->Length());
+  MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + aFrame->mFrameData->Length(),
+             "write more data > EBML_BUFFER_SIZE");
   block->SetLength(ebml.offset);
 }
 
