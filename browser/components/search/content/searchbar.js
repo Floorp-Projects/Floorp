@@ -600,6 +600,12 @@
 
         BrowserSearch.searchBar._textbox.closePopup();
 
+        // Make sure the context menu isn't opened via keyboard shortcut. Check for text selection
+        // before updating the state of any menu items.
+        if (event.button) {
+          this._maybeSelectAll();
+        }
+
         // Update disabled state of menu items
         for (let item of this._menupopup.querySelectorAll("menuitem[cmd]")) {
           let command = item.getAttribute("cmd");
@@ -616,10 +622,6 @@
 
         this._menupopup.openPopupAtScreen(event.screenX, event.screenY, true);
 
-        // Make sure the context menu isn't opened via keyboard shortcut.
-        if (event.button) {
-          this._maybeSelectAll();
-        }
         event.preventDefault();
       });
     }
