@@ -208,6 +208,9 @@ var State = {
     if (!process.windows) {
       return [];
     }
+    if (!process.type == "extensions") {
+      return [];
+    }
     let windows = process.windows.map(win => {
       let tab = tabFinder.get(win.outerWindowId);
       let addon =
@@ -997,11 +1000,14 @@ var Control = {
       let processRow = View.appendProcessRow(process, isOpen);
       processRow.process = process;
 
-      let winRow;
-      for (let win of process.windows) {
-        if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
-          winRow = View.appendDOMWindowRow(win, process);
-          winRow.win = win;
+      if (process.type != "extension") {
+        // We do not want to display extensions.
+        let winRow;
+        for (let win of process.windows) {
+          if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
+            winRow = View.appendDOMWindowRow(win, process);
+            winRow.win = win;
+          }
         }
       }
 

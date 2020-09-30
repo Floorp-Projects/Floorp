@@ -59,12 +59,6 @@ about-processes-thread-summary = Threads ({ $number })
 #   $tid (String) The thread id of this thread, assigned by the OS.
 about-processes-thread-name = Thread { $tid }: { $name }
 
-
-# Extension
-# Variables:
-#   $name (String) The name of the extension.
-about-processes-extension-name = Extension: { $name }
-
 # Tab
 # Variables:
 #   $name (String) The name of the tab (typically the title of the page, might be the url while the page is loading).
