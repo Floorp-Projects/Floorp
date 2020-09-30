@@ -29,14 +29,19 @@ internal class BrowserGestureDetector(
     @Suppress("MaxLineLength")
     internal var gestureDetector = GestureDetector(
         applicationContext,
-        CustomScrollDetectorListener { previousEvent: MotionEvent, currentEvent: MotionEvent, distanceX, distanceY ->
+        CustomScrollDetectorListener { previousEvent: MotionEvent?, currentEvent: MotionEvent, distanceX, distanceY ->
             run {
                 listener.onScroll?.invoke(distanceX, distanceY)
 
-                if (abs(currentEvent.y - previousEvent.y) >= abs(currentEvent.x - previousEvent.x)) {
-                    listener.onVerticalScroll?.invoke(distanceY)
-                } else {
-                    listener.onHorizontalScroll?.invoke(distanceX)
+                // We got many crashes because of the initial event - ACTION_DOWN being null.
+                // Investigations to be continued in android-components/issues/8552.
+                // In the meantime we'll protect against this with a simple null check.
+                if (previousEvent != null) {
+                    if (abs(currentEvent.y - previousEvent.y) >= abs(currentEvent.x - previousEvent.x)) {
+                        listener.onVerticalScroll?.invoke(distanceY)
+                    } else {
+                        listener.onHorizontalScroll?.invoke(distanceX)
+                    }
                 }
             }
         }
@@ -150,14 +155,14 @@ internal class BrowserGestureDetector(
 
     private class CustomScrollDetectorListener(
         val onScrolling: (
-            previousEvent: MotionEvent,
+            previousEvent: MotionEvent?,
             currentEvent: MotionEvent,
             distanceX: Float,
             distanceY: Float
         ) -> Unit
     ) : GestureDetector.SimpleOnGestureListener() {
         override fun onScroll(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             distanceX: Float,
             distanceY: Float
