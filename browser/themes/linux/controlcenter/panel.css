@@ -15,10 +15,6 @@
   outline-offset: -1px;
 }
 
-.tracking-protection-button > .button-box > .button-icon {
-  margin-inline-end: 5px;
-}
-
 /* This overrides color: -moz-buttonhovertext from toolbarbutton.css */
 #protections-popup toolbarbutton:not([disabled="true"]):hover,
 #protections-popup toolbarbutton:not([disabled="true"]):hover:active {
