@@ -12351,21 +12351,6 @@
     "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
     "description": "Number of service workers destroyed; used in conjunction with use counter histograms"
   },
-  "ONBEFOREUNLOAD_PROMPT_ACTION" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "45",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "What button a user clicked in an onbeforeunload prompt.  (Stay on Page = 0, Leave Page = 1, prompt aborted = 2)"
-  },
-  "ONBEFOREUNLOAD_PROMPT_COUNT" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "45",
-    "kind": "count",
-    "description": "How many onbeforeunload prompts has the user encountered in their session?"
-  },
   "SUBPROCESS_ABNORMAL_ABORT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
