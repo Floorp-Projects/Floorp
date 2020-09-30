@@ -18,6 +18,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
 #include "nsDeviceContext.h"                   // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"                     // for nsDisplayTransform, etc
+#include "nsLayoutUtils.h"
 #include "TreeTraversal.h"  // for ForEachNode, BreadthFirstSearch
 
 namespace mozilla {

@@ -15,6 +15,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIContent.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleTransformMatrix.h"
 #include "PuppetWidget.h"
 

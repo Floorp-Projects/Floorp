@@ -31,6 +31,7 @@
 #include "UnitTransforms.h"
 #include "gfxEnv.h"
 #include "nsDisplayListInvalidation.h"
+#include "nsLayoutUtils.h"
 #include "WebRenderCanvasRenderer.h"
 #include "LayersLogging.h"
 #include "LayerTreeInvalidation.h"

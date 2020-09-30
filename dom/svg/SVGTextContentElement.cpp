@@ -11,6 +11,7 @@
 #include "mozilla/dom/SVGRect.h"
 #include "nsBidiUtils.h"
 #include "DOMSVGPoint.h"
+#include "nsLayoutUtils.h"
 #include "nsTextFragment.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextNode.h"

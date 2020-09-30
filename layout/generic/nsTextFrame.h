@@ -161,23 +161,7 @@ class nsTextFrame : public nsIFrame {
    protected:
     void SetupJustificationSpacing(bool aPostReflow);
 
-    void InitFontGroupAndFontMetrics() const {
-      if (!mFontMetrics) {
-        if (mWhichTextRun == nsTextFrame::eInflated) {
-          if (!mFrame->InflatedFontMetrics()) {
-            float inflation = mFrame->GetFontSizeInflation();
-            mFontMetrics =
-                nsLayoutUtils::GetFontMetricsForFrame(mFrame, inflation);
-            mFrame->SetInflatedFontMetrics(mFontMetrics);
-          } else {
-            mFontMetrics = mFrame->InflatedFontMetrics();
-          }
-        } else {
-          mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(mFrame, 1.0f);
-        }
-      }
-      mFontGroup = mFontMetrics->GetThebesFontGroup();
-    }
+    void InitFontGroupAndFontMetrics() const;
 
     const RefPtr<gfxTextRun> mTextRun;
     mutable gfxFontGroup* mFontGroup;

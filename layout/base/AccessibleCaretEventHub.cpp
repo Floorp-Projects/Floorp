@@ -24,6 +24,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
 #include "nsITimer.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 
 using namespace mozilla;

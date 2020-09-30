@@ -20,6 +20,7 @@
 #include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
@@ -2582,7 +2583,7 @@ static nsTextFrame* GetTextFrameForContent(nsIContent* aContent,
   return static_cast<nsTextFrame*>(frame);
 }
 
-static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
+static nsresult GetPartialTextRect(RectCallback* aCallback,
                                    Sequence<nsString>* aTextList,
                                    nsIContent* aContent, int32_t aStartOffset,
                                    int32_t aEndOffset, bool aClampToEdge,
@@ -2639,10 +2640,9 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 
 /* static */
 void nsRange::CollectClientRectsAndText(
-    nsLayoutUtils::RectCallback* aCollector, Sequence<nsString>* aTextList,
-    nsRange* aRange, nsINode* aStartContainer, uint32_t aStartOffset,
-    nsINode* aEndContainer, uint32_t aEndOffset, bool aClampToEdge,
-    bool aFlushLayout) {
+    RectCallback* aCollector, Sequence<nsString>* aTextList, nsRange* aRange,
+    nsINode* aStartContainer, uint32_t aStartOffset, nsINode* aEndContainer,
+    uint32_t aEndOffset, bool aClampToEdge, bool aFlushLayout) {
   // Currently, this method is called with start of end offset of nsRange.
   // So, they must be between 0 - INT32_MAX.
   MOZ_ASSERT(RangeUtils::IsValidOffset(aStartOffset));

@@ -4569,11 +4569,11 @@ nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
 
 struct BoxToRect : public nsLayoutUtils::BoxCallback {
   const nsIFrame* mRelativeTo;
-  nsLayoutUtils::RectCallback* mCallback;
+  RectCallback* mCallback;
   uint32_t mFlags;
   bool mRelativeToIsRoot;
 
-  BoxToRect(const nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
+  BoxToRect(const nsIFrame* aRelativeTo, RectCallback* aCallback,
             uint32_t aFlags)
       : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags),
         mRelativeToIsRoot(!aRelativeTo->GetParent()) {}
@@ -4613,8 +4613,7 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
 struct MOZ_RAII BoxToRectAndText : public BoxToRect {
   Sequence<nsString>* mTextList;
 
-  BoxToRectAndText(const nsIFrame* aRelativeTo,
-                   nsLayoutUtils::RectCallback* aCallback,
+  BoxToRectAndText(const nsIFrame* aRelativeTo, RectCallback* aCallback,
                    Sequence<nsString>* aTextList, uint32_t aFlags)
       : BoxToRect(aRelativeTo, aCallback, aFlags), mTextList(aTextList) {}
 
@@ -7755,10 +7754,9 @@ bool nsLayoutUtils::IsInPositionFixedSubtree(const nsIFrame* aFrame) {
   return false;
 }
 
-SurfaceFromElementResult
-nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
-                                          uint32_t aSurfaceFlags,
-                                          RefPtr<DrawTarget>& aTarget) {
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromOffscreenCanvas(
+    OffscreenCanvas* aOffscreenCanvas, uint32_t aSurfaceFlags,
+    RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
 
   IntSize size = aOffscreenCanvas->GetWidthHeight();

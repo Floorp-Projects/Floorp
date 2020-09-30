@@ -16,6 +16,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsDOMTokenList.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 
 namespace mozilla {

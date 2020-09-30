@@ -6,10 +6,17 @@
 
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/CanvasUtils.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/SVGImageElement.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -17,7 +24,10 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
+#include "nsGlobalWindowInner.h"
+#include "nsIAsyncInputStream.h"
 #include "nsNetUtil.h"
+#include "nsLayoutUtils.h"
 #include "nsStreamUtils.h"
 #include "ImageUtils.h"
 #include "imgLoader.h"
@@ -775,8 +785,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentVideoPrincipal();
   bool hadCrossOriginRedirects = aVideoEl.HadCrossOriginRedirects();
   bool CORSUsed = aVideoEl.GetCORSMode() != CORS_NONE;
-  bool writeOnly =
-      CheckWriteOnlySecurity(CORSUsed, principal, hadCrossOriginRedirects);
+  bool writeOnly = CanvasUtils::CheckWriteOnlySecurity(CORSUsed, principal,
+                                                       hadCrossOriginRedirects);
 
   // Create ImageBitmap.
   RefPtr<layers::Image> data = aVideoEl.GetCurrentImage();
