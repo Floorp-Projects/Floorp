@@ -425,7 +425,11 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     if (!immutableScriptData) {
       return false;
     }
-    script.immutableScriptData = std::move(immutableScriptData);
+    script.sharedData =
+        RuntimeScriptData::createWith(cx, std::move(immutableScriptData));
+    if (!script.sharedData) {
+      return false;
+    }
   }
 
   script.extent.sourceStart = smooshScript.extent.source_start;
