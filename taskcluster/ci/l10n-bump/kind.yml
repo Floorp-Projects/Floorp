@@ -27,6 +27,8 @@ job-defaults:
                 default: https://hg.mozilla.org/mozilla-central
         l10n-bump-info:
             by-release-type:
+                # XXX whenever the `beta` config changes, make sure to make
+                #     the corresponding change in merge-automation/kind.yml
                 beta:
                     name: Firefox l10n changesets
                     path: browser/locales/l10n-changesets.json
