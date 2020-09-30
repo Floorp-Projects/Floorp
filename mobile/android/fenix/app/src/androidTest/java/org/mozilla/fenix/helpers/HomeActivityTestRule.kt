@@ -9,6 +9,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.ui.robots.appContext
 
 /**
  * A [org.junit.Rule] to handle shared test set up for tests on [HomeActivity].
@@ -17,11 +19,16 @@ import org.mozilla.fenix.HomeActivity
  * @param launchActivity See [ActivityTestRule]
  */
 
-class HomeActivityTestRule(initialTouchMode: Boolean = false, launchActivity: Boolean = true) :
+class HomeActivityTestRule(
+    initialTouchMode: Boolean = false,
+    launchActivity: Boolean = true,
+    private val skipOnboarding: Boolean = false
+) :
     ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         setLongTapTimeout()
+        if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 }
 
@@ -35,12 +42,14 @@ class HomeActivityTestRule(initialTouchMode: Boolean = false, launchActivity: Bo
 
 class HomeActivityIntentTestRule(
     initialTouchMode: Boolean = false,
-    launchActivity: Boolean = true
+    launchActivity: Boolean = true,
+    private val skipOnboarding: Boolean = false
 ) :
     IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         setLongTapTimeout()
+        if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 }
 
@@ -48,4 +57,10 @@ class HomeActivityIntentTestRule(
 fun setLongTapTimeout() {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     mDevice.executeShellCommand("settings put secure long_press_timeout 3000")
+}
+
+private fun skipOnboardingBeforeLaunch() {
+    // The production code isn't aware that we're using
+    // this API so it can be fragile.
+    FenixOnboarding(appContext).finish()
 }
