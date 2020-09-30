@@ -43,6 +43,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsWindow.h"
+#include "nsLayoutUtils.h"
 #include "nsNativeBasicTheme.h"
 
 #ifdef MOZ_X11

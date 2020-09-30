@@ -47,6 +47,7 @@
 #include "mozilla/dom/Link.h"
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
+#include "nsLayoutUtils.h"
 #include "nsRange.h"
 
 #include "nsTypeAheadFind.h"

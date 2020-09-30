@@ -22,6 +22,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/Unused.h"
+#include "nsLayoutUtils.h"
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
 #include "WebGLBuffer.h"

@@ -6,6 +6,7 @@
 #include "nsNativeBasicTheme.h"
 
 #include "nsCSSRendering.h"
+#include "nsLayoutUtils.h"
 #include "PathHelpers.h"
 
 using namespace mozilla;
