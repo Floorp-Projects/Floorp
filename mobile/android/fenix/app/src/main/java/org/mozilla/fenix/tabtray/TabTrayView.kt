@@ -213,9 +213,15 @@ class TabTrayView(
 
         tabTrayItemMenu =
             TabTrayItemMenu(
-                view.context,
-                { tabs.isNotEmpty() && view.tab_layout.selectedTabPosition == 0 },
-                { tabs.isNotEmpty() }) {
+                context = view.context,
+                shouldShowSaveToCollection = { tabs.isNotEmpty() && view.tab_layout.selectedTabPosition == 0 },
+                hasOpenTabs = {
+                    if (isPrivateModeSelected) {
+                        view.context.components.core.store.state.privateTabs.isNotEmpty()
+                    } else {
+                        view.context.components.core.store.state.normalTabs.isNotEmpty()
+                    }
+                }) {
                 when (it) {
                     is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
                         isPrivateModeSelected
