@@ -226,7 +226,7 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
   MOZ_TRY(XDRSourceExtent(xdr, &stencil.extent));
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
-    MOZ_TRY(SharedImmutableScriptData::XDR<mode>(xdr, stencil.sharedData));
+    MOZ_TRY(StencilXDR::SharedData<mode>(xdr, stencil.sharedData));
   }
 
   for (ScriptThingVariant& thing : stencil.gcThings) {
@@ -855,6 +855,38 @@ template <XDRMode mode>
 
   return xdr->codeChars(stencil.buf_.get(), stencil.length_);
 }
+
+template <XDRMode mode>
+/* static */
+XDRResult StencilXDR::SharedData(XDRState<mode>* xdr,
+                                 RefPtr<SharedImmutableScriptData>& sisd) {
+  if (mode == XDR_ENCODE) {
+    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, sisd->isd_));
+  } else {
+    JSContext* cx = xdr->cx();
+    UniquePtr<SharedImmutableScriptData> data(
+        SharedImmutableScriptData::create(cx));
+    if (!data) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, data->isd_));
+    sisd = data.release();
+  }
+
+  return Ok();
+}
+
+template
+    /* static */
+    XDRResult
+    StencilXDR::SharedData(XDRState<XDR_ENCODE>* xdr,
+                           RefPtr<SharedImmutableScriptData>& sisd);
+
+template
+    /* static */
+    XDRResult
+    StencilXDR::SharedData(XDRState<XDR_DECODE>* xdr,
+                           RefPtr<SharedImmutableScriptData>& sisd);
 
 namespace js {
 
