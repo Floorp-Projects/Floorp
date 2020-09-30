@@ -143,12 +143,15 @@ let RemotePageAccessManager = {
         "FetchMobileDeviceConnected",
         "GetShowProxyCard",
         "FetchEntryPoint",
+        "FetchVPNSubStatus",
+        "FetchShowVPNCard",
       ],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMSetBoolPref: [
         "browser.contentblocking.report.hide_lockwise_app",
         "browser.contentblocking.report.show_mobile_app",
+        "browser.contentblocking.report.hide_vpn_banner",
       ],
       RPMGetBoolPref: [
         "browser.contentblocking.report.lockwise.enabled",
@@ -161,6 +164,8 @@ let RemotePageAccessManager = {
         "privacy.trackingprotection.socialtracking.enabled",
         "browser.contentblocking.report.hide_lockwise_app",
         "browser.contentblocking.report.show_mobile_app",
+        "browser.contentblocking.report.hide_vpn_banner",
+        "browser.contentblocking.report.vpn.enabled",
       ],
       RPMGetStringPref: [
         "browser.contentblocking.category",
@@ -172,6 +177,11 @@ let RemotePageAccessManager = {
         "browser.contentblocking.report.lockwise.mobile-ios.url",
         "browser.contentblocking.report.mobile-ios.url",
         "browser.contentblocking.report.mobile-android.url",
+        "browser.contentblocking.report.vpn.url",
+        "browser.contentblocking.report.vpn-promo.url",
+        "browser.contentblocking.report.vpn-android.url",
+        "browser.contentblocking.report.vpn-ios.url",
+        "browser.contentblocking.report.vpn_platforms",
       ],
       RPMGetIntPref: ["network.cookie.cookieBehavior"],
       RPMGetFormatURLPref: [
