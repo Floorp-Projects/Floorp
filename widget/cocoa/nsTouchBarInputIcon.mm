@@ -18,8 +18,6 @@
 #include "nsObjCExceptions.h"
 
 using namespace mozilla;
-using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;
@@ -52,10 +50,8 @@ nsTouchBarInputIcon::~nsTouchBarInputIcon() {
 void nsTouchBarInputIcon::Destroy() {
   ReleaseJSObjects();
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
-  }
-  if (mIconLoaderHelper) {
-    mIconLoaderHelper = nullptr;
   }
 
   mButton = nil;
@@ -80,8 +76,8 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   if (!mIconLoader) {
     // We ask only for the HiDPI images since all Touch Bars are Retina
     // displays and we have no need for icons @1x.
-    mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize, kHiDPIScalingFactor);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mDocument, mImageRegionRect);
+    mIconLoader = new nsIconLoaderService(mDocument, &mImageRegionRect, this, kIconSize, kIconSize,
+                                          kHiDPIScalingFactor);
     if (!mIconLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -89,9 +85,9 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
 
   if (!mSetIcon) {
     // Load placeholder icon.
-    [mButton setImage:mIconLoaderHelper->GetNativeIconImage()];
-    [mShareScrubber setButtonImage:mIconLoaderHelper->GetNativeIconImage()];
-    [mPopoverItem setCollapsedRepresentationImage:mIconLoaderHelper->GetNativeIconImage()];
+    [mButton setImage:mIconLoader->GetNativeIconImage()];
+    [mShareScrubber setButtonImage:mIconLoader->GetNativeIconImage()];
+    [mPopoverItem setCollapsedRepresentationImage:mIconLoader->GetNativeIconImage()];
   }
 
   nsresult rv = mIconLoader->LoadIcon(aIconURI, true /* aIsInternalIcon */);
@@ -119,19 +115,14 @@ void nsTouchBarInputIcon::ReleaseJSObjects() {
 }
 
 //
-// mozilla::widget::IconLoaderListenerCocoa
+// nsIconLoaderObserver
 //
 
-nsresult nsTouchBarInputIcon::OnComplete() {
-  if (!mIconLoaderHelper) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult nsTouchBarInputIcon::OnComplete(NSImage* aImage) {
+  [mButton setImage:aImage];
+  [mShareScrubber setButtonImage:aImage];
+  [mPopoverItem setCollapsedRepresentationImage:aImage];
 
-  NSImage* image = mIconLoaderHelper->GetNativeIconImage();
-  [mButton setImage:image];
-  [mShareScrubber setButtonImage:image];
-  [mPopoverItem setCollapsedRepresentationImage:image];
-
-  mIconLoaderHelper->Destroy();
+  [aImage release];
   return NS_OK;
 }

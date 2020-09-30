@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
-
 :root {
   appearance: none;
   background: transparent;
@@ -123,15 +120,6 @@ input[type="checkbox"] {
   display:none;
 }
 
-xul|menu {
-  overflow: hidden;
-  min-height: 0 !important;
-  height: 0 !important;
-  width: 0 !important;
-  appearance: none !important;
-  padding: 0 !important;
-}
-
 .control-icon {
   background-position: center;
   background-size: 16px;
@@ -234,29 +222,4 @@ xul|menu {
   fill: currentColor;
   fill-opacity: 0.4;
   margin: 5px;
-}
-
-#webRTC-sharingCamera-menu,
-#webRTC-sharingMicrophone-menu,
-#webRTC-sharingScreen-menu {
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-#webRTC-sharingCamera-menu {
-  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
-}
-
-#webRTC-sharingMicrophone-menu {
-  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
-}
-
-#webRTC-sharingScreen-menu {
-  list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
-}
-
-#webRTC-sharingCamera-menu > menupopup,
-#webRTC-sharingMicrophone-menu > menupopup,
-#webRTC-sharingScreen-menu > menupopup {
-  list-style-image: none; /* don't inherit into menu items */
 }

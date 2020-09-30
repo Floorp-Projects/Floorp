@@ -36,8 +36,6 @@
 using namespace mozilla;
 
 using mozilla::dom::Element;
-using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 
@@ -61,10 +59,8 @@ nsMenuItemIconX::~nsMenuItemIconX() {
 // are still outstanding).  mMenuObjectX owns our mNativeMenuItem.
 void nsMenuItemIconX::Destroy() {
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
-  }
-  if (mIconLoaderHelper) {
-    mIconLoaderHelper = nullptr;
   }
   mMenuObject = nullptr;
   mNativeMenuItem = nil;
@@ -90,15 +86,14 @@ nsresult nsMenuItemIconX::SetupIcon() {
   }
 
   if (!mIconLoader) {
-    mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mContent, mImageRegionRect);
+    mIconLoader = new nsIconLoaderService(mContent, &mImageRegionRect, this, kIconSize, kIconSize);
     if (!mIconLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
   if (!mSetIcon) {
     // Load placeholder icon.
-    [mNativeMenuItem setImage:mIconLoaderHelper->GetNativeIconImage()];
+    [mNativeMenuItem setImage:mIconLoader->GetNativeIconImage()];
   }
 
   rv = mIconLoader->LoadIcon(iconURI);
@@ -199,30 +194,26 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 }
 
 //
-// mozilla::widget::IconLoaderListenerCocoa
+// nsIconLoaderObserver
 //
 
-nsresult nsMenuItemIconX::OnComplete() {
-  if (!mIconLoaderHelper) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSImage* image = mIconLoaderHelper->GetNativeIconImage();
+nsresult nsMenuItemIconX::OnComplete(NSImage* aImage) {
   if (!mNativeMenuItem) {
-    mIconLoaderHelper->Destroy();
+    if (aImage) {
+      [aImage release];
+    }
     return NS_ERROR_FAILURE;
   }
 
-  if (!image) {
+  if (!aImage) {
     [mNativeMenuItem setImage:nil];
     return NS_OK;
   }
 
-  [mNativeMenuItem setImage:image];
+  [mNativeMenuItem setImage:aImage];
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
-
-  mIconLoaderHelper->Destroy();
+  [aImage release];
   return NS_OK;
 }

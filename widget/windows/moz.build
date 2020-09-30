@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     'AudioSession.cpp',
     'CompositorWidgetChild.cpp',
     'GfxInfo.cpp',
-    'IconLoaderHelperWin.cpp',
     'IEnumFE.cpp',
     'IMMHandler.cpp',
     'InkCollector.cpp',
@@ -78,7 +77,6 @@ UNIFIED_SOURCES += [
     'ProcInfo.cpp',
     'RemoteBackbuffer.cpp',
     'ScreenHelperWin.cpp',
-    'SystemStatusBar.cpp',
     'TaskbarPreview.cpp',
     'TaskbarPreviewButton.cpp',
     'TaskbarTabPreview.cpp',
@@ -156,7 +154,6 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
 LOCAL_INCLUDES += [
     '/layout/forms',
     '/layout/generic',
-    '/layout/style',
     '/layout/xul',
     '/toolkit/xre',
     '/widget',
