@@ -25,8 +25,6 @@ browser.jar:
         content/browser/aboutNetErrorCodes.js         (content/aboutNetErrorCodes.js)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
-        content/browser/supportpages/connection-not-secure.html (content/supportpages/connection-not-secure.html)
-        content/browser/supportpages/time-errors.html           (content/supportpages/time-errors.html)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutFrameCrashed.html        (content/aboutFrameCrashed.html)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)

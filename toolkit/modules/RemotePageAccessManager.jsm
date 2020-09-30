@@ -40,7 +40,6 @@ let RemotePageAccessManager = {
         "Browser:SSLErrorGoBack",
         "Browser:PrimeMitm",
         "Browser:ResetEnterpriseRootsPref",
-        "DisplayOfflineSupportPage",
       ],
       RPMRecordTelemetryEvent: ["*"],
       RPMAddMessageListener: ["*"],
@@ -53,7 +52,6 @@ let RemotePageAccessManager = {
         "security.certerror.hideAddException",
         "security.ssl.errorReporting.automatic",
         "security.ssl.errorReporting.enabled",
-        "security.certerrors.offlineSupport.enabled",
       ],
       RPMSetBoolPref: [
         "security.ssl.errorReporting.automatic",
@@ -85,7 +83,6 @@ let RemotePageAccessManager = {
         "Browser:PrimeMitm",
         "Browser:ResetEnterpriseRootsPref",
         "ReportBlockingError",
-        "DisplayOfflineSupportPage",
       ],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
@@ -98,7 +95,6 @@ let RemotePageAccessManager = {
         "security.certerrors.tls.version.show-override",
         "security.xfocsp.errorReporting.automatic",
         "security.xfocsp.errorReporting.enabled",
-        "security.certerrors.offlineSupport.enabled",
       ],
       RPMSetBoolPref: [
         "security.ssl.errorReporting.automatic",
