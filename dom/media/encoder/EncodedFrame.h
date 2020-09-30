@@ -32,6 +32,9 @@ class EncodedFrame final {
         mFrameType(aFrameType),
         mFrameData(std::move(aData)) {
     MOZ_ASSERT(mFrameData);
+    MOZ_ASSERT_IF(mFrameType == VP8_I_FRAME, mDurationBase == PR_USEC_PER_SEC);
+    MOZ_ASSERT_IF(mFrameType == VP8_P_FRAME, mDurationBase == PR_USEC_PER_SEC);
+    MOZ_ASSERT_IF(mFrameType == OPUS_AUDIO_FRAME, mDurationBase == 48000);
   }
   // Timestamp in microseconds
   const uint64_t mTime;
