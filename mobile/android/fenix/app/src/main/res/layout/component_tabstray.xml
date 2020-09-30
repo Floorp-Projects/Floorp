@@ -112,6 +112,7 @@
             android:id="@+id/tab_layout"
             android:layout_width="0dp"
             android:layout_height="80dp"
+            app:tabMaxWidth="0dp"
             android:background="@color/foundation_normal_theme"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
