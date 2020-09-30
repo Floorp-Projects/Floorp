@@ -7,6 +7,7 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.requestCompleteLog();
 
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
