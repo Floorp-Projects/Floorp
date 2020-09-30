@@ -14,6 +14,7 @@
 #include "WebMWriter.h"
 
 using namespace mozilla;
+using media::TimeUnit;
 using testing::_;
 using testing::ElementsAre;
 using testing::Return;
@@ -48,19 +49,21 @@ static RefPtr<TrackMetadataBase> CreateVP8Metadata(int32_t aWidth,
 }
 
 static RefPtr<EncodedFrame> CreateFrame(EncodedFrame::FrameType aType,
-                                        uint64_t aTimeUs, uint64_t aDurationUs,
+                                        const TimeUnit& aTime,
+                                        const TimeUnit& aDuration,
                                         size_t aDataSize) {
   auto data = MakeRefPtr<EncodedFrame::FrameData>();
   data->SetLength(aDataSize);
   if (aType == EncodedFrame::OPUS_AUDIO_FRAME) {
     // Opus duration is in samples, so figure out how many samples will put us
     // closest to aDurationUs without going over.
-    return MakeRefPtr<EncodedFrame>(aTimeUs,
-                                    UsecsToFrames(aDurationUs, 48000).value(),
+    return MakeRefPtr<EncodedFrame>(aTime,
+                                    TimeUnitToFrames(aDuration, 48000).value(),
                                     48000, aType, std::move(data));
   }
-  return MakeRefPtr<EncodedFrame>(aTimeUs, aDurationUs, PR_USEC_PER_SEC, aType,
-                                  std::move(data));
+  return MakeRefPtr<EncodedFrame>(
+      aTime, TimeUnitToFrames(aDuration, USECS_PER_S).value(), USECS_PER_S,
+      aType, std::move(data));
 }
 
 namespace testing {
@@ -103,7 +106,9 @@ TEST(MuxerTest, AudioOnly)
   // Prepare data
 
   auto opusMeta = CreateOpusMetadata(1, 48000, 16, 16);
-  auto audioFrame = CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, 0, 48000, 4096);
+  auto audioFrame =
+      CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, TimeUnit::FromSeconds(0),
+                  TimeUnit::FromSeconds(0.2), 4096);
 
   // Expectations
 
@@ -137,8 +142,12 @@ TEST(MuxerTest, AudioVideo)
 
   auto opusMeta = CreateOpusMetadata(1, 48000, 16, 16);
   auto vp8Meta = CreateVP8Metadata(640, 480);
-  auto audioFrame = CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, 0, 48000, 4096);
-  auto videoFrame = CreateFrame(EncodedFrame::VP8_I_FRAME, 0, 50000, 65536);
+  auto audioFrame =
+      CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, TimeUnit::FromSeconds(0),
+                  TimeUnit::FromSeconds(0.2), 4096);
+  auto videoFrame =
+      CreateFrame(EncodedFrame::VP8_I_FRAME, TimeUnit::FromSeconds(0),
+                  TimeUnit::FromSeconds(0.05), 65536);
 
   // Expectations
 
@@ -175,10 +184,18 @@ TEST(MuxerTest, AudioVideoOutOfOrder)
 
   auto opusMeta = CreateOpusMetadata(1, 48000, 16, 16);
   auto vp8Meta = CreateVP8Metadata(640, 480);
-  auto a0 = CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, 0, 48, 4096);
-  auto v0 = CreateFrame(EncodedFrame::VP8_I_FRAME, 0, 50, 65536);
-  auto a48 = CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, 48, 48, 4096);
-  auto v50 = CreateFrame(EncodedFrame::VP8_I_FRAME, 50, 50, 65536);
+  auto a0 =
+      CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME, TimeUnit::FromMicroseconds(0),
+                  TimeUnit::FromMicroseconds(48), 4096);
+  auto v0 =
+      CreateFrame(EncodedFrame::VP8_I_FRAME, TimeUnit::FromMicroseconds(0),
+                  TimeUnit::FromMicroseconds(50), 65536);
+  auto a48 = CreateFrame(EncodedFrame::OPUS_AUDIO_FRAME,
+                         TimeUnit::FromMicroseconds(48),
+                         TimeUnit::FromMicroseconds(48), 4096);
+  auto v50 =
+      CreateFrame(EncodedFrame::VP8_I_FRAME, TimeUnit::FromMicroseconds(50),
+                  TimeUnit::FromMicroseconds(50), 65536);
 
   // Expectations
 

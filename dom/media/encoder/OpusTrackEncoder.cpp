@@ -117,9 +117,7 @@ OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
     : AudioTrackEncoder(aTrackRate),
       mEncoder(nullptr),
       mLookahead(0),
-      mCodecDelayUs(0),
-      mResampler(nullptr),
-      mOutputTimeStamp(0) {}
+      mResampler(nullptr) {}
 
 OpusTrackEncoder::~OpusTrackEncoder() {
   if (mEncoder) {
@@ -190,7 +188,7 @@ nsresult OpusTrackEncoder::Init(int aChannels, int aSamplingRate) {
   }
 
   // Calculate offset in microseconds
-  mCodecDelayUs = mLookahead * PR_USEC_PER_SEC / GetOutputSampleRate();
+  mCodecDelay = FramesToTimeUnit(mLookahead, GetOutputSampleRate());
 
   SetInitialized();
 
@@ -433,12 +431,12 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 
     // timestamp should be the time of the first sample
     aData.AppendElement(MakeRefPtr<EncodedFrame>(
-        mOutputTimeStamp + mCodecDelayUs, duration, kOpusSamplingRate,
+        mOutputTimeStamp + mCodecDelay, duration, kOpusSamplingRate,
         EncodedFrame::OPUS_AUDIO_FRAME, std::move(frameData)));
 
     mOutputTimeStamp +=
-        FramesToUsecs(GetPacketDuration(), kOpusSamplingRate).value();
-    LOG("[Opus] mOutputTimeStamp %lld.", mOutputTimeStamp);
+        FramesToTimeUnit(GetPacketDuration(), kOpusSamplingRate);
+    LOG("[Opus] mOutputTimeStamp %.3f.", mOutputTimeStamp.ToSeconds());
   }
 
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;

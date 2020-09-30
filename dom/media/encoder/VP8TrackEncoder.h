@@ -7,6 +7,8 @@
 #define VP8TrackEncoder_h_
 
 #include "TrackEncoder.h"
+
+#include "TimeUnits.h"
 #include "vpx/vpx_codec.h"
 
 namespace mozilla {
@@ -73,8 +75,8 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   // Total duration in mTrackRate extracted by GetEncodedPartitions().
   CheckedInt64 mExtractedDuration;
 
-  // Total duration in microseconds extracted by GetEncodedPartitions().
-  CheckedInt64 mExtractedDurationUs;
+  // Total duration extracted by GetEncodedPartitions().
+  media::TimeUnit mExtractedDurationUs;
 
   // Muted frame, we only create it once.
   RefPtr<layers::Image> mMuteFrame;
