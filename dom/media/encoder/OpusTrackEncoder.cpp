@@ -117,6 +117,7 @@ OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
     : AudioTrackEncoder(aTrackRate),
       mEncoder(nullptr),
       mLookahead(0),
+      mCodecDelayUs(0),
       mResampler(nullptr),
       mOutputTimeStamp(0) {}
 
@@ -167,16 +168,33 @@ nsresult OpusTrackEncoder::Init(int aChannels, int aSamplingRate) {
   mEncoder = opus_encoder_create(GetOutputSampleRate(), mChannels,
                                  OPUS_APPLICATION_AUDIO, &error);
 
-  if (error == OPUS_OK) {
-    SetInitialized();
+  if (error != OPUS_OK) {
+    return NS_ERROR_FAILURE;
   }
 
   if (mAudioBitrate) {
-    opus_encoder_ctl(mEncoder,
-                     OPUS_SET_BITRATE(static_cast<int>(mAudioBitrate)));
+    error = opus_encoder_ctl(mEncoder,
+                             OPUS_SET_BITRATE(static_cast<int>(mAudioBitrate)));
+    if (error != OPUS_OK) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  return error == OPUS_OK ? NS_OK : NS_ERROR_FAILURE;
+  // In the case of Opus we need to calculate the codec delay based on the
+  // pre-skip. For more information see:
+  // https://tools.ietf.org/html/rfc7845#section-4.2
+  error = opus_encoder_ctl(mEncoder, OPUS_GET_LOOKAHEAD(&mLookahead));
+  if (error != OPUS_OK) {
+    mLookahead = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  // Calculate offset in microseconds
+  mCodecDelayUs = mLookahead * PR_USEC_PER_SEC / GetOutputSampleRate();
+
+  SetInitialized();
+
+  return NS_OK;
 }
 
 int OpusTrackEncoder::GetOutputSampleRate() {
@@ -203,12 +221,6 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   RefPtr<OpusMetadata> meta = new OpusMetadata();
   meta->mChannels = mChannels;
   meta->mSamplingFrequency = mSamplingRate;
-
-  mLookahead = 0;
-  int error = opus_encoder_ctl(mEncoder, OPUS_GET_LOOKAHEAD(&mLookahead));
-  if (error != OPUS_OK) {
-    mLookahead = 0;
-  }
 
   // The ogg time stamping and pre-skip is always timed at 48000.
   SerializeOpusIdHeader(
@@ -423,7 +435,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 
     audiodata->SwapInFrameData(frameData);
     // timestamp should be the time of the first sample
-    audiodata->mTime = mOutputTimeStamp;
+    audiodata->mTime = mOutputTimeStamp + mCodecDelayUs;
     mOutputTimeStamp +=
         FramesToUsecs(GetPacketDuration(), kOpusSamplingRate).value();
     LOG("[Opus] mOutputTimeStamp %lld.", mOutputTimeStamp);
