@@ -4,6 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# For Android, we ship hyphenation files in uncompiled format to minimize
+# the package size; for other products, ship precompiled files to eliminate
+# the cost of compilation on first use.
+if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
+    hyphenation_ext = ".dic"
+else:
+    hyphenation_ext = ".hyf"
+
 locales = [
     'af',
     'bg',
@@ -42,7 +50,7 @@ locales = [
     'tr',
     'uk',
 ]
-filename = '{locale}/hyphenation/hyph_{locale}.hyf'
+filename = '{locale}/hyphenation/hyph_{locale}' + hyphenation_ext
 FINAL_TARGET_FILES.hyphenation += [filename.format(locale=locale) for locale in locales]
 # en-US is a special case: the dic file is named like en_US.
-FINAL_TARGET_FILES.hyphenation += ['en-US/hyphenation/hyph_en_US.hyf']
+FINAL_TARGET_FILES.hyphenation += ['en-US/hyphenation/hyph_en_US' + hyphenation_ext]
