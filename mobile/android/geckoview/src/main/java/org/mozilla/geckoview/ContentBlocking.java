@@ -8,6 +8,10 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.os.Parcelable;
 import android.os.Parcel;
@@ -26,14 +30,112 @@ import org.mozilla.gecko.util.GeckoBundle;
  */
 @AnyThread
 public class ContentBlocking {
+    /**
+     * {@link SafeBrowsingProvider} configuration for Google's legacy SafeBrowsing server.
+     */
+    public final static SafeBrowsingProvider GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER =
+            SafeBrowsingProvider.withName("google")
+                    .version("2.2")
+                    .lists("goog-badbinurl-shavar",
+                           "goog-downloadwhite-digest256",
+                           "goog-phish-shavar",
+                           "googpub-phish-shavar",
+                           "goog-malware-shavar",
+                           "goog-unwanted-shavar")
+                    .updateUrl("https://safebrowsing.google.com/safebrowsing/downloads?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2&key=%GOOGLE_SAFEBROWSING_API_KEY%")
+                    .getHashUrl("https://safebrowsing.google.com/safebrowsing/gethash?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2")
+                    .reportUrl("https://safebrowsing.google.com/safebrowsing/diagnostic?site=")
+                    .reportPhishingMistakeUrl("https://%LOCALE%.phish-error.mozilla.com/?url=")
+                    .reportMalwareMistakeUrl("https://%LOCALE%.malware-error.mozilla.com/?url=")
+                    .advisoryUrl("https://developers.google.com/safe-browsing/v4/advisory")
+                    .advisoryName("Google Safe Browsing")
+                    .build();
+
+    /**
+     * {@link SafeBrowsingProvider} configuration for Google's SafeBrowsing server.
+     */
+    public final static SafeBrowsingProvider GOOGLE_SAFE_BROWSING_PROVIDER =
+            SafeBrowsingProvider.withName("google4")
+                    .version("4")
+                    .lists("goog-badbinurl-proto",
+                           "goog-downloadwhite-proto",
+                           "goog-phish-proto",
+                           "googpub-phish-proto",
+                           "goog-malware-proto",
+                           "goog-unwanted-proto",
+                           "goog-harmful-proto",
+                           "goog-passwordwhite-proto")
+                    .updateUrl("https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_SAFEBROWSING_API_KEY%&$httpMethod=POST")
+                    .getHashUrl("https://safebrowsing.googleapis.com/v4/fullHashes:find?$ct=application/x-protobuf&key=%GOOGLE_SAFEBROWSING_API_KEY%&$httpMethod=POST")
+                    .reportUrl("https://safebrowsing.google.com/safebrowsing/diagnostic?site=")
+                    .reportPhishingMistakeUrl("https://%LOCALE%.phish-error.mozilla.com/?url=")
+                    .reportMalwareMistakeUrl("https://%LOCALE%.malware-error.mozilla.com/?url=")
+                    .advisoryUrl("https://developers.google.com/safe-browsing/v4/advisory")
+                    .advisoryName("Google Safe Browsing")
+                    .dataSharingUrl("https://safebrowsing.googleapis.com/v4/threatHits?$ct=application/x-protobuf&key=%GOOGLE_SAFEBROWSING_API_KEY%&$httpMethod=POST")
+                    .dataSharingEnabled(false)
+                    .build();
+
+    // This class shouldn't be instantiated
+    protected ContentBlocking() {}
+
     @AnyThread
     public static class Settings extends RuntimeSettings {
+        private final Map<String, SafeBrowsingProvider> mSafeBrowsingProviders = new HashMap<>();
+
+        private final static SafeBrowsingProvider[] DEFAULT_PROVIDERS = {
+            ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER,
+            ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER
+        };
+
         @AnyThread
         public static class Builder
                 extends RuntimeSettings.Builder<Settings> {
             @Override
             protected @NonNull Settings newSettings(final @Nullable Settings settings) {
                 return new Settings(settings);
+            }
+
+            /**
+             * Set custom safe browsing providers.
+             *
+             * @param providers one or more custom providers.
+             *
+             * @return This Builder instance.
+             * @see SafeBrowsingProvider
+             */
+            public @NonNull Builder safeBrowsingProviders(
+                    final @NonNull SafeBrowsingProvider... providers) {
+                getSettings().setSafeBrowsingProviders(providers);
+                return this;
+            }
+
+            /**
+             * Set the safe browsing table for phishing threats.
+             *
+             * @param safeBrowsingPhishingTable one or more lists for safe browsing phishing.
+             *
+             * @return This Builder instance.
+             * @see SafeBrowsingProvider
+             */
+            public @NonNull Builder safeBrowsingPhishingTable(
+                    final @NonNull String[] safeBrowsingPhishingTable) {
+                getSettings().setSafeBrowsingPhishingTable(safeBrowsingPhishingTable);
+                return this;
+            }
+
+            /**
+             * Set the safe browsing table for malware threats.
+             *
+             * @param safeBrowsingMalwareTable one or more lists for safe browsing malware.
+             *
+             * @return This Builder instance.
+             * @see SafeBrowsingProvider
+             */
+            public @NonNull Builder safeBrowsingMalwareTable(
+                    final @NonNull String[] safeBrowsingMalwareTable) {
+                getSettings().setSafeBrowsingMalwareTable(safeBrowsingMalwareTable);
+                return this;
             }
 
             /**
@@ -168,6 +270,20 @@ public class ContentBlocking {
         /* package */ final Pref<Boolean> mEtpStrict = new Pref<Boolean>(
             "privacy.annotate_channels.strict_list.enabled", false);
 
+        /* package */ final Pref<String> mSafeBrowsingMalwareTable = new Pref<>(
+            "urlclassifier.malwareTable", ContentBlocking.listsToPref(
+                "goog-malware-proto",
+                "goog-unwanted-proto",
+                "moztest-harmful-simple",
+                "moztest-malware-simple",
+                "moztest-unwanted-simple"));
+        /* package */ final Pref<String> mSafeBrowsingPhishingTable = new Pref<>(
+            "urlclassifier.phishTable", ContentBlocking.listsToPref(
+                // In official builds, we are allowed to use Google's private phishing
+                // list (see bug 1288840).
+                BuildConfig.MOZILLA_OFFICIAL ? "goog-phish-proto" : "googpub-phish-proto",
+                "moztest-phish-simple"));
+
         /**
          * Construct default settings.
          */
@@ -195,13 +311,104 @@ public class ContentBlocking {
             super(parent);
 
             if (settings != null) {
-                updateSettings(settings);
+                updatePrefs(settings);
+            } else {
+                // Set default browsing providers
+                setSafeBrowsingProviders(DEFAULT_PROVIDERS);
             }
         }
 
-        private void updateSettings(final @NonNull Settings settings) {
-            // We only have pref settings here.
-            updatePrefs(settings);
+        @Override
+        protected void updatePrefs(final @NonNull RuntimeSettings settings) {
+            super.updatePrefs(settings);
+
+            final ContentBlocking.Settings source = (ContentBlocking.Settings) settings;
+            for (final SafeBrowsingProvider provider : source.mSafeBrowsingProviders.values()) {
+                mSafeBrowsingProviders.put(
+                        provider.getName(),
+                        new SafeBrowsingProvider(this, provider));
+            }
+        }
+
+        /**
+         * Get the collection of {@link SafeBrowsingProvider} for this runtime.
+         *
+         * @return an unmodifiable collection of {@link SafeBrowsingProvider}
+         * @see SafeBrowsingProvider
+         */
+        public @NonNull Collection<SafeBrowsingProvider> getSafeBrowsingProviders() {
+            return Collections.unmodifiableCollection(mSafeBrowsingProviders.values());
+        }
+
+        /**
+         * Sets the collection of {@link SafeBrowsingProvider} for this runtime.
+         *
+         * By default the collection is composed of
+         * {@link ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER} and
+         * {@link ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER}.
+         *
+         * @param providers {@link SafeBrowsingProvider} instances for this runtime.
+         *
+         * @return the {@link Settings} instance.
+         * @see SafeBrowsingProvider
+         */
+        public @NonNull Settings setSafeBrowsingProviders(
+                final @NonNull SafeBrowsingProvider... providers) {
+            mSafeBrowsingProviders.clear();
+
+            for (final SafeBrowsingProvider provider : providers) {
+                mSafeBrowsingProviders.put(
+                        provider.getName(),
+                        new SafeBrowsingProvider(this, provider));
+            }
+
+            return this;
+        }
+
+        /**
+         * Get the table for SafeBrowsing Phishing. The identifiers present in this table must
+         * match one of the identifiers present in {@link SafeBrowsingProvider#getLists}.
+         *
+         * @return an array of identifiers for SafeBrowsing's Phishing feature
+         * @see SafeBrowsingProvider.Builder#lists
+         */
+        public @NonNull String[] getSafeBrowsingPhishingTable() {
+            return ContentBlocking.prefToLists(mSafeBrowsingPhishingTable.get());
+        }
+
+        /**
+         * Sets the table for SafeBrowsing Phishing.
+         *
+         * @param table an array of identifiers for SafeBrowsing's Phishing feature.
+         * @return this {@link Settings} instance.
+         * @see SafeBrowsingProvider.Builder#lists
+         */
+        public @NonNull Settings setSafeBrowsingPhishingTable(final @NonNull String... table) {
+            mSafeBrowsingPhishingTable.commit(ContentBlocking.listsToPref(table));
+            return this;
+        }
+
+        /**
+         * Get the table for SafeBrowsing Malware. The identifiers present in this table must
+         * match one of the identifiers present in {@link SafeBrowsingProvider#getLists}.
+         *
+         * @return an array of identifiers for SafeBrowsing's Malware feature
+         * @see SafeBrowsingProvider.Builder#lists
+         */
+        public @NonNull String[] getSafeBrowsingMalwareTable() {
+            return ContentBlocking.prefToLists(mSafeBrowsingMalwareTable.get());
+        }
+
+        /**
+         * Sets the table for SafeBrowsing Malware.
+         *
+         * @param table an array of identifiers for SafeBrowsing's Malware feature.
+         * @return this {@link Settings} instance.
+         * @see SafeBrowsingProvider.Builder#lists
+         */
+        public @NonNull Settings setSafeBrowsingMalwareTable(final @NonNull String... table) {
+            mSafeBrowsingMalwareTable.commit(ContentBlocking.listsToPref(table));
+            return this;
         }
 
         /**
@@ -399,6 +606,508 @@ public class ContentBlocking {
                         return new Settings[size];
                     }
                 };
+    }
+
+    /**
+     * Holds configuration for a SafeBrowsing provider. <br><br>
+     *
+     * This class can be used to modify existing configuration for SafeBrowsing providers
+     * or to add a custom SafeBrowsing provider to the app. <br><br>
+     *
+     * Default configuration for Google's SafeBrowsing servers can be found at
+     * {@link ContentBlocking#GOOGLE_SAFE_BROWSING_PROVIDER} and
+     * {@link ContentBlocking#GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER}. <br><br>
+     *
+     * This class is immutable, once constructed its values cannot be changed. <br><br>
+     *
+     * You can, however, use the {@link #from} method to build upon an
+     * existing configuration. For example to override the Google's server configuration,
+     * you can do the following: <br>
+     *
+     * <pre><code>
+     *     SafeBrowsingProvider override = SafeBrowsingProvider
+     *         .from(ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER)
+     *         .getHashUrl("http://my-custom-server.com/...")
+     *         .updateUrl("http://my-custom-server.com/...")
+     *         .build();
+     *
+     *     runtime.getContentBlocking().setSafeBrowsingProviders(override);
+     * </code></pre>
+     *
+     * This will override the configuration. <br><br>
+     *
+     * You can also add a custom SafeBrowsing provider using the {@link #withName} method. For
+     * example, to add a custom provider that provides the list
+     * <code>testprovider-phish-digest256</code> do the following: <br>
+     *
+     * <pre><code>
+     *     SafeBrowsingProvider custom = SafeBrowsingProvider
+     *         .withName("custom-provider")
+     *         .version("2.2")
+     *         .lists("testprovider-phish-digest256")
+     *         .updateUrl("http://my-custom-server2.com/...")
+     *         .getHashUrl("http://my-custom-server2.com/...")
+     *         .build();
+     * </code></pre>
+     *
+     * And then add the custom provider (adding optionally existing providers): <br>
+     *
+     * <pre><code>
+     *     runtime.getContentBlocking().setSafeBrowsingProviders(
+     *         custom,
+     *         // Add this if you want to keep the existing configuration too.
+     *         ContentBlocking.GOOGLE_SAFE_BROWSING_PROVIDER,
+     *         ContentBlocking.GOOGLE_LEGACY_SAFE_BROWSING_PROVIDER);
+     * </code></pre>
+     *
+     * And set the list in the phishing configuration <br>
+     *
+     * <pre><code>
+     *     runtime.getContentBlocking().setSafeBrowsingPhishingTable(
+     *          "testprovider-phish-digest256",
+     *          // Existing configuration
+     *          "goog-phish-proto");
+     * </code></pre>
+     *
+     * Note that any list present in the phishing or malware tables need to appear in one
+     * safe browsing provider's {@link #getLists} property.
+     *
+     * See also <a href="https://developers.google.com/safe-browsing/v4">safe-browsing/v4</a>.
+     */
+    @AnyThread
+    public static class SafeBrowsingProvider extends RuntimeSettings {
+        final static private String ROOT = "browser.safebrowsing.provider.";
+
+        final private String mName;
+
+        /* package */ final Pref<String> mVersion;
+        /* package */ final Pref<String> mLists;
+        /* package */ final Pref<String> mUpdateUrl;
+        /* package */ final Pref<String> mGetHashUrl;
+        /* package */ final Pref<String> mReportUrl;
+        /* package */ final Pref<String> mReportPhishingMistakeUrl;
+        /* package */ final Pref<String> mReportMalwareMistakeUrl;
+        /* package */ final Pref<String> mAdvisoryUrl;
+        /* package */ final Pref<String> mAdvisoryName;
+        /* package */ final Pref<String> mDataSharingUrl;
+        /* package */ final Pref<Boolean> mDataSharingEnabled;
+
+        /**
+         * Creates a {@link SafeBrowsingProvider.Builder} for a provider with the given name.
+         *
+         * Note: the <code>mozilla</code> name is reserved for internal use, and this method
+         * will throw if you attempt to build a provider with that name.
+         *
+         * @param name The name of the provider.
+         * @return a {@link Builder} instance that can be used to build a provider.
+         * @throws IllegalArgumentException if this method is called with
+         *         <code>name="mozilla"</code>
+         */
+        @NonNull
+        public static Builder withName(final @NonNull String name) {
+            if ("mozilla".equals(name)) {
+                throw new IllegalArgumentException(
+                        "The 'mozilla' name is reserved for internal use.");
+            }
+            return new Builder(name);
+        }
+
+        /**
+         * Creates a {@link SafeBrowsingProvider.Builder} based on the given provider.
+         *
+         * All properties not otherwise specified will be copied from the provider given in input.
+         *
+         * @param provider The source provider for this builder.
+         *
+         * @return a {@link Builder} instance that can be used to create a configuration based
+         *         on the builder in input.
+         */
+        @NonNull
+        public static Builder from(final @NonNull SafeBrowsingProvider provider) {
+            return new Builder(provider);
+        }
+
+        @AnyThread
+        public static class Builder {
+            final SafeBrowsingProvider mProvider;
+
+            private Builder(final String name) {
+                mProvider = new SafeBrowsingProvider(name);
+            }
+
+            private Builder(final SafeBrowsingProvider source) {
+                mProvider = new SafeBrowsingProvider(source);
+            }
+
+            /**
+             * Sets the SafeBrowsing protocol session for this provider.
+             *
+             * @param version the version strong, e.g. "2.2" or "4".
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder version(final @NonNull String version) {
+                mProvider.mVersion.set(version);
+                return this;
+            }
+
+            /**
+             * Sets the lists provided by this provider.
+             *
+             * @param lists one or more lists for this provider, e.g. "goog-malware-proto",
+             *                 "goog-unwanted-proto"
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder lists(final @NonNull String... lists) {
+                mProvider.mLists.set(ContentBlocking.listsToPref(lists));
+                return this;
+            }
+
+            /**
+             * Sets the url that will be used to update the threat list for this provider.
+             *
+             * See also
+             * <a href="https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch">
+             *     v4/threadListUpdates/fetch
+             * </a>.
+             *
+             * @param updateUrl the update url endpoint for this provider
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder updateUrl(final @NonNull String updateUrl) {
+                mProvider.mUpdateUrl.set(updateUrl);
+                return this;
+            }
+
+            /**
+             * Sets the url that will be used to get the full hashes that match a partial hash.
+             *
+             * See also
+             * <a href="https://developers.google.com/safe-browsing/v4/reference/rest/v4/fullHashes/find">
+             *     v4/fullHashes/find
+             * </a>.
+             *
+             * @param getHashUrl the gethash url endpoint for this provider
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder getHashUrl(final @NonNull String getHashUrl) {
+                mProvider.mGetHashUrl.set(getHashUrl);
+                return this;
+            }
+
+            /**
+             * Set the url that will be used to report a url to the SafeBrowsing provider.
+             *
+             * @param reportUrl the url endpoint to report a url to this provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder reportUrl(final @NonNull String reportUrl) {
+                mProvider.mReportUrl.set(reportUrl);
+                return this;
+            }
+
+            /**
+             * Set the url that will be used to report a url mistakenly reported as Phishing
+             * to the SafeBrowsing provider.
+             *
+             * @param reportPhishingMistakeUrl
+             *        the url endpoint to report a url to this provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder reportPhishingMistakeUrl(
+                    final @NonNull String reportPhishingMistakeUrl) {
+                mProvider.mReportPhishingMistakeUrl.set(reportPhishingMistakeUrl);
+                return this;
+            }
+
+            /**
+             * Set the url that will be used to report a url mistakenly reported as Malware
+             * to the SafeBrowsing provider.
+             *
+             * @param reportMalwareMistakeUrl
+             *        the url endpoint to report a url to this provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder reportMalwareMistakeUrl(
+                    final @NonNull String reportMalwareMistakeUrl) {
+                mProvider.mReportMalwareMistakeUrl.set(reportMalwareMistakeUrl);
+                return this;
+            }
+
+            /**
+             * Set the url that will be used to give a general advisory about this
+             * SafeBrowsing provider.
+             *
+             * @param advisoryUrl
+             *        the adivisory page url for this provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder advisoryUrl(final @NonNull String advisoryUrl) {
+                mProvider.mAdvisoryUrl.set(advisoryUrl);
+                return this;
+            }
+
+            /**
+             * Set the advisory name for this provider.
+             *
+             * @param advisoryName
+             *        the adivisory name for this provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder advisoryName(final @NonNull String advisoryName) {
+                mProvider.mAdvisoryName.set(advisoryName);
+                return this;
+            }
+
+            /**
+             * Set url to share threat data to the provider, if enabled by
+             *  {@link #dataSharingEnabled}.
+             *
+             * @param dataSharingUrl the url endpoint
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder dataSharingUrl(final @NonNull String dataSharingUrl) {
+                mProvider.mDataSharingUrl.set(dataSharingUrl);
+                return this;
+            }
+
+            /**
+             * Set whether to share threat data with the provider, off by default.
+             *
+             * @param dataSharingEnabled <code>true</code> if the browser should share threat
+             *                           data with the provider.
+             * @return this {@link Builder} instance.
+             */
+            public @NonNull Builder dataSharingEnabled(final boolean dataSharingEnabled) {
+                mProvider.mDataSharingEnabled.set(dataSharingEnabled);
+                return this;
+            }
+
+            /**
+             * Build the {@link SafeBrowsingProvider} based on this {@link Builder} instance.
+             * @return thie {@link SafeBrowsingProvider} instance.
+             */
+            public @NonNull SafeBrowsingProvider build() {
+                return new SafeBrowsingProvider(mProvider);
+            }
+        }
+
+        /* package */ SafeBrowsingProvider(final SafeBrowsingProvider source) {
+            this(/* name */ null, /* parent */ null, source);
+        }
+
+        /* package */ SafeBrowsingProvider(final RuntimeSettings parent,
+                                           final SafeBrowsingProvider source) {
+            this(/* name */ null, parent, source);
+        }
+
+        /* package */ SafeBrowsingProvider(final String name) {
+            this(name, /* parent */ null, /* source */ null);
+        }
+
+        /* package */ SafeBrowsingProvider(final String name,
+                                           final RuntimeSettings parent,
+                                           final SafeBrowsingProvider source) {
+            super(parent);
+
+            if (name != null) {
+                mName = name;
+            } else if (source != null) {
+                mName = source.mName;
+            } else {
+                throw new IllegalArgumentException("Either name or source must be non-null");
+            }
+
+            mVersion = new Pref<>(ROOT + mName + ".pver", null);
+            mLists = new Pref<>(ROOT + mName + ".lists", null);
+            mUpdateUrl = new Pref<>(ROOT + mName + ".updateURL", null);
+            mGetHashUrl = new Pref<>(ROOT + mName + ".gethashURL", null);
+            mReportUrl = new Pref<>(ROOT + mName + ".reportURL", null);
+            mReportPhishingMistakeUrl = new Pref<>(ROOT + mName + ".reportPhishMistakeURL", null);
+            mReportMalwareMistakeUrl = new Pref<>(ROOT + mName + ".reportMalwareMistakeURL", null);
+            mAdvisoryUrl = new Pref<>(ROOT + mName + ".advisoryURL", null);
+            mAdvisoryName = new Pref<>(ROOT + mName + ".advisoryName", null);
+            mDataSharingUrl = new Pref<>(ROOT + mName + ".dataSharingURL", null);
+            mDataSharingEnabled = new Pref<>(ROOT + mName + ".dataSharing.enabled", false);
+
+            if (source != null) {
+                updatePrefs(source);
+            }
+        }
+
+        /**
+         * Get the name of this provider.
+         *
+         * @return a string containing the name.
+         */
+        public @NonNull String getName() {
+            return mName;
+        }
+
+        /**
+         * Get the version for this provider.
+         *
+         * @return a string representing the version, e.g. "2.2" or "4".
+         */
+        public @Nullable String getVersion() {
+            return mVersion.get();
+        }
+
+        /**
+         * Get the lists provided by this provider.
+         *
+         * @return an array of string identifiers for the lists
+         */
+        public @NonNull String[] getLists() {
+            return ContentBlocking.prefToLists(mLists.get());
+        }
+
+        /**
+         * Get the url that will be used to update the threat list for this provider.
+         *
+         * See also
+         * <a href="https://developers.google.com/safe-browsing/v4/reference/rest/v4/threatListUpdates/fetch">
+         *     v4/threadListUpdates/fetch
+         * </a>.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getUpdateUrl() {
+            return mUpdateUrl.get();
+        }
+
+        /**
+         * Get the url that will be used to get the full hashes that match a partial hash.
+         *
+         * See also
+         * <a href="https://developers.google.com/safe-browsing/v4/reference/rest/v4/fullHashes/find">
+         *     v4/fullHashes/find
+         * </a>.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getGetHashUrl() {
+            return mGetHashUrl.get();
+        }
+
+        /**
+         * Get the url that will be used to report a url to the SafeBrowsing provider.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getReportUrl() {
+            return mReportUrl.get();
+        }
+
+        /**
+         * Get the url that will be used to report a url mistakenly reported as Phishing
+         * to the SafeBrowsing provider.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getReportPhishingMistakeUrl() {
+            return mReportPhishingMistakeUrl.get();
+        }
+
+        /**
+         * Get the url that will be used to report a url mistakenly reported as Malware
+         * to the SafeBrowsing provider.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getReportMalwareMistakeUrl() {
+            return mReportMalwareMistakeUrl.get();
+        }
+
+        /**
+         * Get the url that will be used to give a general advisory about this
+         * SafeBrowsing provider.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getAdvisoryUrl() {
+            return mAdvisoryUrl.get();
+        }
+
+        /**
+         * Get the advisory name for this provider.
+         *
+         * @return a string containing the URL.
+         */
+        public @Nullable String getAdvisoryName() {
+            return mAdvisoryName.get();
+        }
+
+        /**
+         * Get the url to share threat data to the provider, if enabled by
+         *  {@link #getDataSharingEnabled}.
+         *
+         * @return this {@link Builder} instance.
+         */
+        public @Nullable String getDataSharingUrl() {
+            return mDataSharingUrl.get();
+        }
+
+        /**
+         * Get whether to share threat data with the provider.
+         *
+         * @return <code>true</code> if the browser should whare threat data with the provider,
+         * <code>false</code> otherwise.
+         */
+        public @Nullable Boolean getDataSharingEnabled() {
+            return mDataSharingEnabled.get();
+        }
+
+        @Override // Parcelable
+        @AnyThread
+        public void writeToParcel(final Parcel out, final int flags) {
+            out.writeValue(mName);
+            super.writeToParcel(out, flags);
+        }
+
+        /**
+         * Creator instance for this class.
+         */
+        public static final Parcelable.Creator<SafeBrowsingProvider> CREATOR
+                = new Parcelable.Creator<SafeBrowsingProvider>() {
+                    @Override
+                    public SafeBrowsingProvider createFromParcel(final Parcel source) {
+                        final String name = (String) source.readValue(getClass().getClassLoader());
+                        final SafeBrowsingProvider settings = new SafeBrowsingProvider(name);
+                        settings.readFromParcel(source);
+                        return settings;
+                    }
+
+                    @Override
+                    public SafeBrowsingProvider[] newArray(final int size) {
+                        return new SafeBrowsingProvider[size];
+                    }
+                };
+    }
+
+    private static String listsToPref(final String... lists) {
+        final StringBuilder prefBuilder = new StringBuilder();
+
+        for (final String list : lists) {
+            if (list.contains(",")) {
+                // We use ',' as the separator, so the list name cannot contain it.
+                // Should never happen.
+                throw new IllegalArgumentException("List name cannot contain ',' character.");
+            }
+
+            prefBuilder.append(list);
+            prefBuilder.append(",");
+        }
+
+        // Remove trailing ","
+        if (lists.length > 0) {
+            prefBuilder.setLength(prefBuilder.length() - 1);
+        }
+
+        return prefBuilder.toString();
+    }
+
+    private static String[] prefToLists(final String pref) {
+        return pref != null ? pref.split(",") : new String[]{};
     }
 
     public static class AntiTracking {
