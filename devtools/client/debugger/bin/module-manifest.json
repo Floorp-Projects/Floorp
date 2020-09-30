@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -700,7 +700,9 @@
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-modules/src/async-store-helper.js": 549,
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-config/index.js": 550,
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-config/src/feature.js": 551,
-      "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-environment/index.js": 552
+      "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-contextmenu/menu.js": 552,
+      "../../extract-text-webpack-plugin/dist/loader.js??ref--3-0!../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": 553,
+      "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-environment/index.js": 554
     },
     "usedIds": {
       "0": 0,
@@ -1255,7 +1257,9 @@
       "549": 549,
       "550": 550,
       "551": 551,
-      "552": 552
+      "552": 552,
+      "553": 553,
+      "554": 554
     }
   },
   "chunks": {
@@ -1279,5 +1283,26 @@
       "5": 5,
       "6": 6
     }
-  }
+  },
+  "extract-text-webpack-plugin ../../extract-text-webpack-plugin/dist ../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": [
+    {
+      "modules": {
+        "byIdentifier": {
+          "../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": 0,
+          "../../css-loader/lib/css-base.js": 1
+        },
+        "usedIds": {
+          "0": 0,
+          "1": 1
+        }
+      },
+      "chunks": {
+        "byName": {},
+        "byBlocks": {},
+        "usedIds": {
+          "1": 1
+        }
+      }
+    }
+  ]
 }

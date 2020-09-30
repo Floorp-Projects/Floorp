@@ -4596,13 +4596,6 @@ devtools-connection@^1.0.7:
   resolved "https://registry.yarnpkg.com/devtools-connection/-/devtools-connection-1.0.7.tgz#16f23256f842dce339038cdc273c49c473ef83e0"
   integrity sha512-SrBHnM4nVhTrSfI4WnqcmppDOwB5iQvoEjqVNpwv63puGdKGtcdfWqv4+4gqfRYKHrdGB8tJfWJV2n+EyXb1Xw==
 
-devtools-contextmenu@~1.0.14:
-  version "1.0.14"
-  resolved "https://registry.yarnpkg.com/devtools-contextmenu/-/devtools-contextmenu-1.0.14.tgz#6c70a1a5c7140b95b8081011b6694b0ca0e3bd96"
-  integrity sha512-4Nt3m0amSAPqBfocecuUHsNI7KXF+cr+X7hhuNDH1SzKLNX94G2V5Km5J0l9XwQsP0k9vE1glY+U3YbAOUEJBw==
-  dependencies:
-    devtools-modules "~1.1.9"
-
 devtools-environment@^0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/devtools-environment/-/devtools-environment-0.0.5.tgz#0333bf35009fe09c21c315069e6b4d9177a4b8d1"
