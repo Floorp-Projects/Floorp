@@ -111,8 +111,8 @@ class ThreadLocalKeyStorage {
   }
 
   inline bool set(const T aValue) {
-    void* h =
-        reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
+    void* h = const_cast<void*>(reinterpret_cast<const void*>(
+        static_cast<typename Helper<T>::Type>(aValue)));
     return TlsSetValue(mKey, h);
   }
 
@@ -136,8 +136,8 @@ class ThreadLocalKeyStorage {
   }
 
   inline bool set(const T aValue) {
-    void* h =
-        reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
+    const void* h = reinterpret_cast<const void*>(
+        static_cast<typename Helper<T>::Type>(aValue));
     return !pthread_setspecific(mKey, h);
   }
 
