@@ -36,6 +36,8 @@ class IconLoaderHelperCocoa final : public mozilla::widget::IconLoader::Helper {
   IconLoaderHelperCocoa(mozilla::widget::IconLoaderListenerCocoa* aLoadListener,
                         uint32_t aIconHeight, uint32_t aIconWidth, CGFloat aScaleFactor = 0.0f);
 
+  NS_DECL_ISUPPORTS
+
   nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
 
   /**

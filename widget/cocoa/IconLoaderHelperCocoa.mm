@@ -43,6 +43,8 @@ using mozilla::widget::IconLoaderListenerCocoa;
 
 namespace mozilla::widget {
 
+NS_IMPL_ISUPPORTS0(IconLoaderHelperCocoa)
+
 IconLoaderHelperCocoa::IconLoaderHelperCocoa(IconLoaderListenerCocoa* aListener,
                                              uint32_t aIconHeight, uint32_t aIconWidth,
                                              CGFloat aScaleFactor)
