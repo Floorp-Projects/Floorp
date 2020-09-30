@@ -33,3 +33,15 @@
     border: 1px outset ThreeDLightShadow;
   }
 }
+
+#webRTC-sharingCamera-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.png");
+}
+
+#webRTC-sharingMicrophone-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.png");
+}
+
+#webRTC-sharingScreen-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/screen.png");
+}

@@ -235,3 +235,28 @@ xul|menu {
   fill-opacity: 0.4;
   margin: 5px;
 }
+
+#webRTC-sharingCamera-menu,
+#webRTC-sharingMicrophone-menu,
+#webRTC-sharingScreen-menu {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#webRTC-sharingCamera-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
+}
+
+#webRTC-sharingMicrophone-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
+}
+
+#webRTC-sharingScreen-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
+}
+
+#webRTC-sharingCamera-menu > menupopup,
+#webRTC-sharingMicrophone-menu > menupopup,
+#webRTC-sharingScreen-menu > menupopup {
+  list-style-image: none; /* don't inherit into menu items */
+}
