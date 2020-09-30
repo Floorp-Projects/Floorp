@@ -29,6 +29,7 @@
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
+#include "vm/SharedStencil.h"  // js::RuntimeScriptDataTable
 
 struct JS_PUBLIC_API JSContext;
 

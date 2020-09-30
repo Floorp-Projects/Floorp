@@ -22,9 +22,10 @@
 #include "js/Transcoding.h"
 #include "js/TypeDecls.h"
 #include "vm/JSAtom.h"
-#include "vm/SharedStencil.h"  // js::SourceExtent
 
 namespace js {
+
+struct SourceExtent;
 
 namespace frontend {
 struct CompilationInfo;
@@ -734,9 +735,7 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   XDRBuffer<XDR_ENCODE> finishedChunkBuf_;
 
   using FunctionKey = uint64_t;
-  static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
-  }
+  static FunctionKey toFunctionKey(const SourceExtent& extent);
 
   // A set of functions that is passed to codeFunctionStencil.
   // Used to avoid encoding delazification for same function twice.
