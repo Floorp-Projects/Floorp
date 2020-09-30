@@ -1078,11 +1078,7 @@ class UrlbarView {
     }
 
     let title = item._elements.get("title");
-    this._addTextContentWithHighlights(
-      title,
-      result.title,
-      result.titleHighlights
-    );
+    this._setResultTitle(result, title);
 
     if (result.payload.tail && result.payload.tailOffsetIndex > 0) {
       this._fillTailSuggestionPrefix(item, result);
@@ -1154,7 +1150,23 @@ class UrlbarView {
               );
             };
           }
-        } else {
+        } else if (result.providerName == "TabToSearch") {
+          actionSetter = () => {
+            this.document.l10n.setAttributes(
+              action,
+              UrlbarUtils.WEB_ENGINE_NAMES.has(result.payload.engine)
+                ? "urlbar-result-action-tabtosearch-web"
+                : "urlbar-result-action-tabtosearch-other-engine",
+              { engine: result.payload.engine }
+            );
+          };
+        } else if (!this._shouldLocalizeSearchResultTitle(result)) {
+          // _shouldLocalizeSearchResultTitle is a temporary function that will
+          // be in place only during the update2 transitions. Right now it
+          // returns if the result is a keyword offer result and meets some
+          // other conditions. Post-update2 the conditional above will only
+          // check if the result is a keyword offer. Keyword offer results don't
+          // have action text.
           actionSetter = () => {
             this.document.l10n.setAttributes(
               action,
@@ -1213,9 +1225,11 @@ class UrlbarView {
       actionSetter();
       item._originalActionSetter = actionSetter;
     } else {
-      action.removeAttribute("data-l10n-id");
-      action.textContent = "";
-      item._originalActionSetter = undefined;
+      item._originalActionSetter = () => {
+        action.removeAttribute("data-l10n-id");
+        action.textContent = "";
+      };
+      item._originalActionSetter();
     }
 
     if (!title.hasAttribute("isurl")) {
@@ -1225,6 +1239,28 @@ class UrlbarView {
     }
 
     item._elements.get("titleSeparator").hidden = !actionSetter && !setURL;
+  }
+
+  /**
+   * Returns true if we should localize a result's title. This is a helper
+   * function for the update2 transition period. It can be removed when the
+   * update2 pref is removed. At that point, its callers can instead just check
+   * !!result.payload.keywordOffer.
+   * @param {UrlbarResult} result A search result.
+   * @returns {boolean} True if we should localize a title for search results.
+   */
+  _shouldLocalizeSearchResultTitle(result) {
+    if (
+      result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+      !result.payload.keywordOffer
+    ) {
+      return false;
+    }
+
+    return (
+      UrlbarPrefs.get("update2") ||
+      result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.HIDE
+    );
   }
 
   _iconForSearchResult(result, iconUrlOverride = null) {
@@ -1579,6 +1615,35 @@ class UrlbarView {
     } else {
       this.input.inputField.removeAttribute("aria-activedescendant");
     }
+  }
+
+  /**
+   * Sets `result`'s title in `titleNode`'s DOM.
+   * @param {UrlbarResult} result
+   *   The result for which the title is being set.
+   * @param {Node} titleNode
+   *   The DOM node for the result's tile.
+   */
+  _setResultTitle(result, titleNode) {
+    if (this._shouldLocalizeSearchResultTitle(result)) {
+      // Keyword offers are the only result that require a localized title.
+      // We localize the title instead of using the action text as a title
+      // because some keyword offer results use both a title and action text
+      // (e.g. tab-to-search).
+      this.document.l10n.setAttributes(
+        titleNode,
+        "urlbar-result-action-search-w-engine",
+        { engine: result.payload.engine }
+      );
+      return;
+    }
+
+    titleNode.removeAttribute("data-l10n-id");
+    this._addTextContentWithHighlights(
+      titleNode,
+      result.title,
+      result.titleHighlights
+    );
   }
 
   /**

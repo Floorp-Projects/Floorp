@@ -557,6 +557,8 @@ function makePrioritySearchResult(
  * @param {string} [options.engineName]
  *   The name of the engine providing the suggestion. Leave blank if there
  *   is no suggestion.
+ * @param {string} [options.uri]
+ *   The URI that the search result will navigate to.
  * @param {string} [options.query]
  *   The query that started the search. This overrides
  *   `queryContext.searchString`. This is useful when the query that will show
@@ -570,7 +572,7 @@ function makePrioritySearchResult(
  *   True if this is a heuristic result. Defaults to false.
  * @param {number} [options.keywordOffer]
  *   A value from UrlbarUtils.KEYWORD_OFFER.
- * @param {string} providerName
+ * @param {string} [options.providerName]
  *   The name of the provider offering this result. The test suite will not
  *   check which provider offered a result unless this option is specified.
  * @returns {UrlbarResult}
@@ -584,6 +586,7 @@ function makeSearchResult(
     tailOffsetIndex,
     engineName,
     alias,
+    uri,
     query,
     engineIconUri,
     keywordOffer,
@@ -605,31 +608,39 @@ function makeSearchResult(
     }
   }
 
+  let payload = {
+    engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
+    suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+    tailPrefix,
+    tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+    tailOffsetIndex,
+    keyword: [
+      alias,
+      keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
+        ? UrlbarUtils.HIGHLIGHT.TYPED
+        : UrlbarUtils.HIGHLIGHT.NONE,
+    ],
+    // Check against undefined so consumers can pass in the empty string.
+    query: [
+      typeof query != "undefined" ? query : queryContext.trimmedSearchString,
+      UrlbarUtils.HIGHLIGHT.TYPED,
+    ],
+    icon: engineIconUri,
+    keywordOffer,
+    inPrivateWindow,
+    isPrivateEngine,
+  };
+
+  // Passing even an undefined URL in the payload creates a potentially-unwanted
+  // displayUrl parameter, so we add it only if specified.
+  if (uri) {
+    payload.url = uri;
+  }
+
   let result = new UrlbarResult(
     type,
     source,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
-      suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-      tailPrefix,
-      tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-      tailOffsetIndex,
-      keyword: [
-        alias,
-        keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
-          ? UrlbarUtils.HIGHLIGHT.TYPED
-          : UrlbarUtils.HIGHLIGHT.NONE,
-      ],
-      // Check against undefined so consumers can pass in the empty string.
-      query: [
-        typeof query != "undefined" ? query : queryContext.trimmedSearchString,
-        UrlbarUtils.HIGHLIGHT.TYPED,
-      ],
-      icon: engineIconUri,
-      keywordOffer,
-      inPrivateWindow,
-      isPrivateEngine,
-    })
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
   );
 
   if (typeof suggestion == "string") {

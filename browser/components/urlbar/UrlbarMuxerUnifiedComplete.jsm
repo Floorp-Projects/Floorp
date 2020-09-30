@@ -291,6 +291,35 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
+    if (result.providerName == "TabToSearch") {
+      // Discard tab-to-search results if we're not autofilling a URL.
+      if (
+        state.context.heuristicResult.type != UrlbarUtils.RESULT_TYPE.URL ||
+        !state.context.heuristicResult.autofill
+      ) {
+        return false;
+      }
+
+      let autofillHostname = new URL(state.context.heuristicResult.payload.url)
+        .hostname;
+      let [autofillDomain] = UrlbarUtils.stripPrefixAndTrim(autofillHostname, {
+        stripWww: true,
+      });
+      // For tab-to-search results, result.payload.url is the engine's result
+      // domain. This is already stripped down to the hostname in most cases; we
+      // run stripPrefixAndTrim here just to be sure.
+      let [engineDomain] = UrlbarUtils.stripPrefixAndTrim(result.payload.url, {
+        stripHttp: true,
+        stripHttps: true,
+        stripWww: true,
+      });
+      // Discard if the tab-to-search domain does not equal the autofilled
+      // domain.
+      if (autofillDomain != engineDomain) {
+        return false;
+      }
+    }
+
     // Discard "Search in a Private Window" if appropriate.
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
