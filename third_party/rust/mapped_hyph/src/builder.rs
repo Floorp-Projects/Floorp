@@ -1,4 +1,4 @@
-// Copyright 2019 Mozilla Foundation. See the COPYRIGHT
+// Copyright 2019-2020 Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -10,7 +10,7 @@
 /// Functions to compile human-readable patterns into a mapped_hyph
 /// flattened representation of the hyphenation state machine.
 
-use std::io::{Read,BufRead,BufReader,Write};
+use std::io::{Read,BufRead,BufReader,Write,Error,ErrorKind};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::hash::{Hash,Hasher};
@@ -63,10 +63,10 @@ impl State {
     }
 }
 
-/// This is only public because the read_dic_file() function returns a Vec
-/// of LevelBuilder structs, which can then be passed to write_hyf_file()
+/// Structures returned by the read_dic_file() function;
+/// array of these can then be passed to write_hyf_file()
 /// to create the flattened output.
-pub struct LevelBuilder {
+struct LevelBuilder {
     states: Vec<State>,
     str_to_state: HashMap<Vec<u8>,i32>,
     encoding: Option<String>,
@@ -349,7 +349,7 @@ impl LevelBuilder {
 /// machine transitions, etc.
 /// The returned Vec can be passed to write_hyf_file() to generate a flattened
 /// representation of the state machine in mapped_hyph's binary format.
-pub fn read_dic_file<T: Read>(dic_file: T) -> Vec<LevelBuilder> {
+fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
     let reader = BufReader::new(dic_file);
 
     let mut builders = Vec::<LevelBuilder>::new();
@@ -439,9 +439,11 @@ pub fn read_dic_file<T: Read>(dic_file: T) -> Vec<LevelBuilder> {
         }
     }
 
-    // Merge duplicate states to reduce size.
-    for builder in &mut builders {
-        builder.merge_duplicate_states();
+    if compress {
+        // Merge duplicate states to reduce size.
+        for builder in &mut builders {
+            builder.merge_duplicate_states();
+        }
     }
 
     builders
@@ -449,7 +451,10 @@ pub fn read_dic_file<T: Read>(dic_file: T) -> Vec<LevelBuilder> {
 
 /// Write out the state machines representing a set of hyphenation rules
 /// to the given output stream.
-pub fn write_hyf_file<T: Write>(hyf_file: &mut T, levels: Vec<LevelBuilder>) -> std::io::Result<()> {
+fn write_hyf_file<T: Write>(hyf_file: &mut T, levels: Vec<LevelBuilder>) -> std::io::Result<()> {
+    if levels.is_empty() {
+        return Err(Error::from(ErrorKind::InvalidData));
+    }
     let mut flattened = vec![];
     for level in levels {
         flattened.push(level.flatten());
@@ -470,4 +475,11 @@ pub fn write_hyf_file<T: Write>(hyf_file: &mut T, levels: Vec<LevelBuilder>) -> 
         hyf_file.write_all(&flat)?;
     }
     Ok(())
+}
+
+/// The public API to the compilation process: reads `dic_file` and writes compiled tables
+/// to `hyf_file`. The `compress` param determines whether extra processing to reduce the
+/// size of the output is performed.
+pub fn compile<T1: Read, T2: Write>(dic_file: T1, hyf_file: &mut T2, compress: bool) -> std::io::Result<()> {
+    write_hyf_file(hyf_file, read_dic_file(dic_file, compress))
 }
