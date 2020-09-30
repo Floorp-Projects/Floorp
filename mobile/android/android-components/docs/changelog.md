@@ -6,11 +6,19 @@ permalink: /changelog/
 
 # 61.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v60.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/121?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/122?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
+# 61.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v60.0.0...v61.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/121?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/.config.yml)
 
 * **browser-session**
   * Added "undo" functionality via `UndoMiddleware`.
@@ -30,7 +38,7 @@ permalink: /changelog/
             maxCacheAgeInMinutes = DAY_IN_MINUTES
         )
     }
-  * Temporary add-ons installed via web-ext are no longer displayed as unsupported.  
+  * Temporary add-ons installed via web-ext are no longer displayed as unsupported.
   * 🚒 Bug fixed [issue #8267](https://github.com/mozilla-mobile/android-components/issues/8267) Devtools permission had wrong translation.
   ```
 * **concept-menu**
