@@ -153,7 +153,7 @@ using PrintPreviewResolver =
 extern mozilla::LazyLogModule gPageCacheLog;
 
 #ifdef NS_PRINTING
-static mozilla::LazyLogModule gPrintingLog("printing");
+mozilla::LazyLogModule gPrintingLog("printing");
 
 #  define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
 #endif  // NS_PRINTING

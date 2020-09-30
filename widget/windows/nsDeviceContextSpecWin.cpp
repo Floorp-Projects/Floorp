@@ -43,8 +43,8 @@
 #  include "nsThreadUtils.h"
 #endif
 
-static mozilla::LazyLogModule kWidgetPrintingLogMod("printing-widget");
-#define PR_PL(_p1) MOZ_LOG(kWidgetPrintingLogMod, mozilla::LogLevel::Debug, _p1)
+extern mozilla::LazyLogModule gPrintingLog;
+#define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1)
 
 using namespace mozilla;
 using namespace mozilla::gfx;
