@@ -17,7 +17,13 @@ using mozilla::gfx::SourceSurface;
 
 namespace mozilla::widget {
 
-NS_IMPL_ISUPPORTS(mozilla::widget::IconLoader, imgINotificationObserver)
+NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader, mContent, mHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::widget::IconLoader)
+  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::widget::IconLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::widget::IconLoader)
 
 IconLoader::IconLoader(Helper* aHelper, nsINode* aContent,
                        const nsIntRect& aImageRegionRect)
