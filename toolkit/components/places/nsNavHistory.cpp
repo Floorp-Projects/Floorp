@@ -924,7 +924,9 @@ nsresult nsNavHistory::CanAddURIToHistory(nsIURI* aURI, bool* aCanAdd) {
       !scheme.EqualsLiteral("imap") && !scheme.EqualsLiteral("javascript") &&
       !scheme.EqualsLiteral("mailbox") && !scheme.EqualsLiteral("moz-anno") &&
       !scheme.EqualsLiteral("news") && !scheme.EqualsLiteral("page-icon") &&
-      !scheme.EqualsLiteral("resource") && !scheme.EqualsLiteral("view-source");
+      !scheme.EqualsLiteral("resource") &&
+      !scheme.EqualsLiteral("view-source") &&
+      !scheme.EqualsLiteral("moz-extension");
 
   return NS_OK;
 }
