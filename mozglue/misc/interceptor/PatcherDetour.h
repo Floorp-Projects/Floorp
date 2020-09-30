@@ -146,6 +146,11 @@ class WindowsDllDetourPatcher final
 
 #if defined(NIGHTLY_BUILD)
   const Maybe<DetourError>& GetLastError() const { return mLastError; }
+  void SetLastError(DetourResultCode aError) {
+    mLastError = Some(DetourError(aError));
+  }
+#else
+  void SetLastError(DetourResultCode) {}
 #endif  // defined(NIGHTLY_BUILD)
 
   void Clear() {
@@ -458,6 +463,7 @@ class WindowsDllDetourPatcher final
 
     Maybe<Trampoline<MMPolicyT>> maybeTramp(trampPool->GetNextTrampoline());
     if (!maybeTramp) {
+      SetLastError(DetourResultCode::DETOUR_PATCHER_NEXT_TRAMPOLINE_ERROR);
       return false;
     }
 
@@ -503,20 +509,29 @@ class WindowsDllDetourPatcher final
   Maybe<TrampPoolT> ReserveForModule(HMODULE aModule) {
     nt::PEHeaders moduleHeaders(aModule);
     if (!moduleHeaders) {
+      SetLastError(
+          DetourResultCode::DETOUR_PATCHER_RESERVE_FOR_MODULE_PE_ERROR);
       return Nothing();
     }
 
     Maybe<Span<const uint8_t>> textSectionInfo =
         moduleHeaders.GetTextSectionInfo();
     if (!textSectionInfo) {
+      SetLastError(
+          DetourResultCode::DETOUR_PATCHER_RESERVE_FOR_MODULE_TEXT_ERROR);
       return Nothing();
     }
 
     const uint8_t* median = textSectionInfo.value().data() +
                             (textSectionInfo.value().LengthBytes() / 2);
 
-    return this->mVMPolicy.Reserve(reinterpret_cast<uintptr_t>(median),
-                                   GetDefaultPivotDistance());
+    Maybe<TrampPoolT> maybeTrampPool = this->mVMPolicy.Reserve(
+        reinterpret_cast<uintptr_t>(median), GetDefaultPivotDistance());
+    if (!maybeTrampPool) {
+      SetLastError(
+          DetourResultCode::DETOUR_PATCHER_RESERVE_FOR_MODULE_RESERVE_ERROR);
+    }
+    return maybeTrampPool;
   }
 
   Maybe<TrampPoolT> DoReserve(HMODULE aModule = nullptr) {
@@ -537,7 +552,11 @@ class WindowsDllDetourPatcher final
     }
 #endif  // defined(_M_X64)
 
-    return this->mVMPolicy.Reserve(pivot, distance);
+    Maybe<TrampPoolT> maybeTrampPool = this->mVMPolicy.Reserve(pivot, distance);
+    if (!maybeTrampPool) {
+      SetLastError(DetourResultCode::DETOUR_PATCHER_DO_RESERVE_ERROR);
+    }
+    return maybeTrampPool;
   }
 
  protected:
@@ -892,6 +911,7 @@ class WindowsDllDetourPatcher final
 
     Trampoline<MMPolicyT>& tramp = aTramp;
     if (!tramp) {
+      SetLastError(DetourResultCode::DETOUR_PATCHER_INVALID_TRAMPOLINE);
       return;
     }
 
@@ -903,6 +923,7 @@ class WindowsDllDetourPatcher final
     // just a pointer to that trampoline's target address.
     tramp.WriteEncodedPointer(this);
     if (!tramp) {
+      SetLastError(DetourResultCode::DETOUR_PATCHER_WRITE_POINTER_ERROR);
       return;
     }
 
@@ -921,7 +942,7 @@ class WindowsDllDetourPatcher final
 
 #if defined(NIGHTLY_BUILD)
       origBytes.Rewind();
-      mLastError = Some(DetourError());
+      SetLastError(DetourResultCode::DETOUR_PATCHER_CREATE_TRAMPOLINE_ERROR);
       size_t bytesToCapture = std::min(
           ArrayLength(mLastError->mOrigBytes),
           static_cast<size_t>(PrimitiveT::GetWorstCaseRequiredBytesToPatch()));

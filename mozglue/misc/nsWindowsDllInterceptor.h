@@ -387,11 +387,26 @@ class WindowsDllInterceptor final
     // Use a nop space patch if possible, otherwise fall back to a detour.
     // This should be the preferred method for adding hooks.
     if (!mModule) {
+      mDetourPatcher.SetLastError(DetourResultCode::INTERCEPTOR_MOD_NULL);
+      return false;
+    }
+
+    if (!mDetourPatcher.IsPageAccessible(
+            nt::PEHeaders::HModuleToBaseAddr<uintptr_t>(mModule))) {
+      mDetourPatcher.SetLastError(
+          DetourResultCode::INTERCEPTOR_MOD_INACCESSIBLE);
       return false;
     }
 
     FARPROC proc = mDetourPatcher.GetProcAddress(mModule, aName);
     if (!proc) {
+      mDetourPatcher.SetLastError(DetourResultCode::INTERCEPTOR_PROC_NULL);
+      return false;
+    }
+
+    if (!mDetourPatcher.IsPageAccessible(reinterpret_cast<uintptr_t>(proc))) {
+      mDetourPatcher.SetLastError(
+          DetourResultCode::INTERCEPTOR_PROC_INACCESSIBLE);
       return false;
     }
 
@@ -418,11 +433,26 @@ class WindowsDllInterceptor final
     // Generally, code should not call this method directly. Use AddHook unless
     // there is a specific need to avoid nop space patches.
     if (!mModule) {
+      mDetourPatcher.SetLastError(DetourResultCode::INTERCEPTOR_MOD_NULL);
+      return false;
+    }
+
+    if (!mDetourPatcher.IsPageAccessible(
+            nt::PEHeaders::HModuleToBaseAddr<uintptr_t>(mModule))) {
+      mDetourPatcher.SetLastError(
+          DetourResultCode::INTERCEPTOR_MOD_INACCESSIBLE);
       return false;
     }
 
     FARPROC proc = mDetourPatcher.GetProcAddress(mModule, aName);
     if (!proc) {
+      mDetourPatcher.SetLastError(DetourResultCode::INTERCEPTOR_PROC_NULL);
+      return false;
+    }
+
+    if (!mDetourPatcher.IsPageAccessible(reinterpret_cast<uintptr_t>(proc))) {
+      mDetourPatcher.SetLastError(
+          DetourResultCode::INTERCEPTOR_PROC_INACCESSIBLE);
       return false;
     }
 
