@@ -32,8 +32,22 @@ def test_generate_graph(optimized_task_graph):
 def test_tasks_are_scheduled(optimized_task_graph, filter_tasks, func, min_expected):
     """Ensure the specified tasks are scheduled on mozilla-central."""
     tasks = [t.label for t in filter_tasks(optimized_task_graph, func)]
-    print(tasks)
     assert len(tasks) >= min_expected
+
+
+@pytest.mark.parametrize(
+    "func",
+    (
+        pytest.param(
+            lambda t: t.kind == "build" and "ccov" in t.attributes["build_platform"],
+            id="no ccov builds",
+        ),
+    ),
+)
+def test_tasks_are_not_scheduled(optimized_task_graph, filter_tasks, func):
+    """Ensure the specified tasks are not scheduled on autoland."""
+    tasks = [t.label for t in filter_tasks(optimized_task_graph, func)]
+    assert tasks == []
 
 
 if __name__ == "__main__":
