@@ -118,7 +118,8 @@ class AddonCollectionProviderTest {
         // Authors
         assertTrue(addon.authors.isEmpty())
         verify(client).fetch(Request(
-            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons",
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "7e8d6dc651b54ab385fb8791bf9dac/addons?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
             readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
         ))
 
@@ -133,7 +134,8 @@ class AddonCollectionProviderTest {
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
         provider.getAvailableAddons(readTimeoutInSeconds = 5)
         verify(mockedClient).fetch(Request(
-            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons",
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "7e8d6dc651b54ab385fb8791bf9dac/addons?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
             readTimeout = Pair(5, TimeUnit.SECONDS)
         ))
         Unit
@@ -331,11 +333,110 @@ class AddonCollectionProviderTest {
 
         provider.getAvailableAddons()
         verify(mockedClient).fetch(Request(
-            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/$collectionName/addons",
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
             readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
         ))
 
         assertEquals(COLLECTION_FILE_NAME.format(collectionName), provider.getCacheFileName())
+    }
+
+    @Test
+    fun `collection sort option can be specified`() = runBlocking {
+        val mockedClient = prepareClient()
+
+        val collectionName = "collection123"
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.POPULARITY
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.POPULARITY_DESC
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.NAME
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.NAME.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.NAME_DESC
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.NAME_DESC.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.DATE_ADDED
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        AddonCollectionProvider(
+            testContext,
+            client = mockedClient,
+            collectionName = collectionName,
+            sortOption = SortOption.DATE_ADDED_DESC
+        ).also {
+            it.getAvailableAddons()
+        }
+
+        verify(mockedClient).fetch(Request(
+            url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                "$collectionName/addons?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED_DESC.value}",
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        Unit
     }
 
     @Test
@@ -352,7 +453,9 @@ class AddonCollectionProviderTest {
         provider.getAvailableAddons()
         verify(mockedClient).fetch(Request(
             url = "https://addons.mozilla.org/api/v4/accounts/account/" +
-                "$collectionUser/collections/$collectionName/addons",
+                "$collectionUser/collections/$collectionName/addons" +
+                "?page_size=$PAGE_SIZE" +
+                "&sort=${SortOption.POPULARITY_DESC.value}",
             readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
         ))
 
@@ -374,7 +477,9 @@ class AddonCollectionProviderTest {
         provider.getAvailableAddons()
         verify(mockedClient).fetch(Request(
             url = "https://addons.mozilla.org/api/v4/accounts/account/" +
-                "$DEFAULT_COLLECTION_USER/collections/$DEFAULT_COLLECTION_NAME/addons",
+                "$DEFAULT_COLLECTION_USER/collections/$DEFAULT_COLLECTION_NAME/addons" +
+                "?page_size=$PAGE_SIZE" +
+                "&sort=${SortOption.POPULARITY_DESC.value}",
             readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
         ))
 

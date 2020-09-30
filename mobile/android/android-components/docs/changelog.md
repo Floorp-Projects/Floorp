@@ -27,7 +27,9 @@ permalink: /changelog/
 * **feature-webcompat-reporter**
   * Added the ability to automatically add a screenshot as well as more technical details when submitting a WebCompat report.
 * **feature-addons**
-  * ⚠️ This is a breaking change for call sites that don't rely on named arguments: `AddonCollectionProvider` now supports configuring a custom collection owner (via AMO user ID or name).
+  * ⚠️ This is a breaking change for call sites that don't rely on named arguments: 
+    * `AddonCollectionProvider` now supports configuring a custom collection owner (via AMO user ID or name).
+    * `AddonCollectionProvider` now supports configuring the sort order of recommended collections, defaulting to sorting descending by popularity
   ```kotlin
    val addonCollectionProvider by lazy {
         AddonCollectionProvider(
@@ -35,6 +37,7 @@ permalink: /changelog/
             client,
             collectionUser = "16314372"
             collectionName = "myCollection",
+            sortOption = SortOption.NAME
             maxCacheAgeInMinutes = DAY_IN_MINUTES
         )
     }

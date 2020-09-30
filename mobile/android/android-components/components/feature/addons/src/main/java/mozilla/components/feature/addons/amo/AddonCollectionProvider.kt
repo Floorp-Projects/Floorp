@@ -39,6 +39,7 @@ internal const val COLLECTION_FILE_NAME_PREFIX = "mozilla_components_addon_colle
 internal const val COLLECTION_FILE_NAME = "${COLLECTION_FILE_NAME_PREFIX}_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
 internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
+internal const val PAGE_SIZE = 50
 
 /**
  * Provide access to the AMO collections API.
@@ -63,6 +64,7 @@ class AddonCollectionProvider(
     private val serverURL: String = DEFAULT_SERVER_URL,
     private val collectionUser: String = DEFAULT_COLLECTION_USER,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
+    private val sortOption: SortOption = SortOption.POPULARITY_DESC,
     private val maxCacheAgeInMinutes: Long = -1
 ) : AddonsProvider {
 
@@ -121,7 +123,9 @@ class AddonCollectionProvider(
     private fun fetchAvailableAddons(readTimeoutInSeconds: Long?): List<Addon> {
         client.fetch(
             Request(
-                url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons",
+                url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons" +
+                    "?page_size=$PAGE_SIZE" +
+                    "&sort=${sortOption.value}",
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             )
         )
@@ -237,6 +241,19 @@ class AddonCollectionProvider(
 
         return COLLECTION_FILE_NAME.format(collection).sanitizeFileName()
     }
+}
+
+/**
+ * Represents possible sort options for the recommended add-ons from
+ * the configured add-on collection.
+ */
+enum class SortOption(val value: String) {
+    POPULARITY("popularity"),
+    POPULARITY_DESC("-popularity"),
+    NAME("name"),
+    NAME_DESC("-name"),
+    DATE_ADDED("added"),
+    DATE_ADDED_DESC("-added")
 }
 
 internal fun JSONObject.getAddons(): List<Addon> {
