@@ -111,6 +111,7 @@ var PrintEventHandler = {
   _userChangedSettings: {},
   settingFlags: {
     margins: Ci.nsIPrintSettings.kInitSaveMargins,
+    customMargins: Ci.nsIPrintSettings.kInitSaveMargins,
     orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
     paperId:
       Ci.nsIPrintSettings.kInitSavePaperSize |
@@ -377,7 +378,10 @@ var PrintEventHandler = {
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
     this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
+    return this.getSettingsToUpdate();
+  },
 
+  getSettingsToUpdate() {
     // Get the previously-changed settings we want to try to use on this printer
     let settingsToUpdate = Object.assign({}, this._userChangedSettings);
 
@@ -439,6 +443,28 @@ var PrintEventHandler = {
       delete this._userChangedSettings.paperId;
       settingsToUpdate.paperId = matchedPaper.id;
     }
+
+    // See if we need to change the custom margin values
+    if (
+      parseFloat(this.viewSettings.customMargins.marginTop) +
+        parseFloat(this.viewSettings.customMargins.marginBottom) >
+      paperHeight
+    ) {
+      let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
+      settingsToUpdate.marginTop = settingsToUpdate.customMargins.marginTop = marginTop;
+      settingsToUpdate.marginBottom = settingsToUpdate.customMargins.marginBottom = marginBottom;
+    }
+
+    if (
+      parseFloat(this.viewSettings.customMargins.marginRight) +
+        parseFloat(this.viewSettings.customMargins.marginLeft) >
+      paperWidth
+    ) {
+      let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
+      settingsToUpdate.marginLeft = settingsToUpdate.customMargins.marginLeft = marginLeft;
+      settingsToUpdate.marginRight = settingsToUpdate.customMargins.marginRight = marginRight;
+    }
+
     return settingsToUpdate;
   },
 
@@ -461,7 +487,10 @@ var PrintEventHandler = {
       // Treat a printerName change separately, because it involves a settings
       // object switch and we don't want to set the new name on the old settings.
       changedSettings = await this.refreshSettings(changedSettings.printerName);
+    } else {
+      changedSettings = this.getSettingsToUpdate();
     }
+
     let shouldPreviewUpdate = await this.updateSettings(
       changedSettings,
       !!changedSettings.printerName
@@ -709,6 +738,21 @@ var PrintEventHandler = {
           marginBottom: 0,
           marginRight: 0,
         };
+      case "custom":
+        return {
+          marginTop:
+            PrintSettingsViewProxy._lastCustomMarginValues.marginTop ??
+            this.settings.marginTop,
+          marginBottom:
+            PrintSettingsViewProxy._lastCustomMarginValues.marginBottom ??
+            this.settings.marginBottom,
+          marginLeft:
+            PrintSettingsViewProxy._lastCustomMarginValues.marginLeft ??
+            this.settings.marginLeft,
+          marginRight:
+            PrintSettingsViewProxy._lastCustomMarginValues.marginRight ??
+            this.settings.marginRight,
+        };
       default: {
         let minimum = this.getMarginPresets("minimum", paper);
         return {
@@ -775,6 +819,15 @@ var PrintSettingsViewProxy = {
     headerStrCenter: "print.print_headercenter",
     headerStrLeft: "print.print_headerleft",
     headerStrRight: "print.print_headerright",
+  },
+
+  // Custom margins are not saved by a pref, so we need to keep track of them
+  // in order to save the value.
+  _lastCustomMarginValues: {
+    marginTop: null,
+    marginBottom: null,
+    marginLeft: null,
+    marginRight: null,
   },
 
   // This list was taken from nsDeviceContextSpecWin.cpp which records telemetry on print target type
@@ -964,13 +1017,14 @@ var PrintSettingsViewProxy = {
           none: PrintEventHandler.getMarginPresets("none", paperSize),
           minimum: PrintEventHandler.getMarginPresets("minimum", paperSize),
           default: PrintEventHandler.getMarginPresets("default", paperSize),
+          custom: PrintEventHandler.getMarginPresets("custom", paperSize),
         };
 
       case "marginOptions": {
         let allMarginPresets = this.get(target, "marginPresets");
         let uniqueMargins = new Set();
         let marginsEnabled = {};
-        for (let name of ["none", "default", "minimum"]) {
+        for (let name of ["none", "default", "minimum", "custom"]) {
           let {
             marginTop,
             marginLeft,
@@ -980,7 +1034,8 @@ var PrintSettingsViewProxy = {
           let key = [marginTop, marginLeft, marginBottom, marginRight].join(
             ","
           );
-          marginsEnabled[name] = !uniqueMargins.has(key);
+          // Custom margins are initialized to default margins
+          marginsEnabled[name] = !uniqueMargins.has(key) || name == "custom";
           uniqueMargins.add(key);
         }
         return marginsEnabled;
@@ -993,9 +1048,9 @@ var PrintSettingsViewProxy = {
           marginBottom: target.marginBottom,
           marginRight: target.marginRight,
         };
-        // see if they match the none and then minimum margin values
+        // see if they match the none, minimum, or default margin values
         let allMarginPresets = this.get(target, "marginPresets");
-        for (let presetName of ["none", "minimum"]) {
+        for (let presetName of ["none", "minimum", "default"]) {
           let marginPresets = allMarginPresets[presetName];
           if (
             Object.keys(marginSettings).every(
@@ -1007,8 +1062,21 @@ var PrintSettingsViewProxy = {
             return presetName;
           }
         }
-        // Fall back to the default for any other values
-        return "default";
+
+        // Fall back to custom for other values
+        return "custom";
+
+      case "defaultMargins":
+        return PrintEventHandler.getMarginPresets(
+          "default",
+          this.get(target, "currentPaper")
+        );
+
+      case "customMargins":
+        return PrintEventHandler.getMarginPresets(
+          "custom",
+          this.get(target, "currentPaper")
+        );
 
       case "paperSizes":
         return Object.values(this.availablePaperSizes)
@@ -1062,7 +1130,7 @@ var PrintSettingsViewProxy = {
   set(target, name, value) {
     switch (name) {
       case "margins":
-        if (!["default", "minimum", "none"].includes(value)) {
+        if (!["default", "minimum", "none", "custom"].includes(value)) {
           logger.warn("Unexpected margin preset name: ", value);
           value = "default";
         }
@@ -1111,6 +1179,13 @@ var PrintSettingsViewProxy = {
           value == "all"
             ? Ci.nsIPrintSettings.kRangeAllPages
             : Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
+        break;
+
+      case "customMargins":
+        for (let [settingName, newVal] of Object.entries(value)) {
+          target[settingName] = newVal;
+          this._lastCustomMarginValues[settingName] = newVal;
+        }
         break;
 
       default:
@@ -1163,12 +1238,10 @@ function PrintUIControlMixin(superClass) {
 
     handleKeypress(e) {
       let char = String.fromCharCode(e.charCode);
-      if (
-        !char.match(/^[0-9]$/) &&
-        !char.match("\x00") &&
-        !e.ctrlKey &&
-        !e.metaKey
-      ) {
+      let acceptedChar = e.target.step.includes(".")
+        ? char.match(/^[0-9.]$/)
+        : char.match(/^[0-9]$/);
+      if (!acceptedChar && !char.match("\x00") && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
       }
     }
@@ -1177,11 +1250,12 @@ function PrintUIControlMixin(superClass) {
       let paste = (e.clipboardData || window.clipboardData)
         .getData("text")
         .trim();
-
-      if (paste.match(/^[0-9]*$/)) {
-        e.target.value = paste;
+      let acceptedChars = e.target.step.includes(".")
+        ? paste.match(/^[0-9.]*$/)
+        : paste.match(/^[0-9]*$/);
+      if (!acceptedChars) {
+        e.preventDefault();
       }
-      e.preventDefault();
     }
 
     handleEvent(event) {}
@@ -1267,27 +1341,6 @@ class ColorModePicker extends PrintSettingSelect {
   }
 }
 customElements.define("color-mode-select", ColorModePicker, {
-  extends: "select",
-});
-
-class MarginsPicker extends PrintSettingSelect {
-  update(settings) {
-    // Re-evaluate which margin options should be enabled whenever the printer or paper changes
-    if (
-      settings.paperId !== this._paperId ||
-      settings.printerName !== this._printerName
-    ) {
-      let enabledMargins = settings.marginOptions;
-      for (let option of this.options) {
-        option.hidden = !enabledMargins[option.value];
-      }
-      this._paperId = settings.paperId;
-      this._printerName = settings.printerName;
-    }
-    super.update(settings);
-  }
-}
-customElements.define("margins-select", MarginsPicker, {
   extends: "select",
 });
 
@@ -1690,6 +1743,183 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("page-range-input", PageRangeInput);
+
+class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
+  initialize() {
+    super.initialize();
+
+    this._marginPicker = this.querySelector("#margins-picker");
+    this._customTopMargin = this.querySelector("#custom-margin-top");
+    this._customBottomMargin = this.querySelector("#custom-margin-bottom");
+    this._customLeftMargin = this.querySelector("#custom-margin-left");
+    this._customRightMargin = this.querySelector("#custom-margin-right");
+    this._marginError = this.querySelector("#error-invalid-margin");
+
+    this._updateMarginTask = createDeferredTask(
+      () => this.updateMargins(),
+      INPUT_DELAY_MS
+    );
+
+    this.addEventListener("input", this);
+    this.addEventListener("keypress", this);
+    this.addEventListener("paste", this);
+  }
+
+  get templateId() {
+    return "margins-template";
+  }
+
+  updateMargins() {
+    let newMargins = {
+      marginTop: this._customTopMargin.value,
+      marginBottom: this._customBottomMargin.value,
+      marginLeft: this._customLeftMargin.value,
+      marginRight: this._customRightMargin.value,
+    };
+
+    this.dispatchSettingsChange({
+      customMargins: newMargins,
+    });
+  }
+
+  formatMargin(target) {
+    if (target.value.includes(".")) {
+      if (target.value.split(".")[1].length > 2) {
+        let dotIndex = target.value.indexOf(".");
+        target.value = target.value.slice(0, dotIndex + 3);
+      }
+    }
+  }
+
+  setAllMarginValues(settings) {
+    this._customTopMargin.value = parseFloat(
+      settings.customMargins.marginTop
+    ).toFixed(2);
+    this._customBottomMargin.value = parseFloat(
+      settings.customMargins.marginBottom
+    ).toFixed(2);
+    this._customLeftMargin.value = parseFloat(
+      settings.customMargins.marginLeft
+    ).toFixed(2);
+    this._customRightMargin.value = parseFloat(
+      settings.customMargins.marginRight
+    ).toFixed(2);
+  }
+
+  update(settings) {
+    // Re-evaluate which margin options should be enabled whenever the printer or paper changes
+    if (
+      settings.paperId !== this._paperId ||
+      settings.printerName !== this._printerName
+    ) {
+      let enabledMargins = settings.marginOptions;
+      for (let option of this._marginPicker.options) {
+        option.hidden = !enabledMargins[option.value];
+      }
+      this._paperId = settings.paperId;
+      this._printerName = settings.printerName;
+
+      this._maxHeight =
+        settings.paperHeight -
+        settings.unwriteableMarginTop -
+        settings.unwriteableMarginBottom;
+      this._maxWidth =
+        settings.paperWidth -
+        settings.unwriteableMarginLeft -
+        settings.unwriteableMarginRight;
+
+      this._defaultPresets = settings.defaultMargins;
+      // The values in custom fields should be initialized to custom margin values
+      // and must be overriden if they are no longer valid.
+      this.setAllMarginValues(settings);
+    }
+
+    // We need to ensure we don't override the value if the value should be custom.
+    if (this._marginPicker.value != "custom") {
+      // Reset the custom margin values if they are not valid and revalidate the form
+      if (
+        !this._customTopMargin.checkValidity() ||
+        !this._customBottomMargin.checkValidity() ||
+        !this._customLeftMargin.checkValidity() ||
+        !this._customRightMargin.checkValidity()
+      ) {
+        window.clearTimeout(this.showErrorTimeoutId);
+        this.setAllMarginValues(settings);
+        this.dispatchEvent(new Event("revalidate", { bubbles: true }));
+        this._marginError.hidden = true;
+      }
+      if (settings.margins == "custom") {
+        // Ensure that we display the custom margin boxes
+        this.querySelector(".margin-group").hidden = false;
+      }
+      this._marginPicker.value = settings.margins;
+    }
+
+    this._customTopMargin.max =
+      this._maxHeight - this._customBottomMargin.value;
+    this._customBottomMargin.max =
+      this._maxHeight - this._customTopMargin.value;
+    this._customLeftMargin.max = this._maxWidth - this._customRightMargin.value;
+    this._customRightMargin.max = this._maxWidth - this._customLeftMargin.value;
+  }
+
+  handleEvent(e) {
+    if (e.type == "keypress") {
+      this.handleKeypress(e);
+      return;
+    }
+
+    if (e.type === "paste") {
+      this.handlePaste(e);
+    }
+
+    this._updateMarginTask.disarm();
+
+    if (e.target == this._marginPicker) {
+      let customMargin = e.target.value == "custom";
+      this.querySelector(".margin-group").hidden = !customMargin;
+      if (customMargin) {
+        // Update the custom margin values to ensure consistency
+        this.updateMargins();
+      }
+
+      this.dispatchSettingsChange({
+        margins: e.target.value,
+      });
+    }
+
+    if (
+      e.target == this._customTopMargin ||
+      e.target == this._customBottomMargin ||
+      e.target == this._customLeftMargin ||
+      e.target == this._customRightMargin
+    ) {
+      if (e.target.checkValidity()) {
+        this.formatMargin(e.target);
+        this._updateMarginTask.arm();
+      } else if (e.target.validity.stepMismatch) {
+        // If this is the third digit after the decimal point, we should
+        // truncate the string.
+        this.formatMargin(e.target);
+      }
+    }
+
+    window.clearTimeout(this.showErrorTimeoutId);
+    if (
+      this._customTopMargin.validity.valid &&
+      this._customBottomMargin.validity.valid &&
+      this._customLeftMargin.validity.valid &&
+      this._customRightMargin.validity.valid
+    ) {
+      this._marginError.hidden = true;
+    } else {
+      this.showErrorTimeoutId = window.setTimeout(() => {
+        this._marginError.hidden = false;
+      }, INPUT_DELAY_MS);
+    }
+  }
+}
+customElements.define("margins-select", MarginsPicker);
 
 class PrintSettingNumber extends PrintUIControlMixin(HTMLInputElement) {
   connectedCallback() {

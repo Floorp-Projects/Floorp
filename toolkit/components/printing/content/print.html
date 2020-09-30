@@ -76,6 +76,38 @@
       </div>
     </template>
 
+    <template id="margins-template">
+      <select is="margins-select" id="margins-picker" name="margin-type" class="row" data-setting-name="margins">
+        <option value="default" data-l10n-id="printui-margins-default"></option>
+        <option value="minimum" data-l10n-id="printui-margins-min"></option>
+        <option value="none" data-l10n-id="printui-margins-none"></option>
+        <option value="custom" data-l10n-id="printui-margins-custom"></option>
+      </select>
+      <div id="custom-margins" class="margin-group" hidden>
+        <div class="vertical-margins">
+          <div class="margin-pair">
+            <input id="custom-margin-top" type="number" class="margin-input photon-number" min="0" step="0.01" autocomplete="off" required>
+            <label for="custom-margin-top" class="margin-descriptor" data-l10n-id="printui-margins-custom-top"></label>
+          </div>
+          <div class="margin-pair">
+            <input id="custom-margin-bottom" type="number" class="margin-input photon-number" min="0" step="0.01" autocomplete="off" required>
+            <label for="custom-margin-bottom" class="margin-descriptor" data-l10n-id="printui-margins-custom-bottom"></label>
+          </div>
+        </div>
+        <div class="horizontal-margins">
+          <div class="margin-pair">
+            <input id="custom-margin-left" type="number" class="margin-input photon-number" min="0" step="0.01" autocomplete="off" required>
+            <label for="custom-margin-left" class="margin-descriptor" data-l10n-id="printui-margins-custom-left"></label>
+          </div>
+          <div class="margin-pair">
+            <input id="custom-margin-right" type="number" class="margin-input photon-number" min="0" step="0.01" autocomplete="off" required>
+            <label for="custom-margin-right" class="margin-descriptor" data-l10n-id="printui-margins-custom-right"></label>
+          </div>
+        </div>
+        <p id="error-invalid-margin" hidden data-l10n-id="printui-error-invalid-margin" class="error-message" role="alert"></p>
+      </div>
+    </template>
+
     <header class="header-container" role="none">
       <h2 data-l10n-id="printui-title"></h2>
       <div aria-live="off">
@@ -132,12 +164,8 @@
             </section>
 
             <section id="margins" class="section-block">
-              <label for="margins-picker" class="block-label" data-l10n-id="printui-margins"></label>
-              <select is="margins-select" id="margins-picker" class="row" data-setting-name="margins">
-                <option value="default" data-l10n-id="printui-margins-default"></option>
-                <option value="minimum" data-l10n-id="printui-margins-min"></option>
-                <option value="none" data-l10n-id="printui-margins-none"></option>
-              </select>
+              <label for="margins-select" class="block-label" data-l10n-id="printui-margins"></label>
+              <div id="margins-select" is="margins-select" class="margins-select row"></div>
             </section>
 
             <section id="more-settings-options" class="section-block">
