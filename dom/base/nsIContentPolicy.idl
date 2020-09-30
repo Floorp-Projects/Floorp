@@ -469,6 +469,12 @@ interface nsIContentPolicy : nsISupports
   const short REJECT_OTHER = -4;
 
   /**
+   * Returned from shouldLoad or shouldProcess if the load/process is forbiddden
+   * based on enterprise policy.
+   */
+  const short REJECT_POLICY = -5;
+
+  /**
    * Returned from shouldLoad or shouldProcess if the load or process request
    * is not rejected.
    */

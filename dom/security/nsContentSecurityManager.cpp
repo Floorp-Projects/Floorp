@@ -588,11 +588,16 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     NS_SetRequestBlockingReasonIfNull(
         aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_GENERAL);
 
-    if ((NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) &&
+    if (NS_SUCCEEDED(rv) &&
         (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
          contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT)) {
-      // for docshell loads we might have to return SHOW_ALT.
-      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+      if (shouldLoad == nsIContentPolicy::REJECT_TYPE) {
+        // for docshell loads we might have to return SHOW_ALT.
+        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+      }
+      if (shouldLoad == nsIContentPolicy::REJECT_POLICY) {
+        return NS_ERROR_BLOCKED_BY_POLICY;
+      }
     }
     return NS_ERROR_CONTENT_BLOCKED;
   }
