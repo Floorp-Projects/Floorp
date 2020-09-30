@@ -42,6 +42,15 @@ CONFIGS = defaultdict(lambda: {
             'COMPILE_ENVIRONMENT': '1',
         },
     },
+    'database': {
+        'defines': {},
+        'substs': {
+            'CC': 'clang',
+            'CXX': 'clang++',
+            'LIB_PREFIX': 'lib',
+            'LIB_SUFFIX': 'a',
+        },
+    },
     'rust-library': {
         'defines': {},
         'substs': {
