@@ -18,3 +18,4 @@ load 1341657.html
 load 1584467.html
 load 1614211-1.html
 load 1617315-1.html
+skip-if(Android) pref(dom.disable_open_during_load,false) pref(security.data_uri.unique_opaque_origin,false) pref(security.data_uri.block_toplevel_data_uri_navigations,false) load 1667491.html
