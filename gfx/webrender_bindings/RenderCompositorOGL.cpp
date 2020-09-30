@@ -70,13 +70,19 @@ RenderedFrameId RenderCompositorOGL::EndFrame(
   RenderedFrameId frameId = GetNextRenderFrameId();
   if (UsePartialPresent() && aDirtyRects.Length() > 0) {
     gfx::IntRegion bufferInvalid;
+    const auto bufferSize = GetBufferSize();
     for (const DeviceIntRect& rect : aDirtyRects) {
-      const auto width = std::min(rect.size.width, GetBufferSize().width);
-      const auto height = std::min(rect.size.height, GetBufferSize().height);
-      const auto left =
-          std::max(0, std::min(rect.origin.x, GetBufferSize().width));
-      const auto bottom =
-          std::max(0, std::min(rect.origin.y + height, GetBufferSize().height));
+      const auto left = std::max(0, std::min(bufferSize.width, rect.origin.x));
+      const auto top = std::max(0, std::min(bufferSize.height, rect.origin.y));
+
+      const auto right = std::min(bufferSize.width,
+                                  std::max(0, rect.origin.x + rect.size.width));
+      const auto bottom = std::min(
+          bufferSize.height, std::max(0, rect.origin.y + rect.size.height));
+
+      const auto width = right - left;
+      const auto height = bottom - top;
+
       bufferInvalid.OrWith(
           gfx::IntRect(left, (GetBufferSize().height - bottom), width, height));
     }
