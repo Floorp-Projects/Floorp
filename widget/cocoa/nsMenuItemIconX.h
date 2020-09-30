@@ -10,7 +10,7 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
-#include "nsIconLoaderService.h"
+#include "IconLoaderHelperCocoa.h"
 
 class nsIconLoaderService;
 class nsIURI;
@@ -21,7 +21,7 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public nsIconLoaderObserver {
+class nsMenuItemIconX : public mozilla::widget::IconLoaderListenerCocoa {
  public:
   nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                   NSMenuItem* aNativeMenuItem);
@@ -37,15 +37,15 @@ class nsMenuItemIconX : public nsIconLoaderObserver {
   // GetIconURI fails if the item should not have any icon.
   nsresult GetIconURI(nsIURI** aIconURI);
 
-  // Overrides nsIconLoaderObserver::OnComplete. Handles the NSImage* created
-  // by nsIconLoaderService.
-  nsresult OnComplete(NSImage* aImage) override;
-
   // Unless we take precautions, we may outlive the object that created us
   // (mMenuObject, which owns our native menu item (mNativeMenuItem)).
   // Destroy() should be called from mMenuObject's destructor to prevent
   // this from happening.  See bug 499600.
   void Destroy();
+
+  // Implements this method for mozilla::widget::IconLoaderListenerCocoa.
+  // Called once the icon load is complete.
+  nsresult OnComplete();
 
  protected:
   nsCOMPtr<nsIContent> mContent;
@@ -56,7 +56,8 @@ class nsMenuItemIconX : public nsIconLoaderObserver {
   NSMenuItem* mNativeMenuItem;  // [weak]
   // The icon loader object should never outlive its creating nsMenuItemIconX
   // object.
-  RefPtr<nsIconLoaderService> mIconLoader;
+  RefPtr<mozilla::widget::IconLoader> mIconLoader;
+  RefPtr<mozilla::widget::IconLoaderHelperCocoa> mIconLoaderHelper;
 };
 
 #endif  // nsMenuItemIconX_h_
