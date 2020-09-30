@@ -897,7 +897,7 @@ void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair,
                          const ProfilerMarkerPayload& aPayload);
 
-void profiler_add_js_marker(const char* aMarkerName);
+void profiler_add_js_marker(const char* aMarkerName, const char* aMarkerText);
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 
 // Returns true or or false depending on whether the marker was actually added

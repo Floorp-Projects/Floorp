@@ -355,7 +355,8 @@ JS_FRIEND_API void SetContextProfilingStack(JSContext* cx,
 JS_FRIEND_API void EnableContextProfilingStack(JSContext* cx, bool enabled);
 
 JS_FRIEND_API void RegisterContextProfilingEventMarker(JSContext* cx,
-                                                       void (*fn)(const char*));
+                                                       void (*fn)(const char*,
+                                                                  const char*));
 
 }  // namespace js
 
