@@ -266,36 +266,46 @@ void ScriptPreloader::StartCacheWrite() {
 }
 
 void ScriptPreloader::InvalidateCache() {
-  mMonitor.AssertNotCurrentThreadOwns();
-  MonitorAutoLock mal(mMonitor);
+  {
+    mMonitor.AssertNotCurrentThreadOwns();
+    MonitorAutoLock mal(mMonitor);
 
-  mCacheInvalidated = true;
+    // Wait for pending off-thread parses to finish, since they depend on the
+    // memory allocated by our CachedScripts, and can't be canceled
+    // asynchronously.
+    FinishPendingParses(mal);
 
-  // Wait for pending off-thread parses to finish, since they depend on the
-  // memory allocated by our CachedScripts, and can't be canceled
-  // asynchronously.
-  FinishPendingParses(mal);
+    // Pending scripts should have been cleared by the above, and new parses
+    // should not have been queued.
+    MOZ_ASSERT(mParsingScripts.empty());
+    MOZ_ASSERT(mParsingSources.empty());
+    MOZ_ASSERT(mPendingScripts.isEmpty());
 
-  // Pending scripts should have been cleared by the above, and new parses
-  // should not have been queued.
-  MOZ_ASSERT(mParsingScripts.empty());
-  MOZ_ASSERT(mParsingSources.empty());
-  MOZ_ASSERT(mPendingScripts.isEmpty());
+    for (auto& script : IterHash(mScripts)) {
+      script.Remove();
+    }
 
-  for (auto& script : IterHash(mScripts)) {
-    script.Remove();
+    // If we've already finished saving the cache at this point, start a new
+    // delayed save operation. This will write out an empty cache file in place
+    // of any cache file we've already written out this session, which will
+    // prevent us from falling back to the current session's cache file on the
+    // next startup.
+    if (mSaveComplete && mChildCache) {
+      mSaveComplete = false;
+
+      StartCacheWrite();
+    }
   }
 
-  // If we've already finished saving the cache at this point, start a new
-  // delayed save operation. This will write out an empty cache file in place
-  // of any cache file we've already written out this session, which will
-  // prevent us from falling back to the current session's cache file on the
-  // next startup.
-  if (mSaveComplete && mChildCache) {
-    mSaveComplete = false;
+  {
+    MonitorAutoLock saveMonitorAutoLock(mSaveMonitor);
 
-    StartCacheWrite();
+    mCacheInvalidated = true;
   }
+
+  // If we're waiting on a timeout to finish saving, interrupt it and just save
+  // immediately.
+  mSaveMonitor.NotifyAll();
 }
 
 nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,

@@ -448,6 +448,7 @@ class ScriptPreloader : public nsIObserver,
   bool mCacheInitialized = false;
   bool mSaveComplete = false;
   bool mDataPrepared = false;
+  // May only be changed on the main thread, while `mSaveMonitor` is held.
   bool mCacheInvalidated = false;
 
   // The list of scripts that we read from the initial startup cache file,
