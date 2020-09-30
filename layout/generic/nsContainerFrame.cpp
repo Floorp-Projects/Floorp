@@ -1877,13 +1877,14 @@ void nsContainerFrame::NormalizeChildLists() {
         f = next;
       }
 
+      if (ourOverflow->IsEmpty()) {
+        DestroyOverflowList();
+        ourOverflow = nullptr;
+      }
       if (items.NotEmpty()) {
         PullItemsNextInFlow(items);
       }
       MergeSortedFrameLists(mFrames, items, GetContent());
-      if (ourOverflow->IsEmpty()) {
-        DestroyOverflowList();
-      }
     }
   }
 
