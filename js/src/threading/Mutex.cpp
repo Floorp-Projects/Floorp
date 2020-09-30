@@ -35,8 +35,8 @@ void js::Mutex::preLockChecks() const {
 }
 
 void js::Mutex::postLockChecks() {
-  MOZ_ASSERT(owningThread_.isNothing());
-  owningThread_.emplace(ThreadId::ThisThreadId());
+  MOZ_ASSERT(!owningThread_);
+  owningThread_ = ThreadId::ThisThreadId();
 
   MOZ_ASSERT(prev_ == nullptr);
   prev_ = HeldMutexStack.get();
@@ -54,18 +54,16 @@ void js::Mutex::preUnlockChecks() {
   HeldMutexStack.set(prev_);
   prev_ = nullptr;
 
-  MOZ_ASSERT(owningThread_.isSome() &&
-             ThreadId::ThisThreadId() == owningThread_.value());
-  owningThread_.reset();
+  MOZ_ASSERT(ThreadId::ThisThreadId() == owningThread_);
+  owningThread_ = ThreadId();
 }
 
-bool js::Mutex::isHeld() const { return owningThread_.isSome(); }
+bool js::Mutex::isHeld() const { return owningThread_; }
 
 bool js::Mutex::ownedByCurrentThread() const {
   // First determine this using the owningThread_ property, then check it via
   // the mutex stack.
-  bool check = owningThread_.isSome() &&
-               ThreadId::ThisThreadId() == owningThread_.value();
+  bool check = ThreadId::ThisThreadId() == owningThread_;
 
   Mutex* stack = HeldMutexStack.get();
 
