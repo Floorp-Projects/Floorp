@@ -954,11 +954,12 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   }
 
   RootedFunction targetFunction(cx_, inlineData->target);
-  RootedScript targetScript(cx_, targetFunction->nonLazyScript());
-  ICScript* icScript = inlineData->icScript;
   if (!TrialInliner::canInline(targetFunction, script_)) {
     return false;
   }
+
+  RootedScript targetScript(cx_, targetFunction->nonLazyScript());
+  ICScript* icScript = inlineData->icScript;
 
   // Add the inlined script to the inline script tree.
   LifoAlloc* lifoAlloc = alloc_.lifoAlloc();
