@@ -69,9 +69,9 @@ static nsresult GetKnownFolder(GUID* aGuid, nsIFile** aFile) {
 static nsresult GetWindowsFolder(int aFolder, nsIFile** aFile) {
   WCHAR path_orig[MAX_PATH + 3];
   WCHAR* path = path_orig + 1;
-  HRESULT result = SHGetSpecialFolderPathW(nullptr, path, aFolder, true);
+  BOOL result = SHGetSpecialFolderPathW(nullptr, path, aFolder, true);
 
-  if (!SUCCEEDED(result)) {
+  if (!result) {
     return NS_ERROR_FAILURE;
   }
 
