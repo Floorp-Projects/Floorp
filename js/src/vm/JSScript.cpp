@@ -36,6 +36,7 @@
 #include "frontend/CompilationInfo.h"  // frontend::CompilationStencil
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
+#include "frontend/StencilXdr.h"   // frontend::StencilXdr::SharedData
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -921,38 +922,6 @@ template XDRResult js::XDRImmutableScriptData(
     XDRState<XDR_DECODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
 
 template <XDRMode mode>
-/* static */
-XDRResult SharedImmutableScriptData::XDR(
-    XDRState<mode>* xdr, RefPtr<SharedImmutableScriptData>& sisd) {
-  if (mode == XDR_ENCODE) {
-    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, sisd->isd_));
-  } else {
-    JSContext* cx = xdr->cx();
-    UniquePtr<SharedImmutableScriptData> data(
-        SharedImmutableScriptData::create(cx));
-    if (!data) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, data->isd_));
-    sisd = data.release();
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    SharedImmutableScriptData::XDR(XDRState<XDR_ENCODE>* xdr,
-                                   RefPtr<SharedImmutableScriptData>& sisd);
-
-template
-    /* static */
-    XDRResult
-    SharedImmutableScriptData::XDR(XDRState<XDR_DECODE>* xdr,
-                                   RefPtr<SharedImmutableScriptData>& sisd);
-
-template <XDRMode mode>
 XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
   MOZ_TRY(xdr->codeUint32(&extent->sourceStart));
   MOZ_TRY(xdr->codeUint32(&extent->sourceEnd));
@@ -1123,7 +1092,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // NOTE: The script data is rooted by the script.
   MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
                                        scriptEnclosingScope, funOrMod));
-  MOZ_TRY(SharedImmutableScriptData::XDR<mode>(xdr, script->sharedData_));
+  MOZ_TRY(frontend::StencilXDR::SharedData<mode>(xdr, script->sharedData_));
 
   if (mode == XDR_DECODE) {
     if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {

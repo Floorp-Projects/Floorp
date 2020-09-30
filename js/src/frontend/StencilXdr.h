@@ -32,6 +32,10 @@ class StencilXDR {
 
   template <XDRMode mode>
   static XDRResult RegExp(XDRState<mode>* xdr, RegExpStencil& stencil);
+
+  template <XDRMode mode>
+  static XDRResult SharedData(js::XDRState<mode>* xdr,
+                              RefPtr<SharedImmutableScriptData>& sisd);
 };
 
 } /* namespace frontend */
