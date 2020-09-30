@@ -1883,9 +1883,6 @@ if test -n "$MOZ_TREE_FREETYPE" -a "$OS_TARGET" != WINNT; then
    AC_SUBST_LIST(CAIRO_FT_CFLAGS)
 fi
 
-AC_CHECK_PROGS(WGET, wget, "")
-AC_SUBST(WGET)
-
 dnl ========================================================
 dnl Updater
 dnl ========================================================

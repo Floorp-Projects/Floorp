@@ -149,6 +149,7 @@ wine = check_prog(
     'WINE', ['wine64', 'wine'], allow_missing=True,
     when=depends(target, host)(
         lambda t, h: t.kernel == 'WINNT' and h.kernel != 'WINNT'))
+check_prog('WGET', ('wget',), allow_missing=True)
 
 
 include('build/moz.configure/toolchain.configure',
