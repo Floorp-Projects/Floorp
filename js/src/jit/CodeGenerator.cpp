@@ -6978,9 +6978,12 @@ void CodeGenerator::emitAssertGCThingResult(Register input,
     masm.bind(&ok);
   }
 
+#  ifndef JS_SIMULATOR
   // Check that we have a valid GC pointer.
   // Disable for wasm because we don't have a context on wasm compilation
   // threads and this needs a context.
+  // Also disable for simulator builds because the C++ call is a lot slower
+  // there than on actual hardware.
   if (JitOptions.fullDebugChecks && !IsCompilingWasm()) {
     saveVolatile();
     masm.setupUnalignedABICall(temp);
@@ -7012,6 +7015,7 @@ void CodeGenerator::emitAssertGCThingResult(Register input,
     masm.callWithABI(callee);
     restoreVolatile();
   }
+#  endif
 
   masm.bind(&done);
   masm.pop(temp);
