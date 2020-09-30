@@ -7,12 +7,13 @@
 #ifndef nsImageRenderer_h__
 #define nsImageRenderer_h__
 
-#include "nsLayoutUtils.h"
 #include "nsStyleStruct.h"
 #include "Units.h"
 #include "mozilla/AspectRatio.h"
+#include "mozilla/SurfaceFromElementResult.h"
 
 class gfxDrawable;
+class nsDisplayItem;
 namespace mozilla {
 
 namespace layers {
@@ -302,7 +303,7 @@ class nsImageRenderer {
   nsCOMPtr<imgIContainer> mImageContainer;
   const mozilla::StyleGradient* mGradientData;
   nsIFrame* mPaintServerFrame;
-  nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
+  SurfaceFromElementResult mImageElementSurface;
   ImgDrawResult mPrepareResult;
   nsSize mSize;  // unscaled size of the image, in app units
   uint32_t mFlags;
