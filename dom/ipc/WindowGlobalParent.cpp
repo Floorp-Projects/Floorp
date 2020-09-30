@@ -778,16 +778,11 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
     if (nsCOMPtr<nsIPromptCollection> prompt =
             do_GetService("@mozilla.org/embedcomp/prompt-collection;1")) {
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
-
       RefPtr<Promise> promise;
       prompt->AsyncBeforeUnloadCheck(mWGP->GetBrowsingContext(),
                                      getter_AddRefs(promise));
 
       if (!promise) {
-        mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
         return;
       }
 
@@ -805,19 +800,11 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
-    bool allow = JS::ToBoolean(aValue);
-
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, (allow ? 1 : 0));
-
-    SendReply(allow);
+    SendReply(JS::ToBoolean(aValue));
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(mState == State::PROMPTING);
-
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
 
     SendReply(false);
   }
