@@ -16,9 +16,8 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/add_on_icon"
-        android:layout_width="@dimen/mozac_widget_favicon_size"
-        android:layout_height="@dimen/mozac_widget_favicon_size"
         style="@style/Mozac.Widgets.Favicon"
+        tools:ignore="RequiredSize"
         android:layout_alignParentStart="true"
         android:layout_marginTop="16dp"
         android:importantForAccessibility="no"
