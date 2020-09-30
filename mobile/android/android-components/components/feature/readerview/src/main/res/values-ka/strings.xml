@@ -5,7 +5,7 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_sans_serif_font_desc">უნაჭდევო შრიფტი</string>
     <!-- Name for one of the font options available to use -->
-    <string name="mozac_feature_readerview_serif_font">ნაჭდევებიანი</string>
+    <string name="mozac_feature_readerview_serif_font">ნაჭდევებით</string>
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">ნაჭდევებიანი შრიფტი</string>
 

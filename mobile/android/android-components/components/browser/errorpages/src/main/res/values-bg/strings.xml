@@ -39,6 +39,13 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Връзката е прекъсната</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Четецът осъществи връзка, но тя е прекъсната по време на прехвърляне на информация. Опитайте отново.</p>
+<ul>
+  <li>Страницата може да е временно недостъпна или натоварена. Опитайте отново след малко.</li>
+  <li>Ако и други страници не се отварят - проверете връзката за данни или Wi-Fi.</li>
+</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Времето за изчакване на връзка изтече</string>
     <!-- The error message shown when a website took long to load. -->
@@ -48,8 +55,8 @@
     <string name="mozac_browser_errorpages_connection_failure_title">Не е установена връзка</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-  <li>Сайтът може да е временно недостъпен или натоварен. Опитайте отново след малко.</li>
-  <li>Ако не може да отворите друга страница, проверете връзката за данни или Wi-Fi.</li>
+  <li>Страницата може да е временно недостъпна или натоварена. Опитайте отново след малко.</li>
+  <li>Ако и други страници не се отварят - проверете връзката за данни или Wi-Fi.</li>
 </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
@@ -77,6 +84,13 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Връзката е прекъсната</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Връзка е прекъсната по време на свързване. Моля, опитайте отново.</p>
+<ul>
+  <li>Страницата може да е временно недостъпна или натоварена. Опитайте отново след малко.</li>
+  <li>Ако и други страници не се отварят - проверете връзката за данни или Wi-Fi.</li>
+</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Опасен вид файл</string>
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
@@ -97,6 +111,13 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адресът не е намерен</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Четецът не намира сървър на този адрес.</p>
+<ul>
+  <li>Проверете го за грешки при въвеждане, например <strong>ww</strong>.example.com вместо <strong>www</strong>.example.com.</li>
+  <li>Ако и други страници не се отварят - проверете връзката за данни или Wi-Fi.</li>
+</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Няма връзка с интернет</string>
