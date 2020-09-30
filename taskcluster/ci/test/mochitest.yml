@@ -373,6 +373,7 @@ mochitest-webgl1-core:
     variants:
         by-test-platform:
             android.*: []
+            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -430,6 +431,7 @@ mochitest-webgl2-core:
     variants:
         by-test-platform:
             android.*: []
+            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
