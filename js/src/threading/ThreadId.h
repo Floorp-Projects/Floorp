@@ -24,6 +24,8 @@ class ThreadId {
   bool operator==(const ThreadId& aOther) const;
   bool operator!=(const ThreadId& aOther) const { return !operator==(aOther); }
 
+  MOZ_IMPLICIT operator bool() const;
+
   inline PlatformData* platformData();
   inline const PlatformData* platformData() const;
 
