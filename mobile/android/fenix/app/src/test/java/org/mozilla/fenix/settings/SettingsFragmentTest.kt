@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.preference.Preference
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.robolectric.testContext
@@ -19,7 +20,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -41,6 +44,9 @@ class SettingsFragmentTest {
         // Mock client for fetching account avatar
         val client = testContext.components.core.client
         every { client.fetch(any()) } throws IOException("test")
+
+        mockkObject(Config)
+        every { Config.channel } returns ReleaseChannel.Nightly
     }
 
     @Test
