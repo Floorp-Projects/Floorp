@@ -24,5 +24,5 @@ function f() {
     x = x + x; assertEq((x + 1) | 0, 0); // 2 ** 53
 }
 
-for (var i = 0; i <= 100000; i++)
+for (var i = 0; i <= 10_000; i++)
     f();
