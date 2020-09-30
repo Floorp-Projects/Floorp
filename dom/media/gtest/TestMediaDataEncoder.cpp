@@ -5,14 +5,14 @@
 
 #include "gtest/gtest.h"
 
-#include "nsMimeTypes.h"
-#include "VideoUtils.h"
-#include "PEMFactory.h"
-#include "ImageContainer.h"
 #include "AnnexB.h"
-
+#include "ImageContainer.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/media/MediaUtils.h"  // For media::Await
+#include "nsMimeTypes.h"
+#include "PEMFactory.h"
+#include "TimeUnits.h"
+#include "VideoUtils.h"
 
 #include <algorithm>
 
