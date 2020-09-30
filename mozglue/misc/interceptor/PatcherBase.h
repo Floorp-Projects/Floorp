@@ -117,6 +117,10 @@ class WindowsDllPatcherBase {
     return selector(aModule, aName, mVMPolicy);
   }
 
+  bool IsPageAccessible(uintptr_t aAddress) const {
+    return mVMPolicy.IsPageAccessible(aAddress);
+  }
+
  protected:
   VMPolicy mVMPolicy;
 };
