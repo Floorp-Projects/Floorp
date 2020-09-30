@@ -67,6 +67,25 @@ fpush-linux-android:
         - "'test-android-em 'debug"
         - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar-"
 
+marionette:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Marionette protocol, which underpins
+        many test harnesses as well as our WebDriver implementation.
+        This preset can be filtered down further to limit it to a specific
+        platform or to opt/debug tasks only. For example:
+        |mach try --preset marionette -xq "'linux 'opt"|
+    query:
+        - "'marionette !asan !shippable !gpu !headless"
+        - "'awsy-base"
+        - "'firefox-ui !asan"
+        - "'platform 'wdspec !qr | fis"
+        - "'xpcshell !asan !qr !spi !tsan"
+        - "'platform 'reftest 'debug !qr | fis -1$"
+        - "'platform !reftest !wdspec 'debug -1$"
+        - "'mochitest-browser 'debug !spi -1$"
+        - "'reftest 'debug !platform !gpu !no-accel !qr -1$"
+
 perf:
     selector: fuzzy
     description: >-
