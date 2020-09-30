@@ -19,6 +19,7 @@
 #include "mozilla/SVGUtils.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla::gfx;
 

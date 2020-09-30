@@ -22,6 +22,7 @@
 #include "nsCSSRenderingGradients.h"
 #include "nsDeviceContext.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleStructInlines.h"
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"

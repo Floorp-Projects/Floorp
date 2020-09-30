@@ -3782,6 +3782,23 @@ void nsTextFrame::PropertyProvider::SetupJustificationSpacing(
   }
 }
 
+void nsTextFrame::PropertyProvider::InitFontGroupAndFontMetrics() const {
+  if (!mFontMetrics) {
+    if (mWhichTextRun == nsTextFrame::eInflated) {
+      if (!mFrame->InflatedFontMetrics()) {
+        float inflation = mFrame->GetFontSizeInflation();
+        mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(mFrame, inflation);
+        mFrame->SetInflatedFontMetrics(mFontMetrics);
+      } else {
+        mFontMetrics = mFrame->InflatedFontMetrics();
+      }
+    } else {
+      mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(mFrame, 1.0f);
+    }
+  }
+  mFontGroup = mFontMetrics->GetThebesFontGroup();
+}
+
 //----------------------------------------------------------------------
 
 static nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB) {

@@ -7,6 +7,7 @@
 #ifndef mozilla_AccessibleCaretEventHub_h
 #define mozilla_AccessibleCaretEventHub_h
 
+#include "LayoutConstants.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/UniquePtr.h"

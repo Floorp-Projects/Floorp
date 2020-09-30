@@ -28,6 +28,7 @@
 #include "nsAString.h"
 #include "nsDisplayList.h"
 #include "nsIWidgetListener.h"
+#include "nsLayoutUtils.h"
 #include "nsTArray.h"     // for AutoTArray
 #include "nsXULAppAPI.h"  // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"

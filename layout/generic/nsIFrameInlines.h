@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/ElementInlines.h"
 #include "nsContainerFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSAnonBoxes.h"
