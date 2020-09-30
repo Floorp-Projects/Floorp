@@ -26,7 +26,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsICanvasRenderingContextInternal.h"
-#include "nsLayoutUtils.h"
 #include "nsTArray.h"
 #include "SurfaceTypes.h"
 #include "ScopedGLHelpers.h"
@@ -44,7 +43,6 @@
 // Generated
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsLayoutUtils.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
