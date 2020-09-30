@@ -335,11 +335,12 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
 
   LOG(("Http3Session::ProcessEvents [this=%p]", this));
 
-  nsTArray<uint8_t> headerBytes;
+  // We need an array to pick up header data or a resumption token.
+  nsTArray<uint8_t> data;
   Http3Event event;
   event.tag = Http3Event::Tag::NoEvent;
 
-  nsresult rv = mHttp3Connection->GetEvent(&event, headerBytes);
+  nsresult rv = mHttp3Connection->GetEvent(&event, data);
   if (NS_FAILED(rv)) {
     LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
          static_cast<uint32_t>(rv)));
@@ -362,7 +363,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
           continue;
         }
 
-        stream->SetResponseHeaders(headerBytes, event.header_ready.fin);
+        stream->SetResponseHeaders(data, event.header_ready.fin);
 
         uint32_t read = 0;
         rv = ProcessTransactionRead(stream, count, &read);
@@ -450,6 +451,19 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
           Finish0Rtt(true);
         }
         break;
+      case Http3Event::Tag::ResumptionToken: {
+        LOG(("Http3Session::ProcessEvents - ResumptionToken"));
+        if (!data.IsEmpty()) {
+          LOG(("Got a resumption token"));
+          nsAutoCString peerId;
+          mSocketControl->GetPeerId(peerId);
+          if (NS_FAILED(SSLTokensCache::Put(
+                  peerId, data.Elements(), data.Length(), mSocketControl,
+                  PR_Now() + event.resumption_token.expire_in))) {
+            LOG(("Adding resumption token failed"));
+          }
+        }
+      } break;
       case Http3Event::Tag::ConnectionConnected: {
         LOG(("Http3Session::ProcessEvents - ConnectionConnected"));
         bool was0RTT = mState == ZERORTT;
@@ -459,23 +473,11 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         if (was0RTT) {
           Finish0Rtt(false);
         }
-        nsTArray<uint8_t> token;
-        mHttp3Connection->GetResumptionToken(token);
-        if (!token.IsEmpty()) {
-          LOG(("Got a resumption token"));
-          nsAutoCString peerId;
-          mSocketControl->GetPeerId(peerId);
-          if (NS_FAILED(
-                  // Bug 1660080 tto get the proper expiration time for a token.
-                  SSLTokensCache::Put(peerId, token.Elements(), token.Length(),
-                                      mSocketControl, 1))) {
-            LOG(("Adding resumption token failed"));
-          }
-        }
 
         OnTransportStatus(mSocketTransport, NS_NET_STATUS_CONNECTED_TO, 0);
         // Also send the NS_NET_STATUS_TLS_HANDSHAKE_ENDED event.
-        OnTransportStatus(mSocketTransport, NS_NET_STATUS_TLS_HANDSHAKE_ENDED, 0);
+        OnTransportStatus(mSocketTransport, NS_NET_STATUS_TLS_HANDSHAKE_ENDED,
+                          0);
 
         ReportHttp3Connection();
       } break;
@@ -507,7 +509,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
       default:
         break;
     }
-    rv = mHttp3Connection->GetEvent(&event, headerBytes);
+    rv = mHttp3Connection->GetEvent(&event, data);
     if (NS_FAILED(rv)) {
       LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
            static_cast<uint32_t>(rv)));
