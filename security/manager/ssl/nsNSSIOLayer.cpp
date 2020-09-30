@@ -697,35 +697,33 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy() {
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::GetEchConfig(nsACString& aEchConfig) {
-  aEchConfig = mEchConfig;
+nsNSSSocketInfo::GetEsniTxt(nsACString& aEsniTxt) {
+  aEsniTxt = mEsniTxt;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::SetEchConfig(const nsACString& aEchConfig) {
-  mEchConfig = aEchConfig;
+nsNSSSocketInfo::SetEsniTxt(const nsACString& aEsniTxt) {
+  mEsniTxt = aEsniTxt;
 
-#if 0
-  if (mEchConfig.Length()) {
-    nsAutoCString echBin;
-    if (NS_OK != Base64Decode(mEchConfig, echBin)) {
+  if (mEsniTxt.Length()) {
+    nsAutoCString esniBin;
+    if (NS_OK != Base64Decode(mEsniTxt, esniBin)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-              ("[%p] Invalid EchConfig record. Couldn't base64 decode\n",
+              ("[%p] Invalid ESNIKeys record. Couldn't base64 decode\n",
                (void*)mFd));
       return NS_OK;
     }
 
-    if (SECSuccess != SSL_SetClientEchConfigs(
-                          mFd, reinterpret_cast<const PRUint8*>(echBin.get()),
-                          echBin.Length())) {
+    if (SECSuccess !=
+        SSL_EnableESNI(mFd, reinterpret_cast<const PRUint8*>(esniBin.get()),
+                       esniBin.Length(), nullptr)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-              ("[%p] Invalid EchConfig record %s\n", (void*)mFd,
+              ("[%p] Invalid ESNIKeys record %s\n", (void*)mFd,
                PR_ErrorToName(PR_GetError())));
       return NS_OK;
     }
   }
-#endif
 
   return NS_OK;
 }
