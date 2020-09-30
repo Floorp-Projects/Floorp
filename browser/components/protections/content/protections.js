@@ -7,6 +7,7 @@
 import LockwiseCard from "./lockwise-card.js";
 import MonitorCard from "./monitor-card.js";
 import ProxyCard from "./proxy-card.js";
+import VPNCard from "./vpn-card.js";
 
 let cbCategory = RPMGetStringPref("browser.contentblocking.category");
 document.sendTelemetryEvent = (action, object, value = "") => {
@@ -480,4 +481,16 @@ document.addEventListener("DOMContentLoaded", e => {
   // For tests
   const proxyUI = document.querySelector(".proxy-card");
   proxyUI.dataset.enabled = proxyEnabled;
+
+  const VPNEnabled = RPMGetBoolPref(
+    "browser.contentblocking.report.vpn.enabled",
+    true
+  );
+  if (VPNEnabled) {
+    const vpnCard = new VPNCard(document);
+    vpnCard.init();
+  }
+  // For tests
+  const vpnUI = document.querySelector(".vpn-card");
+  vpnUI.dataset.enabled = VPNEnabled;
 });

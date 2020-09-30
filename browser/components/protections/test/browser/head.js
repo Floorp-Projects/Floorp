@@ -12,6 +12,14 @@ const nsLoginInfo = new Components.Constructor(
   "init"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Region: "resource://gre/modules/Region.jsm",
+});
+
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+
 const TEST_LOGIN1 = new nsLoginInfo(
   "https://example.com/",
   "https://example.com/",
@@ -77,3 +85,21 @@ const mockGetMonitorData = data => {
 registerCleanupFunction(function head_cleanup() {
   Services.logins.removeAllLogins();
 });
+
+// Used to replace AboutProtectionsParent.VPNSubStatus and Region.current
+const getVPNOverrides = (hasSubscription = false, location = "us") => {
+  return {
+    vpnOverrides: () => {
+      return {
+        hasSubscription,
+        location,
+      };
+    },
+  };
+};
+
+const promiseSetHomeRegion = async region => {
+  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
+  Region._setHomeRegion(region);
+  await promise;
+};
