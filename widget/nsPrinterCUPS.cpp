@@ -6,6 +6,7 @@
 #include "nsPrinterCUPS.h"
 
 #include "mozilla/GkRustUtils.h"
+#include "nsTHashtable.h"
 #include "nsPaper.h"
 #include "nsPrinterBase.h"
 #include "nsPrintSettingsImpl.h"
@@ -277,14 +278,15 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
 
   const int paperCount = mShim.cupsGetDestMediaCount(
       connection, mPrinter, printerInfo, CUPS_MEDIA_FLAGS_DEFAULT);
-
   nsTArray<PaperInfo> paperList;
+  nsTHashtable<nsCharPtrHashKey> paperSet(std::max(paperCount, 0));
+
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t media;
     int getInfoSucceeded = mShim.cupsGetDestMediaByIndex(
         connection, mPrinter, printerInfo, i, CUPS_MEDIA_FLAGS_DEFAULT, &media);
 
-    if (!getInfoSucceeded) {
+    if (!getInfoSucceeded || !paperSet.EnsureInserted(media.media)) {
       continue;
     }
 
