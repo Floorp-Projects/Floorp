@@ -14,6 +14,7 @@ backends = {
     'GnConfigGen': 'mozbuild.gn_processor',
     'GnMozbuildWriter': 'mozbuild.gn_processor',
     'RecursiveMake': 'mozbuild.backend.recursivemake',
+    'StaticAnalysis': 'mozbuild.backend.static_analysis',
     'TestManifest': 'mozbuild.backend.test_manifest',
     'VisualStudio': 'mozbuild.backend.visualstudio',
 }
