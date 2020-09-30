@@ -242,5 +242,5 @@ TEST(OpusAudioTrackEncoder, DefaultInitDuration)
   }
   // 44100 as used above gets resampled to 48000 for opus.
   const uint64_t fifteen = 48000 * 15;
-  EXPECT_EQ(fifteen, totalDuration);
+  EXPECT_EQ(totalDuration, fifteen + encoder.GetLookahead());
 }

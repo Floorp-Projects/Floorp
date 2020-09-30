@@ -35,6 +35,9 @@ class OpusTrackEncoder : public AudioTrackEncoder {
 
   nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) override;
 
+  int GetLookahead() const { return mLookahead; }
+  uint64_t GetCodecDelay() const { return mCodecDelayUs; }
+
  protected:
   int GetPacketDuration() override;
 
@@ -67,6 +70,12 @@ class OpusTrackEncoder : public AudioTrackEncoder {
    * in order to align the time of input and output.
    */
   int mLookahead;
+
+  /**
+   * Codec delay in microseconds. See mLookahead which is the codec delay in
+   * output sample rate.
+   */
+  uint64_t mCodecDelayUs;
 
   /**
    * If the input sample rate does not divide 48kHz evenly, the input data are
