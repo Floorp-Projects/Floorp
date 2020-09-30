@@ -3833,6 +3833,12 @@ class MReturnFromCtor : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, getValue), (1, getObject))
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -6095,6 +6101,8 @@ class MBoxNonStrictThis : public MUnaryInstruction, public BoxPolicy<0>::Data {
  public:
   INSTRUCTION_HEADER(BoxNonStrictThis)
   TRIVIAL_NEW_WRAPPERS
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 
   JSObject* globalThis() const { return globalThis_; }
 
