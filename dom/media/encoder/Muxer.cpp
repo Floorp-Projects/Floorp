@@ -19,6 +19,9 @@ bool Muxer::IsFinished() { return mWriter->IsWritingComplete(); }
 
 nsresult Muxer::SetMetadata(
     const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) {
+  MOZ_DIAGNOSTIC_ASSERT(!mMetadataSet);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasAudio);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasVideo);
   nsresult rv = mWriter->SetMetadata(aMetadata);
   if (NS_FAILED(rv)) {
     LOG(LogLevel::Error, "%p Setting metadata failed, tracks=%zu", this,
