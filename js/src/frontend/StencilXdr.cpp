@@ -131,7 +131,7 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
     IsStandaloneFunction,
     WasFunctionEmitted,
     IsSingletonFunction,
-    HasImmutableScriptData,
+    HasSharedData,
     AllowRelazify,
   };
 
@@ -155,8 +155,8 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
 
     numGcThings = stencil.gcThings.length();
 
-    if (stencil.immutableScriptData) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::HasImmutableScriptData);
+    if (stencil.sharedData) {
+      xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
     }
 
     functionFlags = stencil.functionFlags.toRaw();
@@ -225,8 +225,8 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
 
   MOZ_TRY(XDRSourceExtent(xdr, &stencil.extent));
 
-  if (xdrFlags & (1 << uint8_t(XdrFlags::HasImmutableScriptData))) {
-    MOZ_TRY(XDRImmutableScriptData(xdr, stencil.immutableScriptData));
+  if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
+    MOZ_TRY(RuntimeScriptData::XDR<mode>(xdr, stencil.sharedData));
   }
 
   for (ScriptThingVariant& thing : stencil.gcThings) {

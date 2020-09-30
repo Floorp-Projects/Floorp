@@ -1473,12 +1473,12 @@ class RuntimeScriptData {
     return offsetof(RuntimeScriptData, isd_);
   }
 
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script);
+ private:
+  static RuntimeScriptData* create(JSContext* cx);
 
-  static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              js::frontend::ScriptStencil& scriptStencil);
+ public:
+  static RuntimeScriptData* createWith(
+      JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(this) + mallocSizeOf(isd_.get());
@@ -1487,6 +1487,14 @@ class RuntimeScriptData {
   // RuntimeScriptData has trailing data so isn't copyable or movable.
   RuntimeScriptData(const RuntimeScriptData&) = delete;
   RuntimeScriptData& operator=(const RuntimeScriptData&) = delete;
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    RefPtr<RuntimeScriptData>& rsd);
+
+  static bool shareScriptData(JSContext* cx, RefPtr<RuntimeScriptData>& rsd);
+
+  size_t immutableDataLength() const { return isd_->immutableData().Length(); }
 };
 
 // Matches RuntimeScriptData objects that have the same atoms as well as
@@ -2052,14 +2060,6 @@ class JSScript : public js::BaseScript {
                                      js::MutableHandleScript scriptp);
 
   template <js::XDRMode mode>
-  friend js::XDRResult js::RuntimeScriptData::XDR(js::XDRState<mode>* xdr,
-                                                  js::HandleScript script);
-
-  friend bool js::RuntimeScriptData::InitFromStencil(
-      JSContext* cx, js::HandleScript script,
-      js::frontend::ScriptStencil& scriptStencil);
-
-  template <js::XDRMode mode>
   friend js::XDRResult js::PrivateScriptData::XDR(
       js::XDRState<mode>* xdr, js::HandleScript script,
       js::HandleScriptSourceObject sourceObject,
@@ -2420,11 +2420,6 @@ class JSScript : public js::BaseScript {
  private:
   bool createJitScript(JSContext* cx);
 
-  bool createScriptData(JSContext* cx);
-  void initImmutableScriptData(js::UniquePtr<js::ImmutableScriptData>&& data) {
-    MOZ_ASSERT(!sharedData_->isd_);
-    sharedData_->isd_ = std::move(data);
-  }
   bool shareScriptData(JSContext* cx);
 
  public:

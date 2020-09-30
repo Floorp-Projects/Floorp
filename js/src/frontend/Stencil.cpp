@@ -385,7 +385,7 @@ static bool InstantiateScriptStencils(JSContext* cx,
   for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
     auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (scriptStencil.immutableScriptData) {
+    if (scriptStencil.sharedData) {
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
@@ -440,7 +440,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
     return true;
   }
 
-  MOZ_ASSERT(script.immutableScriptData);
+  MOZ_ASSERT(script.sharedData);
 
   if (compilationInfo.input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(compilationInfo.input.lazy);
@@ -1305,11 +1305,11 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json) {
   }
   json.endList();
 
-  if (immutableScriptData) {
-    json.formatProperty("immutableScriptData", "u8[%zu]",
-                        immutableScriptData->immutableData().Length());
+  if (sharedData) {
+    json.formatProperty("sharedData", "u8[%zu]",
+                        sharedData->immutableDataLength());
   } else {
-    json.nullProperty("immutableScriptData");
+    json.nullProperty("sharedData");
   }
 
   json.beginObjectProperty("extent");
