@@ -588,7 +588,7 @@ pub fn update_primitive_visibility(
                 }
 
                 prim_instance.vis = PrimitiveVisibility {
-                    clipped_world_rect,
+                    clipped_world_rect: clipped_world_rect,
                     clip_chain,
                     clip_task_index: ClipTaskIndex::INVALID,
                     combined_local_clip_rect,

@@ -1335,7 +1335,7 @@ fn update_clip_task_for_brush(
         let clip_mask_kind = update_brush_segment_clip_task(
             &segments[0],
             Some(&instance.vis.clip_chain),
-            instance.vis.clipped_world_rect,
+            frame_state.current_dirty_region().combined,
             root_spatial_node_index,
             pic_context.surface_index,
             pic_state,
@@ -1378,7 +1378,7 @@ fn update_clip_task_for_brush(
             let clip_mask_kind = update_brush_segment_clip_task(
                 &segment,
                 segment_clip_chain.as_ref(),
-                instance.vis.clipped_world_rect,
+                frame_state.current_dirty_region().combined,
                 root_spatial_node_index,
                 pic_context.surface_index,
                 pic_state,
@@ -1462,7 +1462,7 @@ pub fn update_clip_task(
         let unadjusted_device_rect = match get_clipped_device_rect(
             &unclipped,
             &pic_state.map_raster_to_world,
-            instance.vis.clipped_world_rect,
+            frame_state.current_dirty_region().combined,
             device_pixel_scale,
         ) {
             Some(device_rect) => device_rect,
@@ -1514,7 +1514,7 @@ pub fn update_clip_task(
 pub fn update_brush_segment_clip_task(
     segment: &BrushSegment,
     clip_chain: Option<&ClipChainInstance>,
-    prim_bounding_rect: WorldRect,
+    world_clip_rect: WorldRect,
     root_spatial_node_index: SpatialNodeIndex,
     surface_index: SurfaceIndex,
     pic_state: &mut PictureState,
@@ -1538,7 +1538,7 @@ pub fn update_brush_segment_clip_task(
         None => return ClipMaskKind::Clipped,
     };
 
-    let segment_world_rect = match segment_world_rect.intersection(&prim_bounding_rect) {
+    let segment_world_rect = match segment_world_rect.intersection(&world_clip_rect) {
         Some(rect) => rect,
         None => return ClipMaskKind::Clipped,
     };
@@ -1805,7 +1805,7 @@ fn get_unclipped_device_rect(
 fn get_clipped_device_rect(
     unclipped: &DeviceRect,
     map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
-    prim_bounding_rect: WorldRect,
+    world_clip_rect: WorldRect,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
@@ -1817,7 +1817,7 @@ fn get_clipped_device_rect(
 
     let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
 
-    let clipped_world_rect = unclipped_world_rect.intersection(&prim_bounding_rect)?;
+    let clipped_world_rect = unclipped_world_rect.intersection(&world_clip_rect)?;
 
     let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
 
