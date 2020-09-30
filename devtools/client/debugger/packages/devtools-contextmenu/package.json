@@ -1,0 +1,14 @@
+{
+  "name": "devtools-contextmenu",
+  "version": "1.0.14",
+  "description": "DevTools Contextmenu",
+  "main": "menu.js",
+  "scripts": {
+    "test": "# No tests available"
+  },
+  "author": "Jason Laster",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "devtools-modules": "~1.1.9"
+  }
+}
