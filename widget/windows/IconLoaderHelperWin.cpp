@@ -29,9 +29,18 @@ using mozilla::widget::IconLoaderListenerWin;
 
 namespace mozilla::widget {
 
+NS_IMPL_CYCLE_COLLECTION(IconLoaderHelperWin, mLoadListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IconLoaderHelperWin)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IconLoaderHelperWin)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IconLoaderHelperWin)
+
 IconLoaderHelperWin::IconLoaderHelperWin(IconLoaderListenerWin* aListener)
     : mLoadListener(aListener) {
   MOZ_ASSERT(aListener);
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 IconLoaderHelperWin::~IconLoaderHelperWin() { Destroy(); }
