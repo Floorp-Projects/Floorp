@@ -116,7 +116,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       scriptEnvironmentPreparer(nullptr),
       ctypesActivityCallback(nullptr),
       windowProxyClass_(nullptr),
-      scriptDataLock(mutexid::RuntimeScriptData),
+      scriptDataLock(mutexid::SharedImmutableScriptData),
 #ifdef DEBUG
       activeThreadHasScriptDataAccess(false),
 #endif
@@ -390,7 +390,7 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     AutoLockScriptData lock(this);
     rtSizes->scriptData +=
         scriptDataTable(lock).shallowSizeOfExcludingThis(mallocSizeOf);
-    for (RuntimeScriptDataTable::Range r = scriptDataTable(lock).all();
+    for (SharedImmutableScriptDataTable::Range r = scriptDataTable(lock).all();
          !r.empty(); r.popFront()) {
       rtSizes->scriptData += r.front()->sizeOfIncludingThis(mallocSizeOf);
     }
