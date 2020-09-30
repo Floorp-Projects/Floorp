@@ -531,7 +531,7 @@ nsresult gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
       NS_ASSERTION(!shapedTextGlyph.IsSimpleGlyph(),
                    "overwriting a simple glyph");
       shapedTextGlyph.SetComplex(inOrder && shapedTextGlyph.IsClusterStart(),
-                                 false, 0);
+                                 false);
     }
 
     glyphStart = glyphEnd;

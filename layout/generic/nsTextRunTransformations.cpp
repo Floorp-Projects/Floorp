@@ -127,7 +127,7 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph, 2> glyphs;
   const gfxTextRun::CompressedGlyph continuationGlyph =
-      gfxTextRun::CompressedGlyph::MakeComplex(false, false, 0);
+      gfxTextRun::CompressedGlyph::MakeComplex(false, false);
   const gfxTextRun::CompressedGlyph* srcGlyphs = aSrc->GetCharacterGlyphs();
   gfxTextRun::CompressedGlyph* destGlyphs = aDest->GetCharacterGlyphs();
   while (iter.NextRun()) {
@@ -137,6 +137,7 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
     bool anyMissing = false;
     uint32_t mergeRunStart = iter.GetStringStart();
+    // Initialize to a copy of the first source glyph in the merge run.
     gfxTextRun::CompressedGlyph mergedGlyph = srcGlyphs[mergeRunStart];
     uint32_t stringEnd = iter.GetStringEnd();
     for (uint32_t k = iter.GetStringStart(); k < stringEnd; ++k) {
@@ -176,20 +177,18 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       if (!aCharsToMerge[mergeRunStart]) {
         // Determine if we can just copy the existing simple glyph record.
         if (mergedGlyph.IsSimpleGlyph() && glyphs.Length() == 1) {
-          // Do nothing, we will store mergedGlyph into destGlyphs below.
+          destGlyphs[offset] = mergedGlyph;
         } else {
           // Otherwise set up complex glyph record and store detailed glyphs.
-          destGlyphs[offset].ClearGlyphInfo();
-          if (anyMissing) {
-            mergedGlyph.SetMissing(glyphs.Length());
-          } else {
-            mergedGlyph.SetComplex(mergedGlyph.IsClusterStart(),
-                                   mergedGlyph.IsLigatureGroupStart(),
-                                   glyphs.Length());
-          }
+          mergedGlyph.SetComplex(mergedGlyph.IsClusterStart(),
+                                 mergedGlyph.IsLigatureGroupStart());
+          destGlyphs[offset] = mergedGlyph;
           aDest->SetDetailedGlyphs(offset, glyphs.Length(), glyphs.Elements());
+          if (anyMissing) {
+            destGlyphs[offset].SetMissing();
+          }
         }
-        destGlyphs[offset++] = mergedGlyph;
+        offset++;
 
         while (offset < aDest->GetLength() && aDeletedChars[offset]) {
           destGlyphs[offset++] = continuationGlyph;

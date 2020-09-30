@@ -439,7 +439,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     for (uint32_t j = char_start; j < char_end; ++j) {
       CompressedGlyph& g = charGlyphs[j];
       NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
-      g.SetComplex(g.IsClusterStart(), false, 0);
+      g.SetComplex(g.IsClusterStart(), false);
     }
   }
 
