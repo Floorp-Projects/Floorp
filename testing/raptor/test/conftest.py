@@ -24,6 +24,7 @@ def options(request):
         "app": "firefox",
         "binary": "path/to/dummy/browser",
         "no_conditioned_profile": True,
+        "browsertime_visualmetrics": False,
     }
 
     if hasattr(request.module, "OPTIONS"):
@@ -39,6 +40,7 @@ def browsertime_options(options):
     options["browsertime_geckodriver"] = "browsertime_geckodriver"
     options["browsertime_chromedriver"] = "browsertime_chromedriver"
     options["browsertime_video"] = "browsertime_video"
+    options["browsertime_visualmetrics"] = "browsertime_visualmetrics"
     options["browsertime_no_ffwindowrecorder"] = "browsertime_no_ffwindowrecorder"
     return options
 
