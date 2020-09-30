@@ -600,7 +600,7 @@ pub fn update_primitive_visibility(
                     store,
                     prim_instance,
                     cluster.spatial_node_index,
-                    clipped_world_rect,
+                    world_culling_rect,
                     frame_context,
                     frame_state,
                 );
@@ -700,7 +700,7 @@ fn request_resources_for_prim(
     store: &mut PrimitiveStore,
     prim_instance: &mut PrimitiveInstance,
     prim_spatial_node_index: SpatialNodeIndex,
-    prim_world_rect: WorldRect,
+    world_culling_rect: WorldRect,
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
 ) {
@@ -753,17 +753,11 @@ fn request_resources_for_prim(
                         .intersection(&common_data.prim_rect).unwrap();
                     image_instance.tight_local_clip_rect = tight_clip_rect;
 
-                    let map_local_to_world = SpaceMapper::new_with_target(
-                        ROOT_SPATIAL_NODE_INDEX,
-                        prim_spatial_node_index,
-                        frame_context.global_screen_world_rect,
-                        frame_context.spatial_tree,
-                    );
-
                     let visible_rect = compute_conservative_visible_rect(
-                        &tight_clip_rect,
-                        prim_world_rect,
-                        &map_local_to_world,
+                        &prim_instance.vis.clip_chain,
+                        world_culling_rect,
+                        prim_spatial_node_index,
+                        frame_context.spatial_tree,
                     );
 
                     let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
@@ -850,13 +844,47 @@ fn edge_flags_for_tile_spacing(tile_spacing: &LayoutSize) -> EdgeAaSegmentMask {
 }
 
 pub fn compute_conservative_visible_rect(
-    local_clip_rect: &LayoutRect,
+    clip_chain: &ClipChainInstance,
     world_culling_rect: WorldRect,
-    map_local_to_world: &SpaceMapper<LayoutPixel, WorldPixel>,
+    prim_spatial_node_index: SpatialNodeIndex,
+    spatial_tree: &SpatialTree,
 ) -> LayoutRect {
-    if let Some(local_bounds) = map_local_to_world.unmap(&world_culling_rect) {
-        return local_clip_rect.intersection(&local_bounds).unwrap_or_else(LayoutRect::zero)
-    }
+    // Mapping from picture space -> world space
+    let map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
+        ROOT_SPATIAL_NODE_INDEX,
+        clip_chain.pic_spatial_node_index,
+        world_culling_rect,
+        spatial_tree,
+    );
 
-    *local_clip_rect
+    // Mapping from local space -> picture space
+    let map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
+        clip_chain.pic_spatial_node_index,
+        prim_spatial_node_index,
+        PictureRect::max_rect(),
+        spatial_tree,
+    );
+
+    // Unmap the world culling rect from world -> picture space. If this mapping fails due
+    // to matrix weirdness, best we can do is use the clip chain's local clip rect.
+    let pic_culling_rect = match map_pic_to_world.unmap(&world_culling_rect) {
+        Some(rect) => rect,
+        None => return clip_chain.local_clip_rect,
+    };
+
+    // Intersect the unmapped world culling rect with the primitive's clip chain rect that
+    // is in picture space (the clip-chain already takes into account the bounds of the
+    // primitive local_rect and local_clip_rect). If there is no intersection here, the
+    // primitive is not visible at all.
+    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect) {
+        Some(rect) => rect,
+        None => return LayoutRect::zero(),
+    };
+
+    // Unmap the picture culling rect from picture -> local space. If this mapping fails due
+    // to matrix weirdness, best we can do is use the clip chain's local clip rect.
+    match map_local_to_pic.unmap(&pic_culling_rect) {
+        Some(rect) => rect,
+        None => clip_chain.local_clip_rect,
+    }
 }

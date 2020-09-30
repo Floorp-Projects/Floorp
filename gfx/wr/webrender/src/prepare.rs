@@ -16,7 +16,7 @@ use smallvec::SmallVec;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};
-use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
@@ -35,7 +35,7 @@ use crate::segment::SegmentBuilder;
 use crate::space::SpaceMapper;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
 use crate::util::{clamp_to_scale_factor, pack_as_float, raster_rect_to_device_pixels};
-use crate::visibility::compute_conservative_visible_rect;
+use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility};
 
 
 const MAX_MASK_SIZE: f32 = 4096.0;
@@ -895,24 +895,16 @@ fn prepare_interned_prim_for_render(
                 // We are performing the decomposition on the CPU here, no need to
                 // have it in the shader.
                 prim_data.common.may_need_repetition = false;
-                let prim_info = &prim_instance.vis;
-
-                let map_local_to_world = SpaceMapper::new_with_target(
-                    ROOT_SPATIAL_NODE_INDEX,
-                    prim_spatial_node_index,
-                    frame_context.global_screen_world_rect,
-                    frame_context.spatial_tree,
-                );
 
                 gradient.visible_tiles_range = decompose_repeated_primitive(
-                    &prim_info.combined_local_clip_rect,
+                    &prim_instance.vis,
                     &prim_data.common.prim_rect,
-                    prim_info.clipped_world_rect,
+                    prim_spatial_node_index,
                     &prim_data.stretch_size,
                     &prim_data.tile_spacing,
                     frame_state,
                     &mut scratch.gradient_tiles,
-                    &map_local_to_world,
+                    &frame_context.spatial_tree,
                     &mut |_, mut request| {
                         request.push([
                             prim_data.start_point.x,
@@ -954,26 +946,17 @@ fn prepare_interned_prim_for_render(
             prim_data.update(frame_state);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
-                let prim_info = &prim_instance.vis;
-
-                let map_local_to_world = SpaceMapper::new_with_target(
-                    ROOT_SPATIAL_NODE_INDEX,
-                    prim_spatial_node_index,
-                    frame_context.global_screen_world_rect,
-                    frame_context.spatial_tree,
-                );
-
                 prim_data.common.may_need_repetition = false;
 
                 *visible_tiles_range = decompose_repeated_primitive(
-                    &prim_info.combined_local_clip_rect,
+                    &prim_instance.vis,
                     &prim_data.common.prim_rect,
-                    prim_info.clipped_world_rect,
+                    prim_spatial_node_index,
                     &prim_data.stretch_size,
                     &prim_data.tile_spacing,
                     frame_state,
                     &mut scratch.gradient_tiles,
-                    &map_local_to_world,
+                    &frame_context.spatial_tree,
                     &mut |_, mut request| {
                         request.push([
                             prim_data.center.x,
@@ -1015,26 +998,17 @@ fn prepare_interned_prim_for_render(
             prim_data.update(frame_state);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
-                let prim_info = &prim_instance.vis;
-
-                let map_local_to_world = SpaceMapper::new_with_target(
-                    ROOT_SPATIAL_NODE_INDEX,
-                    prim_spatial_node_index,
-                    frame_context.global_screen_world_rect,
-                    frame_context.spatial_tree,
-                );
-
                 prim_data.common.may_need_repetition = false;
 
                 *visible_tiles_range = decompose_repeated_primitive(
-                    &prim_info.combined_local_clip_rect,
+                    &prim_instance.vis,
                     &prim_data.common.prim_rect,
-                    prim_info.clipped_world_rect,
+                    prim_spatial_node_index,
                     &prim_data.stretch_size,
                     &prim_data.tile_spacing,
                     frame_state,
                     &mut scratch.gradient_tiles,
-                    &map_local_to_world,
+                    &frame_context.spatial_tree,
                     &mut |_, mut request| {
                         request.push([
                             prim_data.center.x,
@@ -1173,14 +1147,14 @@ fn write_segment<F>(
 }
 
 fn decompose_repeated_primitive(
-    combined_local_clip_rect: &LayoutRect,
+    prim_vis: &PrimitiveVisibility,
     prim_local_rect: &LayoutRect,
-    prim_world_rect: WorldRect,
+    prim_spatial_node_index: SpatialNodeIndex,
     stretch_size: &LayoutSize,
     tile_spacing: &LayoutSize,
     frame_state: &mut FrameBuildingState,
     gradient_tiles: &mut GradientTileStorage,
-    map_local_to_world: &SpaceMapper<LayoutPixel, WorldPixel>,
+    spatial_tree: &SpatialTree,
     callback: &mut dyn FnMut(&LayoutRect, GpuDataRequest),
 ) -> GradientTileRange {
     let mut visible_tiles = Vec::new();
@@ -1188,13 +1162,15 @@ fn decompose_repeated_primitive(
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
     // rect and we want to clip these extra parts out.
-    let tight_clip_rect = combined_local_clip_rect
+    let tight_clip_rect = prim_vis
+        .combined_local_clip_rect
         .intersection(prim_local_rect).unwrap();
 
     let visible_rect = compute_conservative_visible_rect(
-        &tight_clip_rect,
-        prim_world_rect,
-        map_local_to_world,
+        &prim_vis.clip_chain,
+        frame_state.current_dirty_region().combined,
+        prim_spatial_node_index,
+        spatial_tree,
     );
     let stride = *stretch_size + *tile_spacing;
 
