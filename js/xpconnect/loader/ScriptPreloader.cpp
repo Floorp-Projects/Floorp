@@ -256,7 +256,7 @@ void ScriptPreloader::Cleanup() {
 }
 
 void ScriptPreloader::StartCacheWrite() {
-  MOZ_ASSERT(!mSaveThread);
+  MOZ_DIAGNOSTIC_ASSERT(!mSaveThread);
 
   Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread), this);
 
@@ -313,7 +313,7 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     MOZ_ASSERT(mStartupFinished);
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    if (mChildCache) {
+    if (mChildCache && !mSaveComplete && !mSaveThread) {
       StartCacheWrite();
     }
   } else if (mContentStartupFinishedTopic.Equals(topic)) {
