@@ -11,12 +11,13 @@ use std::ops::{Index, IndexMut, Range};
 use std::rc::Rc;
 use std::time::Instant;
 
-use neqo_common::{hex, qdebug, qinfo, qtrace, Role};
+use neqo_common::{hex, hex_snip_middle, qdebug, qinfo, qtrace, Encoder, Role};
 use neqo_crypto::{
     aead::Aead, hkdf, hp::HpKey, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record,
-    RecordList, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
-    TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
-    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
+    RecordList, ResumptionToken, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256,
+    TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
+    TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
+    TLS_VERSION_1_3,
 };
 
 use crate::frame::Frame;
@@ -24,7 +25,7 @@ use crate::packet::{PacketNumber, QuicVersion};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
-use crate::tparams::{TpZeroRttChecker, TransportParametersHandler};
+use crate::tparams::{TpZeroRttChecker, TransportParameters, TransportParametersHandler};
 use crate::tracking::PNSpace;
 use crate::{Error, Res};
 
@@ -243,6 +244,40 @@ impl Crypto {
         self.streams.discard(space);
         self.states.discard(space)
     }
+
+    pub fn create_resumption_token(
+        &mut self,
+        new_token: Option<Vec<u8>>,
+        tps: &TransportParameters,
+        rtt: u64,
+    ) -> Option<ResumptionToken> {
+        if let Agent::Client(ref mut c) = self.tls {
+            if let Some(ref t) = c.resumption_token() {
+                qtrace!("TLS token {}", hex(t.as_ref()));
+                let mut enc = Encoder::default();
+                enc.encode_varint(rtt);
+                enc.encode_vvec_with(|enc_inner| {
+                    tps.encode(enc_inner);
+                });
+                enc.encode_vvec(new_token.as_ref().map_or(&[], |t| &t[..]));
+                enc.encode(t.as_ref());
+                qinfo!("resumption token {}", hex_snip_middle(&enc[..]));
+                Some(ResumptionToken::new(enc.into(), t.expiration_time()))
+            } else {
+                None
+            }
+        } else {
+            unreachable!("It is a server.");
+        }
+    }
+
+    pub fn has_resumption_token(&self) -> bool {
+        if let Agent::Client(c) = &self.tls {
+            c.has_resumption_token()
+        } else {
+            unreachable!("It is a server.");
+        }
+    }
 }
 
 impl ::std::fmt::Display for Crypto {
@@ -311,13 +346,13 @@ impl CryptoDxState {
             0xc3, 0xee, 0xf7, 0x12, 0xc7, 0x2e, 0xbb, 0x5a, 0x11, 0xa7, 0xd2, 0x43, 0x2b, 0xb4,
             0x63, 0x65, 0xbe, 0xf9, 0xf5, 0x02,
         ];
-        const INITIAL_SALT_29: &[u8] = &[
+        const INITIAL_SALT_29_30: &[u8] = &[
             0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
             0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
         ];
         let salt = match quic_version {
             QuicVersion::Draft27 | QuicVersion::Draft28 => INITIAL_SALT_27,
-            QuicVersion::Draft29 => INITIAL_SALT_29,
+            QuicVersion::Draft29 | QuicVersion::Draft30 => INITIAL_SALT_29_30,
         };
         let cipher = TLS_AES_128_GCM_SHA256;
         let initial_secret = hkdf::extract(

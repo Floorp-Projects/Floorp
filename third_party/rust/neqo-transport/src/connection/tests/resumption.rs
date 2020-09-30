@@ -5,8 +5,8 @@
 // except according to those terms.
 
 use super::{
-    connect, connect_with_rtt, default_client, default_server, exchange_ticket, send_something,
-    AT_LEAST_PTO,
+    connect, connect_with_rtt, default_client, default_server, exchange_ticket, get_tokens,
+    send_something, AT_LEAST_PTO,
 };
 use crate::addr_valid::{AddressValidation, ValidateAddress};
 
@@ -24,7 +24,7 @@ fn resume() {
     let token = exchange_ticket(&mut client, &mut server, now());
     let mut client = default_client();
     client
-        .enable_resumption(now(), &token[..])
+        .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = default_server();
     connect(&mut client, &mut server);
@@ -46,7 +46,7 @@ fn remember_smoothed_rtt() {
     let token = exchange_ticket(&mut client, &mut server, now);
     let mut client = default_client();
     let mut server = default_server();
-    client.enable_resumption(now, &token[..]).unwrap();
+    client.enable_resumption(now, token).unwrap();
     assert_eq!(
         client.loss_recovery.rtt(),
         RTT1,
@@ -75,7 +75,7 @@ fn address_validation_token_resume() {
 
     let token = exchange_ticket(&mut client, &mut server, now);
     let mut client = default_client();
-    client.enable_resumption(now, &token[..]).unwrap();
+    client.enable_resumption(now, token).unwrap();
     let mut server = default_server();
 
     // Grab an Initial packet from the client.
@@ -89,11 +89,9 @@ fn address_validation_token_resume() {
     assert!(server.crypto.tls.info().unwrap().resumed());
 }
 
-fn can_resume(mut token: Option<Vec<u8>>, initial_has_token: bool) {
+fn can_resume(token: impl AsRef<[u8]>, initial_has_token: bool) {
     let mut client = default_client();
-    client
-        .enable_resumption(now(), token.take().as_ref().unwrap())
-        .unwrap();
+    client.enable_resumption(now(), token).unwrap();
     let initial = client.process_output(now()).dgram();
     assertions::assert_initial(initial.as_ref().unwrap(), initial_has_token);
 }
@@ -109,16 +107,32 @@ fn two_tickets() {
     server.send_ticket(now(), &[]).expect("send ticket2");
     let pkt = send_something(&mut server, now());
 
-    client.process_input(pkt, now());
-    let token1 = client.resumption_token();
-    assert!(token1.is_some());
-    let token2 = client.resumption_token();
-    assert!(token2.is_some());
-    assert_ne!(token1, token2);
-    assert!(client.resumption_token().is_none());
+    // process() will return an ack first
+    assert!(client.process(Some(pkt), now()).dgram().is_some());
+    // We do not have a ResumptionToken event yet, because NEW_TOKEN was not sent.
+    assert_eq!(get_tokens(&mut client).len(), 0);
 
-    can_resume(token1, false);
-    can_resume(token2, false);
+    // We need to wait for release_resumption_token_timer to expire. The timer will be
+    // set to 3 * PTO
+    let mut now = now() + 3 * client.get_pto();
+    let _ = client.process(None, now);
+    let mut recv_tokens = get_tokens(&mut client);
+    assert_eq!(recv_tokens.len(), 1);
+    let token1 = recv_tokens.pop().unwrap();
+    // Wai for anottheer 3 * PTO to get the nex okeen.
+    now += 3 * client.get_pto();
+    let _ = client.process(None, now);
+    let mut recv_tokens = get_tokens(&mut client);
+    assert_eq!(recv_tokens.len(), 1);
+    let token2 = recv_tokens.pop().unwrap();
+    // Wai for next 3 * PTO, but now there are no more tokens.
+    now += 3 * client.get_pto();
+    let _ = client.process(None, now);
+    assert_eq!(get_tokens(&mut client).len(), 0);
+    assert_ne!(token1.as_ref(), token2.as_ref());
+
+    can_resume(&token1, false);
+    can_resume(&token2, false);
 }
 
 #[test]
@@ -136,11 +150,12 @@ fn two_tickets_and_tokens() {
     let pkt = send_something(&mut server, now());
 
     client.process_input(pkt, now());
-    let token1 = client.resumption_token();
-    let token2 = client.resumption_token();
-    assert_ne!(token1, token2);
-    assert!(client.resumption_token().is_none());
+    let mut all_tokens = get_tokens(&mut client);
+    assert_eq!(all_tokens.len(), 2);
+    let token1 = all_tokens.pop().unwrap();
+    let token2 = all_tokens.pop().unwrap();
+    assert_ne!(token1.as_ref(), token2.as_ref());
 
-    can_resume(token1, true);
-    can_resume(token2, true);
+    can_resume(&token1, true);
+    can_resume(&token2, true);
 }

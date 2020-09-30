@@ -92,6 +92,7 @@ pub enum QuicVersion {
     Draft27,
     Draft28,
     Draft29,
+    Draft30,
 }
 
 impl QuicVersion {
@@ -100,6 +101,7 @@ impl QuicVersion {
             Self::Draft27 => 0xff00_0000 + 27,
             Self::Draft28 => 0xff00_0000 + 28,
             Self::Draft29 => 0xff00_0000 + 29,
+            Self::Draft30 => 0xff00_0000 + 30,
         }
     }
 }
@@ -120,6 +122,8 @@ impl TryFrom<Version> for QuicVersion {
             Ok(Self::Draft28)
         } else if ver == 0xff00_0000 + 29 {
             Ok(Self::Draft29)
+        } else if ver == 0xff00_0000 + 30 {
+            Ok(Self::Draft30)
         } else {
             Err(Error::VersionNegotiation)
         }
@@ -336,6 +340,7 @@ impl PacketBuilder {
         encoder.encode_uint(4, QuicVersion::Draft27.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft28.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft29.as_u32());
+        encoder.encode_uint(4, QuicVersion::Draft30.as_u32());
         // Add a greased version, using the randomness already generated.
         for g in &mut grease[..4] {
             *g = *g & 0xf0 | 0x0a;
@@ -1018,6 +1023,12 @@ mod tests {
         0x8a, 0xa4, 0x57, 0x5e, 0x1e, 0x49,
     ];
 
+    const SAMPLE_RETRY_30: &[u8] = &[
+        0xff, 0xff, 0x00, 0x00, 0x1e, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x2d, 0x3e, 0x04, 0x5d, 0x6d, 0x39, 0x20, 0x67, 0x89, 0x94,
+        0x37, 0x10, 0x8c, 0xe0, 0x0a, 0x61,
+    ];
+
     const RETRY_TOKEN: &[u8] = b"token";
 
     fn build_retry_single(quic_version: QuicVersion, sample_retry: &[u8]) {
@@ -1057,6 +1068,11 @@ mod tests {
     }
 
     #[test]
+    fn build_retry_30() {
+        build_retry_single(QuicVersion::Draft30, SAMPLE_RETRY_30);
+    }
+
+    #[test]
     fn build_retry_multiple() {
         // Run the build_retry test a few times.
         // Odds are approximately 1 in 8 that the full comparison doesn't happen
@@ -1065,6 +1081,7 @@ mod tests {
             build_retry_27();
             build_retry_28();
             build_retry_29();
+            build_retry_30();
         }
     }
 
@@ -1093,6 +1110,11 @@ mod tests {
     #[test]
     fn decode_retry_29() {
         decode_retry(QuicVersion::Draft29, SAMPLE_RETRY_29);
+    }
+
+    #[test]
+    fn decode_retry_30() {
+        decode_retry(QuicVersion::Draft30, SAMPLE_RETRY_30);
     }
 
     /// Check some packets that are clearly not valid Retry packets.
@@ -1131,7 +1153,7 @@ mod tests {
     const SAMPLE_VN: &[u8] = &[
         0x80, 0x00, 0x00, 0x00, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x08,
         0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0xff, 0x00, 0x00, 0x1b, 0xff, 0x00, 0x00,
-        0x1c, 0xff, 0x00, 0x00, 0x1d, 0x0a, 0x0a, 0x0a, 0x0a,
+        0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0x0a, 0x0a, 0x0a, 0x0a,
     ];
 
     #[test]

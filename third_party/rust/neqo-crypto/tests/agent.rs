@@ -271,7 +271,7 @@ fn resume() {
     let mut server = Server::new(&["key"]).expect("should create second server");
 
     client
-        .enable_resumption(&token[..])
+        .enable_resumption(token)
         .expect("should accept token");
     connect(&mut client, &mut server);
 
@@ -287,7 +287,7 @@ fn zero_rtt() {
     let mut client = Client::new("server.example").expect("should create client");
     let mut server = Server::new(&["key"]).expect("should create server");
     client
-        .enable_resumption(&token[..])
+        .enable_resumption(token)
         .expect("should accept token");
     client.enable_0rtt().expect("should enable 0-RTT");
     server
@@ -311,7 +311,7 @@ fn zero_rtt_no_eoed() {
     let mut client = Client::new("server.example").expect("should create client");
     let mut server = Server::new(&["key"]).expect("should create server");
     client
-        .enable_resumption(&token[..])
+        .enable_resumption(token)
         .expect("should accept token");
     client.enable_0rtt().expect("should enable 0-RTT");
     client
@@ -350,7 +350,7 @@ fn reject_zero_rtt() {
     let mut client = Client::new("server.example").expect("should create client");
     let mut server = Server::new(&["key"]).expect("should create server");
     client
-        .enable_resumption(&token[..])
+        .enable_resumption(token)
         .expect("should accept token");
     client.enable_0rtt().expect("should enable 0-RTT");
     server

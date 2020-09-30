@@ -26,7 +26,7 @@ fn zero_rtt_negotiate() {
     let token = exchange_ticket(&mut client, &mut server, now());
     let mut client = default_client();
     client
-        .enable_resumption(now(), &token[..])
+        .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = default_server();
     connect(&mut client, &mut server);
@@ -43,7 +43,7 @@ fn zero_rtt_send_recv() {
     let token = exchange_ticket(&mut client, &mut server, now());
     let mut client = default_client();
     client
-        .enable_resumption(now(), &token[..])
+        .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = default_server();
 
@@ -83,7 +83,7 @@ fn zero_rtt_send_coalesce() {
     let token = exchange_ticket(&mut client, &mut server, now());
     let mut client = default_client();
     client
-        .enable_resumption(now(), &token[..])
+        .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = default_server();
 
@@ -126,7 +126,7 @@ fn zero_rtt_send_reject() {
     let token = exchange_ticket(&mut client, &mut server, now());
     let mut client = default_client();
     client
-        .enable_resumption(now(), &token[..])
+        .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = Connection::new_server(
         test_fixture::DEFAULT_KEYS,
