@@ -76,7 +76,7 @@ class ContentProcessMessageManager : public nsIMessageSender,
     mMessageManager->GetInitialProcessData(aCx, aInitialProcessData, aError);
   }
 
-  already_AddRefed<ipc::SharedMap> SharedData();
+  already_AddRefed<ipc::SharedMap> GetSharedData();
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
 
