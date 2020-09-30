@@ -1,7 +1,7 @@
 [package]
 name = "mapped_hyph"
 description = "Hyphenation using precompiled memory-mapped tables"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Jonathan Kew <jfkthame@gmail.com>"]
 license = "MIT/Apache-2.0"
 edition = "2018"
