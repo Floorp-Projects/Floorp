@@ -11465,7 +11465,9 @@ bool CodeGenerator::generate() {
 
 static bool AddInlinedCompilations(HandleScript script,
                                    IonCompilationId compilationId,
-                                   const WarpSnapshot* snapshot) {
+                                   const WarpSnapshot* snapshot,
+                                   bool* isValid) {
+  MOZ_ASSERT(!*isValid);
   RecompileInfo recompileInfo(script, compilationId);
 
   for (const auto* scriptSnapshot : snapshot->scripts()) {
@@ -11473,6 +11475,18 @@ static bool AddInlinedCompilations(HandleScript script,
     if (inlinedScript == script) {
       continue;
     }
+
+    // TODO(post-Warp): This matches FinishCompilation and is necessary to
+    // ensure in-progress compilations are canceled when an inlined functon
+    // becomes a debuggee. See the breakpoint-14.js jit-test.
+    // When TI is gone, try to clean this up by moving AddInlinedCompilations to
+    // WarpOracle so that we can handle this as part of addPendingRecompile
+    // instead of requiring this separate check.
+    if (inlinedScript->isDebuggee()) {
+      *isValid = false;
+      return true;
+    }
+
     AutoSweepJitScript sweep(inlinedScript);
     if (!inlinedScript->jitScript()->addInlinedCompilation(sweep,
                                                            recompileInfo)) {
@@ -11480,6 +11494,7 @@ static bool AddInlinedCompilations(HandleScript script,
     }
   }
 
+  *isValid = true;
   return true;
 }
 
@@ -11526,19 +11541,20 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints,
   // prevent future compilations. Otherwise, if an invalidation occured, then
   // skip the current compilation.
   bool isValid = false;
-  if (!FinishCompilation(cx, script, constraints, compilationId, &isValid)) {
-    return false;
-  }
-  if (!isValid) {
-    return true;
-  }
 
   if (JitOptions.warpBuilder) {
     // If an inlined script is invalidated (for example, by attaching
     // a debugger), we must also invalidate the parent IonScript.
-    if (!AddInlinedCompilations(script, compilationId, snapshot)) {
+    if (!AddInlinedCompilations(script, compilationId, snapshot, &isValid)) {
       return false;
     }
+  } else {
+    if (!FinishCompilation(cx, script, constraints, compilationId, &isValid)) {
+      return false;
+    }
+  }
+  if (!isValid) {
+    return true;
   }
 
   // IonMonkey could have inferred better type information during
