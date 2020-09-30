@@ -1223,17 +1223,17 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
   bool foundBlocker = false;
   bool foundOOPListener = false;
   bc->PreOrderWalk([&](BrowsingContext* aBC) {
-    if (aBC->IsInProcess()) {
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      aBC->GetDocShell()->GetContentViewer(getter_AddRefs(contentViewer));
-      if (contentViewer &&
-          contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
-        foundBlocker = true;
-      }
-    } else {
+    if (!aBC->IsInProcess()) {
       WindowContext* wc = aBC->GetCurrentWindowContext();
       if (wc && wc->HasBeforeUnload()) {
         foundOOPListener = true;
+      }
+    } else if (aBC->GetDocShell()) {
+      nsCOMPtr<nsIContentViewer> contentViewer(
+          aBC->GetDocShell()->GetContentViewer());
+      if (contentViewer &&
+          contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
+        foundBlocker = true;
       }
     }
   });

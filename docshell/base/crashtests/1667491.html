@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+<script>
+  function go() {
+    const HTML = `
+<script>
+function go() {
+  document.body.appendChild(a)
+  window.frames[0].onbeforeunload = document.createElement("body").onload;
+  window.requestIdleCallback(() => {
+    window.close();
+    finish();
+  });
+}
+<\/script>
+<body onload="go()">
+<iframe id="a"></iframe>
+<iframe></iframe>
+    `;
+
+    let win = window.open(`data:text/html,${encodeURIComponent(HTML)}`);
+    win.finish = function() {
+      document.documentElement.removeAttribute("class");
+    };
+  }
+</script>
+</head>
+<body onload="go()">
+</body>
+</html>
