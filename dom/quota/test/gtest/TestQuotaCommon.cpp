@@ -1389,18 +1389,16 @@ TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
         ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-    EXPECT_NE(nullptr, extraInfoMap);
+    const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
 #endif
   }
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-  EXPECT_NE(nullptr, extraInfoMap);
+  const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
 #endif
 }
 
@@ -1413,29 +1411,25 @@ TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
     const auto extraInfo =
         ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
 
-#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-    EXPECT_NE(nullptr, extraInfoMap);
-#endif
-
     {
       const auto extraInfo =
           ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, nestedText};
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-      EXPECT_EQ(nestedText, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+      const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+      EXPECT_EQ(nestedText, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
 #endif
     }
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+    const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
 #endif
   }
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-  EXPECT_NE(nullptr, extraInfoMap);
+  const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
 #endif
 }

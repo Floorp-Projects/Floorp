@@ -960,63 +960,51 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            int32_t aSourceLine);
 #endif
 
-// XXX Since this uses thread_local, we currently disable it on android, see Bug
-// 1324316
-//#if (defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)) &&
-//! defined(MOZ_WIDGET_ANDROID)
-//#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-//#endif
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#endif
 
 struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   static constexpr const char kTagQuery[] = "query";
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
-  using ScopedLogExtraInfoMap = std::map<const char*, nsCString>;
+ private:
+  static auto FindSlot(const char* aTag);
 
+ public:
   template <size_t N>
   ScopedLogExtraInfo(const char (&aTag)[N], const nsACString& aExtraInfo)
-      : mTag{aTag} {
-    AddInfo(aTag, aExtraInfo);
+      : mTag{aTag}, mCurrentValue{aExtraInfo} {
+    // Initialize is currently only called in the parent process, we could call
+    // it directly from nsLayoutStatics::Initialize in the content process to
+    // allow use of ScopedLogExtraInfo in that too. The check in GetExtraInfoMap
+    // must be removed then.
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    AddInfo();
   }
 
-  ~ScopedLogExtraInfo() {
-    if (mTag) {
-      if (mPreviousValue.IsEmpty()) {
-        sInfos.erase(mTag);
-      } else {
-        sInfos.find(mTag)->second = mPreviousValue;
-      }
-    }
-  }
+  ~ScopedLogExtraInfo();
 
-  ScopedLogExtraInfo(ScopedLogExtraInfo&& aOther)
-      : mTag(aOther.mTag), mPreviousValue(std::move(aOther.mPreviousValue)) {
-    aOther.mTag = nullptr;
-  }
+  ScopedLogExtraInfo(ScopedLogExtraInfo&& aOther);
   ScopedLogExtraInfo& operator=(ScopedLogExtraInfo&& aOther) = delete;
 
   ScopedLogExtraInfo(const ScopedLogExtraInfo&) = delete;
   ScopedLogExtraInfo& operator=(const ScopedLogExtraInfo&) = delete;
 
-  static const ScopedLogExtraInfoMap* GetExtraInfoMap() { return &sInfos; }
+  using ScopedLogExtraInfoMap = std::map<const char*, const nsACString*>;
+  static ScopedLogExtraInfoMap GetExtraInfoMap();
+
+  static void Initialize();
 
  private:
   const char* mTag;
-  nsCString mPreviousValue;
+  const nsACString* mPreviousValue;
+  nsCString mCurrentValue;
 
-  inline static thread_local ScopedLogExtraInfoMap sInfos;
+  static MOZ_THREAD_LOCAL(const nsACString*) sQueryValue;
 
-  void AddInfo(const char* aTag, const nsACString& aExtraInfo) {
-    auto foundIt = sInfos.find(aTag);
-
-    if (foundIt != sInfos.end()) {
-      mPreviousValue = std::move(foundIt->second);
-      foundIt->second = aExtraInfo;
-    } else {
-      sInfos.emplace(aTag, aExtraInfo);
-    }
-  }
-
+  void AddInfo();
 #else
   template <size_t N>
   ScopedLogExtraInfo(const char (&aTag)[N], const nsACString& aExtraInfo) {}
