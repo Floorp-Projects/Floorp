@@ -482,6 +482,11 @@ def get_raptor_test_list(args, oskey):
                 next_test['page_timeout']) * LIVE_SITE_TIMEOUT_MULTIPLIER
             LOG.info("using live sites so using page timeout of %dms" % next_test['page_timeout'])
 
+        if not args.browsertime and "browsertime" in next_test.get("manifest", ""):
+            raise Exception(
+                "%s test can only be run with --browsertime" % next_test.get("name", "Unknown")
+            )
+
         # browsertime doesn't use the 'measure' test ini setting; however just for the sake
         # of supporting both webext and browsertime, just provide a dummy 'measure' setting
         # here to prevent having to check in multiple places; it has no effect on what
