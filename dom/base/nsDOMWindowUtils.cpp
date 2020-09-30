@@ -1283,8 +1283,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsINode* aRoot,
 static already_AddRefed<DataSourceSurface> CanvasToDataSourceSurface(
     HTMLCanvasElement* aCanvas) {
   MOZ_ASSERT(aCanvas);
-  nsLayoutUtils::SurfaceFromElementResult result =
-      nsLayoutUtils::SurfaceFromElement(aCanvas);
+  SurfaceFromElementResult result = nsLayoutUtils::SurfaceFromElement(aCanvas);
 
   MOZ_ASSERT(result.GetSourceSurface());
   return result.GetSourceSurface()->GetDataSurface();

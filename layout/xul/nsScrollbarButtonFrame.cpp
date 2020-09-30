@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsSliderFrame.h"
 #include "nsScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"

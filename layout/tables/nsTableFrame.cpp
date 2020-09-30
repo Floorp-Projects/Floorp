@@ -47,6 +47,7 @@
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleChangeList.h"
 #include <algorithm>
 
@@ -1168,6 +1169,16 @@ void nsDisplayTableItem::ComputeInvalidationRegion(
   }
 
   nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
+}
+
+nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
+    : mBuilder(aBuilder) {
+  mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
+  mozilla::DebugOnly<const nsIFrame*> reference =
+      mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(reference, aTable));
+  mDirtyRect = mBuilder->GetDirtyRect();
 }
 
 // A display item that draws all collapsed borders for a table.

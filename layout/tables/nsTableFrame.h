@@ -69,14 +69,7 @@ class nsDisplayTableBackgroundSet {
 
   nsDisplayList* ColBackgrounds() { return &mColBackgrounds; }
 
-  nsDisplayTableBackgroundSet(nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
-      : mBuilder(aBuilder) {
-    mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
-    mozilla::DebugOnly<const nsIFrame*> reference =
-        mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
-    MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(reference, aTable));
-    mDirtyRect = mBuilder->GetDirtyRect();
-  }
+  nsDisplayTableBackgroundSet(nsDisplayListBuilder* aBuilder, nsIFrame* aTable);
 
   ~nsDisplayTableBackgroundSet() {
     mozilla::DebugOnly<nsDisplayTableBackgroundSet*> result =

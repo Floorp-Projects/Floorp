@@ -89,6 +89,7 @@ EXPORTS.mozilla += [
     'ScrollTypes.h',
     'ShapeUtils.h',
     'StaticPresData.h',
+    'SurfaceFromElementResult.h',
     'ViewportUtils.h',
 ]
 

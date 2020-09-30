@@ -19,6 +19,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "FilterDescription.h"
@@ -27,7 +28,6 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsBidi.h"
 #include "nsColor.h"
-#include "nsLayoutUtils.h"
 
 class gfxFontGroup;
 class nsGlobalWindowInner;
@@ -675,15 +675,14 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
    */
   bool PatternIsOpaque(Style aStyle, bool* aIsColor = nullptr) const;
 
-  nsLayoutUtils::SurfaceFromElementResult CachedSurfaceFromElement(
-      Element* aElement);
+  SurfaceFromElementResult CachedSurfaceFromElement(Element* aElement);
 
   void DrawImage(const CanvasImageSource& aImgElt, double aSx, double aSy,
                  double aSw, double aSh, double aDx, double aDy, double aDw,
                  double aDh, uint8_t aOptional_argc,
                  mozilla::ErrorResult& aError);
 
-  void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& aImage,
+  void DrawDirectlyToCanvas(const DirectDrawInfo& aImage,
                             mozilla::gfx::Rect* aBounds,
                             mozilla::gfx::Rect aDest, mozilla::gfx::Rect aSrc,
                             gfx::IntSize aImgSize);
