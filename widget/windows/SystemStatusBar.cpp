@@ -22,11 +22,14 @@ namespace mozilla::widget {
 
 using mozilla::LinkedListElement;
 using mozilla::dom::Element;
+using mozilla::widget::IconLoaderListenerWin;
 
 class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
-                             public mozilla::widget::IconLoaderListenerWin {
+                             public IconLoaderListenerWin {
  public:
   explicit StatusBarEntry(Element* aMenu);
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(StatusBarEntry)
   nsresult Init();
   LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
   const Element* GetMenu() { return mMenu; };
@@ -41,6 +44,24 @@ class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
   NOTIFYICONDATAW mIconData;
   boolean mInitted;
 };
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(StatusBarEntry)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StatusBarEntry)
+  tmp->OnComplete();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StatusBarEntry)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIconLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIconLoaderHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenu)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StatusBarEntry)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(StatusBarEntry)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(StatusBarEntry)
 
 StatusBarEntry::StatusBarEntry(Element* aMenu) : mMenu(aMenu), mInitted(false) {
   mIconData = {/* cbSize */ sizeof(NOTIFYICONDATA),
@@ -111,9 +132,6 @@ nsresult StatusBarEntry::Init() {
   mIconLoaderHelper = new IconLoaderHelperWin(this);
   nsIntRect rect;
   mIconLoader = new IconLoader(mIconLoaderHelper, mMenu, rect);
-  if (!mIconLoader || !mIconLoaderHelper) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (iconURI) {
     rv = mIconLoader->LoadIcon(iconURI);
