@@ -719,33 +719,6 @@ description#identity-popup-content-verifier,
   list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
 }
 
-/* Content Blocking action button */
-
-.tracking-protection-button {
-  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
-  appearance: none;
-  margin-block: 1em 0;
-  margin-inline: 0 8px;
-  display: none;
-  height: 32px;
-  background-color: var(--arrowpanel-dimmed);
-  /* !important to override -moz-mac-buttonactivetext from applying on :active on mac
-   and -moz-buttonhovertext from applying on :hover on linux. */
-  color: inherit !important;
-}
-
-.tracking-protection-button:hover {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-.tracking-protection-button:hover:active {
-  background-color: var(--arrowpanel-dimmed-even-further);
-}
-
-.tracking-protection-button:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
 /* PERMISSIONS */
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {

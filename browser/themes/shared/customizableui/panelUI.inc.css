@@ -1129,8 +1129,7 @@ panelview .toolbarbutton-1,
   float: inline-end;
 }
 
-.PanelUI-subView .subviewbutton-nav::after,
-#protections-popup-message button::after {
+.PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill, fill-opacity;
   content: url(chrome://browser/skin/back-12.svg);
   fill: currentColor;
@@ -1139,22 +1138,13 @@ panelview .toolbarbutton-1,
   transform: translateY(1px);
 }
 
-#protections-popup-message button::after {
-  transform: scale(1.5) translateY(1px);
-}
-
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
   transform: scaleX(-1) translateY(1px);
 }
 
-#protections-popup-message button:-moz-locale-dir(ltr)::after {
-  transform: scaleX(-1) translateY(1px) scale(1.5);
-}
-
 .subviewbutton[shortcut]::after,
 .subviewbutton[shortcut]::after,
-.PanelUI-subView .subviewbutton-nav::after,
-#protections-popup-message button::after {
+.PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
 }
 
@@ -2056,12 +2046,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-whatsNew .text-link:active {
   color: #0060df;
-}
-
-#protections-popup-message button {
-  color: white;
-  width: 100%;
-  text-align: end;
 }
 
 #PanelUI-profiler {
