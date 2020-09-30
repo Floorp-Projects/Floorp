@@ -67,8 +67,9 @@ void Muxer::AddEncodedAudioFrame(EncodedFrame* aFrame) {
   MOZ_ASSERT(mHasAudio);
   mEncodedAudioFrames.Push(aFrame);
   LOG(LogLevel::Verbose,
-      "%p Added audio frame of type %u, [start %" PRIu64 ", end %" PRIu64 ")",
-      this, aFrame->mFrameType, aFrame->mTime, aFrame->GetEndTime());
+      "%p Added audio frame of type %u, [start %.2f, end %.2f)", this,
+      aFrame->mFrameType, aFrame->mTime.ToSeconds(),
+      aFrame->GetEndTime().ToSeconds());
 }
 
 void Muxer::AddEncodedVideoFrame(EncodedFrame* aFrame) {
@@ -76,8 +77,9 @@ void Muxer::AddEncodedVideoFrame(EncodedFrame* aFrame) {
   MOZ_ASSERT(mHasVideo);
   mEncodedVideoFrames.Push(aFrame);
   LOG(LogLevel::Verbose,
-      "%p Added video frame of type %u, [start %" PRIu64 ", end %" PRIu64 ")",
-      this, aFrame->mFrameType, aFrame->mTime, aFrame->GetEndTime());
+      "%p Added audio frame of type %u, [start %.2f, end %.2f)", this,
+      aFrame->mFrameType, aFrame->mTime.ToSeconds(),
+      aFrame->GetEndTime().ToSeconds());
 }
 
 void Muxer::AudioEndOfStream() {
@@ -147,8 +149,8 @@ nsresult Muxer::Mux() {
   // The times at which we expect our next video and audio frames. These are
   // based on the time + duration (GetEndTime()) of the last seen frames.
   // Assumes that the encoders write the correct duration for frames.;
-  uint64_t expectedNextVideoTime = 0;
-  uint64_t expectedNextAudioTime = 0;
+  media::TimeUnit expectedNextVideoTime;
+  media::TimeUnit expectedNextAudioTime;
   // Interleave frames until we're out of audio or video
   while (mEncodedVideoFrames.GetSize() > 0 &&
          mEncodedAudioFrames.GetSize() > 0) {

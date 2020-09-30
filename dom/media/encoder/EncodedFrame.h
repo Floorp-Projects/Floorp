@@ -8,6 +8,7 @@
 
 #include "nsISupportsImpl.h"
 #include "mozilla/media/MediaUtils.h"
+#include "TimeUnits.h"
 #include "VideoUtils.h"
 
 namespace mozilla {
@@ -24,8 +25,9 @@ class EncodedFrame final {
   };
   using ConstFrameData = const media::Refcountable<nsTArray<uint8_t>>;
   using FrameData = media::Refcountable<nsTArray<uint8_t>>;
-  EncodedFrame(uint64_t aTime, uint64_t aDuration, uint64_t aDurationBase,
-               FrameType aFrameType, RefPtr<ConstFrameData> aData)
+  EncodedFrame(const media::TimeUnit& aTime, uint64_t aDuration,
+               uint64_t aDurationBase, FrameType aFrameType,
+               RefPtr<ConstFrameData> aData)
       : mTime(aTime),
         mDuration(aDuration),
         mDurationBase(aDurationBase),
@@ -37,7 +39,7 @@ class EncodedFrame final {
     MOZ_ASSERT_IF(mFrameType == OPUS_AUDIO_FRAME, mDurationBase == 48000);
   }
   // Timestamp in microseconds
-  const uint64_t mTime;
+  const media::TimeUnit mTime;
   // The playback duration of this packet in mDurationBase.
   const uint64_t mDuration;
   // The time base of mDuration.
@@ -48,8 +50,8 @@ class EncodedFrame final {
   const RefPtr<ConstFrameData> mFrameData;
 
   // The end time of the frame in microseconds.
-  uint64_t GetEndTime() const {
-    return mTime + FramesToUsecs(mDuration, mDurationBase).value();
+  media::TimeUnit GetEndTime() const {
+    return mTime + FramesToTimeUnit(mDuration, mDurationBase);
   }
 
  private:

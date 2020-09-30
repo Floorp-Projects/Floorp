@@ -251,8 +251,9 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
 
   if (!frameData->IsEmpty()) {
     // Convert the timestamp and duration to Usecs.
-    CheckedInt64 timestamp = FramesToUsecs(pkt->data.frame.pts, mTrackRate);
-    if (!timestamp.isValid()) {
+    media::TimeUnit timestamp =
+        FramesToTimeUnit(pkt->data.frame.pts, mTrackRate);
+    if (!timestamp.IsValid()) {
       NS_ERROR("Microsecond timestamp overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
@@ -263,15 +264,15 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
 
-    CheckedInt64 totalDuration =
-        FramesToUsecs(mExtractedDuration.value(), mTrackRate);
-    if (!totalDuration.isValid()) {
+    media::TimeUnit totalDuration =
+        FramesToTimeUnit(mExtractedDuration.value(), mTrackRate);
+    if (!totalDuration.IsValid()) {
       NS_ERROR("Duration overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
 
-    CheckedInt64 duration = totalDuration - mExtractedDurationUs;
-    if (!duration.isValid()) {
+    media::TimeUnit duration = totalDuration - mExtractedDurationUs;
+    if (!duration.IsValid()) {
       NS_ERROR("Duration overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
@@ -279,13 +280,12 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     mExtractedDurationUs = totalDuration;
 
     VP8LOG(LogLevel::Verbose,
-           "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64
-           ", FrameType %d",
-           timestamp.value(), duration.value(), frameType);
+           "GetEncodedPartitions TimeStamp %.2f, Duration %.2f, FrameType %d",
+           timestamp.ToSeconds(), duration.ToSeconds(), frameType);
 
     // Copy the encoded data to aData.
     aData.AppendElement(MakeRefPtr<EncodedFrame>(
-        timestamp.value(), duration.value(), PR_USEC_PER_SEC, frameType,
+        timestamp, duration.ToMicroseconds(), PR_USEC_PER_SEC, frameType,
         std::move(frameData)));
   }
 
@@ -517,11 +517,11 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
       }
 
-      CheckedInt64 totalDuration =
-          FramesToUsecs(mExtractedDuration.value(), mTrackRate);
-      CheckedInt64 skippedDuration = totalDuration - mExtractedDurationUs;
+      media::TimeUnit totalDuration =
+          FramesToTimeUnit(mExtractedDuration.value(), mTrackRate);
+      media::TimeUnit skippedDuration = totalDuration - mExtractedDurationUs;
       mExtractedDurationUs = totalDuration;
-      if (!skippedDuration.isValid()) {
+      if (!skippedDuration.IsValid()) {
         NS_ERROR("skipped duration overflow");
         return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
       }
@@ -530,7 +530,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         auto& last = aData.LastElement();
         MOZ_DIAGNOSTIC_ASSERT(aData.LastElement());
         uint64_t longerDuration =
-            last->mDuration + static_cast<uint64_t>(skippedDuration.value());
+            last->mDuration + skippedDuration.ToMicroseconds();
         auto longerFrame = MakeRefPtr<EncodedFrame>(
             last->mTime, longerDuration, last->mDurationBase, last->mFrameType,
             last->mFrameData);

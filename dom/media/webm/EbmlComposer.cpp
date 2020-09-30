@@ -118,8 +118,8 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     return;
   }
 
-  int64_t timeCode =
-      aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
+  int64_t timeCode = aFrame->mTime.ToMicroseconds() / PR_USEC_PER_MSEC -
+                     mCurrentClusterTimecode;
 
   if (!mHasVideo && timeCode >= FLUSH_AUDIO_ONLY_AFTER_MS) {
     MOZ_ASSERT(mHasAudio);
@@ -145,12 +145,11 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
     mCurrentClusterLengthLoc = ebmlLoc.offset;
     // if timeCode didn't under/overflow before, it shouldn't after this
-    mCurrentClusterTimecode = aFrame->mTime / PR_USEC_PER_MSEC;
+    mCurrentClusterTimecode = aFrame->mTime.ToMicroseconds() / PR_USEC_PER_MSEC;
     Ebml_SerializeUnsigned(&ebml, Timecode, mCurrentClusterTimecode);
 
     // Can't under-/overflow now
-    timeCode =
-        aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
+    timeCode = 0;
   }
 
   writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode),
