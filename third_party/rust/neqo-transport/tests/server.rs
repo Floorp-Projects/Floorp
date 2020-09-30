@@ -13,12 +13,12 @@ use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
     hkdf,
     hp::HpKey,
-    AllowZeroRtt, AuthenticationStatus,
+    AllowZeroRtt, AuthenticationStatus, ResumptionToken,
 };
 use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
-    Connection, ConnectionError, Error, FixedConnectionIdManager, Output, QuicVersion, State,
-    StreamType,
+    Connection, ConnectionError, ConnectionEvent, Error, FixedConnectionIdManager, Output,
+    QuicVersion, State, StreamType,
 };
 use test_fixture::{self, assertions, default_client, now};
 
@@ -274,7 +274,7 @@ fn retry_expired() {
     assert!(dgram.is_none());
 }
 
-fn get_ticket(server: &mut Server) -> Vec<u8> {
+fn get_ticket(server: &mut Server) -> ResumptionToken {
     let mut client = default_client();
     let mut server_conn = connect(&mut client, server);
 
@@ -284,7 +284,16 @@ fn get_ticket(server: &mut Server) -> Vec<u8> {
 
     // Calling active_connections clears the set of active connections.
     assert_eq!(server.active_connections().len(), 1);
-    client.resumption_token().unwrap()
+    client
+        .events()
+        .find_map(|e| {
+            if let ConnectionEvent::ResumptionToken(token) = e {
+                Some(token)
+            } else {
+                None
+            }
+        })
+        .unwrap()
 }
 
 // Attempt a retry with 0-RTT, and have 0-RTT packets sent with the second ClientHello.

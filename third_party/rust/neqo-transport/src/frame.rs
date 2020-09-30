@@ -448,7 +448,9 @@ impl Frame {
                 reason_phrase,
             } => {
                 enc.encode_varint(error_code.code());
-                enc.encode_varint(*frame_type);
+                if let CloseError::Transport(_) = error_code {
+                    enc.encode_varint(*frame_type);
+                }
                 enc.encode_vvec(reason_phrase);
             }
             Self::HandshakeDone => (),
@@ -722,10 +724,17 @@ impl Frame {
                 Ok(Self::PathResponse { data: datav })
             }
             FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT | FRAME_TYPE_CONNECTION_CLOSE_APPLICATION => {
+                let error_code = CloseError::from_type_bit(t, d!(dec.decode_varint()));
+                let frame_type = if t == FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT {
+                    dv!(dec)
+                } else {
+                    0
+                };
+                let reason_phrase = d!(dec.decode_vvec()).to_vec(); // TODO(mt) unnecessary copy
                 Ok(Self::ConnectionClose {
-                    error_code: CloseError::from_type_bit(t, d!(dec.decode_varint())),
-                    frame_type: dv!(dec),
-                    reason_phrase: d!(dec.decode_vvec()).to_vec(), // TODO(mt) unnecessary copy
+                    error_code,
+                    frame_type,
+                    reason_phrase,
                 })
             }
             FRAME_TYPE_HANDSHAKE_DONE => Ok(Self::HandshakeDone),
@@ -985,22 +994,25 @@ mod tests {
     }
 
     #[test]
-    fn test_connection_close() {
-        let mut f = Frame::ConnectionClose {
+    fn connection_close_transport() {
+        let f = Frame::ConnectionClose {
             error_code: CloseError::Transport(0x5678),
             frame_type: 0x1234,
             reason_phrase: vec![0x01, 0x02, 0x03],
         };
 
         enc_dec(&f, "1c80005678523403010203");
+    }
 
-        f = Frame::ConnectionClose {
+    #[test]
+    fn connection_close_application() {
+        let f = Frame::ConnectionClose {
             error_code: CloseError::Application(0x5678),
-            frame_type: 0x1234,
+            frame_type: 0,
             reason_phrase: vec![0x01, 0x02, 0x03],
         };
 
-        enc_dec(&f, "1d80005678523403010203");
+        enc_dec(&f, "1d8000567803010203");
     }
 
     #[test]

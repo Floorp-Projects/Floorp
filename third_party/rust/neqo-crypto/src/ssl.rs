@@ -115,6 +115,17 @@ experimental_api!(SSL_SetResumptionTokenCallback(
     arg: *mut c_void,
 ));
 
+experimental_api!(SSL_GetResumptionTokenInfo(
+    token: *const u8,
+    token_len: c_uint,
+    info: *mut SSLResumptionTokenInfo,
+    len: c_uint,
+));
+
+experimental_api!(SSL_DestroyResumptionTokenInfo(
+    info: *mut SSLResumptionTokenInfo,
+));
+
 #[cfg(test)]
 mod tests {
     use super::{SSL_GetNumImplementedCiphers, SSL_NumImplementedCiphers};

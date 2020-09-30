@@ -13,6 +13,7 @@ use crate::cc::{CWND_MIN, MAX_DATAGRAM_SIZE, PACING_BURST_SIZE};
 use crate::frame::{Frame, StreamType};
 use crate::packet::PacketNumber;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;
+use crate::stats::MAX_PTO_COUNTS;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::{PNSpace, MAX_UNACKED_PKTS};
 
@@ -30,10 +31,16 @@ fn induce_persistent_congestion(
     // timer. This is rather brittle.
     now += AT_LEAST_PTO;
 
+    let mut pto_counts = [0; MAX_PTO_COUNTS];
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
     qtrace!([client], "first PTO");
     let (c_tx_dgrams, next_now) = fill_cwnd(client, 0, now);
     now = next_now;
     assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
+
+    pto_counts[0] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 
     qtrace!([client], "second PTO");
     now += AT_LEAST_PTO * 2;
@@ -41,11 +48,19 @@ fn induce_persistent_congestion(
     now = next_now;
     assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
 
+    pto_counts[0] = 0;
+    pto_counts[1] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
     qtrace!([client], "third PTO");
     now += AT_LEAST_PTO * 4;
     let (c_tx_dgrams, next_now) = fill_cwnd(client, 0, now);
     now = next_now;
     assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
+
+    pto_counts[1] = 0;
+    pto_counts[2] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 
     // Generate ACK
     let (s_tx_dgram, _) = ack_bytes(server, 0, c_tx_dgrams, now);

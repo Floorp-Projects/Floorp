@@ -166,9 +166,9 @@ impl Http3ServerHandler {
                             .connection_state_change(self.base_handler.state());
                     }
                 }
-                ConnectionEvent::AuthenticationNeeded | ConnectionEvent::ZeroRttRejected => {
-                    return Err(Error::HttpInternal)
-                }
+                ConnectionEvent::AuthenticationNeeded
+                | ConnectionEvent::ZeroRttRejected
+                | ConnectionEvent::ResumptionToken(..) => return Err(Error::HttpInternal),
                 ConnectionEvent::SendStreamWritable { .. }
                 | ConnectionEvent::SendStreamComplete { .. }
                 | ConnectionEvent::SendStreamCreatable { .. } => {}

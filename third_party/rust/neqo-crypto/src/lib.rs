@@ -36,8 +36,8 @@ mod ssl;
 mod time;
 
 pub use self::agent::{
-    Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, SecretAgent, SecretAgentInfo,
-    SecretAgentPreInfo, Server, ZeroRttCheckResult, ZeroRttChecker,
+    Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, ResumptionToken, SecretAgent,
+    SecretAgentInfo, SecretAgentPreInfo, Server, ZeroRttCheckResult, ZeroRttChecker,
 };
 pub use self::auth::AuthenticationStatus;
 pub use self::constants::*;

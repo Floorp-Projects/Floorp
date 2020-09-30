@@ -14,31 +14,49 @@ use crate::connection::State;
 use crate::frame::StreamType;
 use crate::stream_id::StreamId;
 use crate::AppError;
+use neqo_crypto::ResumptionToken;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub enum ConnectionEvent {
     /// Cert authentication needed
     AuthenticationNeeded,
     /// A new uni (read) or bidi stream has been opened by the peer.
-    NewStream { stream_id: StreamId },
+    NewStream {
+        stream_id: StreamId,
+    },
     /// Space available in the buffer for an application write to succeed.
-    SendStreamWritable { stream_id: StreamId },
+    SendStreamWritable {
+        stream_id: StreamId,
+    },
     /// New bytes available for reading.
-    RecvStreamReadable { stream_id: u64 },
+    RecvStreamReadable {
+        stream_id: u64,
+    },
     /// Peer reset the stream.
-    RecvStreamReset { stream_id: u64, app_error: AppError },
+    RecvStreamReset {
+        stream_id: u64,
+        app_error: AppError,
+    },
     /// Peer has sent STOP_SENDING
-    SendStreamStopSending { stream_id: u64, app_error: AppError },
+    SendStreamStopSending {
+        stream_id: u64,
+        app_error: AppError,
+    },
     /// Peer has acked everything sent on the stream.
-    SendStreamComplete { stream_id: u64 },
+    SendStreamComplete {
+        stream_id: u64,
+    },
     /// Peer increased MAX_STREAMS
-    SendStreamCreatable { stream_type: StreamType },
+    SendStreamCreatable {
+        stream_type: StreamType,
+    },
     /// Connection state change.
     StateChange(State),
     /// The server rejected 0-RTT.
     /// This event invalidates all state in streams that has been created.
     /// Any data written to streams needs to be written again.
     ZeroRttRejected,
+    ResumptionToken(ResumptionToken),
 }
 
 #[derive(Debug, Default, Clone)]
@@ -107,6 +125,10 @@ impl ConnectionEvents {
             _ => (),
         }
         self.insert(ConnectionEvent::StateChange(state));
+    }
+
+    pub fn client_resumption_token(&self, token: ResumptionToken) {
+        self.insert(ConnectionEvent::ResumptionToken(token));
     }
 
     pub fn client_0rtt_rejected(&self) {
