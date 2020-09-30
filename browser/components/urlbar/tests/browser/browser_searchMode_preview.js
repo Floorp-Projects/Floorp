@@ -8,6 +8,7 @@
 "use strict";
 
 const TEST_ENGINE_NAME = "Test";
+const TEST_ENGINE_DOMAIN = "example.com";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -20,7 +21,7 @@ add_task(async function setup() {
     TEST_ENGINE_NAME,
     {
       alias: "@test",
-      template: "http://example.com/?search={searchTerms}",
+      template: `http://${TEST_ENGINE_DOMAIN}/?search={searchTerms}`,
     }
   );
 
@@ -244,7 +245,7 @@ add_task(async function oneOff_downArrow() {
 // Tests that search mode is previewed when the user Alt+down arrows through the
 // one-offs. This subtest also highlights a keywordoffer result (the first Top
 // Site) before Alt+Arrowing to the one-offs. This checks that the search mode
-// previews from  keywordoffer results are overwritten by selected one-offs.
+// previews from keywordoffer results are overwritten by selected one-offs.
 add_task(async function oneOff_alt_downArrow() {
   // Add some visits to a URL so we have multiple Top Sites.
   await PlacesUtils.history.clear();
@@ -357,8 +358,8 @@ add_task(async function fullSearchMode_oneOff_downArrow() {
 
 // Tests that search mode is not previewed when the user is in full search mode
 // and alt+down arrows through the one-offs. This subtest also checks that
-// exiting full search while alt+arrowing through the one-offs enters search
-// mode preview for subsequent one-offs.
+// exiting full search mode while alt+arrowing through the one-offs enters
+// search mode preview for subsequent one-offs.
 add_task(async function fullSearchMode_oneOff_alt_downArrow() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,

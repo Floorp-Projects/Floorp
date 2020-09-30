@@ -2457,8 +2457,8 @@ class UrlbarInput {
       return null;
     }
 
-    // Search mode is determined by the result's keyword.
-    if (!result.payload.keyword) {
+    // Search mode is determined by the result's keyword or engine.
+    if (!result.payload.keyword && !result.payload.engine) {
       return null;
     }
 
