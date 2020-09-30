@@ -401,6 +401,10 @@ add_task(async function testAboutPage() {
   const cachedContent = JSON.stringify(CACHED_CONTENT);
   const cachedAddons = JSON.stringify(CACHED_ADDONS);
 
+  // Clear any previously generated archived ping before moving on
+  // with this test.
+  await TelemetryStorage.runCleanPingArchiveTask();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_TEST_CACHED_ADDONS, cachedAddons],
@@ -771,6 +775,10 @@ add_task(async function testEnrollmentPings() {
 
   // Clear any pending pings.
   await TelemetryStorage.testClearPendingPings();
+
+  // Clear any previously generated archived ping before moving on
+  // with this test.
+  await TelemetryStorage.runCleanPingArchiveTask();
 
   await BrowserTestUtils.withNewTab(
     {
