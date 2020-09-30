@@ -821,11 +821,11 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
 
 NS_IMETHODIMP
 nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
-    nsIPrintSettings** aGlobalPrintSettings) {
-  nsresult rv = GetGlobalPrintSettings(aGlobalPrintSettings);
+    nsIPrintSettings** aPrintSettings) {
+  nsresult rv = GetNewPrintSettings(aPrintSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIPrintSettings* settings = *aGlobalPrintSettings;
+  nsIPrintSettings* settings = *aPrintSettings;
 
   nsAutoString printerName;
   settings->GetPrinterName(printerName);
@@ -836,12 +836,6 @@ nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
   InitPrintSettingsFromPrinter(printerName, settings);
   InitPrintSettingsFromPrefs(settings, true, nsIPrintSettings::kInitSaveAll);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsService::GetGlobalPrintSettings(
-    nsIPrintSettings** aGlobalPrintSettings) {
-  return GetNewPrintSettings(aGlobalPrintSettings);
 }
 
 NS_IMETHODIMP

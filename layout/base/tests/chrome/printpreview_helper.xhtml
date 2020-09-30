@@ -69,7 +69,7 @@ function printpreview(options = {}) {
     }
   }
   var settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                       .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
+                       .getService(Ci.nsIPrintSettingsService).newPrintSettings;
   settings.showPrintProgress = false;
   settings.printBGColors = true;
   settings.headerStrLeft = "";
