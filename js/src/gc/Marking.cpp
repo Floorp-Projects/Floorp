@@ -1099,34 +1099,44 @@ void GCMarker::traverse(AccessorShape* thing) {
 }  // namespace js
 
 template <typename S, typename T>
-static void CheckTraversedEdge(S source, T* target) {
+static inline void CheckTraversedEdge(S source, T* target) {
+#ifdef DEBUG
   // Atoms and Symbols do not have or mark their internal pointers,
   // respectively.
   MOZ_ASSERT(!source->isPermanentAndMayBeShared());
 
-  // The Zones must match, unless the target is an atom.
-  MOZ_ASSERT_IF(
-      !target->isPermanentAndMayBeShared(),
-      target->zone()->isAtomsZone() || target->zone() == source->zone());
+  if (target->isPermanentAndMayBeShared()) {
+    MOZ_ASSERT(!target->maybeCompartment());
 
-  // If we are marking an atom, that atom must be marked in the source zone's
-  // atom bitmap.
-  MOZ_ASSERT_IF(!target->isPermanentAndMayBeShared() &&
-                    target->zone()->isAtomsZone() &&
-                    !source->zone()->isAtomsZone(),
-                target->runtimeFromAnyThread()->gc.atomMarking.atomIsMarked(
-                    source->zone(), reinterpret_cast<TenuredCell*>(target)));
+    // No further checks for parmanent/shared things.
+    return;
+  }
+
+  Zone* sourceZone = source->zone();
+  Zone* targetZone = target->zone();
 
   // Atoms and Symbols do not have access to a compartment pointer, or we'd need
   // to adjust the subsequent check to catch that case.
-  MOZ_ASSERT_IF(target->isPermanentAndMayBeShared(),
-                !target->maybeCompartment());
-  MOZ_ASSERT_IF(target->zoneFromAnyThread()->isAtomsZone(),
-                !target->maybeCompartment());
+  MOZ_ASSERT_IF(targetZone->isAtomsZone(), !target->maybeCompartment());
+
+  // The Zones must match, unless the target is an atom.
+  MOZ_ASSERT(targetZone == sourceZone || targetZone->isAtomsZone());
+
+  // If we are marking an atom, that atom must be marked in the source zone's
+  // atom bitmap.
+  if (!sourceZone->isAtomsZone() && targetZone->isAtomsZone()) {
+    // We can't currently check this if the helper thread lock is held.
+    if (!gHelperThreadLock.ownedByCurrentThread()) {
+      MOZ_ASSERT(target->runtimeFromAnyThread()->gc.atomMarking.atomIsMarked(
+          sourceZone, reinterpret_cast<TenuredCell*>(target)));
+    }
+  }
+
   // If we have access to a compartment pointer for both things, they must
   // match.
   MOZ_ASSERT_IF(source->maybeCompartment() && target->maybeCompartment(),
                 source->maybeCompartment() == target->maybeCompartment());
+#endif
 }
 
 template <typename S, typename T>
