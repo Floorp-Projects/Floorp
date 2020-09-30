@@ -253,9 +253,6 @@ class CompileInfo {
     return pc == osrPc();
   }
 
-  jsbytecode* startPC() const { return script_->code(); }
-  jsbytecode* limitPC() const { return script_->codeEnd(); }
-
   const char* filename() const { return script_->filename(); }
 
   unsigned lineno() const { return script_->lineno(); }
