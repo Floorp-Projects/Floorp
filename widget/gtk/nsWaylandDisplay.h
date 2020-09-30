@@ -8,16 +8,16 @@
 #ifndef __MOZ_WAYLAND_DISPLAY_H__
 #define __MOZ_WAYLAND_DISPLAY_H__
 
+#include "mozilla/widget/mozwayland.h"
+#include "mozilla/widget/gtk-primary-selection-client-protocol.h"
+#include "mozilla/widget/idle-inhibit-unstable-v1-client-protocol.h"
+
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "mozilla/StaticMutex.h"
 
-#include "mozilla/widget/mozwayland.h"
 #include "mozilla/widget/gbm.h"
-#include "mozilla/widget/gtk-primary-selection-client-protocol.h"
-#include "mozilla/widget/idle-inhibit-unstable-v1-client-protocol.h"
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
-#include "mozilla/widget/primary-selection-unstable-v1-client-protocol.h"
 
 namespace mozilla {
 namespace widget {
@@ -51,13 +51,8 @@ class nsWaylandDisplay {
   };
   wl_seat* GetSeat(void) { return mSeat; };
   wl_shm* GetShm(void) { return mShm; };
-  gtk_primary_selection_device_manager* GetPrimarySelectionDeviceManagerGtk(
-      void) {
-    return mPrimarySelectionDeviceManagerGtk;
-  };
-  zwp_primary_selection_device_manager_v1*
-  GetPrimarySelectionDeviceManagerZwpV1(void) {
-    return mPrimarySelectionDeviceManagerZwpV1;
+  gtk_primary_selection_device_manager* GetPrimarySelectionDeviceManager(void) {
+    return mPrimarySelectionDeviceManager;
   };
   zwp_idle_inhibit_manager_v1* GetIdleInhibitManager(void) {
     return mIdleInhibitManager;
@@ -72,8 +67,6 @@ class nsWaylandDisplay {
   void SetSeat(wl_seat* aSeat);
   void SetPrimarySelectionDeviceManager(
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
-  void SetPrimarySelectionDeviceManager(
-      zwp_primary_selection_device_manager_v1* aPrimarySelectionDeviceManager);
   void SetIdleInhibitManager(zwp_idle_inhibit_manager_v1* aIdleInhibitManager);
 
   MessageLoop* GetThreadLoop() { return mThreadLoop; }
@@ -94,8 +87,7 @@ class nsWaylandDisplay {
   wl_seat* mSeat;
   wl_shm* mShm;
   wl_callback* mSyncCallback;
-  gtk_primary_selection_device_manager* mPrimarySelectionDeviceManagerGtk;
-  zwp_primary_selection_device_manager_v1* mPrimarySelectionDeviceManagerZwpV1;
+  gtk_primary_selection_device_manager* mPrimarySelectionDeviceManager;
   zwp_idle_inhibit_manager_v1* mIdleInhibitManager;
   wl_registry* mRegistry;
   bool mExplicitSync;
