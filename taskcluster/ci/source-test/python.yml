@@ -474,6 +474,7 @@ telemetry-integration-tests:
     treeherder:
         symbol: tt(i)
         tier: 3
+    run-on-projects: []
     run:
         using: run-task
         cwd: '{checkout}'
