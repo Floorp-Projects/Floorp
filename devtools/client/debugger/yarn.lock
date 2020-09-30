@@ -4673,14 +4673,6 @@ devtools-mc-assets@^0.0.8:
   resolved "https://registry.yarnpkg.com/devtools-mc-assets/-/devtools-mc-assets-0.0.8.tgz#47fc23240a916ed2c7d7bc6cc859882d49527e84"
   integrity sha512-+nvHMtga7sji1nCL+RaGyqZTfrmJtsdcsQIkI3VQuxvnRMcih59XcxzTrlEn9tQtQFLL0rNk5oqqbPfrKrCstA==
 
-devtools-modules@~1.1.6, devtools-modules@~1.1.9:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-1.1.9.tgz#b095ff634229ae7f27fc1883757dbb5ca8b830db"
-  integrity sha512-Gpwene1bA1vuLi4lu/1jqXZDjLijFCR/O08JXMcxls30dabctaav7XiU3mrg/bro/LrJoPxFro0OM1M7DRY0Vg==
-  dependencies:
-    devtools-services "0.0.1"
-    punycode "^2.1.0"
-
 devtools-services@0.0.1, devtools-services@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/devtools-services/-/devtools-services-0.0.1.tgz#9042600c11d1f4d45cc6ca299588a86fac1fbdd5"
