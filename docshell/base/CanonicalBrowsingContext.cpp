@@ -605,11 +605,13 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
 
 void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
     SessionHistoryInfo* aInfo) {
-  nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   mActiveEntry->SetInfo(aInfo);
   // Notify children of the update
-  shistory->NotifyOnHistoryReplaceEntry();
-  shistory->UpdateRootBrowsingContextState();
+  nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+  if (shistory) {
+    shistory->NotifyOnHistoryReplaceEntry();
+    shistory->UpdateRootBrowsingContextState();
+  }
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
 
