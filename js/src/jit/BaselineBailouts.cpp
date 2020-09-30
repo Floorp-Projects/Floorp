@@ -1338,7 +1338,7 @@ bool BaselineStackBuilder::finishLastFrame() {
              BailoutKindString(iter_.bailoutKind()),
              resumeAfter() ? "after" : "at", CodeName(op_),
              PCToLineNumber(script_, pc_), filename, script_->lineno());
-    cx_->runtime()->geckoProfiler().markEvent(buf.get());
+    cx_->runtime()->geckoProfiler().markEvent("Bailout", buf.get());
   }
 
   return true;

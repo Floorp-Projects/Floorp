@@ -256,125 +256,125 @@ inline const char* BailoutKindString(BailoutKind kind) {
   switch (kind) {
     // Normal bailouts.
     case BailoutKind::Inevitable:
-      return "BailoutKind::Inevitable";
+      return "Inevitable";
     case BailoutKind::DuringVMCall:
-      return "BailoutKind::DuringVMCall";
+      return "DuringVMCall";
     case BailoutKind::TooManyArguments:
-      return "BailoutKind::TooManyArguments";
+      return "TooManyArguments";
     case BailoutKind::DynamicNameNotFound:
-      return "BailoutKind::DynamicNameNotFound";
+      return "DynamicNameNotFound";
     case BailoutKind::Overflow:
-      return "BailoutKind::Overflow";
+      return "Overflow";
     case BailoutKind::Round:
-      return "BailoutKind::Round";
+      return "Round";
     case BailoutKind::NonPrimitiveInput:
-      return "BailoutKind::NonPrimitiveInput";
+      return "NonPrimitiveInput";
     case BailoutKind::PrecisionLoss:
-      return "BailoutKind::PrecisionLoss";
+      return "PrecisionLoss";
     case BailoutKind::TypeBarrierO:
-      return "BailoutKind::TypeBarrierO";
+      return "TypeBarrierO";
     case BailoutKind::TypeBarrierV:
-      return "BailoutKind::TypeBarrierV";
+      return "TypeBarrierV";
     case BailoutKind::Hole:
-      return "BailoutKind::Hole";
+      return "Hole";
     case BailoutKind::NoDenseElementsGuard:
-      return "BailoutKind::NoDenseElementsGuard";
+      return "NoDenseElementsGuard";
     case BailoutKind::NegativeIndex:
-      return "BailoutKind::NegativeIndex";
+      return "NegativeIndex";
     case BailoutKind::ObjectIdentityOrTypeGuard:
-      return "BailoutKind::ObjectIdentityOrTypeGuard";
+      return "ObjectIdentityOrTypeGuard";
     case BailoutKind::SpecificAtomGuard:
-      return "BailoutKind::SpecifcAtomGuard";
+      return "SpecifcAtomGuard";
     case BailoutKind::SpecificSymbolGuard:
-      return "BailoutKind::SpecificSymbolGuard";
+      return "SpecificSymbolGuard";
     case BailoutKind::StringToIndexGuard:
-      return "BailoutKind::StringToIndexGuard";
+      return "StringToIndexGuard";
     case BailoutKind::StringToInt32Guard:
-      return "BailoutKind::StringToInt32Guard";
+      return "StringToInt32Guard";
     case BailoutKind::StringToDoubleGuard:
-      return "BailoutKind::StringToDoubleGuard";
+      return "StringToDoubleGuard";
     case BailoutKind::NonInt32Input:
-      return "BailoutKind::NonInt32Input";
+      return "NonInt32Input";
     case BailoutKind::NonNumericInput:
-      return "BailoutKind::NonNumericInput";
+      return "NonNumericInput";
     case BailoutKind::NonBooleanInput:
-      return "BailoutKind::NonBooleanInput";
+      return "NonBooleanInput";
     case BailoutKind::NonObjectInput:
-      return "BailoutKind::NonObjectInput";
+      return "NonObjectInput";
     case BailoutKind::NonStringInput:
-      return "BailoutKind::NonStringInput";
+      return "NonStringInput";
     case BailoutKind::NonSymbolInput:
-      return "BailoutKind::NonSymbolInput";
+      return "NonSymbolInput";
     case BailoutKind::NonBigIntInput:
-      return "BailoutKind::NonBigIntInput";
+      return "NonBigIntInput";
     case BailoutKind::Debugger:
-      return "BailoutKind::Debugger";
+      return "Debugger";
     case BailoutKind::FirstExecution:
-      return "BailoutKind::FirstExecution";
+      return "FirstExecution";
     case BailoutKind::NonInt32ArrayLength:
-      return "BailoutKind::NonInt32ArrayLength";
+      return "NonInt32ArrayLength";
     case BailoutKind::FunctionLength:
-      return "BailoutKind::FunctionLength";
+      return "FunctionLength";
     case BailoutKind::FunctionName:
-      return "BailoutKind::FunctionName";
+      return "FunctionName";
     case BailoutKind::InvalidCodePoint:
-      return "BailoutKind::InvalidCodePoint";
+      return "InvalidCodePoint";
 
     // Bailouts caused by invalid assumptions.
     case BailoutKind::OverflowInvalidate:
-      return "BailoutKind::OverflowInvalidate";
+      return "OverflowInvalidate";
     case BailoutKind::DoubleOutput:
-      return "BailoutKind::DoubleOutput";
+      return "DoubleOutput";
 
     // Other bailouts.
     case BailoutKind::ArgumentCheck:
-      return "BailoutKind::ArgumentCheck";
+      return "ArgumentCheck";
     case BailoutKind::BoundsCheck:
-      return "BailoutKind::BoundsCheck";
+      return "BoundsCheck";
     case BailoutKind::ShapeGuard:
-      return "BailoutKind::ShapeGuard";
+      return "ShapeGuard";
     case BailoutKind::ProtoGuard:
-      return "BailoutKind::ProtoGuard";
+      return "ProtoGuard";
     case BailoutKind::ProxyGuard:
-      return "BailoutKind::ProxyGuard";
+      return "ProxyGuard";
     case BailoutKind::NotProxyGuard:
-      return "BailoutKind::NotProxyGuard";
+      return "NotProxyGuard";
     case BailoutKind::NotDOMProxyGuard:
-      return "BailoutKind::NotDOMProxyGuard";
+      return "NotDOMProxyGuard";
     case BailoutKind::NotArrayBufferMaybeSharedGuard:
-      return "BailoutKind::NotArrayBufferMaybeSharedGuard";
+      return "NotArrayBufferMaybeSharedGuard";
     case BailoutKind::TypedArrayGuard:
-      return "BailoutKind::TypedArrayGuard";
+      return "TypedArrayGuard";
     case BailoutKind::MegamorphicAccess:
-      return "BailoutKind::MegamorphicAccess";
+      return "MegamorphicAccess";
     case BailoutKind::ArgumentsObjectAccess:
-      return "BailoutKind::ArgumentsObjectAccess";
+      return "ArgumentsObjectAccess";
     case BailoutKind::ArrayPopShift:
-      return "BailoutKind::ArrayPopShift";
+      return "ArrayPopShift";
     case BailoutKind::ArraySlice:
-      return "BailoutKind::ArraySlice";
+      return "ArraySlice";
     case BailoutKind::ValueGuard:
-      return "BailoutKind::ValueGuard";
+      return "ValueGuard";
     case BailoutKind::NotOptimizedArgumentsGuard:
-      return "BailoutKind::NotOptimizedArgumentsGuard";
+      return "NotOptimizedArgumentsGuard";
     case BailoutKind::NullOrUndefinedGuard:
-      return "BailoutKind::NullOrUndefinedGuard";
+      return "NullOrUndefinedGuard";
     case BailoutKind::TagNotEqualGuard:
-      return "BailoutKind::TagNotEqualGuard";
+      return "TagNotEqualGuard";
     case BailoutKind::FunctionFlagsGuard:
-      return "BailoutKind::FunctionFlagsGuard";
+      return "FunctionFlagsGuard";
     case BailoutKind::FunctionKindGuard:
-      return "BailoutKind::FunctionKindGuard";
+      return "FunctionKindGuard";
     case BailoutKind::FunctionScriptGuard:
-      return "BailoutKind::FunctionScriptGuard";
+      return "FunctionScriptGuard";
     case BailoutKind::PackedArrayGuard:
-      return "BailoutKind::PackedArrayGuard";
+      return "PackedArrayGuard";
     case BailoutKind::HasGetterSetterGuard:
-      return "BailoutKind::HasGetterSetterGuard";
+      return "HasGetterSetterGuard";
     case BailoutKind::UninitializedLexical:
-      return "BailoutKind::UninitializedLexical";
+      return "UninitializedLexical";
     case BailoutKind::IonExceptionDebugMode:
-      return "BailoutKind::IonExceptionDebugMode";
+      return "IonExceptionDebugMode";
 
     case BailoutKind::Limit:
       break;

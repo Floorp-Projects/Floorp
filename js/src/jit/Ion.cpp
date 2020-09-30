@@ -2714,12 +2714,12 @@ void jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses,
     }
 
     // Construct the descriptive string.
-    UniqueChars buf = JS_smprintf("Invalidate %s:%u:%u", filename,
-                                  script->lineno(), script->column());
+    UniqueChars buf =
+        JS_smprintf("%s:%u:%u", filename, script->lineno(), script->column());
 
     // Ignore the event on allocation failure.
     if (buf) {
-      cx->runtime()->geckoProfiler().markEvent(buf.get());
+      cx->runtime()->geckoProfiler().markEvent("Invalidate", buf.get());
     }
   }
 

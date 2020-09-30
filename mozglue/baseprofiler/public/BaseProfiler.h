@@ -823,7 +823,8 @@ MFBT_API void profiler_add_marker(const char* aMarkerName,
                                   ProfilingCategoryPair aCategoryPair,
                                   const ProfilerMarkerPayload& aPayload);
 
-MFBT_API void profiler_add_js_marker(const char* aMarkerName);
+MFBT_API void profiler_add_js_marker(const char* aMarkerName,
+                                     const char* aMarkerText);
 
 // Returns true if the profiler lock is currently held *on the current thread*.
 // This may be used by re-entrant code that may call profiler functions while
