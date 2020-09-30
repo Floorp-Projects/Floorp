@@ -57,6 +57,8 @@ var PKT_SAVED_OVERLAY = function(options) {
       return;
     }
 
+    $(".pkt_ext_subshell").show();
+
     thePKT_SAVED.sendMessage(
       "getSuggestedTags",
       {
@@ -397,6 +399,7 @@ var PKT_SAVED_OVERLAY = function(options) {
   };
   this.initRemovePageInput = function() {
     $(".pkt_ext_removeitem").click(function(e) {
+      $(".pkt_ext_subshell").hide();
       if ($(this).parents(".pkt_ext_item_actions_disabled").length) {
         e.preventDefault();
         return;
@@ -517,6 +520,8 @@ var PKT_SAVED_OVERLAY = function(options) {
   };
   this.renderItemRecs = function(data) {
     if (data?.recommendations?.length) {
+      $("body").addClass("recs_enabled");
+      $(".pkt_ext_subshell").show();
       // URL encode and append raw image source for Thumbor + CDN
       data.recommendations = data.recommendations.map(rec => {
         // Using array notation because there is a key titled `1` (`images` is an object)
