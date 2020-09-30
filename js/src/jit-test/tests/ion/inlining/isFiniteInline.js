@@ -1,6 +1,6 @@
 /* Test inlining of Number.isFinite() */
 
-for (var i = 0; i < 200000; i++) {
+for (var i = 0; i < 10_000; i++) {
     assertEq(Number.isFinite(NaN), false);
     assertEq(Number.isFinite(-NaN), false);
     assertEq(Number.isFinite(+Infinity), false);
