@@ -121,7 +121,7 @@ class PrintingChild extends ActorChild {
         Ci.nsIPrintSettingsService
       );
 
-      let printSettings = PSSVC.globalPrintSettings;
+      let printSettings = PSSVC.newPrintSettings;
       if (!printSettings.printerName) {
         printSettings.printerName = lastUsedPrinterName;
       }
