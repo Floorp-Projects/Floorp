@@ -453,7 +453,7 @@ class ScriptStencil {
   ScriptThingsVector gcThings;
 
   // See `BaseScript::sharedData_`.
-  js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
+  RefPtr<js::RuntimeScriptData> sharedData = {};
 
   // The location of this script in the source.
   SourceExtent extent = {};
