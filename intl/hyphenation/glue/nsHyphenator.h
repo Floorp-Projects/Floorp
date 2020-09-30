@@ -15,12 +15,19 @@
 
 class nsIURI;
 struct HyphDic;
+struct CompiledData;
 
 namespace mozilla {
 template <>
 class DefaultDelete<const HyphDic> {
  public:
   void operator()(const HyphDic* ptr) const;
+};
+
+template <>
+class DefaultDelete<const CompiledData> {
+ public:
+  void operator()(const CompiledData* ptr) const;
 };
 }  // namespace mozilla
 
