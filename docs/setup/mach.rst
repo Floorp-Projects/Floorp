@@ -381,7 +381,7 @@ are loaded, mach looks for specific signatures to detect mach commands.
 Currently, this is implemented through Python decorators. Here is a
 minimal mach command module:
 
-.. code:: brush:
+.. code:: python
 
    from __future__ import print_function, unicode_literals
 

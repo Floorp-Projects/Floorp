@@ -25,7 +25,7 @@ Perform a debug build of Gecko.
 1. Edit your ``mozconfig`` file and add the following lines. These will
    ensure that the build includes debug checks and symbols.
 
-.. code:: txt
+.. code::
 
    ac_add_options --enable-debug
    ac_add_options --with-android-ndk="<path>/.mozbuild/android-ndk-r17b"
@@ -34,7 +34,7 @@ Perform a debug build of Gecko.
    ``mozconfig`` if present. ``./mach configure`` will not allow
    artifact builds to be enabled when generating a debug build.
 
-.. code:: txt
+.. code::
 
    # ac_add_options --enable-artifact-builds
 
@@ -113,7 +113,7 @@ Debug Native code in Android Studio
    debug window, and then select the ``lldb`` console tab. Type the
    following into the console:
 
-.. code:: lldb
+.. code::
 
    b <file>.cpp:<line number>
 
