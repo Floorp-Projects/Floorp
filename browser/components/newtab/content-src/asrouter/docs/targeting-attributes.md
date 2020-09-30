@@ -49,6 +49,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [profileRestartCount](#profilerestartcount)
 * [homePageSettings](#homepagesettings)
 * [newtabSettings](#newtabsettings)
+* [isFissionExperimentEnabled](#isFissionExperimentEnabled)
 
 ## Detailed usage
 
@@ -820,3 +821,7 @@ Object {
   host: "",
 }
 ```
+
+### `isFissionExperimentEnabled`
+
+A boolean. `true` if we're running Fission experiment, `false` otherwise.

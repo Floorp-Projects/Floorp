@@ -633,6 +633,9 @@ const TargetingGetters = {
       host: urls[0].host,
     };
   },
+  get isFissionExperimentEnabled() {
+    return Services.appinfo.fissionExperimentStatus || false;
+  },
 };
 
 this.ASRouterTargeting = {
