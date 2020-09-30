@@ -161,7 +161,17 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
     return rv;
   }
 
-  // TODO: Fetch HTTPS RRs.
+  // Fetch ESNI keys if needed.
+  if (isHttps && StaticPrefs::network_security_esni_enabled()) {
+    nsAutoCString esniHost;
+    esniHost.Append("_esni.");
+    esniHost.Append(NS_ConvertUTF16toUTF8(hostname));
+    Unused << sDNSService->AsyncResolveNative(
+        esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
+        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
+        nullptr, aPartitionedPrincipalOriginAttributes,
+        getter_AddRefs(tmpOutstanding));
+  }
 
   return NS_OK;
 }
@@ -246,6 +256,16 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
       flags | nsIDNSService::RESOLVE_SPECULATE,
       nullptr,  // resolverInfo
       sDNSListener, aReason, aPartitionedPrincipalOriginAttributes);
+  // Cancel fetching ESNI keys if needed.
+  if (StaticPrefs::network_security_esni_enabled() && isHttps) {
+    nsAutoCString esniHost;
+    esniHost.Append("_esni.");
+    esniHost.Append(NS_ConvertUTF16toUTF8(hostname));
+    sDNSService->CancelAsyncResolveNative(
+        esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
+        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
+        aReason, aPartitionedPrincipalOriginAttributes);
+  }
   return rv;
 }
 
@@ -390,8 +410,18 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
                 mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
                 nullptr, sDNSListener, nullptr, oa,
                 getter_AddRefs(tmpOutstanding));
-            // TODO: Fetch HTTPS RRs.
-
+            // Fetch ESNI keys if needed.
+            if (NS_SUCCEEDED(rv) &&
+                StaticPrefs::network_security_esni_enabled() && isHttps) {
+              nsAutoCString esniHost;
+              esniHost.Append("_esni.");
+              esniHost.Append(hostName);
+              sDNSService->AsyncResolveNative(
+                  esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
+                  mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
+                  nullptr, sDNSListener, nullptr, oa,
+                  getter_AddRefs(tmpOutstanding));
+            }
             // Tell link that deferred prefetch was requested
             if (NS_SUCCEEDED(rv)) link->OnDNSPrefetchRequested();
           }
