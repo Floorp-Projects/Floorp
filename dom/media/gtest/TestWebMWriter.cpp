@@ -63,7 +63,7 @@ const uint32_t FIXED_FRAMESIZE = 500;
 
 class TestWebMWriter : public WebMWriter {
  public:
-  TestWebMWriter() : WebMWriter(), mTimestamp(0) {}
+  TestWebMWriter() : WebMWriter() {}
 
   // When we append an I-Frame into WebM muxer, the muxer will treat previous
   // data as "a cluster".
@@ -79,7 +79,7 @@ class TestWebMWriter : public WebMWriter {
         MakeRefPtr<EncodedFrame>(mTimestamp, aDuration, PR_USEC_PER_SEC,
                                  aFrameType, std::move(frameData)));
     WriteEncodedTrack(encodedVideoData, 0);
-    mTimestamp += aDuration;
+    mTimestamp += media::TimeUnit::FromMicroseconds(aDuration);
   }
 
   bool HaveValidCluster() {
@@ -90,7 +90,7 @@ class TestWebMWriter : public WebMWriter {
 
   // Timestamp accumulator that increased by AppendDummyFrame.
   // Keep it public that we can do some testcases about it.
-  uint64_t mTimestamp;
+  media::TimeUnit mTimestamp;
 };
 
 TEST(WebMWriter, Metadata)
