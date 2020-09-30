@@ -49,7 +49,7 @@ Build
 Build Firefox with the following options, which maximize speed and
 accuracy.
 
-.. code:: language-html
+.. code::
 
    ac_add_options --disable-jemalloc
    ac_add_options --disable-strip

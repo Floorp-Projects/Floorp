@@ -81,7 +81,7 @@ Configuring the clang-format commit hook
 To run clang-format at commit phase, run ``mach boostrap`` or just add
 the following line in the ``hgrc`` file:
 
-.. code:: comment-text
+.. code:: ini
 
    [extensions]
    clang-format = ~/.mozbuild/version-control-tools/hgext/clang-format
@@ -233,7 +233,7 @@ Git
 To perform a rebase onto mozilla-central after the merge, a handy merge
 driver, ``clang-format-merge``, has been written:
 
-.. code:: syntaxbox
+.. code:: shell
 
    $ git clone https://github.com/emilio/clang-format-merge
    $ /path/to/clang-format-merge/git-wrapper rebase <upstream>
