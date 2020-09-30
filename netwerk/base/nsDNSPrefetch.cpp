@@ -17,6 +17,8 @@
 #include "mozilla/Preferences.h"
 
 static nsIDNSService* sDNSService = nullptr;
+static mozilla::Atomic<bool, mozilla::Relaxed> sESNIEnabled(false);
+const char kESNIPref[] = "network.security.esni.enabled";
 
 nsresult nsDNSPrefetch::Initialize(nsIDNSService* aDNSService) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -24,12 +26,26 @@ nsresult nsDNSPrefetch::Initialize(nsIDNSService* aDNSService) {
   NS_IF_RELEASE(sDNSService);
   sDNSService = aDNSService;
   NS_IF_ADDREF(sDNSService);
+  mozilla::Preferences::RegisterCallback(nsDNSPrefetch::PrefChanged, kESNIPref);
+  PrefChanged(nullptr, nullptr);
   return NS_OK;
 }
 
 nsresult nsDNSPrefetch::Shutdown() {
   NS_IF_RELEASE(sDNSService);
+  mozilla::Preferences::UnregisterCallback(nsDNSPrefetch::PrefChanged,
+                                           kESNIPref);
   return NS_OK;
+}
+
+// static
+void nsDNSPrefetch::PrefChanged(const char* aPref, void* aClosure) {
+  if (!aPref || strcmp(aPref, kESNIPref) == 0) {
+    bool enabled = false;
+    if (NS_SUCCEEDED(mozilla::Preferences::GetBool(kESNIPref, &enabled))) {
+      sESNIEnabled = enabled;
+    }
+  }
 }
 
 nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
@@ -60,10 +76,25 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
 
   flags |= nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
 
-  return sDNSService->AsyncResolveNative(
+  nsresult rv = sDNSService->AsyncResolveNative(
       mHostname, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this, target,
       mOriginAttributes, getter_AddRefs(tmpOutstanding));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Fetch esni keys if needed.
+  if (sESNIEnabled && mIsHttps) {
+    nsAutoCString esniHost;
+    esniHost.Append("_esni.");
+    esniHost.Append(mHostname);
+    sDNSService->AsyncResolveNative(esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
+                                    flags | nsIDNSService::RESOLVE_SPECULATE,
+                                    nullptr, this, target, mOriginAttributes,
+                                    getter_AddRefs(tmpOutstanding));
+  }
+  return NS_OK;
 }
 
 nsresult nsDNSPrefetch::PrefetchLow(bool refreshDNS) {
