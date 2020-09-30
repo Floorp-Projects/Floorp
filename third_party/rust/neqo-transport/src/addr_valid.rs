@@ -275,6 +275,14 @@ impl NewTokenState {
         }
     }
 
+    /// Is there a token available?
+    pub fn has_token(&self) -> bool {
+        match self {
+            Self::Client(ref token) => !token.is_empty(),
+            Self::Server(..) => false,
+        }
+    }
+
     /// If this is a client, take a token if there is one.
     /// If this is a server, panic.
     pub fn take_token(&mut self) -> Option<Vec<u8>> {

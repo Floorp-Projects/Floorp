@@ -73,21 +73,21 @@ impl RxStreamOrderer {
 
             match (new_start > prev_start, new_end > prev_end) {
                 (true, true) => {
-                    // PPPPPP    ->  PP
-                    //   NNNNNN        NNNNNN
-                    // Truncate prev if overlap. Insert new.
+                    // PPPPPP    ->  PPPPPP
+                    //   NNNNNN            NN
+                    // Add a range containing only new data
                     // (In-order frames will take this path, with no overlap)
                     let overlap = prev_end.saturating_sub(new_start);
-                    if overlap != 0 {
-                        let truncate_to = prev_vec.len() - overlap as usize;
-                        prev_vec.truncate(truncate_to)
-                    }
                     qtrace!(
                         "New frame {}-{} received, overlap: {}",
                         new_start,
                         new_end,
                         overlap
                     );
+                    if overlap != 0 {
+                        new_data.drain(..overlap as usize);
+                        return self.inbound_frame(prev_end, new_data);
+                    }
                     (true, None)
                 }
                 (true, false) => {
@@ -102,17 +102,18 @@ impl RxStreamOrderer {
                     (false, None)
                 }
                 (false, true) => {
-                    // PPPP      ->  NNNNNN
-                    // NNNNNN
-                    // Drop Prev, Insert New
+                    // PPPP      ->  PPPP
+                    // NNNNNN            NN
                     qtrace!(
-                        "New frame with {}-{} replaces existing {}-{}",
+                        "New frame with {}-{} overlaps with existing {}-{}",
                         new_start,
                         new_end,
                         prev_start,
                         prev_end
                     );
-                    (true, Some(prev_start))
+                    let overlap = prev_end.saturating_sub(new_start);
+                    new_data.drain(..overlap as usize);
+                    return self.inbound_frame(prev_end, new_data);
                 }
                 (false, false) => {
                     // PPPPPP    ->  PPPPPP
@@ -170,7 +171,9 @@ impl RxStreamOrderer {
                 self.data_ranges.remove(&start);
             }
 
-            self.data_ranges.insert(new_start, new_data);
+            if !new_data.is_empty() {
+                self.data_ranges.insert(new_start, new_data);
+            }
         };
 
         Ok(())
@@ -232,6 +235,7 @@ impl RxStreamOrderer {
                 // Frame data has new contiguous bytes.
                 let copy_offset =
                     usize::try_from(max(range_start, self.retired) - range_start).unwrap();
+                assert!(range_data.len() >= copy_offset);
                 let available = range_data.len() - copy_offset;
                 let space = buf.len() - copied;
                 let copy_bytes = if available > space {
@@ -707,6 +711,30 @@ mod tests {
         assert_eq!(count, EXTRA_SIZE * 2);
     }
 
+    #[test]
+    fn recv_overlap_while_reading() {
+        let mut s = RxStreamOrderer::new();
+
+        // Add a chunk
+        s.inbound_frame(0, vec![0; 150]).unwrap();
+        assert_eq!(s.data_ranges.get(&0).unwrap().len(), 150);
+        // Read, providing only enough space for the first.
+        let mut buf = vec![0; 100];
+        let count = s.read(&mut buf);
+        assert_eq!(count, 100);
+        assert_eq!(s.retired, 100);
+
+        // Add a second frame that overlaps.
+        // This shouldn't truncate the first frame, as we're already
+        // Reading from it.
+        s.inbound_frame(120, vec![0; 60]).unwrap();
+        assert_eq!(s.data_ranges.get(&0).unwrap().len(), 150);
+        assert_eq!(s.data_ranges.get(&150).unwrap().len(), 30);
+        // Read second part of first frame and all of the second frame
+        let count = s.read(&mut buf);
+        assert_eq!(count, 80);
+    }
+
     /// Reading exactly one chunk works, when there is a gap.
     #[test]
     fn stop_reading_at_gap() {
@@ -843,10 +871,10 @@ mod tests {
             let mut i = s.state.recv_buf().unwrap().data_ranges.iter();
             let item = i.next().unwrap();
             assert_eq!(*item.0, 0);
-            assert_eq!(item.1.len(), 2);
-            let item = i.next().unwrap();
-            assert_eq!(*item.0, 2);
             assert_eq!(item.1.len(), 6);
+            let item = i.next().unwrap();
+            assert_eq!(*item.0, 6);
+            assert_eq!(item.1.len(), 2);
         }
 
         // Test (true, false) case
@@ -855,10 +883,10 @@ mod tests {
             let mut i = s.state.recv_buf().unwrap().data_ranges.iter();
             let item = i.next().unwrap();
             assert_eq!(*item.0, 0);
-            assert_eq!(item.1.len(), 2);
-            let item = i.next().unwrap();
-            assert_eq!(*item.0, 2);
             assert_eq!(item.1.len(), 6);
+            let item = i.next().unwrap();
+            assert_eq!(*item.0, 6);
+            assert_eq!(item.1.len(), 2);
         }
 
         // Test (false, true) case
@@ -867,10 +895,10 @@ mod tests {
             let mut i = s.state.recv_buf().unwrap().data_ranges.iter();
             let item = i.next().unwrap();
             assert_eq!(*item.0, 0);
-            assert_eq!(item.1.len(), 2);
+            assert_eq!(item.1.len(), 6);
             let item = i.next().unwrap();
-            assert_eq!(*item.0, 2);
-            assert_eq!(item.1.len(), 8);
+            assert_eq!(*item.0, 6);
+            assert_eq!(item.1.len(), 2);
         }
 
         // Test (false, false) case
@@ -879,14 +907,14 @@ mod tests {
             let mut i = s.state.recv_buf().unwrap().data_ranges.iter();
             let item = i.next().unwrap();
             assert_eq!(*item.0, 0);
-            assert_eq!(item.1.len(), 2);
+            assert_eq!(item.1.len(), 6);
             let item = i.next().unwrap();
-            assert_eq!(*item.0, 2);
-            assert_eq!(item.1.len(), 8);
+            assert_eq!(*item.0, 6);
+            assert_eq!(item.1.len(), 2);
         }
 
         assert_eq!(s.read(&mut buf).unwrap(), (10, false));
-        assert_eq!(buf[..10], [1, 1, 4, 4, 4, 4, 4, 4, 4, 4]);
+        assert_eq!(buf[..10], [1, 1, 1, 1, 1, 1, 2, 2, 4, 4]);
 
         // Test truncation/span-drop on insert
         s.inbound_stream_frame(false, 100, vec![6; 6]).unwrap();

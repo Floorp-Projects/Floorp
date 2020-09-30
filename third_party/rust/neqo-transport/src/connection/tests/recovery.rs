@@ -13,6 +13,7 @@ use super::{
 use crate::frame::{Frame, StreamType};
 use crate::path::PATH_MTU_V6;
 use crate::recovery::PTO_PACKET_COUNT;
+use crate::stats::MAX_PTO_COUNTS;
 use crate::tparams::TransportParameter;
 use crate::tracking::{PNSpace, ACK_DELAY};
 
@@ -280,10 +281,16 @@ fn pto_handshake_complete() {
     let cb = client.process(None, now).callback();
     assert_eq!(cb, Duration::from_millis(60));
 
+    let mut pto_counts = [0; MAX_PTO_COUNTS];
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
     // Wait for PTO to expire and resend a handshake packet
     now += Duration::from_millis(60);
     let pkt2 = client.process(None, now).dgram();
     assert!(pkt2.is_some());
+
+    pto_counts[0] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 
     // Get a second PTO packet.
     let pkt3 = client.process(None, now).dgram();
@@ -292,6 +299,9 @@ fn pto_handshake_complete() {
     // PTO has been doubled.
     let cb = client.process(None, now).callback();
     assert_eq!(cb, Duration::from_millis(120));
+
+    // We still have only a single PTO
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 
     now += Duration::from_millis(10);
     // Server receives the first packet.
@@ -326,6 +336,9 @@ fn pto_handshake_complete() {
     // The handshake keys are discarded, but now we're back to the idle timeout.
     // We don't send another PING because the handshake space is done and there
     // is nothing to probe for.
+
+    pto_counts[0] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
     assert_eq!(cb, LOCAL_IDLE_TIMEOUT - ACK_DELAY);
 }
 
@@ -410,6 +423,9 @@ fn handshake_ack_pto() {
     let delay = client.process(None, now).callback();
     assert_eq!(delay, RTT * 3);
 
+    let mut pto_counts = [0; MAX_PTO_COUNTS];
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
     // Wait for the PTO and ensure that the client generates a packet.
     now += delay;
     let c3 = client.process(None, now).dgram();
@@ -418,6 +434,9 @@ fn handshake_ack_pto() {
     now += RTT / 2;
     let frames = server.test_process_input(c3.unwrap(), now);
     assert_eq!(frames, vec![(Frame::Ping, PNSpace::Handshake)]);
+
+    pto_counts[0] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 
     // Now complete the handshake as cheaply as possible.
     let dgram = server.process(None, now).dgram();
@@ -429,6 +448,8 @@ fn handshake_ack_pto() {
     assert_eq!(*server.state(), State::Confirmed);
     client.process_input(dgram.unwrap(), now);
     assert_eq!(*client.state(), State::Confirmed);
+
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
 }
 
 #[test]

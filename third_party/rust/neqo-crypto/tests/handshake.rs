@@ -2,8 +2,8 @@
 
 use neqo_common::qinfo;
 use neqo_crypto::{
-    AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, SecretAgent, Server,
-    ZeroRttCheckResult, ZeroRttChecker,
+    AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, ResumptionToken,
+    SecretAgent, Server, ZeroRttCheckResult, ZeroRttChecker,
 };
 use std::mem;
 use std::time::Instant;
@@ -121,7 +121,7 @@ fn zero_rtt_setup(
     }
 }
 
-pub fn resumption_setup(mode: Resumption) -> (Option<AntiReplay>, Vec<u8>) {
+pub fn resumption_setup(mode: Resumption) -> (Option<AntiReplay>, ResumptionToken) {
     fixture_init();
 
     let mut client = Client::new("server.example").expect("should create client");

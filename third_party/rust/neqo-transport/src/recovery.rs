@@ -574,6 +574,10 @@ impl PtoState {
         self.count
     }
 
+    pub fn count_pto(&self, stats: &mut Stats) {
+        stats.add_pto_count(self.count);
+    }
+
     /// Generate a sending profile, indicating what space it should be from.
     /// This takes a packet from the supply or returns an ack-only profile if it can't.
     pub fn send_profile(&mut self, mtu: usize) -> SendProfile {
@@ -811,6 +815,7 @@ impl LossRecovery {
         // The spec says that clients should not do this until confirming that
         // the server has completed address validation, but ignore that.
         self.pto_state = None;
+
         if space == PNSpace::Handshake {
             self.confirmed(now);
         }
@@ -908,6 +913,12 @@ impl LossRecovery {
         } else {
             self.pto_state = Some(PtoState::new(pn_space, allow_probes));
         }
+
+        self.pto_state
+            .as_mut()
+            .unwrap()
+            .count_pto(&mut *self.stats.borrow_mut());
+
         qlog::metrics_updated(
             &mut self.qlog,
             &[QlogMetric::PtoCount(

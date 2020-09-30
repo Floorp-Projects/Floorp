@@ -9,6 +9,7 @@
 use super::{
     Connection, ConnectionError, FixedConnectionIdManager, Output, State, LOCAL_IDLE_TIMEOUT,
 };
+use crate::addr_valid::{AddressValidation, ValidateAddress};
 use crate::cc::CWND_INITIAL_PKTS;
 use crate::events::ConnectionEvent;
 use crate::frame::StreamType;
@@ -22,7 +23,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use neqo_common::{qdebug, qtrace, Datagram, Decoder};
-use neqo_crypto::{AllowZeroRtt, AuthenticationStatus};
+use neqo_crypto::{AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{self, fixture_init, loopback, now};
 
 // All the tests.
@@ -143,13 +144,20 @@ fn assert_error(c: &Connection, err: &ConnectionError) {
     }
 }
 
-fn exchange_ticket(client: &mut Connection, server: &mut Connection, now: Instant) -> Vec<u8> {
+fn exchange_ticket(
+    client: &mut Connection,
+    server: &mut Connection,
+    now: Instant,
+) -> ResumptionToken {
+    let validation = AddressValidation::new(now, ValidateAddress::NoToken).unwrap();
+    let validation = Rc::new(RefCell::new(validation));
+    server.set_validation(Rc::clone(&validation));
     server.send_ticket(now, &[]).expect("can send ticket");
     let ticket = server.process_output(now).dgram();
     assert!(ticket.is_some());
     client.process_input(ticket.unwrap(), now);
     assert_eq!(*client.state(), State::Confirmed);
-    client.resumption_token().expect("should have token")
+    get_tokens(client).pop().expect("should have token")
 }
 
 /// Connect with an RTT and then force both peers to be idle.
@@ -318,4 +326,17 @@ fn split_datagram(d: &Datagram) -> (Datagram, Option<Datagram>) {
         Datagram::new(d.source(), d.destination(), a),
         b.map(|b| Datagram::new(d.source(), d.destination(), b)),
     )
+}
+
+fn get_tokens(client: &mut Connection) -> Vec<ResumptionToken> {
+    client
+        .events()
+        .filter_map(|e| {
+            if let ConnectionEvent::ResumptionToken(token) = e {
+                Some(token)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
