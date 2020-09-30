@@ -1,4 +1,4 @@
-// Copyright 2019 Mozilla Foundation. See the COPYRIGHT
+// Copyright 2019-2020 Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -10,6 +10,8 @@
 use std::slice;
 use std::str;
 use std::ffi::CStr;
+use std::fs::File;
+use std::io::Read;
 use std::os::raw::c_char;
 use std::str::Utf8Error;
 
@@ -20,6 +22,9 @@ use super::Hyphenator;
 /// Opaque type representing a hyphenation dictionary loaded from a file,
 /// for use in FFI function signatures.
 pub struct HyphDic;
+
+/// Opaque type representing a compiled dictionary in a memory buffer.
+pub struct CompiledData;
 
 // Helper to convert word and hyphen buffer parameters from raw C pointer/length
 // pairs to the Rust types expected by mapped_hyph.
@@ -162,4 +167,84 @@ pub unsafe extern "C" fn mapped_hyph_is_valid_hyphenator(dic_buf: *const u8, dic
     }
     let dic = Hyphenator::new(slice::from_raw_parts(dic_buf, dic_len as usize));
     dic.is_valid_hyphenator()
+}
+
+/// C-callable function to free a CompiledData object created by
+/// a `mapped_hyph_compile_...` function (below).
+///
+/// # Safety
+/// The `data` parameter must be a `CompiledData` pointer obtained from
+/// a `mapped_hyph_compile_...` function, and not previously freed.
+#[no_mangle]
+pub unsafe extern "C" fn mapped_hyph_free_compiled_data(data: *mut CompiledData) {
+    Box::from_raw(data);
+}
+
+// Helper for the compilation functions (from either memory buffer or file path).
+fn compile_and_wrap<T: Read>(input: T, compress: bool) -> *const CompiledData {
+    let mut compiled: Vec<u8> = vec![];
+    if super::builder::compile(input, &mut compiled, compress).is_err() {
+        return std::ptr::null();
+    }
+    compiled.shrink_to_fit();
+
+    // Create a persistent heap reference to the compiled data, and return a pointer to it.
+    Box::into_raw(Box::new(compiled)) as *const CompiledData
+}
+
+/// C-callable function to compile hyphenation patterns from `pattern_buf` and return
+/// the compiled data in a memory buffer, suitable to be stored somewhere or passed
+/// to `mapped_hyph_find_hyphen_values_raw` to perform hyphenation.
+///
+/// The returned `CompiledData` must be released with `mapped_hyph_free_compiled_data`.
+///
+/// # Safety
+/// The `pattern_buf` parameter must be a valid pointer to a memory block of size
+/// at least `pattern_len`.
+#[no_mangle]
+pub unsafe extern "C" fn mapped_hyph_compile_buffer(pattern_buf: *const u8, pattern_len: u32, compress: bool) -> *const CompiledData {
+    compile_and_wrap(slice::from_raw_parts(pattern_buf, pattern_len as usize), compress)
+}
+
+/// C-callable function to compile hyphenation patterns from a file to a memory buffer.
+///
+/// The returned `CompiledData` must be released with `mapped_hyph_free_compiled_data`.
+///
+/// # Safety
+/// The given `path` must be a valid pointer to a NUL-terminated (C-style) string.
+#[no_mangle]
+pub unsafe extern "C" fn mapped_hyph_compile_file(path: *const c_char, compress: bool) -> *const CompiledData {
+    // Try to open the file at the given path, returning null on failure.
+    let path_str = match CStr::from_ptr(path).to_str() {
+        Ok(str) => str,
+        Err(_) => return std::ptr::null(),
+    };
+    let in_file = match File::open(path_str) {
+        Ok(file) => file,
+        Err(_) => return std::ptr::null(),
+    };
+    compile_and_wrap(&in_file, compress)
+}
+
+/// Get the size of the compiled table buffer in a `CompiledData` object.
+///
+/// # Safety
+/// The `data` parameter must be a `CompiledData` pointer obtained from
+/// a `mapped_hyph_compile_...` function, and not previously freed.
+#[no_mangle]
+pub unsafe extern "C" fn mapped_hyph_compiled_data_size(data: *const CompiledData) -> u32 {
+    (&*(data as *const Vec<u8>)).len() as u32
+}
+
+/// Get a pointer to the raw data held by a `CompiledData` object.
+///
+/// # Safety
+/// The `data` parameter must be a `CompiledData` pointer obtained from
+/// a `mapped_hyph_compile_...` function, and not previously freed.
+///
+/// The returned pointer only remains valid as long as the `CompiledData` has not
+/// been released (by passing it to `mapped_hyph_free_compiled_data`).
+#[no_mangle]
+pub unsafe extern "C" fn mapped_hyph_compiled_data_ptr(data: *const CompiledData) -> *const u8 {
+    (&*(data as *const Vec<u8>)).as_ptr()
 }
