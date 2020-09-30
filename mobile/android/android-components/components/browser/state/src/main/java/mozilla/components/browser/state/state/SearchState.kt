@@ -4,15 +4,18 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 
 /**
  * Value type that represents the state of search.
  *
+ * @property region The region of the user.
  * @property searchEngines The map of search engines (bundled and custom) to their respective IDs.
  * @property defaultSearchEngineId The ID of default [SearchEngine]
  */
 data class SearchState(
+    val region: RegionState? = null,
     val searchEngines: Map<String, SearchEngine> = emptyMap(),
     val defaultSearchEngineId: String? = null
 )

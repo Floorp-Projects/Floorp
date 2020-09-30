@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
@@ -15,6 +16,7 @@ internal object SearchReducer {
      */
     fun reduce(state: BrowserState, action: SearchAction): BrowserState {
         return when (action) {
+            is SearchAction.SetRegionAction -> state.setRegion(action.regionState)
             is SearchAction.AddSearchEngineListAction -> {
                 state.addSearchEnginesMap(action.searchEngineList)
             }
@@ -29,6 +31,12 @@ internal object SearchReducer {
             }
         }
     }
+}
+
+private fun BrowserState.setRegion(regionState: RegionState): BrowserState {
+    return copy(search = search.copy(
+        region = regionState
+    ))
 }
 
 private fun BrowserState.addSearchEnginesMap(

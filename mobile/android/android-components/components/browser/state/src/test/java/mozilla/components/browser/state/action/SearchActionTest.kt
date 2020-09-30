@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.action
 
+import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -105,5 +106,17 @@ class SearchActionTest {
 
         store.dispatch(SearchAction.SetDefaultSearchEngineAction("unrecognized_id")).joinBlocking()
         assertEquals(searchEngine.id, store.state.search.defaultSearchEngineId)
+    }
+
+    @Test
+    fun `Setting region of user`() {
+        val store = BrowserStore()
+        assertNull(store.state.search.region)
+
+        store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
+
+        assertNotNull(store.state.search.region)
+        assertEquals("DE", store.state.search.region!!.home)
+        assertEquals("FR", store.state.search.region!!.current)
     }
 }
