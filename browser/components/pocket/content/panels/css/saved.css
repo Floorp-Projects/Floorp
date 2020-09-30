@@ -454,9 +454,7 @@
 --------------------------------------------------------------------------------------- */
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
-    border-top: 1px solid #c1c1c1;
     box-sizing: border-box;
-    background: #ebebeb;
     clear: both;
     inset-inline-start: 0;
     opacity: 0;
@@ -904,22 +902,29 @@ button {
 }
 
 .pkt_ext_subshell {
+    display: none;
+    border-top: 1px solid #c1c1c1;
     position: fixed;
+    background: #ebebeb;
     bottom: 0;
     width: 100%;
 }
 
-.pkt_ext_item_recs {
-    background: #ebebeb;
-    text-align: start;
-    margin: 0 auto;
-    padding: 0.25em 1em;
+.pkt_ext_subshell hr {
+    display: none;
 }
 
-.pkt_ext_item_recs hr {
+.recs_enabled .pkt_ext_subshell hr {
+    display: block;
     border: 0;
     border-top: 1px solid #D7D7DB;
     margin: 0 -16px 0;
+}
+
+.pkt_ext_item_recs {
+    text-align: start;
+    margin: 0 auto;
+    padding: 0.25em 1em;
 }
 
 .pkt_ext_item_recs header {
