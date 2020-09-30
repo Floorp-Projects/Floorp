@@ -20,12 +20,17 @@ add_task(async function search_engine_match() {
   let engine = await Services.search.getDefault();
   let domain = engine.getResultDomain();
   let token = domain.substr(0, 1);
-  let matchedEngine = await UrlbarSearchUtils.engineForDomainPrefix(token);
+  let matchedEngine = (
+    await UrlbarSearchUtils.enginesForDomainPrefix(token)
+  )[0];
   Assert.equal(matchedEngine, engine);
 });
 
 add_task(async function no_match() {
-  Assert.equal(null, await UrlbarSearchUtils.engineForDomainPrefix("test"));
+  Assert.equal(
+    0,
+    (await UrlbarSearchUtils.enginesForDomainPrefix("test")).length
+  );
 });
 
 add_task(async function hide_search_engine_nomatch() {
@@ -35,19 +40,26 @@ add_task(async function hide_search_engine_nomatch() {
   let promiseTopic = promiseSearchTopic("engine-changed");
   await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   Assert.ok(engine.hidden);
-  let matchedEngine = await UrlbarSearchUtils.engineForDomainPrefix(token);
-  Assert.ok(!matchedEngine || matchedEngine.getResultDomain() != domain);
-  engine.hidden = false;
-  await TestUtils.waitForCondition(() =>
-    UrlbarSearchUtils.engineForDomainPrefix(token)
+  let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token);
+  Assert.ok(
+    !matchedEngines.length || matchedEngines[0].getResultDomain() != domain
   );
-  let matchedEngine2 = await UrlbarSearchUtils.engineForDomainPrefix(token);
+  engine.hidden = false;
+  await TestUtils.waitForCondition(
+    async () => (await UrlbarSearchUtils.enginesForDomainPrefix(token)).length
+  );
+  let matchedEngine2 = (
+    await UrlbarSearchUtils.enginesForDomainPrefix(token)
+  )[0];
   Assert.ok(matchedEngine2);
 });
 
 add_task(async function add_search_engine_match() {
   let promiseTopic = promiseSearchTopic("engine-added");
-  Assert.equal(null, await UrlbarSearchUtils.engineForDomainPrefix("bacon"));
+  Assert.equal(
+    0,
+    (await UrlbarSearchUtils.enginesForDomainPrefix("bacon")).length
+  );
   await Promise.all([
     Services.search.addEngineWithDetails("bacon", {
       alias: "pork",
@@ -58,11 +70,40 @@ add_task(async function add_search_engine_match() {
     promiseTopic,
   ]);
   await promiseTopic;
-  let matchedEngine = await UrlbarSearchUtils.engineForDomainPrefix("bacon");
+  let matchedEngine = (
+    await UrlbarSearchUtils.enginesForDomainPrefix("bacon")
+  )[0];
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
   Assert.equal(matchedEngine.iconURI, null);
+});
+
+add_task(async function match_multiple_search_engines() {
+  let promiseTopic = promiseSearchTopic("engine-added");
+  Assert.equal(
+    0,
+    (await UrlbarSearchUtils.enginesForDomainPrefix("baseball")).length
+  );
+  await Promise.all([
+    Services.search.addEngineWithDetails("baseball", {
+      description: "Search Baseball",
+      method: "GET",
+      template: "http://www.baseball.moz/?search={searchTerms}",
+    }),
+    promiseTopic,
+  ]);
+  await promiseTopic;
+  let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix("ba");
+  Assert.equal(
+    matchedEngines.length,
+    2,
+    "enginesForDomainPrefix returned two engines."
+  );
+  Assert.equal(matchedEngines[0].searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngines[0].name, "bacon");
+  Assert.equal(matchedEngines[1].searchForm, "http://www.baseball.moz");
+  Assert.equal(matchedEngines[1].name, "baseball");
 });
 
 add_task(async function test_aliased_search_engine_match() {
@@ -89,7 +130,10 @@ add_task(async function test_aliased_search_engine_match() {
 
 add_task(async function test_aliased_search_engine_match_upper_case_alias() {
   let promiseTopic = promiseSearchTopic("engine-added");
-  Assert.equal(null, await UrlbarSearchUtils.engineForDomainPrefix("patch"));
+  Assert.equal(
+    0,
+    (await UrlbarSearchUtils.enginesForDomainPrefix("patch")).length
+  );
   await Promise.all([
     Services.search.addEngineWithDetails("patch", {
       alias: "PR",
@@ -123,7 +167,10 @@ add_task(async function remove_search_engine_nomatch() {
   let engine = Services.search.getEngineByName("bacon");
   let promiseTopic = promiseSearchTopic("engine-removed");
   await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
-  Assert.equal(null, await UrlbarSearchUtils.engineForDomainPrefix("bacon"));
+  Assert.equal(
+    0,
+    (await UrlbarSearchUtils.enginesForDomainPrefix("bacon")).length
+  );
 });
 
 add_task(async function test_builtin_aliased_search_engine_match() {
