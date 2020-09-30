@@ -206,7 +206,7 @@ class TreeNode extends Component {
 
   constructor(props) {
     super(props);
-    this.treeNodeRef = _react.default.createRef();
+    this.treeNodeRef = /*#__PURE__*/_react.default.createRef();
     this._onKeyDown = this._onKeyDown.bind(this);
   }
 
@@ -608,7 +608,7 @@ class Tree extends Component {
     this.state = {
       autoExpanded: new Set()
     };
-    this.treeRef = _react.default.createRef();
+    this.treeRef = /*#__PURE__*/_react.default.createRef();
 
     const opaf = fn => oncePerAnimationFrame(fn, {
       getDocument: () => this.treeRef.current && this.treeRef.current.ownerDocument
