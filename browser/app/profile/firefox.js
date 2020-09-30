@@ -1764,10 +1764,9 @@ pref("privacy.userContext.extension", "");
 // tab in the default container
 pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 
-#if defined(NIGHTLY_BUILD) || defined(XP_WIN) || defined(XP_MACOSX)
+#ifdef NIGHTLY_BUILD
 // Set to true to allow the user to silence all notifications when
-// sharing the screen. Only shipping on Windows and macOS out to
-// release. Enabled for all desktop platforms on Nightly.
+// sharing the screen.
 pref("privacy.webrtc.allowSilencingNotifications", true);
 // Set to true to use the legacy WebRTC global indicator
 pref("privacy.webrtc.legacyGlobalIndicator", false);
@@ -1776,10 +1775,6 @@ pref("privacy.webrtc.hideGlobalIndicator", false);
 pref("privacy.webrtc.allowSilencingNotifications", false);
 pref("privacy.webrtc.legacyGlobalIndicator", true);
 #endif
-
-// Set to true to add toggles to the WebRTC indicator for globally
-// muting the camera and microphone.
-pref("privacy.webrtc.globalMuteToggles", false);
 
 // Set to true to enable a warning displayed when attempting
 // to switch tabs in a window that's being shared over WebRTC.
