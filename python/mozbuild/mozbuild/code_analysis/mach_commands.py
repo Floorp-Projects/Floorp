@@ -358,7 +358,6 @@ class StaticAnalysis(MachCommandBase):
         source = [re.escape(f) for f in source]
 
         cwd = self.topobjdir
-        self._compilation_commands_path = self.topobjdir
 
         monitor = StaticAnalysisMonitor(
             self.topsrcdir,
@@ -612,12 +611,6 @@ class StaticAnalysis(MachCommandBase):
             )
             return 0
 
-        if len(self.cov_non_unified_paths):
-            self.cov_non_unified_paths = [
-                mozpath.join(self.topsrcdir, path)
-                for path in self.cov_non_unified_paths
-            ]
-
         # For each element in commands_list run `cov-translate`
         for element in commands_list:
 
@@ -627,12 +620,6 @@ class StaticAnalysis(MachCommandBase):
                 return [re.sub(r'\'-D(.*)="(.*)"\'', r'-D\1="\2"', arg) for arg in cmd]
 
             build_command = element["command"].split(" ")
-            # For modules that are compatible with the non unified build environment
-            # use the the implicit file for analysis in the detriment of the unified
-            if any(
-                element["file"].startswith(path) for path in self.cov_non_unified_paths
-            ):
-                build_command[-1] = element["file"]
 
             cmd = [self.cov_translate, "--dir", self.cov_idir_path] + transform_cmd(
                 build_command
@@ -842,7 +829,6 @@ class StaticAnalysis(MachCommandBase):
         self.cov_capture_search = cov_config.get("fs_capture_search", None)
         self.cov_full_stack = cov_config.get("full_stack", False)
         self.cov_stream = cov_config.get("stream", False)
-        self.cov_non_unified_paths = cov_config.get("non_unified", [])
 
         return 0
 
@@ -2466,7 +2452,13 @@ class StaticAnalysis(MachCommandBase):
         return (0, config, ran_configure)
 
     def _build_compile_db(self, verbose=False):
-        self._compile_db = mozpath.join(self.topobjdir, "compile_commands.json")
+        self._compilation_commands_path = mozpath.join(
+            self.topobjdir, "static-analysis"
+        )
+        self._compile_db = mozpath.join(
+            self._compilation_commands_path, "compile_commands.json"
+        )
+
         if os.path.exists(self._compile_db):
             return 0
 
@@ -2486,7 +2478,7 @@ class StaticAnalysis(MachCommandBase):
                 "created yet, creating it now..."
             )
             builder = Build(self._mach_context, None)
-            rc = builder.build_backend(["CompileDB"], verbose=verbose)
+            rc = builder.build_backend(["StaticAnalysis"], verbose=verbose)
             if rc != 0:
                 return rc
             assert os.path.exists(self._compile_db)
