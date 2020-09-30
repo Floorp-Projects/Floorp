@@ -61,8 +61,15 @@ interface WindowGlobalParent : WindowContext {
   // dispatched to them. If any of those request to block the navigation,
   // displays a prompt to the user. Returns a boolean which resolves to true
   // if the navigation should be allowed.
+  //
+  // If `timeout` is greater than 0, it is the maximum time (in milliseconds)
+  // we will wait for a child process to respond with a request to block
+  // navigation before proceeding. If the user needs to be prompted, however,
+  // the promise will not resolve until the user has responded, regardless of
+  // the timeout.
   [Throws]
-  Promise<boolean> permitUnload(optional PermitUnloadAction action = "prompt");
+  Promise<boolean> permitUnload(optional PermitUnloadAction action = "prompt",
+                                optional unsigned long timeout = 0);
 
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
