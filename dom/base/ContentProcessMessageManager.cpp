@@ -40,7 +40,7 @@ ContentProcessMessageManager* ContentProcessMessageManager::Get() {
 }
 
 already_AddRefed<mozilla::dom::ipc::SharedMap>
-ContentProcessMessageManager::SharedData() {
+ContentProcessMessageManager::GetSharedData() {
   if (ContentChild* child = ContentChild::GetSingleton()) {
     return do_AddRef(child->SharedData());
   }

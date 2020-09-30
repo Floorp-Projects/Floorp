@@ -496,7 +496,7 @@ interface ContentProcessMessageManager
   [Throws]
   readonly attribute any initialProcessData;
 
-  readonly attribute MozSharedMap sharedData;
+  readonly attribute MozSharedMap? sharedData;
 };
 ContentProcessMessageManager includes MessageManagerGlobal;
 ContentProcessMessageManager includes SyncMessageSenderMixin;
