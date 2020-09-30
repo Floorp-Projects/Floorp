@@ -314,27 +314,15 @@ WaylandDataOffer::~WaylandDataOffer(void) {
 }
 
 bool PrimaryDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
-  if (mPrimaryDataOfferGtk) {
-    gtk_primary_selection_offer_receive(mPrimaryDataOfferGtk, aMimeType, fd);
-    return true;
-  }
-  if (mPrimaryDataOfferZwpV1) {
-    zwp_primary_selection_offer_v1_receive(mPrimaryDataOfferZwpV1, aMimeType,
-                                           fd);
+  if (mPrimaryDataOffer) {
+    gtk_primary_selection_offer_receive(mPrimaryDataOffer, aMimeType, fd);
     return true;
   }
   return false;
 }
 
 static void primary_data_offer(
-    void* data, gtk_primary_selection_offer* primary_selection_offer,
-    const char* mime_type) {
-  auto* offer = static_cast<DataOffer*>(data);
-  offer->AddMIMEType(mime_type);
-}
-
-static void primary_data_offer(
-    void* data, zwp_primary_selection_offer_v1* primary_selection_offer,
+    void* data, gtk_primary_selection_offer* gtk_primary_selection_offer,
     const char* mime_type) {
   auto* offer = static_cast<DataOffer*>(data);
   offer->AddMIMEType(mime_type);
@@ -346,31 +334,18 @@ static void primary_data_offer(
  *                      gtk_primary_selection_offer.
  */
 static const struct gtk_primary_selection_offer_listener
-    primary_selection_offer_listener_gtk = {primary_data_offer};
-
-static const struct zwp_primary_selection_offer_v1_listener
-    primary_selection_offer_listener_zwp_v1 = {primary_data_offer};
+    primary_selection_offer_listener = {primary_data_offer};
 
 PrimaryDataOffer::PrimaryDataOffer(
     gtk_primary_selection_offer* aPrimaryDataOffer)
-    : mPrimaryDataOfferGtk(aPrimaryDataOffer), mPrimaryDataOfferZwpV1(nullptr) {
+    : mPrimaryDataOffer(aPrimaryDataOffer) {
   gtk_primary_selection_offer_add_listener(
-      aPrimaryDataOffer, &primary_selection_offer_listener_gtk, this);
-}
-
-PrimaryDataOffer::PrimaryDataOffer(
-    zwp_primary_selection_offer_v1* aPrimaryDataOffer)
-    : mPrimaryDataOfferGtk(nullptr), mPrimaryDataOfferZwpV1(aPrimaryDataOffer) {
-  zwp_primary_selection_offer_v1_add_listener(
-      aPrimaryDataOffer, &primary_selection_offer_listener_zwp_v1, this);
+      aPrimaryDataOffer, &primary_selection_offer_listener, this);
 }
 
 PrimaryDataOffer::~PrimaryDataOffer(void) {
-  if (mPrimaryDataOfferGtk) {
-    gtk_primary_selection_offer_destroy(mPrimaryDataOfferGtk);
-  }
-  if (mPrimaryDataOfferZwpV1) {
-    zwp_primary_selection_offer_v1_destroy(mPrimaryDataOfferZwpV1);
+  if (mPrimaryDataOffer) {
+    gtk_primary_selection_offer_destroy(mPrimaryDataOffer);
   }
 }
 
@@ -469,20 +444,6 @@ void nsRetrievalContextWayland::RegisterNewDataOffer(
   }
 }
 
-void nsRetrievalContextWayland::RegisterNewDataOffer(
-    zwp_primary_selection_offer_v1* aPrimaryDataOffer) {
-  DataOffer* dataOffer = static_cast<DataOffer*>(
-      g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
-  MOZ_ASSERT(
-      dataOffer == nullptr,
-      "Registered PrimaryDataOffer already exists. Wayland protocol error?");
-
-  if (!dataOffer) {
-    dataOffer = new PrimaryDataOffer(aPrimaryDataOffer);
-    g_hash_table_insert(mActiveOffers, aPrimaryDataOffer, dataOffer);
-  }
-}
-
 void nsRetrievalContextWayland::SetClipboardDataOffer(
     wl_data_offer* aWaylandDataOffer) {
   // Delete existing clipboard data offer
@@ -503,24 +464,6 @@ void nsRetrievalContextWayland::SetClipboardDataOffer(
 
 void nsRetrievalContextWayland::SetPrimaryDataOffer(
     gtk_primary_selection_offer* aPrimaryDataOffer) {
-  // Release any primary offer we have.
-  mPrimaryOffer = nullptr;
-
-  // aPrimaryDataOffer can be null which means we lost
-  // the mouse selection.
-  if (aPrimaryDataOffer) {
-    DataOffer* dataOffer = static_cast<DataOffer*>(
-        g_hash_table_lookup(mActiveOffers, aPrimaryDataOffer));
-    NS_ASSERTION(dataOffer, "We're missing primary data offer!");
-    if (dataOffer) {
-      g_hash_table_remove(mActiveOffers, aPrimaryDataOffer);
-      mPrimaryOffer = WrapUnique(dataOffer);
-    }
-  }
-}
-
-void nsRetrievalContextWayland::SetPrimaryDataOffer(
-    zwp_primary_selection_offer_v1* aPrimaryDataOffer) {
   // Release any primary offer we have.
   mPrimaryOffer = nullptr;
 
@@ -673,43 +616,24 @@ static const struct wl_data_device_listener data_device_listener = {
     data_device_motion,     data_device_drop,  data_device_selection};
 
 static void primary_selection_data_offer(
-    void* data, struct gtk_primary_selection_device* primary_selection_device,
-    struct gtk_primary_selection_offer* primary_offer) {
+    void* data,
+    struct gtk_primary_selection_device* gtk_primary_selection_device,
+    struct gtk_primary_selection_offer* gtk_primary_offer) {
   LOGCLIP(("primary_selection_data_offer() callback\n"));
   // create and add listener
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
-  context->RegisterNewDataOffer(primary_offer);
-}
-
-static void primary_selection_data_offer(
-    void* data,
-    struct zwp_primary_selection_device_v1* primary_selection_device,
-    struct zwp_primary_selection_offer_v1* primary_offer) {
-  LOGCLIP(("primary_selection_data_offer() callback\n"));
-  // create and add listener
-  nsRetrievalContextWayland* context =
-      static_cast<nsRetrievalContextWayland*>(data);
-  context->RegisterNewDataOffer(primary_offer);
-}
-
-static void primary_selection_selection(
-    void* data, struct gtk_primary_selection_device* primary_selection_device,
-    struct gtk_primary_selection_offer* primary_offer) {
-  LOGCLIP(("primary_selection_selection() callback\n"));
-  nsRetrievalContextWayland* context =
-      static_cast<nsRetrievalContextWayland*>(data);
-  context->SetPrimaryDataOffer(primary_offer);
+  context->RegisterNewDataOffer(gtk_primary_offer);
 }
 
 static void primary_selection_selection(
     void* data,
-    struct zwp_primary_selection_device_v1* primary_selection_device,
-    struct zwp_primary_selection_offer_v1* primary_offer) {
+    struct gtk_primary_selection_device* gtk_primary_selection_device,
+    struct gtk_primary_selection_offer* gtk_primary_offer) {
   LOGCLIP(("primary_selection_selection() callback\n"));
   nsRetrievalContextWayland* context =
       static_cast<nsRetrievalContextWayland*>(data);
-  context->SetPrimaryDataOffer(primary_offer);
+  context->SetPrimaryDataOffer(gtk_primary_offer);
 }
 
 /* gtk_primary_selection_device callback description:
@@ -726,20 +650,13 @@ static void primary_selection_selection(
  *                          there's no primary selection.
  */
 static const struct gtk_primary_selection_device_listener
-    primary_selection_device_listener_gtk = {
-        primary_selection_data_offer,
-        primary_selection_selection,
-};
-
-static const struct zwp_primary_selection_device_v1_listener
-    primary_selection_device_listener_zwp_v1 = {
+    primary_selection_device_listener = {
         primary_selection_data_offer,
         primary_selection_selection,
 };
 
 bool nsRetrievalContextWayland::HasSelectionSupport(void) {
-  return (mDisplay->GetPrimarySelectionDeviceManagerZwpV1() != nullptr ||
-          mDisplay->GetPrimarySelectionDeviceManagerGtk() != nullptr);
+  return mDisplay->GetPrimarySelectionDeviceManager() != nullptr;
 }
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
@@ -756,20 +673,14 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
       mDisplay->GetDataDeviceManager(), mDisplay->GetSeat());
   wl_data_device_add_listener(dataDevice, &data_device_listener, this);
 
-  if (mDisplay->GetPrimarySelectionDeviceManagerZwpV1()) {
-    zwp_primary_selection_device_v1* primaryDataDevice =
-        zwp_primary_selection_device_manager_v1_get_device(
-            mDisplay->GetPrimarySelectionDeviceManagerZwpV1(),
-            mDisplay->GetSeat());
-    zwp_primary_selection_device_v1_add_listener(
-        primaryDataDevice, &primary_selection_device_listener_zwp_v1, this);
-  } else if (mDisplay->GetPrimarySelectionDeviceManagerGtk()) {
+  gtk_primary_selection_device_manager* manager =
+      mDisplay->GetPrimarySelectionDeviceManager();
+  if (manager) {
     gtk_primary_selection_device* primaryDataDevice =
-        gtk_primary_selection_device_manager_get_device(
-            mDisplay->GetPrimarySelectionDeviceManagerGtk(),
-            mDisplay->GetSeat());
+        gtk_primary_selection_device_manager_get_device(manager,
+                                                        mDisplay->GetSeat());
     gtk_primary_selection_device_add_listener(
-        primaryDataDevice, &primary_selection_device_listener_gtk, this);
+        primaryDataDevice, &primary_selection_device_listener, this);
   }
 
   mInitialized = true;

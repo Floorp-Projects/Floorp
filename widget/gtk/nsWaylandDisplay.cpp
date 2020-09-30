@@ -127,12 +127,7 @@ void nsWaylandDisplay::SetSeat(wl_seat* aSeat) { mSeat = aSeat; }
 
 void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
     gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager) {
-  mPrimarySelectionDeviceManagerGtk = aPrimarySelectionDeviceManager;
-}
-
-void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
-    zwp_primary_selection_device_manager_v1* aPrimarySelectionDeviceManager) {
-  mPrimarySelectionDeviceManagerZwpV1 = aPrimarySelectionDeviceManager;
+  mPrimarySelectionDeviceManager = aPrimarySelectionDeviceManager;
 }
 
 void nsWaylandDisplay::SetIdleInhibitManager(
@@ -169,15 +164,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* primary_selection_device_manager =
         WaylandRegistryBind<gtk_primary_selection_device_manager>(
             registry, id, &gtk_primary_selection_device_manager_interface, 1);
-    wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
-                       display->GetEventQueue());
-    display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
-  } else if (strcmp(interface, "zwp_primary_selection_device_manager_v1") ==
-             0) {
-    auto* primary_selection_device_manager =
-        WaylandRegistryBind<gtk_primary_selection_device_manager>(
-            registry, id, &zwp_primary_selection_device_manager_v1_interface,
-            1);
     wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
                        display->GetEventQueue());
     display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
@@ -298,8 +284,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
       mSeat(nullptr),
       mShm(nullptr),
       mSyncCallback(nullptr),
-      mPrimarySelectionDeviceManagerGtk(nullptr),
-      mPrimarySelectionDeviceManagerZwpV1(nullptr),
+      mPrimarySelectionDeviceManager(nullptr),
       mIdleInhibitManager(nullptr),
       mRegistry(nullptr),
       mExplicitSync(false) {
