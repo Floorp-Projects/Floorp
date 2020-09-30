@@ -30,6 +30,10 @@ def test_generate_graph(optimized_task_graph):
             lambda t: t.kind == "build" and "fuzzing" in t.attributes["build_platform"],
             id="no fuzzing builds",
         ),
+        pytest.param(
+            lambda t: t.kind == "build" and "ccov" in t.attributes["build_platform"],
+            id="no ccov builds",
+        ),
     ),
 )
 def test_tasks_are_not_scheduled(optimized_task_graph, filter_tasks, func):

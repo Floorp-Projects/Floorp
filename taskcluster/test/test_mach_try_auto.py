@@ -88,6 +88,10 @@ def test_tasks_are_scheduled(optimized_task_graph, filter_tasks, func, min_expec
             id="no fuzzing builds",
         ),
         pytest.param(
+            lambda t: t.kind == "build" and "ccov" in t.attributes["build_platform"],
+            id="no ccov builds",
+        ),
+        pytest.param(
             lambda t: t.kind == "build-signing",
             id="no build-signing",
         ),
