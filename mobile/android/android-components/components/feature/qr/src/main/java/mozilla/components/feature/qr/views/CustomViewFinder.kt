@@ -98,7 +98,7 @@ class CustomViewFinder @JvmOverloads constructor(
             viewFinderBottom = viewFinderRectangle.bottom.toFloat()
             normalizedRadius = min(viewFinderCornersRadius, (viewFinderCornersSize - 1).coerceAtLeast(0f))
 
-            scanMessageStringRes?.let { showMessage(it) }
+            showMessage(scanMessageStringRes)
         }
     }
 
@@ -185,11 +185,15 @@ class CustomViewFinder @JvmOverloads constructor(
      * Creates a Static Layout used to show a message below the viewfinder
      */
     @Suppress("Deprecation")
-    private fun showMessage(@StringRes scanMessageId: Int) {
-        val scanMessage = HtmlCompat.fromHtml(
-            context.getString(scanMessageId),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
+    private fun showMessage(@StringRes scanMessageId: Int?) {
+        val scanMessage = if (scanMessageId != null) {
+            HtmlCompat.fromHtml(
+                context.getString(scanMessageId),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+        } else {
+            ""
+        }
         messageTextPaint = TextPaint().apply {
             isAntiAlias = true
             color = ContextCompat.getColor(context, android.R.color.white)
@@ -277,7 +281,7 @@ class CustomViewFinder @JvmOverloads constructor(
         internal var scanMessageStringRes: Int? = null
 
         /** Sets the message to be displayed below ViewFinder. */
-        fun setMessage(scanMessageStringRes: Int) {
+        fun setMessage(scanMessageStringRes: Int?) {
             this.scanMessageStringRes = scanMessageStringRes
         }
     }

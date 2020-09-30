@@ -107,7 +107,7 @@ class QrFragment : Fragment() {
     internal lateinit var cameraErrorView: TextView
 
     @StringRes
-    private var scanMessage: Int? = null
+    internal var scanMessage: Int? = null
     internal var cameraId: String? = null
     private var captureSession: CameraCaptureSession? = null
     internal var cameraDevice: CameraDevice? = null
@@ -223,9 +223,7 @@ class QrFragment : Fragment() {
         customViewFinder = view.findViewById<View>(R.id.view_finder) as CustomViewFinder
         cameraErrorView = view.findViewById<View>(R.id.camera_error) as TextView
 
-        scanMessage?.let {
-            CustomViewFinder.setMessage(it)
-        }
+        CustomViewFinder.setMessage(scanMessage)
         qrState = STATE_FIND_QRCODE
     }
 

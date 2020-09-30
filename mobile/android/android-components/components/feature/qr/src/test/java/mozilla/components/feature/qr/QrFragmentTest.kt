@@ -109,6 +109,17 @@ class QrFragmentTest {
     }
 
     @Test
+    fun `qr fragment has the correct scan message resource`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+
+        val qrFragmentWithMessage = QrFragment.newInstance(listener, R.string.mozac_feature_qr_scanner)
+        val qrFragmentNoMessage = QrFragment.newInstance(listener, null)
+
+        assertEquals(null, qrFragmentNoMessage.scanMessage)
+        assertEquals(R.string.mozac_feature_qr_scanner, qrFragmentWithMessage.scanMessage)
+    }
+
+    @Test
     fun `listener is invoked on successful qr scan`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
@@ -253,7 +264,7 @@ class QrFragmentTest {
 
         val cameraManager: CameraManager = mock()
         whenever(cameraManager.openCamera(anyString(), any<CameraDevice.StateCallback>(), any()))
-                .thenThrow(CameraAccessException(123))
+            .thenThrow(CameraAccessException(123))
 
         val activity: FragmentActivity = mock()
         whenever(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)

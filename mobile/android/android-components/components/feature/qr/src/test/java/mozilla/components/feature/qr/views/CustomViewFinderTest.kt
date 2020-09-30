@@ -38,6 +38,19 @@ class CustomViewFinderTest {
     }
 
     @Test
+    fun `calling setupMessage with null value clears scan message `() {
+        val customViewFinder = spy(CustomViewFinder(testContext))
+        val rect = mock(Rect::class.java)
+        customViewFinder.viewFinderRectangle = rect
+
+        CustomViewFinder.setMessage(R.string.mozac_feature_qr_scanner)
+        assertNotNull(CustomViewFinder.scanMessageStringRes)
+
+        CustomViewFinder.setMessage(null)
+        assertNull(CustomViewFinder.scanMessageStringRes)
+    }
+
+    @Test
     fun `message has the correct attributes`() {
         val customViewFinder = spy(CustomViewFinder(testContext))
         val rect = mock(Rect::class.java)
