@@ -22,6 +22,7 @@
 
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::image;

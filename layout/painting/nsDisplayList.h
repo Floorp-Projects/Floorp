@@ -289,7 +289,12 @@ struct ActiveScrolledRoot {
    * Find the view ID (or generate a new one) for the content element
    * corresponding to the ASR.
    */
-  mozilla::layers::ScrollableLayerGuid::ViewID GetViewId() const;
+  mozilla::layers::ScrollableLayerGuid::ViewID GetViewId() const {
+    if (!mViewId.isSome()) {
+      mViewId = Some(ComputeViewId());
+    }
+    return *mViewId;
+  }
 
   RefPtr<const ActiveScrolledRoot> mParent;
   nsIScrollableFrame* mScrollableFrame;
@@ -313,6 +318,8 @@ struct ActiveScrolledRoot {
   static uint32_t Depth(const ActiveScrolledRoot* aActiveScrolledRoot) {
     return aActiveScrolledRoot ? aActiveScrolledRoot->mDepth : 0;
   }
+
+  mozilla::layers::ScrollableLayerGuid::ViewID ComputeViewId() const;
 
   // This field is lazily populated in GetViewId(). We don't want to do the
   // work of populating if webrender is disabled, because it is often not

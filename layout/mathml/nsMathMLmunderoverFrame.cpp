@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmunderoverFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsMathMLmmultiscriptsFrame.h"
 #include "mozilla/dom/MathMLElement.h"

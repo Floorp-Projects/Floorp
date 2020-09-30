@@ -235,12 +235,10 @@ nsCString ActiveScrolledRoot::ToString(
   return std::move(str);
 }
 
-ViewID ActiveScrolledRoot::GetViewId() const {
-  if (!mViewId.isSome()) {
-    nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
-    mViewId = Some(nsLayoutUtils::FindOrCreateIDFor(content));
-  }
-  return *mViewId;
+mozilla::layers::ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId()
+    const {
+  nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
+  return nsLayoutUtils::FindOrCreateIDFor(content);
 }
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {

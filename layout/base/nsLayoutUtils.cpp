@@ -7755,7 +7755,7 @@ bool nsLayoutUtils::IsInPositionFixedSubtree(const nsIFrame* aFrame) {
   return false;
 }
 
-nsLayoutUtils::SurfaceFromElementResult
+SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
                                           uint32_t aSurfaceFlags,
                                           RefPtr<DrawTarget>& aTarget) {
@@ -7796,7 +7796,7 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
   return result;
 }
 
-nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     nsIImageLoadingContent* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
@@ -7935,14 +7935,14 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   return result;
 }
 
-nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     HTMLImageElement* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   return SurfaceFromElement(static_cast<nsIImageLoadingContent*>(aElement),
                             aSurfaceFlags, aTarget);
 }
 
-nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     HTMLCanvasElement* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
@@ -7992,7 +7992,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   return result;
 }
 
-nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     HTMLVideoElement* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
@@ -8042,7 +8042,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   return result;
 }
 
-nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     dom::Element* aElement, uint32_t aSurfaceFlags,
     RefPtr<DrawTarget>& aTarget) {
   // If it's a <canvas>, we may be able to just grab its internal surface
@@ -9025,7 +9025,7 @@ bool nsLayoutUtils::IsAPZTestLoggingEnabled() {
 ////////////////////////////////////////
 // SurfaceFromElementResult
 
-nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
+SurfaceFromElementResult::SurfaceFromElementResult()
     // Use safe default values here
     : mHadCrossOriginRedirects(false),
       mIsWriteOnly(true),
@@ -9035,7 +9035,7 @@ nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
       mAlphaType(gfxAlphaType::Opaque) {}
 
 const RefPtr<mozilla::gfx::SourceSurface>&
-nsLayoutUtils::SurfaceFromElementResult::GetSourceSurface() {
+SurfaceFromElementResult::GetSourceSurface() {
   if (!mSourceSurface && mLayersImage) {
     mSourceSurface = mLayersImage->GetAsSourceSurface();
   }

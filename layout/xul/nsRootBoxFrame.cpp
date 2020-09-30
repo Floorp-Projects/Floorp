@@ -13,6 +13,7 @@
 #include "nsIPopupContainer.h"
 #include "nsIContent.h"
 #include "nsFrameManager.h"
+#include "nsLayoutUtils.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/PresShell.h"
 

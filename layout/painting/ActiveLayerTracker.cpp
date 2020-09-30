@@ -26,6 +26,7 @@
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsLayoutUtils.h"
 
 namespace mozilla {
 

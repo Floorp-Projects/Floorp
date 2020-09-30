@@ -417,9 +417,8 @@ template <class ElementType>
 static already_AddRefed<SourceSurface> GetSurfaceFromElement(
     nsIGlobalObject* aGlobal, ElementType& aElement, bool* aWriteOnly,
     ErrorResult& aRv) {
-  nsLayoutUtils::SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromElement(
-          &aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+  SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromElement(
+      &aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
   if (NS_WARN_IF(!surface)) {
@@ -660,9 +659,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateFromOffscreenCanvas(
   // Check write-only mode.
   bool writeOnly = aOffscreenCanvas.IsWriteOnly();
 
-  nsLayoutUtils::SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromOffscreenCanvas(
-          &aOffscreenCanvas, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+  SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromOffscreenCanvas(
+      &aOffscreenCanvas, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
 

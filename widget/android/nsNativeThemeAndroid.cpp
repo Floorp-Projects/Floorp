@@ -10,6 +10,7 @@
 #include "nsCSSRendering.h"
 #include "nsDateTimeControlFrame.h"
 #include "nsDeviceContext.h"
+#include "nsLayoutUtils.h"
 #include "PathHelpers.h"
 
 using namespace mozilla;
