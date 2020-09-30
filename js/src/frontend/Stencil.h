@@ -30,9 +30,9 @@
 #include "vm/GeneratorAndAsyncKind.h"     // GeneratorKind, FunctionAsyncKind
 #include "vm/JSScript.h"                  // MemberInitializers
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
-#include "vm/ScopeKind.h"      // ScopeKind
-#include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex
-#include "vm/StencilEnums.h"   // ImmutableScriptFlagsEnum
+#include "vm/ScopeKind.h"  // ScopeKind
+#include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex, js::RuntimeScriptData
+#include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 
 namespace js {
 
