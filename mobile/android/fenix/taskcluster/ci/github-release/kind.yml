@@ -10,6 +10,9 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
+    # To work around a race condition where if this runs before
+    # push-apk, push-apk fails to verify chain of trust
+    - push-apk
     - signing
 
 primary-dependency: signing
