@@ -115,9 +115,9 @@ add_task(async function testPageActionsButtonPress() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     let button = document.getElementById("pageActionButton");
     forceFocus(button);
-    EventUtils.synthesizeKey(" ");
     let view = document.getElementById("pageActionPanelMainView");
     let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
+    EventUtils.synthesizeKey(" ");
     await focused;
     ok(true, "Focus inside Page Actions menu after toolbar button pressed");
     let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
