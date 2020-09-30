@@ -32,6 +32,7 @@ function setup() {
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
+  prefs.setBoolPref("network.security.esni.enabled", false);
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
@@ -60,6 +61,7 @@ function setup() {
 
 setup();
 registerCleanupFunction(() => {
+  prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
   prefs.clearUserPref("network.http.spdy.enabled.http2");
   prefs.clearUserPref("network.dns.localDomains");
@@ -99,7 +101,7 @@ DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIDNSListener",
 ]);
 
-add_task(async function testTXTResolve() {
+add_task(async function testEsniRequest() {
   // use the h2 server as DOH provider
   prefs.setCharPref(
     "network.trr.uri",
@@ -126,8 +128,8 @@ add_task(async function testTXTResolve() {
   Assert.equal(answer, test_answer, "got correct answer");
 });
 
-// verify TXT record pushed on a A record request
-add_task(async function testTXTRecordPushPart1() {
+// verify esni record pushed on a A record request
+add_task(async function testEsniPushPart1() {
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/esni-dns-push"
@@ -151,8 +153,8 @@ add_task(async function testTXTRecordPushPart1() {
   Assert.equal(answer, test_answer_addr, "got correct answer");
 });
 
-// verify the TXT pushed record
-add_task(async function testTXTRecordPushPart2() {
+// verify the esni pushed record
+add_task(async function testEsniPushPart2() {
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
   prefs.setCharPref(
@@ -179,7 +181,7 @@ add_task(async function testTXTRecordPushPart2() {
   Assert.equal(answer, test_answer, "got correct answer");
 });
 
-add_task(async function testHTTPSSVCResolve() {
+add_task(async function testEsniHTTPSSVC() {
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/doh"
