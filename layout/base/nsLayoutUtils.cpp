@@ -3197,11 +3197,11 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
     Maybe<Matrix4x4Flagged>* aMatrixCache /* = nullptr */,
     bool aStopAtStackingContextAndDisplayPortAndOOFFrame /* = false */,
     nsIFrame** aOutAncestor /* = nullptr */) {
-#if 0
-  // FIXME(bug 1668156): This should hold.
-  MOZ_ASSERT(IsAncestorFrameCrossDoc(aAncestor.mFrame, aFrame),
+  // FIXME(emilio, bug 1668156): The pres context check shouldn't be needed, it
+  // should hold regardless, but there are some existing bogus callers...
+  MOZ_ASSERT(aAncestor.mFrame->PresContext() != aFrame->PresContext() ||
+                 IsAncestorFrameCrossDoc(aAncestor.mFrame, aFrame),
              "Fix the caller");
-#endif
 
   SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
 
@@ -4575,7 +4575,9 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
 
   BoxToRect(const nsIFrame* aRelativeTo, RectCallback* aCallback,
             uint32_t aFlags)
-      : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags),
+      : mRelativeTo(aRelativeTo),
+        mCallback(aCallback),
+        mFlags(aFlags),
         mRelativeToIsRoot(!aRelativeTo->GetParent()) {}
 
   virtual void AddBox(nsIFrame* aFrame) override {
