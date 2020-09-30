@@ -311,27 +311,38 @@ class WellKnownParserAtoms_ROM {
 
     // Length-1 static atoms
     for (size_t i = 0; i < ASCII_STATIC_LIMIT; ++i) {
-      constexpr size_t len = 1;
-      char16_t buf[] = {static_cast<char16_t>(i),
-                        /* null-terminator */ 0};
-      length1Table[i].setHashAndLength(mozilla::HashString(buf), len);
-      length1Table[i].setStaticParserString1(StaticParserString1(i));
-      length1Table[i].storage()[0] = buf[0];
+      init(length1Table[i], i);
     }
 
     // Length-2 static atoms
     for (size_t i = 0; i < NUM_LENGTH2_ENTRIES; ++i) {
-      constexpr size_t len = 2;
-      char16_t buf[] = {StaticStrings::fromSmallChar(i >> 6),
-                        StaticStrings::fromSmallChar(i & 0x003F),
-                        /* null-terminator */ 0};
-      length2Table[i].setHashAndLength(mozilla::HashString(buf), len);
-      length2Table[i].setStaticParserString2(StaticParserString2(i));
-      length2Table[i].storage()[0] = buf[0];
-      length2Table[i].storage()[1] = buf[1];
+      init(length2Table[i], i);
     }
   }
 
+ private:
+  // Initialization moved out of the constructor to workaround bug 1668238.
+  static constexpr void init(StaticParserAtomEntry<1>& entry, size_t i) {
+    constexpr size_t len = 1;
+    char16_t buf[] = {static_cast<char16_t>(i),
+                      /* null-terminator */ 0};
+    entry.setHashAndLength(mozilla::HashString(buf), len);
+    entry.setStaticParserString1(StaticParserString1(i));
+    entry.storage()[0] = buf[0];
+  }
+
+  static constexpr void init(StaticParserAtomEntry<2>& entry, size_t i) {
+    constexpr size_t len = 2;
+    char16_t buf[] = {StaticStrings::fromSmallChar(i >> 6),
+                      StaticStrings::fromSmallChar(i & 0x003F),
+                      /* null-terminator */ 0};
+    entry.setHashAndLength(mozilla::HashString(buf), len);
+    entry.setStaticParserString2(StaticParserString2(i));
+    entry.storage()[0] = buf[0];
+    entry.storage()[1] = buf[1];
+  }
+
+ public:
   // Fast-path tiny strings since they are abundant in minified code.
   template <typename CharsT>
   const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
