@@ -30,6 +30,7 @@ import org.mozilla.geckoview.WebResponse;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -895,7 +896,7 @@ public class GeckoViewActivity
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             mTabSessionManager.setCurrentSession((TabSession) mGeckoView.getSession());
             sGeckoRuntime.getWebExtensionController().setTabActive(mGeckoView.getSession(), true);
         } else {
@@ -1085,6 +1086,11 @@ public class GeckoViewActivity
         if (session != currentSession) {
             setGeckoViewSession(session, activateTab);
             mCurrentUri = session.getUri();
+            if (!session.isOpen()) {
+                // Session's process was previously killed; reopen
+                session.open(sGeckoRuntime);
+                session.loadUri(mCurrentUri);
+            }
             mToolbarView.getLocationView().setText(mCurrentUri);
         }
     }
@@ -1248,6 +1254,13 @@ public class GeckoViewActivity
         return filename;
     }
 
+    private static boolean isForeground() {
+        final ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(appProcessInfo);
+        return appProcessInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND ||
+               appProcessInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+    }
+
     private String mErrorTemplate;
     private String createErrorPage(final String error) {
         if (mErrorTemplate == null) {
@@ -1378,6 +1391,28 @@ public class GeckoViewActivity
         public void onCrash(GeckoSession session) {
             Log.e(LOGTAG, "Crashed, reopening session");
             session.open(sGeckoRuntime);
+        }
+
+        @Override
+        public void onKill(GeckoSession session) {
+            TabSession tabSession = mTabSessionManager.getSession(session);
+            if (tabSession == null) {
+                return;
+            }
+
+            if (tabSession != mTabSessionManager.getCurrentSession()) {
+                Log.e(LOGTAG, "Background session killed");
+                return;
+            }
+
+            if (isForeground()) {
+                throw new IllegalStateException("Foreground content process unexpectedly killed by OS!");
+            }
+
+            Log.e(LOGTAG, "Current session killed, reopening");
+
+            tabSession.open(sGeckoRuntime);
+            tabSession.loadUri(tabSession.getUri());
         }
 
         @Override
