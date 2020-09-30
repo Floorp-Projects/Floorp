@@ -1026,7 +1026,7 @@ class DispatchWheelEventOnMainThread : public Runnable {
         mAPZResult(aAPZResult) {}
 
   NS_IMETHOD Run() override {
-    WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetWheelEvent(mWidget);
+    WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetEvent(mWidget);
     mWidget->ProcessUntransformedAPZEvent(&wheelEvent, mAPZResult);
     return NS_OK;
   }
@@ -1097,10 +1097,10 @@ void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
       return;
     }
 
-    WidgetWheelEvent event = aInput.ToWidgetWheelEvent(this);
+    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
     ProcessUntransformedAPZEvent(&event, result);
   } else {
-    WidgetWheelEvent event = aInput.ToWidgetWheelEvent(this);
+    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
