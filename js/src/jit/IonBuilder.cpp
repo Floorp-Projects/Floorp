@@ -177,7 +177,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
       inlineCallInfo_(nullptr),
       maybeFallbackFunctionGetter_(nullptr) {
   script_ = info_->script();
-  pc = info_->startPC();
+  pc = script_->code();
 
   // The script must have a JitScript. Compilation requires a BaselineScript
   // too.
