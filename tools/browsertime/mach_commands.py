@@ -404,7 +404,7 @@ class MachBrowsertime(MachCommandBase):
 
     def _need_install(self, package):
         from pip._internal.req.constructors import install_req_from_line
-        req = install_req_from_line("Pillow")
+        req = install_req_from_line(package)
         req.check_if_exists(use_user_site=False)
         if req.satisfied_by is None:
             return True

@@ -283,6 +283,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
     def __init__(self, config, root_results_dir=None):
         super(BrowsertimeResultsHandler, self).__init__(**config)
         self._root_results_dir = root_results_dir
+        self.browsertime_visualmetrics = False
 
     def result_dir(self):
         return self._root_results_dir
@@ -501,6 +502,25 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         ).append(cycle[metric])
                 power_result["statistics"] = raw_result["statistics"]["android"]["power"]
                 results.append(power_result)
+
+            if self.browsertime_visualmetrics:
+                vismet_result = {
+                    "bt_ver": bt_ver,
+                    "browser": bt_browser,
+                    "url": bt_url,
+                    "measurements": {},
+                    "statistics": {},
+                }
+                for cycle in raw_result["visualMetrics"]:
+                    for metric in cycle:
+                        if "progress" in metric.lower():
+                            # Bug 1665750 - Determine if we should display progress
+                            continue
+                        vismet_result["measurements"].setdefault(
+                            metric, []
+                        ).append(cycle[metric])
+                vismet_result["statistics"] = raw_result["statistics"]["visualMetrics"]
+                results.append(vismet_result)
 
             custom_types = raw_result["browserScripts"][0].get("custom")
             if custom_types:

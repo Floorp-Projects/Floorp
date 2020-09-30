@@ -70,6 +70,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
             "default": None,
             "help": argparse.SUPPRESS
         }],
+        [["--browsertime-vismet-script"], {
+            "dest": "browsertime_vismet_script",
+            "default": None,
+            "help": argparse.SUPPRESS
+        }],
         [["--browsertime-chromedriver"], {
             "dest": "browsertime_chromedriver",
             "default": None,
@@ -87,6 +92,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
         }],
         [["--browsertime-video"], {
             "dest": "browsertime_video",
+            "action": "store_true",
+            "default": False,
+            "help": argparse.SUPPRESS
+        }],
+        [["--browsertime-visualmetrics"], {
+            "dest": "browsertime_visualmetrics",
             "action": "store_true",
             "default": False,
             "help": argparse.SUPPRESS
@@ -418,12 +429,17 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
         self.chromium_dist_path = None
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
         self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
+        self.browsertime_visualmetrics = False
+        self.browsertime_video = False
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
             value = self.config.get(details['dest'])
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
                 setattr(self, details['dest'], value)
+
+        if not self.run_local and self.browsertime_visualmetrics and self.browsertime_video:
+            self.error("Cannot run visual metrics in the same CI task as the test.")
 
     # We accept some configuration options from the try commit message in the
     # format mozharness: <options>. Example try commit message: mozharness:
@@ -746,10 +762,20 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
             two_pass=True,
             editable=True,
         )
+
+        modules = ['pip>=1.5']
+        if self.run_local:
+            # Add modules required for visual metrics
+            modules.extend([
+                'numpy==1.16.1',
+                'Pillow==6.1.0',
+                'scipy==1.2.3',
+                'pyssim==0.4'
+            ])
+
         # Require pip >= 1.5 so pip will prefer .whl files to install
-        super(Raptor, self).create_virtualenv(
-            modules=['pip>=1.5']
-        )
+        super(Raptor, self).create_virtualenv(modules=modules)
+
         # Install Raptor dependencies
         self.install_module(
             requirements=[os.path.join(self.raptor_path,

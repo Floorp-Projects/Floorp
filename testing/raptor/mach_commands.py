@@ -181,7 +181,30 @@ class RaptorRunner(MozbuildObject):
             self.config.update({
                 'browsertime_node': browsertime.node_path(),
                 'browsertime_browsertimejs': browsertime.browsertime_path(),
+                'browsertime_vismet_script': browsertime.visualmetrics_path(),
             })
+
+            def _browsertime_exists():
+                return (
+                    os.path.exists(self.config["browsertime_browsertimejs"]) and
+                    os.path.exists(self.config["browsertime_vismet_script"])
+                )
+            # Check if browsertime scripts exist and try to install them if
+            # they aren't
+            if not _browsertime_exists():
+                # TODO: Make this "integration" nicer in the near future
+                print("Missing browsertime files...attempting to install")
+                subprocess.check_call([
+                    os.path.join(self.topsrcdir, "mach"),
+                    "browsertime",
+                    "--setup",
+                    "--clobber"
+                ])
+                if not _browsertime_exists():
+                    raise Exception(
+                        "Failed installation attempt. Cannot find browsertime scripts. "
+                        "Run `./mach browsertime --setup --clobber` to set it up."
+                    )
         finally:
             sys.path = sys.path[1:]
 
