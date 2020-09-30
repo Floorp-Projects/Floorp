@@ -46,7 +46,7 @@ mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", opt
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
 wgpu_bindings = { path = "../../../../gfx/wgpu_bindings", optional = true }
-mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
+mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.4.0" }
 remote = { path = "../../../../remote", optional = true }
 fog_control = { path = "../../../components/glean", optional = true }
 app_services_logger = { path = "../../../../services/common/app_services_logger" }
