@@ -4601,11 +4601,6 @@ devtools-environment@^0.0.5:
   resolved "https://registry.yarnpkg.com/devtools-environment/-/devtools-environment-0.0.5.tgz#0333bf35009fe09c21c315069e6b4d9177a4b8d1"
   integrity sha512-ynvI7CKMnYlje5G/pcq/ez517M2T40SzfUl0K71liomVoaphAJ5vRIRxl53X2eH25ODR5IaEj01XtJcKJBxWgA==
 
-devtools-environment@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/devtools-environment/-/devtools-environment-0.0.6.tgz#11584f5b1ead784c2356d8da647a630fed591a4e"
-  integrity sha512-tZK/UlLBnm5TCr9YnBahMkv2bpasjNyQgLNZOvFCMCO4TZSjggrccMTkljhqCr32Zb1Nx/C/jhB/KdlyiUI2Lw==
-
 devtools-launchpad@^0.0.161:
   version "0.0.161"
   resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.161.tgz#22073f35388c7cd7df71726daded76c5f12abfde"

@@ -8,6 +8,7 @@ bin/
 packages/**/fixtures/**
 packages/devtools-config/**
 packages/devtools-contextmenu/**
+packages/devtools-environment/**
 packages/devtools-modules/**
 node_modules
 out
