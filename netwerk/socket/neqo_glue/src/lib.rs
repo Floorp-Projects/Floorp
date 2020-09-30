@@ -360,7 +360,7 @@ pub extern "C" fn neqo_http3conn_fetch(
             *stream_id = id;
             NS_OK
         }
-        Err(Http3Error::TransportError(TransportError::StreamLimitError)) => {
+        Err(Http3Error::StreamLimitError) => {
             NS_BASE_STREAM_WOULD_BLOCK
         }
         Err(_) => NS_ERROR_UNEXPECTED,
@@ -619,7 +619,7 @@ pub extern "C" fn neqo_http3conn_read_response_data(
             *fin = fin_recvd;
             NS_OK
         }
-        Err(Http3Error::TransportError(TransportError::InvalidStreamId))
+        Err(Http3Error::InvalidStreamId)
         | Err(Http3Error::TransportError(TransportError::NoMoreData)) => NS_ERROR_INVALID_ARG,
         Err(Http3Error::HttpFrame) => NS_ERROR_ABORT,
         Err(_) => NS_ERROR_UNEXPECTED,
