@@ -485,6 +485,9 @@ pub enum Http3Event {
     ConnectionClosed {
         error: CloseError,
     },
+    ResumptionToken {
+        expire_in: u64, // microseconds
+    },
     NoEvent,
 }
 
@@ -519,7 +522,7 @@ fn convert_h3_to_h1_headers(
 pub extern "C" fn neqo_http3conn_event(
     conn: &mut NeqoHttp3Conn,
     ret_event: &mut Http3Event,
-    ret_headers: &mut ThinVec<u8>,
+    data: &mut ThinVec<u8>,
 ) -> nsresult {
     while let Some(evt) = conn.conn.next_event() {
         let fe = match evt {
@@ -533,7 +536,7 @@ pub extern "C" fn neqo_http3conn_event(
                 fin,
             } => {
                 if let Some(headers) = headers {
-                    let res = convert_h3_to_h1_headers(headers, ret_headers);
+                    let res = convert_h3_to_h1_headers(headers, data);
                     if res != NS_OK {
                         return res;
                     }
@@ -547,7 +550,7 @@ pub extern "C" fn neqo_http3conn_event(
                 request_stream_id,
                 headers,
             } => {
-                let res = convert_h3_to_h1_headers(headers, ret_headers);
+                let res = convert_h3_to_h1_headers(headers, data);
                 if res != NS_OK {
                     return res;
                 }
@@ -562,7 +565,7 @@ pub extern "C" fn neqo_http3conn_event(
                 fin,
             } => {
                 if let Some(headers) = headers {
-                    let res = convert_h3_to_h1_headers(headers, ret_headers);
+                    let res = convert_h3_to_h1_headers(headers, data);
                     if res != NS_OK {
                         return res;
                     }
@@ -576,6 +579,22 @@ pub extern "C" fn neqo_http3conn_event(
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
             Http3ClientEvent::ZeroRttRejected => Http3Event::ZeroRttRejected,
+            Http3ClientEvent::ResumptionToken(token) => {
+                // expiration_time time is Instant, transform it into microseconds it will
+                // be valid for. Necko code will add the value to PR_Now() to get the expiration
+                // time in PRTime.
+                if token.expiration_time() > Instant::now() {
+                    let e = (token.expiration_time() - Instant::now()).as_micros();
+                    if let Ok(expire_in) = u64::try_from(e) {
+                        data.extend_from_slice(token.as_ref());
+                        Http3Event::ResumptionToken{ expire_in }
+                    } else {
+                        Http3Event::NoEvent
+                    }
+                } else {
+                    Http3Event::NoEvent
+                }
+            }
             Http3ClientEvent::GoawayReceived => Http3Event::GoawayReceived,
             Http3ClientEvent::StateChange(state) => match state {
                 Http3State::Connected => Http3Event::ConnectionConnected,
@@ -716,16 +735,6 @@ pub extern "C" fn neqo_http3conn_peer_certificate_info(
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_authenticated(conn: &mut NeqoHttp3Conn, error: PRErrorCode) {
     conn.conn.authenticated(error.into(), Instant::now());
-}
-
-#[no_mangle]
-pub extern "C" fn neqo_http3conn_resumption_token(
-    conn: &mut NeqoHttp3Conn,
-    token: &mut ThinVec<u8>,
-) {
-    if let Some(t) = conn.conn.resumption_token() {
-        token.extend_from_slice(&t);
-    }
 }
 
 #[no_mangle]
