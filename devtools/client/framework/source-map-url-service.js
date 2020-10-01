@@ -28,11 +28,11 @@ class SourceMapURLService {
     this._urlToIDMap = new Map();
     this._mapsById = new Map();
     this._sourcesLoading = null;
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._runningCallback = false;
 
     this._syncPrevValue = this._syncPrevValue.bind(this);
     this._clearAllState = this._clearAllState.bind(this);
-    this._onNewStyleSheet = this._onNewStyleSheet.bind(this);
 
     this._target.on("will-navigate", this._clearAllState);
 
@@ -416,33 +416,20 @@ class SourceMapURLService {
     if (!this._prefValue) {
       return null;
     }
+    if (this._target.isWorkerTarget) {
+      return;
+    }
 
     if (!this._sourcesLoading) {
-      const sourcesLoading = (async () => {
-        if (this._target.isWorkerTarget) {
-          return;
-        }
+      const { resourceWatcher } = this._toolbox;
+      const { STYLESHEET, SOURCE } = resourceWatcher.TYPES;
 
-        const { resourceWatcher } = this._toolbox;
-        const { STYLESHEET, SOURCE } = resourceWatcher.TYPES;
-
-        this._onResourceAvailable = resources => {
-          if (this._sourcesLoading === sourcesLoading) {
-            for (const resource of resources) {
-              if (resource.resourceType == STYLESHEET) {
-                this._onNewStyleSheet(resource);
-              } else if (resource.resourceType == SOURCE) {
-                this._onNewJavascript(resource);
-              }
-            }
-          }
-        };
-
-        await resourceWatcher.watchResources([STYLESHEET, SOURCE], {
+      this._sourcesLoading = resourceWatcher.watchResources(
+        [STYLESHEET, SOURCE],
+        {
           onAvailable: this._onResourceAvailable,
-        });
-      })();
-      this._sourcesLoading = sourcesLoading;
+        }
+      );
     }
 
     return this._sourcesLoading;
@@ -453,6 +440,18 @@ class SourceMapURLService {
       return this._sourcesLoading;
     }
     return Promise.resolve();
+  }
+
+  _onResourceAvailable(resources) {
+    const { resourceWatcher } = this._toolbox;
+    const { STYLESHEET, SOURCE } = resourceWatcher.TYPES;
+    for (const resource of resources) {
+      if (resource.resourceType == STYLESHEET) {
+        this._onNewStyleSheet(resource);
+      } else if (resource.resourceType == SOURCE) {
+        this._onNewJavascript(resource);
+      }
+    }
   }
 
   _convertPendingURLSubscriptionsToID(url, id) {
