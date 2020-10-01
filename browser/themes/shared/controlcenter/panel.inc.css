@@ -261,6 +261,11 @@
   overflow: hidden;
   color: white;
   background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
+  /* Set custom hover/focus/active states on the info button,
+     to make them more visible on the header background */
+  --arrowpanel-dimmed: rgba(12, 12, 13, 0.2);
+  --arrowpanel-dimmed-further: rgba(12, 12, 13, 0.3);
+  --arrowpanel-dimmed-even-further: rgba(12, 12, 13, 0.4);
 }
 
 #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
@@ -297,29 +302,11 @@
 }
 
 #protections-popup-info-button {
-  /* 3px outline, so this is actually 9px from the edge. */
-  margin: 12px 0;
-  margin-inline-end: 12px;
-  padding: 0;
-  border-radius: 0;
-  outline: 3px solid transparent;
-  -moz-outline-radius: var(--toolbarbutton-border-radius);
-  appearance: none;
+  margin-inline-end: 10px;
 }
 
 #protections-popup-info-button > image {
   fill-opacity: 1;
-}
-
-#protections-popup-info-button:hover,
-#protections-popup-info-button:-moz-focusring {
-  outline-color: rgba(12, 12, 13, 0.2);
-  background-color: rgba(12, 12, 13, 0.2);
-}
-
-#protections-popup-info-button:not(:hover)[checked] {
-  outline-color: rgba(12, 12, 13, 0.3);
-  background-color: rgba(12, 12, 13, 0.3);
 }
 
 #identity-popup-permissions-content > description,
@@ -344,7 +331,7 @@
 .identity-popup-warning-yellow {
   color: black;
   background-color: #FFEEBF;
-  border: 1px solid #FFE083
+  border: 1px solid #FFE083;
 }
 
 /* SECURITY */
