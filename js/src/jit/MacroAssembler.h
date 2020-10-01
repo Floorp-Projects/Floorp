@@ -10,6 +10,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86.h"
@@ -622,6 +623,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           MoveOp::Type result = MoveOp::GENERAL);
 
   CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
+                         mozilla::Maybe<int32_t> tlsOffset,
                          MoveOp::Type result = MoveOp::GENERAL);
   void callDebugWithABI(wasm::SymbolicAddress fun,
                         MoveOp::Type result = MoveOp::GENERAL);
