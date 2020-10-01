@@ -6187,7 +6187,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     result.ISize(aWM) = ComputeInlineSizeFromAspectRatio(
         aWM, stylePos->mAspectRatio, bSize, boxSizingAdjust);
     aspectRatioUsage = AspectRatioUsage::ToComputeISize;
-  } else if (MOZ_UNLIKELY(isGridItem) && !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+  } else if (MOZ_UNLIKELY(isGridItem) && !IsTrueOverflowContainer()) {
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
     // 'normal' and clamp it to the CB if requested:
     bool stretch = false;
@@ -6286,7 +6286,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
       aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
     } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
-               !IS_TRUE_OVERFLOW_CONTAINER(this) &&
+               !IsTrueOverflowContainer() &&
                !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                 : eLogicalAxisBlock)) {
       auto cbSize = aCBSize.BSize(aWM);
