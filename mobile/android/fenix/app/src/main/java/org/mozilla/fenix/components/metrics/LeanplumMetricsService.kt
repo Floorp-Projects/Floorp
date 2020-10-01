@@ -5,11 +5,8 @@
 package org.mozilla.fenix.components.metrics
 
 import android.app.Application
-import android.content.Context.MODE_PRIVATE
 import android.net.Uri
-import android.os.StrictMode
 import android.util.Log
-import androidx.annotation.VisibleForTesting
 import com.leanplum.Leanplum
 import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
@@ -22,7 +19,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.components.metrics.MozillaProductDetector.MozillaProducts
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
@@ -57,9 +53,7 @@ private val Event.name: String?
     }
 
 class LeanplumMetricsService(
-    private val application: Application,
-    strictMode: StrictModeManager,
-    private val deviceIdGenerator: () -> String = { randomUUID().toString() }
+    private val application: Application
 ) : MetricsService, DeepLinkIntentProcessor.DeepLinkVerifier {
     val scope = CoroutineScope(Dispatchers.IO)
     var leanplumJob: Job? = null
@@ -84,32 +78,14 @@ class LeanplumMetricsService(
     override val type = MetricServiceType.Marketing
     private val token = Token(LeanplumId, LeanplumToken)
 
-    private val preferences = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-        application.getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE)
-    }
-
-    @VisibleForTesting
-    internal val deviceId by lazy {
-        var deviceId = preferences.getString(DEVICE_ID_KEY, null)
-
-        if (deviceId == null) {
-            deviceId = deviceIdGenerator.invoke()
-            preferences.edit().putString(DEVICE_ID_KEY, deviceId).apply()
-        }
-
-        deviceId
-    }
-
     @Suppress("ComplexMethod")
     override fun start() {
 
         if (!application.settings().isMarketingTelemetryEnabled) return
 
-        Log.i(LOGTAG, "Starting Leanplum with device id: $deviceId")
-
         Leanplum.setIsTestModeEnabled(false)
         Leanplum.setApplicationContext(application)
-        Leanplum.setDeviceId(deviceId)
+        Leanplum.setDeviceId(randomUUID().toString())
         Parser.parseVariables(application)
 
         leanplumJob = scope.launch {
@@ -189,10 +165,7 @@ class LeanplumMetricsService(
         // We compare the local Leanplum device ID against the "uid" query parameter and only
         // accept deep links where both values match.
         val uid = deepLink.getQueryParameter("uid")
-        if (uid != deviceId) {
-            Log.i(LOGTAG, "Rejecting Leanplum deep link because uid $uid does not match $deviceId")
-        }
-        return uid == deviceId
+        return uid == Leanplum.getDeviceId()
     }
 
     override fun stop() {

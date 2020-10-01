@@ -125,7 +125,7 @@ class Components(private val context: Context) {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
     }
 
-    val analytics by lazy { Analytics(context, strictMode) }
+    val analytics by lazy { Analytics(context) }
     val publicSuffixList by lazy { PublicSuffixList(context) }
     val clipboardHandler by lazy { ClipboardHandler(context) }
     val migrationStore by lazy { MigrationStore() }
