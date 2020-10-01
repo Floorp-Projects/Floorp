@@ -904,19 +904,26 @@ nsresult nsPrintSettingsService::ReadPrefDouble(const char* aPrefId,
 
   nsAutoCString str;
   nsresult rv = Preferences::GetCString(aPrefId, str);
-  if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
-    aVal = atof(str.get());
+  if (NS_FAILED(rv) || str.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  return rv;
+
+  double value = str.ToDouble(&rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  aVal = value;
+  return NS_OK;
 }
 
 nsresult nsPrintSettingsService::WritePrefDouble(const char* aPrefId,
                                                  double aVal) {
   NS_ENSURE_ARG_POINTER(aPrefId);
 
-  nsPrintfCString str("%6.2f", aVal);
-  NS_ENSURE_TRUE(!str.IsEmpty(), NS_ERROR_FAILURE);
-
+  nsAutoCString str;
+  // We cast to a float so we only get up to 6 digits precision in the prefs.
+  str.AppendFloat((float)aVal);
   return Preferences::SetCString(aPrefId, str);
 }
 
