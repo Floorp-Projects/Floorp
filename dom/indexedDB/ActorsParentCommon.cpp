@@ -239,16 +239,15 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
           NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   for (auto remainder = aBlobData; !remainder.IsEmpty();) {
-    IDB_TRY_INSPECT((const auto& [indexId, unique, remainderAfterIndexId]),
-                    ReadCompressedIndexId(remainder));
+    IDB_TRY_VAR((const auto [indexId, unique, remainderAfterIndexId]),
+                ReadCompressedIndexId(remainder));
 
     IDB_TRY(OkIf(!remainderAfterIndexId.IsEmpty()), NS_ERROR_FILE_CORRUPTED,
             IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
     // Read key buffer length.
-    IDB_TRY_INSPECT(
-        (const auto& [keyBufferLength, remainderAfterKeyBufferLength]),
-        ReadCompressedNumber(remainderAfterIndexId));
+    IDB_TRY_VAR((const auto [keyBufferLength, remainderAfterKeyBufferLength]),
+                ReadCompressedNumber(remainderAfterIndexId));
 
     IDB_TRY(OkIf(!remainderAfterKeyBufferLength.IsEmpty()),
             NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
@@ -366,8 +365,7 @@ GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
 
   nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
-    IDB_TRY_UNWRAP(files,
-                   DeserializeStructuredCloneFiles(aFileManager, aFileIds));
+    IDB_TRY_VAR(files, DeserializeStructuredCloneFiles(aFileManager, aFileIds));
   }
 
   return StructuredCloneReadInfoParent{std::move(data), std::move(files),
@@ -384,8 +382,7 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
 
   nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
-    IDB_TRY_UNWRAP(files,
-                   DeserializeStructuredCloneFiles(aFileManager, aFileIds));
+    IDB_TRY_VAR(files, DeserializeStructuredCloneFiles(aFileManager, aFileIds));
   }
 
   // Higher and lower 32 bits described
@@ -422,8 +419,8 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
   do {
     char buffer[kFileCopyBufferSize];
 
-    IDB_TRY_INSPECT(
-        const uint32_t& numRead,
+    IDB_TRY_VAR(
+        const uint32_t numRead,
         MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer, sizeof(buffer)));
 
     if (!numRead) {
@@ -628,8 +625,7 @@ Result<IndexDataValuesAutoArray, nsresult> ReadCompressedIndexDataValues(
 
 Result<std::tuple<IndexOrObjectStoreId, bool, Span<const uint8_t>>, nsresult>
 ReadCompressedIndexId(const Span<const uint8_t> aData) {
-  IDB_TRY_INSPECT((const auto& [indexId, remainder]),
-                  ReadCompressedNumber(aData));
+  IDB_TRY_VAR((const auto [indexId, remainder]), ReadCompressedNumber(aData));
 
   MOZ_ASSERT(UINT64_MAX / 2 >= uint64_t(indexId), "Bad index id!");
 
@@ -693,8 +689,8 @@ DeserializeStructuredCloneFiles(const FileManager& aFileManager,
     const auto& token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
 
-    IDB_TRY_UNWRAP(auto structuredCloneFile,
-                   DeserializeStructuredCloneFile(aFileManager, token));
+    IDB_TRY_VAR(auto structuredCloneFile,
+                DeserializeStructuredCloneFile(aFileManager, token));
 
     result.EmplaceBack(std::move(structuredCloneFile));
   }

@@ -102,13 +102,13 @@ class SetupAction final : public SyncDBAction {
 
       // Clean up orphaned Cache objects
       AutoTArray<CacheId, 8> orphanedCacheIdList;
-      CACHE_TRY_UNWRAP(orphanedCacheIdList, db::FindOrphanedCacheIds(*aConn));
+      CACHE_TRY_VAR(orphanedCacheIdList, db::FindOrphanedCacheIds(*aConn));
 
       int64_t overallDeletedPaddingSize = 0;
       for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
         DeletionInfo deletionInfo;
-        CACHE_TRY_UNWRAP(deletionInfo,
-                         db::DeleteCacheId(*aConn, orphanedCacheIdList[i]));
+        CACHE_TRY_VAR(deletionInfo,
+                      db::DeleteCacheId(*aConn, orphanedCacheIdList[i]));
 
         rv = BodyDeleteFiles(aQuotaInfo, aDBDir,
                              deletionInfo.mDeletedBodyIdList);
@@ -128,7 +128,7 @@ class SetupAction final : public SyncDBAction {
 
       // Clean up orphaned body objects
       AutoTArray<nsID, 64> knownBodyIdList;
-      CACHE_TRY_UNWRAP(knownBodyIdList, db::GetKnownBodyIds(*aConn));
+      CACHE_TRY_VAR(knownBodyIdList, db::GetKnownBodyIds(*aConn));
 
       rv = BodyDeleteOrphanedFiles(aQuotaInfo, aDBDir, knownBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -489,7 +489,7 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    CACHE_TRY_UNWRAP(mDeletionInfo, db::DeleteCacheId(*aConn, mCacheId));
+    CACHE_TRY_VAR(mDeletionInfo, db::DeleteCacheId(*aConn, mCacheId));
 
     nsresult rv = MaybeUpdatePaddingFile(
         aDBDir, aConn, /* aIncreaceSize */ 0, mDeletionInfo.mDeletedPaddingSize,
@@ -542,7 +542,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     Maybe<SavedResponse> maybeResponse;
-    CACHE_TRY_UNWRAP(
+    CACHE_TRY_VAR(
         maybeResponse,
         db::CacheMatch(*aConn, mCacheId, mArgs.request(), mArgs.params()));
 
@@ -612,9 +612,9 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    CACHE_TRY_UNWRAP(mSavedResponses,
-                     db::CacheMatchAll(*aConn, mCacheId, mArgs.maybeRequest(),
-                                       mArgs.params()));
+    CACHE_TRY_VAR(mSavedResponses,
+                  db::CacheMatchAll(*aConn, mCacheId, mArgs.maybeRequest(),
+                                    mArgs.params()));
 
     for (uint32_t i = 0; i < mSavedResponses.Length(); ++i) {
       if (!mSavedResponses[i].mHasBodyId ||
@@ -1082,7 +1082,7 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     Maybe<DeletionInfo> maybeDeletionInfo;
-    CACHE_TRY_UNWRAP(
+    CACHE_TRY_VAR(
         maybeDeletionInfo,
         db::CacheDelete(*aConn, mCacheId, mArgs.request(), mArgs.params()));
 
@@ -1147,7 +1147,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    CACHE_TRY_UNWRAP(
+    CACHE_TRY_VAR(
         mSavedRequests,
         db::CacheKeys(*aConn, mCacheId, mArgs.maybeRequest(), mArgs.params()));
 
@@ -1278,8 +1278,8 @@ class Manager::StorageHasAction final : public Manager::BaseAction {
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_VAR(maybeCacheId,
+                  db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     mCacheFound = maybeCacheId.isSome();
 
@@ -1316,8 +1316,8 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
 
     // Look for existing cache
     Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_VAR(maybeCacheId,
+                  db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     if (maybeCacheId.isSome()) {
       mCacheId = maybeCacheId.ref();
@@ -1325,7 +1325,7 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
       return NS_OK;
     }
 
-    CACHE_TRY_UNWRAP(mCacheId, db::CreateCacheId(*aConn));
+    CACHE_TRY_VAR(mCacheId, db::CreateCacheId(*aConn));
 
     nsresult rv =
         db::StoragePutCache(*aConn, mNamespace, mArgs.key(), mCacheId);
@@ -1374,8 +1374,8 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_UNWRAP(maybeCacheId,
-                     db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
+    CACHE_TRY_VAR(maybeCacheId,
+                  db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
 
     if (maybeCacheId.isNothing()) {
       mCacheDeleted = false;
@@ -1439,7 +1439,7 @@ class Manager::StorageKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    CACHE_TRY_UNWRAP(mKeys, db::StorageGetKeys(*aConn, mNamespace));
+    CACHE_TRY_VAR(mKeys, db::StorageGetKeys(*aConn, mNamespace));
 
     return NS_OK;
   }
