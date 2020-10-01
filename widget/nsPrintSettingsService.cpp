@@ -113,6 +113,8 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   data->printBGColors() = aSettings->GetPrintBGColors();
   data->printBGImages() = aSettings->GetPrintBGImages();
 
+  data->honorPageRuleMargins() = aSettings->GetHonorPageRuleMargins();
+
   aSettings->GetPrintRange(&data->printRange());
 
   aSettings->GetTitle(data->title());
@@ -209,6 +211,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
 
   settings->SetPrintBGColors(data.printBGColors());
   settings->SetPrintBGImages(data.printBGImages());
+  settings->SetHonorPageRuleMargins(data.honorPageRuleMargins());
   settings->SetPrintRange(data.printRange());
 
   settings->SetTitle(data.title());
