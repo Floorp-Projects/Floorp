@@ -12,6 +12,7 @@
 #define MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
 
 #include <memory>
+#include <atomic>
 
 #include <stddef.h>
 
@@ -109,7 +110,7 @@ typedef struct Aec {
   int farend_started;
 
   // Aec instance counter.
-  static int instance_count;
+  static std::atomic<int> instance_count;
   AecCore* aec;
 } Aec;
 
