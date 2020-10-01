@@ -2551,15 +2551,14 @@ void gfxPlatform::InitAcceleration() {
     }
 #endif
 
-    if (NS_SUCCEEDED(
-            gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL2,
-                                      discardFailureId, &status))) {
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL2,
+                                               discardFailureId, &status))) {
       gfxVars::SetAllowWebgl2(status == nsIGfxInfo::FEATURE_STATUS_OK);
     }
-    if (NS_SUCCEEDED(
-            gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL,
-                                      discardFailureId, &status))) {
-      gfxVars::SetWebglAllowWindowsNativeGl(status == nsIGfxInfo::FEATURE_STATUS_OK);
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL,
+                                               discardFailureId, &status))) {
+      gfxVars::SetWebglAllowWindowsNativeGl(status ==
+                                            nsIGfxInfo::FEATURE_STATUS_OK);
     }
 
     if (kIsMacOS) {
@@ -2568,9 +2567,30 @@ void gfxPlatform::InitAcceleration() {
       gfxInfo->GetAdapterVendorID(vendorID);
       gfxInfo->GetAdapterDeviceID(deviceID);
       if (vendorID.EqualsLiteral("0x8086") &&
-          (deviceID.EqualsLiteral("0x0116") || deviceID.EqualsLiteral("0x0126"))) {
+          (deviceID.EqualsLiteral("0x0116") ||
+           deviceID.EqualsLiteral("0x0126"))) {
         gfxVars::SetWebglAllowCoreProfile(false);
       }
+    }
+
+    const auto IsFeatureOk = [&](const int32_t feature) {
+      nsCString discardFailureId;
+      int32_t status;
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(
+          gfxInfo->GetFeatureStatus(feature, discardFailureId, &status)));
+      return (status == nsIGfxInfo::FEATURE_STATUS_OK);
+    };
+
+    {
+      bool allowWebGLOop =
+          IsFeatureOk(nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS);
+
+      const bool threadsafeGl = IsFeatureOk(nsIGfxInfo::FEATURE_THREADSAFE_GL);
+      if (gfxVars::UseWebRender() && !threadsafeGl) {
+        allowWebGLOop = false;
+      }
+
+      gfxVars::SetAllowWebglOop(allowWebGLOop);
     }
   }
 

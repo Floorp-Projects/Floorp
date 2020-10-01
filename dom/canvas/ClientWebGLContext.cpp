@@ -565,7 +565,15 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
 }
 
 static bool IsWebglOutOfProcessEnabled() {
-  return StaticPrefs::webgl_out_of_process();
+  bool useOop = StaticPrefs::webgl_out_of_process();
+
+  if (!gfxVars::AllowWebglOop()) {
+    useOop = false;
+  }
+  if (StaticPrefs::webgl_out_of_process_force()) {
+    useOop = true;
+  }
+  return useOop;
 }
 
 bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {

@@ -261,7 +261,8 @@ bool WebGLContext::CreateAndInitGL(
   if (IsWebGL2() && !forceEnabled) {
     FailureReason reason;
     if (!gfx::gfxVars::AllowWebgl2()) {
-      reason.info = "AllowWebgl2:false restricts context creation on this system.";
+      reason.info =
+          "AllowWebgl2:false restricts context creation on this system.";
       out_failReasons->push_back(reason);
       GenerateWarning("%s", reason.info.BeginReading());
       return false;
@@ -338,7 +339,9 @@ bool WebGLContext::CreateAndInitGL(
   if (tryNativeGL && !forceEnabled) {
     FailureReason reason;
     if (!gfx::gfxVars::WebglAllowWindowsNativeGl()) {
-      reason.info = "WebglAllowWindowsNativeGl:false restricts context creation on this system.";
+      reason.info =
+          "WebglAllowWindowsNativeGl:false restricts context creation on this "
+          "system.";
 
       out_failReasons->push_back(reason);
 

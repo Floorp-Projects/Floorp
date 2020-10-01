@@ -9961,6 +9961,11 @@
   value: false
   mirror: always
 
+- name: webgl.out-of-process.force
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: webgl.out-of-process.shmem-size
   type: RelaxedAtomicUint32
   value: 100000 # 100KB
