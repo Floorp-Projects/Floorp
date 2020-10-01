@@ -53,6 +53,28 @@ class TestFissionAutostart(MarionetteTestCase):
                 '%s should have the value `%r`, but has `%r`'
                 % (prop, value, status[prop]))
 
+    def check_pref_locked(self):
+        PREF = Prefs.FISSION_AUTOSTART
+
+        if PREF in self.marionette.instance.required_prefs:
+            return True
+
+        res = self.execute_script(r'''
+          const { AppConstants } = ChromeUtils.import(
+            "resource://gre/modules/AppConstants.jsm"
+          );
+          return {
+            prefLocked: Services.prefs.prefIsLocked(arguments[0]),
+            releaseOrBeta: AppConstants.RELEASE_OR_BETA,
+          };
+        ''', script_args=(PREF,))
+
+        if res['prefLocked']:
+            self.assertTrue(res['releaseOrBeta'],
+                            'Preference should only be locked on release/beta')
+            return True
+        return False
+
     def set_env(self, env, value):
         self.execute_script('env.set(arguments[0], arguments[1]);',
                             script_args=(env, value))
@@ -117,7 +139,7 @@ class TestFissionAutostart(MarionetteTestCase):
         """Tests that changes to preferences during runtime do not have any
         effect on the current session."""
 
-        if self.marionette.instance.required_prefs.get(Prefs.FISSION_AUTOSTART):
+        if self.check_pref_locked():
             # Need to be able to flip Fission prefs for this test to work.
             return
 
@@ -150,7 +172,7 @@ class TestFissionAutostart(MarionetteTestCase):
                                   experiment=ExperimentStatus.ENROLLED_CONTROL)
 
     def test_fission_precedence(self):
-        if self.marionette.instance.required_prefs.get(Prefs.FISSION_AUTOSTART):
+        if self.check_pref_locked():
             # Need to be able to flip Fission prefs for this test to work.
             return
 
