@@ -272,7 +272,7 @@ static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,
   return Some(nsRect(left, top, right - left, bottom - top));
 }
 
-enum class BrowsingContextOrigin { Similar, Different, Unknown };
+enum class BrowsingContextOrigin { Similar, Different };
 
 // FIXME(emilio): The whole concept of "units of related similar-origin browsing
 // contexts" is gone, but this is still in the spec, see
@@ -280,7 +280,7 @@ enum class BrowsingContextOrigin { Similar, Different, Unknown };
 static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
                                            const nsINode* aRoot) {
   if (!aRoot) {
-    return BrowsingContextOrigin::Unknown;
+    return BrowsingContextOrigin::Different;
   }
   nsIPrincipal* principal1 = aTarget.NodePrincipal();
   nsIPrincipal* principal2 = aRoot->NodePrincipal();
@@ -300,20 +300,11 @@ static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
                                     : BrowsingContextOrigin::Different;
 }
 
-// NOTE: This returns nullptr if |aDocument| is in a cross process.
-static Document* GetTopLevelDocument(const Document& aDocument) {
-  BrowsingContext* browsingContext = aDocument.GetBrowsingContext();
-  if (!browsingContext) {
-    return nullptr;
-  }
-
-  nsPIDOMWindowOuter* topWindow = browsingContext->Top()->GetDOMWindow();
-  if (!topWindow) {
-    // If we don't have a DOMWindow, We are not in same origin.
-    return nullptr;
-  }
-
-  return topWindow->GetExtantDoc();
+// NOTE: This returns nullptr if |aDocument| is in another process from the top
+// level content document.
+static Document* GetTopLevelContentDocumentInThisProcess(Document& aDocument) {
+  auto* wc = aDocument.GetTopLevelWindowContext();
+  return wc ? wc->GetExtantDoc() : nullptr;
 }
 
 // https://w3c.github.io/IntersectionObserver/#compute-the-intersection
@@ -411,7 +402,7 @@ static Maybe<nsRect> ComputeTheIntersection(
   }
 
   // In out-of-process iframes we need to take an intersection with the remote
-  // document visble rect which was already clipped by ancestor document's
+  // document visible rect which was already clipped by ancestor document's
   // viewports.
   if (aRemoteDocumentVisibleRect) {
     MOZ_ASSERT(aRoot->PresContext()->IsRootContentDocumentInProcess() &&
@@ -434,9 +425,25 @@ struct OopIframeMetrics {
   nsRect mRemoteDocumentVisibleRect;
 };
 
-static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument) {
+static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument,
+                                                   Document* aRootDocument) {
   Document* rootDoc = nsContentUtils::GetRootDocument(&aDocument);
-  MOZ_ASSERT(rootDoc && !rootDoc->IsTopLevelContentDocument());
+  MOZ_ASSERT(rootDoc);
+
+  if (rootDoc->IsTopLevelContentDocument()) {
+    return Nothing();
+  }
+
+  if (aRootDocument &&
+      rootDoc == nsContentUtils::GetRootDocument(aRootDocument)) {
+    // aRootDoc, if non-null, is either the implicit root
+    // (top-level-content-document) or a same-origin document passed explicitly.
+    //
+    // In the former case, we should've returned above if there are no iframes
+    // in between. This condition handles the explicit, same-origin root
+    // document, when both are embedded in an OOP iframe.
+    return Nothing();
+  }
 
   PresShell* rootPresShell = rootDoc->GetPresShell();
   if (!rootPresShell || rootPresShell->IsDestroying()) {
@@ -509,21 +516,36 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   } else {
     MOZ_ASSERT(!mRoot || mRoot->IsDocument());
     Document* rootDocument =
-        mRoot ? mRoot->AsDocument() : GetTopLevelDocument(*aDocument);
+        mRoot ? mRoot->AsDocument()
+              : GetTopLevelContentDocumentInThisProcess(*aDocument);
+    root = rootDocument;
+
     if (rootDocument) {
+      // We're in the same process as the root document, though note that there
+      // could be an out-of-process iframe in between us and the root. Grab the
+      // root frame and the root rect.
+      //
+      // Note that the root rect is always good (we assume no DPI changes in
+      // between the two documents, and we don't need to convert coordinates).
+      //
+      // The root frame however we may need to tweak in the block below, if
+      // there's any OOP iframe in between `rootDocument` and `aDocument`, to
+      // handle the OOP iframe positions.
       if (PresShell* presShell = rootDocument->GetPresShell()) {
         rootFrame = presShell->GetRootScrollFrame();
         if (rootFrame) {
-          root = rootFrame->GetContent()->AsElement();
           nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
           rootRect = scrollFrame->GetScrollPortRect();
         }
       }
-    } else if (Maybe<OopIframeMetrics> metrics =
-                   GetOopIframeMetrics(*aDocument)) {
-      // `implicit root` case in an out-of-process iframe.
+    }
+
+    if (Maybe<OopIframeMetrics> metrics =
+            GetOopIframeMetrics(*aDocument, rootDocument)) {
       rootFrame = metrics->mInProcessRootFrame;
-      rootRect = metrics->mInProcessRootRect;
+      if (!rootDocument) {
+        rootRect = metrics->mInProcessRootRect;
+      }
       remoteDocumentVisibleRect = Some(metrics->mRemoteDocumentVisibleRect);
     }
   }
@@ -555,8 +577,6 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     }
 
     BrowsingContextOrigin origin = SimilarOrigin(*target, root);
-    MOZ_ASSERT_IF(remoteDocumentVisibleRect,
-                  origin != BrowsingContextOrigin::Similar);
     if (origin == BrowsingContextOrigin::Similar) {
       rootBounds.Inflate(rootMargin);
     }

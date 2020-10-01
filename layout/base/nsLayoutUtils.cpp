@@ -3197,10 +3197,7 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
     Maybe<Matrix4x4Flagged>* aMatrixCache /* = nullptr */,
     bool aStopAtStackingContextAndDisplayPortAndOOFFrame /* = false */,
     nsIFrame** aOutAncestor /* = nullptr */) {
-  // FIXME(emilio, bug 1668156): The pres context check shouldn't be needed, it
-  // should hold regardless, but there are some existing bogus callers...
-  MOZ_ASSERT(aAncestor.mFrame->PresContext() != aFrame->PresContext() ||
-                 IsAncestorFrameCrossDoc(aAncestor.mFrame, aFrame),
+  MOZ_ASSERT(IsAncestorFrameCrossDoc(aAncestor.mFrame, aFrame),
              "Fix the caller");
 
   SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
