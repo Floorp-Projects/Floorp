@@ -4512,6 +4512,7 @@ class nsIFrame : public nsQueryFrame {
   inline bool IsStickyPositioned() const;
   inline bool IsAbsolutelyPositioned(
       const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  inline bool IsTrueOverflowContainer() const;
 
   // Does this frame have "column-span: all" style.
   //
