@@ -6508,7 +6508,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // Bug 1629201 is filed for having much clearer decision making around
     // which cases need error events.
     bool fireFrameErrorEvent = (aStatus == NS_ERROR_CONTENT_BLOCKED_SHOW_ALT ||
-                                aStatus == NS_ERROR_BLOCKED_BY_POLICY ||
                                 aStatus == NS_ERROR_CONTENT_BLOCKED);
     UnblockEmbedderLoadEventForFailure(fireFrameErrorEvent);
 
@@ -8427,13 +8426,8 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
                                    &shouldLoad);
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      if (NS_SUCCEEDED(rv)) {
-        if (shouldLoad == nsIContentPolicy::REJECT_TYPE) {
-          return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
-        }
-        if (shouldLoad == nsIContentPolicy::REJECT_POLICY) {
-          return NS_ERROR_BLOCKED_BY_POLICY;
-        }
+      if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
+        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
       }
 
       return NS_ERROR_CONTENT_BLOCKED;

@@ -2011,7 +2011,10 @@ var Policies = {
 
   WebsiteFilter: {
     onBeforeUIStartup(manager, param) {
-      WebsiteFilter.init(param.Block || [], param.Exceptions || []);
+      this.filter = new WebsiteFilter(
+        param.Block || [],
+        param.Exceptions || []
+      );
     },
   },
 };
