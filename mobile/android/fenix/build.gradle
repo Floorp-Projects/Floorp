@@ -179,7 +179,6 @@ tasks.register('ktlint', JavaExec) {
 
 tasks.withType(io.gitlab.arturbosch.detekt.Detekt.class).configureEach {
     exclude("**/resources/**")
-    exclude("**/test/**")
     exclude("**/tmp/**")
 }
 
