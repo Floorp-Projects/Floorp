@@ -203,13 +203,13 @@
 #define LS_TRY_VAR_GLUE(accessFunction, ...)                             \
   QM_TRY_VAR_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
                   accessFunction, ##__VA_ARGS__)
-#define LS_TRY_UNWRAP(...) LS_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define LS_TRY_VAR(...) LS_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 #define LS_TRY_INSPECT(...) LS_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
-#  define LS_DEBUG_TRY_UNWRAP(...) LS_TRY_UNWRAP(__VA_ARGS__)
+#  define LS_DEBUG_TRY_VAR(...) LS_TRY_VAR(__VA_ARGS__)
 #else
-#  define LS_DEBUG_TRY_UNWRAP(...)
+#  define LS_DEBUG_TRY_VAR(...)
 #endif
 
 // LocalStorage equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
