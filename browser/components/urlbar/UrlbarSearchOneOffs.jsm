@@ -131,6 +131,12 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   set selectedButton(button) {
     super.selectedButton = button;
 
+    // We don't want to enter search mode preview if we're already in full
+    // search mode.
+    if (this.input.searchMode && !this.input.searchMode.isPreview) {
+      return;
+    }
+
     let expectedSearchMode;
     if (
       button &&
@@ -141,11 +147,17 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         source: button.source,
         entry: "oneoff",
       };
-      this.input.setSearchMode(expectedSearchMode);
-    } else if (this.input.searchMode) {
-      // Restore the previous state. We do this only if we're in search mode, as
-      // an optimization in the common case of cycling through normal results.
-      this.input.restoreSearchModeState();
+    }
+
+    // selectedButton is set every time the up/down arrows are pressed,
+    // including when cycling through the results. If a one-off hasn't set
+    // expectedSearchMode, we may still want to call setSearchMode({}) to exit
+    // search mode when moving from a one-off to the settings button or to a
+    // result. We avoid calling setSearchMode({}) when we're not already in
+    // search mode as an optimization  in the common case of cycling through
+    // normal results.
+    if (expectedSearchMode || this.input.searchMode) {
+      this.input.setSearchMode(expectedSearchMode || {});
     }
   }
 
