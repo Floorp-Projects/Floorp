@@ -416,7 +416,8 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   }
 
   NS_LossyConvertUTF16toASCII asciiUrl(url);
-  AUTO_PROFILER_MARKER_TEXT("SubScript", JS, MarkerStack::Capture(), asciiUrl);
+  AUTO_PROFILER_MARKER_TEXT("SubScript", JS.WithOptions(MarkerStack::Capture()),
+                            asciiUrl);
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
       "mozJSSubScriptLoader::DoLoadSubScriptWithOptions", OTHER, asciiUrl);
 

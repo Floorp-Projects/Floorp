@@ -286,9 +286,10 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Blocked preallocation for %fms",
              (TimeStamp::Now() - mBlockingStartTime).ToMilliseconds()));
-    PROFILER_MARKER_TEXT("Process", DOM,
-                         MarkerTiming::IntervalUntilNowFrom(mBlockingStartTime),
-                         "Blocked preallocation");
+    PROFILER_MARKER_TEXT(
+        "Process",
+        DOM.WithOptions(MarkerTiming::IntervalUntilNowFrom(mBlockingStartTime)),
+        "Blocked preallocation");
     if (IsEmpty()) {
       AllocateAfterDelay();
     }

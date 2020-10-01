@@ -7950,7 +7950,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
         BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
         nsPrintfCString marker("Iframe loaded in background: %s",
                                prinURI->GetSpecOrDefault().get());
-        PROFILER_MARKER_TEXT("Background Iframe", DOM, {}, marker);
+        PROFILER_MARKER_TEXT("Background Iframe", DOM, marker);
 #endif
         SetBackgroundLoadIframe();
       }

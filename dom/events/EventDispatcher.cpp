@@ -1063,18 +1063,21 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
             }
           };
 
-          profiler_add_marker("DOMEvent", geckoprofiler::category::DOM,
-                              {MarkerTiming::IntervalStart(),
-                               MarkerInnerWindowId(innerWindowId)},
-                              DOMEventMarker{}, typeStr, aEvent->mTimeStamp);
+          profiler_add_marker<DOMEventMarker>(
+              "DOMEvent",
+              geckoprofiler::category::DOM.WithOptions(
+                  MarkerTiming::IntervalStart(),
+                  MarkerInnerWindowId(innerWindowId)),
+              typeStr, aEvent->mTimeStamp);
 
           EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                        aCallback, cd);
 
-          profiler_add_marker(
-              "DOMEvent", geckoprofiler::category::DOM,
-              {MarkerTiming::IntervalEnd(), std::move(innerWindowId)},
-              DOMEventMarker{}, typeStr, aEvent->mTimeStamp);
+          profiler_add_marker<DOMEventMarker>(
+              "DOMEvent",
+              geckoprofiler::category::DOM.WithOptions(
+                  MarkerTiming::IntervalEnd(), std::move(innerWindowId)),
+              typeStr, aEvent->mTimeStamp);
         } else
 #endif
         {
