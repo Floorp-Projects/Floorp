@@ -883,7 +883,7 @@ nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
-      IDB_TRY_VAR(auto principal, PrincipalInfoToPrincipal(*principalInfo));
+      IDB_TRY_UNWRAP(auto principal, PrincipalInfoToPrincipal(*principalInfo));
 
       nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr,
                                                        nullptr, &aOrigin);
