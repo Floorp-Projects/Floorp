@@ -295,14 +295,9 @@ ICScript* ICScript::findInlinedChild(uint32_t pcOffset) {
 
 void ICScript::removeInlinedChild(uint32_t pcOffset) {
   MOZ_ASSERT(inliningRoot());
-  ICScript* icScript = findInlinedChild(pcOffset);
-
   inlinedChildren_->eraseIf([pcOffset](const CallSite& callsite) -> bool {
     return callsite.pcOffset_ == pcOffset;
   });
-
-  // The ICScript is owned by the inlining root. Remove it.
-  inliningRoot()->removeInlinedScript(icScript);
 }
 
 bool ICScript::hasInlinedChild(uint32_t pcOffset) {
