@@ -367,6 +367,11 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   InitUnwriteableMargin(aHdc);
 
   int pixelsPerInchY = ::GetDeviceCaps(aHdc, LOGPIXELSY);
+  int physicalHeight = ::GetDeviceCaps(aHdc, PHYSICALHEIGHT);
+  double physicalHeightInch = double(physicalHeight) / pixelsPerInchY;
+  int pixelsPerInchX = ::GetDeviceCaps(aHdc, LOGPIXELSX);
+  int physicalWidth = ::GetDeviceCaps(aHdc, PHYSICALWIDTH);
+  double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
 
   // The length and width in DEVMODE are always in tenths of a millimeter.
   double sizeUnitToTenthsOfAmm =
@@ -376,11 +381,14 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   } else {
     // We need the paper height to be set, because it is used in the child for
     // layout. If it is not set in the DEVMODE, get it from the device context.
-    int physicalHeight = ::GetDeviceCaps(aHdc, PHYSICALHEIGHT);
-    double physicalHeightInch = double(physicalHeight) / pixelsPerInchY;
+    // We want the normalized (in portrait orientation) paper height, so account
+    // for orientation.
+    double paperHeightInch = mOrientation == kPortraitOrientation
+                                 ? physicalHeightInch
+                                 : physicalWidthInch;
     mPaperHeight = mPaperSizeUnit == kPaperSizeInches
-                       ? physicalHeightInch
-                       : physicalHeightInch * MM_PER_INCH_FLOAT;
+                       ? paperHeightInch
+                       : paperHeightInch * MM_PER_INCH_FLOAT;
   }
 
   if (aDevMode->dmFields & DM_PAPERWIDTH) {
@@ -388,12 +396,14 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   } else {
     // We need the paper width to be set, because it is used in the child for
     // layout. If it is not set in the DEVMODE, get it from the device context.
-    int pixelsPerInchX = ::GetDeviceCaps(aHdc, LOGPIXELSX);
-    int physicalWidth = ::GetDeviceCaps(aHdc, PHYSICALWIDTH);
-    double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
+    // We want the normalized (in portrait orientation) paper width, so account
+    // for orientation.
+    double paperWidthInch = mOrientation == kPortraitOrientation
+                                ? physicalWidthInch
+                                : physicalHeightInch;
     mPaperWidth = mPaperSizeUnit == kPaperSizeInches
-                      ? physicalWidthInch
-                      : physicalWidthInch * MM_PER_INCH_FLOAT;
+                      ? paperWidthInch
+                      : paperWidthInch * MM_PER_INCH_FLOAT;
   }
 
   // Using LOGPIXELSY to match existing code for print scaling calculations.
