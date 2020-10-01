@@ -323,7 +323,7 @@ templates['item_recs'] = template({"1":function(depth0,helpers,partials,data) {
 
   return "<header>\n"
     + ((stack1 = helpers['if'].call(depth0,((stack1 = (depth0 != null ? depth0.recommendations : depth0)) != null ? stack1['1'] : stack1),{"name":"if","hash":{},"fn":this.program(1, data, 0),"inverse":this.program(3, data, 0),"data":data})) != null ? stack1 : "")
-    + "  <a target=\"_blank\" href=\"https://getpocket.com/story_recommendations_learn_more\">Learn more</a>\n</header>\n\n<ol>\n"
+    + "  <a class=\"pkt_ext_learn_more\" target=\"_blank\" href=\"https://getpocket.com/story_recommendations_learn_more\">Learn more</a>\n</header>\n\n<ol>\n"
     + ((stack1 = helpers.each.call(depth0,(depth0 != null ? depth0.recommendations : depth0),{"name":"each","hash":{},"fn":this.program(5, data, 0),"inverse":this.noop,"data":data})) != null ? stack1 : "")
     + "</ol>\n";
 },"useData":true});
