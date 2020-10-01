@@ -2292,6 +2292,9 @@ bool WarpCacheIRTranspiler::emitMathHypot2NumberResult(
   vector.infallibleAppend(getOperand(secondId));
 
   auto* ins = MHypot::New(alloc(), vector);
+  if (!ins) {
+    return false;
+  }
   add(ins);
 
   pushResult(ins);
@@ -2311,6 +2314,9 @@ bool WarpCacheIRTranspiler::emitMathHypot3NumberResult(
   vector.infallibleAppend(getOperand(thirdId));
 
   auto* ins = MHypot::New(alloc(), vector);
+  if (!ins) {
+    return false;
+  }
   add(ins);
 
   pushResult(ins);
@@ -2331,6 +2337,9 @@ bool WarpCacheIRTranspiler::emitMathHypot4NumberResult(
   vector.infallibleAppend(getOperand(fourthId));
 
   auto* ins = MHypot::New(alloc(), vector);
+  if (!ins) {
+    return false;
+  }
   add(ins);
 
   pushResult(ins);

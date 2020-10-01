@@ -2861,6 +2861,9 @@ static bool CloneForDeadBranches(TempAllocator& alloc,
   }
 
   MInstruction* clone = candidate->clone(alloc, operands);
+  if (!clone) {
+    return false;
+  }
   clone->setRange(nullptr);
 
   // Set UseRemoved flag on the cloned instruction in order to chain recover

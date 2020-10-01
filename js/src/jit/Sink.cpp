@@ -194,6 +194,9 @@ bool Sink(MIRGenerator* mir, MIRGraph& graph) {
       }
 
       MInstruction* clone = ins->clone(alloc, operands);
+      if (!clone) {
+        return false;
+      }
       ins->block()->insertBefore(ins, clone);
       clone->setRecoveredOnBailout();
 
