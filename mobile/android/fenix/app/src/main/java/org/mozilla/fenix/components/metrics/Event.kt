@@ -356,7 +356,7 @@ sealed class Event {
                         hasSavedInstanceState.toString()
                 }
                 if (launchTime != null) {
-                    extrasMap[Events.appOpenedAllStartupKeys.launchTimeNanoSeconds] =
+                    extrasMap[Events.appOpenedAllStartupKeys.firstFramePreDrawNanos] =
                         launchTime.toString()
                 }
                 return extrasMap

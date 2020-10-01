@@ -19,10 +19,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.firstFramePreDrawNanos
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.hasSavedInstanceState
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.source
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.type
-import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.launchTimeNanoSeconds
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source.APP_ICON
@@ -272,7 +272,7 @@ class AppStartupTelemetryTest {
         val expectedExtra: Map<Events.appOpenedAllStartupKeys, String>? = hashMapOf(
             source to APP_ICON.toString(),
             type to HOT.toString(),
-            launchTimeNanoSeconds to onPreDrawTime.minus(homeActivityInitTime).toString())
+            firstFramePreDrawNanos to onPreDrawTime.minus(homeActivityInitTime).toString())
 
         val appAllStartup = AppAllStartup(APP_ICON, HOT, launchTime = onPreDrawTime.minus(homeActivityInitTime))
 
@@ -285,7 +285,7 @@ class AppStartupTelemetryTest {
             source to APP_ICON.toString(),
             type to COLD.toString(),
             hasSavedInstanceState to true.toString(),
-            launchTimeNanoSeconds to onPreDrawTime.minus(homeActivityInitTime).toString())
+            firstFramePreDrawNanos to onPreDrawTime.minus(homeActivityInitTime).toString())
 
         val appAllStartup = AppAllStartup(APP_ICON, COLD, true, onPreDrawTime.minus(homeActivityInitTime))
 

@@ -52,9 +52,9 @@ events:
           for example, when we are doing a hot start up, we cant have a
           savedInstanceState therefore we report only [APP_ICON, HOT] instead
           of [APP_ICON, HOT, false].
-      launch_time_nano_seconds:
+      first_frame_pre_draw_nanos:
         description: |
-          the number of nano seconds application took to launch. This is the
+          the number of nanoseconds the application took to launch. This is the
           time difference between application launch(user pressing app_icon,
           launching a link) and until the first view is about to be drawn
           on the screen. If the time is not captured, this extra key will
