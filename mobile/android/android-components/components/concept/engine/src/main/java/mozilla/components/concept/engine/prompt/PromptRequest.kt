@@ -289,6 +289,20 @@ sealed class PromptRequest {
         override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
+    /**
+     * Value type that represents a request for a repost prompt.
+     *
+     * This prompt is shown whenever refreshing or navigating to a page needs resubmitting
+     * POST data that has been submitted already.
+     *
+     * @property onConfirm callback to notify that the user wants to refresh the webpage.
+     * @property onDismiss callback to notify that the user wants stay in the current webpage and not refresh it.
+     */
+    data class Repost(
+        val onConfirm: () -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
+
     interface Dismissible {
         val onDismiss: () -> Unit
     }

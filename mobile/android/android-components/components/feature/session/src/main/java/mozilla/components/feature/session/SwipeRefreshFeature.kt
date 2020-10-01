@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -29,7 +30,12 @@ class SwipeRefreshFeature(
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val swipeRefreshLayout: SwipeRefreshLayout,
     private val tabId: String? = null
-) : LifecycleAwareFeature, SwipeRefreshLayout.OnChildScrollUpCallback, SwipeRefreshLayout.OnRefreshListener {
+) : LifecycleAwareFeature,
+    SwipeRefreshLayout.OnChildScrollUpCallback,
+    SwipeRefreshLayout.OnRefreshListener,
+    EngineSession.Observer {
+
+    private var currentSession: EngineSession? = null
     private var scope: CoroutineScope? = null
 
     init {
@@ -41,6 +47,9 @@ class SwipeRefreshFeature(
      * Start feature: Starts adding pull to refresh behavior for the active session.
      */
     override fun start() {
+        currentSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession?.also {
+            it.register(this)
+        }
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .map { tab -> tab?.content?.loading ?: false }
@@ -52,6 +61,7 @@ class SwipeRefreshFeature(
     }
 
     override fun stop() {
+        currentSession?.unregister(this)
         scope?.cancel()
     }
 
@@ -75,6 +85,10 @@ class SwipeRefreshFeature(
         store.state.findTabOrCustomTabOrSelectedTab(tabId)?.let { tab ->
             reloadUrlUseCase(tab.id)
         }
+    }
+
+    override fun onRepostPromptCancelled() {
+        swipeRefreshLayout.isRefreshing = false
     }
 
     /**

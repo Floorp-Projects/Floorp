@@ -7,6 +7,7 @@ package mozilla.components.feature.prompts.dialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 
 internal const val KEY_POSITIVE_BUTTON = "KEY_POSITIVE_BUTTON"
@@ -20,8 +21,10 @@ internal const val KEY_NEGATIVE_BUTTON = "KEY_NEGATIVE_BUTTON"
  */
 internal class ConfirmDialogFragment : PromptDialogFragment() {
 
-    private val positiveButtonText: String by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON)!! }
-    private val negativeButtonText: String by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON)!! }
+    @VisibleForTesting
+    internal val positiveButtonText: String by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON)!! }
+    @VisibleForTesting
+    internal val negativeButtonText: String by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON)!! }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(requireContext())

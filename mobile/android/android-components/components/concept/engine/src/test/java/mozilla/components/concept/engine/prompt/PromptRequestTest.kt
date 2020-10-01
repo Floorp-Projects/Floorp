@@ -177,5 +177,21 @@ class PromptRequestTest {
         assertEquals(loginSelectRequest.logins, listOf(login))
         loginSelectRequest.onConfirm(login)
         loginSelectRequest.onDismiss()
+
+        // Now testing that a Repost PromptRequest can be successfully instantiated
+        var onAcceptWasCalled = false
+        var onDismissWasCalled = false
+        val repostRequest = PromptRequest.Repost(
+            onConfirm = {
+                onAcceptWasCalled = true
+            },
+            onDismiss = {
+                onDismissWasCalled = true
+            }
+        )
+        repostRequest.onConfirm()
+        assertTrue(onAcceptWasCalled)
+        repostRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
     }
 }

@@ -32,6 +32,9 @@ permalink: /changelog/
 * **browser-toolbar**
   * 🌟 Added API to add a click listener to the iconView.
 
+* **feature-prompts**
+  * The repost prompt now has different text and will also dismiss the pull to refresh throbber.
+
 # 62.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...v62.0.0)

@@ -43,6 +43,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
+import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
@@ -54,6 +55,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -70,6 +72,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.Robolectric
 import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
 import java.util.Date
@@ -1279,6 +1282,79 @@ class PromptFeatureTest {
 
         store.waitUntilIdle()
         assert(illegalArgumentExceptionThrown)
+    }
+
+    @Test
+    fun `A Repost PromptRequest prompt will be shown as a ConfirmDialogFragment`() {
+        val feature = PromptFeature(
+            // Proper activity here to allow for the feature to properly execute "container.context.getString"
+            activity = Robolectric.setupActivity(Activity::class.java),
+            store = store,
+            fragmentManager = fragmentManager,
+            shareDelegate = mock(),
+            isSaveLoginEnabled = { true },
+            loginValidationDelegate = mock()
+        ) { }
+
+        feature.handleDialogsRequest(mock<PromptRequest.Repost>(), mock())
+
+        val dialog: ConfirmDialogFragment = feature.activePrompt!!.get() as ConfirmDialogFragment
+        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_title), dialog.title)
+        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_message), dialog.message)
+        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_positive_button_text),
+            dialog.positiveButtonText)
+        assertEquals(testContext.getString(R.string.mozac_feature_prompt_repost_negative_button_text),
+            dialog.negativeButtonText)
+    }
+
+    @Test
+    fun `Positive button on a Repost dialog will call onAccept and consume the dialog`() {
+        val feature = PromptFeature(
+            activity = Robolectric.setupActivity(Activity::class.java),
+            store = store,
+            fragmentManager = fragmentManager
+        ) { }
+        feature.start()
+
+        var acceptCalled = false
+        val repostRequest = PromptRequest.Repost(
+            { acceptCalled = true }, { }
+        )
+        store
+            .dispatch(ContentAction.UpdatePromptRequestAction(tabId, repostRequest))
+            .joinBlocking()
+
+        assertEquals(repostRequest, tab()?.content?.promptRequest)
+        feature.onConfirm(tabId, null)
+
+        store.waitUntilIdle()
+        assertTrue(acceptCalled)
+        assertNull(tab()?.content?.promptRequest)
+    }
+
+    @Test
+    fun `Negative button on a Repost dialog will call onDismiss and consume the dialog`() {
+        val feature = PromptFeature(
+            activity = Robolectric.setupActivity(Activity::class.java),
+            store = store,
+            fragmentManager = fragmentManager
+        ) { }
+        feature.start()
+
+        var dismissCalled = false
+        val repostRequest = PromptRequest.Repost(
+            { }, { dismissCalled = true }
+        )
+        store
+            .dispatch(ContentAction.UpdatePromptRequestAction(tabId, repostRequest))
+            .joinBlocking()
+
+        assertEquals(repostRequest, tab()?.content?.promptRequest)
+        feature.onCancel(tabId)
+
+        store.waitUntilIdle()
+        assertTrue(dismissCalled)
+        assertNull(tab()?.content?.promptRequest)
     }
 
     private fun mockFragmentManager(): FragmentManager {

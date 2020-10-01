@@ -73,6 +73,15 @@ class SwipeRefreshFeatureTest {
     }
 
     @Test
+    fun `onRepostPromptCancelled should dismiss the refresh indicator`() {
+        mockLayout.isRefreshing = true
+
+        refreshFeature.onRepostPromptCancelled()
+
+        verify(mockLayout).isRefreshing = false
+    }
+
+    @Test
     fun `onLoadingStateChanged should update the SwipeRefreshLayout`() {
         refreshFeature.onLoadingStateChanged(false)
         verify(mockLayout).isRefreshing = false

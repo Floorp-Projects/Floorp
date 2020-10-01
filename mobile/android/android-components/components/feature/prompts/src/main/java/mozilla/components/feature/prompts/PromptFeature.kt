@@ -32,6 +32,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.File
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Popup
+import mozilla.components.concept.engine.prompt.PromptRequest.Repost
 import mozilla.components.concept.engine.prompt.PromptRequest.SaveLoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.SelectLoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Share
@@ -407,6 +408,8 @@ class PromptFeature private constructor(
                                 it.onConfirmNeutralButton(!isCheckBoxChecked)
                         }
                     }
+
+                    is Repost -> it.onConfirm()
                 }
             } catch (e: ClassCastException) {
                 throw IllegalArgumentException(
@@ -621,6 +624,23 @@ class PromptFeature private constructor(
                 }
             }
 
+            is Repost -> {
+                val title = container.context.getString(R.string.mozac_feature_prompt_repost_title)
+                val message = container.context.getString(R.string.mozac_feature_prompt_repost_message)
+                val positiveAction =
+                    container.context.getString(R.string.mozac_feature_prompt_repost_positive_button_text)
+                val negativeAction =
+                    container.context.getString(R.string.mozac_feature_prompt_repost_negative_button_text)
+
+                ConfirmDialogFragment.newInstance(
+                    sessionId = session.id,
+                    title = title,
+                    message = message,
+                    positiveButtonText = positiveAction,
+                    negativeButtonText = negativeAction
+                )
+            }
+
             else -> throw InvalidParameterException("Not valid prompt request type")
         }
 
@@ -650,7 +670,7 @@ class PromptFeature private constructor(
             is SaveLoginPrompt,
             is SelectLoginPrompt,
             is Share -> true
-            is Alert, is TextPrompt, is Confirm -> promptAbuserDetector.shouldShowMoreDialogs
+            is Alert, is TextPrompt, is Confirm, is Repost -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
 }

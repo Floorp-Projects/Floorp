@@ -77,6 +77,11 @@ abstract class EngineSession(
         fun onPromptRequest(promptRequest: PromptRequest) = Unit
 
         /**
+         * User cancelled a repost prompt. Page will not be reloaded.
+         */
+        fun onRepostPromptCancelled() = Unit
+
+        /**
          * The engine received a request to open or close a window.
          *
          * @param windowRequest the request to describing the required window action.
