@@ -21,6 +21,7 @@ EXPORTS.mozilla = [
     'Array.h',
     'ArrayUtils.h',
     'Assertions.h',
+    'AtomicBitfields.h',
     'Atomics.h',
     'Attributes.h',
     'BinarySearch.h',
