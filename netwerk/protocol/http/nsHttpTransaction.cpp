@@ -2177,9 +2177,9 @@ void nsHttpTransaction::ReleaseBlockingTransaction() {
 void nsHttpTransaction::DisableSpdy() {
   mCaps |= NS_HTTP_DISALLOW_SPDY;
   if (mConnInfo) {
-    RefPtr<nsHttpConnectionInfo> connInfo = mConnInfo->Clone();
-    connInfo->SetNoSpdy(true);
-    mConnInfo.swap(connInfo);
+    // This is our clone of the connection info, not the persistent one that
+    // is owned by the connection manager, so we're safe to change this here
+    mConnInfo->SetNoSpdy(true);
   }
 }
 
