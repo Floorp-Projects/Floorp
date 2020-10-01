@@ -269,6 +269,12 @@ var CommonUtils = {
     return CommonUtils.decodeUTF8(CommonUtils.hexToBytes(hex));
   },
 
+  base64urlToHex(b64str) {
+    return CommonUtils.bufferToHex(
+      new Uint8Array(ChromeUtils.base64URLDecode(b64str, { padding: "reject" }))
+    );
+  },
+
   /**
    * Base32 encode (RFC 4648) a string
    */

@@ -143,7 +143,8 @@ function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
  * @returns {string} sha256 of the user's kB as a hex string
  */
 const getKBHash = async function(fxaService) {
-  return (await fxaService.keys.getKeys()).kExtKbHash;
+  const key = await fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
+  return fxaService.keys.kidAsHex(key);
 };
 
 /**
@@ -272,12 +273,8 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
     throwIfNoFxA(this._fxaService, "encrypting chrome.storage.sync records");
     const self = this;
     return (async function() {
-      let keys = await self._fxaService.keys.getKeys();
-      if (!keys.kExtSync) {
-        throw new Error("user doesn't have kExtSync");
-      }
-
-      return BulkKeyBundle.fromHexKey(keys.kExtSync);
+      let key = await self._fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
+      return BulkKeyBundle.fromJWK(key);
     })();
   }
   // Pass through the kbHash field from the unencrypted record. If
