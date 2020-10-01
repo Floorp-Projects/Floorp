@@ -162,13 +162,6 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
 
   // Audio track config info.
   UniquePtr<AudioInfo> mInfo;
-
-  // Number of frames to skip at the beginning
-  uint32_t mEncoderDelay = 0;
-  // Number of frames to skip at the end
-  uint32_t mEncoderPadding = 0;
-  // End of stream has been found
-  bool mEOS = false;
 };
 
 }  // namespace mozilla
