@@ -150,10 +150,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:ScriptPreloader::MaybeFinishOffThreadDecode\n"
          "race:ScriptPreloader::DoFinishOffThreadDecode\n"
 
-         // Bug 1601980
-         "race:image::RasterImage::StartDecoding\n"
-         "race:image::RasterImage::OnImageDataAvailable\n"
-
          // Bug 1606651
          "race:nsPluginTag::nsPluginTag\n"
          "race:nsFakePluginTag\n"

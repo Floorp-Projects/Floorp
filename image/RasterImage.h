@@ -28,6 +28,7 @@
 #include "ImageMetadata.h"
 #include "ISurfaceProvider.h"
 #include "Orientation.h"
+#include "mozilla/AtomicBitfields.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -397,7 +398,7 @@ class RasterImage final : public ImageResource,
    * Orientation that indicates no transformation is needed.
    */
   Orientation UsedOrientation() const {
-    return mHandledOrientation ? mOrientation : Orientation();
+    return GetHandledOrientation() ? mOrientation : Orientation();
   }
 
   // Functions to convert between oriented and unoriented pixels.
@@ -462,35 +463,40 @@ class RasterImage final : public ImageResource,
   NotNull<RefPtr<SourceBuffer>> mSourceBuffer;
 
   // Boolean flags (clustered together to conserve space):
-  bool mHasSize : 1;         // Has SetSize() been called?
-  bool mTransient : 1;       // Is the image short-lived?
-  bool mSyncLoad : 1;        // Are we loading synchronously?
-  bool mDiscardable : 1;     // Is container discardable?
-  bool mSomeSourceData : 1;  // Do we have some source data?
-  bool mAllSourceData : 1;   // Do we have all the source data?
-  bool mHasBeenDecoded : 1;  // Decoded at least once?
+  MOZ_ATOMIC_BITFIELDS(
+      mAtomicBitfields, 16,
+      ((bool, HasSize, 1),         // Has SetSize() been called?
+       (bool, Transient, 1),       // Is the image short-lived?
+       (bool, SyncLoad, 1),        // Are we loading synchronously?
+       (bool, Discardable, 1),     // Is container discardable?
+       (bool, SomeSourceData, 1),  // Do we have some source data?
+       (bool, AllSourceData, 1),   // Do we have all the source data?
+       (bool, HasBeenDecoded, 1),  // Decoded at least once?
 
-  // Whether we're waiting to start animation. If we get a StartAnimation() call
-  // but we don't yet have more than one frame, mPendingAnimation is set so that
-  // we know to start animation later if/when we have more frames.
-  bool mPendingAnimation : 1;
+       // Whether we're waiting to start animation. If we get a StartAnimation()
+       // call but we don't yet have more than one frame, mPendingAnimation is
+       // set so that we know to start animation later if/when we have more
+       // frames.
+       (bool, PendingAnimation, 1),
 
-  // Whether the animation can stop, due to running out
-  // of frames, or no more owning request
-  bool mAnimationFinished : 1;
+       // Whether the animation can stop, due to running out
+       // of frames, or no more owning request
+       (bool, AnimationFinished, 1),
 
-  // Whether, once we are done doing a metadata decode, we should immediately
-  // kick off a full decode.
-  bool mWantFullDecode : 1;
+       // Whether, once we are done doing a metadata decode, we should
+       // immediately kick off a full decode.
+       (bool, WantFullDecode, 1),
 
-  // Whether this RasterImage handled orientation of the image.
-  //
-  // This will be set based on the value of the image.honor-orientation-metadata
-  // pref at the time the RasterImage is created.
-  //
-  // NOTE(heycam): Once the image.honor-orientation-metadata pref is removed,
-  // this member (and the UsedOrientation() function) can also be removed.
-  bool mHandledOrientation : 1;
+       // Whether this RasterImage handled orientation of the image.
+       //
+       // This will be set based on the value of the
+       // image.honor-orientation-metadata pref at the time the RasterImage is
+       // created.
+       //
+       // NOTE(heycam): Once the image.honor-orientation-metadata pref is
+       // removed, this member (and the UsedOrientation() function) can also be
+       // removed.
+       (bool, HandledOrientation, 1)))
 
   TimeStamp mDrawStartTime;
 
