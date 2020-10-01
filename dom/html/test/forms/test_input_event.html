@@ -12,27 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=851780">Mozilla Bug 851780</a>
 <p id="display"></p>
-<div id="content">
-<input type="file" id="fileInput">
-<textarea id="textarea"></textarea>
-<input type="text" id="input_text">
-<input type="email" id="input_email">
-<input type="search" id="input_search">
-<input type="tel" id="input_tel">
-<input type="url" id="input_url">
-<input type="password" id="input_password">
-
-<!-- "Non-text" inputs-->
-<input type="button" id="input_button">
-<input type="submit" id="input_submit">
-<input type="image" id="input_image">
-<input type="reset" id="input_reset">
-<input type="radio" id="input_radio">
-<input type="checkbox" id="input_checkbox">
-<input type="range" id="input_range">
-<input type="number" id="input_number">
- 
-</div>
+<div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -88,63 +68,86 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   let textareaInput = 0, textareaBeforeInput = 0;
-  document.getElementById("textarea").onbeforeinput = (aEvent) => {
-    ++textareaBeforeInput;
-    checkBeforeInputEvent(aEvent, "on textarea element");
-  };
-  document.getElementById("textarea").oninput = (aEvent) => {
-    ++textareaInput;
-    checkIfInputIsInputEvent(aEvent, "on textarea element");
-  };
-
-  // These are the type were the input event apply.
   let textTypes = ["text", "email", "search", "tel", "url", "password"];
   let textBeforeInput = [0, 0, 0, 0, 0, 0];
   let textInput = [0, 0, 0, 0, 0, 0];
-  for (let id of ["input_text", "input_email", "input_search", "input_tel", "input_url", "input_password"]) {
-    document.getElementById(id).onbeforeinput = (aEvent) => {
-      ++textBeforeInput[textTypes.indexOf(aEvent.target.type)];
-      checkBeforeInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
-    };
-    document.getElementById(id).oninput = (aEvent) => {
-      ++textInput[textTypes.indexOf(aEvent.target.type)];
-      checkIfInputIsInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
-    };
-  }
-
-  // These are the type were the input event does not apply.
   let nonTextTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
   let nonTextBeforeInput = [0, 0, 0, 0, 0, 0];
   let nonTextInput = [0, 0, 0, 0, 0, 0];
-  for (let id of ["input_button", "input_submit", "input_image", "input_reset", "input_radio", "input_checkbox"]) {
-    document.getElementById(id).onbeforeinput = (aEvent) => {
-      ++nonTextBeforeInput[nonTextTypes.indexOf(aEvent.target.type)];
+  let rangeInput = 0, rangeBeforeInput = 0;
+  let numberInput = 0, numberBeforeInput = 0;
+
+  // Don't create elements whose event listener attributes are required before enabling `beforeinput` event.
+  function init() {
+    document.getElementById("content").innerHTML =
+    `<input type="file" id="fileInput">
+     <textarea id="textarea"></textarea>
+     <input type="text" id="input_text">
+     <input type="email" id="input_email">
+     <input type="search" id="input_search">
+     <input type="tel" id="input_tel">
+     <input type="url" id="input_url">
+     <input type="password" id="input_password">
+
+     <!-- "Non-text" inputs-->
+     <input type="button" id="input_button">
+     <input type="submit" id="input_submit">
+     <input type="image" id="input_image">
+     <input type="reset" id="input_reset">
+     <input type="radio" id="input_radio">
+     <input type="checkbox" id="input_checkbox">
+     <input type="range" id="input_range">
+     <input type="number" id="input_number">`;
+
+    document.getElementById("textarea").onbeforeinput = (aEvent) => {
+      ++textareaBeforeInput;
+      checkBeforeInputEvent(aEvent, "on textarea element");
     };
-    document.getElementById(id).oninput = (aEvent) => {
-      ++nonTextInput[nonTextTypes.indexOf(aEvent.target.type)];
-      checkIfInputIsEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+    document.getElementById("textarea").oninput = (aEvent) => {
+      ++textareaInput;
+      checkIfInputIsInputEvent(aEvent, "on textarea element");
+    };
+
+    // These are the type were the input event apply.
+    for (let id of ["input_text", "input_email", "input_search", "input_tel", "input_url", "input_password"]) {
+      document.getElementById(id).onbeforeinput = (aEvent) => {
+        ++textBeforeInput[textTypes.indexOf(aEvent.target.type)];
+        checkBeforeInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+      };
+      document.getElementById(id).oninput = (aEvent) => {
+        ++textInput[textTypes.indexOf(aEvent.target.type)];
+        checkIfInputIsInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+      };
+    }
+
+    // These are the type were the input event does not apply.
+    for (let id of ["input_button", "input_submit", "input_image", "input_reset", "input_radio", "input_checkbox"]) {
+      document.getElementById(id).onbeforeinput = (aEvent) => {
+        ++nonTextBeforeInput[nonTextTypes.indexOf(aEvent.target.type)];
+      };
+      document.getElementById(id).oninput = (aEvent) => {
+        ++nonTextInput[nonTextTypes.indexOf(aEvent.target.type)];
+        checkIfInputIsEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+      };
+    }
+
+    document.getElementById("input_range").onbeforeinput = (aEvent) => {
+      ++rangeBeforeInput;
+    };
+    document.getElementById("input_range").oninput = (aEvent) => {
+      ++rangeInput;
+      checkIfInputIsEvent(aEvent, "on input element whose type is range");
+    };
+
+    document.getElementById("input_number").onbeforeinput = (aEvent) => {
+      ++numberBeforeInput;
+    };
+    document.getElementById("input_number").oninput = (aEvent) => {
+      ++numberInput;
+      checkIfInputIsInputEvent(aEvent, "on input element whose type is number");
     };
   }
 
-  var rangeInput = 0, rangeBeforeInput = 0;
-  document.getElementById("input_range").onbeforeinput = (aEvent) => {
-    ++rangeBeforeInput;
-  };
-  document.getElementById("input_range").oninput = (aEvent) => {
-    ++rangeInput;
-    checkIfInputIsEvent(aEvent, "on input element whose type is range");
-  };
-
-  var numberInput = 0, numberBeforeInput = 0;
-  document.getElementById("input_number").onbeforeinput = (aEvent) => {
-    ++numberBeforeInput;
-  };
-  document.getElementById("input_number").oninput = (aEvent) => {
-    ++numberInput;
-    checkIfInputIsInputEvent(aEvent, "on input element whose type is number");
-  };
-
-  SimpleTest.waitForExplicitFinish();
   var MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
 
@@ -159,7 +162,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       ok(false, "beforeinput event shouldn't be dispatched on file input.");
     });
     input.addEventListener("input", function (aEvent) {
-      ok(true, "input event should have been dispatched on file input.");
+      ok(true, "input event should've been dispatched on file input.");
       checkIfInputIsEvent(aEvent, "on file input");
     });
 
@@ -176,28 +179,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       expectedData = null;
       expectedBeforeInputCancelable = true;
       synthesizeKey("KEY_Enter");
-      is(textBeforeInput[i], 0, "beforeinput event shouldn't be dispatched on " + textTypes[i] + " input element");
+      is(textBeforeInput[i], 1, "beforeinput event should've been dispatched on " + textTypes[i] + " input element");
       is(textInput[i], 0, "input event shouldn't be dispatched on " + textTypes[i] + " input element");
 
       expectedInputType = "insertText";
       expectedData = "m";
       expectedBeforeInputCancelable = true;
       sendString("m");
-      todo_is(textBeforeInput[i], 1, textTypes[i] + " input element should have dispatched beforeinput event.");
-      is(textInput[i], 1, textTypes[i] + " input element should have dispatched input event.");
+      is(textBeforeInput[i], 2, textTypes[i] + " input element should've been dispatched beforeinput event.");
+      is(textInput[i], 1, textTypes[i] + " input element should've been dispatched input event.");
       expectedInputType = "insertLineBreak";
       expectedData = null;
       expectedBeforeInputCancelable = true;
-      synthesizeKey("KEY_Enter");
-      todo_is(textBeforeInput[i], 1, "input event shouldn't be dispatched on " + textTypes[i] + " input element");
+      synthesizeKey("KEY_Enter", {shiftKey: true});
+      is(textBeforeInput[i], 3, "input event should've been dispatched on " + textTypes[i] + " input element");
       is(textInput[i], 1, "input event shouldn't be dispatched on " + textTypes[i] + " input element");
 
       expectedInputType = "deleteContentBackward";
       expectedData = null;
       expectedBeforeInputCancelable = true;
       synthesizeKey("KEY_Backspace");
-      todo_is(textBeforeInput[i], 2, textTypes[i] + " input element should have dispatched beforeinput event.");
-      is(textInput[i], 2, textTypes[i] + " input element should have dispatched input event.");
+      is(textBeforeInput[i], 4, textTypes[i] + " input element should've been dispatched beforeinput event.");
+      is(textInput[i], 2, textTypes[i] + " input element should've been dispatched input event.");
     }
 
     // Some scenarios of value changing from script and from user input.
@@ -207,18 +210,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     expectedData = "f";
     expectedBeforeInputCancelable = true;
     sendString("f");
-    todo_is(textBeforeInput[0], 3, "beforeinput event should have been dispatched");
-    is(textInput[0], 3, "input event should have been dispatched");
+    is(textBeforeInput[0], 5, "beforeinput event should've been dispatched");
+    is(textInput[0], 3, "input event should've been dispatched");
     input.blur();
-    todo_is(textBeforeInput[0], 3, "input event should not have been dispatched");
+    is(textBeforeInput[0], 5, "input event should not have been dispatched");
     is(textInput[0], 3, "input event should not have been dispatched");
 
     input.focus();
     input.value = 'foo';
-    todo_is(textBeforeInput[0], 3, "beforeinput event should not have been dispatched");
+    is(textBeforeInput[0], 5, "beforeinput event should not have been dispatched");
     is(textInput[0], 3, "input event should not have been dispatched");
     input.blur();
-    todo_is(textBeforeInput[0], 3, "beforeinput event should not have been dispatched");
+    is(textBeforeInput[0], 5, "beforeinput event should not have been dispatched");
     is(textInput[0], 3, "input event should not have been dispatched");
 
     input.focus();
@@ -226,13 +229,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     expectedData = "f";
     expectedBeforeInputCancelable = true;
     sendString("f");
-    todo_is(textBeforeInput[0], 4, "beforeinput event should have been dispatched");
-    is(textInput[0], 4, "input event should have been dispatched");
+    is(textBeforeInput[0], 6, "beforeinput event should've been dispatched");
+    is(textInput[0], 4, "input event should've been dispatched");
     input.value = 'bar';
-    todo_is(textBeforeInput[0], 4, "beforeinput event should not have been dispatched");
+    is(textBeforeInput[0], 6, "beforeinput event should not have been dispatched");
     is(textInput[0], 4, "input event should not have been dispatched");
     input.blur();
-    todo_is(textBeforeInput[0], 4, "beforeinput event should not have been dispatched");
+    is(textBeforeInput[0], 6, "beforeinput event should not have been dispatched");
     is(textInput[0], 4, "input event should not have been dispatched");
 
     // Same for textarea.
@@ -242,18 +245,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     expectedData = "f";
     expectedBeforeInputCancelable = true;
     sendString("f");
-    todo_is(textareaBeforeInput, 1, "beforeinput event should have been dispatched");
-    is(textareaInput, 1, "input event should have been dispatched");
+    is(textareaBeforeInput, 1, "beforeinput event should've been dispatched");
+    is(textareaInput, 1, "input event should've been dispatched");
     textarea.blur();
-    todo_is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
+    is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
     is(textareaInput, 1, "input event should not have been dispatched");
 
     textarea.focus();
     textarea.value = 'foo';
-    todo_is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
+    is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
     is(textareaInput, 1, "input event should not have been dispatched");
     textarea.blur();
-    todo_is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
+    is(textareaBeforeInput, 1, "beforeinput event should not have been dispatched");
     is(textareaInput, 1, "input event should not have been dispatched");
 
     textarea.focus();
@@ -261,19 +264,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     expectedData = "f";
     expectedBeforeInputCancelable = true;
     sendString("f");
-    todo_is(textareaBeforeInput, 2, "beforeinput event should have been dispatched");
-    is(textareaInput, 2, "input event should have been dispatched");
+    is(textareaBeforeInput, 2, "beforeinput event should've been dispatched");
+    is(textareaInput, 2, "input event should've been dispatched");
     textarea.value = 'bar';
-    todo_is(textareaBeforeInput, 2, "beforeinput event should not have been dispatched");
+    is(textareaBeforeInput, 2, "beforeinput event should not have been dispatched");
     is(textareaInput, 2, "input event should not have been dispatched");
     expectedInputType = "deleteContentBackward";
     expectedData = null;
     expectedBeforeInputCancelable = true;
     synthesizeKey("KEY_Backspace");
-    todo_is(textareaBeforeInput, 3, "beforeinput event should have been dispatched");
-    is(textareaInput, 3, "input event should have been dispatched");
+    is(textareaBeforeInput, 3, "beforeinput event should've been dispatched");
+    is(textareaInput, 3, "input event should've been dispatched");
     textarea.blur();
-    todo_is(textareaBeforeInput, 3, "beforeinput event should not have been dispatched");
+    is(textareaBeforeInput, 3, "beforeinput event should not have been dispatched");
     is(textareaInput, 3, "input event should not have been dispatched");
 
     // Non-text input tests:
@@ -295,7 +298,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
         input.focus();
         input.click();
         is(nonTextBeforeInput[i], 0, "beforeinput event should not have been dispatched");
-        is(nonTextInput[i], 1, "input event should have been dispatched");
+        is(nonTextInput[i], 1, "input event should've been dispatched");
         input.blur();
         is(nonTextBeforeInput[i], 0, "beforeinput event should not have been dispatched");
         is(nonTextInput[i], 1, "input event should not have been dispatched");
@@ -372,7 +375,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       expectedData = "1";
       expectedBeforeInputCancelable = false;
       synthesizeKey("KEY_ArrowUp");
-      todo_is(numberBeforeInput, 1, "beforeinput event should be dispatched for up/down arrow key keypress");
+      is(numberBeforeInput, 1, "beforeinput event should be dispatched for up/down arrow key keypress");
       is(numberInput, 1, "input event should be dispatched for up/down arrow key keypress");
       is(number.value, "1", "sanity check value of number control after keypress");
 
@@ -380,13 +383,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       // `expectedData` and use {repeat: 3} at the same time.
       skipExpectedDataCheck = true;
       synthesizeKey("KEY_ArrowDown", {repeat: 3});
-      todo_is(numberBeforeInput, 4, "beforeinput event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
+      is(numberBeforeInput, 4, "beforeinput event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
       is(numberInput, 4, "input event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
       is(number.value, "-2", "sanity check value of number control after multiple keydown events");
       skipExpectedDataCheck = false;
 
       number.blur();
-      todo_is(numberBeforeInput, 4, "beforeinput event shouldn't be dispatched on blur");
+      is(numberBeforeInput, 4, "beforeinput event shouldn't be dispatched on blur");
       is(numberInput, 4, "input event shouldn't be dispatched on blur");
     }
 
@@ -395,12 +398,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.waitForFocus(async () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     await SpecialPowers.pushPrefEnv({
       set: [["dom.input_events.beforeinput.enabled", true]],
     });
-    testUserInput();
-  });
+    init();
+    SimpleTest.waitForFocus(testUserInput);
+  }, {once: true});
 
 </script>
 </pre>
