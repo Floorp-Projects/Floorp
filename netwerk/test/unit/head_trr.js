@@ -269,10 +269,18 @@ function trrQueryHandler(req, resp, url) {
         `${dnsQuery.questions[0].name}/${dnsQuery.questions[0].type}`
       ] || {};
 
+    let flags = global.dnsPacket.RECURSION_DESIRED;
+    if (
+      (!response.answers || !response.answers.length) &&
+      response.additionals &&
+      response.additionals.length > 0
+    ) {
+      flags |= global.dnsPacket.rcodes.toRcode("SERVFAIL");
+    }
     let buf = global.dnsPacket.encode({
       type: "response",
       id: dnsQuery.id,
-      flags: global.dnsPacket.RECURSION_DESIRED,
+      flags,
       questions: dnsQuery.questions,
       answers: response.answers || [],
       additionals: response.additionals || [],
