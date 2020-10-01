@@ -187,11 +187,6 @@ class AlignedBuffer {
     mLength -= aSize;
   }
 
-  void PopBack(size_t aSize) {
-    MOZ_DIAGNOSTIC_ASSERT(mLength >= aSize, "Popping too many frames");
-    mLength -= aSize;
-  }
-
  private:
   static size_t AlignmentOffset() { return Alignment ? Alignment - 1 : 0; }
 
