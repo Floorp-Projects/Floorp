@@ -182,8 +182,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
  [[]]          // 0x80
 */
 
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::SetFromString(
-    const nsAString& aString) {
+Result<Ok, nsresult> Key::SetFromString(const nsAString& aString) {
   mBuffer.Truncate();
   auto result = EncodeString(aString, 0);
   if (result.isOk()) {
@@ -213,8 +212,7 @@ uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
   return iter - aPos - 1;
 }
 
-IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
-    const nsCString& aLocale) const {
+Result<Key, nsresult> Key::ToLocaleAwareKey(const nsCString& aLocale) const {
   Key res;
 
   if (IsUnset()) {
@@ -258,7 +256,7 @@ IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
   }
 
   if (!res.mBuffer.SetCapacity(mBuffer.Length(), fallible)) {
-    return Err(IDBException(NS_ERROR_OUT_OF_MEMORY));
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   // A string was found, so we need to copy the data we've read so far
@@ -292,21 +290,21 @@ IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
     if (type == eTerminator) {
       // Copy array TypeID and terminator from raw key
       if (!updateBufferAndIter(0)) {
-        return Err(IDBException(NS_ERROR_OUT_OF_MEMORY));
+        return Err(NS_ERROR_OUT_OF_MEMORY);
       }
     } else if (type == eFloat || type == eDate) {
       // Copy number from raw key
       const size_t byteCount = std::min(sizeof(uint64_t), size_t(end - it - 1));
 
       if (!updateBufferAndIter(byteCount)) {
-        return Err(IDBException(NS_ERROR_OUT_OF_MEMORY));
+        return Err(NS_ERROR_OUT_OF_MEMORY);
       }
     } else if (type == eBinary) {
       // skip all binary data
       const auto binaryLength = LengthOfEncodedBinary(it, end);
 
       if (!updateBufferAndIter(binaryLength)) {
-        return Err(IDBException(NS_ERROR_OUT_OF_MEMORY));
+        return Err(NS_ERROR_OUT_OF_MEMORY);
       }
     } else {
       // Decode string and reencode
@@ -546,24 +544,24 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeJSVal(
   return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
 }
 
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeString(
-    const nsAString& aString, uint8_t aTypeOffset) {
+Result<Ok, nsresult> Key::EncodeString(const nsAString& aString,
+                                       uint8_t aTypeOffset) {
   return EncodeString(Span{aString}, aTypeOffset);
 }
 
 template <typename T>
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeString(
-    const Span<const T> aInput, uint8_t aTypeOffset) {
+Result<Ok, nsresult> Key::EncodeString(const Span<const T> aInput,
+                                       uint8_t aTypeOffset) {
   return EncodeAsString(aInput, eString + aTypeOffset);
 }
 
 template <typename T>
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeAsString(
-    const Span<const T> aInput, uint8_t aType) {
+Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
+                                         uint8_t aType) {
   // First measure how long the encoded string will be.
   if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
     IDB_REPORT_INTERNAL_ERR();
-    return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
@@ -587,7 +585,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeAsString(
       payloadSize += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!payloadSize.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
-        return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       }
     }
   }
@@ -600,13 +598,13 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   if (!size.isValid()) {
     IDB_REPORT_INTERNAL_ERR();
-    return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   char* buffer;
   if (!mBuffer.GetMutableData(&buffer, size.value())) {
     IDB_REPORT_INTERNAL_ERR();
-    return Err(IDBException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   buffer += oldLen;
 
@@ -651,8 +649,9 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeAsString(
   return Ok();
 }
 
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
-    const nsAString& aString, uint8_t aTypeOffset, const nsCString& aLocale) {
+Result<Ok, nsresult> Key::EncodeLocaleString(const nsAString& aString,
+                                             uint8_t aTypeOffset,
+                                             const nsCString& aLocale) {
   const int length = aString.Length();
   if (length == 0) {
     return Ok();
@@ -662,7 +661,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
   UErrorCode uerror = U_ZERO_ERROR;
   UCollator* collator = ucol_open(aLocale.get(), &uerror);
   if (NS_WARN_IF(U_FAILURE(uerror))) {
-    return Err(IDBException(NS_ERROR_FAILURE));
+    return Err(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(collator);
 
@@ -671,7 +670,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
       collator, ustr, length, keyBuffer.Elements(), keyBuffer.Length());
   if (sortKeyLength > (int32_t)keyBuffer.Length()) {
     if (!keyBuffer.SetLength(sortKeyLength, fallible)) {
-      return Err(IDBException(NS_ERROR_OUT_OF_MEMORY));
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
     sortKeyLength = ucol_getSortKey(collator, ustr, length,
                                     keyBuffer.Elements(), sortKeyLength);
@@ -679,7 +678,7 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
 
   ucol_close(collator);
   if (NS_WARN_IF(sortKeyLength == 0)) {
-    return Err(IDBException(NS_ERROR_FAILURE));
+    return Err(NS_ERROR_FAILURE);
   }
 
   return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
@@ -832,9 +831,8 @@ double Key::DecodeNumber(const EncodedDataType*& aPos,
   return BitwiseCast<double>(bits);
 }
 
-IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeBinary(JSObject* aObject,
-                                                          bool aIsViewObject,
-                                                          uint8_t aTypeOffset) {
+Result<Ok, nsresult> Key::EncodeBinary(JSObject* aObject, bool aIsViewObject,
+                                       uint8_t aTypeOffset) {
   uint8_t* bufferData;
   uint32_t bufferLength;
 
