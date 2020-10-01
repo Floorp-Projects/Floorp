@@ -22,9 +22,10 @@ add_task(async function test_updateRecipes_activeExperiments() {
   const recipe = ExperimentFakes.recipe("foo");
   const loader = ExperimentFakes.rsLoader();
   loader.manager = manager;
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+  const PASS_FILTER_RECIPE = {
     targeting: `"${recipe.slug}" in activeExperiments`,
-  });
+    arguments: recipe,
+  };
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sandbox.stub(manager.store, "ready").resolves();
@@ -41,7 +42,10 @@ add_task(async function test_updateRecipes_isFirstRun() {
   const recipe = ExperimentFakes.recipe("foo");
   const loader = ExperimentFakes.rsLoader();
   loader.manager = manager;
-  const PASS_FILTER_RECIPE = { ...recipe, targeting: "isFirstStartup" };
+  const PASS_FILTER_RECIPE = {
+    targeting: "isFirstStartup",
+    arguments: recipe,
+  };
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sandbox.stub(manager.store, "ready").resolves();

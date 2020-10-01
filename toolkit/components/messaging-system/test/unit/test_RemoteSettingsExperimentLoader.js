@@ -71,13 +71,14 @@ add_task(async function test_init() {
 
 add_task(async function test_updateRecipes() {
   const loader = ExperimentFakes.rsLoader();
-
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+  const PASS_FILTER_RECIPE = {
     targeting: "true",
-  });
-  const FAIL_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  const FAIL_FILTER_RECIPE = {
     targeting: "false",
-  });
+    arguments: ExperimentFakes.recipe("foo"),
+  };
   sinon.stub(loader, "setTimer");
   sinon.spy(loader, "updateRecipes");
 
@@ -96,16 +97,20 @@ add_task(async function test_updateRecipes() {
     "should call .onRecipe only for recipes that pass"
   );
   ok(
-    loader.manager.onRecipe.calledWith(PASS_FILTER_RECIPE, "rs-loader"),
+    loader.manager.onRecipe.calledWith(
+      PASS_FILTER_RECIPE.arguments,
+      "rs-loader"
+    ),
     "should call .onRecipe with argument data"
   );
 });
 
 add_task(async function test_updateRecipes_forFirstStartup() {
   const loader = ExperimentFakes.rsLoader();
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+  const PASS_FILTER_RECIPE = {
     targeting: "isFirstStartup",
-  });
+    arguments: ExperimentFakes.recipe("foo"),
+  };
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
@@ -121,9 +126,10 @@ add_task(async function test_updateRecipes_forFirstStartup() {
 
 add_task(async function test_updateRecipes_forNoneFirstStartup() {
   const loader = ExperimentFakes.rsLoader();
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+  const PASS_FILTER_RECIPE = {
     targeting: "isFirstStartup",
-  });
+    arguments: ExperimentFakes.recipe("foo"),
+  };
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
@@ -158,14 +164,15 @@ add_task(async function test_checkTargeting() {
 
 add_task(async function test_checkExperimentSelfReference() {
   const loader = ExperimentFakes.rsLoader();
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+  const PASS_FILTER_RECIPE = {
     targeting:
-      "experiment.slug == 'foo' && experiment.branches[0].slug == 'control'",
-  });
-
-  const FAIL_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
-    targeting: "experiment.slug == 'bar'",
-  });
+      "experiment.arguments.slug == 'foo' && experiment.arguments.branches[0].slug == 'control'",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  const FAIL_FILTER_RECIPE = {
+    targeting: "experiment.arguments.slug == 'bar'",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
 
   equal(
     await loader.checkTargeting(PASS_FILTER_RECIPE),
