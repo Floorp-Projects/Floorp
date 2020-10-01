@@ -4319,25 +4319,24 @@ const BrowserSearch = {
    *
    * @param searchText
    *        The search terms to use for the search.
-   *
    * @param where
    *        String indicating where the search should load. Most commonly used
    *        are 'tab' or 'window', defaults to 'current'.
-   *
    * @param usePrivate
    *        Whether to use the Private Browsing mode default search engine.
    *        Defaults to `false`.
-   *
    * @param purpose [optional]
    *        A string meant to indicate the context of the search request. This
    *        allows the search service to provide a different nsISearchSubmission
    *        depending on e.g. where the search is triggered in the UI.
-   *
    * @param triggeringPrincipal
    *        The principal to use for a new window or tab.
-   *
    * @param csp
    *        The content security policy to use for a new window or tab.
+   * @param engine [optional]
+   *        The search engine to use for the search.
+   * @param tab [optional]
+   *        The tab to show the search result.
    *
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
@@ -4348,7 +4347,9 @@ const BrowserSearch = {
     usePrivate,
     purpose,
     triggeringPrincipal,
-    csp
+    csp,
+    engine = null,
+    tab = null
   ) {
     if (!triggeringPrincipal) {
       throw new Error(
@@ -4356,9 +4357,11 @@ const BrowserSearch = {
       );
     }
 
-    let engine = usePrivate
-      ? await Services.search.getDefaultPrivate()
-      : await Services.search.getDefault();
+    if (!engine) {
+      engine = usePrivate
+        ? await Services.search.getDefaultPrivate()
+        : await Services.search.getDefault();
+    }
 
     let submission = engine.getSubmission(searchText, null, purpose); // HTML response
 
@@ -4373,6 +4376,7 @@ const BrowserSearch = {
     let inBackground = Services.prefs.getBoolPref(
       "browser.search.context.loadInBackground"
     );
+
     openLinkIn(submission.uri.spec, where || "current", {
       private: usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window),
       postData: submission.postData,
@@ -4380,6 +4384,7 @@ const BrowserSearch = {
       relatedToCurrent: true,
       triggeringPrincipal,
       csp,
+      targetBrowser: tab?.linkedBrowser,
     });
 
     return { engine, url: submission.uri };
@@ -4424,6 +4429,26 @@ const BrowserSearch = {
     if (engine) {
       BrowserSearch.recordSearchInTelemetry(engine, "system", { url });
     }
+  },
+
+  /**
+   * Perform a search initiated from an extension.
+   */
+  async loadSearchFromExtension(terms, engine, tab, triggeringPrincipal) {
+    const result = await BrowserSearch._loadSearch(
+      terms,
+      tab ? "current" : "tab",
+      PrivateBrowsingUtils.isWindowPrivate(window),
+      "webextension",
+      triggeringPrincipal,
+      null,
+      engine,
+      tab
+    );
+
+    BrowserSearch.recordSearchInTelemetry(result.engine, "webextension", {
+      url: result.url,
+    });
   },
 
   pasteAndSearch(event) {

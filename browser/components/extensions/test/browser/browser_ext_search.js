@@ -13,6 +13,15 @@ AddonTestUtils.initMochitest(this);
 
 add_task(async function test_search() {
   async function background(SEARCH_TERM) {
+    browser.test.onMessage.addListener(async (msg, tabIds) => {
+      if (msg !== "removeTabs") {
+        return;
+      }
+
+      await browser.tabs.remove(tabIds);
+      browser.test.sendMessage("onTabsRemoved");
+    });
+
     function awaitSearchResult() {
       return new Promise(resolve => {
         async function listener(tabId, info, changedTab) {
@@ -23,7 +32,6 @@ add_task(async function test_search() {
 
           if (info.status === "complete") {
             browser.tabs.onUpdated.removeListener(listener);
-            await browser.tabs.remove(tabId);
             resolve({ tabId, url: changedTab.url });
           }
         }
@@ -38,10 +46,10 @@ add_task(async function test_search() {
     // Search with no tabId
     browser.search.search({ query: SEARCH_TERM + "1", engine: "Search Test" });
     let result = await awaitSearchResult();
-    browser.test.sendMessage("searchLoaded", result.url);
+    browser.test.sendMessage("searchLoaded", result);
 
     // Search with tabId
-    let tab = await browser.tabs.create({ url: "about:blank" });
+    let tab = await browser.tabs.create({});
     browser.search.search({
       query: SEARCH_TERM + "2",
       engine: "Search Test",
@@ -49,7 +57,7 @@ add_task(async function test_search() {
     });
     result = await awaitSearchResult();
     browser.test.assertEq(result.tabId, tab.id, "Page loaded in right tab");
-    browser.test.sendMessage("searchLoaded", result.url);
+    browser.test.sendMessage("searchLoaded", result);
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -81,19 +89,32 @@ add_task(async function test_search() {
     "Default engine is correct"
   );
 
-  let url = await extension.awaitMessage("searchLoaded");
+  const result1 = await extension.awaitMessage("searchLoaded");
   is(
-    url,
+    result1.url,
     SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "1"),
     "Loaded page matches search"
   );
+  await TestUtils.waitForCondition(
+    () => !gURLBar.focused,
+    "Wait for unfocusing the urlbar"
+  );
+  info("The urlbar has no focus when searching without tabId");
 
-  url = await extension.awaitMessage("searchLoaded");
+  const result2 = await extension.awaitMessage("searchLoaded");
   is(
-    url,
+    result2.url,
     SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "2"),
     "Loaded page matches search"
   );
+  await TestUtils.waitForCondition(
+    () => !gURLBar.focused,
+    "Wait for unfocusing the urlbar"
+  );
+  info("The urlbar has no focus when searching with tabId");
+
+  extension.sendMessage("removeTabs", [result1.tabId, result2.tabId]);
+  await extension.awaitMessage("onTabsRemoved");
 
   await extension.unload();
 });
