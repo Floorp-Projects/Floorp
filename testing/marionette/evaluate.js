@@ -97,7 +97,6 @@ evaluate.sandbox = function(
   } = {}
 ) {
   let unloadHandler;
-
   let marionetteSandbox = sandbox.create(sb.window);
 
   // timeout handler
@@ -179,15 +178,20 @@ evaluate.sandbox = function(
 
 /**
  * Convert any web elements in arbitrary objects to DOM elements by
- * looking them up in the seen element store, or add new ElementIdentifiers to
- * the seen element reference store.
+ * looking them up in the seen element store. For ElementIdentifiers a new
+ * entry in the seen element reference store gets added when running in the
+ * parent process, otherwise ContentDOMReference is used to retrieve the DOM
+ * node.
  *
  * @param {Object} obj
- *     Arbitrary object containing web elements.
+ *     Arbitrary object containing web elements or ElementIdentifiers.
  * @param {(element.Store|element.ReferenceStore)=} seenEls
- *     Known element store to look up web elements from. If `seenEls` is
- *     undefined or an instance of `element.ReferenceStore`, return WebElement.
- *     If `seenEls` is an instance of `element.Store`, return Element.
+ *     Known element store to look up web elements from. If `seenEls` is an
+ *     instance of `element.ReferenceStore`, return WebElement. If `seenEls`
+ *     is an instance of `element.Store`, return Element. If `seenEls` is
+ *     `undefined` the Element from the ContentDOMReference cache is returned
+ *     when executed in the child process, in the parent process the WebElement
+ *     is passed-through.
  * @param {WindowProxy=} win
  *     Current browsing context, if `seenEls` is provided.
  *
@@ -219,19 +223,28 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
       } else if (Array.isArray(obj)) {
         return obj.map(e => evaluate.fromJSON(e, seenEls, win));
 
-        // web elements
-      } else if (WebElement.isReference(obj)) {
-        let webEl = WebElement.fromJSON(obj);
-        if (seenEls) {
-          return seenEls.get(webEl, win);
+        // ElementIdentifier and ReferenceStore (used by JSWindowActor)
+      } else if (WebElement.isReference(obj.webElRef)) {
+        if (seenEls instanceof element.ReferenceStore) {
+          // Parent: Store web element reference in the cache
+          return seenEls.add(obj);
+        } else if (!seenEls) {
+          // Child: Resolve ElementIdentifier by using ContentDOMReference
+          return element.resolveElement(obj);
         }
-        return webEl;
-        // ElementIdentifier
-      } else if (
-        seenEls instanceof element.ReferenceStore &&
-        WebElement.isReference(obj.webElRef)
-      ) {
-        return seenEls.add(obj);
+        throw new TypeError("seenEls is not an instance of ReferenceStore");
+
+        // WebElement and Store (used by framescript)
+      } else if (WebElement.isReference(obj)) {
+        const webEl = WebElement.fromJSON(obj);
+        if (seenEls instanceof element.Store) {
+          // Child: Get web element from the store
+          return seenEls.get(webEl, win);
+        } else if (!seenEls) {
+          // Parent: No conversion. Just return the web element
+          return webEl;
+        }
+        throw new TypeError("seenEls is not an instance of Store");
       }
 
       // arbitrary objects
@@ -254,9 +267,9 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
  * - Collections, such as `Array<`, `NodeList`, `HTMLCollection`
  *   et al. are expanded to arrays and then recursed.
  *
- * - Elements that are not known web elements are added to the
- *   `seenEls` element store.  Once known, the elements' associated
- *   web element representation is returned.
+ * - Elements that are not known web elements are added to the `seenEls` element
+ *   store, or the ContentDOMReference registry. Once known, the elements'
+ *   associated web element representation is returned.
  *
  * - WebElements are transformed to the corresponding ElementIdentifier
  *   for use in the content process, if an `element.ReferenceStore` is provided.
@@ -303,14 +316,40 @@ evaluate.toJSON = function(obj, seenEls) {
 
     // WebElement
   } else if (WebElement.isReference(obj)) {
+    // Parent: Convert to ElementIdentifier for use in child actor
     if (seenEls instanceof element.ReferenceStore) {
       return seenEls.get(WebElement.fromJSON(obj));
     }
+
     return obj;
+
+    // ElementIdentifier
+  } else if (WebElement.isReference(obj.webElRef)) {
+    // Parent: Pass-through ElementIdentifiers to the child
+    if (seenEls instanceof element.ReferenceStore) {
+      return obj;
+    }
+
+    // Parent: Otherwise return the web element
+    return WebElement.fromJSON(obj.webElRef);
 
     // Element (HTMLElement, SVGElement, XULElement, et al.)
   } else if (element.isElement(obj)) {
-    return seenEls.add(obj);
+    // Parent
+    if (seenEls instanceof element.ReferenceStore) {
+      throw new TypeError(`ReferenceStore can't be used with Element`);
+
+      // Child: Add element to the Store, return as WebElement
+    } else if (seenEls instanceof element.Store) {
+      return seenEls.add(obj);
+    }
+
+    // If no storage has been specified assume we are in a child process.
+    // Evaluation of code will take place in mutable sandboxes, which are
+    // created to waive xrays by default. As such DOM nodes have to be unwaived
+    // before accessing the ownerGlobal is possible, which is needed by
+    // ContentDOMReference.
+    return element.getElementId(Cu.unwaiveXrays(obj));
 
     // custom JSON representation
   } else if (typeof obj.toJSON == "function") {
