@@ -74,6 +74,11 @@ Document* WindowContext::GetDocument() const {
   return innerWindow ? innerWindow->GetDocument() : nullptr;
 }
 
+Document* WindowContext::GetExtantDoc() const {
+  nsGlobalWindowInner* innerWindow = GetInnerWindow();
+  return innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+}
+
 WindowContext* WindowContext::GetParentWindowContext() {
   return mBrowsingContext->GetParentWindowContext();
 }
