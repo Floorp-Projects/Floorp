@@ -40,6 +40,7 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         components.appStartupTelemetry.onExternalAppBrowserOnCreate(
             safeIntent,
             hasSavedInstanceState,
+            // HomeActivity is init before ExternalAppBrowserActivity so we use that time.
             homeActivityInitTimeStampNanoSeconds,
             rootContainer
         )
