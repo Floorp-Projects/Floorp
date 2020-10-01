@@ -32,6 +32,7 @@ struct PrintData {
   double scaling;
   bool printBGColors;
   bool printBGImages;
+  bool honorPageRuleMargins;
   short printRange;
   nsString title;
   nsString docURL;

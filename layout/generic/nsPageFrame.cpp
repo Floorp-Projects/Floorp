@@ -85,19 +85,18 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   kidReflowInput.mFlags.mIsTopOfPage = true;
   kidReflowInput.mFlags.mTableIsSplittable = true;
 
-  // Use the margins given in the @page rule.
-  // If a margin is 'auto', use the margin from the print settings for that
-  // side.
-  const auto& marginStyle = kidReflowInput.mStyleMargin->mMargin;
-  for (const auto side : mozilla::AllPhysicalSides()) {
-    if (marginStyle.Get(side).IsAuto()) {
-      mPageContentMargin.Side(side) =
-          aPresContext->GetDefaultPageMargin().Side(side);
-    } else {
-      nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
-          mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
-      mPageContentMargin.Side(side) = std::max(
-          kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
+  mPageContentMargin = aPresContext->GetDefaultPageMargin();
+
+  // Use the margins given in the @page rule if told to do so.
+  if (mPD->mPrintSettings->GetHonorPageRuleMargins()) {
+    const auto& margin = kidReflowInput.mStyleMargin->mMargin;
+    for (const auto side : mozilla::AllPhysicalSides()) {
+      if (!margin.Get(side).IsAuto()) {
+        nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
+            mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
+        mPageContentMargin.Side(side) = std::max(
+            kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
+      }
     }
   }
 
