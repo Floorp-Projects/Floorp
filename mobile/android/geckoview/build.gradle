@@ -348,7 +348,7 @@ android.libraryVariants.all { variant ->
         classifier 'sources'
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
-        from files(variant.javaCompileProvider.get().source)
+        from files(variant.sourceSets.collect({ it.java.srcDirs }).flatten())
     }
 
     task("checkstyle${name.capitalize()}", type: Checkstyle) {
