@@ -5,6 +5,7 @@ from unittest import mock
 import shutil
 import string
 import random
+import pathlib
 
 import pytest
 
@@ -24,6 +25,23 @@ HERE = os.path.dirname(__file__)
 
 def fetch(self, url):
     return os.path.join(HERE, "fetched_artifact.zip")
+
+
+def mocked_jsonload(val):
+    return val.__iter__.return_value
+
+
+def build_mock_open(files_data):
+    mocked_opens = []
+
+    for data in files_data:
+        mocked_file = mock.MagicMock()
+        mocked_file.__enter__.return_value.__iter__.return_value = data
+        mocked_opens.append(mocked_file)
+
+    m = mock.mock_open()
+    m.side_effect = mocked_opens
+    return m
 
 
 @mock.patch("mozperftest.test.browsertime.runner.install_package")
@@ -68,6 +86,76 @@ def test_browser(*mocked):
     assert len(results) == 1
     assert set(list(results[0].keys())) - set(["name", "results"]) == set()
     assert results[0]["name"] == "Example"
+
+
+@mock.patch(
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner.browsertime_js",
+    new=pathlib.Path("doesn't-exist"),
+)
+@mock.patch(
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner.visualmetrics_py",
+    new=pathlib.Path("doesn't-exist-either"),
+)
+def test_browsertime_not_existing():
+    _, _, env = get_running_env(
+        android=True,
+        android_app_name="something",
+        browsertime_geckodriver="GECKODRIVER",
+        browsertime_iterations=1,
+        browsertime_extra_options="one=1,two=2",
+        tests=[EXAMPLE_TEST],
+    )
+    browser = env.layers[TEST]
+    btime_layer = browser.layers[0]
+    assert btime_layer._should_install()
+
+
+@mock.patch(
+    "mozperftest.test.browsertime.runner.pathlib.Path.exists", new=lambda x: True
+)
+def test_browsertime_no_reinstall():
+    _, _, env = get_running_env(
+        android=True,
+        android_app_name="something",
+        browsertime_geckodriver="GECKODRIVER",
+        browsertime_iterations=1,
+        browsertime_extra_options="one=1,two=2",
+        tests=[EXAMPLE_TEST],
+    )
+
+    with mock.patch(
+        "mozperftest.test.browsertime.runner.pathlib.Path.open",
+        build_mock_open(
+            [{"devDependencies": {"browsertime": "good"}}, {"_resolved": "good"}]
+        ),
+    ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
+        browser = env.layers[TEST]
+        btime_layer = browser.layers[0]
+        assert not btime_layer._should_install()
+
+
+@mock.patch(
+    "mozperftest.test.browsertime.runner.pathlib.Path.exists", new=lambda x: True
+)
+def test_browsertime_should_reinstall():
+    _, _, env = get_running_env(
+        android=True,
+        android_app_name="something",
+        browsertime_geckodriver="GECKODRIVER",
+        browsertime_iterations=1,
+        browsertime_extra_options="one=1,two=2",
+        tests=[EXAMPLE_TEST],
+    )
+
+    with mock.patch(
+        "mozperftest.test.browsertime.runner.pathlib.Path.open",
+        build_mock_open(
+            [{"devDependencies": {"browsertime": "bad"}}, {"_resolved": "good"}]
+        ),
+    ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
+        browser = env.layers[TEST]
+        btime_layer = browser.layers[0]
+        assert btime_layer._should_install()
 
 
 @mock.patch("mozperftest.test.browsertime.runner.install_package")

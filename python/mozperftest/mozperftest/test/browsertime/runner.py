@@ -131,6 +131,23 @@ class BrowsertimeRunner(NodeRunner):
             os.environ["VISUALMETRICS_PY"] = str(path)
         return path
 
+    def _should_install(self):
+        # If browsertime doesn't exist, install it
+        if not self.visualmetrics_py.exists() or not self.browsertime_js.exists():
+            return True
+
+        # Browsertime exists, check if it's outdated
+        with Path(BROWSERTIME_SRC_ROOT, "package.json").open() as new, Path(
+            os.environ.get("BROWSERTIME", self.state_path),
+            "node_modules",
+            "browsertime",
+            "package.json",
+        ).open() as old:
+            old_pkg = json.load(old)
+            new_pkg = json.load(new)
+
+        return old_pkg["_resolved"] != new_pkg["devDependencies"]["browsertime"]
+
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
 
@@ -147,11 +164,7 @@ class BrowsertimeRunner(NodeRunner):
 
         # check if the browsertime package has been deployed correctly
         # for this we just check for the browsertime directory presence
-        if (
-            self.visualmetrics_py.exists()
-            and self.browsertime_js.exists()
-            and not self.get_arg("clobber")
-        ):
+        if not self._should_install() and not self.get_arg("clobber"):
             return
 
         # preparing ~/.mozbuild/browsertime
