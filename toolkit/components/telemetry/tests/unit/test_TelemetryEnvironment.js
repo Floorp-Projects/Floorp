@@ -442,7 +442,6 @@ function checkSettingsSection(data) {
     blocklistEnabled: "boolean",
     e10sEnabled: "boolean",
     e10sMultiProcesses: "number",
-    fissionEnabled: "boolean",
     intl: "object",
     locale: "string",
     telemetryEnabled: "boolean",
