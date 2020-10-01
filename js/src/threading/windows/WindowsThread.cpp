@@ -26,6 +26,8 @@ ThreadId::ThreadId() {
   platformData()->id = 0;
 }
 
+ThreadId::operator bool() const { return platformData()->handle; }
+
 bool ThreadId::operator==(const ThreadId& aOther) const {
   return platformData()->id == aOther.platformData()->id;
 }
