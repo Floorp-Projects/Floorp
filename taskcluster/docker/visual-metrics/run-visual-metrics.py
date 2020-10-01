@@ -8,11 +8,13 @@
 
 import argparse
 import json
+import logging
 import os
 import statistics
 import subprocess
 import sys
 import tarfile
+import time
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from multiprocessing import cpu_count
@@ -24,6 +26,10 @@ from jsonschema import validate
 from voluptuous import ALLOW_EXTRA, Required, Schema
 
 
+#: The max run time for a command (5 minutes)
+MAX_TIME = 300
+
+
 #: The directory where artifacts from this job will be placed.
 OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
 
@@ -33,6 +39,9 @@ OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
 class Job:
     #: The name of the test.
     test_name = attr.ib(type=str)
+
+    #: A unique number for the job.
+    count = attr.ib(type=int)
 
     #: The extra options for this job.
     extra_options = attr.ib(type=str)
@@ -68,7 +77,7 @@ with Path("/", "builds", "worker", "performance-artifact-schema.json").open() as
     PERFHERDER_SCHEMA = json.loads(f.read())
 
 
-def run_command(log, cmd):
+def run_command(log, cmd, job_count):
     """Run a command using subprocess.check_output
 
     Args:
@@ -79,18 +88,51 @@ def run_command(log, cmd):
         A tuple of the process' exit status and standard output.
     """
     log.info("Running command", cmd=cmd)
-    try:
-        res = subprocess.check_output(cmd)
-        log.info("Command succeeded", result=res)
-        return 0, res
-    except subprocess.CalledProcessError as e:
-        log.info(
-            "[TEST-UNEXPECTED FAIL] Command failed",
-            cmd=cmd,
-            status=e.returncode,
-            output=e.output
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    lines = []
+    res = None
+    start = time.time()
+    while time.time() - start <= MAX_TIME:
+        time.sleep(0.1)
+        output = process.stdout.readline()
+        if output == b"" and process.poll() is not None:
+            break
+        if output:
+            res = output.strip()
+            lines.append(res.decode("utf-8", "ignore"))
+        else:
+            time.sleep(5)
+
+    if time.time() - start > MAX_TIME:
+        log.error(
+            "[TEST-UNEXPECTED FAIL] Timed out waiting for response from command", cmd=cmd
         )
-        return e.returncode, e.output
+        return 1, "Timed out"
+
+    rc = process.poll()
+    job_prefix = "[JOB-" + str(job_count) + "] "
+    for line in lines:
+        # Some output doesn't start with the levels because it comes
+        # from FFMPEG rather than the script itself
+        if line.startswith(("[INFO]", "[WARNING]", "[CRITICAL]", "[ERROR]")):
+            splitline = line.split(" - ")
+            level = splitline[0]
+            line = " - ".join(splitline[1:])
+        else:
+            level = "[INFO]"
+
+        newline = job_prefix + line
+        if level.strip() in ("[ERROR]", "[CRITICAL]"):
+            if rc == 0:
+                rc = 1
+            log.error("[TEST-UNEXPECTED FAIL]" + newline)
+        elif level == "[WARNING]":
+            log.warning(newline)
+        else:
+            log.info(newline)
+
+    return rc, res
 
 
 def append_result(log, suites, test_name, name, result, extra_options):
@@ -242,6 +284,7 @@ def main(log, args):
         return 1
 
     jobs = []
+    count = 0
 
     for job in jobs_json["jobs"]:
         browsertime_json_path = fetch_dir / job["browsertime_json_path"]
@@ -258,6 +301,7 @@ def main(log, args):
 
         for site in browsertime_json:
             for video in site["files"]["video"]:
+                count += 1
                 jobs.append(
                     Job(
                         test_name=job["test_name"],
@@ -265,6 +309,7 @@ def main(log, args):
                         job["extra_options"] or jobs_json["extra_options"],
                         json_path=browsertime_json_path,
                         video_path=browsertime_json_path.parent / video,
+                        count=count,
                     )
                 )
 
@@ -356,18 +401,27 @@ def run_visual_metrics(job, visualmetrics_path, options):
     Returns:
        A returncode and a string containing the output of visualmetrics.py
     """
-    cmd = ["/usr/bin/python", str(visualmetrics_path), "-v", "--video", str(job.video_path)]
+    cmd = [
+        "/usr/bin/python",
+        str(visualmetrics_path),
+        "-vvv",
+        "--logformat",
+        "[%(levelname)s] - %(message)s",
+        "--video",
+        str(job.video_path)
+    ]
     cmd.extend(options)
-    return run_command(log, cmd)
+    return run_command(log, cmd, job.count)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
     structlog.configure(
         processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.format_exc_info,
             structlog.dev.ConsoleRenderer(colors=False),
         ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 
