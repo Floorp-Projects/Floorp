@@ -325,7 +325,6 @@ class DownloadsFeatureTest {
 
         feature.start()
 
-        println(store.state.findTab("test-tab"))
         assertNotNull(store.state.findTab("test-tab")!!.content.download)
 
         feature.onPermissionsResult(
