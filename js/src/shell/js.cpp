@@ -4814,13 +4814,18 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
        opt == JSJITCOMPILER_WASM_JIT_ION ||
        opt == JSJITCOMPILER_WASM_JIT_CRANELIFT) &&
       number == 0) {
-    uint32_t baseline, ion, cranelift;
+    uint32_t baseline, ion;
     MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_WASM_JIT_BASELINE, &baseline));
     MOZ_ALWAYS_TRUE(
         JS_GetGlobalJitCompilerOption(cx, JSJITCOMPILER_WASM_JIT_ION, &ion));
+#ifdef ENABLE_WASM_CRANELIFT
+    uint32_t cranelift;
     MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_WASM_JIT_CRANELIFT, &cranelift));
+#else
+    uint32_t cranelift = 0;
+#endif
     if (baseline + ion + cranelift == 1) {
       if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE && baseline) ||
           (opt == JSJITCOMPILER_WASM_JIT_ION && ion) ||
