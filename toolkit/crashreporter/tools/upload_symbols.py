@@ -132,7 +132,7 @@ def main():
                                 fh.write(c.compress(buf))
                             fh.write(c.flush())
                         jar.add(info.name + '.bz2', File(path), compress=False)
-                    elif info.name.endswith('.pdb'):
+                    elif info.name.endswith(('.pdb', '.exe', '.dll')):
                         import subprocess
                         makecab = os.environ.get('MAKECAB', 'makecab')
                         os.makedirs(os.path.dirname(path), exist_ok=True)
