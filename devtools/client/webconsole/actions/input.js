@@ -103,7 +103,7 @@ function evaluateExpression(expression, from = "input") {
 
     const response = await client
       .evaluateJSAsync(expression, {
-        frameActor: await webConsoleUI.getFrameActor(),
+        frameActor: webConsoleUI.getFrameActor(),
         selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
         selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
         mapped,
