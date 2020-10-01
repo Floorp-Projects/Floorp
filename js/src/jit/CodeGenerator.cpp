@@ -8954,7 +8954,7 @@ void CodeGenerator::visitModD(LModD* ins) {
     masm.passABIArg(lhs, MoveOp::DOUBLE);
     masm.passABIArg(rhs, MoveOp::DOUBLE);
     masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ModD,
-                     MoveOp::DOUBLE);
+                     mozilla::Nothing(), MoveOp::DOUBLE);
   } else {
     masm.setupUnalignedABICall(ToRegister(ins->temp()));
     masm.passABIArg(lhs, MoveOp::DOUBLE);

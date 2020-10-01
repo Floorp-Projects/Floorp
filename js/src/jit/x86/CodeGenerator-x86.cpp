@@ -628,7 +628,7 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
       masm.setupWasmABICall();
       masm.passABIArg(input, MoveOp::DOUBLE);
       masm.callWithABI(ins->mir()->bytecodeOffset(),
-                       wasm::SymbolicAddress::ToInt32);
+                       wasm::SymbolicAddress::ToInt32, mozilla::Nothing());
     } else {
       masm.setupUnalignedABICall(output);
       masm.passABIArg(input, MoveOp::DOUBLE);
@@ -727,7 +727,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
 
     if (gen->compilingWasm()) {
       masm.callWithABI(ins->mir()->bytecodeOffset(),
-                       wasm::SymbolicAddress::ToInt32);
+                       wasm::SymbolicAddress::ToInt32, mozilla::Nothing());
     } else {
       masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
                        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
@@ -844,9 +844,11 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
 
   MOZ_ASSERT(gen->compilingWasm());
   if (mir->isMod()) {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64,
+                     mozilla::Nothing());
   } else {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64,
+                     mozilla::Nothing());
   }
 
   // output in edx:eax, move to output register.
@@ -881,9 +883,11 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   MOZ_ASSERT(gen->compilingWasm());
   MDefinition* mir = lir->mir();
   if (mir->isMod()) {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64,
+                     mozilla::Nothing());
   } else {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64,
+                     mozilla::Nothing());
   }
 
   // output in edx:eax, move to output register.

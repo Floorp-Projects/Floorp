@@ -589,7 +589,7 @@ void CodeGenerator::visitSoftDivI(LSoftDivI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI(mir->bytecodeOffset(),
-                     wasm::SymbolicAddress::aeabi_idivmod);
+                     wasm::SymbolicAddress::aeabi_idivmod, mozilla::Nothing());
   } else {
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
@@ -778,7 +778,7 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI(mir->bytecodeOffset(),
-                     wasm::SymbolicAddress::aeabi_idivmod);
+                     wasm::SymbolicAddress::aeabi_idivmod, mozilla::Nothing());
   } else {
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
@@ -2249,7 +2249,8 @@ void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod* ins) {
     masm.passABIArg(rhs);
     wasm::BytecodeOffset bytecodeOffset =
         (div ? div->bytecodeOffset() : mod->bytecodeOffset());
-    masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::aeabi_uidivmod);
+    masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::aeabi_uidivmod,
+                     mozilla::Nothing());
   } else {
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
@@ -2366,18 +2367,22 @@ void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
   if (lir->mir()->isSaturating()) {
     if (lir->mir()->isUnsigned()) {
       masm.callWithABI(mir->bytecodeOffset(),
-                       wasm::SymbolicAddress::SaturatingTruncateDoubleToUint64);
+                       wasm::SymbolicAddress::SaturatingTruncateDoubleToUint64,
+                       mozilla::Nothing());
     } else {
       masm.callWithABI(mir->bytecodeOffset(),
-                       wasm::SymbolicAddress::SaturatingTruncateDoubleToInt64);
+                       wasm::SymbolicAddress::SaturatingTruncateDoubleToInt64,
+                       mozilla::Nothing());
     }
   } else {
     if (lir->mir()->isUnsigned()) {
       masm.callWithABI(mir->bytecodeOffset(),
-                       wasm::SymbolicAddress::TruncateDoubleToUint64);
+                       wasm::SymbolicAddress::TruncateDoubleToUint64,
+                       mozilla::Nothing());
     } else {
       masm.callWithABI(mir->bytecodeOffset(),
-                       wasm::SymbolicAddress::TruncateDoubleToInt64);
+                       wasm::SymbolicAddress::TruncateDoubleToInt64,
+                       mozilla::Nothing());
     }
   }
 
@@ -2433,7 +2438,7 @@ void CodeGenerator::visitInt64ToFloatingPointCall(
 
   MoveOp::Type result =
       toType == MIRType::Float32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE;
-  masm.callWithABI(mir->bytecodeOffset(), callee, result);
+  masm.callWithABI(mir->bytecodeOffset(), callee, mozilla::Nothing(), result);
 
   DebugOnly<FloatRegister> output(ToFloatRegister(lir->output()));
   MOZ_ASSERT_IF(toType == MIRType::Double, output.value == ReturnDoubleReg);
@@ -2595,9 +2600,11 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   masm.passABIArg(rhs.low);
 
   if (mir->isMod()) {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64,
+                     mozilla::Nothing());
   } else {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64,
+                     mozilla::Nothing());
   }
 
   MOZ_ASSERT(ReturnReg64 == output);
@@ -2629,9 +2636,11 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   MOZ_ASSERT(gen->compilingWasm());
   MDefinition* mir = lir->mir();
   if (mir->isMod()) {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64,
+                     mozilla::Nothing());
   } else {
-    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64);
+    masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64,
+                     mozilla::Nothing());
   }
 }
 
