@@ -31,6 +31,26 @@ class PrintHelper {
     return testPath + "simplifyArticleSample.html";
   }
 
+  static createMockPaper(paperProperties = {}) {
+    return Object.assign(
+      {
+        id: "regular",
+        name: "Regular Size",
+        width: 612,
+        height: 792,
+        unwriteableMargin: {
+          marginTop: 0.1,
+          marginBottom: 0.1,
+          marginLeft: 0.1,
+          marginRight: 0.1,
+          QueryInterface: ChromeUtils.generateQI([Ci.nsIPaperMargin]),
+        },
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIPaper]),
+      },
+      paperProperties
+    );
+  }
+
   constructor(sourceBrowser) {
     this.sourceBrowser = sourceBrowser;
   }
@@ -43,6 +63,22 @@ class PrintHelper {
     );
     await dialog._dialogReady;
     await this.win._initialized;
+  }
+
+  beforeInit(initFn) {
+    // Run a function when the print.html document is created,
+    // but before its init is called from the domcontentloaded handler
+    TestUtils.topicObserved("document-element-inserted", doc => {
+      return (
+        doc.nodePrincipal.isSystemPrincipal &&
+        doc.contentType == "text/html" &&
+        doc.URL.startsWith("chrome://global/content/print.html")
+      );
+    }).then(([doc]) => {
+      doc.addEventListener("DOMContentLoaded", () => {
+        initFn(doc.ownerGlobal);
+      });
+    });
   }
 
   async withClosingFn(closeFn) {
@@ -103,6 +139,40 @@ class PrintHelper {
     // Mock PrintEventHandler with our Promises.
     this.win.PrintEventHandler._showPrintDialog = () => showSystemDialogPromise;
     this.win.PrintEventHandler._doPrint = () => printPromise;
+  }
+
+  addMockPrinter(name = "Mock Printer") {
+    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+    let defaultSettings = {
+      printerName: name,
+      toFileName: "",
+      outputFormat: Ci.nsIPrintSettings.kOutputFormatNative,
+      printToFile: false,
+    };
+    let printer = {
+      name,
+      supportsColor: Promise.resolve(true),
+      supportsMonochrome: Promise.resolve(true),
+      paperList: Promise.resolve([]),
+      createDefaultSettings: name => {
+        let settings = PSSVC.newPrintSettings;
+        for (let [key, value] of Object.entries(defaultSettings)) {
+          settings[key] = value;
+        }
+        return settings;
+      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIPrinter]),
+    };
+
+    if (!this._mockPrinters) {
+      this._mockPrinters = [printer];
+      this.beforeInit(win => (win._mockPrinters = this._mockPrinters));
+    } else {
+      this._mockPrinters.push(printer);
+    }
+    return printer;
   }
 
   get _tabDialogBox() {

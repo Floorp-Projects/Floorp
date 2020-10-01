@@ -664,7 +664,7 @@ var PrintEventHandler = {
     let printers;
 
     if (Cu.isInAutomation) {
-      printers = [];
+      printers = await Promise.resolve(window._mockPrinters || []);
     } else {
       printers = await printerList.printers;
     }
@@ -967,6 +967,10 @@ var PrintSettingsViewProxy = {
     printerInfo.settings.toFileName = "";
 
     // prepare the available paper sizes for this printer
+    if (!printerInfo.paperList?.length) {
+      logger.warn("Printer has empty paperList: ", printerInfo.printer.id);
+      printerInfo.paperList = this.fallbackPaperList;
+    }
     let paperSizeUnit = printerInfo.settings.paperSizeUnit;
     let unitsPerPoint =
       paperSizeUnit == printerInfo.settings.kPaperSizeMillimeters
