@@ -194,6 +194,10 @@ void LIRGeneratorMIPS::lowerDivI64(MDiv* div) {
   defineReturn(lir, div);
 }
 
+void LIRGeneratorMIPS::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
+  MOZ_CRASH("We don't use runtime div for this architecture");
+}
+
 void LIRGeneratorMIPS::lowerModI64(MMod* mod) {
   if (mod->isUnsigned()) {
     lowerUModI64(mod);
@@ -204,6 +208,10 @@ void LIRGeneratorMIPS::lowerModI64(MMod* mod) {
       useInt64RegisterAtStart(mod->lhs()), useInt64RegisterAtStart(mod->rhs()));
 
   defineReturn(lir, mod);
+}
+
+void LIRGeneratorMIPS::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
+  MOZ_CRASH("We don't use runtime mod for this architecture");
 }
 
 void LIRGeneratorMIPS::lowerUDivI64(MDiv* div) {

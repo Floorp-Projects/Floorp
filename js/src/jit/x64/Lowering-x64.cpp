@@ -352,6 +352,10 @@ void LIRGeneratorX64::lowerDivI64(MDiv* div) {
   defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
 }
 
+void LIRGeneratorX64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
+  MOZ_CRASH("We don't use runtime div for this architecture");
+}
+
 void LIRGeneratorX64::lowerModI64(MMod* mod) {
   if (mod->isUnsigned()) {
     lowerUModI64(mod);
@@ -361,6 +365,10 @@ void LIRGeneratorX64::lowerModI64(MMod* mod) {
   LDivOrModI64* lir = new (alloc()) LDivOrModI64(
       useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(rax));
   defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
+}
+
+void LIRGeneratorX64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
+  MOZ_CRASH("We don't use runtime mod for this architecture");
 }
 
 void LIRGeneratorX64::lowerUDivI64(MDiv* div) {

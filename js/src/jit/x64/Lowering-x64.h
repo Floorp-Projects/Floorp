@@ -45,7 +45,9 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared {
   bool needTempForPostBarrier() { return true; }
 
   void lowerDivI64(MDiv* div);
+  void lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div);
   void lowerModI64(MMod* mod);
+  void lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod);
   void lowerUDivI64(MDiv* div);
   void lowerUModI64(MMod* mod);
 };
