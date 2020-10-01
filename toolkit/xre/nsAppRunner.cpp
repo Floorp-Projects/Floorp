@@ -535,9 +535,9 @@ bool FissionAutostart() {
 }
 
 bool SessionHistoryInParent() {
-  // Fission check will be enabled later.
-  return /*FissionAutostart() ||*/
-      StaticPrefs::fission_sessionHistoryInParent_AtStartup_DoNotUseDirectly();
+  return FissionAutostart() ||
+         StaticPrefs::
+             fission_sessionHistoryInParent_AtStartup_DoNotUseDirectly();
 }
 
 }  // namespace mozilla
