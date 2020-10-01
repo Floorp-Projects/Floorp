@@ -1496,6 +1496,9 @@ class UrlbarInput {
       return;
     }
 
+    // Unselect the one-off search button to ensure UI consistency.
+    this.view.oneOffSearchButtons.selectedButton = null;
+
     this._searchModesByBrowser.set(
       this.window.gBrowser.selectedBrowser,
       this.searchMode
