@@ -363,26 +363,47 @@ class LSoftUDivOrMod : public LBinaryCallInstructionHelper<1, 0> {
   MInstruction* mir() { return mir_->toInstruction(); }
 };
 
-class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 1, 0> {
+class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 2, 0> {
+  static const size_t Input = 0;
+  static const size_t Tls = 1;
+
  public:
   LIR_HEADER(WasmTruncateToInt64);
 
-  explicit LWasmTruncateToInt64(const LAllocation& in)
+  LWasmTruncateToInt64(const LAllocation& in, const LAllocation& tls)
       : LCallInstructionHelper(classOpcode) {
-    setOperand(0, in);
+    setOperand(Input, in);
+    setOperand(Tls, tls);
   }
 
-  MWasmTruncateToInt64* mir() const { return mir_->toWasmTruncateToInt64(); }
+  LAllocation* input() { return getOperand(Input); }
+  LAllocation* tls() { return getOperand(Tls); }
+
+  MWasmBuiltinTruncateToInt64* mir() const {
+    return mir_->toWasmBuiltinTruncateToInt64();
+  }
 };
 
 class LInt64ToFloatingPointCall
-    : public LCallInstructionHelper<1, INT64_PIECES, 0> {
+    : public LCallInstructionHelper<1, INT64_PIECES + 1, 0> {
  public:
   LIR_HEADER(Int64ToFloatingPointCall);
 
-  LInt64ToFloatingPointCall() : LCallInstructionHelper(classOpcode) {}
+  static const size_t Input = 0;
+  static const size_t Tls = INT64_PIECES;
 
-  MInt64ToFloatingPoint* mir() const { return mir_->toInt64ToFloatingPoint(); }
+  LInt64ToFloatingPointCall(const LInt64Allocation& in, const LAllocation& tls)
+      : LCallInstructionHelper(classOpcode) {
+    setInt64Operand(Input, in);
+    setOperand(Tls, tls);
+  }
+
+  LAllocation* input() { return getOperand(Input); }
+  LAllocation* tls() { return getOperand(Tls); }
+
+  MBuiltinInt64ToFloatingPoint* mir() const {
+    return mir_->toBuiltinInt64ToFloatingPoint();
+  }
 };
 
 namespace details {

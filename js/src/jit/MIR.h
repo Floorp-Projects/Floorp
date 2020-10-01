@@ -4082,6 +4082,45 @@ class MExtendInt32ToInt64 : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+// The same as MWasmTruncateToInt64 but with the TLS dependency.
+// It used only for arm now because on arm we need to call builtin to truncate
+// to i64.
+class MWasmBuiltinTruncateToInt64 : public MAryInstruction<2>,
+                                    public NoTypePolicy::Data {
+  TruncFlags flags_;
+  wasm::BytecodeOffset bytecodeOffset_;
+
+  MWasmBuiltinTruncateToInt64(MDefinition* def, MDefinition* tls,
+                              TruncFlags flags,
+                              wasm::BytecodeOffset bytecodeOffset)
+      : MAryInstruction(classOpcode),
+        flags_(flags),
+        bytecodeOffset_(bytecodeOffset) {
+    initOperand(0, def);
+    initOperand(1, tls);
+
+    setResultType(MIRType::Int64);
+    setGuard();  // neither removable nor movable because of possible
+                 // side-effects.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBuiltinTruncateToInt64)
+  NAMED_OPERANDS((0, input), (1, tls));
+  TRIVIAL_NEW_WRAPPERS
+
+  bool isUnsigned() const { return flags_ & TRUNC_UNSIGNED; }
+  bool isSaturating() const { return flags_ & TRUNC_SATURATING; }
+  TruncFlags flags() const { return flags_; }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmBuiltinTruncateToInt64()->flags() == flags_;
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 class MWasmTruncateToInt64 : public MUnaryInstruction,
                              public NoTypePolicy::Data {
   TruncFlags flags_;
@@ -4213,6 +4252,46 @@ class MInt64ToFloatingPoint : public MUnaryInstruction,
       return false;
     }
     if (ins->toInt64ToFloatingPoint()->isUnsigned_ != isUnsigned_) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+// It used only for arm now because on arm we need to call builtin to convert
+// i64 to float.
+class MBuiltinInt64ToFloatingPoint : public MAryInstruction<2>,
+                                     public NoTypePolicy::Data {
+  bool isUnsigned_;
+  wasm::BytecodeOffset bytecodeOffset_;
+
+  MBuiltinInt64ToFloatingPoint(MDefinition* def, MDefinition* tls, MIRType type,
+                               wasm::BytecodeOffset bytecodeOffset,
+                               bool isUnsigned)
+      : MAryInstruction(classOpcode),
+        isUnsigned_(isUnsigned),
+        bytecodeOffset_(bytecodeOffset) {
+    MOZ_ASSERT(IsFloatingPointType(type));
+    initOperand(0, def);
+    initOperand(1, tls);
+    setResultType(type);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(BuiltinInt64ToFloatingPoint)
+  NAMED_OPERANDS((0, input), (1, tls));
+  TRIVIAL_NEW_WRAPPERS
+
+  bool isUnsigned() const { return isUnsigned_; }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isBuiltinInt64ToFloatingPoint()) {
+      return false;
+    }
+    if (ins->toBuiltinInt64ToFloatingPoint()->isUnsigned_ != isUnsigned_) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
