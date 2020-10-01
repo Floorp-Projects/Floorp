@@ -42,5 +42,10 @@ add_task(async function() {
   const markupViewElement = inspector.panelDoc.getElementById("markup-box");
   ok(markupViewElement, "Inspector is still rendered");
 
+  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
+  // and avoid leak / pending requests
+  info("Destroy the opened toolbox");
+  await toolbox.destroy();
+
   await removeTab(tab);
 });
