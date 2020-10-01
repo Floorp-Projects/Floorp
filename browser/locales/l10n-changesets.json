@@ -1335,7 +1335,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5f58319c32b80670c2f81bd565341c72639354cc"
+        "revision": "a7aebeed8e3086ae214b5298f4f549e460c68c9a"
     },
     "ru": {
         "pin": false,
