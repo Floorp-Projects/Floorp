@@ -15,6 +15,7 @@ CppUnitTests([
     'TestAlgorithm',
     'TestArray',
     'TestArrayUtils',
+    'TestAtomicBitfields',
     'TestAtomics',
     'TestBinarySearch',
     'TestBloomFilter',
