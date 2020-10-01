@@ -175,6 +175,17 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) = 0;
 
   /**
+   * Get the distances from the origin of the path segments.
+   * For non-path elements that's just 0 and the total length of the shape.
+   */
+  virtual bool GetDistancesFromOriginToEndsOfVisibleSegments(
+      FallibleTArray<double>* aOutput) {
+    aOutput->Clear();
+    double distances[] = {0.0, GetTotalLength()};
+    return aOutput->AppendElements(Span<double>(distances), fallible);
+  }
+
+  /**
    * Returns a Path that can be used to measure the length of this elements
    * path, or to find the position at a given distance along it.
    *

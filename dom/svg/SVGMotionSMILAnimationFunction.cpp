@@ -209,15 +209,13 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromMpathElem(
     SVGMPathElement* aMpathElem) {
   mPathSourceType = ePathSourceType_Mpath;
 
-  // Use the path that's the target of our chosen <mpath> child.
-  SVGPathElement* pathElem = aMpathElem->GetReferencedPath();
-  // Path data must contain of at least one path segment (if the path data
-  // doesn't begin with a valid "M", then it's invalid).
-  if (pathElem && pathElem->HasValidDimensions()) {
-    bool ok =
-        pathElem->GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
+  // Use the shape that's the target of our chosen <mpath> child.
+  SVGGeometryElement* shapeElem = aMpathElem->GetReferencedPath();
+  if (shapeElem && shapeElem->HasValidDimensions()) {
+    bool ok = shapeElem->GetDistancesFromOriginToEndsOfVisibleSegments(
+        &mPathVertices);
     if (ok && mPathVertices.Length()) {
-      mPath = pathElem->GetOrBuildPathForMeasuring();
+      mPath = shapeElem->GetOrBuildPathForMeasuring();
     }
   }
 }

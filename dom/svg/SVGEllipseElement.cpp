@@ -81,11 +81,18 @@ already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Ry() {
 bool SVGEllipseElement::HasValidDimensions() const {
   float rx, ry;
 
-  DebugOnly<bool> ok =
-      SVGGeometryProperty::ResolveAll<SVGT::Rx, SVGT::Ry>(this, &rx, &ry);
-  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
-
-  return rx > 0 && ry > 0;
+  if (SVGGeometryProperty::ResolveAll<SVGT::Rx, SVGT::Ry>(this, &rx, &ry)) {
+    return rx > 0 && ry > 0;
+  }
+  // This function might be called for an element in display:none subtree
+  // (e.g. SMIL animateMotion), we fall back to use SVG attributes.
+  bool hasRx = mLengthAttributes[RX].IsExplicitlySet();
+  bool hasRy = mLengthAttributes[RY].IsExplicitlySet();
+  if ((hasRx && mLengthAttributes[RX].GetAnimValInSpecifiedUnits() <= 0) ||
+      (hasRy && mLengthAttributes[RY].GetAnimValInSpecifiedUnits() <= 0)) {
+    return false;
+  }
+  return hasRx || hasRy;
 }
 
 SVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
