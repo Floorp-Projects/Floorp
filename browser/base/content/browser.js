@@ -1563,8 +1563,8 @@ function _loadURI(browser, uri, params = {}) {
       browser.webNavigation.loadURI(uri, loadURIOptions);
     } else {
       // Check if the current browser is allowed to unload.
-      let { permitUnload } = browser.permitUnload();
-      if (!permitUnload) {
+      let { permitUnload, timedOut } = browser.permitUnload();
+      if (!timedOut && !permitUnload) {
         return;
       }
 
@@ -7853,13 +7853,27 @@ function CanCloseWindow() {
     return true;
   }
 
+  let timedOutProcesses = new WeakSet();
+
   for (let browser of gBrowser.browsers) {
     // Don't instantiate lazy browsers.
     if (!browser.isConnected) {
       continue;
     }
 
-    let { permitUnload } = browser.permitUnload();
+    let pmm = browser.messageManager.processMessageManager;
+
+    if (timedOutProcesses.has(pmm)) {
+      continue;
+    }
+
+    let { permitUnload, timedOut } = browser.permitUnload();
+
+    if (timedOut) {
+      timedOutProcesses.add(pmm);
+      continue;
+    }
+
     if (!permitUnload) {
       return false;
     }

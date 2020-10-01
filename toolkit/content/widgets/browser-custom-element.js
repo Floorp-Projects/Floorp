@@ -1717,14 +1717,23 @@
       }
 
       this._inPermitUnload.add(wgp);
+      let timeout;
       try {
-        let permitUnload = await wgp.permitUnload(
-          action,
-          lazyPrefs.unloadTimeoutMs
-        );
-        return { permitUnload };
+        let result = await Promise.race([
+          new Promise(resolve => {
+            timeout = setTimeout(() => {
+              resolve({ permitUnload: true, timedOut: true });
+            }, lazyPrefs.unloadTimeoutMs);
+          }),
+          wgp
+            .permitUnload(action)
+            .then(permitUnload => ({ permitUnload, timedOut: false })),
+        ]);
+
+        return result;
       } finally {
         this._inPermitUnload.delete(wgp);
+        clearTimeout(timeout);
       }
     }
 
@@ -1741,7 +1750,7 @@
     permitUnload(action) {
       if (this.isRemoteBrowser) {
         if (!this.hasBeforeUnload) {
-          return { permitUnload: true };
+          return { permitUnload: true, timedOut: false };
         }
 
         let result;
@@ -1766,10 +1775,11 @@
       }
 
       if (!this.docShell || !this.docShell.contentViewer) {
-        return { permitUnload: true };
+        return { permitUnload: true, timedOut: false };
       }
       return {
         permitUnload: this.docShell.contentViewer.permitUnload(),
+        timedOut: false,
       };
     }
 
