@@ -105,6 +105,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   nsGlobalWindowInner* GetInnerWindow() const;
   Document* GetDocument() const;
+  Document* GetExtantDoc() const;
 
   // Get the parent WindowContext of this WindowContext, taking the BFCache into
   // account. This will not cross chrome/content <browser> boundaries.
