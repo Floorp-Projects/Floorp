@@ -99,8 +99,29 @@ class IDBError {
 
   template <typename... SpecialValueMappers>
   ErrorResult ExtractErrorResult(SpecialValueMappers... aSpecialValueMappers) {
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)
     return mVariant.match(
         [](ErrorResult& aException) { return std::move(aException); },
+        [aSpecialValueMappers...](const SpecialConstant<S>& aSpecialValue) {
+          return ErrorResult{aSpecialValueMappers(aSpecialValue)};
+        }...);
+#else
+    // gcc 7 doesn't accept the kind of parameter pack expansion above,
+    // probably due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47226
+    return mVariant.match([aSpecialValueMappers...](auto& aValue) {
+      if constexpr (std::is_same_v<ErrorResult&, decltype(aValue)>) {
+        return std::move(aValue);
+      } else {
+        return ErrorResult{aSpecialValueMappers(aValue)...};
+      }
+    });
+#endif
+  }
+
+  template <typename... SpecialValueMappers>
+  nsresult ExtractNSResult(SpecialValueMappers... aSpecialValueMappers) {
+    return mVariant.match(
+        [](ErrorResult& aException) { return aException.StealNSResult(); },
         aSpecialValueMappers...);
   }
 
@@ -118,8 +139,8 @@ template <typename T, IDBSpecialValue... S>
 using IDBResult = Result<T, detail::IDBError<S...>>;
 
 template <nsresult E>
-ErrorResult InvalidMapsTo(const indexedDB::detail::InvalidType&) {
-  return ErrorResult{E};
+nsresult InvalidMapsTo(const indexedDB::detail::InvalidType&) {
+  return E;
 }
 
 inline detail::IDBError<> IDBException(nsresult aRv) {
