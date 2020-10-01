@@ -119,16 +119,21 @@ function createScript(url) {
 function waitForSourceLoad(toolbox, url) {
   info(`Waiting for source ${url} to be available...`);
   return new Promise(resolve => {
-    const target = toolbox.target;
+    const { resourceWatcher } = toolbox;
 
-    function sourceHandler(sourceEvent) {
-      if (sourceEvent && sourceEvent.source && sourceEvent.source.url === url) {
-        resolve();
-        target.off("source-updated", sourceHandler);
+    function onAvailable(sources) {
+      for (const source of sources) {
+        if (source.url === url) {
+          resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
+            onAvailable,
+          });
+          resolve();
+        }
       }
     }
-
-    target.on("source-updated", sourceHandler);
+    resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
+      onAvailable,
+    });
   });
 }
 
