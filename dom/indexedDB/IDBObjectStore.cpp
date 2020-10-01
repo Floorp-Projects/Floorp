@@ -61,19 +61,14 @@ using namespace mozilla::ipc;
 
 namespace {
 
-IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
-                                    const nsCString& aLocale,
-                                    ErrorResult* const aRv) {
+Result<IndexUpdateInfo, nsresult> MakeIndexUpdateInfo(
+    const int64_t aIndexID, const Key& aKey, const nsCString& aLocale) {
   IndexUpdateInfo indexUpdateInfo;
   indexUpdateInfo.indexId() = aIndexID;
   indexUpdateInfo.value() = aKey;
   if (!aLocale.IsEmpty()) {
-    auto result = aKey.ToLocaleAwareKey(aLocale);
-    if (result.isErr()) {
-      *aRv = result.unwrapErr().ExtractErrorResult(
-          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR>);
-    }
-    indexUpdateInfo.localizedValue() = result.unwrap();
+    IDB_TRY_UNWRAP(indexUpdateInfo.localizedValue(),
+                   aKey.ToLocaleAwareKey(aLocale));
   }
   return indexUpdateInfo;
 }
@@ -521,8 +516,11 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       return;
     }
 
-    *aUpdateInfoArray->AppendElement() =
-        MakeIndexUpdateInfo(aIndexID, key, aLocale, aRv);
+    IDB_TRY_UNWRAP(
+        auto item, MakeIndexUpdateInfo(aIndexID, key, aLocale), QM_VOID,
+        [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
+
+    aUpdateInfoArray->AppendElement(std::move(item));
     return;
   }
 
@@ -584,11 +582,11 @@ void IDBObjectStore::AppendIndexUpdateInfo(
         continue;
       }
 
-      *aUpdateInfoArray->AppendElement() =
-          MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
-      if (aRv->Failed()) {
-        return;
-      }
+      IDB_TRY_UNWRAP(
+          auto item, MakeIndexUpdateInfo(aIndexID, value, aLocale), QM_VOID,
+          [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
+
+      aUpdateInfoArray->AppendElement(std::move(item));
     }
   } else {
     Key value;
@@ -601,8 +599,11 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       return;
     }
 
-    *aUpdateInfoArray->AppendElement() =
-        MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
+    IDB_TRY_UNWRAP(
+        auto item, MakeIndexUpdateInfo(aIndexID, value, aLocale), QM_VOID,
+        [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
+
+    aUpdateInfoArray->AppendElement(std::move(item));
   }
 }
 
