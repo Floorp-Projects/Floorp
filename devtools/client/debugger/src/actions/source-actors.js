@@ -20,9 +20,6 @@ import { PROMISE } from "./utils/middleware/promise";
 import type { ThunkArgs } from "./types";
 import type { Context } from "../utils/context";
 
-export function insertSourceActor(item: SourceActor) {
-  return insertSourceActors([item]);
-}
 export function insertSourceActors(items: Array<SourceActor>) {
   return function({ dispatch }: ThunkArgs) {
     dispatch({
