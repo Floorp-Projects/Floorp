@@ -2938,56 +2938,6 @@ static void MakeOrSetMinidumpPath(nsIFile* profD) {
 
 const XREAppData* gAppData = nullptr;
 
-#ifdef MOZ_WIDGET_GTK
-static void MOZ_gdk_display_close(GdkDisplay* display) {
-#  if CLEANUP_MEMORY
-  // XXX wallpaper for bug 417163: don't close the Display if we're using the
-  // Qt theme because we crash (in Qt code) when using jemalloc.
-  bool skip_display_close = false;
-  GtkSettings* settings =
-      gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
-  gchar* theme_name;
-  g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
-  if (theme_name) {
-    skip_display_close = strcmp(theme_name, "Qt") == 0;
-    if (skip_display_close) NS_WARNING("wallpaper bug 417163 for Qt theme");
-    g_free(theme_name);
-  }
-
-  bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
-
-  if (!buggyCairoShutdown) {
-    // We should shut down GDK before we shut down libraries it depends on
-    // like Pango and cairo. But if cairo shutdown is buggy, we should
-    // shut down cairo first otherwise it may crash because of dangling
-    // references to Display objects (see bug 469831).
-    if (!skip_display_close) gdk_display_close(display);
-  }
-
-  // Tell PangoCairo to release its default fontmap.
-  pango_cairo_font_map_set_default(nullptr);
-
-  // cairo_debug_reset_static_data() is prototyped through cairo.h included
-  // by gtk.h.
-#    ifdef cairo_debug_reset_static_data
-#      error \
-          "Looks like we're including Mozilla's cairo instead of system cairo"
-#    endif
-  cairo_debug_reset_static_data();
-  // FIXME: Do we need to call this in non-GTK2 cases as well?
-  FcFini();
-
-  if (buggyCairoShutdown) {
-    if (!skip_display_close) gdk_display_close(display);
-  }
-#  else  // not CLEANUP_MEMORY
-  // Don't do anything to avoid running into driver bugs under XCloseDisplay().
-  // See bug 973192.
-  (void)display;
-#  endif
-}
-#endif
-
 /**
  * NSPR will search for the "nspr_use_zone_allocator" symbol throughout
  * the process and use it to determine whether the application defines its own
@@ -5125,7 +5075,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 #  ifdef MOZ_WAYLAND
     WaylandDisplayRelease();
 #  endif
-    MOZ_gdk_display_close(mGdkDisplay);
   }
 #endif
 
