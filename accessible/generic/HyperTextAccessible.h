@@ -469,6 +469,18 @@ class HyperTextAccessible : public AccessibleWrap {
                             EWhichLineBoundary aWhichLineBoundary);
 
   /**
+   * Find the start offset for a paragraph , taking into account
+   * inner block elements and line breaks.
+   */
+  int32_t FindParagraphStartOffset(uint32_t aOffset);
+
+  /**
+   * Find the end offset for a paragraph , taking into account
+   * inner block elements and line breaks.
+   */
+  int32_t FindParagraphEndOffset(uint32_t aOffset);
+
+  /**
    * Return an offset corresponding to the given direction and selection amount
    * relative the given offset. A helper used to find word or line boundaries.
    */
