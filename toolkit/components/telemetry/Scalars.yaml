@@ -1816,6 +1816,7 @@ os.environment:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'thunderbird'
     record_in_processes:
       - main
     operating_systems:
