@@ -31,6 +31,34 @@ static void GetDisplayNameForPrinter(const cups_dest_t& aDest,
 #endif
 }
 
+NS_IMETHODIMP
+nsPrinterListCUPS::InitPrintSettingsFromPrinter(
+    const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
+  MOZ_ASSERT(aPrintSettings);
+
+  // Set a default file name.
+  nsAutoString filename;
+  nsresult rv = aPrintSettings->GetToFileName(filename);
+  if (NS_FAILED(rv) || filename.IsEmpty()) {
+    const char* path = PR_GetEnv("PWD");
+    if (!path) {
+      path = PR_GetEnv("HOME");
+    }
+
+    if (path) {
+      CopyUTF8toUTF16(mozilla::MakeStringSpan(path), filename);
+      filename.AppendLiteral("/mozilla.pdf");
+    } else {
+      filename.AssignLiteral("mozilla.pdf");
+    }
+
+    aPrintSettings->SetToFileName(filename);
+  }
+
+  aPrintSettings->SetIsInitializedFromPrinter(true);
+  return NS_OK;
+}
+
 nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   if (!sCupsShim.EnsureInitialized()) {
     return {};
@@ -148,6 +176,7 @@ Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
   }
   return rv;
 }
+
 nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   aName.Truncate();
 
@@ -169,33 +198,5 @@ nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   }
 
   sCupsShim.cupsFreeDests(1, dest);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinterListCUPS::InitPrintSettingsFromPrinter(
-    const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
-  MOZ_ASSERT(aPrintSettings);
-
-  // Set a default file name.
-  nsAutoString filename;
-  nsresult rv = aPrintSettings->GetToFileName(filename);
-  if (NS_FAILED(rv) || filename.IsEmpty()) {
-    const char* path = PR_GetEnv("PWD");
-    if (!path) {
-      path = PR_GetEnv("HOME");
-    }
-
-    if (path) {
-      CopyUTF8toUTF16(mozilla::MakeStringSpan(path), filename);
-      filename.AppendLiteral("/mozilla.pdf");
-    } else {
-      filename.AssignLiteral("mozilla.pdf");
-    }
-
-    aPrintSettings->SetToFileName(filename);
-  }
-
-  aPrintSettings->SetIsInitializedFromPrinter(true);
   return NS_OK;
 }
