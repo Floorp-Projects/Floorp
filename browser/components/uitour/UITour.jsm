@@ -372,6 +372,12 @@ var UITour = {
       }
 
       case "showHighlight": {
+        if (data.target.startsWith("pageAction-")) {
+          // The page action panel is lazily loaded, so we will need to initialize it
+          // and place actions in the panel before showing the highlight for a panel
+          // node.
+          window.BrowserPageActions.initializePanel();
+        }
         let targetPromise = this.getTarget(window, data.target);
         targetPromise
           .then(target => {

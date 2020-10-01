@@ -34,6 +34,45 @@ async function openAndCheckMenu(menu, target) {
   menu.hidePopup();
 }
 
+async function openAndCheckLazyMenu(id, target) {
+  let menu = document.getElementById(id);
+
+  EventUtils.synthesizeNativeTapAtCenter(target);
+  let ev = await BrowserTestUtils.waitForEvent(
+    window,
+    "popupshown",
+    true,
+    e => e.target.id == id
+  );
+  menu = ev.target;
+
+  is(menu.state, "open", `Menu panel (${menu.id}) is open.`);
+  is(
+    menu.getAttribute("touchmode"),
+    "true",
+    `Menu panel (${menu.id}) is in touchmode.`
+  );
+
+  menu.hidePopup();
+
+  EventUtils.synthesizeNativeTapAtCenter(target);
+  ev = await BrowserTestUtils.waitForEvent(
+    window,
+    "popupshown",
+    true,
+    e => e.target.id == id
+  );
+  menu = ev.target;
+
+  is(menu.state, "open", `Menu panel (${menu.id}) is open.`);
+  ok(
+    !menu.hasAttribute("touchmode"),
+    `Menu panel (${menu.id}) is not in touchmode.`
+  );
+
+  menu.hidePopup();
+}
+
 // The customization UI menu is not attached to the document when it is
 // closed and hence requires special attention.
 async function openAndCheckCustomizationUIMenu(target) {
@@ -96,9 +135,8 @@ add_task(async function test_main_menu_touch() {
 add_task(async function test_page_action_panel_touch() {
   // The page action menu only appears on a web page.
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    let pageActionPanel = document.getElementById("pageActionPanel");
     let target = document.getElementById("pageActionButton");
-    await openAndCheckMenu(pageActionPanel, target);
+    await openAndCheckLazyMenu("pageActionPanel", target);
   });
 });
 
