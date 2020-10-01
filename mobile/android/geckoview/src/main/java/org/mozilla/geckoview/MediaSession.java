@@ -305,16 +305,19 @@ public class MediaSession {
 
         /**
          * The duration of the media in seconds.
+         * 0.0 if unknown.
          */
         public final double duration;
 
         /**
          * The width of the video in device pixels.
+         * 0 if unknown.
          */
         public final long width;
 
         /**
          * The height of the video in device pixels.
+         * 0 if unknown.
          */
         public final long height;
 
@@ -726,7 +729,8 @@ public class MediaSession {
                 final long features = Feature.fromBundle(
                         message.getBundle("features"));
                 delegate.onFeatures(mSession, mMediaSession, features);
-            } else if (FULLSCREEN_EVENT.equals(event)) {
+            } else if (FULLSCREEN_EVENT.equals(event) &&
+                    mMediaSession.isActive()) {
                 final boolean enabled = message.getBoolean("enabled");
                 final ElementMetadata meta =
                         ElementMetadata.fromBundle(
