@@ -3482,7 +3482,7 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
     loadPtr(Address(func, JSFunction::offsetOfScript()), output);
     loadPtr(Address(output, JSScript::offsetOfSharedData()), output);
     branchTestPtr(Assembler::Zero, output, output, slowPath);
-    loadPtr(Address(output, SharedImmutableScriptData::offsetOfISD()), output);
+    loadPtr(Address(output, RuntimeScriptData::offsetOfISD()), output);
     load16ZeroExtend(Address(output, ImmutableScriptData::offsetOfFunLength()),
                      output);
   }

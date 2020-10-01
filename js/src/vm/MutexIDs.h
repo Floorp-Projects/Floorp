@@ -48,7 +48,7 @@
   _(ProcessExecutableRegion, 500)     \
   _(BufferStreamState, 500)           \
   _(SharedArrayGrow, 500)             \
-  _(SharedImmutableScriptData, 500)   \
+  _(RuntimeScriptData, 500)           \
   _(WasmFuncTypeIdSet, 500)           \
   _(WasmCodeProfilingLabels, 500)     \
   _(WasmCodeBytesEnd, 500)            \

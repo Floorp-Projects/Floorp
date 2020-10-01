@@ -36,7 +36,6 @@
 #include "frontend/CompilationInfo.h"  // frontend::CompilationStencil
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
-#include "frontend/StencilXdr.h"   // frontend::StencilXdr::SharedData
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -922,6 +921,39 @@ template XDRResult js::XDRImmutableScriptData(
     XDRState<XDR_DECODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
 
 template <XDRMode mode>
+/* static */
+XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
+  JSContext* cx = xdr->cx();
+  RuntimeScriptData* rsd = nullptr;
+
+  if (mode == XDR_ENCODE) {
+    rsd = script->sharedData();
+  }
+
+  if (mode == XDR_DECODE) {
+    if (!script->createScriptData(cx)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+
+    rsd = script->sharedData();
+  }
+
+  MOZ_TRY(XDRImmutableScriptData<mode>(xdr, rsd->isd_));
+
+  return Ok();
+}
+
+template
+    /* static */
+    XDRResult
+    RuntimeScriptData::XDR(XDRState<XDR_ENCODE>* xdr, HandleScript script);
+
+template
+    /* static */
+    XDRResult
+    RuntimeScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
+
+template <XDRMode mode>
 XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
   MOZ_TRY(xdr->codeUint32(&extent->sourceStart));
   MOZ_TRY(xdr->codeUint32(&extent->sourceEnd));
@@ -1092,10 +1124,10 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // NOTE: The script data is rooted by the script.
   MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
                                        scriptEnclosingScope, funOrMod));
-  MOZ_TRY(frontend::StencilXDR::SharedData<mode>(xdr, script->sharedData_));
+  MOZ_TRY(RuntimeScriptData::XDR<mode>(xdr, script));
 
   if (mode == XDR_DECODE) {
-    if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {
+    if (!script->shareScriptData(cx)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
   }
@@ -3423,22 +3455,16 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
   return result;
 }
 
-/* static */
-SharedImmutableScriptData* SharedImmutableScriptData::create(JSContext* cx) {
-  return cx->new_<SharedImmutableScriptData>();
-}
+bool JSScript::createScriptData(JSContext* cx) {
+  MOZ_ASSERT(!sharedData_);
 
-/* static */
-SharedImmutableScriptData* SharedImmutableScriptData::createWith(
-    JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd) {
-  MOZ_ASSERT(isd.get());
-  SharedImmutableScriptData* sisd = create(cx);
-  if (!sisd) {
-    return nullptr;
+  RefPtr<RuntimeScriptData> rsd(cx->new_<RuntimeScriptData>());
+  if (!rsd) {
+    return false;
   }
 
-  sisd->isd_ = std::move(isd);
-  return sisd;
+  sharedData_ = std::move(rsd);
+  return true;
 }
 
 void JSScript::relazify(JSRuntime* rt) {
@@ -3479,40 +3505,37 @@ void JSScript::relazify(JSRuntime* rt) {
   MOZ_ASSERT(isReadyForDelazification());
 }
 
-// Takes ownership of the passed SharedImmutableScriptData and either adds it
-// into the runtime's SharedImmutableScriptDataTable, or frees it if a matching
-// entry already exists and replaces the passed RefPtr with the existing entry.
-/* static */
-bool SharedImmutableScriptData::shareScriptData(
-    JSContext* cx, RefPtr<SharedImmutableScriptData>& sisd) {
-  MOZ_ASSERT(sisd);
-  MOZ_ASSERT(sisd->refCount() == 1);
-
-  SharedImmutableScriptData* data = sisd.get();
+// Takes ownership of the script's scriptData_ and either adds it into the
+// runtime's RuntimeScriptDataTable or frees it if a matching entry already
+// exists.
+bool JSScript::shareScriptData(JSContext* cx) {
+  RuntimeScriptData* rsd = sharedData();
+  MOZ_ASSERT(rsd);
+  MOZ_ASSERT(rsd->refCount() == 1);
 
   // Calculate the hash before taking the lock. Because the data is reference
   // counted, it also will be freed after releasing the lock if necessary.
-  SharedImmutableScriptData::Hasher::Lookup lookup(data);
+  RuntimeScriptData::Hasher::Lookup lookup(rsd);
 
   AutoLockScriptData lock(cx->runtime());
 
-  SharedImmutableScriptDataTable::AddPtr p =
+  RuntimeScriptDataTable::AddPtr p =
       cx->scriptDataTable(lock).lookupForAdd(lookup);
   if (p) {
-    MOZ_ASSERT(data != *p);
-    sisd = *p;
+    MOZ_ASSERT(rsd != *p);
+    sharedData_ = *p;
   } else {
-    if (!cx->scriptDataTable(lock).add(p, data)) {
+    if (!cx->scriptDataTable(lock).add(p, rsd)) {
       ReportOutOfMemory(cx);
       return false;
     }
 
     // Being in the table counts as a reference on the script data.
-    data->AddRef();
+    rsd->AddRef();
   }
 
-  // Refs: sisd argument, SharedImmutableScriptDataTable
-  MOZ_ASSERT(sisd->refCount() >= 2);
+  // Refs: JSScript, RuntimeScriptDataTable
+  MOZ_ASSERT(sharedData()->refCount() >= 2);
 
   return true;
 }
@@ -3522,11 +3545,10 @@ void js::SweepScriptData(JSRuntime* rt) {
   // i.e. when the only reference to them is from the table entry.
 
   AutoLockScriptData lock(rt);
-  SharedImmutableScriptDataTable& table = rt->scriptDataTable(lock);
+  RuntimeScriptDataTable& table = rt->scriptDataTable(lock);
 
-  for (SharedImmutableScriptDataTable::Enum e(table); !e.empty();
-       e.popFront()) {
-    SharedImmutableScriptData* sharedData = e.front();
+  for (RuntimeScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
+    RuntimeScriptData* sharedData = e.front();
     if (sharedData->refCount() == 1) {
       sharedData->Release();
       e.removeFront();
@@ -3752,12 +3774,13 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
     return false;
   }
 
-  if (!SharedImmutableScriptData::shareScriptData(cx,
-                                                  scriptStencil.sharedData)) {
+  // Create and initialize RuntimeScriptData/ImmutableScriptData
+  if (!RuntimeScriptData::InitFromStencil(cx, script, scriptStencil)) {
     return false;
   }
-
-  script->initSharedData(scriptStencil.sharedData);
+  if (!script->shareScriptData(cx)) {
+    return false;
+  }
 
   // NOTE: JSScript is now constructed and should be linked in.
   rollbackGuard.release();
@@ -3799,7 +3822,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
                                 js::frontend::CompilationGCOutput& gcOutput,
                                 frontend::ScriptStencil& scriptStencil,
                                 HandleFunction fun) {
-  MOZ_ASSERT(scriptStencil.sharedData,
+  MOZ_ASSERT(scriptStencil.immutableScriptData,
              "Need generated bytecode to use JSScript::fromStencil");
 
   RootedObject functionOrGlobal(cx, cx->global());
@@ -4343,7 +4366,7 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
     return nullptr;
   }
 
-  // The SharedImmutableScriptData can be reused by any zone in the Runtime.
+  // The RuntimeScriptData can be reused by any zone in the Runtime.
   dst->initSharedData(src->sharedData());
 
   return dst;
@@ -4503,6 +4526,19 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
   CopySpan(tryNotes, data->tryNotes());
 
   return data;
+}
+
+/* static */
+bool RuntimeScriptData::InitFromStencil(
+    JSContext* cx, js::HandleScript script,
+    frontend::ScriptStencil& scriptStencil) {
+  // Allocate RuntimeScriptData
+  if (!script->createScriptData(cx)) {
+    return false;
+  }
+
+  script->initImmutableScriptData(std::move(scriptStencil.immutableScriptData));
+  return true;
 }
 
 void ScriptWarmUpData::trace(JSTracer* trc) {

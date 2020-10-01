@@ -60,7 +60,6 @@
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseRuntimeState
 #include "vm/Scope.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"  // js::SharedImmutableScriptDataTable
 #include "vm/Stack.h"
 #include "vm/SymbolType.h"
 #include "wasm/WasmTypes.h"
@@ -886,10 +885,10 @@ struct JSRuntime {
   // within the runtime. This may be modified by threads using
   // AutoLockScriptData.
  private:
-  js::ScriptDataLockData<js::SharedImmutableScriptDataTable> scriptDataTable_;
+  js::ScriptDataLockData<js::RuntimeScriptDataTable> scriptDataTable_;
 
  public:
-  js::SharedImmutableScriptDataTable& scriptDataTable(
+  js::RuntimeScriptDataTable& scriptDataTable(
       const js::AutoLockScriptData& lock) {
     return scriptDataTable_.ref();
   }

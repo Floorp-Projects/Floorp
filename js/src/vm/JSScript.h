@@ -46,7 +46,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData
+#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent
 #include "vm/Time.h"
 
 namespace JS {
@@ -1431,6 +1431,82 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
+// Wrapper type for ImmutableScriptData to allow sharing across a JSRuntime.
+//
+// Note: This is distinct from ImmutableScriptData because it contains a mutable
+//       ref-count while the ImmutableScriptData may live in read-only memory.
+//
+// Note: This is *not* directly inlined into the RuntimeScriptDataTable because
+//       scripts point directly to object and table resizing moves entries. This
+//       allows for fast finalization by decrementing the ref-count directly
+//       without doing a hash-table lookup.
+class RuntimeScriptData {
+  // This class is reference counted as follows: each pointer from a JSScript
+  // counts as one reference plus there may be one reference from the shared
+  // script data table.
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
+
+  js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
+
+  // End of fields.
+
+  friend class ::JSScript;
+
+ public:
+  RuntimeScriptData() = default;
+
+  // Hash over the contents of RuntimeScriptData and its ImmutableScriptData.
+  struct Hasher;
+
+  uint32_t refCount() const { return refCount_; }
+  void AddRef() { refCount_++; }
+  void Release() {
+    MOZ_ASSERT(refCount_ != 0);
+    uint32_t remain = --refCount_;
+    if (remain == 0) {
+      isd_ = nullptr;
+      js_free(this);
+    }
+  }
+
+  static constexpr size_t offsetOfISD() {
+    return offsetof(RuntimeScriptData, isd_);
+  }
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
+
+  static bool InitFromStencil(JSContext* cx, js::HandleScript script,
+                              js::frontend::ScriptStencil& scriptStencil);
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(this) + mallocSizeOf(isd_.get());
+  }
+
+  // RuntimeScriptData has trailing data so isn't copyable or movable.
+  RuntimeScriptData(const RuntimeScriptData&) = delete;
+  RuntimeScriptData& operator=(const RuntimeScriptData&) = delete;
+};
+
+// Matches RuntimeScriptData objects that have the same atoms as well as
+// contain the same bytes in their ImmutableScriptData.
+struct RuntimeScriptData::Hasher {
+  using Lookup = RefPtr<RuntimeScriptData>;
+
+  static HashNumber hash(const Lookup& l) {
+    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
+    return mozilla::HashBytes(immutableData.data(), immutableData.size());
+  }
+
+  static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
+    return (entry->isd_->immutableData() == lookup->isd_->immutableData());
+  }
+};
+
+using RuntimeScriptDataTable =
+    HashSet<RuntimeScriptData*, RuntimeScriptData::Hasher, SystemAllocPolicy>;
+
 // [SMDOC] Script Representation (js::BaseScript)
 //
 // A "script" corresponds to a JavaScript function or a top-level (global, eval,
@@ -1483,7 +1559,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 //              +-----------------------------------------------+
 //                                v
 //              +-------------------------------------+
-//              | ImmutableScriptData                 |
+//              | RuntimeScriptData                   |
 //              |   Provides:   Bytecode              |
 //              |   Engine:     Interpreter           |
 //              +-------------------------------------+
@@ -1560,7 +1636,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // Shareable script data. This includes runtime-wide atom pointers, bytecode,
   // and various script note structures. If the script is currently lazy, this
   // will be nullptr.
-  RefPtr<js::SharedImmutableScriptData> sharedData_ = {};
+  RefPtr<js::RuntimeScriptData> sharedData_ = {};
 
   // End of fields.
 
@@ -1849,8 +1925,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     return data_->getMemberInitializers();
   }
 
-  SharedImmutableScriptData* sharedData() const { return sharedData_; }
-  void initSharedData(SharedImmutableScriptData* data) {
+  RuntimeScriptData* sharedData() const { return sharedData_; }
+  void initSharedData(RuntimeScriptData* data) {
     MOZ_ASSERT(sharedData_ == nullptr);
     sharedData_ = data;
   }
@@ -1974,6 +2050,14 @@ class JSScript : public js::BaseScript {
                                      js::HandleScriptSourceObject sourceObject,
                                      js::HandleObject funOrMod,
                                      js::MutableHandleScript scriptp);
+
+  template <js::XDRMode mode>
+  friend js::XDRResult js::RuntimeScriptData::XDR(js::XDRState<mode>* xdr,
+                                                  js::HandleScript script);
+
+  friend bool js::RuntimeScriptData::InitFromStencil(
+      JSContext* cx, js::HandleScript script,
+      js::frontend::ScriptStencil& scriptStencil);
 
   template <js::XDRMode mode>
   friend js::XDRResult js::PrivateScriptData::XDR(
@@ -2336,6 +2420,11 @@ class JSScript : public js::BaseScript {
  private:
   bool createJitScript(JSContext* cx);
 
+  bool createScriptData(JSContext* cx);
+  void initImmutableScriptData(js::UniquePtr<js::ImmutableScriptData>&& data) {
+    MOZ_ASSERT(!sharedData_->isd_);
+    sharedData_->isd_ = std::move(data);
+  }
   bool shareScriptData(JSContext* cx);
 
  public:

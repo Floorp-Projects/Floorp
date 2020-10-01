@@ -24,7 +24,6 @@
 #include "js/BuildId.h"                // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
-#include "vm/SharedStencil.h"  // js::SourceExtent
 #include "vm/TraceLogging.h"
 
 using namespace js;
@@ -780,12 +779,6 @@ XDRResult XDRIncrementalStencilEncoder::codeStencils(
   }
 
   return Ok();
-}
-
-/* static */
-XDRIncrementalStencilEncoder::FunctionKey
-XDRIncrementalStencilEncoder::toFunctionKey(const SourceExtent& extent) {
-  return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
 }
 
 XDRResultT<bool> XDRIncrementalStencilEncoder::checkAlreadyCoded(
