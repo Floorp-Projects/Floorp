@@ -4359,7 +4359,7 @@ static bool EvalInWorker(JSContext* cx, unsigned argc, Value* vp) {
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     thread = js_new<Thread>(
-        Thread::Options().setStackSize(gMaxStackSize + 256 * 1024));
+        Thread::Options().setStackSize(gMaxStackSize + 512 * 1024));
     if (!thread || !thread->init(WorkerMain, input)) {
       oomUnsafe.crash("EvalInWorker");
     }
