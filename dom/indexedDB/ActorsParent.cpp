@@ -6358,13 +6358,11 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(aLocalizedKey);
   MOZ_ASSERT(!aLocale.IsEmpty());
 
-  auto result = aBaseKey.ToLocaleAwareKey(aLocale);
-  if (result.isErr()) {
-    return NS_WARN_IF(result.inspectErr().Is(SpecialValues::Exception))
-               ? result.unwrapErr().AsException().StealNSResult()
-               : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-  }
-  *aLocalizedKey = result.unwrap();
+  IDB_TRY_UNWRAP(*aLocalizedKey,
+                 aBaseKey.ToLocaleAwareKey(aLocale).mapErr([](auto&& err) {
+                   return err.ExtractNSResult(
+                       InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+                 }));
 
   return NS_OK;
 }
