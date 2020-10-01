@@ -1422,11 +1422,9 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
           !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         screenPoint = nsPoint(anchorRect.x, anchorRect.y);
         mAnchorRect = anchorRect;
-      } else
-#endif
-      {
-        screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
       }
+#endif
+      screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
     } else {
       // with no anchor, the popup is positioned relative to the root frame
       anchorRect = rootScreenRect;
