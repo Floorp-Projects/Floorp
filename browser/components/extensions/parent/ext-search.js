@@ -13,16 +13,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-});
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "searchLoadInBackground",
-  "browser.search.context.loadInBackground"
-);
-
 var { ExtensionError } = ExtensionUtils;
 
 this.search = class extends ExtensionAPI {
@@ -73,36 +63,17 @@ this.search = class extends ExtensionAPI {
                 `${searchProperties.engine} was not found`
               );
             }
-          } else {
-            engine = await Services.search.getDefault();
           }
-          let submission = engine.getSubmission(
+
+          const tab = searchProperties.tabId
+            ? tabTracker.getTab(searchProperties.tabId)
+            : null;
+
+          await windowTracker.topWindow.BrowserSearch.loadSearchFromExtension(
             searchProperties.query,
-            null,
-            "webextension"
-          );
-          let options = {
-            postData: submission.postData,
-            triggeringPrincipal: context.principal,
-          };
-          let tabbrowser;
-          if (searchProperties.tabId === null) {
-            let { gBrowser } = windowTracker.topWindow;
-            let nativeTab = gBrowser.addTab(submission.uri.spec, options);
-            if (!searchLoadInBackground) {
-              gBrowser.selectedTab = nativeTab;
-            }
-            tabbrowser = gBrowser;
-          } else {
-            let tab = tabTracker.getTab(searchProperties.tabId);
-            tab.linkedBrowser.loadURI(submission.uri.spec, options);
-            tabbrowser = tab.linkedBrowser.getTabBrowser();
-          }
-          BrowserUsageTelemetry.recordSearch(
-            tabbrowser,
             engine,
-            "webextension",
-            { url: submission.uri }
+            tab,
+            context.principal
           );
         },
       },
