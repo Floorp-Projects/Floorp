@@ -26,8 +26,6 @@ inline const ThreadId::PlatformData* ThreadId::platformData() const {
 
 ThreadId::ThreadId() { platformData()->hasThread = false; }
 
-ThreadId::operator bool() const { return platformData()->hasThread; }
-
 bool ThreadId::operator==(const ThreadId& aOther) const {
   const PlatformData& self = *platformData();
   const PlatformData& other = *aOther.platformData();
