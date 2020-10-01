@@ -229,6 +229,8 @@ enum DriverVendor : uint8_t {
   MesaLLVMPipe,
   MesaSoftPipe,
   MesaSWRast,
+  // Nouveau: Open-source nvidia
+  MesaNouveau,
   // A generic ID to be provided when we can't determine the DRI driver on Mesa.
   MesaUnknown,
   // Wildcard for all non-Mesa drivers.

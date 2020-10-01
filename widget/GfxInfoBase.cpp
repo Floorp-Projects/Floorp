@@ -222,6 +222,12 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS:
       name = BLOCKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
       break;
+    case nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS:
+      name = BLOCKLIST_PREF_BRANCH "webgl.allow-oop";
+      break;
+    case nsIGfxInfo::FEATURE_THREADSAFE_GL:
+      name = BLOCKLIST_PREF_BRANCH "gl.threadsafe";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -411,6 +417,10 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_GL_SWIZZLE;
   else if (aFeature.EqualsLiteral("WEBRENDER_SCISSORED_CACHE_CLEARS"))
     return nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS;
+  else if (aFeature.EqualsLiteral("ALLOW_WEBGL_OUT_OF_PROCESS"))
+    return nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS;
+  else if (aFeature.EqualsLiteral("THREADSAFE_GL"))
+    return nsIGfxInfo::FEATURE_THREADSAFE_GL;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -1275,6 +1285,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_DX_P010,
                         nsIGfxInfo::FEATURE_DX_P016,
                         nsIGfxInfo::FEATURE_GL_SWIZZLE,
+                        nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
                         0};
 
   // For every feature we know about, we evaluate whether this blocklist has a
