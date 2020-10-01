@@ -7,6 +7,7 @@
 
 #include "MediaControlKeySource.h"
 #include "MediaEventSource.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,7 +25,7 @@ class MediaControlKeyManager final : public MediaControlKeySource,
  public:
   NS_INLINE_DECL_REFCOUNTING(MediaControlKeyManager, override)
 
-  MediaControlKeyManager() = default;
+  MediaControlKeyManager();
 
   // MediaControlKeySource methods
   bool Open() override;
@@ -51,6 +52,22 @@ class MediaControlKeyManager final : public MediaControlKeySource,
 
  private:
   ~MediaControlKeyManager();
+  void Shutdown();
+
+  class Observer final : public nsIObserver {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    explicit Observer(MediaControlKeyManager* aManager);
+
+   protected:
+    virtual ~Observer() = default;
+
+    MediaControlKeyManager* MOZ_OWNING_REF mManager;
+  };
+  RefPtr<Observer> mObserver;
+  void OnPreferenceChange();
+
   void StartMonitoringControlKeys();
   void StopMonitoringControlKeys();
   RefPtr<MediaControlKeySource> mEventSource;
