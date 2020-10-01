@@ -697,8 +697,8 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
 }
 
 template <typename StepFunc>
-mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
-    mozIStorageStatement& aStmt, StepFunc&& aStepFunc) {
+Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
+                                           StepFunc&& aStepFunc) {
   return CollectWhile(
       [&aStmt]() -> Result<bool, nsresult> {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
@@ -1284,10 +1284,10 @@ class DatabaseConnection final {
     return mUpdateRefcountFunction;
   }
 
-  mozilla::Result<CachedStatement, nsresult> GetCachedStatement(
+  Result<CachedStatement, nsresult> GetCachedStatement(
       const nsACString& aQuery);
 
-  mozilla::Result<BorrowedStatement, nsresult> BorrowCachedStatement(
+  Result<BorrowedStatement, nsresult> BorrowCachedStatement(
       const nsACString& aQuery);
 
   template <typename BindFunctor>
@@ -4785,7 +4785,7 @@ class Cursor<CursorType>::CursorOpBase
 template <IDBCursorType CursorType>
 class OpenOpHelper;
 
-using ResponseSizeOrError = mozilla::Result<size_t, nsresult>;
+using ResponseSizeOrError = Result<size_t, nsresult>;
 
 template <IDBCursorType CursorType>
 class CursorOpBaseHelperBase {
@@ -5700,7 +5700,7 @@ RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
   return impl;
 }
 
-mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
+Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               const SafeRefPtr<Database>& aDatabase,
                               const nsTArray<StructuredCloneFileParent>& aFiles,
@@ -5942,8 +5942,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
 
   IDB_TRY(
       MOZ_TO_RESULT_INVOKE(markerFile, Create, nsIFile::NORMAL_FILE_TYPE, 0644)
-          .orElse(
-              ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, mozilla::Ok>));
+          .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, Ok>));
 
   return markerFile;
 }
@@ -5961,14 +5960,14 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
   return NS_OK;
 }
 
-Result<mozilla::Ok, nsresult> DeleteFileManagerDirectory(
+Result<Ok, nsresult> DeleteFileManagerDirectory(
     nsIFile& aFileManagerDirectory, QuotaManager* aQuotaManager,
     const PersistenceType aPersistenceType, const nsACString& aGroup,
     const nsACString& aOrigin) {
   if (!aQuotaManager) {
     IDB_TRY(aFileManagerDirectory.Remove(true));
 
-    return mozilla::Ok{};
+    return Ok{};
   }
 
   IDB_TRY_UNWRAP(auto fileUsage, FileManager::GetUsage(&aFileManagerDirectory));
@@ -5991,10 +5990,10 @@ Result<mozilla::Ok, nsresult> DeleteFileManagerDirectory(
 
                             // XXX andThen does not support void return
                             // values right now, we must return a Result
-                            return Result<mozilla::Ok, nsresult>{mozilla::Ok{}};
+                            return Result<Ok, nsresult>{Ok{}};
                           });
 
-            return Result<mozilla::Ok, nsresult>{Err(rv)};
+            return Result<Ok, nsresult>{Err(rv)};
           });
 
   if (usageValue) {
@@ -7494,49 +7493,48 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
 
   bool freedSomePages = false;
 
-  IDB_TRY(
-      CollectWhile(
-          [&aFreelistCount]() -> mozilla::Result<bool, nsresult> {
-            return aFreelistCount != 0;
-          },
-          [&aFreelistStatement, &aFreelistCount, currentThread,
-           &incrementalVacuumStmt, &freedSomePages,
-           this]() -> mozilla::Result<mozilla::Ok, nsresult> {
-            // Fail if something else wants to use the thread, and
-            // roll back this transaction. It's ok if we never make
-            // progress here because the idle service should
-            // eventually reclaim this space.
-            IDB_TRY(OkIf(!NS_HasPendingEvents(currentThread)),
-                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+  IDB_TRY(CollectWhile(
+              [&aFreelistCount]() -> Result<bool, nsresult> {
+                return aFreelistCount != 0;
+              },
+              [&aFreelistStatement, &aFreelistCount, currentThread,
+               &incrementalVacuumStmt, &freedSomePages,
+               this]() -> mozilla::Result<Ok, nsresult> {
+                // Fail if something else wants to use the thread, and
+                // roll back this transaction. It's ok if we never make
+                // progress here because the idle service should
+                // eventually reclaim this space.
+                IDB_TRY(OkIf(!NS_HasPendingEvents(currentThread)),
+                        Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
 
-            IDB_TRY(incrementalVacuumStmt.Borrow()->Execute());
+                IDB_TRY(incrementalVacuumStmt.Borrow()->Execute());
 
-            freedSomePages = true;
+                freedSomePages = true;
 
-            IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
+                IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
 
-            return mozilla::Ok{};
-          })
-          .andThen([&commitStmt, &freedSomePages, this](
-                       mozilla::Ok) -> mozilla::Result<mozilla::Ok, nsresult> {
-            if (freedSomePages) {
-              // Commit the write transaction.
-              IDB_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
-                      [](const auto&) { NS_WARNING("Failed to commit!"); });
+                return Ok{};
+              })
+              .andThen([&commitStmt, &freedSomePages,
+                        this](Ok) -> Result<Ok, nsresult> {
+                if (freedSomePages) {
+                  // Commit the write transaction.
+                  IDB_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
+                          [](const auto&) { NS_WARNING("Failed to commit!"); });
 
-              mInWriteTransaction = false;
-            }
+                  mInWriteTransaction = false;
+                }
 
-            return mozilla::Ok{};
-          }),
-      QM_PROPAGATE, ([&aRollbackStatement, this](const auto&) {
-        MOZ_ASSERT(mInWriteTransaction);
+                return Ok{};
+              }),
+          QM_PROPAGATE, ([&aRollbackStatement, this](const auto&) {
+            MOZ_ASSERT(mInWriteTransaction);
 
-        // Something failed, make sure we roll everything back.
-        Unused << aRollbackStatement.Borrow()->Execute();
+            // Something failed, make sure we roll everything back.
+            Unused << aRollbackStatement.Borrow()->Execute();
 
-        mInWriteTransaction = false;
-      }));
+            mInWriteTransaction = false;
+          }));
 
   *aFreedSomePages = freedSomePages;
   return NS_OK;
@@ -12698,8 +12696,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
                       nsCOMPtr<mozIStorageStatement>, aConnection,
                       CreateStatement, "SELECT id, refcount FROM file"_ns));
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) -> Result<mozilla::Ok, nsresult> {
+  IDB_TRY(
+      CollectWhileHasResult(*stmt, [this](auto& stmt) -> Result<Ok, nsresult> {
         IDB_TRY_INSPECT(const int64_t& id,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
         IDB_TRY_INSPECT(const int32_t& dbRefCnt,
@@ -12715,7 +12713,7 @@ nsresult FileManager::Init(nsIFile* aDirectory,
 
         mLastFileId = std::max(id, mLastFileId);
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   return NS_OK;
@@ -12871,8 +12869,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
           IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                     GetNextFile));
         },
-        [&hasJournals](
-            const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
+        [&hasJournals](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
           IDB_TRY_INSPECT(
               const auto& leafName,
               MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
@@ -12885,7 +12882,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
             UNKNOWN_FILE_WARNING(leafName);
           }
 
-          return mozilla::Ok{};
+          return Ok{};
         }));
 
     if (hasJournals) {
@@ -12915,15 +12912,14 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       IDB_TRY(CollectWhileHasResult(
           *stmt,
-          [&aDirectory,
-           &journalDirectory](auto& stmt) -> Result<mozilla::Ok, nsresult> {
+          [&aDirectory, &journalDirectory](auto& stmt) -> Result<Ok, nsresult> {
             nsString name;
             IDB_TRY(stmt.GetString(0, name));
 
             nsresult rv;
             name.ToInteger64(&rv);
             if (NS_FAILED(rv)) {
-              return mozilla::Ok{};
+              return Ok{};
             }
 
             int32_t flag = stmt.AsInt32(1);
@@ -12950,7 +12946,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
               NS_WARNING("Failed to remove journal file!");
             }
 
-            return mozilla::Ok{};
+            return Ok{};
           }));
 
       IDB_TRY(connection->ExecuteSimpleSQL("DROP TABLE fs;"_ns));
@@ -12983,12 +12979,12 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                   GetNextFile));
       },
-      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
+      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
         IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
                                                   nsString, file, GetLeafName));
 
         if (leafName.Equals(kJournalDirectoryName)) {
-          return mozilla::Ok{};
+          return Ok{};
         }
 
         nsresult rv;
@@ -12999,12 +12995,12 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
 
           usage += FileUsageType(Some(uint64_t(fileSize)));
 
-          return mozilla::Ok{};
+          return Ok{};
         }
 
         UNKNOWN_FILE_WARNING(leafName);
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   return usage;
@@ -15426,8 +15422,8 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                                             kStmtParamNameObjectDataKey));
 
     IDB_TRY(MOZ_TO_RESULT_INVOKE(&*borrowedStmt, Execute)
-                .orElse([&info, index, &aIndexValues](nsresult rv)
-                            -> mozilla::Result<mozilla::Ok, nsresult> {
+                .orElse([&info, index,
+                         &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
                   if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
                     // If we're inserting multiple entries for the same unique
                     // index, then we might have failed to insert due to
@@ -15441,7 +15437,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                         // We found a key with the same value for the same
                         // index. So we must have had a collision with a value
                         // we just inserted.
-                        return mozilla::Ok{};
+                        return Ok{};
                       }
                     }
                   }
@@ -15599,7 +15595,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
        &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
        deleteStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> Result<mozilla::Ok, nsresult> {
+          auto& selectStmt) mutable -> Result<Ok, nsresult> {
         if (!singleRowOnly) {
           IDB_TRY(objectStoreKey.SetFromStatement(&selectStmt, 1));
 
@@ -15629,7 +15625,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
         resultCountDEBUG++;
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
@@ -17066,7 +17062,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
       [&lastObjectStoreId, &objectStores,
        usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
        usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
@@ -17129,7 +17125,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
         lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   // Load index information
@@ -17150,7 +17146,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
       [&lastIndexId, &objectStores, &aConnection,
        usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
        usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
@@ -17251,7 +17247,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
         lastIndexId = std::max(lastIndexId, indexId);
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   if (NS_WARN_IF(lastObjectStoreId == INT64_MAX) ||
@@ -17298,7 +17294,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       *readStmt,
       [&aConnection, &indexTable, &aIndexMetadata, &aLocale,
        writeStmt = nsCOMPtr<mozIStorageStatement>{}](
-          auto& readStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+          auto& readStmt) mutable -> mozilla::Result<Ok, nsresult> {
         if (!writeStmt) {
           IDB_TRY_UNWRAP(
               writeStmt,
@@ -17336,7 +17332,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
 
         IDB_TRY(writeStmt->Execute());
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   // The parameter names are not used, parameters are bound by index only
@@ -20064,7 +20060,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       [this, &aConnection, &lastObjectStoreKey, &lastIndexValues,
        deleteIndexRowStmt = DatabaseConnection::CachedStatement{},
        nullIndexDataValuesStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+          auto& selectStmt) mutable -> Result<Ok, nsresult> {
         // We always need the index key to delete the index row.
         Key indexKey;
         IDB_TRY(indexKey.SetFromStatement(&selectStmt, 0));
@@ -20143,7 +20139,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           IDB_TRY(borrowedDeleteIndexRowStmt->Execute());
         }
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   // Take care of the last key.
@@ -21068,8 +21064,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         IDB_TRY_UNWRAP(auto cloneInfo,
                        GetStructuredCloneReadInfoFromStatement(
                            &stmt, 1, 0, mDatabase->GetFileManager()));
@@ -21081,7 +21076,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
         IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
                 Err(NS_ERROR_OUT_OF_MEMORY));
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21221,13 +21216,12 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         Key* const key = mResponse.AppendElement(fallible);
         IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
         IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21592,8 +21586,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         IDB_TRY_UNWRAP(auto cloneInfo,
                        GetStructuredCloneReadInfoFromStatement(
                            &stmt, 1, 0, mDatabase->GetFileManager()));
@@ -21606,7 +21599,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
         IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
                 Err(NS_ERROR_OUT_OF_MEMORY));
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21723,13 +21716,12 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         Key* const key = mResponse.AppendElement(fallible);
         IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
         IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-        return mozilla::Ok{};
+        return Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
