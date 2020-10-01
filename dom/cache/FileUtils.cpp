@@ -871,7 +871,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
     // We don't need to add the aIncreaseSize or aDecreaseSize here, because
     // it's already encompassed within the database.
-    CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
+    CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
   } else {
     bool shouldRevise = false;
     if (aIncreaseSize > 0) {
@@ -900,7 +900,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
         return rv;
       }
 
-      CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
+      CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
 
       // XXXtt: we should have an easy way to update (increase or recalulate)
       // padding size in the QM. For now, only correct the padding size in
@@ -912,7 +912,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
 #ifdef DEBUG
     int64_t lastPaddingSize = currentPaddingSize;
-    CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
+    CACHE_TRY_UNWRAP(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
 
     MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize == lastPaddingSize);
 #endif  // DEBUG
@@ -984,7 +984,7 @@ nsresult LockedDirectoryPaddingRestore(nsIFile* aBaseDir,
     return rv;
   }
 
-  CACHE_TRY_VAR(*aPaddingSizeOut, db::FindOverallPaddingSize(*aConn));
+  CACHE_TRY_UNWRAP(*aPaddingSizeOut, db::FindOverallPaddingSize(*aConn));
   MOZ_DIAGNOSTIC_ASSERT(*aPaddingSizeOut >= 0);
 
   rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE,
