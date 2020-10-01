@@ -1483,7 +1483,10 @@ addAccessibleTask(
  * Test search with non-webarea root
  */
 addAccessibleTask(
-  `<div id="searchroot"><p>hello</p><p>world</p></div><div><p>goodybe</p></div>`,
+  `
+  <div id="searchroot"><p id="p1">hello</p><p id="p2">world</p></div>
+  <div><p>goodybe</p></div>
+  `,
   async (browser, accDoc) => {
     let searchPred = {
       AXSearchKey: "AXAnyTypeSearchKey",
@@ -1498,5 +1501,25 @@ addAccessibleTask(
       NSDictionary(searchPred)
     );
     is(resultCount, 2, "Found 2 items");
+
+    const p1 = getNativeInterface(accDoc, "p1");
+    searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+      AXStartElement: p1,
+    };
+
+    let results = searchRoot.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    Assert.deepEqual(
+      results.map(r => r.getAttributeValue("AXDOMIdentifier")),
+      ["p2"],
+      "Result is next group sibling"
+    );
   }
 );
