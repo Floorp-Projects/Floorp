@@ -28,7 +28,6 @@ import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.GuardedBy
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
@@ -394,14 +393,14 @@ abstract class AbstractFetchDownloadService : Service() {
      */
     @VisibleForTesting
     internal fun addToDownloadSystemDatabaseCompat(download: DownloadState) {
-        if (SDK_INT < Build.VERSION_CODES.Q) {
+        if (!shouldUseScopedStorage()) {
             val fileName = download.fileName
                 ?: throw IllegalStateException("A fileName for a download is required")
             val file = File(download.filePath)
             // addCompletedDownload can't handle any non http(s) urls
             val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
 
-            context.addCompletedDownload(
+            addCompletedDownload(
                 title = fileName,
                 description = fileName,
                 isMediaScannerScannable = true,
@@ -414,6 +413,33 @@ abstract class AbstractFetchDownloadService : Service() {
                 referer = download.referrerUrl?.toUri()
             )
         }
+    }
+
+    @VisibleForTesting
+    @Suppress("LongParameterList")
+    internal fun addCompletedDownload(
+        title: String,
+        description: String,
+        isMediaScannerScannable: Boolean,
+        mimeType: String,
+        path: String,
+        length: Long,
+        showNotification: Boolean,
+        uri: Uri?,
+        referer: Uri?
+    ) {
+        context.addCompletedDownload(
+            title = title,
+            description = description,
+            isMediaScannerScannable = isMediaScannerScannable,
+            mimeType = mimeType,
+            path = path,
+            length = length,
+            // Only show notifications if our channel is blocked
+            showNotification = showNotification,
+            uri = uri,
+            referer = referer
+        )
     }
 
     @VisibleForTesting
@@ -693,14 +719,18 @@ abstract class AbstractFetchDownloadService : Service() {
         val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
         updateDownloadState(downloadWithUniqueFileName)
 
-        if (getSdkVersion() >= Build.VERSION_CODES.Q && !isExternalStorageLegacy()) {
+        if (shouldUseScopedStorage()) {
             useFileStreamScopedStorage(downloadWithUniqueFileName, block)
         } else {
             useFileStreamLegacy(downloadWithUniqueFileName, append, block)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
+    @VisibleForTesting
+    internal fun shouldUseScopedStorage() =
+            getSdkVersion() >= Build.VERSION_CODES.Q && !isExternalStorageLegacy()
+
+    @SuppressLint("NewApi")
     @VisibleForTesting
     internal fun isExternalStorageLegacy(): Boolean =
         Environment.isExternalStorageLegacy()

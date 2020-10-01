@@ -1200,7 +1200,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
-    fun `WHEN a download is completed on devices older than Q the file MUST be added manually to the download system database`() {
+    fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() {
         val download = DownloadState(
                 url = "http://www.mozilla.org",
                 fileName = "example.apk",
@@ -1217,7 +1217,60 @@ class AbstractFetchDownloadServiceTest {
         doReturn(testContext).`when`(service).context
         service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
 
-        verify(service).addToDownloadSystemDatabaseCompat(any())
+        verify(service).addCompletedDownload(
+            title = any(),
+            description = any(),
+            isMediaScannerScannable = eq(true),
+            mimeType = any(),
+            path = any(),
+            length = anyLong(),
+            showNotification = anyBoolean(),
+            uri = any(),
+            referer = any()
+        )
+    }
+
+    @Test
+    fun `WHEN a download is completed and the scoped storage is used addToDownloadSystemDatabaseCompat MUST NOT be called`() {
+        val download = DownloadState(
+            url = "http://www.mozilla.org",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path,
+            status = DownloadState.Status.COMPLETED
+        )
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+
+        val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
+
+        doReturn(testContext).`when`(service).context
+        doNothing().`when`(service).addCompletedDownload(
+            title = any(),
+            description = any(),
+            isMediaScannerScannable = eq(true),
+            mimeType = any(),
+            path = any(),
+            length = anyLong(),
+            showNotification = anyBoolean(),
+            uri = any(),
+            referer = any())
+        doReturn(true).`when`(service).shouldUseScopedStorage()
+
+        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
+
+        verify(service, never()).addCompletedDownload(
+            title = any(),
+            description = any(),
+            isMediaScannerScannable = eq(true),
+            mimeType = any(),
+            path = any(),
+            length = anyLong(),
+            showNotification = anyBoolean(),
+            uri = any(),
+            referer = any()
+        )
     }
 
     @Test
