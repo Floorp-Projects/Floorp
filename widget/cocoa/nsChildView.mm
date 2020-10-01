@@ -1169,21 +1169,28 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
 }
 
 bool nsChildView::WidgetTypeSupportsAcceleration() {
-  // We need to enable acceleration in popups which contain remote layer
-  // trees, since the remote content won't be rendered at all otherwise. This
-  // causes issues with transparency and drop shadows, so it should not be
-  // used by default in release builds.
+  // All widget types support acceleration.
+  return true;
+}
+
+bool nsChildView::ShouldUseOffMainThreadCompositing() {
+  // We need to enable OMTC in popups which contain remote layer
+  // trees, since the remote content won't be rendered at all otherwise.
   if (HasRemoteContent()) {
     return true;
   }
 
-  // Don't use OpenGL for transparent windows or for popup windows.
-  return mView && [[mView window] isOpaque] && ![[mView window] isKindOfClass:[PopupWindow class]];
-}
-
-bool nsChildView::ShouldUseOffMainThreadCompositing() {
-  // Don't use OMTC for transparent windows or for popup windows.
-  if (!WidgetTypeSupportsAcceleration()) return false;
+  // Don't use OMTC for popup windows, because we do not want context menus to
+  // pay the overhead of starting up a compositor. With the OpenGL compositor,
+  // new windows are expensive because of shader re-compilation, and with
+  // WebRender, new windows are expensive because they create their own threads
+  // and texture caches.
+  // Using OMTC with BasicCompositor for context menus would probably be fine
+  // but isn't a well-tested configuration.
+  if ([mView window] && [[mView window] isKindOfClass:[PopupWindow class]]) {
+    // Use main-thread BasicLayerManager for drawing menus.
+    return false;
+  }
 
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();
 }
