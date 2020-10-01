@@ -1125,6 +1125,13 @@ nsEventStatus nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
       APZThreadUtils::RunOnControllerThread(std::move(r));
       return nsEventStatus_eConsumeDoDefault;
     }
+    if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+      RefPtr<Runnable> r =
+          new DispatchInputOnControllerThread<MouseInput, WidgetMouseEvent>(
+              *mouseEvent, mAPZC, this);
+      APZThreadUtils::RunOnControllerThread(std::move(r));
+      return nsEventStatus_eConsumeDoDefault;
+    }
     // Allow dispatching keyboard events on Gecko thread.
     MOZ_ASSERT(aEvent->AsKeyboardEvent());
   }
