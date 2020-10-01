@@ -5428,7 +5428,7 @@ void profiler_add_marker(const char* aMarkerName,
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName, const char* aMarkerText) {
   PROFILER_MARKER_TEXT(
-      ProfilerString8View::WrapNullTerminatedString(aMarkerName), JS,
+      ProfilerString8View::WrapNullTerminatedString(aMarkerName), JS, {},
       ProfilerString8View::WrapNullTerminatedString(aMarkerText));
 }
 

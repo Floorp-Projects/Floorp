@@ -2365,10 +2365,9 @@ void RecordCompositionPayloadsPresented(
         nsPrintfCString text(
             "Latency: %dms",
             int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
-        PROFILER_MARKER_TEXT(name,
-                             GRAPHICS.WithOptions(MarkerTiming::Interval(
-                                 payload.mTimeStamp, presented)),
-                             text);
+        PROFILER_MARKER_TEXT(
+            name, GRAPHICS,
+            MarkerTiming::Interval(payload.mTimeStamp, presented), text);
       }
 #endif
 
