@@ -254,9 +254,8 @@ void RenderCompositorNative::CompositorEndFrame() {
       nativeLayerCount += int(it.second.mNativeLayers.size());
     }
     PROFILER_MARKER_TEXT(
-        "WR OS Compositor frame",
-        GRAPHICS.WithOptions(
-            MarkerTiming::IntervalUntilNowFrom(mBeginFrameTimeStamp)),
+        "WR OS Compositor frame", GRAPHICS,
+        MarkerTiming::IntervalUntilNowFrom(mBeginFrameTimeStamp),
         nsPrintfCString("%d%% painting, %d%% overdraw, %d used "
                         "layers (%d%% memory) + %d unused layers (%d%% memory)",
                         int(mDrawnPixelCount * 100 / windowPixelCount),

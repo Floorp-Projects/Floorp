@@ -81,7 +81,7 @@ void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     PROFILER_MARKER_TEXT(
-        "SurfacePool", GRAPHICS.WithOptions(MarkerTiming::IntervalUntilNowFrom(before)),
+        "SurfacePool", GRAPHICS, MarkerTiming::IntervalUntilNowFrom(before),
         nsPrintfCString("%d -> %d in use | %d -> %d waiting for | %d -> %d "
                         "available | %s %dx%d | %dMB total memory",
                         int(inUseCountBefore), int(mInUseEntries.size()), int(pendingCountBefore),
