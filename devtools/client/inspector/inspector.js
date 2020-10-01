@@ -1927,6 +1927,11 @@ Inspector.prototype = {
    *         Options passed to the highlighter actor.
    */
   onShowBoxModelHighlighterForNode(nodeFront, options) {
+    // As React components aren't destroyed when the panel closes,
+    // this function may still be called and throw because of destroyed fronts.
+    if (this._destroyed) {
+      return;
+    }
     this.highlighters.showHighlighterTypeForNode(
       this.highlighters.TYPES.BOXMODEL,
       nodeFront,
