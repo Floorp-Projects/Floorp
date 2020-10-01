@@ -1260,7 +1260,13 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
     }
 
     if (aContent->IsHTMLElement(nsGkAtoms::input)) {
-      HTMLInputElement::FromNode(aContent)->GetType(context.mHTMLInputType);
+      HTMLInputElement* inputElement = HTMLInputElement::FromNode(aContent);
+      if (inputElement->HasBeenTypePassword() && aState.IsEditable()) {
+        context.mHTMLInputType.AssignLiteral("password");
+      } else {
+        inputElement->GetType(context.mHTMLInputType);
+      }
+
       GetActionHint(*aContent, context.mActionHint);
     } else if (aContent->IsHTMLElement(nsGkAtoms::textarea)) {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
