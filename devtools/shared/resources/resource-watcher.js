@@ -666,9 +666,6 @@ class ResourceWatcher {
     const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
     const onDestroyed = this._onResourceDestroyed.bind(this, { targetFront });
     const onUpdated = this._onResourceUpdated.bind(this, { targetFront });
-    if (!(resourceType in LegacyListeners)) {
-      throw new Error(`Missing legacy listener for ${resourceType}`);
-    }
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
@@ -750,7 +747,6 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   NETWORK_EVENT: "network-event",
   WEBSOCKET: "websocket",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
-  SOURCE: "source",
 };
 module.exports = { ResourceWatcher };
 
@@ -795,8 +791,6 @@ const LegacyListeners = {
     .WEBSOCKET]: require("devtools/shared/resources/legacy-listeners/websocket"),
   [ResourceWatcher.TYPES
     .NETWORK_EVENT_STACKTRACE]: require("devtools/shared/resources/legacy-listeners/network-event-stacktraces"),
-  [ResourceWatcher.TYPES
-    .SOURCE]: require("devtools/shared/resources/legacy-listeners/source"),
 };
 
 // Optional transformers for each type of resource.

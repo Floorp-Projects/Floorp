@@ -94,9 +94,6 @@ add_task(async function testForeignCookieBlockedMessage() {
     message,
     getStorageErrorUrl("CookieBlockedForeign")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 });
 
@@ -127,9 +124,6 @@ add_task(async function testLimitForeignCookieBlockedMessage() {
     message,
     getStorageErrorUrl("CookieBlockedForeign")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 });
 
@@ -150,9 +144,6 @@ add_task(async function testAllCookieBlockedMessage() {
     message,
     getStorageErrorUrl("CookieBlockedAll")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 });
 
@@ -173,9 +164,6 @@ add_task(async function testTrackerCookieBlockedMessage() {
     message,
     getStorageErrorUrl("CookieBlockedTracker")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 });
 
@@ -196,9 +184,6 @@ add_task(async function testForeignCookiePartitionedMessage() {
     message,
     getStorageErrorUrl("CookiePartitionedForeign")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 });
 
@@ -227,9 +212,6 @@ add_task(async function testCookieBlockedByPermissionMessage() {
     message,
     getStorageErrorUrl("CookieBlockedByPermission")
   );
-  // We explicitely destroy the toolbox in order to ensure waiting for its full destruction
-  // and avoid leak / pending requests
-  await hud.toolbox.destroy();
   win.close();
 
   // Remove the custom permission.

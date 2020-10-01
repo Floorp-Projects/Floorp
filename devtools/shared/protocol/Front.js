@@ -144,10 +144,7 @@ class Front extends Pool {
     }
 
     // Call listeners registered via `watchFronts` method
-    // (ignore if this front has been destroyed)
-    if (this._frontCreationListeners) {
-      this._frontCreationListeners.emit(front.typeName, front);
-    }
+    this._frontCreationListeners.emit(front.typeName, front);
   }
 
   async unmanage(front) {

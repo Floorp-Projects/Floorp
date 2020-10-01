@@ -58,6 +58,10 @@ async function loadInitialState() {
   };
 }
 
+function getClient(connection: any) {
+  return firefox;
+}
+
 export async function onConnect(
   connection: Object,
   panelWorkers: Object,
@@ -70,7 +74,8 @@ export async function onConnect(
 
   verifyPrefSchema();
 
-  const commands = firefox.clientCommands;
+  const client = getClient(connection);
+  const commands = client.clientCommands;
 
   const initialState = await loadInitialState();
   const workers = bootstrapWorkers(panelWorkers);
@@ -82,7 +87,7 @@ export async function onConnect(
     initialState
   );
 
-  const connected = firefox.onConnect(connection, actions, store);
+  const connected = client.onConnect(connection, actions);
 
   await syncBreakpoints();
   syncXHRBreakpoints();
@@ -92,14 +97,10 @@ export async function onConnect(
     selectors,
     workers,
     connection,
-    client: firefox.clientCommands,
+    client: client.clientCommands,
   });
 
   bootstrapApp(store, panel);
   await connected;
   return { store, actions, selectors, client: commands };
-}
-
-export function onDisconnect() {
-  return firefox.onDisconnect();
 }

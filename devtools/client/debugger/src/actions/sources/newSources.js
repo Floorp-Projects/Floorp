@@ -47,7 +47,9 @@ import { validateNavigateContext, ContextError } from "../../utils/context";
 
 import type {
   Source,
+  SourceActorId,
   SourceId,
+  ThreadId,
   Context,
   OriginalSourceData,
   GeneratedSourceData,
@@ -396,5 +398,20 @@ function checkNewSources(cx: Context, sources: Source[]) {
     dispatch(restoreBlackBoxedSources(cx, sources));
 
     return sources;
+  };
+}
+
+export function ensureSourceActor(
+  thread: ThreadId,
+  sourceActor: SourceActorId
+) {
+  return async function({ dispatch, getState, client }: ThunkArgs) {
+    await sourceQueue.flush();
+    if (hasSourceActor(getState(), sourceActor)) {
+      return Promise.resolve();
+    }
+
+    const sources = await client.fetchThreadSources(thread);
+    await dispatch(newGeneratedSources(sources));
   };
 }

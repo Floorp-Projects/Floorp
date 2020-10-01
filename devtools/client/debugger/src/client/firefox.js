@@ -7,28 +7,20 @@
 import { setupCommands, clientCommands } from "./firefox/commands";
 import { setupEvents, clientEvents } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
-import { prepareSourcePayload } from "./firefox/create";
 
 let actions;
 let targetList;
-let resourceWatcher;
 
 export async function onConnect(
   connection: any,
-  _actions: Object,
-  store: any
+  _actions: Object
 ): Promise<void> {
-  const {
-    devToolsClient,
-    targetList: _targetList,
-    resourceWatcher: _resourceWatcher,
-  } = connection;
+  const { devToolsClient, targetList: _targetList } = connection;
   actions = _actions;
   targetList = _targetList;
-  resourceWatcher = _resourceWatcher;
 
   setupCommands({ devToolsClient, targetList });
-  setupEvents({ actions, devToolsClient, store, resourceWatcher });
+  setupEvents({ actions, devToolsClient });
   const { targetFront } = targetList;
   if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
     targetList.listenForWorkers = true;
@@ -44,21 +36,6 @@ export async function onConnect(
     onTargetAvailable,
     onTargetDestroyed
   );
-
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
-    onAvailable: onSourceAvailable,
-  });
-}
-
-export function onDisconnect() {
-  targetList.unwatchTargets(
-    targetList.ALL_TYPES,
-    onTargetAvailable,
-    onTargetDestroyed
-  );
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
-    onAvailable: onSourceAvailable,
-  });
 }
 
 async function onTargetAvailable({
@@ -133,17 +110,6 @@ function onTargetDestroyed({ targetFront }): void {
     targetFront.off("navigate", actions.navigated);
   }
   actions.removeTarget(targetFront);
-}
-
-async function onSourceAvailable(sources) {
-  const frontendSources = await Promise.all(
-    sources.map(async source => {
-      const threadFront = await source.targetFront.getFront("thread");
-      const frontendSource = prepareSourcePayload(threadFront, source);
-      return frontendSource;
-    })
-  );
-  await actions.newGeneratedSources(frontendSources);
 }
 
 export { clientCommands, clientEvents };
