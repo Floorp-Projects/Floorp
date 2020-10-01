@@ -227,6 +227,37 @@ panelview {
   -moz-box-flex: 1;
 }
 
+.panel-info-button {
+  appearance: none;
+  padding: 0;
+  margin-inline-end: 4px;
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+.panel-info-button[disabled=true] {
+  visibility: hidden;
+}
+
+.panel-info-button@buttonStateHover@ {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+.panel-info-button:not(:hover)[checked] {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+.panel-info-button@buttonStateActive@ {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+.panel-info-button > image {
+  list-style-image: url(chrome://global/skin/icons/identity-icon.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+  padding: 4px;
+}
+
 #wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
 #wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls {
   margin-inline-start: 0;
@@ -2070,6 +2101,11 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-header[isinfocollapsed="false"] {
   background: radial-gradient(circle farthest-side at top right, #03b1f4, #0556cd);
   color: #fff;
+  /* Set custom hover/focus/active states on the info button,
+     to make them more visible on the header background */
+  --arrowpanel-dimmed: #0003;
+  --arrowpanel-dimmed-further: #0005;
+  --arrowpanel-dimmed-even-further: #0007;
 }
 
 #PanelUI-profiler-header-bar {
@@ -2089,14 +2125,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-profiler-header[isinfocollapsed="true"] #PanelUI-profiler-header-bar {
   border-bottom: 1px solid var(--panel-separator-color);
-}
-
-#PanelUI-profiler-header[isinfocollapsed="false"] #PanelUI-profiler-info-button {
-  background-color: #0003;
-}
-
-#PanelUI-profiler-header[isinfocollapsed="false"] #PanelUI-profiler-info-button:hover {
-  background-color: #0005;
 }
 
 #PanelUI-profiler-info {
