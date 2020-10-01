@@ -24,13 +24,13 @@
 #define IDB_TRY_VAR_GLUE(accessFunction, ...)                         \
   QM_TRY_VAR_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
                   accessFunction, ##__VA_ARGS__)
-#define IDB_TRY_UNWRAP(...) IDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define IDB_TRY_VAR(...) IDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 #define IDB_TRY_INSPECT(...) IDB_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
-#  define IDB_DEBUG_TRY_UNWRAP(...) IDB_TRY_UNWRAP(__VA_ARGS__)
+#  define IDB_DEBUG_TRY_VAR(...) IDB_TRY_VAR(__VA_ARGS__)
 #else
-#  define IDB_DEBUG_TRY_UNWRAP(...)
+#  define IDB_DEBUG_TRY_VAR(...)
 #endif
 
 // IndexedDB equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.

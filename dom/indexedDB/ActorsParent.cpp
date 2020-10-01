@@ -610,7 +610,7 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
           ? "&directoryLockId="_ns + IntCString(aDirectoryLockId)
           : EmptyCString();
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       auto result, ([&mutator, &directoryLockIdClause] {
         nsCOMPtr<nsIFileURL> result;
         nsresult rv = NS_MutateURI(mutator)
@@ -685,20 +685,20 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
 Result<nsCOMPtr<mozIStorageStatement>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString) {
-  IDB_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
-                                nsCOMPtr<mozIStorageStatement>, aConnection,
-                                CreateStatement, aStatementString));
+  IDB_TRY_VAR(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
+                             nsCOMPtr<mozIStorageStatement>, aConnection,
+                             CreateStatement, aStatementString));
 
-  IDB_TRY_INSPECT(const DebugOnly<bool>& hasResult,
-                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+  IDB_TRY_VAR(const DebugOnly<bool> hasResult,
+              MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
   MOZ_ASSERT(hasResult);
 
   return stmt;
 }
 
 template <typename StepFunc>
-Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
-                                           StepFunc&& aStepFunc) {
+mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
+    mozIStorageStatement& aStmt, StepFunc&& aStepFunc) {
   return CollectWhile(
       [&aStmt]() -> Result<bool, nsresult> {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
@@ -809,7 +809,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
   using ConnectionType = Maybe<MovingNotNull<nsCOMPtr<mozIStorageConnection>>>;
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       auto connection,
       StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL,
                                              aTelemetryId)
@@ -839,7 +839,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
     do {
       PR_Sleep(PR_MillisecondsToInterval(100));
 
-      IDB_TRY_UNWRAP(
+      IDB_TRY_VAR(
           connection,
           StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL,
                                                  aTelemetryId)
@@ -906,7 +906,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       ToResultGet<nsCOMPtr<mozIStorageService>>(
           MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       auto connection,
       OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
           .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
@@ -936,8 +936,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       IDB_TRY(aFMDirectory.Remove(true));
     }
 
-    IDB_TRY_UNWRAP(connection, OpenDatabaseAndHandleBusy(
-                                   *storageService, *dbFileUrl, aTelemetryId));
+    IDB_TRY_VAR(connection, OpenDatabaseAndHandleBusy(
+                                *storageService, *dbFileUrl, aTelemetryId));
   }
 
   IDB_TRY(SetDefaultPragmas(*connection));
@@ -1025,9 +1025,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       IDB_TRY(stmt->BindUTF8StringByIndex(1, aOrigin));
       IDB_TRY(stmt->Execute());
     } else {
-      IDB_TRY_UNWRAP(vacuumNeeded,
-                     MaybeUpgradeSchema(*connection, schemaVersion,
-                                        aFMDirectory, aOrigin));
+      IDB_TRY_VAR(vacuumNeeded, MaybeUpgradeSchema(*connection, schemaVersion,
+                                                   aFMDirectory, aOrigin));
     }
 
     IDB_TRY(MOZ_TO_RESULT_INVOKE(transaction, Commit)
@@ -1163,8 +1162,8 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
     return Err(rv);
   }
 
-  IDB_TRY_UNWRAP(nsCOMPtr<mozIStorageConnection> connection,
-                 OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId));
+  IDB_TRY_VAR(nsCOMPtr<mozIStorageConnection> connection,
+              OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId));
 
   rv = SetDefaultPragmas(*connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1284,10 +1283,10 @@ class DatabaseConnection final {
     return mUpdateRefcountFunction;
   }
 
-  Result<CachedStatement, nsresult> GetCachedStatement(
+  mozilla::Result<CachedStatement, nsresult> GetCachedStatement(
       const nsACString& aQuery);
 
-  Result<BorrowedStatement, nsresult> BorrowCachedStatement(
+  mozilla::Result<BorrowedStatement, nsresult> BorrowCachedStatement(
       const nsACString& aQuery);
 
   template <typename BindFunctor>
@@ -4785,7 +4784,7 @@ class Cursor<CursorType>::CursorOpBase
 template <IDBCursorType CursorType>
 class OpenOpHelper;
 
-using ResponseSizeOrError = Result<size_t, nsresult>;
+using ResponseSizeOrError = mozilla::Result<size_t, nsresult>;
 
 template <IDBCursorType CursorType>
 class CursorOpBaseHelperBase {
@@ -5700,7 +5699,7 @@ RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
   return impl;
 }
 
-Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
+mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               const SafeRefPtr<Database>& aDatabase,
                               const nsTArray<StructuredCloneFileParent>& aFiles,
@@ -5934,15 +5933,15 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
-  IDB_TRY_UNWRAP(
-      auto markerFile,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
+  IDB_TRY_VAR(auto markerFile, MOZ_TO_RESULT_INVOKE_TYPED(
+                                   nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
 
   IDB_TRY(markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
   IDB_TRY(
       MOZ_TO_RESULT_INVOKE(markerFile, Create, nsIFile::NORMAL_FILE_TYPE, 0644)
-          .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, Ok>));
+          .orElse(
+              ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, mozilla::Ok>));
 
   return markerFile;
 }
@@ -5960,17 +5959,17 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
   return NS_OK;
 }
 
-Result<Ok, nsresult> DeleteFileManagerDirectory(
+Result<mozilla::Ok, nsresult> DeleteFileManagerDirectory(
     nsIFile& aFileManagerDirectory, QuotaManager* aQuotaManager,
     const PersistenceType aPersistenceType, const nsACString& aGroup,
     const nsACString& aOrigin) {
   if (!aQuotaManager) {
     IDB_TRY(aFileManagerDirectory.Remove(true));
 
-    return Ok{};
+    return mozilla::Ok{};
   }
 
-  IDB_TRY_UNWRAP(auto fileUsage, FileManager::GetUsage(&aFileManagerDirectory));
+  IDB_TRY_VAR(auto fileUsage, FileManager::GetUsage(&aFileManagerDirectory));
 
   uint64_t usageValue = fileUsage.GetValue().valueOr(0);
 
@@ -5990,10 +5989,10 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
 
                             // XXX andThen does not support void return
                             // values right now, we must return a Result
-                            return Result<Ok, nsresult>{Ok{}};
+                            return Result<mozilla::Ok, nsresult>{mozilla::Ok{}};
                           });
 
-            return Result<Ok, nsresult>{Err(rv)};
+            return Result<mozilla::Ok, nsresult>{Err(rv)};
           });
 
   if (usageValue) {
@@ -6025,8 +6024,8 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
 
   AUTO_PROFILER_LABEL("RemoveDatabaseFilesAndDirectory", DOM);
 
-  IDB_TRY_UNWRAP(auto markerFile,
-                 CreateMarkerFile(aBaseDirectory, aDatabaseFilenameBase));
+  IDB_TRY_VAR(auto markerFile,
+              CreateMarkerFile(aBaseDirectory, aDatabaseFilenameBase));
 
   // The database file counts towards quota.
   IDB_TRY(DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSuffix,
@@ -6357,7 +6356,13 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(aLocalizedKey);
   MOZ_ASSERT(!aLocale.IsEmpty());
 
-  IDB_TRY_UNWRAP(*aLocalizedKey, aBaseKey.ToLocaleAwareKey(aLocale));
+  auto result = aBaseKey.ToLocaleAwareKey(aLocale);
+  if (!result.Is(Ok)) {
+    return NS_WARN_IF(result.Is(SpecialValues::Exception))
+               ? result.AsException().StealNSResult()
+               : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
+  *aLocalizedKey = result.Unwrap();
 
   return NS_OK;
 }
@@ -6537,9 +6542,9 @@ struct ValuePopulateResponseHelper {
                              const ValueCursorBase& aCursor) {
     constexpr auto offset = StatementHasIndexKeyBindings ? 2 : 0;
 
-    IDB_TRY_UNWRAP(auto cloneInfo,
-                   GetStructuredCloneReadInfoFromStatement(
-                       aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager));
+    IDB_TRY_VAR(auto cloneInfo,
+                GetStructuredCloneReadInfoFromStatement(
+                    aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager));
 
     mCloneInfo.init(std::move(cloneInfo));
 
@@ -7091,7 +7096,7 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
     const auto extraInfo =
         ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
 
-    IDB_TRY_UNWRAP(
+    IDB_TRY_VAR(
         stmt,
         MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
                                    **mStorageConnection, CreateStatement,
@@ -7120,7 +7125,7 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 
 Result<DatabaseConnection::BorrowedStatement, nsresult>
 DatabaseConnection::BorrowCachedStatement(const nsACString& aQuery) {
-  IDB_TRY_UNWRAP(auto cachedStatement, GetCachedStatement(aQuery));
+  IDB_TRY_VAR(auto cachedStatement, GetCachedStatement(aQuery));
 
   return cachedStatement.Borrow();
 }
@@ -7396,8 +7401,8 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
   CachedStatement rollbackStmt;
   CachedStatement beginStmt;
   if (aNeedsCheckpoint || freelistCount) {
-    IDB_TRY_UNWRAP(rollbackStmt, GetCachedStatement("ROLLBACK;"_ns), QM_VOID);
-    IDB_TRY_UNWRAP(beginStmt, GetCachedStatement("BEGIN;"_ns), QM_VOID);
+    IDB_TRY_VAR(rollbackStmt, GetCachedStatement("ROLLBACK;"_ns), QM_VOID);
+    IDB_TRY_VAR(beginStmt, GetCachedStatement("BEGIN;"_ns), QM_VOID);
 
     // Release the connection's normal transaction. It's possible that it could
     // fail, but that isn't a problem here.
@@ -7489,48 +7494,49 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
 
   bool freedSomePages = false;
 
-  IDB_TRY(CollectWhile(
-              [&aFreelistCount]() -> Result<bool, nsresult> {
-                return aFreelistCount != 0;
-              },
-              [&aFreelistStatement, &aFreelistCount, currentThread,
-               &incrementalVacuumStmt, &freedSomePages,
-               this]() -> mozilla::Result<Ok, nsresult> {
-                // Fail if something else wants to use the thread, and
-                // roll back this transaction. It's ok if we never make
-                // progress here because the idle service should
-                // eventually reclaim this space.
-                IDB_TRY(OkIf(!NS_HasPendingEvents(currentThread)),
-                        Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
+  IDB_TRY(
+      CollectWhile(
+          [&aFreelistCount]() -> mozilla::Result<bool, nsresult> {
+            return aFreelistCount != 0;
+          },
+          [&aFreelistStatement, &aFreelistCount, currentThread,
+           &incrementalVacuumStmt, &freedSomePages,
+           this]() -> mozilla::Result<mozilla::Ok, nsresult> {
+            // Fail if something else wants to use the thread, and
+            // roll back this transaction. It's ok if we never make
+            // progress here because the idle service should
+            // eventually reclaim this space.
+            IDB_TRY(OkIf(!NS_HasPendingEvents(currentThread)),
+                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR));
 
-                IDB_TRY(incrementalVacuumStmt.Borrow()->Execute());
+            IDB_TRY(incrementalVacuumStmt.Borrow()->Execute());
 
-                freedSomePages = true;
+            freedSomePages = true;
 
-                IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
+            IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
 
-                return Ok{};
-              })
-              .andThen([&commitStmt, &freedSomePages,
-                        this](Ok) -> Result<Ok, nsresult> {
-                if (freedSomePages) {
-                  // Commit the write transaction.
-                  IDB_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
-                          [](const auto&) { NS_WARNING("Failed to commit!"); });
+            return mozilla::Ok{};
+          })
+          .andThen([&commitStmt, &freedSomePages, this](
+                       mozilla::Ok) -> mozilla::Result<mozilla::Ok, nsresult> {
+            if (freedSomePages) {
+              // Commit the write transaction.
+              IDB_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
+                      [](const auto&) { NS_WARNING("Failed to commit!"); });
 
-                  mInWriteTransaction = false;
-                }
+              mInWriteTransaction = false;
+            }
 
-                return Ok{};
-              }),
-          QM_PROPAGATE, ([&aRollbackStatement, this](const auto&) {
-            MOZ_ASSERT(mInWriteTransaction);
+            return mozilla::Ok{};
+          }),
+      QM_PROPAGATE, ([&aRollbackStatement, this](const auto&) {
+        MOZ_ASSERT(mInWriteTransaction);
 
-            // Something failed, make sure we roll everything back.
-            Unused << aRollbackStatement.Borrow()->Execute();
+        // Something failed, make sure we roll everything back.
+        Unused << aRollbackStatement.Borrow()->Execute();
 
-            mInWriteTransaction = false;
-          }));
+        mInWriteTransaction = false;
+      }));
 
   *aFreedSomePages = freedSomePages;
   return NS_OK;
@@ -7546,14 +7552,14 @@ nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
   nsresult rv;
 
   if (!aCachedStatement) {
-    IDB_TRY_UNWRAP(aCachedStatement,
-                   GetCachedStatement("PRAGMA freelist_count;"_ns));
+    IDB_TRY_VAR(aCachedStatement,
+                GetCachedStatement("PRAGMA freelist_count;"_ns));
   }
 
   const auto borrowedStatement = aCachedStatement.Borrow();
 
-  IDB_TRY_INSPECT(const DebugOnly<bool>& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
+  IDB_TRY_VAR(const DebugOnly<bool> hasResult,
+              MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
 
   MOZ_ASSERT(hasResult);
 
@@ -7658,7 +7664,7 @@ nsresult DatabaseConnection::GetFileSize(const nsAString& aPath,
   MOZ_ASSERT(!aPath.IsEmpty());
   MOZ_ASSERT(aResult);
 
-  IDB_TRY_UNWRAP(auto file, QM_NewLocalFile(aPath));
+  IDB_TRY_VAR(auto file, QM_NewLocalFile(aPath));
 
   int64_t fileSize;
 
@@ -8144,10 +8150,10 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   if (!mUpdateStatement) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_UNWRAP(mUpdateStatement, connection->GetCachedStatement(
-                                         "UPDATE file "
-                                         "SET refcount = refcount + :delta "
-                                         "WHERE id = :id"_ns));
+    IDB_TRY_VAR(mUpdateStatement, connection->GetCachedStatement(
+                                      "UPDATE file "
+                                      "SET refcount = refcount + :delta "
+                                      "WHERE id = :id"_ns));
   }
 
   {
@@ -8179,10 +8185,10 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
     if (!mSelectStatement) {
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_UNWRAP(mSelectStatement,
-                     connection->GetCachedStatement("SELECT id "
-                                                    "FROM file "
-                                                    "WHERE id = :id"_ns));
+      IDB_TRY_VAR(mSelectStatement,
+                  connection->GetCachedStatement("SELECT id "
+                                                 "FROM file "
+                                                 "WHERE id = :id"_ns));
     }
 
     const auto borrowedSelectStatement = mSelectStatement.Borrow();
@@ -8208,10 +8214,9 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   if (!mInsertStatement) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_UNWRAP(
-        mInsertStatement,
-        connection->GetCachedStatement(
-            "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
+    IDB_TRY_VAR(mInsertStatement,
+                connection->GetCachedStatement(
+                    "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
   }
 
   const auto borrowedInsertStatement = mInsertStatement.Borrow();
@@ -8344,7 +8349,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
 
   MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       MovingNotNull<nsCOMPtr<mozIStorageConnection>> storageConnection,
       GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
                            aDatabase.TelemetryId()));
@@ -10012,7 +10017,7 @@ nsresult Database::EnsureConnection() {
   AUTO_PROFILER_LABEL("Database::EnsureConnection", DOM);
 
   if (!mConnection || !mConnection->HasStorageConnection()) {
-    IDB_TRY_UNWRAP(mConnection, gConnectionPool->GetOrCreateConnection(*this));
+    IDB_TRY_VAR(mConnection, gConnectionPool->GetOrCreateConnection(*this));
   }
 
   AssertIsOnConnectionThread();
@@ -10480,7 +10485,7 @@ Database::AllocPBackgroundIDBTransactionParent(
     return nullptr;
   }
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       auto objectStoreMetadatas,
       TransformIntoNewArrayAbortOnErr(
           aObjectStoreNames,
@@ -12495,13 +12500,13 @@ void ValueCursorBase::ProcessFiles(CursorResponse& aResponse,
       MOZ_ASSERT(serializedInfo->files().IsEmpty());
       MOZ_ASSERT(this->mDatabase);
 
-      IDB_TRY_UNWRAP(serializedInfo->files(),
-                     SerializeStructuredCloneFiles((*this->mBackgroundParent),
-                                                   this->mDatabase, files,
-                                                   /* aForPreprocess */ false),
-                     QM_VOID, [&aResponse](auto& result) {
-                       aResponse = ClampResultCode(result.unwrapErr());
-                     });
+      IDB_TRY_VAR(serializedInfo->files(),
+                  SerializeStructuredCloneFiles((*this->mBackgroundParent),
+                                                this->mDatabase, files,
+                                                /* aForPreprocess */ false),
+                  QM_VOID, [&aResponse](auto& result) {
+                    aResponse = ClampResultCode(result.unwrapErr());
+                  });
     }
   }
 }
@@ -12586,7 +12591,7 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
 
   MOZ_ASSERT(!aCurrentKey.IsUnset());
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       auto position,
       ([&]() -> Result<CursorPosition<CursorType>, mozilla::ipc::IPCResult> {
         if constexpr (IsIndexCursor) {
@@ -12662,15 +12667,14 @@ nsresult FileManager::Init(nsIFile* aDirectory,
       IDB_TRY(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755));
     }
 
-    IDB_TRY_UNWRAP(auto path,
-                   MOZ_TO_RESULT_INVOKE_TYPED(nsString, aDirectory, GetPath));
+    IDB_TRY_VAR(auto path,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, aDirectory, GetPath));
 
     mDirectoryPath.init(std::move(path));
   }
 
-  IDB_TRY_INSPECT(
-      const auto& journalDirectory,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
+  IDB_TRY_VAR(auto journalDirectory,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
 
@@ -12681,8 +12685,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
   Unused << existsAsDirectory;
 
   {
-    IDB_TRY_UNWRAP(auto path, MOZ_TO_RESULT_INVOKE_TYPED(
-                                  nsString, journalDirectory, GetPath));
+    IDB_TRY_VAR(auto path, MOZ_TO_RESULT_INVOKE_TYPED(
+                               nsString, journalDirectory, GetPath));
 
     mJournalDirectoryPath.init(std::move(path));
   }
@@ -12692,8 +12696,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
                       nsCOMPtr<mozIStorageStatement>, aConnection,
                       CreateStatement, "SELECT id, refcount FROM file"_ns));
 
-  IDB_TRY(
-      CollectWhileHasResult(*stmt, [this](auto& stmt) -> Result<Ok, nsresult> {
+  IDB_TRY(CollectWhileHasResult(
+      *stmt, [this](auto& stmt) -> Result<mozilla::Ok, nsresult> {
         IDB_TRY_INSPECT(const int64_t& id,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
         IDB_TRY_INSPECT(const int32_t& dbRefCnt,
@@ -12709,7 +12713,7 @@ nsresult FileManager::Init(nsIFile* aDirectory,
 
         mLastFileId = std::max(id, mLastFileId);
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   return NS_OK;
@@ -12791,10 +12795,9 @@ nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   nsAutoString id;
   id.AppendInt(aId);
 
-  IDB_TRY_UNWRAP(
-      auto file,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone),
-      nullptr);
+  IDB_TRY_VAR(auto file,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone),
+              nullptr);
 
   IDB_TRY(file->Append(id), nullptr);
 
@@ -12865,7 +12868,8 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
           IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                     GetNextFile));
         },
-        [&hasJournals](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+        [&hasJournals](
+            const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
           IDB_TRY_INSPECT(
               const auto& leafName,
               MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
@@ -12878,14 +12882,14 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
             UNKNOWN_FILE_WARNING(leafName);
           }
 
-          return Ok{};
+          return mozilla::Ok{};
         }));
 
     if (hasJournals) {
-      IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-                     CreateStorageConnection(
-                         aDatabaseFile, aDirectory, VoidString(), aOrigin,
-                         /* aDirectoryLockId */ -1, aTelemetryId));
+      IDB_TRY_VAR(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+                  CreateStorageConnection(
+                      aDatabaseFile, aDirectory, VoidString(), aOrigin,
+                      /* aDirectoryLockId */ -1, aTelemetryId));
 
       mozStorageTransaction transaction(connection.get(), false);
 
@@ -12894,8 +12898,8 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_INSPECT(
-          const auto& stmt,
+      IDB_TRY_VAR(
+          auto stmt,
           MOZ_TO_RESULT_INVOKE_TYPED(
               nsCOMPtr<mozIStorageStatement>, *connection, CreateStatement,
               "SELECT name, (name IN (SELECT id FROM file)) FROM fs WHERE path = :path"_ns));
@@ -12908,14 +12912,15 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       IDB_TRY(CollectWhileHasResult(
           *stmt,
-          [&aDirectory, &journalDirectory](auto& stmt) -> Result<Ok, nsresult> {
+          [&aDirectory,
+           &journalDirectory](auto& stmt) -> Result<mozilla::Ok, nsresult> {
             nsString name;
             IDB_TRY(stmt.GetString(0, name));
 
             nsresult rv;
             name.ToInteger64(&rv);
             if (NS_FAILED(rv)) {
-              return Ok{};
+              return mozilla::Ok{};
             }
 
             int32_t flag = stmt.AsInt32(1);
@@ -12942,7 +12947,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
               NS_WARNING("Failed to remove journal file!");
             }
 
-            return Ok{};
+            return mozilla::Ok{};
           }));
 
       IDB_TRY(connection->ExecuteSimpleSQL("DROP TABLE fs;"_ns));
@@ -12975,12 +12980,12 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                   GetNextFile));
       },
-      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
         IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
                                                   nsString, file, GetLeafName));
 
         if (leafName.Equals(kJournalDirectoryName)) {
-          return Ok{};
+          return mozilla::Ok{};
         }
 
         nsresult rv;
@@ -12991,12 +12996,12 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
 
           usage += FileUsageType(Some(uint64_t(fileSize)));
 
-          return Ok{};
+          return mozilla::Ok{};
         }
 
         UNKNOWN_FILE_WARNING(leafName);
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   return usage;
@@ -13753,8 +13758,8 @@ nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
   QuotaManager* const quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
-  IDB_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
-                                     aPersistenceType, aOrigin));
+  IDB_TRY_VAR(auto directory,
+              quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 
@@ -14685,10 +14690,10 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   const nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
-  IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-                 GetStorageConnection(*databaseFile, mDirectoryLockId,
-                                      TelemetryIdForFile(databaseFile)),
-                 QM_VOID);
+  IDB_TRY_VAR(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+              GetStorageConnection(*databaseFile, mDirectoryLockId,
+                                   TelemetryIdForFile(databaseFile)),
+              QM_VOID);
 
   AutoClose autoClose(connection);
 
@@ -14796,7 +14801,7 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
         return rv;
       }
 
-      IDB_TRY_UNWRAP(foreignKeyError, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+      IDB_TRY_VAR(foreignKeyError, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
     }
 
     if (!foreignKeysWereEnabled) {
@@ -15382,7 +15387,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
         info.mUnique ? insertUniqueStmt : insertStmt;
 
     if (!stmt) {
-      IDB_TRY_UNWRAP(
+      IDB_TRY_VAR(
           stmt,
           aConnection->GetCachedStatement(
               info.mUnique
@@ -15418,8 +15423,8 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                                             kStmtParamNameObjectDataKey));
 
     IDB_TRY(MOZ_TO_RESULT_INVOKE(&*borrowedStmt, Execute)
-                .orElse([&info, index,
-                         &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
+                .orElse([&info, index, &aIndexValues](nsresult rv)
+                            -> mozilla::Result<mozilla::Ok, nsresult> {
                   if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
                     // If we're inserting multiple entries for the same unique
                     // index, then we might have failed to insert due to
@@ -15433,7 +15438,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
                         // We found a key with the same value for the same
                         // index. So we must have had a collision with a value
                         // we just inserted.
-                        return Ok{};
+                        return mozilla::Ok{};
                       }
                     }
                   }
@@ -15472,7 +15477,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
         indexValue.mUnique ? deleteUniqueStmt : deleteStmt;
 
     if (!stmt) {
-      IDB_TRY_UNWRAP(
+      IDB_TRY_VAR(
           stmt,
           aConnection->GetCachedStatement(
               indexValue.mUnique
@@ -15541,18 +15546,18 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   nsresult rv;
   Key objectStoreKey;
-  IDB_TRY_INSPECT(
-      const auto& selectStmt,
+  IDB_TRY_VAR(
+      const auto selectStmt,
       ([singleRowOnly, &aConnection, &objectStoreKey, &aKeyRange]()
            -> Result<DatabaseConnection::BorrowedStatement, nsresult> {
         if (singleRowOnly) {
-          IDB_TRY_UNWRAP(auto selectStmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT index_data_values "
-                             "FROM object_data "
-                             "WHERE object_store_id = :"_ns +
-                             kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                             kStmtParamNameKey + ";"_ns));
+          IDB_TRY_VAR(auto selectStmt,
+                      aConnection->BorrowCachedStatement(
+                          "SELECT index_data_values "
+                          "FROM object_data "
+                          "WHERE object_store_id = :"_ns +
+                          kStmtParamNameObjectStoreId + " AND key = :"_ns +
+                          kStmtParamNameKey + ";"_ns));
 
           objectStoreKey = aKeyRange.ref().lower();
 
@@ -15565,12 +15570,11 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         const auto keyRangeClause =
             MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
-        IDB_TRY_UNWRAP(
-            auto selectStmt,
-            aConnection->BorrowCachedStatement(
-                "SELECT index_data_values, "_ns + kColumnNameKey +
-                " FROM object_data WHERE object_store_id = :"_ns +
-                kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
+        IDB_TRY_VAR(auto selectStmt,
+                    aConnection->BorrowCachedStatement(
+                        "SELECT index_data_values, "_ns + kColumnNameKey +
+                        " FROM object_data WHERE object_store_id = :"_ns +
+                        kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
 
         if (aKeyRange.isSome()) {
           IDB_TRY(BindKeyRangeToStatement(aKeyRange.ref(), &*selectStmt));
@@ -15591,7 +15595,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
        &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
        deleteStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> Result<Ok, nsresult> {
+          auto& selectStmt) mutable -> Result<mozilla::Ok, nsresult> {
         if (!singleRowOnly) {
           IDB_TRY(objectStoreKey.SetFromStatement(&selectStmt, 1));
 
@@ -15603,12 +15607,12 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
             DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues));
 
         if (!deleteStmt) {
-          IDB_TRY_UNWRAP(deleteStmt,
-                         aConnection->GetCachedStatement(
-                             "DELETE FROM object_data "
-                             "WHERE object_store_id = :"_ns +
-                             kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                             kStmtParamNameKey + ";"_ns));
+          IDB_TRY_VAR(deleteStmt,
+                      aConnection->GetCachedStatement(
+                          "DELETE FROM object_data "
+                          "WHERE object_store_id = :"_ns +
+                          kStmtParamNameObjectStoreId + " AND key = :"_ns +
+                          kStmtParamNameKey + ";"_ns));
         }
 
         const auto borrowedDeleteStmt = deleteStmt.Borrow();
@@ -15621,7 +15625,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
         resultCountDEBUG++;
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
@@ -15639,8 +15643,8 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 
   AUTO_PROFILER_LABEL("DatabaseOperationBase::UpdateIndexValues", DOM);
 
-  IDB_TRY_UNWRAP((auto [indexDataValues, indexDataValuesLength]),
-                 MakeCompressedIndexDataValues(aIndexValues));
+  IDB_TRY_VAR((auto [indexDataValues, indexDataValuesLength]),
+              MakeCompressedIndexDataValues(aIndexValues));
 
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
@@ -15705,8 +15709,7 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
     return rv;
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   *aHasIndexes = hasResult;
   return NS_OK;
@@ -16568,8 +16571,8 @@ nsresult FactoryOp::OpenDirectory() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_UNWRAP(auto dbFile,
-                 quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
+  IDB_TRY_VAR(auto dbFile,
+              quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
 
   nsresult rv =
       dbFile->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
@@ -16915,10 +16918,9 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  IDB_TRY_UNWRAP(
-      NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-      CreateStorageConnection(*dbFile, *fmDirectory, databaseName, mOrigin,
-                              mDirectoryLockId, mTelemetryId));
+  IDB_TRY_VAR(NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+              CreateStorageConnection(*dbFile, *fmDirectory, databaseName,
+                                      mOrigin, mDirectoryLockId, mTelemetryId));
 
   AutoSetProgressHandler asph;
   rv = asph.Register(*connection, this);
@@ -17004,8 +17006,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
     return rv;
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     return NS_ERROR_FILE_CORRUPTED;
@@ -17058,7 +17059,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
       [&lastObjectStoreId, &objectStores,
        usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
        usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
@@ -17121,7 +17122,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
         lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   // Load index information
@@ -17142,7 +17143,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
       [&lastIndexId, &objectStores, &aConnection,
        usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
        usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
@@ -17243,7 +17244,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
         lastIndexId = std::max(lastIndexId, indexId);
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   if (NS_WARN_IF(lastObjectStoreId == INT64_MAX) ||
@@ -17290,9 +17291,9 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       *readStmt,
       [&aConnection, &indexTable, &aIndexMetadata, &aLocale,
        writeStmt = nsCOMPtr<mozIStorageStatement>{}](
-          auto& readStmt) mutable -> mozilla::Result<Ok, nsresult> {
+          auto& readStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         if (!writeStmt) {
-          IDB_TRY_UNWRAP(
+          IDB_TRY_VAR(
               writeStmt,
               MOZ_TO_RESULT_INVOKE_TYPED(
                   nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
@@ -17311,8 +17312,13 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
         IDB_TRY(oldKey.SetFromStatement(&readStmt, 0));
         IDB_TRY(oldKey.BindToStatement(writeStmt, kStmtParamNameValue));
 
-        IDB_TRY_INSPECT(const auto& newSortKey,
-                        oldKey.ToLocaleAwareKey(aLocale));
+        auto result = oldKey.ToLocaleAwareKey(aLocale);
+        if (!result.Is(Ok)) {
+          return Err(NS_WARN_IF(result.Is(SpecialValues::Exception))
+                         ? result.AsException().StealNSResult()
+                         : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        }
+        const auto newSortKey = result.Unwrap();
 
         IDB_TRY(
             newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale));
@@ -17322,7 +17328,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
 
         IDB_TRY(writeStmt->Execute());
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   // The parameter names are not used, parameters are bound by index only
@@ -17693,37 +17699,37 @@ Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
   DatabaseSpec spec;
   spec.metadata() = mMetadata->mCommonMetadata;
 
-  IDB_TRY_UNWRAP(
-      spec.objectStores(),
-      TransformIntoNewArrayAbortOnErr(
-          mMetadata->mObjectStores,
-          [](const auto& objectStoreEntry)
-              -> mozilla::Result<ObjectStoreSpec, nsresult> {
-            FullObjectStoreMetadata* metadata = objectStoreEntry.GetData();
-            MOZ_ASSERT(objectStoreEntry.GetKey());
-            MOZ_ASSERT(metadata);
+  IDB_TRY_VAR(spec.objectStores(),
+              TransformIntoNewArrayAbortOnErr(
+                  mMetadata->mObjectStores,
+                  [](const auto& objectStoreEntry)
+                      -> mozilla::Result<ObjectStoreSpec, nsresult> {
+                    FullObjectStoreMetadata* metadata =
+                        objectStoreEntry.GetData();
+                    MOZ_ASSERT(objectStoreEntry.GetKey());
+                    MOZ_ASSERT(metadata);
 
-            ObjectStoreSpec objectStoreSpec;
-            objectStoreSpec.metadata() = metadata->mCommonMetadata;
+                    ObjectStoreSpec objectStoreSpec;
+                    objectStoreSpec.metadata() = metadata->mCommonMetadata;
 
-            IDB_TRY_UNWRAP(auto indexes,
-                           TransformIntoNewArray(
-                               metadata->mIndexes,
-                               [](const auto& indexEntry) {
-                                 FullIndexMetadata* indexMetadata =
-                                     indexEntry.GetData();
-                                 MOZ_ASSERT(indexEntry.GetKey());
-                                 MOZ_ASSERT(indexMetadata);
+                    IDB_TRY_VAR(auto indexes,
+                                TransformIntoNewArray(
+                                    metadata->mIndexes,
+                                    [](const auto& indexEntry) {
+                                      FullIndexMetadata* indexMetadata =
+                                          indexEntry.GetData();
+                                      MOZ_ASSERT(indexEntry.GetKey());
+                                      MOZ_ASSERT(indexMetadata);
 
-                                 return indexMetadata->mCommonMetadata;
-                               },
-                               fallible));
+                                      return indexMetadata->mCommonMetadata;
+                                    },
+                                    fallible));
 
-            objectStoreSpec.indexes() = std::move(indexes);
+                    objectStoreSpec.indexes() = std::move(indexes);
 
-            return objectStoreSpec;
-          },
-          fallible));
+                    return objectStoreSpec;
+                  },
+                  fallible));
 
   return spec;
 }
@@ -17932,8 +17938,8 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
     return;
   }
 
-  IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-                 OpenDatabaseAndHandleBusy(*ss, aDatabaseFile), QM_VOID);
+  IDB_TRY_VAR(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+              OpenDatabaseAndHandleBusy(*ss, aDatabaseFile), QM_VOID);
 
 #ifdef DEBUG
   {
@@ -17944,8 +17950,8 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
       return;
     }
 
-    IDB_TRY_INSPECT(const bool& hasResult,
-                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep), QM_VOID);
+    IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep),
+                QM_VOID);
     if (NS_WARN_IF(!hasResult)) {
       return;
     }
@@ -17967,8 +17973,8 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
     return;
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep), QM_VOID);
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep),
+              QM_VOID);
 
   if (NS_WARN_IF(!hasResult)) {
     return;
@@ -18018,8 +18024,8 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_UNWRAP(auto directory,
-                 quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
+  IDB_TRY_VAR(auto directory,
+              quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
 
   nsresult rv =
       directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
@@ -18635,11 +18641,10 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
       if (!stmt) {
         // The parameter names are not used, parameters are bound by index only
         // locally in the same function.
-        IDB_TRY_UNWRAP(stmt,
-                       connection->GetCachedStatement(
-                           "UPDATE object_store "
-                           "SET auto_increment = :auto_increment WHERE id "
-                           "= :object_store_id;"_ns));
+        IDB_TRY_VAR(stmt, connection->GetCachedStatement(
+                              "UPDATE object_store "
+                              "SET auto_increment = :auto_increment WHERE id "
+                              "= :object_store_id;"_ns));
       }
 
       const auto borrowedStmt = stmt.Borrow();
@@ -18698,7 +18703,7 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::Mode::ReadOnly);
 
   {
-    IDB_DEBUG_TRY_UNWRAP(
+    IDB_DEBUG_TRY_VAR(
         const auto pragmaStmt,
         aConnection->BorrowCachedStatement("PRAGMA foreign_keys;"_ns), QM_VOID);
 
@@ -18715,7 +18720,7 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   }
 
   {
-    IDB_DEBUG_TRY_UNWRAP(
+    IDB_DEBUG_TRY_VAR(
         const auto checkStmt,
         aConnection->BorrowCachedStatement("PRAGMA foreign_key_check;"_ns),
         QM_VOID);
@@ -19103,10 +19108,10 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt, aConnection->BorrowCachedStatement(
-                                              "SELECT name "
-                                              "FROM object_store "
-                                              "WHERE name = :name;"_ns));
+    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->BorrowCachedStatement(
+                                           "SELECT name "
+                                           "FROM object_store "
+                                           "WHERE name = :name;"_ns));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
 
@@ -19193,9 +19198,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
-    IDB_DEBUG_TRY_UNWRAP(
-        const auto stmt,
-        aConnection->BorrowCachedStatement("SELECT id FROM object_store;"_ns));
+    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->BorrowCachedStatement(
+                                           "SELECT id FROM object_store;"_ns));
 
     bool foundThisObjectStore = false;
     bool foundOtherObjectStore = false;
@@ -19373,11 +19377,11 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT name "
-                             "FROM object_store "
-                             "WHERE name = :name AND id != :id;"_ns));
+    IDB_DEBUG_TRY_VAR(const auto stmt,
+                      aConnection->BorrowCachedStatement(
+                          "SELECT name "
+                          "FROM object_store "
+                          "WHERE name = :name AND id != :id;"_ns));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
 
@@ -19556,7 +19560,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // we should have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(
+    IDB_DEBUG_TRY_VAR(
         const auto stmt,
         aConnection->BorrowCachedStatement(
             "SELECT name "
@@ -19704,11 +19708,10 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 #endif
 
-  IDB_TRY_UNWRAP(auto cloneInfo,
-                 GetStructuredCloneReadInfoFromValueArray(aValues,
-                                                          /* aDataIndex */ 3,
-                                                          /* aFileIdsIndex */ 2,
-                                                          *mOp->mFileManager));
+  IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromValueArray(
+                                  aValues,
+                                  /* aDataIndex */ 3,
+                                  /* aFileIdsIndex */ 2, *mOp->mFileManager));
 
   const IndexMetadata& metadata = mOp->mMetadata;
   const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
@@ -19775,7 +19778,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  IDB_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 1));
+  IDB_TRY_VAR(auto indexValues, ReadCompressedIndexDataValues(*aValues, 1));
 
   const bool hadPreviousIndexValues = !indexValues.IsEmpty();
 
@@ -19795,8 +19798,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
         fallible));
   }
 
-  IDB_TRY_UNWRAP((auto [indexValuesBlob, indexValuesBlobLength]),
-                 MakeCompressedIndexDataValues(indexValues));
+  IDB_TRY_VAR((auto [indexValuesBlob, indexValuesBlobLength]),
+              MakeCompressedIndexDataValues(indexValues));
 
   MOZ_ASSERT(!indexValuesBlobLength == !(indexValuesBlob.get()));
 
@@ -19934,11 +19937,11 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure |mIsLastIndex| is telling the truth.
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT id "
-                             "FROM object_store_index "
-                             "WHERE object_store_id = :object_store_id;"_ns));
+    IDB_DEBUG_TRY_VAR(const auto stmt,
+                      aConnection->BorrowCachedStatement(
+                          "SELECT id "
+                          "FROM object_store_index "
+                          "WHERE object_store_id = :object_store_id;"_ns));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 
@@ -19984,8 +19987,8 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // mozStorage warns that these statements trigger a sort operation but we
   // don't care because this is a very rare call and we expect it to be slow.
   // The cost of having an index on this field is too high.
-  IDB_TRY_INSPECT(
-      const auto& selectStmt,
+  IDB_TRY_VAR(
+      const auto selectStmt,
       aConnection->BorrowCachedStatement(
           mUnique
               ? (mIsLastIndex
@@ -20050,7 +20053,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       [this, &aConnection, &lastObjectStoreKey, &lastIndexValues,
        deleteIndexRowStmt = DatabaseConnection::CachedStatement{},
        nullIndexDataValuesStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> Result<Ok, nsresult> {
+          auto& selectStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         // We always need the index key to delete the index row.
         Key indexKey;
         IDB_TRY(indexKey.SetFromStatement(&selectStmt, 0));
@@ -20097,7 +20100,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
         // Now delete the index row.
         if (!deleteIndexRowStmt) {
-          IDB_TRY_UNWRAP(
+          IDB_TRY_VAR(
               deleteIndexRowStmt,
               aConnection->GetCachedStatement(
                   mUnique ? "DELETE FROM unique_index_data "
@@ -20129,7 +20132,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           IDB_TRY(borrowedDeleteIndexRowStmt->Execute());
         }
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   // Take care of the last key.
@@ -20188,13 +20191,13 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT name "
-                             "FROM object_store_index "
-                             "WHERE object_store_id = :object_store_id "
-                             "AND name = :name "
-                             "AND id != :id;"_ns));
+    IDB_DEBUG_TRY_VAR(const auto stmt,
+                      aConnection->BorrowCachedStatement(
+                          "SELECT name "
+                          "FROM object_store_index "
+                          "WHERE object_store_id = :object_store_id "
+                          "AND name = :name "
+                          "AND id != :id;"_ns));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 
@@ -20485,8 +20488,8 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
     return rv;
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*indexValuesStmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult,
+              MOZ_TO_RESULT_INVOKE(&*indexValuesStmt, ExecuteStep));
 
   if (hasResult) {
     IndexDataValuesAutoArray existingIndexValues;
@@ -20540,7 +20543,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
     mUniqueIndexTable.ref().MarkImmutable();
   }
 
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       mStoredFileInfos,
       TransformIntoNewArray(
           mParams.fileAddInfos(),
@@ -21012,10 +21015,9 @@ Result<T, nsresult> ObjectStoreGetRequestOp::ConvertResponse(
     result.hasPreprocessInfo() = aInfo.HasPreprocessInfo();
   }
 
-  IDB_TRY_UNWRAP(
-      result.files(),
-      SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, aInfo.Files(),
-                                    std::is_same_v<T, PreprocessInfo>));
+  IDB_TRY_VAR(result.files(), SerializeStructuredCloneFiles(
+                                  mBackgroundParent, mDatabase, aInfo.Files(),
+                                  std::is_same_v<T, PreprocessInfo>));
 
   return result;
 }
@@ -21054,10 +21056,11 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
-        IDB_TRY_UNWRAP(auto cloneInfo,
-                       GetStructuredCloneReadInfoFromStatement(
-                           &stmt, 1, 0, mDatabase->GetFileManager()));
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(auto cloneInfo,
+                    GetStructuredCloneReadInfoFromStatement(
+                        &stmt, 1, 0, mDatabase->GetFileManager()));
 
         if (cloneInfo.HasPreprocessInfo()) {
           mPreprocessInfoCount++;
@@ -21066,7 +21069,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
         IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
                 Err(NS_ERROR_OUT_OF_MEMORY));
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21106,8 +21109,8 @@ ObjectStoreGetRequestOp::GetPreprocessParams() {
 
   auto params = ObjectStoreGetPreprocessParams();
 
-  IDB_TRY_UNWRAP(params.preprocessInfo(),
-                 ConvertResponse<PreprocessInfo>(std::move(mResponse[0])));
+  IDB_TRY_VAR(params.preprocessInfo(),
+              ConvertResponse<PreprocessInfo>(std::move(mResponse[0])));
 
   return PreprocessParams{std::move(params)};
 }
@@ -21121,7 +21124,7 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
     *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
-      IDB_TRY_UNWRAP(
+      IDB_TRY_VAR(
           aResponse.get_ObjectStoreGetAllResponse().cloneInfos(),
           TransformIntoNewArrayAbortOnErr(
               std::make_move_iterator(mResponse.begin()),
@@ -21147,12 +21150,11 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
         aResponse.get_ObjectStoreGetResponse().cloneInfo();
 
     *aResponseSize += mResponse[0].Size();
-    IDB_TRY_UNWRAP(serializedInfo,
-                   ConvertResponse<SerializedStructuredCloneReadInfo>(
-                       std::move(mResponse[0])),
-                   QM_VOID, [&aResponse](auto& result) {
-                     aResponse = result.unwrapErr();
-                   });
+    IDB_TRY_VAR(serializedInfo,
+                ConvertResponse<SerializedStructuredCloneReadInfo>(
+                    std::move(mResponse[0])),
+                QM_VOID,
+                [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
   }
 }
 
@@ -21206,12 +21208,13 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         Key* const key = mResponse.AppendElement(fallible);
         IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
         IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21425,8 +21428,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
     }
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     MOZ_ASSERT(false, "This should never be possible!");
@@ -21576,10 +21578,11 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
-        IDB_TRY_UNWRAP(auto cloneInfo,
-                       GetStructuredCloneReadInfoFromStatement(
-                           &stmt, 1, 0, mDatabase->GetFileManager()));
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(auto cloneInfo,
+                    GetStructuredCloneReadInfoFromStatement(
+                        &stmt, 1, 0, mDatabase->GetFileManager()));
 
         if (cloneInfo.HasPreprocessInfo()) {
           IDB_WARNING("Preprocessing for indexes not yet implemented!");
@@ -21589,7 +21592,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
         IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
                 Err(NS_ERROR_OUT_OF_MEMORY));
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21608,9 +21611,9 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 
     result.data().data = info.ReleaseData();
 
-    IDB_TRY_UNWRAP(result.files(),
-                   SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
-                                                 info.Files(), false));
+    IDB_TRY_VAR(result.files(),
+                SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
+                                              info.Files(), false));
 
     return result;
   };
@@ -21620,19 +21623,19 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
     *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
-      IDB_TRY_UNWRAP(aResponse.get_IndexGetAllResponse().cloneInfos(),
-                     TransformIntoNewArrayAbortOnErr(
-                         std::make_move_iterator(mResponse.begin()),
-                         std::make_move_iterator(mResponse.end()),
-                         [convertResponse, &aResponseSize](
-                             StructuredCloneReadInfoParent&& info) {
-                           *aResponseSize += info.Size();
-                           return convertResponse(std::move(info));
-                         },
-                         fallible),
-                     QM_VOID, [&aResponse](auto& result) {
-                       aResponse = result.unwrapErr();
-                     });
+      IDB_TRY_VAR(aResponse.get_IndexGetAllResponse().cloneInfos(),
+                  TransformIntoNewArrayAbortOnErr(
+                      std::make_move_iterator(mResponse.begin()),
+                      std::make_move_iterator(mResponse.end()),
+                      [convertResponse,
+                       &aResponseSize](StructuredCloneReadInfoParent&& info) {
+                        *aResponseSize += info.Size();
+                        return convertResponse(std::move(info));
+                      },
+                      fallible),
+                  QM_VOID, [&aResponse](auto& result) {
+                    aResponse = result.unwrapErr();
+                  });
     }
 
     return;
@@ -21646,9 +21649,9 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
         aResponse.get_IndexGetResponse().cloneInfo();
 
     *aResponseSize += mResponse[0].Size();
-    IDB_TRY_UNWRAP(
-        serializedInfo, convertResponse(std::move(mResponse[0])), QM_VOID,
-        [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
+    IDB_TRY_VAR(serializedInfo, convertResponse(std::move(mResponse[0])),
+                QM_VOID,
+                [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
   }
 }
 
@@ -21706,12 +21709,13 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
         Key* const key = mResponse.AppendElement(fallible);
         IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
         IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-        return Ok{};
+        return mozilla::Ok{};
       }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
@@ -21783,8 +21787,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
   if (NS_WARN_IF(!hasResult)) {
     MOZ_ASSERT(false, "This should never be possible!");
@@ -21951,8 +21954,8 @@ void CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
       // any remaining entries, and signal overall success. Probably, future
       // attempts to access the same entry will fail as well, but it might never
       // be accessed by the application.
-      IDB_TRY_INSPECT(
-          const auto& responseSize,
+      IDB_TRY_VAR(
+          const auto responseSize,
           PopulateResponseFromStatement(aStmt, false, aOptPreviousSortKey),
           extraCount, [](const auto&) {
             // TODO: Maybe disable preloading for this cursor? The problem will
@@ -22011,9 +22014,16 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         (range.isOnly() || lowerBound) ? range.lower() : range.upper();
     if constexpr (IsIndexCursor) {
       if (this->IsLocaleAware()) {
-        // XXX Don't we need to propagate the error?
-        IDB_TRY_UNWRAP(localeAwareRangeBound,
-                       bound.ToLocaleAwareKey(this->mLocale), QM_VOID);
+        auto res = bound.ToLocaleAwareKey(this->mLocale);
+
+        // XXX Explain why an error or Invalid result is ignored here (If it's
+        // impossible, then
+        //     we should change this to an assertion.)
+        if (res.Is(SpecialValues::Exception)) {
+          res.AsException().SuppressException();
+        }
+
+        localeAwareRangeBound = res.Unwrap();
       } else {
         localeAwareRangeBound = bound;
       }
@@ -22151,8 +22161,7 @@ void IndexOpenOpHelper<CursorType>::PrepareIndexKeyConditionClause(
 template <IDBCursorType CursorType>
 nsresult CommonOpenOpHelper<CursorType>::ProcessStatementSteps(
     mozIStorageStatement* const aStmt) {
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
+  IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
 
   if (!hasResult) {
     SetResponse(void_t{});
@@ -22644,8 +22653,8 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   // TODO: Why do we query the records we don't need and skip them here, rather
   // than using a OFFSET clause in the query?
   for (uint32_t index = 0; index < advanceCount; index++) {
-    IDB_TRY_INSPECT(const bool& hasResult,
-                    MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+    IDB_TRY_VAR(const bool hasResult,
+                MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
     if (!hasResult) {
       mResponse = void_t();
