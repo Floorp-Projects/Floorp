@@ -208,6 +208,7 @@ void Simulator::Destroy(Simulator* sim) {
 void Simulator::ExecuteInstruction() {
   // The program counter should always be aligned.
   VIXL_ASSERT(IsWordAligned(pc_));
+#ifdef JS_CACHE_SIMULATOR_ARM64
   if (pendingCacheRequests) {
       // We're here emulating the behavior of the membarrier carried over on
       // real hardware does; see syscalls to membarrier in MozCpu-vixl.cpp.
@@ -218,6 +219,7 @@ void Simulator::ExecuteInstruction() {
       js::jit::AutoLockSimulatorCache alsc;
       FlushICache();
   }
+#endif
   decoder_->Decode(pc_);
   increment_pc();
 }
@@ -432,8 +434,8 @@ void Simulator::VisitException(const Instruction* instr) {
           return;
         }
         case kCheckStackPointer: {
-          int64_t current = get_sp();
-          int64_t expected = spStack_.popCopy();
+          DebugOnly<int64_t> current = get_sp();
+          DebugOnly<int64_t> expected = spStack_.popCopy();
           VIXL_ASSERT(current == expected);
           return;
         }
