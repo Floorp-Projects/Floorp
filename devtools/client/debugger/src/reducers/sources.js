@@ -1031,7 +1031,7 @@ export function isSourceWithMap(
   id: SourceId
 ): boolean {
   return getSourceActorsForSource(state, id).some(
-    soureActor => soureActor.sourceMapURL
+    sourceActor => sourceActor.sourceMapURL
   );
 }
 
