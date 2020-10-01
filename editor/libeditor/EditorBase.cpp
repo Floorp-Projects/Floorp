@@ -5327,8 +5327,14 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
   }
 
   RefPtr<Element> targetElement = mEditorBase.GetInputEventTargetElement();
-  if (NS_WARN_IF(!targetElement)) {
-    return NS_ERROR_FAILURE;
+  if (!targetElement) {
+    // If selection is not in editable element and it is outside of any
+    // editing hosts, there may be no target element to dispatch `beforeinput`
+    // event.  In this case, the caller shouldn't keep handling the edit
+    // action since web apps cannot override it with `beforeinput` event
+    // listener, but for backward compatibility, we should return a special
+    // success code instead of error.
+    return NS_OK;
   }
   OwningNonNull<TextEditor> textEditor = *mEditorBase.AsTextEditor();
   EditorInputType inputType = ToInputType(mEditAction);
