@@ -23,7 +23,8 @@ uint32_t GetMaxWebProcessCount();
 // enable fission regardless of pref settings.
 bool FissionAutostart();
 
-// Returns true if fission.sessionHistoryInParent or FissionAutostart() is true.
+// Returns true if fission.sessionHistoryInParent is true
+// (and will return true also when FissionAutostart() is true).
 bool SessionHistoryInParent();
 }
 
