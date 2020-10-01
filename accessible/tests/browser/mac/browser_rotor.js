@@ -1521,5 +1521,23 @@ addAccessibleTask(
       ["p2"],
       "Result is next group sibling"
     );
+
+    searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionPrevious",
+    };
+
+    results = searchRoot.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    Assert.deepEqual(
+      results.map(r => r.getAttributeValue("AXDOMIdentifier")),
+      ["p2", "p1"],
+      "A reverse search should return groups in reverse"
+    );
   }
 );
