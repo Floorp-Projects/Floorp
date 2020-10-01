@@ -743,14 +743,14 @@ void nsWindow::SendAnAPZEvent(InputData& aEvent) {
 
   if (aEvent.mInputType == PANGESTURE_INPUT) {
     PanGestureInput& panInput = aEvent.AsPanGestureInput();
-    WidgetWheelEvent event = panInput.ToWidgetEvent(this);
+    WidgetWheelEvent event = panInput.ToWidgetWheelEvent(this);
     ProcessUntransformedAPZEvent(&event, result);
 
     return;
   }
 
   PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
-  WidgetWheelEvent event = pinchInput.ToWidgetEvent(this);
+  WidgetWheelEvent event = pinchInput.ToWidgetWheelEvent(this);
   ProcessUntransformedAPZEvent(&event, result);
 }
 

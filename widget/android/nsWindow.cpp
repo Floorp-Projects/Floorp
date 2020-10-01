@@ -363,7 +363,7 @@ class NPZCSupport final
     }
 
     PostInputEvent([input, result](nsWindow* window) {
-      WidgetWheelEvent wheelEvent = input.ToWidgetEvent(window);
+      WidgetWheelEvent wheelEvent = input.ToWidgetWheelEvent(window);
       window->ProcessUntransformedAPZEvent(&wheelEvent, result);
     });
 
@@ -489,7 +489,7 @@ class NPZCSupport final
     }
 
     PostInputEvent([input, result](nsWindow* window) {
-      WidgetMouseEvent mouseEvent = input.ToWidgetEvent(window);
+      WidgetMouseEvent mouseEvent = input.ToWidgetMouseEvent(window);
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
     });
 

@@ -2051,7 +2051,7 @@ nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
 
   if (aEvent.mInputType == PINCHGESTURE_INPUT) {
     PinchGestureInput& pinchEvent = aEvent.AsPinchGestureInput();
-    WidgetWheelEvent wheelEvent = pinchEvent.ToWidgetEvent(this);
+    WidgetWheelEvent wheelEvent = pinchEvent.ToWidgetWheelEvent(this);
     ProcessUntransformedAPZEvent(&wheelEvent, result);
   }
 
@@ -2083,7 +2083,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
 
         PanGestureInput& panInput = aEvent.AsPanGestureInput();
 
-        event = panInput.ToWidgetEvent(this);
+        event = panInput.ToWidgetWheelEvent(this);
         if (aCanTriggerSwipe && panInput.mOverscrollBehaviorAllowsSwipe) {
           SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
           event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
@@ -2119,7 +2119,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
         // that function has special handling (for delta multipliers etc.) that
         // we need to run. Using the InputData variant would bypass that and
         // go straight to the APZCTreeManager subclass.
-        event = aEvent.AsScrollWheelInput().ToWidgetEvent(this);
+        event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
         result = mAPZC->InputBridge()->ReceiveInputEvent(event);
         if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
           return;
@@ -2154,7 +2154,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
         return;
       }
 
-      event = panInput.ToWidgetEvent(this);
+      event = panInput.ToWidgetWheelEvent(this);
       if (aCanTriggerSwipe) {
         SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
 
@@ -2184,7 +2184,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
       break;
     }
     case SCROLLWHEEL_INPUT: {
-      event = aEvent.AsScrollWheelInput().ToWidgetEvent(this);
+      event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
       break;
     }
     default:
