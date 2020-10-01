@@ -78,6 +78,9 @@ class LIRGeneratorNone : public LIRGeneratorShared {
   void lowerWasmBuiltinTruncateToInt64(MWasmBuiltinTruncateToInt64* ins) {
     MOZ_CRASH();
   }
+  void lowerWasmBuiltinTruncateToInt32(MWasmBuiltinTruncateToInt32* ins) {
+    MOZ_CRASH();
+  }
   void lowerDivI(MDiv*) { MOZ_CRASH(); }
   void lowerModI(MMod*) { MOZ_CRASH(); }
   void lowerDivI64(MDiv*) { MOZ_CRASH(); }

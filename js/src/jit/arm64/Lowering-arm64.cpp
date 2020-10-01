@@ -186,6 +186,11 @@ void LIRGeneratorARM64::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
   add(baab, mir);
 }
 
+void LIRGeneratorARM64::lowerWasmBuiltinTruncateToInt32(
+    MWasmBuiltinTruncateToInt32* ins) {
+  MOZ_CRASH("NYI");
+}
+
 void LIRGeneratorARM64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
                                              LBlock* block, size_t lirIndex) {
   lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
