@@ -61,6 +61,10 @@ class nsPageFrame final : public nsContainerFrame {
    */
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
+  const nsMargin& GetUsedPageContentMargin() const {
+    return mPageContentMargin;
+  }
+
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();

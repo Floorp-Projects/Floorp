@@ -183,6 +183,9 @@ interface nsIPrintSettings : nsISupports
   /** Whether @page rule margins should be honored or not. */
   [infallible] attribute boolean honorPageRuleMargins;
 
+  /** Whether to draw guidelines showing the margin settings */
+  [infallible] attribute boolean showMarginGuides;
+
   attribute short   printRange;
 
   attribute AString title;
@@ -201,7 +204,6 @@ interface nsIPrintSettings : nsISupports
   attribute boolean printSilent;         /* print without putting up the dialog */
   attribute boolean shrinkToFit;         /* shrinks content to fit on page      */
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
-  attribute boolean showMarginGuides;    /* whether to draw guidelines showing the margin settings */
 
   /* Additional XP Related */
   attribute AString paperId;       /* identifier of paper (not display name) */
