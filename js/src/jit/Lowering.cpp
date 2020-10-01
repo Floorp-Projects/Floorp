@@ -2381,6 +2381,16 @@ void LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins) {
   }
 }
 
+void LIRGenerator::visitWasmBuiltinTruncateToInt32(
+    MWasmBuiltinTruncateToInt32* truncate) {
+  mozilla::DebugOnly<MDefinition*> opd = truncate->input();
+  MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
+
+  // May call into JS::ToInt32() on the slow OOL path.
+  gen->setNeedsStaticStackAlignment();
+  lowerWasmBuiltinTruncateToInt32(truncate);
+}
+
 void LIRGenerator::visitWasmBoxValue(MWasmBoxValue* ins) {
   LWasmBoxValue* lir = new (alloc()) LWasmBoxValue(useBox(ins->input()));
   define(lir, ins);

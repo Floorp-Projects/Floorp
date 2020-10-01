@@ -1195,9 +1195,21 @@ void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
                      ins->mir());
 }
 
+void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
+    LWasmBuiltinTruncateDToInt32* ins) {
+  emitTruncateDouble(ToFloatRegister(ins->getOperand(0)),
+                     ToRegister(ins->getDef(0)), ins->mir());
+}
+
 void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
   emitTruncateFloat32(ToFloatRegister(ins->input()), ToRegister(ins->output()),
                       ins->mir());
+}
+
+void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
+    LWasmBuiltinTruncateFToInt32* ins) {
+  emitTruncateFloat32(ToFloatRegister(ins->getOperand(0)),
+                      ToRegister(ins->getDef(0)), ins->mir());
 }
 
 static const uint32_t FrameSizes[] = {128, 256, 512, 1024};

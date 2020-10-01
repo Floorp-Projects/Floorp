@@ -4455,6 +4455,41 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
   ALLOW_CLONE(MTruncateToInt32)
 };
 
+// It is like MTruncateToInt32 but with tls dependency.
+class MWasmBuiltinTruncateToInt32 : public MAryInstruction<2>,
+                                    public ToInt32Policy::Data {
+  wasm::BytecodeOffset bytecodeOffset_;
+
+  MWasmBuiltinTruncateToInt32(
+      MDefinition* def, MDefinition* tls,
+      wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset())
+      : MAryInstruction(classOpcode), bytecodeOffset_(bytecodeOffset) {
+    initOperand(0, def);
+    initOperand(1, tls);
+    setResultType(MIRType::Int32);
+    setMovable();
+
+    // Guard unless the conversion is known to be non-effectful & non-throwing.
+    if (MTruncateToInt32::mightHaveSideEffects(def)) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBuiltinTruncateToInt32)
+  NAMED_OPERANDS((0, input), (1, tls))
+  TRIVIAL_NEW_WRAPPERS
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+
+  ALLOW_CLONE(MWasmBuiltinTruncateToInt32)
+};
+
 // Converts a primitive (either typed or untyped) to a BigInt. If the input is
 // not primitive at runtime, a bailout occurs.
 class MToBigInt : public MUnaryInstruction, public ToBigIntPolicy::Data {
