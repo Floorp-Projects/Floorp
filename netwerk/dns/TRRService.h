@@ -102,6 +102,9 @@ class TRRService : public TRRServiceBase,
   bool MaybeSetPrivateURI(const nsACString& aURI) override;
   void ClearEntireCache();
 
+  virtual void ReadEtcHostsFile() override;
+  void AddEtcHosts(const nsTArray<nsCString>&);
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds;
 
@@ -124,6 +127,7 @@ class TRRService : public TRRServiceBase,
   // A set of domains that we should not use TRR for.
   nsTHashtable<nsCStringHashKey> mExcludedDomains;
   nsTHashtable<nsCStringHashKey> mDNSSuffixDomains;
+  nsTHashtable<nsCStringHashKey> mEtcHostsDomains;
 
   enum ConfirmationState {
     CONFIRM_INIT = 0,

@@ -33,6 +33,8 @@ class TRRServiceBase {
   void OnTRRModeChange();
   void OnTRRURIChange();
 
+  virtual void ReadEtcHostsFile() {}
+
   nsCString mPrivateURI;
   // Pref caches should only be used on the main thread.
   bool mURIPrefHasUserValue = false;

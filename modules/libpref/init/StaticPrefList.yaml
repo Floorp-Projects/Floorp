@@ -8445,6 +8445,14 @@
   value: false
   mirror: always
 
+# If true we parse the /etc/hosts file and exclude any host names from TRR.
+# Reading the file is only done once, when TRR is first enabled - this could be
+# soon after startup or when the pref is flipped.
+- name: network.trr.exclude-etc-hosts
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed
