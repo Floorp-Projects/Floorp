@@ -3291,9 +3291,6 @@ nsDocShell::GetCanGoBack(bool* aCanGoBack) {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (rootSH) {
     *aCanGoBack = rootSH->CanGo(-1);
-    MOZ_LOG(gSHLog, LogLevel::Verbose,
-            ("nsDocShell %p CanGoBack()->%d", this, *aCanGoBack));
-
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -3308,8 +3305,6 @@ nsDocShell::GetCanGoForward(bool* aCanGoForward) {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (rootSH) {
     *aCanGoForward = rootSH->CanGo(1);
-    MOZ_LOG(gSHLog, LogLevel::Verbose,
-            ("nsDocShell %p CanGoForward()->%d", this, *aCanGoForward));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -8785,6 +8780,18 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     newURIPartitionedPrincipalToInherit = doc->PartitionedPrincipal();
     newCsp = doc->GetCsp();
   }
+  // Pass true for aCloneSHChildren, since we're not
+  // changing documents here, so all of our subframes are
+  // still relevant to the new session history entry.
+  //
+  // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
+  // flag on firing onLocationChange(...).
+  // Anyway, aCloneSHChildren param is simply reflecting
+  // doSameDocumentNavigation in this scope.
+  OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
+           newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
+           newCsp, true, true, true);
+
   nsCOMPtr<nsIInputStream> postData;
   uint32_t cacheKey = 0;
 
@@ -8958,18 +8965,6 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
     }
   }
-
-  // Pass true for aCloneSHChildren, since we're not
-  // changing documents here, so all of our subframes are
-  // still relevant to the new session history entry.
-  //
-  // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
-  // flag on firing onLocationChange(...).
-  // Anyway, aCloneSHChildren param is simply reflecting
-  // doSameDocumentNavigation in this scope.
-  OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
-           newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
-           newCsp, true, true, true);
 
   /* Restore the original LSHE if we were loading something
    * while same document navigation was initiated.
