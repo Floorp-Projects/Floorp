@@ -1571,7 +1571,7 @@ class FunctionCompiler {
     }
 
     if (values.empty()) {
-      curBlock_->end(MWasmReturnVoid::New(alloc()));
+      curBlock_->end(MWasmReturnVoid::New(alloc(), tlsPointer_));
     } else {
       ResultType resultType = ResultType::Vector(funcType().results());
       ABIResultIter iter(resultType);
@@ -1603,7 +1603,7 @@ class FunctionCompiler {
         } else {
           MOZ_ASSERT(iter.remaining() == 1);
           MOZ_ASSERT(i + 1 == values.length());
-          curBlock_->end(MWasmReturn::New(alloc(), values[i]));
+          curBlock_->end(MWasmReturn::New(alloc(), values[i], tlsPointer_));
         }
       }
     }
