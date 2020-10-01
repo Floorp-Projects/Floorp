@@ -1126,14 +1126,8 @@ GeckoDriver.prototype.execute_ = async function(
   switch (this.context) {
     case Context.Content:
       // evaluate in content with lasting side-effects
-      if (!sandboxName) {
-        res = await this.listener.execute(script, args, opts);
-
-        // evaluate in content with sandbox
-      } else {
-        res = await this.listener.executeInSandbox(script, args, opts);
-      }
-
+      opts.useSandbox = !!sandboxName;
+      res = await this.listener.executeScript(script, args, opts);
       break;
 
     case Context.Chrome:

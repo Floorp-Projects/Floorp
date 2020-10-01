@@ -144,8 +144,7 @@ let performActionsFn = dispatch(performActions);
 let releaseActionsFn = dispatch(releaseActions);
 let actionChainFn = dispatch(actionChain);
 let multiActionFn = dispatch(multiAction);
-let executeFn = dispatch(execute);
-let executeInSandboxFn = dispatch(executeInSandbox);
+let executeScriptFn = dispatch(executeScript);
 let sendKeysToElementFn = dispatch(sendKeysToElement);
 let reftestWaitFn = dispatch(reftestWait);
 
@@ -161,8 +160,7 @@ function startListeners() {
     "Marionette:DOM:RemoveEventListener",
     domRemoveEventListener
   );
-  addMessageListener("Marionette:execute", executeFn);
-  addMessageListener("Marionette:executeInSandbox", executeInSandboxFn);
+  addMessageListener("Marionette:executeScript", executeScriptFn);
   addMessageListener("Marionette:findElementContent", findElementContentFn);
   addMessageListener("Marionette:findElementsContent", findElementsContentFn);
   addMessageListener("Marionette:getActiveElement", getActiveElementFn);
@@ -201,8 +199,7 @@ function deregister() {
   removeMessageListener("Marionette:clearElement", clearElementFn);
   removeMessageListener("Marionette:clickElement", clickElementFn);
   removeMessageListener("Marionette:Deregister", deregister);
-  removeMessageListener("Marionette:execute", executeFn);
-  removeMessageListener("Marionette:executeInSandbox", executeInSandboxFn);
+  removeMessageListener("Marionette:executeScript", executeScriptFn);
   removeMessageListener("Marionette:findElementContent", findElementContentFn);
   removeMessageListener(
     "Marionette:findElementsContent",
@@ -309,13 +306,15 @@ function sendError(err, uuid) {
   sendToServer(uuid, err);
 }
 
-async function execute(script, args, opts) {
-  let sb = sandbox.createMutable(curContainer.frame);
-  return evaluate.sandbox(sb, script, args, opts);
-}
+async function executeScript(script, args, opts = {}) {
+  let sb;
 
-async function executeInSandbox(script, args, opts) {
-  let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
+  if (opts.useSandbox) {
+    sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
+  } else {
+    sb = sandbox.createMutable(curContainer.frame);
+  }
+
   return evaluate.sandbox(sb, script, args, opts);
 }
 
