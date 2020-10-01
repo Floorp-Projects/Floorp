@@ -459,7 +459,7 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   int32_t schemaVersion;
-  CACHE_TRY_VAR(schemaVersion, GetEffectiveSchemaVersion(aConn));
+  CACHE_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
 
   if (schemaVersion == kLatestSchemaVersion) {
     // We already have the correct schema version.  Validate it matches
@@ -548,7 +548,7 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
       return rv;
     }
 
-    CACHE_TRY_VAR(schemaVersion, GetEffectiveSchemaVersion(aConn));
+    CACHE_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
   }
 
   nsresult rv = Validate(aConn);
@@ -694,7 +694,7 @@ Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
   // anyway.  These body IDs must be deleted one-by-one as content may
   // still be referencing them invidivually.
   AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_VAR(matches, QueryAll(aConn, aCacheId));
+  CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
 
   AutoTArray<nsID, 16> deletedBodyIdList;
   AutoTArray<IdCount, 16> deletedSecurityIdList;
@@ -811,7 +811,7 @@ Result<nsTArray<nsID>, nsresult> GetKnownBodyIds(mozIStorageConnection& aConn) {
 
       if (!isNull) {
         nsID id;
-        CACHE_TRY_VAR(id, ExtractId(*state, i));
+        CACHE_TRY_UNWRAP(id, ExtractId(*state, i));
 
         idList.AppendElement(id);
       }
@@ -827,14 +827,14 @@ Result<Maybe<SavedResponse>, nsresult> CacheMatch(
   MOZ_ASSERT(!NS_IsMainThread());
 
   AutoTArray<EntryId, 1> matches;
-  CACHE_TRY_VAR(matches, QueryCache(aConn, aCacheId, aRequest, aParams, 1));
+  CACHE_TRY_UNWRAP(matches, QueryCache(aConn, aCacheId, aRequest, aParams, 1));
 
   if (matches.IsEmpty()) {
     return Maybe<SavedResponse>();
   }
 
   SavedResponse response;
-  CACHE_TRY_VAR(response, ReadResponse(aConn, matches[0]));
+  CACHE_TRY_UNWRAP(response, ReadResponse(aConn, matches[0]));
 
   response.mCacheId = aCacheId;
 
@@ -848,10 +848,10 @@ Result<nsTArray<SavedResponse>, nsresult> CacheMatchAll(
 
   AutoTArray<EntryId, 256> matches;
   if (aMaybeRequest.isNothing()) {
-    CACHE_TRY_VAR(matches, QueryAll(aConn, aCacheId));
+    CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
   } else {
-    CACHE_TRY_VAR(matches,
-                  QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
+    CACHE_TRY_UNWRAP(matches,
+                     QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
   }
 
   nsTArray<SavedResponse> savedResponses;
@@ -859,7 +859,7 @@ Result<nsTArray<SavedResponse>, nsresult> CacheMatchAll(
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
   for (const auto match : matches) {
     SavedResponse savedResponse;
-    CACHE_TRY_VAR(savedResponse, ReadResponse(aConn, match));
+    CACHE_TRY_UNWRAP(savedResponse, ReadResponse(aConn, match));
 
     savedResponse.mCacheId = aCacheId;
     savedResponses.AppendElement(savedResponse);
@@ -878,7 +878,7 @@ Result<DeletionInfo, nsresult> CachePut(mozIStorageConnection& aConn,
 
   CacheQueryParams params(false, false, false, false, u""_ns);
   AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_VAR(matches, QueryCache(aConn, aCacheId, aRequest, params));
+  CACHE_TRY_UNWRAP(matches, QueryCache(aConn, aCacheId, aRequest, params));
 
   nsTArray<nsID> deletedBodyIdList;
   AutoTArray<IdCount, 16> deletedSecurityIdList;
@@ -911,7 +911,7 @@ Result<Maybe<DeletionInfo>, nsresult> CacheDelete(
   MOZ_ASSERT(!NS_IsMainThread());
 
   AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_VAR(matches, QueryCache(aConn, aCacheId, aRequest, aParams));
+  CACHE_TRY_UNWRAP(matches, QueryCache(aConn, aCacheId, aRequest, aParams));
 
   if (matches.IsEmpty()) {
     return Maybe<DeletionInfo>();
@@ -941,17 +941,17 @@ Result<nsTArray<SavedRequest>, nsresult> CacheKeys(
 
   AutoTArray<EntryId, 256> matches;
   if (aMaybeRequest.isNothing()) {
-    CACHE_TRY_VAR(matches, QueryAll(aConn, aCacheId));
+    CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
   } else {
-    CACHE_TRY_VAR(matches,
-                  QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
+    CACHE_TRY_UNWRAP(matches,
+                     QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
   }
 
   nsTArray<SavedRequest> savedRequests;
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
   for (const auto match : matches) {
     SavedRequest savedRequest;
-    CACHE_TRY_VAR(savedRequest, ReadRequest(aConn, match));
+    CACHE_TRY_UNWRAP(savedRequest, ReadRequest(aConn, match));
 
     savedRequest.mCacheId = aCacheId;
     savedRequests.AppendElement(savedRequest);
@@ -971,8 +971,8 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
   // and perform the match.
   if (!aParams.cacheName().EqualsLiteral("")) {
     Maybe<CacheId> maybeCacheId;
-    CACHE_TRY_VAR(maybeCacheId,
-                  StorageGetCacheId(aConn, aNamespace, aParams.cacheName()));
+    CACHE_TRY_UNWRAP(maybeCacheId,
+                     StorageGetCacheId(aConn, aNamespace, aParams.cacheName()));
     if (maybeCacheId.isNothing()) {
       return Maybe<SavedResponse>();
     }
@@ -1011,8 +1011,8 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
   // Now try to find a match in each cache in order
   for (const auto cacheId : cacheIdList) {
     Maybe<SavedResponse> matchedResponse;
-    CACHE_TRY_VAR(matchedResponse,
-                  CacheMatch(aConn, cacheId, aRequest, aParams));
+    CACHE_TRY_UNWRAP(matchedResponse,
+                     CacheMatch(aConn, cacheId, aRequest, aParams));
 
     if (matchedResponse.isSome()) {
       return matchedResponse;
@@ -1036,7 +1036,7 @@ Result<Maybe<CacheId>, nsresult> StorageGetCacheId(mozIStorageConnection& aConn,
       "ORDER BY rowid;";
 
   nsCOMPtr<mozIStorageStatement> state;
-  CACHE_TRY_VAR(state, CreateAndBindKeyStatement(aConn, query, aKey));
+  CACHE_TRY_UNWRAP(state, CreateAndBindKeyStatement(aConn, query, aKey));
 
   nsresult rv = state->BindInt32ByName("namespace"_ns, aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1108,7 +1108,7 @@ nsresult StorageForgetCache(mozIStorageConnection& aConn, Namespace aNamespace,
   const char* query = "DELETE FROM storage WHERE namespace=:namespace AND %s;";
 
   nsCOMPtr<mozIStorageStatement> state;
-  CACHE_TRY_VAR(state, CreateAndBindKeyStatement(aConn, query, aKey));
+  CACHE_TRY_UNWRAP(state, CreateAndBindKeyStatement(aConn, query, aKey));
 
   nsresult rv = state->BindInt32ByName("namespace"_ns, aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1292,7 +1292,8 @@ Result<nsTArray<EntryId>, nsresult> QueryCache(mozIStorageConnection& aConn,
 
     if (!aParams.ignoreVary() && varyCount > 0) {
       bool matchedByVary = false;
-      CACHE_TRY_VAR(matchedByVary, MatchByVaryHeader(aConn, aRequest, entryId));
+      CACHE_TRY_UNWRAP(matchedByVary,
+                       MatchByVaryHeader(aConn, aRequest, entryId));
       if (!matchedByVary) {
         continue;
       }
@@ -1516,7 +1517,7 @@ nsresult DeleteEntries(mozIStorageConnection& aConn,
 
       if (!isNull) {
         nsID id;
-        CACHE_TRY_VAR(id, ExtractId(*state, i));
+        CACHE_TRY_UNWRAP(id, ExtractId(*state, i));
 
         aDeletedBodyIdListOut.AppendElement(id);
       }
@@ -1844,9 +1845,9 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
 
   int32_t securityId = -1;
   if (!aResponse.channelInfo().securityInfo().IsEmpty()) {
-    CACHE_TRY_VAR(securityId,
-                  InsertSecurityInfo(aConn, *crypto,
-                                     aResponse.channelInfo().securityInfo()));
+    CACHE_TRY_UNWRAP(
+        securityId, InsertSecurityInfo(aConn, *crypto,
+                                       aResponse.channelInfo().securityInfo()));
   }
 
   nsCOMPtr<mozIStorageStatement> state;
@@ -2265,7 +2266,7 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
   savedResponse.mHasBodyId = !nullBody;
 
   if (savedResponse.mHasBodyId) {
-    CACHE_TRY_VAR(savedResponse.mBodyId, ExtractId(*state, 4));
+    CACHE_TRY_UNWRAP(savedResponse.mBodyId, ExtractId(*state, 4));
   }
 
   nsAutoCString serializedInfo;
@@ -2516,7 +2517,7 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
   }
   savedRequest.mHasBodyId = !nullBody;
   if (savedRequest.mHasBodyId) {
-    CACHE_TRY_VAR(savedRequest.mBodyId, ExtractId(*state, 13));
+    CACHE_TRY_UNWRAP(savedRequest.mBodyId, ExtractId(*state, 13));
   }
   rv = aConn.CreateStatement(nsLiteralCString("SELECT "
                                               "name, "
@@ -2815,7 +2816,7 @@ struct Expect {
 
 nsresult Validate(mozIStorageConnection& aConn) {
   int32_t schemaVersion;
-  CACHE_TRY_VAR(schemaVersion, GetEffectiveSchemaVersion(aConn));
+  CACHE_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
   if (NS_WARN_IF(schemaVersion != kLatestSchemaVersion)) {
     return NS_ERROR_FAILURE;
   }
@@ -2973,7 +2974,7 @@ nsresult Migrate(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   int32_t currentVersion = 0;
-  CACHE_TRY_VAR(currentVersion, GetEffectiveSchemaVersion(aConn));
+  CACHE_TRY_UNWRAP(currentVersion, GetEffectiveSchemaVersion(aConn));
 
   bool rewriteSchema = false;
 
@@ -3000,7 +3001,7 @@ nsresult Migrate(mozIStorageConnection& aConn) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     int32_t lastVersion = currentVersion;
 #endif
-    CACHE_TRY_VAR(currentVersion, GetEffectiveSchemaVersion(aConn));
+    CACHE_TRY_UNWRAP(currentVersion, GetEffectiveSchemaVersion(aConn));
 
     MOZ_DIAGNOSTIC_ASSERT(currentVersion > lastVersion);
   }

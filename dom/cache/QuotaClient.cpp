@@ -388,7 +388,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
   QuotaManager* qm = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(qm);
 
-  CACHE_TRY_VAR(auto dir, qm->GetDirectoryForOrigin(aPersistenceType, aOrigin));
+  CACHE_TRY_UNWRAP(auto dir,
+                   qm->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   nsresult rv =
       dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME));
