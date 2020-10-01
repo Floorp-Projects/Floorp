@@ -10,8 +10,9 @@
 varying vec2 v_uv;
 varying vec2 v_local_pos;
 
-// Normalized bounds of the source image in the texture.
-flat varying vec4 v_uv_bounds;
+// Normalized bounds of the source image in the texture, adjusted to avoid
+// sampling artifacts.
+flat varying vec4 v_uv_sample_bounds;
 
 // Layer index to sample.
 // Flag to allow perspective interpolation of UV.
@@ -46,10 +47,11 @@ void brush_vs(
     v_layer_and_perspective.x = res.layer;
     v_layer_and_perspective.y = perspective_interpolate;
 
-    // TODO: The image shader treats this differently: deflate the rect by half a pixel on each side and
-    // clamp the uv in the frame shader. Does it make sense to do the same here?
-    v_uv_bounds = vec4(uv0, uv1) / texture_size.xyxy;
-    v_local_pos = vi.local_pos;
+    v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
+
+    #ifdef WR_FEATURE_ANTIALIASING
+        v_local_pos = vi.local_pos;
+    #endif
 
     v_opacity = float(prim_user_data.y) / 65536.0;
 }
@@ -59,20 +61,19 @@ void brush_vs(
 Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
     vec2 uv = v_uv * perspective_divisor;
-    vec4 Cs = texture(sColor0, vec3(uv, v_layer_and_perspective.x));
+    // Clamp the uvs to avoid sampling artifacts.
+    uv = clamp(uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
 
-    // Un-premultiply the input.
-    float alpha = Cs.a;
-    vec3 color = alpha != 0.0 ? Cs.rgb / alpha : Cs.rgb;
+    // No need to un-premultiply since we'll only apply a factor to the alpha.
+    vec4 color = texture(sColor0, vec3(uv, v_layer_and_perspective.x));
 
-    alpha *= v_opacity;
+    float alpha = v_opacity;
 
-    // Fail-safe to ensure that we don't sample outside the rendered
-    // portion of a blend source.
-    alpha *= min(point_inside_rect(uv, v_uv_bounds.xy, v_uv_bounds.zw),
-                 init_transform_fs(v_local_pos));
+    #ifdef WR_FEATURE_ANTIALIASING
+        alpha *= init_transform_fs(v_local_pos);
+    #endif
 
-    // Pre-multiply the alpha into the output value.
-    return Fragment(alpha * vec4(color, 1.0));
+    // Pre-multiply the contribution of the opacity factor.
+    return Fragment(alpha * color);
 }
 #endif
