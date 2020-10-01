@@ -27,7 +27,6 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     await Services.search.removeEngine(testEngine);
-    await PlacesUtils.history.clear();
   });
 });
 
@@ -121,6 +120,7 @@ add_task(async function startTyping() {
 add_task(async function topSites() {
   // Enable search shortcut Top Sites.
   await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
   await updateTopSites(
     sites => sites && sites[0] && sites[0].searchTopSite,
     true
@@ -249,6 +249,7 @@ add_task(async function oneOff_downArrow() {
 add_task(async function oneOff_alt_downArrow() {
   // Add some visits to a URL so we have multiple Top Sites.
   await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits("http://example.com/");
   }
@@ -313,7 +314,7 @@ add_task(async function oneOff_alt_downArrow() {
   await UrlbarTestUtils.assertSearchMode(window, null);
 });
 
-// Tests that search mode is previewed when the user is in full search mode
+// Tests that search mode is not previewed when the user is in full search mode
 // and down arrows through the one-offs.
 add_task(async function fullSearchMode_oneOff_downArrow() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -326,6 +327,7 @@ add_task(async function fullSearchMode_oneOff_downArrow() {
     () => !oneOffs._rebuilding,
     "Waiting for one-offs to finish rebuilding"
   );
+  let resultCount = UrlbarTestUtils.getResultCount(window);
 
   await UrlbarTestUtils.enterSearchMode(window);
   let expectedSearchMode = getExpectedSearchMode(oneOffButtons[0], false);
@@ -333,27 +335,17 @@ add_task(async function fullSearchMode_oneOff_downArrow() {
   await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
 
   // Key down through all results.
-  let resultCount = UrlbarTestUtils.getResultCount(window);
   for (let i = 0; i < resultCount; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    // If the result is a shortcut, it will enter preview mode.
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    await UrlbarTestUtils.assertSearchMode(
-      window,
-      Object.assign(expectedSearchMode, {
-        isPreview: !!result.searchParams.keyword,
-      })
-    );
+    await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
   }
 
   // Key down again. The first one-off should be selected.
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  // Check that we show the correct preview as we cycle through the one-offs.
+  // Check that we stay in the same search mode as we cycle through the
+  // one-offs.
   while (oneOffs.selectedButton != oneOffs.settingsButtonCompact) {
-    await UrlbarTestUtils.assertSearchMode(
-      window,
-      getExpectedSearchMode(oneOffs.selectedButton, true)
-    );
+    await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
 
@@ -364,7 +356,7 @@ add_task(async function fullSearchMode_oneOff_downArrow() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-// Tests that search mode is previewed when the user is in full search mode
+// Tests that search mode is not previewed when the user is in full search mode
 // and alt+down arrows through the one-offs. This subtest also checks that
 // exiting full search mode while alt+arrowing through the one-offs enters
 // search mode preview for subsequent one-offs.
@@ -390,17 +382,14 @@ add_task(async function fullSearchMode_oneOff_alt_downArrow() {
   // Alt+down. The first one-off should be selected.
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
   // Cycle through the first half of the one-offs and verify that search mode
-  // preview is entered.
+  // preview is not entered.
   Assert.greater(
     oneOffButtons.length,
     1,
     "Sanity check: We should have at least two one-offs."
   );
   for (let i = 1; i < oneOffButtons.length / 2; i++) {
-    await UrlbarTestUtils.assertSearchMode(
-      window,
-      getExpectedSearchMode(oneOffs.selectedButton, true)
-    );
+    await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
   }
   // Now click out of search mode.
@@ -410,85 +399,11 @@ add_task(async function fullSearchMode_oneOff_alt_downArrow() {
   while (oneOffs.selectedButton) {
     await UrlbarTestUtils.assertSearchMode(
       window,
-      getExpectedSearchMode(oneOffs.selectedButton, true)
+      getExpectedSearchMode(oneOffs.selectedButton)
     );
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarTestUtils.assertSearchMode(window, null);
-});
-
-// Tests that the original search mode is preserved when going through some
-// one-off buttons and then back down in the results list.
-add_task(async function fullSearchMode_oneOff_restore_on_down() {
-  info("Add a few visits to top sites");
-  for (let i = 0; i < 5; i++) {
-    await PlacesTestUtils.addVisits([
-      "http://1.example.com/",
-      "http://2.example.com/",
-      "http://3.example.com/",
-    ]);
-  }
-  await updateTopSites(sites => sites?.length > 2, false);
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "",
-  });
-  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
-  let oneOffButtons = oneOffs.getSelectableButtons(true);
-  await TestUtils.waitForCondition(
-    () => !oneOffs._rebuilding,
-    "Waiting for one-offs to finish rebuilding"
-  );
-
-  await UrlbarTestUtils.enterSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-  });
-  let expectedSearchMode = getExpectedSearchMode(
-    oneOffButtons.find(b => b.source == UrlbarUtils.RESULT_SOURCE.HISTORY),
-    false
-  );
-  await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  info("Down to the first result");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  info("Alt+down to the first one-off.");
-  Assert.greater(
-    oneOffButtons.length,
-    1,
-    "Sanity check: We should have at least two one-offs."
-  );
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  await UrlbarTestUtils.assertSearchMode(
-    window,
-    getExpectedSearchMode(oneOffs.selectedButton, true)
-  );
-  info("Go again down through the list of results");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-
-  // Now do a similar test without initial search mode.
-  info("Exit search mode.");
-  await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "",
-  });
-  info("Down to the first result");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  info("select a one-off to start preview");
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  await UrlbarTestUtils.assertSearchMode(
-    window,
-    getExpectedSearchMode(oneOffs.selectedButton, true)
-  );
-  info("Go again through the list of results");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await UrlbarTestUtils.assertSearchMode(window, null);
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  await PlacesUtils.history.clear();
 });
