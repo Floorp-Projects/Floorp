@@ -16,6 +16,8 @@ import android.provider.Settings.ACTION_SECURITY_SETTINGS
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -98,7 +100,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.logins_biometric_prompt_message))
-            .setDeviceCredentialAllowed(true)
+            .setAllowedAuthenticators(BIOMETRIC_WEAK or DEVICE_CREDENTIAL)
             .build()
     }
 
@@ -154,7 +156,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
     private fun canUseBiometricPrompt(context: Context): Boolean {
         return if (SDK_INT >= M) {
             val manager = BiometricManager.from(context)
-            val canAuthenticate = manager.canAuthenticate()
+            val canAuthenticate = manager.canAuthenticate(BIOMETRIC_WEAK)
 
             val hardwareUnavailable = canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
                 canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
