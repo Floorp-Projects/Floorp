@@ -41,7 +41,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         # Ensure we're not yet using WR; we're not rolled out yet!
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'opt-in', 'Should start out as WR opt-in')
+        self.assertEqual(status, 'disabled:FEATURE_FAILURE_NOT_QUALIFIED', 'Should start out as WR disabled, not qualified')
         self.assertTrue(compositor != 'webrender', 'Before WR rollout on non-qualifying HW, should not be using WR.')
 
         # Set the rollout pref's default value, as Normandy would do, and restart.
@@ -52,7 +52,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         self.marionette.restart(clean=False, in_app=True)
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'opt-in', 'WR rolled out on non-qualifying hardware should not use WR.')
+        self.assertEqual(status, 'disabled:FEATURE_FAILURE_NOT_QUALIFIED', 'WR rolled out on non-qualifying hardware should not use WR.')
         self.assertTrue(compositor != 'webrender', 'WR rolled out on non-qualifying HW should not be used.')
 
         # Simulate a rollback of the rollout; set the pref to false at runtime.
@@ -60,7 +60,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         self.marionette.restart(clean=False, in_app=True)
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'opt-in', 'WR rollback of rollout should revert to opt-in on non-qualifying hardware.')
+        self.assertEqual(status, 'disabled:FEATURE_FAILURE_NOT_QUALIFIED', 'WR rollback of rollout should revert to disabled on non-qualifying hardware.')
         self.assertTrue(compositor != 'webrender', 'After roll back on non-qualifying HW, WR should not be used.')
 
     @skipIf(platform.machine() == "ARM64" and platform.system() == "Windows", "Bug 1536369 - Crashes on Windows 10 aarch64")
@@ -80,7 +80,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         # Ensure we're not yet using WR; we're not rolled out yet!
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'opt-in', 'Should start out as WR opt-in')
+        self.assertEqual(status, 'disabled:FEATURE_FAILURE_IN_EXPERIMENT', 'Should start out as WR disabled, in experiment')
         self.assertTrue(compositor != 'webrender', 'Before WR rollout on qualifying HW, should not be using WR.')
 
         # Set the rollout pref's default value, as Normandy would do, and restart.
@@ -99,7 +99,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         self.marionette.restart(clean=False, in_app=True)
         status, compositor = self.wr_status()
         print('self.wr_status()={},{}'.format(status, compositor))
-        self.assertEqual(status, 'opt-in', 'WR rollback of rollout should revert to opt-in on qualifying hardware.')
+        self.assertEqual(status, 'disabled:FEATURE_FAILURE_IN_EXPERIMENT', 'WR rollback of rollout should revert to disabled on qualifying hardware.')
         self.assertTrue(compositor != 'webrender', 'After roll back on qualifying HW, WR should not be used.')
 
     def wr_status(self):
