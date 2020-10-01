@@ -294,7 +294,8 @@
     text-decoration: none;
     text-transform: none;
 }
-.pkt_ext_containersaved .pkt_ext_item_actions a:hover {
+.pkt_ext_containersaved .pkt_ext_item_actions a:hover,
+.pkt_ext_containersaved .pkt_ext_item_actions a:focus {
     color: #008acb;
     text-decoration: underline;
 }
@@ -980,7 +981,8 @@ button {
     background-position-x: right 318px;
 }
 
-.pkt_ext_containersaved .pkt_ext_item_recs li:hover {
+.pkt_ext_containersaved .pkt_ext_item_recs li:hover,
+.pkt_ext_containersaved .pkt_ext_item_recs li a:focus {
     background-color: rgba(12, 12, 13, 0.1);
 }
 
