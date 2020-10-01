@@ -5,7 +5,7 @@ use super::EmitState;
 use crate::ir::condcodes::{FloatCC, IntCC};
 use crate::machinst::*;
 use core::fmt::Debug;
-use regalloc::{RealRegUniverse, Reg, RegClass, RegUsageCollector, RegUsageMapper};
+use regalloc::{RealRegUniverse, Reg, RegClass, RegUsageCollector, RegUsageMapper, Writable};
 use std::fmt;
 use std::string::{String, ToString};
 
@@ -265,6 +265,12 @@ impl RegMem {
     }
 }
 
+impl From<Writable<Reg>> for RegMem {
+    fn from(r: Writable<Reg>) -> Self {
+        RegMem::reg(r.to_reg())
+    }
+}
+
 impl ShowWithRRU for RegMem {
     fn show_rru(&self, mb_rru: Option<&RealRegUniverse>) -> String {
         self.show_rru_sized(mb_rru, 8)
@@ -336,6 +342,7 @@ impl fmt::Display for UnaryRmROpcode {
 pub(crate) enum InstructionSet {
     SSE,
     SSE2,
+    SSSE3,
     SSE41,
 }
 
@@ -382,6 +389,7 @@ pub enum SseOpcode {
     Movd,
     Movdqa,
     Movdqu,
+    Movlhps,
     Movq,
     Movss,
     Movsd,
@@ -393,13 +401,42 @@ pub enum SseOpcode {
     Mulsd,
     Orps,
     Orpd,
+    Pabsb,
+    Pabsw,
+    Pabsd,
     Paddb,
     Paddd,
     Paddq,
     Paddw,
+    Paddsb,
+    Paddsw,
+    Paddusb,
+    Paddusw,
+    Pavgb,
+    Pavgw,
+    Pextrb,
+    Pextrw,
+    Pextrd,
+    Pinsrb,
+    Pinsrw,
+    Pinsrd,
+    Pmaxsb,
+    Pmaxsw,
+    Pmaxsd,
+    Pmaxub,
+    Pmaxuw,
+    Pmaxud,
+    Pminsb,
+    Pminsw,
+    Pminsd,
+    Pminub,
+    Pminuw,
+    Pminud,
     Pmulld,
     Pmullw,
     Pmuludq,
+    Pshufb,
+    Pshufd,
     Psllw,
     Pslld,
     Psllq,
@@ -453,6 +490,7 @@ impl SseOpcode {
             | SseOpcode::Minps
             | SseOpcode::Minss
             | SseOpcode::Movaps
+            | SseOpcode::Movlhps
             | SseOpcode::Movss
             | SseOpcode::Movups
             | SseOpcode::Mulps
@@ -499,8 +537,21 @@ impl SseOpcode {
             | SseOpcode::Paddd
             | SseOpcode::Paddq
             | SseOpcode::Paddw
+            | SseOpcode::Paddsb
+            | SseOpcode::Paddsw
+            | SseOpcode::Paddusb
+            | SseOpcode::Paddusw
+            | SseOpcode::Pavgb
+            | SseOpcode::Pavgw
+            | SseOpcode::Pextrw
+            | SseOpcode::Pinsrw
+            | SseOpcode::Pmaxsw
+            | SseOpcode::Pmaxub
+            | SseOpcode::Pminsw
+            | SseOpcode::Pminub
             | SseOpcode::Pmullw
             | SseOpcode::Pmuludq
+            | SseOpcode::Pshufd
             | SseOpcode::Psllw
             | SseOpcode::Pslld
             | SseOpcode::Psllq
@@ -521,9 +572,24 @@ impl SseOpcode {
             | SseOpcode::Ucomisd
             | SseOpcode::Xorpd => SSE2,
 
-            SseOpcode::Insertps | SseOpcode::Pmulld | SseOpcode::Roundss | SseOpcode::Roundsd => {
-                SSE41
-            }
+            SseOpcode::Pabsb | SseOpcode::Pabsw | SseOpcode::Pabsd | SseOpcode::Pshufb => SSSE3,
+
+            SseOpcode::Insertps
+            | SseOpcode::Pextrb
+            | SseOpcode::Pextrd
+            | SseOpcode::Pinsrb
+            | SseOpcode::Pinsrd
+            | SseOpcode::Pmaxsb
+            | SseOpcode::Pmaxsd
+            | SseOpcode::Pmaxuw
+            | SseOpcode::Pmaxud
+            | SseOpcode::Pminsb
+            | SseOpcode::Pminsd
+            | SseOpcode::Pminuw
+            | SseOpcode::Pminud
+            | SseOpcode::Pmulld
+            | SseOpcode::Roundss
+            | SseOpcode::Roundsd => SSE41,
         }
     }
 
@@ -579,6 +645,7 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Movd => "movd",
             SseOpcode::Movdqa => "movdqa",
             SseOpcode::Movdqu => "movdqu",
+            SseOpcode::Movlhps => "movlhps",
             SseOpcode::Movq => "movq",
             SseOpcode::Movss => "movss",
             SseOpcode::Movsd => "movsd",
@@ -590,13 +657,42 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Mulsd => "mulsd",
             SseOpcode::Orpd => "orpd",
             SseOpcode::Orps => "orps",
+            SseOpcode::Pabsb => "pabsb",
+            SseOpcode::Pabsw => "pabsw",
+            SseOpcode::Pabsd => "pabsd",
             SseOpcode::Paddb => "paddb",
             SseOpcode::Paddd => "paddd",
             SseOpcode::Paddq => "paddq",
             SseOpcode::Paddw => "paddw",
+            SseOpcode::Paddsb => "paddsb",
+            SseOpcode::Paddsw => "paddsw",
+            SseOpcode::Paddusb => "paddusb",
+            SseOpcode::Paddusw => "paddusw",
+            SseOpcode::Pavgb => "pavgb",
+            SseOpcode::Pavgw => "pavgw",
+            SseOpcode::Pextrb => "pextrb",
+            SseOpcode::Pextrw => "pextrw",
+            SseOpcode::Pextrd => "pextrd",
+            SseOpcode::Pinsrb => "pinsrb",
+            SseOpcode::Pinsrw => "pinsrw",
+            SseOpcode::Pinsrd => "pinsrd",
+            SseOpcode::Pmaxsb => "pmaxsb",
+            SseOpcode::Pmaxsw => "pmaxsw",
+            SseOpcode::Pmaxsd => "pmaxsd",
+            SseOpcode::Pmaxub => "pmaxub",
+            SseOpcode::Pmaxuw => "pmaxuw",
+            SseOpcode::Pmaxud => "pmaxud",
+            SseOpcode::Pminsb => "pminsb",
+            SseOpcode::Pminsw => "pminsw",
+            SseOpcode::Pminsd => "pminsd",
+            SseOpcode::Pminub => "pminub",
+            SseOpcode::Pminuw => "pminuw",
+            SseOpcode::Pminud => "pminud",
             SseOpcode::Pmulld => "pmulld",
             SseOpcode::Pmullw => "pmullw",
             SseOpcode::Pmuludq => "pmuludq",
+            SseOpcode::Pshufb => "pshufb",
+            SseOpcode::Pshufd => "pshufd",
             SseOpcode::Psllw => "psllw",
             SseOpcode::Pslld => "pslld",
             SseOpcode::Psllq => "psllq",
@@ -664,6 +760,19 @@ pub enum ExtMode {
 }
 
 impl ExtMode {
+    /// Calculate the `ExtMode` from passed bit lengths of the from/to types.
+    pub(crate) fn new(from_bits: u16, to_bits: u16) -> Option<ExtMode> {
+        match (from_bits, to_bits) {
+            (1, 8) | (1, 16) | (1, 32) | (8, 16) | (8, 32) => Some(ExtMode::BL),
+            (1, 64) | (8, 64) => Some(ExtMode::BQ),
+            (16, 32) => Some(ExtMode::WL),
+            (16, 64) => Some(ExtMode::WQ),
+            (32, 64) => Some(ExtMode::LQ),
+            _ => None,
+        }
+    }
+
+    /// Return the source register size in bytes.
     pub(crate) fn src_size(&self) -> u8 {
         match self {
             ExtMode::BL | ExtMode::BQ => 1,
@@ -671,6 +780,8 @@ impl ExtMode {
             ExtMode::LQ => 4,
         }
     }
+
+    /// Return the destination register size in bytes.
     pub(crate) fn dst_size(&self) -> u8 {
         match self {
             ExtMode::BL | ExtMode::WL => 4,
