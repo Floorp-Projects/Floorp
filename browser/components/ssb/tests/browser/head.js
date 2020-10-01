@@ -55,10 +55,10 @@ async function openSSB(uri) {
 async function openSSBFromBrowserWindow(win = window) {
   let doc = win.document;
   let pageActionButton = doc.getElementById("pageActionButton");
-  EventUtils.synthesizeMouseAtCenter(pageActionButton, {}, win);
   let panel = doc.getElementById("pageActionPanel");
   let popupShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
 
+  EventUtils.synthesizeMouseAtCenter(pageActionButton, {}, win);
   await popupShown;
 
   let openItem = doc.getElementById("pageAction-panel-launchSSB");
