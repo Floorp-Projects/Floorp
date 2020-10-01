@@ -77,6 +77,7 @@ import java.util.concurrent.TimeUnit
  * Component group for all core browser functionality.
  */
 @Mockable
+@Suppress("LargeClass")
 class Core(
     private val context: Context,
     private val crashReporter: CrashReporting,
@@ -218,6 +219,18 @@ class Core(
                     .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                     .whenGoingToBackground()
                     .whenSessionsChange()
+
+                // Now that we have restored our previous state (if there's one) let's remove timed out tabs
+                if (!context.settings().manuallyCloseTabs) {
+                    store.state.tabs.filter {
+                        (System.currentTimeMillis() - it.lastAccess) > context.settings().getTabTimeout()
+                    }.forEach {
+                        val session = sessionManager.findSessionById(it.id)
+                        if (session != null) {
+                            sessionManager.remove(session)
+                        }
+                    }
+                }
             }
 
             WebNotificationFeature(
@@ -272,11 +285,13 @@ class Core(
     val bookmarksStorage by lazy { lazyBookmarksStorage.value }
     val passwordsStorage by lazy { lazyPasswordsStorage.value }
 
-    val tabCollectionStorage by lazy { TabCollectionStorage(
-        context,
-        sessionManager,
-        strictMode
-    ) }
+    val tabCollectionStorage by lazy {
+        TabCollectionStorage(
+            context,
+            sessionManager,
+            strictMode
+        )
+    }
 
     /**
      * A storage component for persisting thumbnail images of tabs.
