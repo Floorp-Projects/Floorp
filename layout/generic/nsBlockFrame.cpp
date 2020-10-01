@@ -231,8 +231,7 @@ static Maybe<nscolor> GetBackplateColor(nsIFrame* aFrame) {
     if (NS_GET_A(backgroundColor) != 0) {
       // NOTE: We intentionally disregard the alpha channel here for the purpose
       // of the backplate, in order to guarantee contrast.
-      return Some(NS_RGB(NS_GET_R(backgroundColor),
-                         NS_GET_G(backgroundColor),
+      return Some(NS_RGB(NS_GET_R(backgroundColor), NS_GET_G(backgroundColor),
                          NS_GET_B(backgroundColor)));
     }
     break;
@@ -1963,7 +1962,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     finalSize.BSize(wm) = bSize;
   }
 
-  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
+  if (IsTrueOverflowContainer()) {
     if (aState.mReflowStatus.IsIncomplete()) {
       // Overflow containers can only be overflow complete.
       // Note that auto height overflow containers have no normal children
@@ -2918,10 +2917,11 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
 
   if (skipPull && aState.mNextInFlow) {
     NS_ASSERTION(heightConstrained, "Height should be constrained here\n");
-    if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
+    if (aState.mNextInFlow->IsTrueOverflowContainer()) {
       aState.mReflowStatus.SetOverflowIncomplete();
-    else
+    } else {
       aState.mReflowStatus.SetIncomplete();
+    }
   }
 
   if (!skipPull && aState.mNextInFlow) {
@@ -4682,7 +4682,7 @@ void nsBlockFrame::SplitFloat(BlockReflowInput& aState, nsIFrame* aFloat,
 
   aState.AppendPushedFloatChain(nextInFlow);
   if (MOZ_LIKELY(!HasAnyStateBits(NS_BLOCK_FLOAT_MGR)) ||
-      MOZ_UNLIKELY(IS_TRUE_OVERFLOW_CONTAINER(this))) {
+      MOZ_UNLIKELY(IsTrueOverflowContainer())) {
     aState.mReflowStatus.SetOverflowIncomplete();
   } else {
     aState.mReflowStatus.SetIncomplete();
@@ -7684,7 +7684,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   // applied to this frame.
   const nscoord computedBSizeLeftOver =
       GetEffectiveComputedBSize(aReflowInput, aConsumed);
-  NS_ASSERTION(!(IS_TRUE_OVERFLOW_CONTAINER(this) && computedBSizeLeftOver),
+  NS_ASSERTION(!(IsTrueOverflowContainer() && computedBSizeLeftOver),
                "overflow container must not have computedBSizeLeftOver");
 
   const nsReflowStatus statusFromChildren = aStatus;

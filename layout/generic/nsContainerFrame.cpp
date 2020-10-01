@@ -2531,7 +2531,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
                                                   : eLogicalAxisInline)) {
-    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
+    MOZ_ASSERT(!IsTrueOverflowContainer());
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.ISize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
@@ -2592,7 +2592,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisInline
                                                   : eLogicalAxisBlock)) {
-    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
+    MOZ_ASSERT(!IsTrueOverflowContainer());
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {

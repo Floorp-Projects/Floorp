@@ -777,7 +777,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
                "Should use aBorderArea for box-decoration-break:clone");
     MOZ_ASSERT(
         aForFrame->GetSkipSides().IsEmpty() ||
-            IS_TRUE_OVERFLOW_CONTAINER(aForFrame) ||
+            aForFrame->IsTrueOverflowContainer() ||
             aForFrame->IsColumnSetFrame(),  // a little broader than column-rule
         "Should not skip sides for box-decoration-break:clone except "
         "::first-letter/line continuations or other frame types that "
