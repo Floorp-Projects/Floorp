@@ -7,6 +7,7 @@
 import { throttle } from "lodash";
 import type { QueuedSourceData } from "../types";
 
+// This SourceQueue module is now only used for source mapped sources
 let newQueuedSources;
 let queuedSources;
 let currentWork;
