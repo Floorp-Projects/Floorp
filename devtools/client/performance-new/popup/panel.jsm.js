@@ -95,11 +95,12 @@ function selectElementsInPanelview(panelview) {
 function createViewControllers(state, elements) {
   return {
     updateInfoCollapse() {
-      const { header, info } = elements;
+      const { header, info, infoButton } = elements;
       header.setAttribute(
         "isinfocollapsed",
         state.isInfoCollapsed ? "true" : "false"
       );
+      infoButton.checked = !state.isInfoCollapsed;
 
       if (state.isInfoCollapsed) {
         const { height } = info.getBoundingClientRect();
