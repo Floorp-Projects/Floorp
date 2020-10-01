@@ -4,56 +4,25 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["fetch"]);
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { _ExperimentManager } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentManager.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  _ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
-  ExperimentStore:
-    "resource://messaging-system/experiments/ExperimentStore.jsm",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
-  _RemoteSettingsExperimentLoader:
-    "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm",
-  Ajv: "resource://testing-common/ajv-4.1.1.js",
-});
-
+const { ExperimentStore } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentStore.jsm"
+);
+const { NormandyUtils } = ChromeUtils.import(
+  "resource://normandy/lib/NormandyUtils.jsm"
+);
+const { FileTestUtils } = ChromeUtils.import(
+  "resource://testing-common/FileTestUtils.jsm"
+);
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;
 
-XPCOMUtils.defineLazyGetter(this, "fetchExperimentSchema", async () => {
-  const response = await fetch(
-    "resource://testing-common/NimbusExperiment.schema.json"
-  );
-  const schema = await response.json();
-  if (!schema) {
-    throw new Error("Failed to load NimbusSchema");
-  }
-  return schema.definitions.NimbusExperiment;
-});
+const { _RemoteSettingsExperimentLoader } = ChromeUtils.import(
+  "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm"
+);
 
-const EXPORTED_SYMBOLS = ["ExperimentTestUtils", "ExperimentFakes"];
-
-const ExperimentTestUtils = {
-  /**
-   * Checks if an experiment is valid acording to existing schema
-   * @param {NimbusExperiment} experiment
-   */
-  async validateExperiment(experiment) {
-    const schema = await fetchExperimentSchema;
-    const ajv = new Ajv({ async: "co*", allErrors: true });
-    const validator = ajv.compile(schema);
-    validator(experiment);
-    if (validator.errors?.length) {
-      throw new Error(
-        "Experiment not valid:" + JSON.stringify(validator.errors, undefined, 2)
-      );
-    }
-    return experiment;
-  },
-};
+const EXPORTED_SYMBOLS = ["ExperimentFakes"];
 
 const ExperimentFakes = {
   manager(store) {
@@ -102,27 +71,16 @@ const ExperimentFakes = {
       ...props,
     };
   },
-  recipe(slug = NormandyUtils.generateUuid(), props = {}) {
+  recipe(slug, props = {}) {
     return {
-      // This field is required for populating remote settings
-      id: NormandyUtils.generateUuid(),
       slug,
-      isEnrollmentPaused: false,
-      probeSets: [],
-      startDate: null,
-      endDate: null,
-      proposedEnrollment: 7,
-      referenceBranch: "control",
-      application: "firefox-desktop",
       branches: [
         {
           slug: "control",
-          ratio: 1,
           feature: { featureId: "aboutwelcome", enabled: true, value: null },
         },
         {
           slug: "treatment",
-          ratio: 1,
           feature: {
             featureId: "aboutwelcome",
             enabled: true,

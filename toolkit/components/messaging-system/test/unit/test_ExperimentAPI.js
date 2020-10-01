@@ -167,7 +167,9 @@ add_task(async function test_isFeatureEnabled() {
  */
 add_task(async function test_getRecipe() {
   const sandbox = sinon.createSandbox();
-  const RECIPE = ExperimentFakes.recipe("foo");
+  const RECIPE = {
+    arguments: ExperimentFakes.recipe("foo"),
+  };
   sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
 
   const recipe = await ExperimentAPI.getRecipe("foo");
@@ -195,13 +197,15 @@ add_task(async function test_getRecipe_Failure() {
  */
 add_task(async function test_getAllBranches() {
   const sandbox = sinon.createSandbox();
-  const RECIPE = ExperimentFakes.recipe("foo");
+  const RECIPE = {
+    arguments: ExperimentFakes.recipe("foo"),
+  };
   sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
 
   const branches = await ExperimentAPI.getAllBranches("foo");
   Assert.deepEqual(
     branches,
-    RECIPE.branches,
+    RECIPE.arguments.branches,
     "should return all branches if found a recipe"
   );
 
