@@ -81,7 +81,7 @@ class Mutex {
  private:
   const MutexId id_;
   Mutex* prev_ = nullptr;
-  ThreadId owningThread_;
+  mozilla::Maybe<ThreadId> owningThread_;
 
   static MOZ_THREAD_LOCAL(Mutex*) HeldMutexStack;
 #endif
