@@ -282,7 +282,15 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
 
 void LIRGeneratorARM64::lowerDivI64(MDiv* div) { MOZ_CRASH("NYI"); }
 
+void LIRGeneratorARM64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
+  MOZ_CRASH("We don't use runtime div for this architecture");
+}
+
 void LIRGeneratorARM64::lowerModI64(MMod* mod) { MOZ_CRASH("NYI"); }
+
+void LIRGeneratorARM64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
+  MOZ_CRASH("We don't use runtime mod for this architecture");
+}
 
 void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   MDefinition* input = ins->input();
