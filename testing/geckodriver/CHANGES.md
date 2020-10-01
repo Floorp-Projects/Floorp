@@ -4,8 +4,20 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-0.27.0  (2020-07-27)
+0.27.0  (2020-07-27, `7b8c4f32cdde`)
 --------------------
+
+### Security Fixes
+
+- CVE-2020-15660
+
+  - Added additional checks on the `Content-Type` header for `POST`
+    requests to disallow `application/x-www-form-urlencoded`,
+    `multipart/form-data` and `text/plain`.
+
+  - Added checking of the `Origin` header for `POST` requests.
+
+  - The version number of Firefox is now checked when establishing a session.
 
 ### Known problems
 
@@ -15,9 +27,9 @@ All notable changes to this program is documented in this file.
   notarized, geckodriver will not work on Catalina if you manually
   download it through another notarized program, such as Firefox.
 
-  Whilst we are working on a repackaging fix for this problem, you
-  can find more details on how to work around this issue in the
-  [macOS notarization] section of the documentation.
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
 
 ### Added
 
@@ -42,8 +54,7 @@ All notable changes to this program is documented in this file.
 
 - _Android:_
 
-  * Firefox running on Android devices can now be controlled from a
-    Windows host.
+  * Firefox running on Android devices can now be controlled from a Windows host.
 
   * Setups with multiple connected Android devices are now supported.
 
