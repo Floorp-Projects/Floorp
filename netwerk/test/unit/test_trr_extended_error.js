@@ -306,3 +306,33 @@ add_task(async function delayed_ipv4_answer_and_ipv6_error() {
   // Check that we don't fall back to DNS
   await new TRRDNSListener("delay4.com", { expectedAnswer: "1.2.3.4" });
 });
+
+add_task(async function test_only_ipv4_extended_error() {
+  Services.prefs.setBoolPref("network.dns.disableIPv6", true);
+  await trrServer.registerDoHAnswers(
+    "only.com",
+    "A",
+    [],
+    [
+      {
+        name: ".",
+        type: "OPT",
+        class: "IN",
+        options: [
+          {
+            code: "EDNS_ERROR",
+            extended_error: 17, // Filtered
+            text: "Filtered",
+          },
+        ],
+      },
+    ]
+  );
+  let [, , inStatus] = await new TRRDNSListener("only.com", {
+    expectedSuccess: false,
+  });
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+});

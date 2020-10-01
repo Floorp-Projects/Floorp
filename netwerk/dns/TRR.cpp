@@ -823,9 +823,9 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
   uint8_t rcode = mResponse[3] & 0x0F;
+  LOG(("TRR Decode %s RCODE %d\n", aHost.get(), rcode));
   if (rcode) {
-    LOG(("TRR Decode %s RCODE %d\n", aHost.get(), rcode));
-    return NS_ERROR_FAILURE;
+    RecordReason(nsHostRecord::TRR_RCODE_FAIL);
   }
 
   uint16_t questionRecords = get16bit(mResponse, 4);  // qdcount

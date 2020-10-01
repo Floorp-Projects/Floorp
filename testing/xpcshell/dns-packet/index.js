@@ -2,6 +2,7 @@
 
 const types = require('./types')
 const rcodes = require('./rcodes')
+exports.rcodes = rcodes;
 const opcodes = require('./opcodes')
 const classes = require('./classes')
 const optioncodes = require('./optioncodes')
