@@ -1875,7 +1875,7 @@
 
 - name: dom.input_events.beforeinput.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether we conform to Input Events Level 1 or Input Events Level 2.
