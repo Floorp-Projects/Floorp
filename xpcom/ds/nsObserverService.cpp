@@ -277,7 +277,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 
   mozilla::TimeStamp start = TimeStamp::Now();
 
-  AUTO_PROFILER_MARKER_TEXT("NotifyObservers", OTHER, MarkerStack::Capture(),
+  AUTO_PROFILER_MARKER_TEXT("NotifyObservers",
+                            OTHER.WithOptions(MarkerStack::Capture()),
                             nsDependentCString(aTopic));
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
       "nsObserverService::NotifyObservers", OTHER, aTopic);

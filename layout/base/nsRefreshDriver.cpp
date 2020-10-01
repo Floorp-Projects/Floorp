@@ -1283,10 +1283,11 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
     nsPrintfCString str("%s [%s]", data.mDescription,
                         kFlushTypeNames[aFlushType]);
     PROFILER_MARKER_TEXT(
-        "RefreshObserver", GRAPHICS,
-        MarkerOptions(MarkerStack::TakeBacktrace(std::move(data.mCause)),
-                      MarkerTiming::IntervalUntilNowFrom(data.mRegisterTime),
-                      MarkerInnerWindowId(data.mInnerWindowId)),
+        "RefreshObserver",
+        GRAPHICS.WithOptions(
+            MarkerStack::TakeBacktrace(std::move(data.mCause)),
+            MarkerTiming::IntervalUntilNowFrom(data.mRegisterTime),
+            MarkerInnerWindowId(data.mInnerWindowId)),
         str);
   }
 #endif
@@ -2069,8 +2070,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   }
 #endif
   AUTO_PROFILER_MARKER_TEXT(
-      "RefreshDriverTick", GRAPHICS,
-      MarkerOptions(
+      "RefreshDriverTick",
+      GRAPHICS.WithOptions(
           MarkerStack::TakeBacktrace(std::move(mRefreshTimerStartedCause)),
           MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext))),
       profilerStr);
@@ -2332,10 +2333,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       transactionId.AppendInt((uint64_t)mNextTransactionId);
     }
 #endif
-    AUTO_PROFILER_MARKER_TEXT(
-        "ViewManagerFlush", GRAPHICS,
-        MarkerStack::TakeBacktrace(std::move(mViewManagerFlushCause)),
-        transactionId);
+    AUTO_PROFILER_MARKER_TEXT("ViewManagerFlush",
+                              GRAPHICS.WithOptions(MarkerStack::TakeBacktrace(
+                                  std::move(mViewManagerFlushCause))),
+                              transactionId);
 
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 

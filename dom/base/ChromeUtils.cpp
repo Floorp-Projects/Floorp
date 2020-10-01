@@ -200,7 +200,7 @@ void ChromeUtils::AddProfilerMarker(
     const Optional<DOMHighResTimeStamp>& aStartTime,
     const Optional<nsACString>& aText) {
 #ifdef MOZ_GECKO_PROFILER
-  MarkerOptions options;
+  MarkerOptions options{::geckoprofiler::category::JS};
 
   if (aStartTime.WasPassed()) {
     RefPtr<Performance> performance;
@@ -231,9 +231,10 @@ void ChromeUtils::AddProfilerMarker(
   }
 
   if (aText.WasPassed()) {
-    PROFILER_MARKER_TEXT(aName, JS, std::move(options), aText.Value());
+    PROFILER_MARKER_TEXT(aName, MarkerOptions(std::move(options)),
+                         aText.Value());
   } else {
-    PROFILER_MARKER_UNTYPED(aName, JS, std::move(options));
+    PROFILER_MARKER_UNTYPED(aName, MarkerOptions(std::move(options)));
   }
 #endif  // MOZ_GECKO_PROFILER
 }

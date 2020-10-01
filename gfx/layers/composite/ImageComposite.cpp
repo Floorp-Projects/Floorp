@@ -50,7 +50,7 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
     nsPrintfCString str("current %.2lfms, next %.2lfms",
                         offsetCurrent.ToMilliseconds(),
                         offsetNext.ToMilliseconds());
-    PROFILER_MARKER_TEXT("Video frame offsets", GRAPHICS, {}, str);
+    PROFILER_MARKER_TEXT("Video frame offsets", GRAPHICS, str);
   }
 #endif
 
@@ -185,7 +185,7 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
                           ") to frameID %" PRId32 " (prod %" PRId32 ")",
                           len, len == 1 ? "image" : "images", first.mFrameID,
                           first.mProducerID, last.mFrameID, last.mProducerID);
-      PROFILER_MARKER_TEXT("ImageComposite::SetImages", GRAPHICS, {}, str);
+      PROFILER_MARKER_TEXT("ImageComposite::SetImages", GRAPHICS, str);
     }
 #endif
   }
@@ -229,7 +229,7 @@ bool ImageComposite::UpdateCompositedFrame(
       descr.AppendLiteral(", no change");
     }
   }
-  PROFILER_MARKER_TEXT("UpdateCompositedFrame", GRAPHICS, {}, descr);
+  PROFILER_MARKER_TEXT("UpdateCompositedFrame", GRAPHICS, descr);
 #endif
 
   if (mLastFrameID == image.mFrameID && mLastProducerID == image.mProducerID) {
@@ -259,7 +259,7 @@ bool ImageComposite::UpdateCompositedFrame(
                            " (producer %" PRId32 ")",
                            dropped, frameOrFrames, mLastFrameID, image.mFrameID,
                            mLastProducerID);
-      PROFILER_MARKER_TEXT("Video frames dropped", GRAPHICS, {}, text);
+      PROFILER_MARKER_TEXT("Video frames dropped", GRAPHICS, text);
     }
 #endif
   }
@@ -370,7 +370,7 @@ void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
   }
   if (jitter) {
     nsPrintfCString text("%.2lfms", jitter->ToMilliseconds());
-    PROFILER_MARKER_TEXT("VideoFrameTimeStampJitter", GRAPHICS, {}, text);
+    PROFILER_MARKER_TEXT("VideoFrameTimeStampJitter", GRAPHICS, text);
   }
 #endif
 }
