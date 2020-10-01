@@ -50,6 +50,10 @@ internal const val DEFAULT_VERSION_CODE = "N/A"
 
 private const val KEY_CRASH_ID = "CrashID"
 
+private const val MINI_DUMP_FILE_EXT = "dmp"
+private const val EXTRAS_FILE_EXT = "extra"
+private const val FILE_REGEX = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\\."
+
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
  *
@@ -256,12 +260,15 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "Breadcrumbs", breadcrumbs, nameSet)
 
         extrasFilePath?.let {
-            val extrasFile = File(it)
-            val extrasMap = readExtrasFromFile(extrasFile)
-            for (key in extrasMap.keys) {
-                sendPart(gzipOs, boundary, key, extrasMap[key], nameSet)
+            val regex = "$FILE_REGEX$EXTRAS_FILE_EXT".toRegex()
+            if (regex.matchEntire(it.substringAfterLast("/")) != null) {
+                val extrasFile = File(it)
+                val extrasMap = readExtrasFromFile(extrasFile)
+                for (key in extrasMap.keys) {
+                    sendPart(gzipOs, boundary, key, extrasMap[key], nameSet)
+                }
+                extrasFile.delete()
             }
-            extrasFile.delete()
         }
 
         if (throwable?.stackTrace?.isEmpty() == false) {
@@ -270,9 +277,12 @@ class MozillaSocorroService(
         }
 
         miniDumpFilePath?.let {
-            val minidumpFile = File(it)
-            sendFile(gzipOs, boundary, "upload_file_minidump", minidumpFile, nameSet)
-            minidumpFile.delete()
+            val regex = "$FILE_REGEX$MINI_DUMP_FILE_EXT".toRegex()
+            if (regex.matchEntire(it.substringAfterLast("/")) != null) {
+                val minidumpFile = File(it)
+                sendFile(gzipOs, boundary, "upload_file_minidump", minidumpFile, nameSet)
+                minidumpFile.delete()
+            }
         }
 
         when {

@@ -19,9 +19,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -139,6 +141,129 @@ class MozillaSocorroServiceTest {
 
             verify(service).report(crash)
             verify(service).sendReport(123456, null, "dump.path", "extras.path", true, true, crash.breadcrumbs)
+        } finally {
+            mockWebServer.shutdown()
+        }
+    }
+
+    @Test
+    fun `incorrect file extension is ignored in native fatal crash requests`() {
+        val mockWebServer = MockWebServer()
+
+        try {
+            mockWebServer.enqueue(
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+            )
+            mockWebServer.start()
+            val serverUrl = mockWebServer.url("/")
+            val service = spy(
+                MozillaSocorroService(
+                    testContext,
+                    "Test App",
+                    appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    serverUrl = serverUrl.toString()
+                )
+            )
+
+            val crash = Crash.NativeCodeCrash(
+                123456,
+                "test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e.ini",
+                true,
+                "test/file/66dd8af2-643c-ca11-5178-e61c6819f827",
+                isFatal = true,
+                breadcrumbs = arrayListOf()
+            )
+
+            doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
+            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            service.report(crash)
+
+            verify(service).report(crash)
+            verify(service, times(0)).readExtrasFromFile(any())
+            verify(service, times(0)).sendFile(any(), any(), any(), any(), any())
+        } finally {
+            mockWebServer.shutdown()
+        }
+    }
+
+    @Test
+    fun `incorrect file format is ignored in native fatal crash requests`() {
+        val mockWebServer = MockWebServer()
+
+        try {
+            mockWebServer.enqueue(
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+            )
+            mockWebServer.start()
+            val serverUrl = mockWebServer.url("/")
+            val service = spy(
+                MozillaSocorroService(
+                    testContext,
+                    "Test App",
+                    appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    serverUrl = serverUrl.toString()
+                )
+            )
+
+            val crash = Crash.NativeCodeCrash(
+                123456,
+                "test/minidumps/test.dmp",
+                true,
+                "test/file/test.extra",
+                isFatal = true,
+                breadcrumbs = arrayListOf()
+            )
+
+            doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
+            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            service.report(crash)
+
+            verify(service).report(crash)
+            verify(service, times(0)).readExtrasFromFile(any())
+            verify(service, times(0)).sendFile(any(), any(), any(), any(), any())
+        } finally {
+            mockWebServer.shutdown()
+        }
+    }
+
+    @Test
+    fun `correct file format is used in native fatal crash requests`() {
+        val mockWebServer = MockWebServer()
+
+        try {
+            mockWebServer.enqueue(
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+            )
+            mockWebServer.start()
+            val serverUrl = mockWebServer.url("/")
+            val service = spy(
+                MozillaSocorroService(
+                    testContext,
+                    "Test App",
+                    appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    serverUrl = serverUrl.toString()
+                )
+            )
+
+            val crash = Crash.NativeCodeCrash(
+                123456,
+                "test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e.dmp",
+                true,
+                "test/file/66dd8af2-643c-ca11-5178-e61c6819f827.extra",
+                isFatal = true,
+                breadcrumbs = arrayListOf()
+            )
+
+            doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
+            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            service.report(crash)
+
+            verify(service).report(crash)
+            verify(service).readExtrasFromFile(any())
+            verify(service).sendFile(any(), any(), any(), any(), any())
         } finally {
             mockWebServer.shutdown()
         }
