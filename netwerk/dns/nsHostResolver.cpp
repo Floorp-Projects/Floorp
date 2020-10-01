@@ -1473,6 +1473,7 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
   if (StaticPrefs::network_dns_disabled()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
+  LOG(("NativeLookup host:%s af:%" PRId16, aRec->host.get(), aRec->af));
 
   // Only A/AAAA request are resolve natively.
   MOZ_ASSERT(aRec->IsAddrRecord());
@@ -2023,7 +2024,6 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       if (!addrRec->mTRRSuccess) {
         // no TRR success
         newRRSet = nullptr;
-        status = NS_ERROR_UNKNOWN_HOST;
 
         // At least one of them was a failure. If the IPv4 response has a
         // recorded reason, we use that (we also care about ipv4 more).
@@ -2041,7 +2041,8 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
 
       if (!addrRec->mTRRSuccess &&
           addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
-          addrRec->mFirstTRRresult != NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+          addrRec->mFirstTRRresult != NS_ERROR_DEFINITIVE_UNKNOWN_HOST &&
+          status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
         MOZ_ASSERT(!addrRec->mResolving);
         NativeLookup(addrRec);
         MOZ_ASSERT(addrRec->mResolving);
@@ -2051,6 +2052,11 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       if (addrRec->mTRRSuccess && mNCS &&
           (mNCS->GetNAT64() == nsINetworkConnectivityService::OK) && newRRSet) {
         newRRSet = mNCS->MapNAT64IPs(newRRSet);
+      }
+
+      if (NS_FAILED(status)) {
+        // This is the error that consumers expect.
+        status = NS_ERROR_UNKNOWN_HOST;
       }
 
       // continue

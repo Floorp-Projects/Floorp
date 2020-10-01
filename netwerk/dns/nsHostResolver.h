@@ -120,6 +120,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_DECODE_FAILED = 25,        // DohDecode failed
     TRR_EXCLUDED = 26,             // ExcludedFromTRR
     TRR_SERVER_RESPONSE_ERR = 27,  // Server responded with non-200 code
+    TRR_RCODE_FAIL = 28,           // DNS response contains a non-NOERROR rcode
   };
 
   // Records the first reason that caused TRR to be skipped or to fail.
