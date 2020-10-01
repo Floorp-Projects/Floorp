@@ -446,15 +446,15 @@ int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
                         JS::Handle<JS::Value> aSecond, ErrorResult& aRv) {
   Key first, second;
   auto result = first.SetFromJSVal(aCx, aFirst);
-  if (result.isErr()) {
-    aRv = result.unwrapErr().ExtractErrorResult(
+  if (!result.Is(Ok)) {
+    aRv = result.ExtractErrorResult(
         InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return 0;
   }
 
   result = second.SetFromJSVal(aCx, aSecond);
-  if (result.isErr()) {
-    aRv = result.unwrapErr().ExtractErrorResult(
+  if (!result.Is(Ok)) {
+    aRv = result.ExtractErrorResult(
         InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return 0;
   }
