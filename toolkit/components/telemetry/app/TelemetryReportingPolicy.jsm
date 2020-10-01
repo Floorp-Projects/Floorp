@@ -154,11 +154,8 @@ var TelemetryReportingPolicy = {
    * Test only method, used to trigger an update of the "first run" state.
    */
   testUpdateFirstRun() {
-    return TelemetryReportingPolicyImpl.observe(
-      null,
-      "sessionstore-windows-restored",
-      null
-    );
+    TelemetryReportingPolicyImpl._isFirstRun = undefined;
+    TelemetryReportingPolicyImpl.isFirstRun();
   },
 };
 
@@ -170,7 +167,7 @@ var TelemetryReportingPolicyImpl = {
   _startupNotificationTimerId: null,
   // Keep track of the first session state, as the related preference
   // is flipped right after the browser starts.
-  _isFirstRun: true,
+  _isFirstRun: undefined,
 
   get _log() {
     if (!this._logger) {
@@ -331,6 +328,7 @@ var TelemetryReportingPolicyImpl = {
    */
   reset() {
     this.shutdown();
+    this._isFirstRun = undefined;
     return this.setup();
   },
 
@@ -390,6 +388,12 @@ var TelemetryReportingPolicyImpl = {
   },
 
   isFirstRun() {
+    if (this._isFirstRun === undefined) {
+      this._isFirstRun = Services.prefs.getBoolPref(
+        TelemetryUtils.Preferences.FirstRun,
+        true
+      );
+    }
     return this._isFirstRun;
   },
 
@@ -553,11 +557,7 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    this._isFirstRun = Services.prefs.getBoolPref(
-      TelemetryUtils.Preferences.FirstRun,
-      true
-    );
-    if (this._isFirstRun) {
+    if (this.isFirstRun()) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
       Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, false);
 
@@ -571,7 +571,7 @@ var TelemetryReportingPolicyImpl = {
     }
 
     // Show the info bar.
-    const delay = this._isFirstRun
+    const delay = this.isFirstRun()
       ? NOTIFICATION_DELAY_FIRST_RUN_MSEC
       : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 

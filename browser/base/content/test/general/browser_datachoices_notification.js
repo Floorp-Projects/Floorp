@@ -16,6 +16,7 @@ var TelemetryReportingPolicy = ChromeUtils.import(
 ).TelemetryReportingPolicy;
 
 const PREF_BRANCH = "datareporting.policy.";
+const PREF_FIRST_RUN = "toolkit.telemetry.reportingpolicy.firstRun";
 const PREF_BYPASS_NOTIFICATION =
   PREF_BRANCH + "dataSubmissionPolicyBypassNotification";
 const PREF_CURRENT_POLICY_VERSION = PREF_BRANCH + "currentPolicyVersion";
@@ -114,11 +115,13 @@ var checkInfobarButton = async function(aNotification) {
 };
 
 add_task(async function setup() {
+  const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
   const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, true);
   const currentPolicyVersion = Preferences.get(PREF_CURRENT_POLICY_VERSION, 1);
 
   // Register a cleanup function to reset our preferences.
   registerCleanupFunction(() => {
+    Preferences.set(PREF_FIRST_RUN, isFirstRun);
     Preferences.set(PREF_BYPASS_NOTIFICATION, bypassNotification);
     Preferences.set(PREF_CURRENT_POLICY_VERSION, currentPolicyVersion);
 
@@ -129,6 +132,9 @@ add_task(async function setup() {
   Preferences.set(PREF_BYPASS_NOTIFICATION, false);
   // Set the current policy version.
   Preferences.set(PREF_CURRENT_POLICY_VERSION, TEST_POLICY_VERSION);
+  // Ensure this isn't the first run, because then we open the first run page.
+  Preferences.set(PREF_FIRST_RUN, false);
+  TelemetryReportingPolicy.testUpdateFirstRun();
 });
 
 function clearAcceptedPolicy() {
