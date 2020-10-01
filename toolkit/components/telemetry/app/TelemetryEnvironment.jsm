@@ -277,6 +277,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["extensions.update.url", { what: RECORD_PREF_VALUE }],
   ["extensions.update.background.url", { what: RECORD_PREF_VALUE }],
   ["extensions.screenshots.disabled", { what: RECORD_PREF_VALUE }],
+  ["fission.autostart", { what: RECORD_DEFAULTPREF_VALUE }],
   ["general.config.filename", { what: RECORD_DEFAULTPREF_STATE }],
   ["general.smoothScroll", { what: RECORD_PREF_VALUE }],
   ["gfx.direct2d.disabled", { what: RECORD_PREF_VALUE }],
@@ -1602,7 +1603,6 @@ EnvironmentCache.prototype = {
       ),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
-      fissionEnabled: Services.appinfo.fissionAutostart,
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
       // We need to wait for browser-delayed-startup-finished to ensure that the locales
