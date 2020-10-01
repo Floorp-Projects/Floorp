@@ -21,11 +21,11 @@
 // supporting types.
 //
 // To then record markers:
-// - Use `baseprofiler::AddMarker(...)` from  mozglue or other libraries that
-//   are outside of xul, especially if they may happen outside of xpcom's
-//   lifetime (typically startup, shutdown, or tests).
+// - Use `baseprofiler::AddMarker<ChosenMarkerType>(...)` from
+//   mozglue or other libraries that are outside of xul, especially if they may
+//   happen outside of xpcom's lifetime (typically startup, shutdown, or tests).
 // - Otherwise #include "ProfilerMarkers.h" instead, and use
-//   `profiler_add_marker(...)`.
+//   `profiler_add_marker<ChosenMarkerType>(...)`.
 // See these functions for more details.
 
 #ifndef BaseProfilerMarkers_h
@@ -38,18 +38,15 @@
 
 #ifndef MOZ_GECKO_PROFILER
 
-#  define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)
-#  define BASE_PROFILER_MARKER(markerName, categoryName, options, MarkerType, \
-                               ...)
-#  define BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, text)
-#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, \
-                                         text)
+#  define BASE_PROFILER_MARKER_UNTYPED(markerName, options)
+#  define BASE_PROFILER_MARKER(markerName, options, MarkerType, ...)
+#  define BASE_PROFILER_MARKER_TEXT(markerName, options, text)
+#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, options, text)
 
 #else  // ndef MOZ_GECKO_PROFILER
 
 #  include "mozilla/ProfileChunkedBuffer.h"
 #  include "mozilla/TimeStamp.h"
-#  include "mozilla/Unused.h"
 
 #  include <functional>
 #  include <string>
@@ -57,56 +54,27 @@
 
 namespace mozilla::baseprofiler {
 
-// Add a marker to a given buffer. `AddMarker()` and related macros should be
-// used in most cases, see below for more information about them and the
-// parameters; This function may be useful when markers need to be recorded in a
-// local buffer outside of the main profiler buffer.
-template <typename MarkerType, typename... PayloadArguments>
-ProfileBufferBlockIndex AddMarkerToBuffer(
-    ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
-    const MarkerCategory& aCategory, MarkerOptions&& aOptions,
-    MarkerType aMarkerType, const PayloadArguments&... aPayloadArguments) {
-  Unused << aMarkerType;  // Only the empty object type is useful.
+template <typename MarkerType = ::mozilla::baseprofiler::markers::NoPayload,
+          typename... Ts>
+ProfileBufferBlockIndex AddMarkerToBuffer(ProfileChunkedBuffer& aBuffer,
+                                          const ProfilerString8View& aName,
+                                          MarkerOptions&& aOptions,
+                                          const Ts&... aTs) {
   return base_profiler_markers_detail::AddMarkerToBuffer<MarkerType>(
-      aBuffer, aName, aCategory, std::move(aOptions),
-      ::mozilla::baseprofiler::profiler_capture_backtrace_into,
-      aPayloadArguments...);
+      aBuffer, aName, std::move(aOptions),
+      ::mozilla::baseprofiler::profiler_capture_backtrace_into, aTs...);
 }
 
-// Add a marker (without payload) to a given buffer.
-inline ProfileBufferBlockIndex AddMarkerToBuffer(
-    ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
-    const MarkerCategory& aCategory, MarkerOptions&& aOptions = {}) {
-  return AddMarkerToBuffer(aBuffer, aName, aCategory, std::move(aOptions),
-                           markers::NoPayload{});
-}
-
-// Add a marker to the Base Profiler buffer.
-// - aName: Main name of this marker.
-// - aCategory: Category for this marker.
-// - aOptions: Optional settings (such as timing, inner window id,
-//   backtrace...), see `MarkerOptions` for details.
-// - aMarkerType: Empty object that specifies the type of marker.
-// - aPayloadArguments: Arguments expected by this marker type's
-// ` StreamJSONMarkerData` function.
-template <typename MarkerType, typename... PayloadArguments>
-ProfileBufferBlockIndex AddMarker(
-    const ProfilerString8View& aName, const MarkerCategory& aCategory,
-    MarkerOptions&& aOptions, MarkerType aMarkerType,
-    const PayloadArguments&... aPayloadArguments) {
+template <typename MarkerType = ::mozilla::baseprofiler::markers::NoPayload,
+          typename... Ts>
+ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
+                                  MarkerOptions&& aOptions, const Ts&... aTs) {
   if (!baseprofiler::profiler_can_accept_markers()) {
     return {};
   }
-  return ::mozilla::baseprofiler::AddMarkerToBuffer(
-      base_profiler_markers_detail::CachedBaseCoreBuffer(), aName, aCategory,
-      std::move(aOptions), aMarkerType, aPayloadArguments...);
-}
-
-// Add a marker (without payload) to the Base Profiler buffer.
-inline ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
-                                         const MarkerCategory& aCategory,
-                                         MarkerOptions&& aOptions = {}) {
-  return AddMarker(aName, aCategory, std::move(aOptions), markers::NoPayload{});
+  return ::mozilla::baseprofiler::AddMarkerToBuffer<MarkerType>(
+      base_profiler_markers_detail::CachedBaseCoreBuffer(), aName,
+      std::move(aOptions), aTs...);
 }
 
 // Marker types' StreamJSONMarkerData functions should use this to correctly
@@ -122,26 +90,20 @@ inline void WritePropertyTime(JSONWriter& aWriter,
 
 }  // namespace mozilla::baseprofiler
 
-// Same as `AddMarker()` (without payload). This macro is safe to use even if
-// MOZ_GECKO_PROFILER is not #defined.
-#  define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)  \
-    do {                                                               \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_UNTYPED);               \
-      ::mozilla::baseprofiler::AddMarker(                              \
-          markerName, ::mozilla::baseprofiler::category::categoryName, \
-          ##__VA_ARGS__);                                              \
+#  define BASE_PROFILER_MARKER_UNTYPED(markerName, options)        \
+    do {                                                           \
+      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_UNTYPED);           \
+      ::mozilla::baseprofiler::AddMarker<>(                        \
+          markerName, ::mozilla::baseprofiler::category::options); \
     } while (false)
 
-// Same as `AddMarker()` (with payload). This macro is safe to use even if
-// MOZ_GECKO_PROFILER is not #defined.
-#  define BASE_PROFILER_MARKER(markerName, categoryName, options, MarkerType, \
-                               ...)                                           \
-    do {                                                                      \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_with_##MarkerType);            \
-      ::mozilla::baseprofiler::AddMarker(                                     \
-          markerName, ::mozilla::baseprofiler::category::categoryName,        \
-          options, ::mozilla::baseprofiler::markers::MarkerType{},            \
-          ##__VA_ARGS__);                                                     \
+#  define BASE_PROFILER_MARKER(markerName, options, MarkerType, ...) \
+    do {                                                             \
+      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_with_##MarkerType);   \
+      ::mozilla::baseprofiler::AddMarker<                            \
+          ::mozilla::baseprofiler::markers::MarkerType>(             \
+          markerName, ::mozilla::baseprofiler::category::options,    \
+          ##__VA_ARGS__);                                            \
     } while (false)
 
 namespace mozilla::baseprofiler::markers {
@@ -157,14 +119,12 @@ struct Text {
 };
 }  // namespace mozilla::baseprofiler::markers
 
-// Add a text marker. This macro is safe to use even if MOZ_GECKO_PROFILER is
-// not #defined.
-#  define BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, text) \
-    do {                                                                     \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_TEXT);                        \
-      ::mozilla::baseprofiler::AddMarker(                                    \
-          markerName, ::mozilla::baseprofiler::category::categoryName,       \
-          options, ::mozilla::baseprofiler::markers::Text{}, text);          \
+#  define BASE_PROFILER_MARKER_TEXT(markerName, options, text)           \
+    do {                                                                 \
+      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_TEXT);                    \
+      ::mozilla::baseprofiler::AddMarker<                                \
+          ::mozilla::baseprofiler::markers::Text>(                       \
+          markerName, ::mozilla::baseprofiler::category::options, text); \
     } while (false)
 
 namespace mozilla::baseprofiler {
@@ -174,13 +134,9 @@ namespace mozilla::baseprofiler {
 // start time is already specified in the provided options) until destruction.
 class MOZ_RAII AutoProfilerTextMarker {
  public:
-  AutoProfilerTextMarker(const char* aMarkerName,
-                         const MarkerCategory& aCategory,
-                         MarkerOptions&& aOptions, const std::string& aText)
-      : mMarkerName(aMarkerName),
-        mCategory(aCategory),
-        mOptions(std::move(aOptions)),
-        mText(aText) {
+  AutoProfilerTextMarker(const char* aMarkerName, MarkerOptions&& aOptions,
+                         const std::string& aText)
+      : mMarkerName(aMarkerName), mOptions(std::move(aOptions)), mText(aText) {
     MOZ_ASSERT(mOptions.Timing().EndTime().IsNull(),
                "AutoProfilerTextMarker options shouldn't have an end time");
     if (mOptions.Timing().StartTime().IsNull()) {
@@ -190,27 +146,22 @@ class MOZ_RAII AutoProfilerTextMarker {
 
   ~AutoProfilerTextMarker() {
     mOptions.TimingRef().SetIntervalEnd();
-    AUTO_PROFILER_STATS(AUTO_BASE_PROFILER_MARKER_TEXT);
-    AddMarker(ProfilerString8View::WrapNullTerminatedString(mMarkerName),
-              mCategory, std::move(mOptions), markers::Text{}, mText);
+    BASE_PROFILER_MARKER_TEXT(
+        ProfilerString8View::WrapNullTerminatedString(mMarkerName),
+        MarkerOptions(std::move(mOptions)), mText);
   }
 
  protected:
   const char* mMarkerName;
-  MarkerCategory mCategory;
   MarkerOptions mOptions;
   std::string mText;
 };
 
 }  // namespace mozilla::baseprofiler
 
-// Creates an AutoProfilerTextMarker RAII object.  This macro is safe to use
-// even if MOZ_GECKO_PROFILER is not #defined.
-#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options,   \
-                                         text)                                \
-    ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII(       \
-        markerName, ::mozilla::baseprofiler::category::categoryName, options, \
-        text)
+#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, options, text)     \
+    ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII( \
+        markerName, ::mozilla::baseprofiler::category::options, text)
 
 #endif  // nfed MOZ_GECKO_PROFILER else
 

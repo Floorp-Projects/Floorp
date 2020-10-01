@@ -677,8 +677,9 @@ void NS_CreateServicesFromCategory(const char* aCategory, nsISupports* aOrigin,
 #ifdef MOZ_GECKO_PROFILER
         nsPrintfCString profilerStr("%s (%s)", aObserverTopic,
                                     entryString.get());
-        AUTO_PROFILER_MARKER_TEXT("Category observer notification", OTHER,
-                                  MarkerStack::Capture(), profilerStr);
+        AUTO_PROFILER_MARKER_TEXT("Category observer notification",
+                                  OTHER.WithOptions(MarkerStack::Capture()),
+                                  profilerStr);
         AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
             "Category observer notification -", OTHER, profilerStr);
 #endif

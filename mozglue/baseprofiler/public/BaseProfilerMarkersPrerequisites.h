@@ -212,34 +212,47 @@ class MOZ_STACK_CLASS ProfilerStringView {
 using ProfilerString8View = ProfilerStringView<char>;
 using ProfilerString16View = ProfilerStringView<char16_t>;
 
-// This compulsory marker parameter contains the required category information.
+// The classes below are all embedded in a `MarkerOptions` object.
+class MarkerOptions;
+
+// This compulsory marker option contains the required category information.
 class MarkerCategory {
  public:
-  // Constructor from category pair (includes both super- and sub-categories).
+  // Constructor from category pair (aka sub-category) and category.
   constexpr explicit MarkerCategory(
       baseprofiler::ProfilingCategoryPair aCategoryPair)
       : mCategoryPair(aCategoryPair) {}
 
-  // Returns the stored category pair.
   constexpr baseprofiler::ProfilingCategoryPair CategoryPair() const {
     return mCategoryPair;
   }
 
-  // Returns the super-category from the stored category pair.
   baseprofiler::ProfilingCategory GetCategory() const {
     return GetProfilingCategoryPairInfo(mCategoryPair).mCategory;
   }
 
+  // Create a MarkerOptions object from this category and options.
+  // Definition under MarkerOptions below.
+  template <typename... Options>
+  MarkerOptions WithOptions(Options&&... aOptions) const;
+
  private:
+  // The default constructor is only used during deserialization of
+  // MarkerOptions.
+  friend MarkerOptions;
+  constexpr MarkerCategory() = default;
+
+  friend ProfileBufferEntryReader::Deserializer<MarkerCategory>;
+
   baseprofiler::ProfilingCategoryPair mCategoryPair =
       baseprofiler::ProfilingCategoryPair::OTHER;
 };
 
 namespace baseprofiler::category {
 
-// Each category pair name constructs a MarkerCategory.
+// Each category-pair (aka subcategory) name constructs a MarkerCategory.
 // E.g.: mozilla::baseprofiler::category::OTHER_Profiling
-// Profiler macros will take the category name alone without namespace.
+// Profiler macros will take the category name alone.
 // E.g.: `PROFILER_MARKER_UNTYPED("name", OTHER_Profiling)`
 #  define CATEGORY_ENUM_BEGIN_CATEGORY(name, labelAsString, color)
 #  define CATEGORY_ENUM_SUBCATEGORY(supercategory, name, labelAsString) \
@@ -254,14 +267,11 @@ MOZ_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
 
 // Import `MarkerCategory` into this namespace. This will allow using this type
 // dynamically in macros that prepend `::mozilla::baseprofiler::category::` to
-// the given category, e.g.:
+// the given category, e.g.: E.g.:
 // `PROFILER_MARKER_UNTYPED("name", MarkerCategory(...))`
 using MarkerCategory = ::mozilla::MarkerCategory;
 
 }  // namespace baseprofiler::category
-
-// The classes below are all embedded in a `MarkerOptions` object.
-class MarkerOptions;
 
 // This marker option captures a given thread id.
 // If left unspecified (by default construction) during the add-marker call, the
@@ -575,15 +585,22 @@ class MarkerInnerWindowId {
   uint64_t mInnerWindowId = scNoId;
 };
 
-// This class combines each of the possible marker options above.
+// This class combines a compulsory category with the above marker options.
+// To provide options to add-marker functions, first pick a MarkerCategory
+// object, then options may be added with WithOptions(), e.g.:
+// `mozilla::baseprofiler::category::OTHER_profiling`
+// `mozilla::baseprofiler::category::DOM.WithOptions(
+//      MarkerThreadId(1), MarkerTiming::IntervalStart())`
 class MarkerOptions {
  public:
-  // Constructor from individual options (including none).
-  // Implicit to allow `{}` and one option type as-is.
-  // Options that are not provided here are defaulted. In particular, timing
-  // defaults to `MarkerTiming::InstantNow()` when the marker is recorded.
+  // Implicit constructor from category.
+  constexpr MOZ_IMPLICIT MarkerOptions(const MarkerCategory& aCategory)
+      : mCategory(aCategory) {}
+
+  // Constructor from category and other options.
   template <typename... Options>
-  MOZ_IMPLICIT MarkerOptions(Options&&... aOptions) {
+  explicit MarkerOptions(const MarkerCategory& aCategory, Options&&... aOptions)
+      : mCategory(aCategory) {
     (Set(std::forward<Options>(aOptions)), ...);
   }
 
@@ -604,6 +621,7 @@ class MarkerOptions {
   // `options.Set(MarkerThreadId(123)).Set(MarkerTiming::IntervalEnd())`.
   // When passed to an add-marker function, it must be an rvalue, either created
   // on the spot, or `std::move`d from storage, e.g.:
+  // `PROFILER_MARKER_UNTYPED("...", OTHER.Set(...))`;
   // `PROFILER_MARKER_UNTYPED("...", std::move(options).Set(...))`;
   //
   // Options can be read by their name (without "Marker"), e.g.: `o.ThreadId()`.
@@ -623,6 +641,7 @@ class MarkerOptions {
                                                          \
     Marker##NAME& NAME##Ref() { return m##NAME; }
 
+  FUNCTIONS_ON_MEMBER(Category);
   FUNCTIONS_ON_MEMBER(ThreadId);
   FUNCTIONS_ON_MEMBER(Timing);
   FUNCTIONS_ON_MEMBER(Stack);
@@ -632,11 +651,30 @@ class MarkerOptions {
  private:
   friend ProfileBufferEntryReader::Deserializer<MarkerOptions>;
 
+  // The default constructor is only used during deserialization.
+  constexpr MarkerOptions() = default;
+
+  MarkerCategory mCategory;
   MarkerThreadId mThreadId;
   MarkerTiming mTiming;
   MarkerStack mStack;
   MarkerInnerWindowId mInnerWindowId;
 };
+
+template <typename... Options>
+MarkerOptions MarkerCategory::WithOptions(Options&&... aOptions) const {
+  return MarkerOptions(*this, std::forward<Options>(aOptions)...);
+}
+
+namespace baseprofiler::category {
+
+// Import `MarkerOptions` into this namespace. This will allow using this type
+// dynamically in macros that prepend `::mozilla::baseprofiler::category::` to
+// the given category, e.g.: E.g.:
+// `PROFILER_MARKER_UNTYPED("name", MarkerOptions(...))`
+using MarkerOptions = ::mozilla::MarkerOptions;
+
+}  // namespace baseprofiler::category
 
 }  // namespace mozilla
 

@@ -88,8 +88,8 @@ void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
     auto now = mozilla::TimeStamp::NowUnfuzzed();
     auto start = now - mozilla::TimeDuration::FromMicroseconds(microseconds);
     PROFILER_MARKER_TEXT(
-        mozilla::ProfilerString8View::WrapNullTerminatedString(name), GRAPHICS,
-        mozilla::MarkerTiming::Interval(start, now),
+        mozilla::ProfilerString8View::WrapNullTerminatedString(name),
+        GRAPHICS.WithOptions(mozilla::MarkerTiming::Interval(start, now)),
         mozilla::ProfilerString8View(text_bytes, text_len));
   }
 #endif
@@ -1990,7 +1990,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   if (mPaused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
     mCompositionOpportunityId = mCompositionOpportunityId.Next();
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS, {},
+    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
                          mPaused ? "Paused"_ns : "No display list"_ns);
     return;
   }
@@ -2010,7 +2010,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
       }
     }
 
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS, {},
+    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
                          "Too many pending frames");
     return;
   }
@@ -2037,8 +2037,8 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     // Skip WR render during paused state.
     if (cbp->IsPaused()) {
       TimeStamp now = TimeStamp::NowUnfuzzed();
-      PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
-                           MarkerTiming::InstantAt(now),
+      PROFILER_MARKER_TEXT("SkippedComposite",
+                           GRAPHICS.WithOptions(MarkerTiming::InstantAt(now)),
                            "CompositorBridgeParent is paused");
       cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
                                   now);
@@ -2073,8 +2073,8 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 
   if (!generateFrame) {
     // Could skip generating frame now.
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
-                         MarkerTiming::InstantAt(start),
+    PROFILER_MARKER_TEXT("SkippedComposite",
+                         GRAPHICS.WithOptions(MarkerTiming::InstantAt(start)),
                          "No reason to generate frame");
     ResetPreviousSampleTime();
     return;

@@ -265,9 +265,10 @@ void ChannelWrapper::Resume(const nsCString& aText, ErrorResult& aRv) {
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
       rv = chan->Resume();
 
-      PROFILER_MARKER_TEXT("Extension Suspend", NETWORK,
-                           MarkerTiming::IntervalUntilNowFrom(mSuspendTime),
-                           aText);
+      PROFILER_MARKER_TEXT(
+          "Extension Suspend",
+          NETWORK.WithOptions(MarkerTiming::IntervalUntilNowFrom(mSuspendTime)),
+          aText);
     }
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
