@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",
   interaction: "chrome://marionette/content/interaction.js",
   Log: "chrome://marionette/content/log.js",
+  sandbox: "chrome://marionette/content/evaluate.js",
+  Sandboxes: "chrome://marionette/content/evaluate.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -24,6 +26,9 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 class MarionetteFrameChild extends JSWindowActorChild {
   constructor() {
     super();
+
+    // sandbox storage and name of the current sandbox
+    this.sandboxes = new Sandboxes(() => this.contentWindow);
   }
 
   get innerWindowId() {
@@ -64,6 +69,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:clickElement":
           result = await this.clickElement(data);
+          break;
+        case "MarionetteFrameParent:executeScript":
+          result = await this.executeScript(data);
           break;
         case "MarionetteFrameParent:findElement":
           result = await this.findElement(data);
@@ -152,6 +160,22 @@ class MarionetteFrameChild extends JSWindowActorChild {
       capabilities["moz:accessibilityChecks"],
       capabilities["moz:webdriverClick"]
     );
+  }
+
+  /**
+   * Executes a JavaScript function.
+   */
+  async executeScript(options = {}) {
+    const { args, opts = {}, script } = options;
+
+    let sb;
+    if (opts.sandboxName) {
+      sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
+    } else {
+      sb = sandbox.createMutable(this.contentWindow);
+    }
+
+    return evaluate.sandbox(sb, script, args, opts);
   }
 
   /**
@@ -245,8 +269,8 @@ class MarionetteFrameChild extends JSWindowActorChild {
 
     const rect = elem.getBoundingClientRect();
     return {
-      x: rect.x + this.content.pageXOffset,
-      y: rect.y + this.content.pageYOffset,
+      x: rect.x + this.contentWindow.pageXOffset,
+      y: rect.y + this.contentWindow.pageYOffset,
       width: rect.width,
       height: rect.height,
     };

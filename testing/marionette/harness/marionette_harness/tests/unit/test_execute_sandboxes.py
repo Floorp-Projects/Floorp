@@ -25,8 +25,8 @@ class TestExecuteSandboxes(MarionetteTestCase):
         # execute_async_script.
         result = self.marionette.execute_async_script("""
             let result = Ci.nsIPermissionManager.ALLOW_ACTION;
-            arguments[0](result);""",
-            sandbox="system")
+            arguments[0](result);
+        """, sandbox="system")
         self.assertEqual(result, 1)
 
     def test_execute_switch_sandboxes(self):
@@ -48,8 +48,9 @@ class TestExecuteSandboxes(MarionetteTestCase):
 
         # deprecate sandbox 1 by asking explicitly for a fresh one
         with self.assertRaises(JavascriptException):
-            self.marionette.execute_script("return foo",
-                sandbox="1", new_sandbox=True)
+            self.marionette.execute_script("""
+                return foo
+            """, sandbox="1", new_sandbox=True)
 
         foo = self.marionette.execute_script(
             "return foo", sandbox="2", new_sandbox=False)

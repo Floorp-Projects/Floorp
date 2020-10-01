@@ -1121,20 +1121,24 @@ GeckoDriver.prototype.execute_ = async function(
     async,
   };
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().executeScript(script, args, opts);
+  }
+
   let res, els;
 
   switch (this.context) {
-    case Context.Content:
-      // evaluate in content with lasting side-effects
-      opts.useSandbox = !!sandboxName;
-      res = await this.listener.executeScript(script, args, opts);
-      break;
-
     case Context.Chrome:
       let sb = this.sandboxes.get(sandboxName, newSandbox);
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
       res = await evaluate.sandbox(sb, script, wargs, opts);
       els = this.curBrowser.seenEls;
+      break;
+
+    case Context.Content:
+      // evaluate in content with lasting side-effects
+      opts.useSandbox = !!sandboxName;
+      res = await this.listener.executeScript(script, args, opts);
       break;
 
     default:
