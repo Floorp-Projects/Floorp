@@ -36,6 +36,13 @@ var gHaveAppSourcesFeature = true;
 var gErrorDetectingAppSourcesFeature = false;
 
 function setup() {
+  // Allow the test to run successfully for all products whether they have the
+  // probe or not.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   // Mock up the function that gets the allowed app sources so we don't actually
   // have to change OS settings to test.
   OsEnvironment.Policy.getAllowedAppSources = () => {
