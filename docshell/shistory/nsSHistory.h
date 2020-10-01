@@ -269,6 +269,31 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   static int32_t sHistoryMaxTotalViewers;
 };
 
+// CallerWillNotifyHistoryIndexAndLengthChanges is used to prevent
+// SHistoryChangeNotifier to send automatic index and length updates.
+// When that is done, it is up to the caller to explicitly send those updates.
+// This is needed in cases when the update is a reaction to some change in a
+// child process and child process passes a changeId to the parent side.
+class MOZ_STACK_CLASS CallerWillNotifyHistoryIndexAndLengthChanges {
+ public:
+  explicit CallerWillNotifyHistoryIndexAndLengthChanges(
+      nsISHistory* aSHistory) {
+    nsSHistory* shistory = static_cast<nsSHistory*>(aSHistory);
+    if (shistory && !shistory->HasOngoingUpdate()) {
+      shistory->SetHasOngoingUpdate(true);
+      mSHistory = shistory;
+    }
+  }
+
+  ~CallerWillNotifyHistoryIndexAndLengthChanges() {
+    if (mSHistory) {
+      mSHistory->SetHasOngoingUpdate(false);
+    }
+  }
+
+  RefPtr<nsSHistory> mSHistory;
+};
+
 inline nsISupports* ToSupports(nsSHistory* aObj) {
   return static_cast<nsISHistory*>(aObj);
 }

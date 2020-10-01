@@ -23,6 +23,7 @@ class nsISHistory;
 class nsSHistory;
 class nsBrowserStatusFilter;
 class nsSecureBrowserUI;
+class CallerWillNotifyHistoryIndexAndLengthChanges;
 
 namespace mozilla {
 namespace net {
@@ -235,6 +236,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       Maybe<LoadingSessionHistoryInfo>& aLoadingInfo, int32_t* aRequestedIndex,
       int32_t* aLength);
 
+  void HistoryCommitIndexAndLength();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -294,7 +297,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool SupportsLoadingInParent(nsDocShellLoadState* aLoadState,
                                uint64_t* aOuterWindowId);
 
-  void HistoryCommitIndexAndLength(const nsID& aChangeID);
+  void HistoryCommitIndexAndLength(
+      const nsID& aChangeID,
+      const CallerWillNotifyHistoryIndexAndLengthChanges& aProofOfCaller);
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.

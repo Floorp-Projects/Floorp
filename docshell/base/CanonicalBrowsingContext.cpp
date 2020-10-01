@@ -398,6 +398,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         return;
       }
 
+      CallerWillNotifyHistoryIndexAndLengthChanges caller(shistory);
+
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
 
       bool loadFromSessionHistory = !newActiveEntry->ForInitialLoad();
@@ -489,7 +491,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         }
       }
 
-      HistoryCommitIndexAndLength(aChangeID);
+      HistoryCommitIndexAndLength(aChangeID, caller);
 
       return;
     }
@@ -568,6 +570,12 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
     uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey,
     const nsID& aChangeID) {
+  nsISHistory* shistory = GetSessionHistory();
+  if (!shistory) {
+    return;
+  }
+  CallerWillNotifyHistoryIndexAndLengthChanges caller(shistory);
+
   RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
   if (aPreviousScrollPos.isSome() && oldActiveEntry) {
     oldActiveEntry->SetScrollPosition(aPreviousScrollPos.ref().x,
@@ -579,28 +587,24 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
   if (aUpdatedCacheKey != 0) {
     mActiveEntry->SharedInfo()->mCacheKey = aUpdatedCacheKey;
   }
-  nsISHistory* shistory = GetSessionHistory();
+
   if (IsTop()) {
-    if (shistory) {
-      Maybe<int32_t> previousEntryIndex, loadedEntryIndex;
-      shistory->AddToRootSessionHistory(
-          true, oldActiveEntry, this, mActiveEntry, aLoadType,
-          nsDocShell::ShouldAddToSessionHistory(aInfo->GetURI(), nullptr),
-          &previousEntryIndex, &loadedEntryIndex);
-    }
+    Maybe<int32_t> previousEntryIndex, loadedEntryIndex;
+    shistory->AddToRootSessionHistory(
+        true, oldActiveEntry, this, mActiveEntry, aLoadType,
+        nsDocShell::ShouldAddToSessionHistory(aInfo->GetURI(), nullptr),
+        &previousEntryIndex, &loadedEntryIndex);
   } else {
     if (oldActiveEntry) {
-      if (shistory) {
-        shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),
-                                        true);
-      }
+      shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),
+                                      true);
     } else if (GetParent() && GetParent()->mActiveEntry) {
       GetParent()->mActiveEntry->AddChild(mActiveEntry, aChildOffset,
                                           UseRemoteSubframes());
     }
   }
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
-  HistoryCommitIndexAndLength(aChangeID);
+  HistoryCommitIndexAndLength(aChangeID, caller);
 }
 
 void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
@@ -1440,10 +1444,16 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
   }
 }
 
+void CanonicalBrowsingContext::HistoryCommitIndexAndLength() {
+  nsID changeID = {};
+  CallerWillNotifyHistoryIndexAndLengthChanges caller(nullptr);
+  HistoryCommitIndexAndLength(changeID, caller);
+}
 void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
-    const nsID& aChangeID) {
+    const nsID& aChangeID,
+    const CallerWillNotifyHistoryIndexAndLengthChanges& aProofOfCaller) {
   if (!IsTop()) {
-    Cast(Top())->HistoryCommitIndexAndLength(aChangeID);
+    Cast(Top())->HistoryCommitIndexAndLength(aChangeID, aProofOfCaller);
     return;
   }
 

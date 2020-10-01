@@ -136,7 +136,7 @@ extern mozilla::LazyLogModule gPageCacheLog;
   }                                                       \
   PR_END_MACRO
 
-class SHistoryChangeNotifier {
+class MOZ_STACK_CLASS SHistoryChangeNotifier {
  public:
   explicit SHistoryChangeNotifier(nsSHistory* aHistory) {
     // If we're already in an update, the outermost change notifier will
@@ -157,6 +157,13 @@ class SHistoryChangeNotifier {
         mSHistory->GetBrowsingContext()->SessionHistoryChanged(
             mSHistory->Index() - mInitialIndex,
             mSHistory->Length() - mInitialLength);
+      }
+
+      if (mozilla::SessionHistoryInParent() &&
+          mSHistory->GetBrowsingContext()) {
+        mSHistory->GetBrowsingContext()
+            ->Canonical()
+            ->HistoryCommitIndexAndLength();
       }
     }
   }
@@ -828,8 +835,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   return NS_OK;
 }
 
-void
-nsSHistory::NotifyOnHistoryReplaceEntry() {
+void nsSHistory::NotifyOnHistoryReplaceEntry() {
   NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
 }
 
