@@ -540,7 +540,7 @@
                   accessFunction, ##__VA_ARGS__)
 
 /**
- * QM_TRY_VAR(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
+ * QM_TRY_UNWRAP(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
  * Rust's `target = try!(expr);`. First, it evaluates expr, which must produce
  * a Result value. On success, the result's success value is unwrapped and
  * assigned to target. On error, it calls HandleError and an additional cleanup
@@ -548,7 +548,7 @@
  * result or a custom return value (if the third argument was passed). |target|
  * must be an lvalue.
  */
-#define QM_TRY_VAR(...) QM_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define QM_TRY_UNWRAP(...) QM_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 
 /**
  * QM_TRY_INSPECT is similar to QM_TRY_VAR, but it does not unwrap a success
@@ -559,7 +559,7 @@
  *
  * should be preferred over
  *
- *   QM_TRY_VAR(const auto target, DoSomething())
+ *   QM_TRY_UNWRAP(const auto target, DoSomething())
  *
  * as it avoids unnecessary moves/copies.
  */
@@ -570,9 +570,9 @@
  * in non-debug builds.
  */
 #ifdef DEBUG
-#  define QM_DEBUG_TRY_VAR(...) QM_TRY_VAR(__VA_ARGS__)
+#  define QM_DEBUG_TRY_UNWRAP(...) QM_TRY_UNWRAP(__VA_ARGS__)
 #else
-#  define QM_DEBUG_TRY_VAR(...)
+#  define QM_DEBUG_TRY_UNWRAP(...)
 #endif
 
 // QM_TRY_RETURN_PROPAGATE_ERR, QM_TRY_RETURN_CUSTOM_RET_VAL,

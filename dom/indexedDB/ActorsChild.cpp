@@ -784,8 +784,9 @@ class WorkerPermissionChallenge final : public Runnable {
       return true;
     }
 
-    IDB_TRY_VAR(auto principal,
-                mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo), true);
+    IDB_TRY_UNWRAP(auto principal,
+                   mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo),
+                   true);
 
     if (XRE_IsParentProcess()) {
       const nsCOMPtr<Element> ownerElement =
@@ -1466,9 +1467,9 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return IPC_OK();
   }
 
-  IDB_TRY_VAR(auto principal,
-              mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
-              IPC_FAIL_NO_REASON(this));
+  IDB_TRY_UNWRAP(auto principal,
+                 mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
+                 IPC_FAIL_NO_REASON(this));
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
