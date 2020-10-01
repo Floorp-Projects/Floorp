@@ -10,11 +10,11 @@ import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction.LinkEngineSessionAction
 import mozilla.components.browser.state.action.EngineAction.UpdateEngineSessionStateAction
-import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -223,7 +223,7 @@ class SessionManager(
             }
 
         val tabs = items.map { item ->
-            item.session.toTabSessionState()
+            item.session.toRestoredTabSessionState(item)
         }
 
         val selectedTabId = if (updateSelection && snapshot.selectedSessionIndex != NO_SELECTION) {
@@ -238,23 +238,6 @@ class SessionManager(
         }
 
         store?.syncDispatch(TabListAction.RestoreAction(tabs, selectedTabId))
-
-        items.forEach { item ->
-            item.engineSessionState?.let {
-                store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it))
-            }
-
-            item.readerState?.let {
-                store?.syncDispatch(ReaderAction.UpdateReaderActiveAction(item.session.id, it.active))
-                it.activeUrl?.let { activeUrl ->
-                    store?.syncDispatch(ReaderAction.UpdateReaderActiveUrlAction(item.session.id, activeUrl))
-                }
-            }
-
-            if (item.lastAccess != 0L) {
-                store?.syncDispatch(LastAccessAction.UpdateLastAccessAction(item.session.id, item.lastAccess))
-            }
-        }
     }
 
     /**
@@ -446,4 +429,18 @@ fun SessionManager.runWithSessionIdOrSelected(
     }
 
     return false
+}
+
+private fun Session.toRestoredTabSessionState(snapshot: SessionManager.Snapshot.Item): TabSessionState {
+    val engineState = if (snapshot.engineSessionState != null) {
+        EngineState(engineSessionState = snapshot.engineSessionState)
+    } else {
+        EngineState()
+    }
+
+    return toTabSessionState().copy(
+        engineState = engineState,
+        readerState = snapshot.readerState ?: ReaderState(),
+        lastAccess = snapshot.lastAccess
+    )
 }

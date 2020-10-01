@@ -4,27 +4,22 @@
 
 package mozilla.components.browser.session
 
-import mozilla.components.browser.state.action.BrowserAction
-import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
-import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
-
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.calls
-import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -1144,11 +1139,9 @@ class SessionManagerTest {
 
     @Test
     fun `WHEN restoring a session THEN dispatch updates to store`() {
-        val store = spy(BrowserStore())
-        val inOrder = inOrder(store)
+        val store = BrowserStore()
         val manager = SessionManager(mock(), store)
-        val session = Session("http://www.mozilla.org")
-        val captor = argumentCaptor<BrowserAction>()
+        val session = Session(id = "test123", initialUrl = "http://www.mozilla.org")
 
         manager.restore(SessionManager.Snapshot(listOf(
             SessionManager.Snapshot.Item(
@@ -1157,10 +1150,8 @@ class SessionManagerTest {
             )
         ), 0))
 
-        inOrder.verify(store, calls(2)).dispatch(captor.capture())
-
-        assertTrue(captor.allValues[0] is TabListAction.RestoreAction)
-        assertTrue(captor.allValues[1] is LastAccessAction.UpdateLastAccessAction)
-        assertEquals(123, (captor.allValues[1] as LastAccessAction.UpdateLastAccessAction).lastAccess)
+        val restoredTab = store.state.findTab(session.id)
+        assertNotNull(restoredTab!!)
+        assertEquals(123, restoredTab.lastAccess)
     }
 }
