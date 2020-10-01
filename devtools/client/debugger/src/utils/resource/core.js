@@ -47,7 +47,11 @@ export function insertResources<R: ResourceBound>(
   for (const resource of resources) {
     const { id } = resource;
     if (state.identity[id]) {
-      throw new Error(`Resource "${id}" already exists, cannot insert`);
+      throw new Error(
+        `Resource "${id}" already exists, cannot insert ${JSON.stringify(
+          resource
+        )}`
+      );
     }
     if (state.values[id]) {
       throw new Error(
