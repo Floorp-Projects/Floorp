@@ -6,21 +6,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-SimpleTest.requestFlakyTimeout("Needs to test a timeout");
-
-function delay(msec) {
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  return new Promise(resolve => setTimeout(resolve, msec));
-}
-
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
-
-  const permitUnloadTimeout = Services.prefs.getIntPref(
-    "dom.beforeunload_timeout_ms"
-  );
 
   let url = TEST_PATH + "dummy_page.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -34,22 +23,15 @@ add_task(async function test() {
 
   let allowNavigation;
   let promptShown = false;
-  let promptDismissed = false;
-  let promptTimeout;
 
   const DIALOG_TOPIC = "tabmodal-dialog-loaded";
-  async function observer(node) {
+  function observer(node) {
     promptShown = true;
-
-    if (promptTimeout) {
-      await delay(promptTimeout);
-    }
 
     let button = node.querySelector(
       `.tabmodalprompt-button${allowNavigation ? 0 : 1}`
     );
     button.click();
-    promptDismissed = true;
   }
   Services.obs.addObserver(observer, DIALOG_TOPIC);
 
@@ -86,31 +68,6 @@ add_task(async function test() {
     "permit unload should be true"
   );
   ok(!promptShown, "prompt should not have been displayed");
-
-  promptShown = false;
-  promptDismissed = false;
-  promptTimeout = 3 * permitUnloadTimeout;
-  let promise = browser.asyncPermitUnload();
-
-  let promiseResolved = false;
-  promise.then(() => {
-    promiseResolved = true;
-  });
-
-  await TestUtils.waitForCondition(() => promptShown);
-  ok(!promptDismissed, "Should not have dismissed prompt yet");
-  ok(!promiseResolved, "Should not have resolved promise yet");
-
-  await delay(permitUnloadTimeout * 1.5);
-
-  ok(!promptDismissed, "Should not have dismissed prompt yet");
-  ok(!promiseResolved, "Should not have resolved promise yet");
-
-  let { permitUnload } = await promise;
-  ok(promptDismissed, "Should have dismissed prompt");
-  ok(!permitUnload, "Should not have permitted unload");
-
-  promptTimeout = null;
 
   /*
    * Check condition where no one requests a prompt.  In all cases,
