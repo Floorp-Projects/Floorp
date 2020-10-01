@@ -41,16 +41,13 @@ add_task(async function() {
   info("Wait for change to be tracked");
   await onTrackChange;
 
-  const removeDecl = getRemovedDeclarations(doc);
-  const addDecl = getAddedDeclarations(doc);
-
-  is(removeDecl.length, 2, "Two declarations tracked as removed");
-  is(addDecl.length, 1, "One declaration tracked as added");
   // Ensure changes to the second declaration were tracked after removing the first one.
-  is(
-    addDecl[0].property,
-    "display",
-    "Added declaration has updated property name"
+  await waitFor(
+    () => getRemovedDeclarations(doc).length == 2,
+    "Two declarations should have been tracked as removed"
   );
-  is(addDecl[0].value, "flex", "Added declaration has updated property value");
+  await waitFor(() => {
+    const addDecl = getAddedDeclarations(doc);
+    return addDecl.length == 1 && addDecl[0].value == "flex";
+  }, "One declaration should have been tracked as added, and the added declaration to have updated property value");
 });
