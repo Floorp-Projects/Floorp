@@ -114,8 +114,7 @@ class WidgetShutdownObserver final : public nsIObserver {
  */
 
 class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
-  template <class EventType, class InputType>
-  friend class DispatchEventOnMainThread;
+  friend class DispatchWheelEventOnMainThread;
   friend class mozilla::widget::InProcessCompositorWidget;
   friend class mozilla::layers::RemoteCompositorSession;
 
