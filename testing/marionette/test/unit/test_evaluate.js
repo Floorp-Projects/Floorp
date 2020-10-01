@@ -14,6 +14,11 @@ class Element {
     this.tagName = tagName;
     this.localName = tagName;
 
+    // Set default properties
+    this.isConnected = true;
+    this.ownerDocument = {};
+    this.ownerGlobal = { document: this.ownerDocument };
+
     for (let attr in attrs) {
       this[attr] = attrs[attr];
     }
@@ -51,11 +56,14 @@ class XULElement extends Element {
 const domEl = new DOMElement("p");
 const svgEl = new SVGElement("rect");
 const xulEl = new XULElement("browser");
+
 const domWebEl = WebElement.from(domEl);
 const svgWebEl = WebElement.from(svgEl);
 const xulWebEl = WebElement.from(xulEl);
+
 const domElId = { id: 1, browsingContextId: 4, webElRef: domWebEl.toJSON() };
 const svgElId = { id: 2, browsingContextId: 5, webElRef: svgWebEl.toJSON() };
+const xulElId = { id: 3, browsingContextId: 6, webElRef: xulWebEl.toJSON() };
 
 const seenEls = new element.Store();
 const elementIdCache = new element.ReferenceStore();
@@ -77,43 +85,6 @@ add_test(function test_toJSON_types() {
   ok(evaluate.toJSON(domEl, seenEls) instanceof WebElement);
   ok(evaluate.toJSON(svgEl, seenEls) instanceof WebElement);
   ok(evaluate.toJSON(xulEl, seenEls) instanceof WebElement);
-  Assert.throws(
-    () => evaluate.toJSON(domEl, elementIdCache),
-    /TypeError/,
-    "Expected ElementIdentifier"
-  );
-  Assert.throws(
-    () => evaluate.toJSON(svgEl, elementIdCache),
-    /TypeError/,
-    "Expected ElementIdentifier"
-  );
-  Assert.throws(
-    () => evaluate.toJSON(xulEl, elementIdCache),
-    /TypeError/,
-    "Expected ElementIdentifier"
-  );
-
-  // WebElement reference, empty elCache
-  Assert.throws(
-    () => evaluate.toJSON(domWebEl, elementIdCache),
-    /NoSuchElementError/
-  );
-  Assert.throws(
-    () => evaluate.toJSON(svgWebEl, elementIdCache),
-    /NoSuchElementError/
-  );
-  Assert.throws(
-    () => evaluate.toJSON(xulWebEl, elementIdCache),
-    /NoSuchElementError/
-  );
-
-  elementIdCache.add(domElId);
-  elementIdCache.add(svgElId);
-
-  deepEqual(evaluate.toJSON(domWebEl, elementIdCache), domElId);
-  deepEqual(evaluate.toJSON(svgWebEl, elementIdCache), svgElId);
-
-  elementIdCache.clear();
 
   // toJSON
   equal(
@@ -127,6 +98,28 @@ add_test(function test_toJSON_types() {
 
   // arbitrary object
   deepEqual({ foo: "bar" }, evaluate.toJSON({ foo: "bar" }));
+
+  run_next_test();
+});
+
+add_test(function test_toJSON_types_ReferenceStore() {
+  // Temporarily add custom elements until xpcshell tests
+  // have access to real DOM nodes (including the Window Proxy)
+  elementIdCache.add(domElId);
+  elementIdCache.add(svgElId);
+  elementIdCache.add(xulElId);
+
+  deepEqual(evaluate.toJSON(domWebEl, elementIdCache), domElId);
+  deepEqual(evaluate.toJSON(svgWebEl, elementIdCache), svgElId);
+  deepEqual(evaluate.toJSON(xulWebEl, elementIdCache), xulElId);
+
+  Assert.throws(
+    () => evaluate.toJSON(domEl, elementIdCache),
+    /TypeError/,
+    "Reference store not usable for elements"
+  );
+
+  elementIdCache.clear();
 
   run_next_test();
 });
@@ -153,17 +146,10 @@ add_test(function test_toJSON_sequences() {
   equal("foo", actual[4]);
   deepEqual({ bar: "baz" }, actual[5]);
 
-  Assert.throws(
-    () => evaluate.toJSON(input, elementIdCache),
-    /TypeError/,
-    "Expected ElementIdentifier"
-  );
-
   run_next_test();
 });
 
 add_test(function test_toJSON_sequences_ReferenceStore() {
-  elementIdCache.add(domElId);
   const input = [
     null,
     true,
@@ -176,6 +162,15 @@ add_test(function test_toJSON_sequences_ReferenceStore() {
     },
     { bar: "baz" },
   ];
+
+  Assert.throws(
+    () => evaluate.toJSON(input, elementIdCache),
+    /NoSuchElementError/,
+    "Expected no element"
+  );
+
+  elementIdCache.add(domElId);
+
   const actual = evaluate.toJSON(input, elementIdCache);
 
   equal(null, actual[0]);
@@ -196,6 +191,7 @@ add_test(function test_toJSON_objects() {
     boolean: true,
     array: [],
     webElement: domEl,
+    elementId: domElId,
     toJSON: {
       toJSON() {
         return "foo";
@@ -209,26 +205,20 @@ add_test(function test_toJSON_objects() {
   equal(true, actual.boolean);
   deepEqual([], actual.array);
   ok(actual.webElement instanceof WebElement);
+  ok(actual.elementId instanceof WebElement);
   equal("foo", actual.toJSON);
   deepEqual({ bar: "baz" }, actual.object);
-
-  Assert.throws(
-    () => evaluate.toJSON(input, elementIdCache),
-    /TypeError/,
-    "Expected ElementIdentifier"
-  );
 
   run_next_test();
 });
 
 add_test(function test_toJSON_objects_ReferenceStore() {
-  elementIdCache.add(domElId);
-
   const input = {
     null: null,
     boolean: true,
     array: [],
     webElement: domWebEl,
+    elementId: domElId,
     toJSON: {
       toJSON() {
         return "foo";
@@ -236,12 +226,22 @@ add_test(function test_toJSON_objects_ReferenceStore() {
     },
     object: { bar: "baz" },
   };
+
+  Assert.throws(
+    () => evaluate.toJSON(input, elementIdCache),
+    /NoSuchElementError/,
+    "Expected no element"
+  );
+
+  elementIdCache.add(domElId);
+
   const actual = evaluate.toJSON(input, elementIdCache);
 
   equal(null, actual.null);
   equal(true, actual.boolean);
   deepEqual([], actual.array);
   deepEqual(actual.webElement, domElId);
+  deepEqual(actual.elementId, domElId);
   equal("foo", actual.toJSON);
   deepEqual({ bar: "baz" }, actual.object);
 
@@ -251,21 +251,52 @@ add_test(function test_toJSON_objects_ReferenceStore() {
 });
 
 add_test(function test_fromJSON_ReferenceStore() {
-  const input = {
-    id: domElId,
-  };
-  evaluate.fromJSON(input, elementIdCache);
-  deepEqual(elementIdCache.get(domWebEl), domElId);
+  // Add unknown element to reference store
+  let webEl = evaluate.fromJSON(domElId, elementIdCache);
+  deepEqual(webEl, domWebEl);
+  deepEqual(elementIdCache.get(webEl), domElId);
 
+  // Previously seen element is associated with original web element reference
   const domElId2 = {
     id: 1,
     browsingContextId: 4,
     webElRef: WebElement.from(domEl).toJSON(),
   };
-  evaluate.fromJSON(domElId2, elementIdCache);
-  // previously seen element is associated with original web element reference
-  deepEqual(elementIdCache.get(domWebEl), domElId);
+  webEl = evaluate.fromJSON(domElId2, elementIdCache);
+  deepEqual(webEl, domWebEl);
+  deepEqual(elementIdCache.get(webEl), domElId);
+
+  // Store doesn't contain ElementIdentifiers
+  Assert.throws(
+    () => evaluate.fromJSON(domElId, seenEls),
+    /TypeError/,
+    "Expected element.ReferenceStore"
+  );
+
   elementIdCache.clear();
+
+  run_next_test();
+});
+
+add_test(function test_fromJSON_Store() {
+  // Pass-through WebElements without adding it to the element store
+  let webEl = evaluate.fromJSON(domWebEl.toJSON());
+  deepEqual(webEl, domWebEl);
+  ok(!seenEls.has(domWebEl));
+
+  // Find element in the element store
+  webEl = seenEls.add(domEl);
+  const el = evaluate.fromJSON(webEl.toJSON(), seenEls);
+  deepEqual(el, domEl);
+
+  // Reference store doesn't contain web elements
+  Assert.throws(
+    () => evaluate.fromJSON(domWebEl.toJSON(), elementIdCache),
+    /TypeError/,
+    "Expected element.Store"
+  );
+
+  seenEls.clear();
 
   run_next_test();
 });
