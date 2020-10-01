@@ -17,7 +17,7 @@ nsresult NS_NewSVGMPathElement(
 
 namespace mozilla {
 namespace dom {
-class SVGPathElement;
+class SVGGeometryElement;
 
 using SVGMPathElementBase = SVGElement;
 
@@ -58,10 +58,10 @@ class SVGMPathElement final : public SVGMPathElementBase,
                                 nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
 
-  // Public helper method: If our xlink:href attribute links to a <path>
+  // Public helper method: If our xlink:href attribute links to a Shape
   // element, this method returns a pointer to that element. Otherwise,
   // this returns nullptr.
-  SVGPathElement* GetReferencedPath();
+  SVGGeometryElement* GetReferencedPath();
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedString> Href();
