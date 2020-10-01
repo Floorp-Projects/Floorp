@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.DialogInterface
 import android.os.Bundle
+import android.text.SpannableString
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -49,6 +50,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
@@ -185,6 +187,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                     inflater.inflate(R.menu.bookmarks_select_multi_not_item, menu)
                 } else {
                     inflater.inflate(R.menu.bookmarks_select_multi, menu)
+
+                    menu.findItem(R.id.delete_bookmarks_multi_select).title =
+                        SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
+                            setTextColor(requireContext(), R.attr.destructive)
+                        }
                 }
             }
         }

@@ -8,6 +8,7 @@ import android.content.ClipboardManager
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.DialogInterface
 import android.os.Bundle
+import android.text.SpannableString
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -42,6 +43,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
@@ -166,7 +168,13 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
         }
 
         inflater.inflate(menuRes, menu)
+
         menu.findItem(R.id.share_history_multi_select)?.isVisible = true
+
+        menu.findItem(R.id.delete_history_multi_select)?.title =
+            SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
+                setTextColor(requireContext(), R.attr.destructive)
+            }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
