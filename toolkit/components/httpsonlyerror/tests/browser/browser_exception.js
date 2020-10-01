@@ -41,8 +41,8 @@ const INSECURE_ROOT_PATH = ROOT_PATH.replace(
 //                 with HTTP or not (eg.: img-ok, xhr-ok, iframe-error, ...)
 
 add_task(async function() {
-  const openPrivateTab = [false, true];
-  for (let i = 0; i < openPrivateTab.length; i++) {
+  const testCases = ["default", "private", "firstpartyisolation"];
+  for (let i = 0; i < testCases.length; i++) {
     // Call sjs-file with setup query-string and store promise
     let expectedQueries = new Set([
       "content",
@@ -59,9 +59,13 @@ add_task(async function() {
 
     // Create a new private window but reuse the normal one.
     let privateWindow = false;
-    if (openPrivateTab[i]) {
+    if (testCases[i] === "private") {
       privateWindow = await BrowserTestUtils.openNewBrowserWindow({
         private: true,
+      });
+    } else if (testCases[i] === "firstpartyisolation") {
+      await SpecialPowers.pushPrefEnv({
+        set: [["privacy.firstparty.isolate", true]],
       });
     }
 
@@ -115,8 +119,12 @@ add_task(async function() {
       }
     }
 
-    // Clean up permissions and tab
+    // Clean up permissions, tab and potentially preferences
     Services.perms.removeAll();
+
+    if (testCases[i] === "firstpartyisolation") {
+      await SpecialPowers.popPrefEnv();
+    }
 
     if (privateWindow) {
       await BrowserTestUtils.closeWindow(privateWindow);

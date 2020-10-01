@@ -79,9 +79,20 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
           .setScheme("http")
           .finalize();
 
+    const oldOriginAttributes = aBrowser.contentPrincipal.originAttributes;
+    const hasFpiAttribute = !!oldOriginAttributes.firstPartyDomain.length;
+
+    // Create new content principal for the permission. If first-party isolation
+    // is enabled, we have to replace the about-page first-party domain with the
+    // one from the exempt website.
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       newURI,
-      aBrowser.contentPrincipal.originAttributes
+      {
+        ...oldOriginAttributes,
+        firstPartyDomain: hasFpiAttribute
+          ? Services.eTLD.getBaseDomain(newURI)
+          : "",
+      }
     );
 
     // Create exception for this website that expires with the session.
