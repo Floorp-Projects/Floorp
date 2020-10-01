@@ -341,10 +341,9 @@ int32_t Timers::Finish(JSContext* aCx, const nsAString& aHistogram,
     markerText.AppendLiteral(":");
     markerText.Append(NS_ConvertUTF16toUTF8(aKey));
   }
-  PROFILER_MARKER_TEXT(
-      "TelemetryStopwatch",
-      OTHER.WithOptions(MarkerTiming::IntervalUntilNowFrom(timer->StartTime())),
-      markerText);
+  PROFILER_MARKER_TEXT("TelemetryStopwatch", OTHER,
+                       MarkerTiming::IntervalUntilNowFrom(timer->StartTime()),
+                       markerText);
 #endif
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE && !mSuppressErrors) {
     LogError(aCx, nsPrintfCString(
