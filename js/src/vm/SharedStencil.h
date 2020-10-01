@@ -7,22 +7,16 @@
 #ifndef vm_SharedStencil_h
 #define vm_SharedStencil_h
 
-#include "mozilla/HashFunctions.h"    // mozilla::HahNumber, mozilla::HashBytes
-#include "mozilla/HashTable.h"        // mozilla::HashSet
-#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
-#include "mozilla/RefPtr.h"           // RefPtr
-#include "mozilla/Span.h"             // mozilla::Span
+#include "mozilla/Span.h"  // mozilla::Span
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
-
-#include "js/AllocPolicy.h"      // js::SystemAllocPolicy
-#include "js/TypeDecls.h"        // JSContext,jsbytecode
-#include "js/UniquePtr.h"        // js::UniquePtr
-#include "util/TrailingArray.h"  // js::TrailingArray
+#include "js/TypeDecls.h"          // JSContext,jsbytecode
+#include "js/UniquePtr.h"          // js::UniquePtr
+#include "util/TrailingArray.h"    // js::TrailingArray
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
 //
@@ -30,10 +24,6 @@
 //
 
 namespace js {
-
-namespace frontend {
-class StencilXDR;
-}  // namespace frontend
 
 // Index into gcthings array.
 class GCThingIndexType;
@@ -474,91 +464,6 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
   ImmutableScriptData(const ImmutableScriptData&) = delete;
   ImmutableScriptData& operator=(const ImmutableScriptData&) = delete;
 };
-
-// Wrapper type for ImmutableScriptData to allow sharing across a JSRuntime.
-//
-// Note: This is distinct from ImmutableScriptData because it contains a mutable
-//       ref-count while the ImmutableScriptData may live in read-only memory.
-//
-// Note: This is *not* directly inlined into the SharedImmutableScriptDataTable
-//       because scripts point directly to object and table resizing moves
-//       entries. This allows for fast finalization by decrementing the
-//       ref-count directly without doing a hash-table lookup.
-class SharedImmutableScriptData {
-  // This class is reference counted as follows: each pointer from a JSScript
-  // counts as one reference plus there may be one reference from the shared
-  // script data table.
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
-
-  js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
-
-  // End of fields.
-
-  friend class ::JSScript;
-  friend class js::frontend::StencilXDR;
-
- public:
-  SharedImmutableScriptData() = default;
-
-  // Hash over the contents of SharedImmutableScriptData and its
-  // ImmutableScriptData.
-  struct Hasher;
-
-  uint32_t refCount() const { return refCount_; }
-  void AddRef() { refCount_++; }
-  void Release() {
-    MOZ_ASSERT(refCount_ != 0);
-    uint32_t remain = --refCount_;
-    if (remain == 0) {
-      isd_ = nullptr;
-      js_free(this);
-    }
-  }
-
-  static constexpr size_t offsetOfISD() {
-    return offsetof(SharedImmutableScriptData, isd_);
-  }
-
- private:
-  static SharedImmutableScriptData* create(JSContext* cx);
-
- public:
-  static SharedImmutableScriptData* createWith(
-      JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd);
-
-  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(this) + mallocSizeOf(isd_.get());
-  }
-
-  // SharedImmutableScriptData has trailing data so isn't copyable or movable.
-  SharedImmutableScriptData(const SharedImmutableScriptData&) = delete;
-  SharedImmutableScriptData& operator=(const SharedImmutableScriptData&) =
-      delete;
-
-  static bool shareScriptData(JSContext* cx,
-                              RefPtr<SharedImmutableScriptData>& sisd);
-
-  size_t immutableDataLength() const { return isd_->immutableData().Length(); }
-};
-
-// Matches SharedImmutableScriptData objects that have the same atoms as well as
-// contain the same bytes in their ImmutableScriptData.
-struct SharedImmutableScriptData::Hasher {
-  using Lookup = RefPtr<SharedImmutableScriptData>;
-
-  static mozilla::HashNumber hash(const Lookup& l) {
-    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
-    return mozilla::HashBytes(immutableData.data(), immutableData.size());
-  }
-
-  static bool match(SharedImmutableScriptData* entry, const Lookup& lookup) {
-    return (entry->isd_->immutableData() == lookup->isd_->immutableData());
-  }
-};
-
-using SharedImmutableScriptDataTable =
-    mozilla::HashSet<SharedImmutableScriptData*,
-                     SharedImmutableScriptData::Hasher, SystemAllocPolicy>;
 
 }  // namespace js
 

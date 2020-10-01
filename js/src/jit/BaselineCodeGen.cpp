@@ -475,8 +475,7 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
   Register scratch = R0.scratchReg();
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfSharedData()), scratch);
-  masm.loadPtr(Address(scratch, SharedImmutableScriptData::offsetOfISD()),
-               scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
   masm.load32(Address(scratch, ImmutableScriptData::offsetOfNfixed()), scratch);
 
   Label top, done;
@@ -835,8 +834,7 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
   MOZ_ASSERT(reg != scratch);
   loadScript(scratch);
   masm.loadPtr(Address(scratch, JSScript::offsetOfSharedData()), scratch);
-  masm.loadPtr(Address(scratch, SharedImmutableScriptData::offsetOfISD()),
-               scratch);
+  masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
   masm.load32(Address(scratch, ImmutableScriptData::offsetOfNslots()), scratch);
   static_assert(sizeof(Value) == 8,
                 "shift by 3 below assumes Value is 8 bytes");
@@ -1186,8 +1184,7 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
 
   // Initialize interpreter pc.
   masm.loadPtr(Address(scratch1, JSScript::offsetOfSharedData()), scratch1);
-  masm.loadPtr(Address(scratch1, SharedImmutableScriptData::offsetOfISD()),
-               scratch1);
+  masm.loadPtr(Address(scratch1, RuntimeScriptData::offsetOfISD()), scratch1);
   masm.addPtr(Imm32(ImmutableScriptData::offsetOfCode()), scratch1);
 
   if (HasInterpreterPCReg()) {
@@ -4790,8 +4787,7 @@ void BaselineCodeGen<Handler>::emitInterpJumpToResumeEntry(Register script,
                                                            Register scratch) {
   // Load JSScript::immutableScriptData() into |script|.
   masm.loadPtr(Address(script, JSScript::offsetOfSharedData()), script);
-  masm.loadPtr(Address(script, SharedImmutableScriptData::offsetOfISD()),
-               script);
+  masm.loadPtr(Address(script, RuntimeScriptData::offsetOfISD()), script);
 
   // Load the resume pcOffset in |resumeIndex|.
   masm.load32(
