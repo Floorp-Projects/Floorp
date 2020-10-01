@@ -1601,9 +1601,11 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
 #endif
   }
 
+  bool hasAnchorRect = true;
   if (anchorRect.width == 0) {
     LOG(("  No anchor rect given, use aPosition for anchor"));
     anchorRect.SetRect(aPosition->x, aPosition->y, 1, 1);
+    hasAnchorRect = false;
   }
   LOG(("  anchor x %d y %d width %d height %d (absolute coords)\n",
        anchorRect.x, anchorRect.y, anchorRect.width, anchorRect.height));
@@ -1705,7 +1707,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   nsPoint cursorOffset(0, 0);
 #ifdef MOZ_WAYLAND
   // Offset is already computed to the tooltips
-  if (popupFrame && mPopupType != ePopupTypeTooltip) {
+  if (hasAnchorRect && popupFrame && mPopupType != ePopupTypeTooltip) {
     nsMargin margin(0, 0, 0, 0);
     popupFrame->StyleMargin()->GetMargin(margin);
     switch (popupFrame->GetPopupAlignment()) {
