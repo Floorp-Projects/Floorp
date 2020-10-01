@@ -48,6 +48,8 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared {
   void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs,
                         MDefinition* rhs);
 
+  void lowerBuiltinInt64ToFloatingPoint(MBuiltinInt64ToFloatingPoint* ins);
+  void lowerWasmBuiltinTruncateToInt64(MWasmBuiltinTruncateToInt64* ins);
   void lowerDivI64(MDiv* div);
   void lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div);
   void lowerModI64(MMod* mod);
