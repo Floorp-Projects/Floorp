@@ -507,6 +507,15 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup_UnwrapErr)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
+TEST(QuotaCommon_TryVar, Decl)
+{
+  QM_TRY_VAR(int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), int32_t>);
+
+  EXPECT_EQ(x, 42);
+}
+
 TEST(QuotaCommon_TryInspect, ConstDecl)
 {
   QM_TRY_INSPECT(const int32_t& x, (Result<int32_t, nsresult>{42}), QM_VOID);
@@ -533,6 +542,19 @@ TEST(QuotaCommon_TryInspect, SameLine)
 
   EXPECT_EQ(x, 42);
   EXPECT_EQ(y, 42);
+}
+
+TEST(QuotaCommon_TryVar, ParenDecl)
+{
+  QM_TRY_VAR((const auto [x, y]),
+             (Result<std::pair<int32_t, bool>, nsresult>{std::pair{42, true}}),
+             QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), const int32_t>);
+  static_assert(std::is_same_v<decltype(y), const bool>);
+
+  EXPECT_EQ(x, 42);
+  EXPECT_EQ(y, true);
 }
 
 TEST(QuotaCommon_TryInspect, NestingMadness_Success)
@@ -699,112 +721,76 @@ TEST(QuotaCommon_TryInspect, NestingMadness_Multiple_Failure2)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
-// We are not repeating all QM_TRY_INSPECT test cases for QM_TRY_UNWRAP, since
-// they are largely based on the same implementation. We just add some where
-// inspecting and unwrapping differ.
-
-TEST(QuotaCommon_TryUnwrap, NonConstDecl)
+TEST(QuotaCommon_DebugTryVar, Success)
 {
-  QM_TRY_UNWRAP(int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
-
-  static_assert(std::is_same_v<decltype(x), int32_t>);
-
-  EXPECT_EQ(x, 42);
-}
-
-TEST(QuotaCommon_TryUnwrap, RvalueDecl)
-{
-  QM_TRY_UNWRAP(int32_t && x, (Result<int32_t, nsresult>{42}), QM_VOID);
-
-  static_assert(std::is_same_v<decltype(x), int32_t&&>);
-
-  EXPECT_EQ(x, 42);
-}
-
-TEST(QuotaCommon_TryUnwrap, ParenDecl)
-{
-  QM_TRY_UNWRAP(
-      (auto&& [x, y]),
-      (Result<std::pair<int32_t, bool>, nsresult>{std::pair{42, true}}),
-      QM_VOID);
-
-  static_assert(std::is_same_v<decltype(x), int32_t>);
-  static_assert(std::is_same_v<decltype(y), bool>);
-
-  EXPECT_EQ(x, 42);
-  EXPECT_EQ(y, true);
-}
-
-TEST(QuotaCommon_DebugTryUnwrap, Success)
-{
-  bool debugTryUnwrapBodyRan = false;
-  bool debugTryUnwrapDidNotReturn = false;
+  bool debugTryVarBodyRan = false;
+  bool debugTryVarDidNotReturn = false;
 
   nsresult rv = [
 #ifdef DEBUG
-                    &debugTryUnwrapBodyRan, &debugTryUnwrapDidNotReturn
+                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
 #else
-                    &debugTryUnwrapDidNotReturn
+                    &debugTryVarDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_UNWRAP(
-        const auto x, ([&debugTryUnwrapBodyRan]() -> Result<int32_t, nsresult> {
-          debugTryUnwrapBodyRan = true;
+    QM_DEBUG_TRY_VAR(const auto x,
+                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
+                       debugTryVarBodyRan = true;
 
-          return 42;
-        }()));
+                       return 42;
+                     }()));
 #ifdef DEBUG
     EXPECT_EQ(x, 42);
 #endif
 
-    debugTryUnwrapDidNotReturn = true;
+    debugTryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
 #ifdef DEBUG
-  EXPECT_TRUE(debugTryUnwrapBodyRan);
+  EXPECT_TRUE(debugTryVarBodyRan);
 #else
-  EXPECT_FALSE(debugTryUnwrapBodyRan);
+  EXPECT_FALSE(debugTryVarBodyRan);
 #endif
-  EXPECT_TRUE(debugTryUnwrapDidNotReturn);
+  EXPECT_TRUE(debugTryVarDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
 }
 
-TEST(QuotaCommon_DebugTryUnwrap, Failure)
+TEST(QuotaCommon_DebugTryVar, Failure)
 {
-  bool debugTryUnwrapBodyRan = false;
-  bool debugTryUnwrapDidNotReturn = false;
+  bool debugTryVarBodyRan = false;
+  bool debugTryVarDidNotReturn = false;
 
   nsresult rv = [
 #ifdef DEBUG
-                    &debugTryUnwrapBodyRan, &debugTryUnwrapDidNotReturn
+                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
 #else
-                    &debugTryUnwrapDidNotReturn
+                    &debugTryVarDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_UNWRAP(
-        const auto x, ([&debugTryUnwrapBodyRan]() -> Result<int32_t, nsresult> {
-          debugTryUnwrapBodyRan = true;
+    QM_DEBUG_TRY_VAR(const auto x,
+                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
+                       debugTryVarBodyRan = true;
 
-          return Err(NS_ERROR_FAILURE);
-        }()));
+                       return Err(NS_ERROR_FAILURE);
+                     }()));
 #ifdef DEBUG
     Unused << x;
 #endif
 
-    debugTryUnwrapDidNotReturn = true;
+    debugTryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
 #ifdef DEBUG
-  EXPECT_TRUE(debugTryUnwrapBodyRan);
-  EXPECT_FALSE(debugTryUnwrapDidNotReturn);
+  EXPECT_TRUE(debugTryVarBodyRan);
+  EXPECT_FALSE(debugTryVarDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 #else
-  EXPECT_FALSE(debugTryUnwrapBodyRan);
-  EXPECT_TRUE(debugTryUnwrapDidNotReturn);
+  EXPECT_FALSE(debugTryVarBodyRan);
+  EXPECT_TRUE(debugTryVarDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
 #endif
 }

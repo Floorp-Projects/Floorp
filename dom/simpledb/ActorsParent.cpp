@@ -1653,8 +1653,8 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  SDB_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
-                                     aPersistenceType, aOrigin));
+  SDB_TRY_VAR(auto directory,
+              quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 

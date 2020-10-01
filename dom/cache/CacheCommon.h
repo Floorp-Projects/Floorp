@@ -24,13 +24,13 @@
 #define CACHE_TRY_VAR_GLUE(accessFunction, ...)                   \
   QM_TRY_VAR_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), \
                   accessFunction, ##__VA_ARGS__)
-#define CACHE_TRY_UNWRAP(...) CACHE_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define CACHE_TRY_VAR(...) CACHE_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 #define CACHE_TRY_INSPECT(...) CACHE_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
 #ifdef DEBUG
-#  define CACHE_DEBUG_TRY_UNWRAP(...) CACHE_TRY_UNWRAP(__VA_ARGS__)
+#  define CACHE_DEBUG_TRY_VAR(...) CACHE_TRY_VAR(__VA_ARGS__)
 #else
-#  define CACHE_DEBUG_TRY_UNWRAP(...)
+#  define CACHE_DEBUG_TRY_VAR(...)
 #endif
 
 // Cache equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.

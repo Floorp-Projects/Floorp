@@ -61,14 +61,19 @@ using namespace mozilla::ipc;
 
 namespace {
 
-Result<IndexUpdateInfo, nsresult> MakeIndexUpdateInfo(
-    const int64_t aIndexID, const Key& aKey, const nsCString& aLocale) {
+IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
+                                    const nsCString& aLocale,
+                                    ErrorResult* const aRv) {
   IndexUpdateInfo indexUpdateInfo;
   indexUpdateInfo.indexId() = aIndexID;
   indexUpdateInfo.value() = aKey;
   if (!aLocale.IsEmpty()) {
-    IDB_TRY_UNWRAP(indexUpdateInfo.localizedValue(),
-                   aKey.ToLocaleAwareKey(aLocale));
+    auto result = aKey.ToLocaleAwareKey(aLocale);
+    if (!result.Is(Ok)) {
+      *aRv = result.ExtractErrorResult(
+          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR>);
+    }
+    indexUpdateInfo.localizedValue() = result.Unwrap();
   }
   return indexUpdateInfo;
 }
@@ -516,11 +521,8 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       return;
     }
 
-    IDB_TRY_UNWRAP(
-        auto item, MakeIndexUpdateInfo(aIndexID, key, aLocale), QM_VOID,
-        [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
-
-    aUpdateInfoArray->AppendElement(std::move(item));
+    *aUpdateInfoArray->AppendElement() =
+        MakeIndexUpdateInfo(aIndexID, key, aLocale, aRv);
     return;
   }
 
@@ -573,37 +575,33 @@ void IDBObjectStore::AppendIndexUpdateInfo(
 
       Key value;
       auto result = value.SetFromJSVal(aCx, arrayItem);
-      if (result.isErr() || value.IsUnset()) {
+      if (!result.Is(Ok) || value.IsUnset()) {
         // Not a value we can do anything with, ignore it.
-        if (result.isErr() &&
-            result.inspectErr().Is(SpecialValues::Exception)) {
-          result.unwrapErr().AsException().SuppressException();
+        if (result.Is(SpecialValues::Exception)) {
+          result.AsException().SuppressException();
         }
         continue;
       }
 
-      IDB_TRY_UNWRAP(
-          auto item, MakeIndexUpdateInfo(aIndexID, value, aLocale), QM_VOID,
-          [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
-
-      aUpdateInfoArray->AppendElement(std::move(item));
+      *aUpdateInfoArray->AppendElement() =
+          MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
+      if (aRv->Failed()) {
+        return;
+      }
     }
   } else {
     Key value;
     auto result = value.SetFromJSVal(aCx, val);
-    if (result.isErr() || value.IsUnset()) {
+    if (!result.Is(Ok) || value.IsUnset()) {
       // Not a value we can do anything with, ignore it.
-      if (result.isErr() && result.inspectErr().Is(SpecialValues::Exception)) {
-        result.unwrapErr().AsException().SuppressException();
+      if (result.Is(SpecialValues::Exception)) {
+        result.AsException().SuppressException();
       }
       return;
     }
 
-    IDB_TRY_UNWRAP(
-        auto item, MakeIndexUpdateInfo(aIndexID, value, aLocale), QM_VOID,
-        [aRv](const auto& tryResult) { aRv->Throw(tryResult.inspectErr()); });
-
-    aUpdateInfoArray->AppendElement(std::move(item));
+    *aUpdateInfoArray->AppendElement() =
+        MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
   }
 }
 
@@ -678,8 +676,8 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
   if (!HasValidKeyPath()) {
     // Out-of-line keys must be passed in.
     auto result = aKey.SetFromJSVal(aCx, aKeyVal);
-    if (result.isErr()) {
-      aRv = result.unwrapErr().ExtractErrorResult(
+    if (!result.Is(Ok)) {
+      aRv = result.ExtractErrorResult(
           InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
       return;
     }
@@ -828,7 +826,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   commonParams.indexUpdateInfos() = std::move(updateInfos);
 
   // Convert any blobs or mutable files into FileAddInfo.
-  IDB_TRY_UNWRAP(
+  IDB_TRY_VAR(
       commonParams.fileAddInfos(),
       TransformIntoNewArrayAbortOnErr(
           cloneWriteInfo.mFiles,
