@@ -1869,6 +1869,14 @@ void LIRGenerator::visitDiv(MDiv* ins) {
   MOZ_CRASH("Unhandled number specialization");
 }
 
+void LIRGenerator::visitWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
+  lowerWasmBuiltinDivI64(div);
+}
+
+void LIRGenerator::visitWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
+  lowerWasmBuiltinModI64(mod);
+}
+
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
   MOZ_ASSERT(IsNumberType(ins->type()));
