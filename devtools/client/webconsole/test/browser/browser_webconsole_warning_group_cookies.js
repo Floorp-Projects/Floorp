@@ -144,11 +144,6 @@ add_task(async function testInvalidSameSiteMessage() {
     `| ${message2}`,
   ]);
 
-  // Source map are being resolved in background and we might have
-  // pending request related to this service if we close the window
-  // immeditely. So just wait for these request to finish before proceeding.
-  await hud.toolbox.sourceMapURLService.waitForSourcesLoading();
-
   await win.close();
 });
 
