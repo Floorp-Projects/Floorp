@@ -2450,13 +2450,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvReleaseCompositable(
 TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
   MOZ_ASSERT(mApi);
 
-  TextureFactoryIdentifier ident(LayersBackend::LAYERS_WR, XRE_GetProcessType(),
-                                 mApi->GetMaxTextureSize(), false,
-                                 mApi->GetUseANGLE(), mApi->GetUseDComp(),
-                                 mAsyncImageManager->UseCompositorWnd(), false,
-                                 false, false, mApi->GetSyncHandle());
-  ident.mUsingSoftwareWebRender = gfx::gfxVars::UseSoftwareWebRender();
-  return ident;
+  return TextureFactoryIdentifier(
+      LayersBackend::LAYERS_WR, XRE_GetProcessType(), mApi->GetMaxTextureSize(),
+      false, mApi->GetUseANGLE(), mApi->GetUseDComp(),
+      mAsyncImageManager->UseCompositorWnd(), false, false, false,
+      mApi->GetSyncHandle());
 }
 
 wr::Epoch WebRenderBridgeParent::GetNextWrEpoch() {

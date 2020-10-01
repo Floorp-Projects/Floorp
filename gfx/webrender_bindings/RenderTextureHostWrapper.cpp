@@ -22,7 +22,7 @@ RenderTextureHostWrapper::~RenderTextureHostWrapper() {
   MOZ_COUNT_DTOR_INHERITED(RenderTextureHostWrapper, RenderTextureHost);
 }
 
-void RenderTextureHostWrapper::EnsureTextureHost() const {
+void RenderTextureHostWrapper::EnsureTextureHost() {
   if (!mTextureHost) {
     mTextureHost = RenderThread::Get()->GetRenderTexture(mExternalImageId);
     MOZ_ASSERT(mTextureHost);
@@ -71,54 +71,6 @@ RenderTextureHostWrapper::AsRenderDXGITextureHostOGL() {
     return nullptr;
   }
   return mTextureHost->AsRenderDXGITextureHostOGL();
-}
-
-size_t RenderTextureHostWrapper::GetPlaneCount() {
-  EnsureTextureHost();
-  if (!mTextureHost) {
-    return 0;
-  }
-  RenderTextureHostSWGL* swglHost = mTextureHost->AsRenderTextureHostSWGL();
-  if (!swglHost) {
-    return 0;
-  }
-  return swglHost->GetPlaneCount();
-}
-
-bool RenderTextureHostWrapper::MapPlane(uint8_t aChannelIndex,
-                                        PlaneInfo& aPlaneInfo) {
-  EnsureTextureHost();
-  if (!mTextureHost) {
-    return false;
-  }
-  RenderTextureHostSWGL* swglHost = mTextureHost->AsRenderTextureHostSWGL();
-  if (!swglHost) {
-    return false;
-  }
-  return swglHost->MapPlane(aChannelIndex, aPlaneInfo);
-}
-
-void RenderTextureHostWrapper::UnmapPlanes() {
-  EnsureTextureHost();
-  if (!mTextureHost) {
-    return;
-  }
-  RenderTextureHostSWGL* swglHost = mTextureHost->AsRenderTextureHostSWGL();
-  if (swglHost) {
-    swglHost->UnmapPlanes();
-  }
-}
-
-gfx::YUVColorSpace RenderTextureHostWrapper::GetYUVColorSpace() const {
-  EnsureTextureHost();
-  if (!mTextureHost) {
-    return gfx::YUVColorSpace::UNKNOWN;
-  }
-  RenderTextureHostSWGL* swglHost = mTextureHost->AsRenderTextureHostSWGL();
-  if (!swglHost) {
-    return gfx::YUVColorSpace::UNKNOWN;
-  }
-  return swglHost->GetYUVColorSpace();
 }
 
 }  // namespace wr
