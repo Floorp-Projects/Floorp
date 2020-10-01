@@ -220,23 +220,13 @@ function isCurrentMetadataEqualTo(metadata) {
  * the `options`.
  */
 async function isGivenTabUsingDefaultMetadata(tab, options = {}) {
-  const localization = new Localization([
-    "branding/brand.ftl",
-    "dom/media.ftl",
-  ]);
-  const fallbackTitle = await localization.formatValue(
-    "mediastatus-fallback-title"
-  );
-  ok(fallbackTitle.length > 0, "l10n fallback title is not empty");
-
   const metadata = tab.linkedBrowser.browsingContext.mediaController.getMetadata();
-
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [metadata.title, fallbackTitle, options.isPrivateBrowsing],
-    (title, fallbackTitle, isPrivateBrowsing) => {
+    [metadata.title, options.isPrivateBrowsing],
+    (title, isPrivateBrowsing) => {
       if (isPrivateBrowsing || !content.document.title.length) {
-        is(title, fallbackTitle, "Using a generic default fallback title");
+        is(title, "Firefox is playing media", "Using a generic default title");
       } else {
         is(
           title,
