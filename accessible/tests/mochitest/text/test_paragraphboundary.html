@@ -45,6 +45,12 @@
       testTextAtOffset("link", BOUNDARY_PARAGRAPH,
       [[0, 2, "bc", 0, 2]]);
 
+      // Paragraph with link that contains a line break.
+      testTextAtOffset("pWithLinkWithBr", BOUNDARY_PARAGRAPH,
+      [[0, 0, "a" + kEmbedChar, 0, 2],
+      [1, 1, "a" + kEmbedChar + "d", 0, 3],
+      [2, 3, kEmbedChar + "d", 1, 3]]);
+
       // Test a list and list item
       testTextAtOffset("ul", BOUNDARY_PARAGRAPH,
       [[0, 0, kEmbedChar, 0, 1],
@@ -57,6 +63,25 @@
       testTextAtOffset("textarea_with_br", BOUNDARY_PARAGRAPH,
       [[0, 15, "This is a test.\n", 0, 16],
        [16, 16, "", 16, 16]]);
+
+      // Paragraph with a presentational line break.
+      testTextAtOffset("presentational_br", BOUNDARY_PARAGRAPH,
+       [[0, 3, "a b", 0, 3]]);
+
+      // Two paragraphs in a div, non-editable case.
+      testTextAtOffset("two_paragraphs", BOUNDARY_PARAGRAPH,
+      [[0, 0, kEmbedChar, 0, 1],
+      [1, 2, kEmbedChar, 1, 2]]);
+
+      // Div containing a paragraph containing a link
+      testTextAtOffset("divWithParaWithLink", BOUNDARY_PARAGRAPH,
+      [[0, 0, kEmbedChar, 0, 1],
+      [1, 2, "b", 1, 2]]);
+
+      // Two text nodes and a br
+      testTextAtOffset("twoTextNodesAndBr", BOUNDARY_PARAGRAPH,
+      [[0, 2, "ab\n", 0, 3],
+      [3, 3, "", 3, 3]]);
 
       SimpleTest.finish();
     }
@@ -86,8 +111,13 @@
   <p id="forced_br">a<br>b<br><br>c</p>
   <p id="br_at_beginning"><br>a<br>b</p>
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
+  <p id="pWithLinkWithBr">a<a href="#">b<br>c</a>d</p>
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
   <textarea id="textarea_with_br">This is a test.
 </textarea> <!-- This must be outdented for a correct test case -->
+<p id="presentational_br" style="white-space: pre-wrap;">a<span> <br role="presentation"></span>b</p>
+<div id="two_paragraphs"><p>a</p><p>b</p></div>
+<div id ="divWithParaWithLink"><p><a href="#">a</a></p>b</div>
+<p id="twoTextNodesAndBr">a<span>b</span><br></p>
 </body>
 </html>
