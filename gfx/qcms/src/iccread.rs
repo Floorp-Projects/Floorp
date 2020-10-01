@@ -25,6 +25,7 @@ use std::{
     ptr::null_mut,
     slice,
     sync::atomic::{AtomicBool, Ordering},
+    sync::Arc,
 };
 
 use ::libc;
@@ -32,7 +33,7 @@ use libc::{fclose, fopen, fread, free, malloc, memset, FILE};
 
 use crate::{
     double_to_s15Fixed16Number,
-    transform::{get_rgb_colorants, precache_output, precache_release, set_rgb_colorants},
+    transform::{get_rgb_colorants, precache_output, set_rgb_colorants},
 };
 use crate::{
     matrix::matrix, qcms_intent, s15Fixed16Number, s15Fixed16Number_to_float,
@@ -93,25 +94,9 @@ pub struct qcms_profile {
     pub mAB: Option<Box<lutmABType>>,
     pub mBA: Option<Box<lutmABType>>,
     pub chromaticAdaption: matrix,
-    pub output_table_r: *mut precache_output,
-    pub output_table_g: *mut precache_output,
-    pub output_table_b: *mut precache_output,
-}
-
-impl Drop for qcms_profile {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.output_table_r.is_null() {
-                precache_release(self.output_table_r);
-            }
-            if !self.output_table_g.is_null() {
-                precache_release(self.output_table_g);
-            }
-            if !self.output_table_b.is_null() {
-                precache_release(self.output_table_b);
-            }
-        }
-    }
+    pub output_table_r: Option<Arc<precache_output>>,
+    pub output_table_g: Option<Arc<precache_output>>,
+    pub output_table_b: Option<Arc<precache_output>>,
 }
 
 #[repr(C)]
