@@ -341,8 +341,8 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let mut x: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut y: i32 = (linear_g * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut z: i32 = (linear_b * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
-        let mut x_n: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
-        let mut y_n: i32 = (linear_g * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
+        let mut x_n: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).ceil() as i32;
+        let mut y_n: i32 = (linear_g * ((*transform).grid_size as i32 - 1) as f32).ceil() as i32;
         let mut z_n: i32 = (linear_b * ((*transform).grid_size as i32 - 1) as f32).ceil() as i32;
         let mut x_d: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
         let mut y_d: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;

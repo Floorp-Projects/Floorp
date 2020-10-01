@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod test {
-
     use crate::{
         iccread::*, transform::*, transform_util::lut_inverse_interp16, QCMS_INTENT_PERCEPTUAL,
     };
@@ -259,5 +258,78 @@ mod test {
             assert_ne!(profile, std::ptr::null_mut());
             unsafe { qcms_profile_release(profile) };
         }
+    }
+
+    #[test]
+    fn v4() {
+        use libc::c_void;
+        use std::io::Read;
+
+        let mut p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        unsafe {
+            qcms_enable_iccv4();
+        }
+        p.push("profiles");
+        // this profile was made by taking the lookup table profile from
+        // http://displaycal.net/icc-color-management-test/ and removing
+        // the unneeed tables using lcms
+        p.push("displaycal-lut-stripped.icc");
+
+        let mut file = std::fs::File::open(p).unwrap();
+        let mut data = Vec::new();
+        file.read_to_end(&mut data).unwrap();
+        let profile =
+            unsafe { qcms_profile_from_memory(data.as_ptr() as *const c_void, data.len()) };
+        assert_ne!(profile, std::ptr::null_mut());
+
+        let srgb_profile = unsafe { qcms_profile_sRGB() };
+        assert_ne!(srgb_profile, std::ptr::null_mut());
+
+        unsafe { qcms_profile_precache_output_transform(srgb_profile) };
+
+        let intent = unsafe { qcms_profile_get_rendering_intent(profile) };
+        let transform = unsafe {
+            qcms_transform_create(
+                profile,
+                QCMS_DATA_RGB_8,
+                srgb_profile,
+                QCMS_DATA_RGB_8,
+                intent,
+            )
+        };
+
+        assert_ne!(transform, std::ptr::null_mut());
+
+        const SRC_SIZE: usize = 4;
+        let src: [u8; SRC_SIZE * 3] = [
+            246, 246, 246, // gray
+            255, 0, 0, // red
+            0, 255, 255, // cyan
+            255, 255, 0, // yellow
+        ];
+        let mut dst: [u8; SRC_SIZE * 3] = [0; SRC_SIZE * 3];
+
+        // the reference values here should be adjusted if the accuracy
+        // of the transformation changes
+        let mut reference = [
+            246, 246, 246, // gray
+            255, 0, 0, // red
+            248, 14, 22, // red
+            0, 0, 255, // blue
+        ];
+
+        unsafe {
+            qcms_transform_data(
+                transform,
+                src.as_ptr() as *const libc::c_void,
+                dst.as_mut_ptr() as *mut libc::c_void,
+                SRC_SIZE,
+            );
+        }
+
+        assert_eq!(reference, dst);
+        unsafe { qcms_transform_release(transform) }
+        unsafe { qcms_profile_release(profile) }
+        unsafe { qcms_profile_release(srgb_profile) }
     }
 }
