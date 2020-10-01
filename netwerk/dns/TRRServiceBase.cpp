@@ -124,6 +124,12 @@ void TRRServiceBase::OnTRRModeChange() {
       obs->NotifyObservers(nullptr, NS_NETWORK_TRR_MODE_CHANGED_TOPIC, nullptr);
     }
   }
+
+  static bool readHosts = false;
+  if ((mMode == 2 || mMode == 3) && !readHosts) {
+    readHosts = true;
+    ReadEtcHostsFile();
+  }
 }
 
 void TRRServiceBase::OnTRRURIChange() {
