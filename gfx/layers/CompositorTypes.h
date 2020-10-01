@@ -185,7 +185,6 @@ struct TextureFactoryIdentifier {
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
   bool mUsingAdvancedLayers;
-  bool mUsingSoftwareWebRender;
   SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(
@@ -208,7 +207,6 @@ struct TextureFactoryIdentifier {
         mSupportsPartialUploads(aSupportsPartialUploads),
         mSupportsComponentAlpha(aSupportsComponentAlpha),
         mUsingAdvancedLayers(false),
-        mUsingSoftwareWebRender(false),
         mSyncHandle(aSyncHandle) {}
 
   bool operator==(const TextureFactoryIdentifier& aOther) const {
@@ -224,7 +222,6 @@ struct TextureFactoryIdentifier {
            mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
            mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&
            mUsingAdvancedLayers == aOther.mUsingAdvancedLayers &&
-           mUsingSoftwareWebRender == aOther.mUsingSoftwareWebRender &&
            mSyncHandle == aOther.mSyncHandle;
   }
 };
