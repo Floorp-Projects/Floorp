@@ -197,7 +197,7 @@ add_task(async function test_navigation() {
   // Load a non-remote page
   await waitForLoad("about:robots");
   await TestUtils.waitForCondition(
-    () => gBrowser.selectedBrowser.contentTitle != "about:robots",
+    () => !!gBrowser.selectedBrowser.contentTitle.length,
     "Waiting for about:robots title to update"
   );
   is(
@@ -239,6 +239,10 @@ add_task(async function test_navigation() {
     permanentKey,
     "browser.permanentKey is still the same"
   );
+  await TestUtils.waitForCondition(
+    () => !!gBrowser.selectedBrowser.contentTitle.length,
+    "Waiting for about:robots title to update"
+  );
   await check_history();
 
   info("6");
@@ -267,6 +271,10 @@ add_task(async function test_navigation() {
     permanentKey,
     "browser.permanentKey is still the same"
   );
+  await TestUtils.waitForCondition(
+    () => !!gBrowser.selectedBrowser.contentTitle.length,
+    "Waiting for about:robots title to update"
+  );
   await check_history();
 
   info("8");
@@ -285,6 +293,10 @@ add_task(async function test_navigation() {
 
   info("9");
   await back();
+  await TestUtils.waitForCondition(
+    () => !!gBrowser.selectedBrowser.contentTitle.length,
+    "Waiting for about:robots title to update"
+  );
   is(
     gBrowser.selectedBrowser.isRemoteBrowser,
     false,
@@ -442,7 +454,7 @@ add_task(async function test_loadflags() {
   // Load a non-remote page
   await waitForLoadWithFlags("about:robots");
   await TestUtils.waitForCondition(
-    () => gBrowser.selectedBrowser.contentTitle != "about:robots",
+    () => !!gBrowser.selectedBrowser.contentTitle.length,
     "Waiting for about:robots title to update"
   );
   is(
