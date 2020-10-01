@@ -221,16 +221,13 @@ class FrameParser {
     // The offset of the passed ByteReader needs to point to an MPEG frame
     // begin, as a VBRI-style header is searched at a fixed offset relative to
     // frame begin. Returns whether a valid VBR header was found in the range.
-    bool Parse(BufferReader* aReader, size_t aFrameSize);
-
-    uint32_t EncoderDelay() const { return mEncoderDelay; }
-    uint32_t EncoderPadding() const { return mEncoderPadding; }
+    bool Parse(BufferReader* aReader);
 
    private:
     // Parses contents of given ByteReader for a valid Xing header.
     // The initial ByteReader offset will be preserved.
     // Returns whether a valid Xing header was found in the range.
-    Result<bool, nsresult> ParseXing(BufferReader* aReader, size_t aFrameSize);
+    Result<bool, nsresult> ParseXing(BufferReader* aReader);
 
     // Parses contents of given ByteReader for a valid VBRI header.
     // The initial ByteReader offset will be preserved. It also needs to point
@@ -253,13 +250,6 @@ class FrameParser {
 
     // The detected VBR header type.
     VBRHeaderType mType;
-
-    // Delay and padding values found in the LAME header. The encoder delay is a
-    // number of frames that has to be skipped at the beginning of the stream,
-    // encoder padding is a number of frames that needs to be ignored in the
-    // last packet.
-    uint16_t mEncoderDelay = 0;
-    uint16_t mEncoderPadding = 0;
   };
 
   // Frame meta container used to parse and hold a frame header and side info.
