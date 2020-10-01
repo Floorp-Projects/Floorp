@@ -99,7 +99,7 @@ static const int kMaxBufSizeStart = 62;  // In partitions
 static const int sampMsNb = 8;           // samples per ms in nb
 static const int initCheck = 42;
 
-int Aec::instance_count = 0;
+std::atomic<int> Aec::instance_count = 0;
 
 // Estimates delay to set the position of the far-end buffer read pointer
 // (controlled by knownDelay)
