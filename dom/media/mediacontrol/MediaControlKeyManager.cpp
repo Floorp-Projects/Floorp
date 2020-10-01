@@ -9,6 +9,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/widget/MediaKeysEventSourceFactory.h"
 
@@ -21,6 +22,8 @@
 #define LOG_INFO(msg, ...)                  \
   MOZ_LOG(gMediaControlLog, LogLevel::Info, \
           ("MediaControlKeyManager=%p, " msg, this, ##__VA_ARGS__))
+
+#define MEDIA_CONTROL_PREF "media.hardwaremediakeys.enabled"
 
 namespace mozilla {
 namespace dom {
@@ -43,10 +46,23 @@ bool MediaControlKeyManager::Open() {
   return true;
 }
 
-MediaControlKeyManager::~MediaControlKeyManager() {
+MediaControlKeyManager::MediaControlKeyManager()
+    : mObserver(new Observer(this)) {
+  nsContentUtils::RegisterShutdownObserver(mObserver);
+  Preferences::AddStrongObserver(mObserver, MEDIA_CONTROL_PREF);
+}
+
+MediaControlKeyManager::~MediaControlKeyManager() { Shutdown(); }
+
+void MediaControlKeyManager::Shutdown() {
   StopMonitoringControlKeys();
   mEventSource = nullptr;
   mControllerAmountChangedListener.DisconnectIfExists();
+  if (mObserver) {
+    nsContentUtils::UnregisterShutdownObserver(mObserver);
+    Preferences::RemoveObserver(mObserver, MEDIA_CONTROL_PREF);
+    mObserver = nullptr;
+  }
 }
 
 void MediaControlKeyManager::StartMonitoringControlKeys() {
@@ -64,8 +80,8 @@ void MediaControlKeyManager::StartMonitoringControlKeys() {
     return;
   }
 
-  LOG_INFO("StartMonitoringControlKeys");
   if (!mEventSource->IsOpened() && mEventSource->Open()) {
+    LOG_INFO("StartMonitoringControlKeys");
     mEventSource->SetPlaybackState(mPlaybackState);
     mEventSource->SetMediaMetadata(mMetadata);
     mEventSource->SetSupportedMediaKeys(mSupportedKeys);
@@ -182,6 +198,38 @@ void MediaControlKeyManager::SetPositionState(const PositionState& aState) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPositionState(aState);
   }
+}
+
+void MediaControlKeyManager::OnPreferenceChange() {
+  const bool isPrefEnabled = StaticPrefs::media_hardwaremediakeys_enabled();
+  // Only start monitoring control keys when the pref is on and having a main
+  // controller that means already having media which need to be controlled.
+  const bool shouldMonitorKeys =
+      isPrefEnabled && MediaControlService::GetService()->GetMainController();
+  LOG_INFO("Preference change : %s media control",
+           isPrefEnabled ? "enable" : "disable");
+  if (shouldMonitorKeys) {
+    StartMonitoringControlKeys();
+  } else {
+    StopMonitoringControlKeys();
+  }
+}
+
+NS_IMPL_ISUPPORTS(MediaControlKeyManager::Observer, nsIObserver);
+
+MediaControlKeyManager::Observer::Observer(MediaControlKeyManager* aManager)
+    : mManager(aManager) {}
+
+NS_IMETHODIMP
+MediaControlKeyManager::Observer::Observe(nsISupports* aSubject,
+                                          const char* aTopic,
+                                          const char16_t* aData) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    mManager->Shutdown();
+  } else if (!strcmp(aTopic, "nsPref:changed")) {
+    mManager->OnPreferenceChange();
+  }
+  return NS_OK;
 }
 
 }  // namespace dom
