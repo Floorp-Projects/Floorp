@@ -82,11 +82,6 @@ class MediaControlService final : public nsIObserver {
   MediaMetadataBase GetMainControllerMediaMetadata() const;
   MediaSessionPlaybackState GetMainControllerPlaybackState() const;
 
-  // Media title that should be used as a fallback. This commonly used
-  // when playing media in private browsing mode and we are trying to avoid
-  // exposing potentially sensitive titles.
-  nsString GetFallbackTitle() const;
-
  private:
   MediaControlService();
   ~MediaControlService();
@@ -171,7 +166,6 @@ class MediaControlService final : public nsIObserver {
   RefPtr<MediaControlKeyListener> mMediaKeysHandler;
   MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
   UniquePtr<ControllerManager> mControllerManager;
-  nsString mFallbackTitle;
 };
 
 }  // namespace dom
