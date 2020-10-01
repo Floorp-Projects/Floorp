@@ -212,3 +212,110 @@ async function disableNonReleaseActions() {
     );
   }
 }
+
+function assertActivatedPageActionPanelHidden() {
+  Assert.ok(
+    !document.getElementById(BrowserPageActions._activatedActionPanelID)
+  );
+}
+
+function promiseOpenPageActionPanel() {
+  let dwu = window.windowUtils;
+  return BrowserTestUtils.waitForCondition(() => {
+    // Wait for the main page action button to become visible.  It's hidden for
+    // some URIs, so depending on when this is called, it may not yet be quite
+    // visible.  It's up to the caller to make sure it will be visible.
+    info("Waiting for main page action button to have non-0 size");
+    let bounds = dwu.getBoundsWithoutFlushing(
+      BrowserPageActions.mainButtonNode
+    );
+    return bounds.width > 0 && bounds.height > 0;
+  })
+    .then(() => {
+      // Wait for the panel to become open, by clicking the button if necessary.
+      info("Waiting for main page action panel to be open");
+      if (BrowserPageActions.panelNode.state == "open") {
+        return Promise.resolve();
+      }
+      let shownPromise = promisePageActionPanelShown();
+      EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+      return shownPromise;
+    })
+    .then(() => {
+      // Wait for items in the panel to become visible.
+      return promisePageActionViewChildrenVisible(
+        BrowserPageActions.mainViewNode
+      );
+    });
+}
+
+function promisePageActionPanelShown() {
+  return promisePanelShown(BrowserPageActions.panelNode);
+}
+
+function promisePageActionPanelHidden() {
+  return promisePanelHidden(BrowserPageActions.panelNode);
+}
+
+function promisePanelShown(panelIDOrNode) {
+  return promisePanelEvent(panelIDOrNode, "popupshown");
+}
+
+function promisePanelHidden(panelIDOrNode) {
+  return promisePanelEvent(panelIDOrNode, "popuphidden");
+}
+
+function promisePanelEvent(panelIDOrNode, eventType) {
+  return new Promise(resolve => {
+    let panel = panelIDOrNode;
+    if (typeof panel == "string") {
+      panel = document.getElementById(panelIDOrNode);
+      if (!panel) {
+        throw new Error(`Panel with ID "${panelIDOrNode}" does not exist.`);
+      }
+    }
+    if (
+      (eventType == "popupshown" && panel.state == "open") ||
+      (eventType == "popuphidden" && panel.state == "closed")
+    ) {
+      executeSoon(resolve);
+      return;
+    }
+    panel.addEventListener(
+      eventType,
+      () => {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
+  });
+}
+
+function promisePageActionViewShown() {
+  info("promisePageActionViewShown waiting for ViewShown");
+  return BrowserTestUtils.waitForEvent(
+    BrowserPageActions.panelNode,
+    "ViewShown"
+  ).then(async event => {
+    let panelViewNode = event.originalTarget;
+    await promisePageActionViewChildrenVisible(panelViewNode);
+    return panelViewNode;
+  });
+}
+
+function promisePageActionViewChildrenVisible(panelViewNode) {
+  info(
+    "promisePageActionViewChildrenVisible waiting for a child node to be visible"
+  );
+  let dwu = window.windowUtils;
+  return BrowserTestUtils.waitForCondition(() => {
+    let bodyNode = panelViewNode.firstElementChild;
+    for (let childNode of bodyNode.children) {
+      let bounds = dwu.getBoundsWithoutFlushing(childNode);
+      if (bounds.width > 0 && bounds.height > 0) {
+        return true;
+      }
+    }
+    return false;
+  });
+}
