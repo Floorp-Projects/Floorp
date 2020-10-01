@@ -11,6 +11,7 @@ DevToolsModules(
     'network-events.js',
     'platform-messages.js',
     'root-node.js',
+    'source.js',
     'stylesheet.js',
     'websocket.js',
 )
