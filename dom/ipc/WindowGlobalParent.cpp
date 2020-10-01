@@ -42,6 +42,7 @@
 #include "nsSerializationHelper.h"
 #include "nsIBrowser.h"
 #include "nsIPromptCollection.h"
+#include "nsITimer.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "mozilla/Telemetry.h"
@@ -674,7 +675,8 @@ WindowGlobalParent::RecvSubmitLoadInputEventResponsePreloadTelemetry(
 
 namespace {
 
-class CheckPermitUnloadRequest final : public PromiseNativeHandler {
+class CheckPermitUnloadRequest final : public PromiseNativeHandler,
+                                       public nsITimerCallback {
  public:
   CheckPermitUnloadRequest(WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
                            nsIContentViewer::PermitUnloadAction aAction,
@@ -684,7 +686,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
         mAction(aAction),
         mFoundBlocker(aHasInProcessBlocker) {}
 
-  void Run(ContentParent* aIgnoreProcess = nullptr) {
+  void Run(ContentParent* aIgnoreProcess = nullptr, uint32_t aTimeout = 0) {
     MOZ_ASSERT(mState == State::UNINITIALIZED);
     mState = State::WAITING;
 
@@ -719,6 +721,11 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
       }
     });
 
+    if (mPendingRequests && aTimeout) {
+      Unused << NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, aTimeout,
+                                        nsITimer::TYPE_ONE_SHOT);
+    }
+
     CheckDoneWaiting();
   }
 
@@ -727,15 +734,29 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
     CheckDoneWaiting();
   }
 
+  NS_IMETHODIMP Notify(nsITimer* aTimer) override {
+    MOZ_ASSERT(aTimer == mTimer);
+    if (mState == State::WAITING) {
+      mState = State::TIMED_OUT;
+      CheckDoneWaiting();
+    }
+    return NS_OK;
+  }
+
   void CheckDoneWaiting() {
     // If we've found a blocker, we prompt immediately without waiting for
     // further responses. The user's response applies to the entire navigation
     // attempt, regardless of how many "beforeunload" listeners we call.
-    if (mState != State::WAITING || (mPendingRequests && !mFoundBlocker)) {
+    if (mState != State::TIMED_OUT &&
+        (mState != State::WAITING || (mPendingRequests && !mFoundBlocker))) {
       return;
     }
 
     mState = State::PROMPTING;
+
+    // Clearing our reference to the timer will automatically cancel it if it's
+    // still running.
+    mTimer = nullptr;
 
     if (!mFoundBlocker) {
       SendReply(true);
@@ -815,6 +836,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
   enum class State : uint8_t {
     UNINITIALIZED,
     WAITING,
+    TIMED_OUT,
     PROMPTING,
     REPLIED,
   };
@@ -822,6 +844,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
   std::function<void(bool)> mResolver;
 
   RefPtr<WindowGlobalParent> mWGP;
+  nsCOMPtr<nsITimer> mTimer;
 
   uint32_t mPendingRequests = 0;
 
@@ -832,7 +855,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler {
   bool mFoundBlocker = false;
 };
 
-NS_IMPL_ISUPPORTS0(CheckPermitUnloadRequest)
+NS_IMPL_ISUPPORTS(CheckPermitUnloadRequest, nsITimerCallback)
 
 }  // namespace
 
@@ -852,7 +875,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvCheckPermitUnload(
 }
 
 already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
-    PermitUnloadAction aAction, mozilla::ErrorResult& aRv) {
+    PermitUnloadAction aAction, uint32_t aTimeout, mozilla::ErrorResult& aRv) {
   nsIGlobalObject* global = GetParentObject();
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -863,7 +886,7 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
       this, /* aHasInProcessBlocker */ false,
       nsIContentViewer::PermitUnloadAction(aAction),
       [promise](bool aAllow) { promise->MaybeResolve(aAllow); });
-  request->Run();
+  request->Run(/* aIgnoreProcess */ nullptr, aTimeout);
 
   return promise.forget();
 }
