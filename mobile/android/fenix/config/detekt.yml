@@ -112,6 +112,8 @@ mozilla-detekt-rules:
     # with the debuggable flag or not. Use a check for different build variants,
     # instead.
     bannedProperties: "BuildConfig.DEBUG"
+  MozillaCorrectUnitTestRunner:
+    active: true
 
 empty-blocks:
   active: true

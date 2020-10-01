@@ -14,7 +14,8 @@ class CustomRulesetProvider : RuleSetProvider {
     override fun instance(config: Config): RuleSet = RuleSet(
         ruleSetId,
         listOf(
-            MozillaBannedPropertyAccess(config)
+            MozillaBannedPropertyAccess(config),
+            MozillaCorrectUnitTestRunner(config)
         )
     )
 }
