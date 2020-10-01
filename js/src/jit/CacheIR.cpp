@@ -1067,7 +1067,7 @@ static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
 }
 
 static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
-                                     HandleObject obj, HandleShape shape,
+                                     JSObject* obj, HandleShape shape,
                                      ICState::Mode mode) {
   MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
   if (!JitOptions.warpBuilder) {
@@ -1090,6 +1090,7 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
   }
 
   const JSJitInfo* jitInfo = fun->jitInfo();
+  MOZ_ASSERT_IF(IsWindow(obj), !jitInfo->needsOuterizedThisObject());
   if (jitInfo->type() != type) {
     return false;
   }
@@ -1104,6 +1105,13 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
   return instanceChecker(clasp, jitInfo->protoID, jitInfo->depth);
 }
 
+static void EmitCallDOMGetterResultNoGuards(CacheIRWriter& writer, Shape* shape,
+                                            ObjOperandId objId) {
+  JSFunction* getter = &shape->getterValue().toObject().as<JSFunction>();
+  writer.callDOMGetterResult(objId, getter->jitInfo());
+  writer.typeMonitorResult();
+}
+
 static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
                                     JSObject* obj, JSObject* holder,
                                     Shape* shape, ObjOperandId objId) {
@@ -1112,10 +1120,7 @@ static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
   // The shape guard ensures the receiver's Class is valid for this DOM getter.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId,
                              ICState::Mode::Specialized);
-
-  JSFunction* getter = &shape->getterValue().toObject().as<JSFunction>();
-  writer.callDOMGetterResult(objId, getter->jitInfo());
-  writer.typeMonitorResult();
+  EmitCallDOMGetterResultNoGuards(writer, shape, objId);
 }
 
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
@@ -2882,11 +2887,18 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     writer.guardShape(holderId, holder->lastProperty());
   }
 
-  ValOperandId receiverId = writer.boxObject(globalId);
-  EmitCallGetterResultNoGuards(cx_, writer, &globalLexical->global(), holder,
-                               shape, receiverId);
+  if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, &globalLexical->global(),
+                               shape, mode_)) {
+    // The global shape guard above ensures the instance JSClass is correct.
+    EmitCallDOMGetterResultNoGuards(writer, shape, globalId);
+    trackAttached("GlobalNameDOMGetter");
+  } else {
+    ValOperandId receiverId = writer.boxObject(globalId);
+    EmitCallGetterResultNoGuards(cx_, writer, &globalLexical->global(), holder,
+                                 shape, receiverId);
+    trackAttached("GlobalNameGetter");
+  }
 
-  trackAttached("GlobalNameGetter");
   return AttachDecision::Attach;
 }
 
