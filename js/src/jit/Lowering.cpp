@@ -1887,6 +1887,14 @@ void LIRGenerator::visitWasmBuiltinTruncateToInt64(
   lowerWasmBuiltinTruncateToInt64(ins);
 }
 
+void LIRGenerator::visitWasmBuiltinModD(MWasmBuiltinModD* ins) {
+  MOZ_ASSERT(gen->compilingWasm());
+  LWasmBuiltinModD* lir = new (alloc()) LWasmBuiltinModD(
+      useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
+      useFixedAtStart(ins->tls(), WasmTlsReg));
+  defineReturn(lir, ins);
+}
+
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
   MOZ_ASSERT(IsNumberType(ins->type()));
@@ -1910,13 +1918,13 @@ void LIRGenerator::visitMod(MMod* ins) {
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Double);
     MOZ_ASSERT(ins->rhs()->type() == MIRType::Double);
 
-    // Ion does an unaligned ABI call and thus needs a temp register. Wasm
-    // doesn't.
-    LDefinition maybeTemp = gen->compilingWasm() ? LDefinition::BogusTemp()
-                                                 : tempFixed(CallTempReg0);
+    MOZ_ASSERT(!gen->compilingWasm());
 
-    LModD* lir = new (alloc()) LModD(useRegisterAtStart(ins->lhs()),
-                                     useRegisterAtStart(ins->rhs()), maybeTemp);
+    // Ion does an unaligned ABI call and thus needs a temp register.
+    // Note: useRegisterAtStart is safe here, the temp is not a FP register.
+    LModD* lir = new (alloc())
+        LModD(useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
+              tempFixed(CallTempReg0));
     defineReturn(lir, ins);
     return;
   }
