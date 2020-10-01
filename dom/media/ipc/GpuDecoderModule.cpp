@@ -37,6 +37,7 @@ bool GpuDecoderModule::Supports(const TrackInfo& aTrackInfo,
 static inline bool IsRemoteAcceleratedCompositor(KnowsCompositor* aKnows) {
   TextureFactoryIdentifier ident = aKnows->GetTextureFactoryIdentifier();
   return ident.mParentBackend != LayersBackend::LAYERS_BASIC &&
+         !ident.mUsingSoftwareWebRender &&
          ident.mParentProcessType == GeckoProcessType_GPU;
 }
 

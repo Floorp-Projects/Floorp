@@ -158,7 +158,7 @@ CompositorBridgeChild* WebRenderLayerManager::GetCompositorBridgeChild() {
 }
 
 void WebRenderLayerManager::GetBackendName(nsAString& name) {
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
+  if (WrBridge()->GetTextureFactoryIdentifier().mUsingSoftwareWebRender) {
     name.AssignLiteral("WebRender (Software)");
   } else {
     name.AssignLiteral("WebRender");
