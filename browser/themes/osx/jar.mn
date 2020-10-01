@@ -32,5 +32,5 @@ browser.jar:
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/share.svg                            (share.svg)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)
-
+  skin/classic/browser/webRTC-menubar-indicator.css         (../shared/webRTC-menubar-indicator.css)
 % override chrome://browser/skin/notification-icons/geo-detailed.svg       chrome://browser/skin/notification-icons/geo.svg
