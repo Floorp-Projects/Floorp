@@ -597,7 +597,6 @@ NS_IMETHODIMP nsPrintSettings::SetShowPrintProgress(bool aShowPrintProgress) {
 }
 
 NS_IMETHODIMP nsPrintSettings::GetShowMarginGuides(bool* aShowMarginGuides) {
-  NS_ENSURE_ARG_POINTER(aShowMarginGuides);
   *aShowMarginGuides = mShowMarginGuides;
   return NS_OK;
 }
