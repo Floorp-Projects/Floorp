@@ -67,6 +67,16 @@ def params():
             id="no previous backstop",
         ),
         pytest.param(
+            {
+                "index": DEFAULT_RESPONSES["index"],
+                "status": DEFAULT_RESPONSES["status"],
+                "artifact": {"status": 404},
+            },
+            {"pushlog_id": 1},
+            False,
+            id="previous backstop not finished",
+        ),
+        pytest.param(
             DEFAULT_RESPONSES,
             {
                 "pushlog_id": LAST_BACKSTOP_ID + 1,
