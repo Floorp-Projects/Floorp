@@ -179,9 +179,7 @@ uint32_t ResponsiveImageSelector::NumCandidates(bool aIncludeDefault) {
   uint32_t candidates = mCandidates.Length();
 
   // If present, the default candidate is the last item
-  if (!aIncludeDefault && candidates &&
-      (mCandidates[candidates - 1].Type() ==
-       ResponsiveImageCandidate::eCandidateType_Default)) {
+  if (!aIncludeDefault && candidates && mCandidates.LastElement().IsDefault()) {
     candidates--;
   }
 
@@ -201,9 +199,7 @@ void ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString,
   ClearSelectedCandidate();
 
   // Check if the last element of our candidates is a default
-  int32_t candidates = mCandidates.Length();
-  if (candidates && (mCandidates[candidates - 1].Type() ==
-                     ResponsiveImageCandidate::eCandidateType_Default)) {
+  if (!mCandidates.IsEmpty() && mCandidates.LastElement().IsDefault()) {
     mCandidates.RemoveLastElement();
   }
 
@@ -233,7 +229,7 @@ void ResponsiveImageSelector::AppendCandidateIfUnique(
 
   // With the exception of Default, which should not be added until we are done
   // building the list.
-  if (aCandidate.Type() == ResponsiveImageCandidate::eCandidateType_Default) {
+  if (aCandidate.IsDefault()) {
     return;
   }
 
@@ -416,7 +412,7 @@ bool ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(
 }
 
 ResponsiveImageCandidate::ResponsiveImageCandidate() {
-  mType = eCandidateType_Invalid;
+  mType = CandidateType::Invalid;
   mValue.mDensity = 1.0;
 }
 
@@ -424,7 +420,7 @@ ResponsiveImageCandidate::ResponsiveImageCandidate(
     const nsAString& aURLString, double aDensity,
     nsIPrincipal* aTriggeringPrincipal)
     : mURLString(aURLString), mTriggeringPrincipal(aTriggeringPrincipal) {
-  mType = eCandidateType_Density;
+  mType = CandidateType::Density;
   mValue.mDensity = aDensity;
 }
 
@@ -438,30 +434,30 @@ void ResponsiveImageCandidate::SetTriggeringPrincipal(
 }
 
 void ResponsiveImageCandidate::SetParameterAsComputedWidth(int32_t aWidth) {
-  mType = eCandidateType_ComputedFromWidth;
+  mType = CandidateType::ComputedFromWidth;
   mValue.mWidth = aWidth;
 }
 
 void ResponsiveImageCandidate::SetParameterDefault() {
-  MOZ_ASSERT(mType == eCandidateType_Invalid, "double setting candidate type");
+  MOZ_ASSERT(!IsValid(), "double setting candidate type");
 
-  mType = eCandidateType_Default;
+  mType = CandidateType::Default;
   // mValue shouldn't actually be used for this type, but set it to default
   // anyway
   mValue.mDensity = 1.0;
 }
 
 void ResponsiveImageCandidate::SetParameterInvalid() {
-  mType = eCandidateType_Invalid;
+  mType = CandidateType::Invalid;
   // mValue shouldn't actually be used for this type, but set it to default
   // anyway
   mValue.mDensity = 1.0;
 }
 
 void ResponsiveImageCandidate::SetParameterAsDensity(double aDensity) {
-  MOZ_ASSERT(mType == eCandidateType_Invalid, "double setting candidate type");
+  MOZ_ASSERT(!IsValid(), "double setting candidate type");
 
-  mType = eCandidateType_Density;
+  mType = CandidateType::Density;
   mValue.mDensity = aDensity;
 }
 
@@ -634,7 +630,7 @@ bool ResponsiveImageCandidate::ConsumeDescriptors(
 
   descriptors.FillCandidate(*this);
 
-  return Type() != eCandidateType_Invalid;
+  return IsValid();
 }
 
 bool ResponsiveImageCandidate::HasSameParameter(
@@ -643,18 +639,20 @@ bool ResponsiveImageCandidate::HasSameParameter(
     return false;
   }
 
-  if (mType == eCandidateType_Default) {
+  if (mType == CandidateType::Default) {
     return true;
   }
 
-  if (mType == eCandidateType_Density) {
+  if (mType == CandidateType::Density) {
     return aOther.mValue.mDensity == mValue.mDensity;
   }
 
-  if (mType == eCandidateType_Invalid) {
-    MOZ_ASSERT(false, "Comparing invalid candidates?");
+  if (mType == CandidateType::Invalid) {
+    MOZ_ASSERT_UNREACHABLE("Comparing invalid candidates?");
     return true;
-  } else if (mType == eCandidateType_ComputedFromWidth) {
+  }
+
+  if (mType == CandidateType::ComputedFromWidth) {
     return aOther.mValue.mWidth == mValue.mWidth;
   }
 
@@ -662,17 +660,9 @@ bool ResponsiveImageCandidate::HasSameParameter(
   return false;
 }
 
-const nsAString& ResponsiveImageCandidate::URLString() const {
-  return mURLString;
-}
-
-nsIPrincipal* ResponsiveImageCandidate::TriggeringPrincipal() const {
-  return mTriggeringPrincipal;
-}
-
 double ResponsiveImageCandidate::Density(
     ResponsiveImageSelector* aSelector) const {
-  if (mType == eCandidateType_ComputedFromWidth) {
+  if (mType == CandidateType::ComputedFromWidth) {
     double width;
     if (!aSelector->ComputeFinalWidthForCurrentViewport(&width)) {
       return 1.0;
@@ -681,24 +671,25 @@ double ResponsiveImageCandidate::Density(
   }
 
   // Other types don't need matching width
-  MOZ_ASSERT(mType == eCandidateType_Default || mType == eCandidateType_Density,
+  MOZ_ASSERT(mType == CandidateType::Default || mType == CandidateType::Density,
              "unhandled candidate type");
   return Density(-1);
 }
 
 double ResponsiveImageCandidate::Density(double aMatchingWidth) const {
-  if (mType == eCandidateType_Invalid) {
+  if (mType == CandidateType::Invalid) {
     MOZ_ASSERT(false, "Getting density for uninitialized candidate");
     return 1.0;
   }
 
-  if (mType == eCandidateType_Default) {
+  if (mType == CandidateType::Default) {
     return 1.0;
   }
 
-  if (mType == eCandidateType_Density) {
+  if (mType == CandidateType::Density) {
     return mValue.mDensity;
-  } else if (mType == eCandidateType_ComputedFromWidth) {
+  }
+  if (mType == CandidateType::ComputedFromWidth) {
     if (aMatchingWidth < 0) {
       MOZ_ASSERT(
           false,
@@ -712,16 +703,6 @@ double ResponsiveImageCandidate::Density(double aMatchingWidth) const {
 
   MOZ_ASSERT(false, "Unknown candidate type");
   return 1.0;
-}
-
-bool ResponsiveImageCandidate::IsComputedFromWidth() const {
-  if (mType == eCandidateType_ComputedFromWidth) {
-    return true;
-  }
-
-  MOZ_ASSERT(mType == eCandidateType_Default || mType == eCandidateType_Density,
-             "Unknown candidate type");
-  return false;
 }
 
 }  // namespace dom
