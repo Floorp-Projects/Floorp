@@ -5095,9 +5095,11 @@ void LIRGenerator::visitWasmParameter(MWasmParameter* ins) {
 
 void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
   MDefinition* rval = ins->getOperand(0);
+  MDefinition* tlsParam = ins->getOperand(1);
 
   if (rval->type() == MIRType::Int64) {
-    add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64)));
+    add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64),
+                                     useFixed(tlsParam, WasmTlsReg)));
     return;
   }
 
@@ -5117,11 +5119,16 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
     MOZ_CRASH("Unexpected wasm return type");
   }
 
+  lir->setOperand(1, useFixed(tlsParam, WasmTlsReg));
+
   add(lir);
 }
 
 void LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins) {
-  add(new (alloc()) LWasmReturnVoid);
+  MDefinition* tlsParam = ins->getOperand(0);
+  LWasmReturnVoid* lir = new (alloc()) LWasmReturnVoid;
+  lir->setOperand(0, useFixed(tlsParam, WasmTlsReg));
+  add(lir);
 }
 
 void LIRGenerator::visitWasmStackArg(MWasmStackArg* ins) {

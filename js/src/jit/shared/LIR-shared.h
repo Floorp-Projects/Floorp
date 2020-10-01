@@ -7521,24 +7521,26 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
   LWasmParameterI64() : LInstructionHelper(classOpcode) {}
 };
 
-class LWasmReturn : public LInstructionHelper<0, 1, 0> {
+class LWasmReturn : public LInstructionHelper<0, 2, 0> {
  public:
   LIR_HEADER(WasmReturn);
 
   LWasmReturn() : LInstructionHelper(classOpcode) {}
 };
 
-class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES, 0> {
+// +1 for tls.
+class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
  public:
   LIR_HEADER(WasmReturnI64)
 
-  explicit LWasmReturnI64(const LInt64Allocation& input)
+  LWasmReturnI64(const LInt64Allocation& input, const LAllocation& tls)
       : LInstructionHelper(classOpcode) {
     setInt64Operand(0, input);
+    setOperand(INT64_PIECES, tls);
   }
 };
 
-class LWasmReturnVoid : public LInstructionHelper<0, 0, 0> {
+class LWasmReturnVoid : public LInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(WasmReturnVoid);
 
