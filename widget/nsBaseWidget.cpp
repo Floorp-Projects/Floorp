@@ -1015,54 +1015,54 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   return status;
 }
 
-template <class InputType, class EventType>
-class DispatchEventOnMainThread : public Runnable {
+class DispatchWheelEventOnMainThread : public Runnable {
  public:
-  DispatchEventOnMainThread(const InputType& aInput, nsBaseWidget* aWidget,
-                            const APZEventResult& aAPZResult)
-      : mozilla::Runnable("DispatchEventOnMainThread"),
-        mInput(aInput),
+  DispatchWheelEventOnMainThread(const ScrollWheelInput& aWheelInput,
+                                 nsBaseWidget* aWidget,
+                                 const APZEventResult& aAPZResult)
+      : mozilla::Runnable("DispatchWheelEventOnMainThread"),
+        mWheelInput(aWheelInput),
         mWidget(aWidget),
         mAPZResult(aAPZResult) {}
 
   NS_IMETHOD Run() override {
-    EventType event = mInput.ToWidgetEvent(mWidget);
-    mWidget->ProcessUntransformedAPZEvent(&event, mAPZResult);
+    WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetWheelEvent(mWidget);
+    mWidget->ProcessUntransformedAPZEvent(&wheelEvent, mAPZResult);
     return NS_OK;
   }
 
  private:
-  InputType mInput;
+  ScrollWheelInput mWheelInput;
   nsBaseWidget* mWidget;
   APZEventResult mAPZResult;
 };
 
-template <class InputType, class EventType>
-class DispatchInputOnControllerThread : public Runnable {
+class DispatchWheelInputOnControllerThread : public Runnable {
  public:
-  DispatchInputOnControllerThread(const EventType& aEvent,
-                                  IAPZCTreeManager* aAPZC,
-                                  nsBaseWidget* aWidget)
-      : mozilla::Runnable("DispatchInputOnControllerThread"),
+  DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
+                                       IAPZCTreeManager* aAPZC,
+                                       nsBaseWidget* aWidget)
+      : mozilla::Runnable("DispatchWheelInputOnControllerThread"),
         mMainMessageLoop(MessageLoop::current()),
-        mInput(aEvent),
+        mWheelInput(aWheelEvent),
         mAPZC(aAPZC),
         mWidget(aWidget) {}
 
   NS_IMETHOD Run() override {
-    APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(mInput);
+    APZEventResult result =
+        mAPZC->InputBridge()->ReceiveInputEvent(mWheelInput);
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return NS_OK;
     }
-    RefPtr<Runnable> r = new DispatchEventOnMainThread<InputType, EventType>(
-        mInput, mWidget, result);
+    RefPtr<Runnable> r =
+        new DispatchWheelEventOnMainThread(mWheelInput, mWidget, result);
     mMainMessageLoop->PostTask(r.forget());
     return NS_OK;
   }
 
  private:
   MessageLoop* mMainMessageLoop;
-  InputType mInput;
+  ScrollWheelInput mWheelInput;
   RefPtr<IAPZCTreeManager> mAPZC;
   nsBaseWidget* mWidget;
 };
@@ -1097,10 +1097,10 @@ void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
       return;
     }
 
-    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
+    WidgetWheelEvent event = aInput.ToWidgetWheelEvent(this);
     ProcessUntransformedAPZEvent(&event, result);
   } else {
-    WidgetWheelEvent event = aInput.ToWidgetEvent(this);
+    WidgetWheelEvent event = aInput.ToWidgetWheelEvent(this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1117,18 +1117,10 @@ nsEventStatus nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
       }
       return ProcessUntransformedAPZEvent(aEvent, result);
     }
-    if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
+    WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
+    if (wheelEvent) {
       RefPtr<Runnable> r =
-          new DispatchInputOnControllerThread<ScrollWheelInput,
-                                              WidgetWheelEvent>(*wheelEvent,
-                                                                mAPZC, this);
-      APZThreadUtils::RunOnControllerThread(std::move(r));
-      return nsEventStatus_eConsumeDoDefault;
-    }
-    if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
-      RefPtr<Runnable> r =
-          new DispatchInputOnControllerThread<MouseInput, WidgetMouseEvent>(
-              *mouseEvent, mAPZC, this);
+          new DispatchWheelInputOnControllerThread(*wheelEvent, mAPZC, this);
       APZThreadUtils::RunOnControllerThread(std::move(r));
       return nsEventStatus_eConsumeDoDefault;
     }

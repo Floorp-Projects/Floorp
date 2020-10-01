@@ -309,7 +309,7 @@ bool MouseInput::TransformToLocal(
   return true;
 }
 
-WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
+WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetTouchEvent on main thread");
 
@@ -431,7 +431,7 @@ bool PanGestureInput::IsMomentum() const {
   }
 }
 
-WidgetWheelEvent PanGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
+WidgetWheelEvent PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
@@ -546,7 +546,8 @@ bool PinchGestureInput::TransformToLocal(
   return true;
 }
 
-WidgetWheelEvent PinchGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
+WidgetWheelEvent PinchGestureInput::ToWidgetWheelEvent(
+    nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers | MODIFIER_CONTROL;
   wheelEvent.mTime = mTime;
@@ -766,7 +767,8 @@ ScrollUnit ScrollWheelInput::ScrollUnitForDeltaType(
   return ScrollUnit::LINES;
 }
 
-WidgetWheelEvent ScrollWheelInput::ToWidgetEvent(nsIWidget* aWidget) const {
+WidgetWheelEvent ScrollWheelInput::ToWidgetWheelEvent(
+    nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
