@@ -15,6 +15,8 @@ add_task(async function() {
 
   // Navigate to a content process URL and check that the sources tree updates
   await navigate(dbg, EXAMPLE_URL + "doc-scripts.html", "simple1.js");
+  info("Wait for all sources to be in the store");
+  await waitFor(() => dbg.selectors.getSourceCount() == 5);
   is(dbg.selectors.getSourceCount(), 5, "5 sources are loaded.");
 
   // Check that you can still break after target switching.
