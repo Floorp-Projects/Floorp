@@ -1,0 +1,15 @@
+# This file is the websocketprocess requirements.txt used with python 3.
+
+# needed by txws, and we'd like pip to get it from the local server before setuptools tries pypi
+six
+vcversioner==2.16.0.0
+twisted>=18.7.0
+
+# websocket adapter for twisted, might be built into twisted someday
+txws==0.9.1
+
+psutil>=5.6.3
+
+# Needed by iceserver
+ipaddr>=2.2.0
+passlib==1.6.5
