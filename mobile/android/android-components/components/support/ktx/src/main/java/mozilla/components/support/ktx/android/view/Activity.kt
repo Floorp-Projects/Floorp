@@ -8,26 +8,38 @@
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
+import android.os.Build
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Attempts to call immersive mode using the View to hide the status bar and navigation buttons.
  */
+@Suppress("DEPRECATION")
 fun Activity.enterToImmersiveMode() {
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-        or View.SYSTEM_UI_FLAG_FULLSCREEN
-        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        window.insetsController?.apply {
+            systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsets.Type.systemBars())
+        }
+    } else {
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+    }
 }
 
 /**
  * Attempts to come out from immersive mode using the View.
  */
+@Suppress("DEPRECATION")
 fun Activity.exitImmersiveModeIfNeeded() {
     if (WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON and window.attributes.flags == 0) {
         // We left immersive mode already.
@@ -35,7 +47,11 @@ fun Activity.exitImmersiveModeIfNeeded() {
     }
 
     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        window.insetsController?.show(WindowInsets.Type.systemBars())
+    } else {
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+    }
 }
 
 /**
