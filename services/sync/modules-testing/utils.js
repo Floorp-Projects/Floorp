@@ -44,6 +44,9 @@ const { FxAccounts } = ChromeUtils.import(
 const { FxAccountsClient } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsClient.jsm"
 );
+const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
@@ -150,9 +153,23 @@ var makeIdentityConfig = function(overrides) {
         assertion: "assertion",
         email: "foo",
         kSync: "a".repeat(128),
-        kXCS: "a".repeat(32),
-        kExtSync: "a".repeat(128),
-        kExtKbHash: "a".repeat(32),
+        kXCS: "b".repeat(32),
+        kExtSync: "c".repeat(128),
+        kExtKbHash: "d".repeat(64),
+        scopedKeys: {
+          [SCOPE_OLD_SYNC]: {
+            kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",
+            k:
+              "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
+            kty: "oct",
+          },
+          [LEGACY_SCOPE_WEBEXT_SYNC]: {
+            kid: "1234567890123-3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
+            k:
+              "zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzA",
+            kty: "oct",
+          },
+        },
         sessionToken: "sessionToken",
         uid: "a".repeat(32),
         verified: true,

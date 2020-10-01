@@ -384,6 +384,15 @@ class FxAccountsDevice {
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
   // devices to re-register when Firefox updates.
   async _registerOrUpdateDevice(currentState, signedInUser) {
+    // This method has the side-effect of setting some account-related prefs
+    // (e.g. for caching the device name) so it's important we don't execute it
+    // if the signed-in state has changed.
+    if (!currentState.isCurrent) {
+      throw new Error(
+        "_registerOrUpdateDevice called after a different user has signed in"
+      );
+    }
+
     const { sessionToken, device: currentDevice } = signedInUser;
     if (!sessionToken) {
       throw new Error("_registerOrUpdateDevice called without a session token");
@@ -550,7 +559,7 @@ class FxAccountsDevice {
     // registration will be retried.
     log.error("device registration failed", error);
     try {
-      currentState.updateUserAccountData({
+      await currentState.updateUserAccountData({
         device: null,
       });
     } catch (secondError) {

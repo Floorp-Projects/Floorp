@@ -4,9 +4,12 @@
 
 const EXPORTED_SYMBOLS = ["SendTab", "FxAccountsCommands"];
 
-const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL, log } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
+const {
+  COMMAND_SENDTAB,
+  COMMAND_SENDTAB_TAIL,
+  SCOPE_OLD_SYNC,
+  log,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.defineModuleGetter(
   this,
   "PushCrypto",
@@ -234,9 +237,9 @@ class FxAccountsCommands {
 /**
  * Send Tab is built on top of FxA commands.
  *
- * Devices exchange keys wrapped in kSync between themselves (getEncryptedKey)
+ * Devices exchange keys wrapped in the oldsync key between themselves (getEncryptedKey)
  * during the device registration flow. The FxA server can theorically never
- * retrieve the send tab keys since it doesn't know kSync.
+ * retrieve the send tab keys since it doesn't know the oldsync key.
  */
 class SendTab {
   constructor(commands, fxAccountsInternal) {
@@ -329,7 +332,9 @@ class SendTab {
     if (!bundle) {
       throw new Error(`Device ${device.id} does not have send tab keys.`);
     }
-    const { kSync, kXCS: ourKid } = await this._fxai.keys.getKeys();
+    const oldsyncKey = await this._fxai.keys.getKeyForScope(SCOPE_OLD_SYNC);
+    // Older clients expect this to be hex, due to pre-JWK sync key ids :-(
+    const ourKid = this._fxai.keys.kidAsHex(oldsyncKey);
     const { kid: theirKid } = JSON.parse(
       device.availableCommands[COMMAND_SENDTAB]
     );
@@ -339,7 +344,7 @@ class SendTab {
     const json = JSON.parse(bundle);
     const wrapper = new CryptoWrapper();
     wrapper.deserialize({ payload: json });
-    const syncKeyBundle = BulkKeyBundle.fromHexKey(kSync);
+    const syncKeyBundle = BulkKeyBundle.fromJWK(oldsyncKey);
     let { publicKey, authSecret } = await wrapper.decrypt(syncKeyBundle);
     authSecret = urlsafeBase64Decode(authSecret);
     publicKey = urlsafeBase64Decode(publicKey);
@@ -406,33 +411,29 @@ class SendTab {
     };
     // getEncryptedKey() will be called as part of device registration, which
     // happens immediately after signup/signin, so there's a good chance we
-    // don't yet have kSync et. al. Unverified users will be unable to fetch
+    // don't yet have the sync keys. Unverified users will be unable to fetch
     // keys, meaning they will end up registering the device twice (once without
     // sendtab support, then once with sendtab support when they verify), but
     // that's OK.
-    if (!(await this._fxai.keys.canGetKeys())) {
+    // TODO: this will fail if master password is locked; should we prompt to unlock it here?
+    if (!(await this._fxai.keys.canGetKeyForScope(SCOPE_OLD_SYNC))) {
       log.info("Can't fetch keys, so unable to determine sendtab keys");
       return null;
     }
-    let kSync, kXCS;
+    let oldsyncKey;
     try {
-      ({ kSync, kXCS } = await this._fxai.keys.getKeys());
-      if (!kSync || !kXCS) {
-        log.warn(
-          "Fetched the keys but didn't get any, so unable to determine sendtab keys"
-        );
-        return null;
-      }
+      oldsyncKey = await this._fxai.keys.getKeyForScope(SCOPE_OLD_SYNC);
     } catch (ex) {
       log.warn("Failed to fetch keys, so unable to determine sendtab keys", ex);
       return null;
     }
     const wrapper = new CryptoWrapper();
     wrapper.cleartext = keyToEncrypt;
-    const keyBundle = BulkKeyBundle.fromHexKey(kSync);
+    const keyBundle = BulkKeyBundle.fromJWK(oldsyncKey);
     await wrapper.encrypt(keyBundle);
     return JSON.stringify({
-      kid: kXCS,
+      // Older clients expect this to be hex, due to pre-JWK sync key ids :-(
+      kid: this._fxai.keys.kidAsHex(oldsyncKey),
       IV: wrapper.IV,
       hmac: wrapper.hmac,
       ciphertext: wrapper.ciphertext,

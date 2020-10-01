@@ -50,6 +50,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "CommonUtils",
+  "resource://services-common/utils.js"
+);
+
 XPCOMUtils.defineLazyGetter(this, "log", function() {
   let log = Log.repository.getLogger("Sync.BrowserIDManager");
   log.manageLevelFromPref("services.sync.log.logger.identity");
@@ -74,6 +80,8 @@ ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js",
   fxAccountsCommon
 );
+
+const SCOPE_OLD_SYNC = fxAccountsCommon.SCOPE_OLD_SYNC;
 
 const OBSERVER_TOPICS = [
   fxAccountsCommon.ONLOGIN_NOTIFICATION,
@@ -306,6 +314,7 @@ this.BrowserIDManager.prototype = {
    */
   async unlockAndVerifyAuthState() {
     let data = await this.getSignedInUser();
+    const fxa = this._fxaService;
     if (!data) {
       log.debug("unlockAndVerifyAuthState has no FxA user");
       return LOGIN_FAILED_NO_USERNAME;
@@ -320,7 +329,7 @@ this.BrowserIDManager.prototype = {
       log.debug("unlockAndVerifyAuthState has an unverified user");
       return LOGIN_FAILED_LOGIN_REJECTED;
     }
-    if (await this._fxaService.keys.canGetKeys()) {
+    if (await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC)) {
       log.debug(
         "unlockAndVerifyAuthState already has (or can fetch) sync keys"
       );
@@ -338,7 +347,7 @@ this.BrowserIDManager.prototype = {
     // without unlocking the MP or cleared the saved logins, so we've now
     // lost them - the user will need to reauth before continuing.
     let result;
-    if (await this._fxaService.keys.canGetKeys()) {
+    if (await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC)) {
       result = STATUS_OK;
     } else {
       result = LOGIN_FAILED_LOGIN_REJECTED;
@@ -392,7 +401,7 @@ this.BrowserIDManager.prototype = {
     // We need keys for things to work.  If we don't have them, just
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
-    if (!(await fxa.keys.canGetKeys())) {
+    if (!(await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC))) {
       this._log.info(
         "Unable to fetch keys (master-password locked?), so aborting token fetch"
       );
@@ -400,47 +409,38 @@ this.BrowserIDManager.prototype = {
     }
 
     // Do the assertion/certificate/token dance, with a retry.
-    let getToken = async keys => {
-      this._log.info("Getting an assertion from", this._tokenServerUrl);
+    let getToken = async key => {
+      this._log.info("Getting a sync token from", this._tokenServerUrl);
       let token;
-
       if (USE_OAUTH_FOR_SYNC_TOKEN) {
-        token = await this._fetchTokenUsingOAuth();
+        token = await this._fetchTokenUsingOAuth(key);
       } else {
-        const audience = Services.io.newURI(this._tokenServerUrl).prePath;
-        const assertion = await fxa._internal.getAssertion(audience);
-        this._log.debug("Getting a token using an Assertion");
-        const headers = { "X-Client-State": keys.kXCS };
-        token = await this._tokenServerClient.getTokenFromBrowserIDAssertion(
-          this._tokenServerUrl,
-          assertion,
-          headers
-        );
+        token = await this._fetchTokenUsingBrowserID(key);
       }
-
       this._log.trace("Successfully got a token");
       return token;
     };
 
     try {
-      let token;
-      let keys;
+      let token, key;
       try {
-        this._log.info("Getting keys");
-        keys = await fxa.keys.getKeys(); // throws if the user changed.
-        token = await getToken(keys);
+        this._log.info("Getting sync key");
+        key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+        if (!key) {
+          throw new Error("browser does not have the sync key, cannot sync");
+        }
+        token = await getToken(key);
       } catch (err) {
-        // If we get a 401 fetching the token it may be that our certificate
-        // needs to be regenerated.
+        // If we get a 401 fetching the token it may be that our auth tokens needed
+        // to be regenerated; retry exactly once.
         if (!err.response || err.response.status !== 401) {
           throw err;
         }
         this._log.warn(
-          "Token server returned 401, refreshing certificate and retrying token fetch"
+          "Token server returned 401, retrying token fetch with fresh credentials"
         );
-        await fxa._internal.invalidateCertificate();
-        keys = await fxa.keys.getKeys();
-        token = await getToken(keys);
+        key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+        token = await getToken(key);
       }
       // TODO: Make it be only 80% of the duration, so refresh the token
       // before it actually expires. This is to avoid sync storage errors
@@ -448,7 +448,7 @@ this.BrowserIDManager.prototype = {
       // (XXX - the above may no longer be true - someone should check ;)
       token.expiration = this._now() + token.duration * 1000 * 0.8;
       if (!this._syncKeyBundle) {
-        this._syncKeyBundle = BulkKeyBundle.fromHexKey(keys.kSync);
+        this._syncKeyBundle = BulkKeyBundle.fromJWK(key);
       }
       Weave.Status.login = LOGIN_SUCCEEDED;
       this._token = token;
@@ -486,30 +486,62 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
-   * Fetches an OAuth token using the OLD_SYNC scope and later exchanges it
+   * Fetches an OAuth token using the OLD_SYNC scope and exchanges it
    * for a TokenServer token.
    *
    * @returns {Promise}
    * @private
    */
-  async _fetchTokenUsingOAuth() {
+  async _fetchTokenUsingOAuth(key) {
     this._log.debug("Getting a token using OAuth");
     const fxa = this._fxaService;
-    const scope = fxAccountsCommon.SCOPE_OLD_SYNC;
     const ttl = fxAccountsCommon.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS;
-    const { token, key } = await fxa.getAccessToken(scope, ttl);
+    const accessToken = await fxa.getOAuthToken({ scope: SCOPE_OLD_SYNC, ttl });
     const headers = {
       "X-KeyId": key.kid,
     };
 
     return this._tokenServerClient
-      .getTokenFromOAuthToken(this._tokenServerUrl, token, headers)
+      .getTokenFromOAuthToken(this._tokenServerUrl, accessToken, headers)
       .catch(async err => {
-        if (err.response || err.response.status === 401) {
+        if (err.response && err.response.status === 401) {
           // remove the cached token if we cannot authorize with it.
           // we have to do this here because we know which `token` to remove
           // from cache.
-          await fxa.removeCachedOAuthToken({ token });
+          console.log("REMOVE CACHED", accessToken);
+          await fxa.removeCachedOAuthToken({ token: accessToken });
+        }
+
+        // continue the error chain, so other handlers can deal with the error.
+        throw err;
+      });
+  },
+
+  /**
+   * Exchanges a BrowserID assertion for a TokenServer token.
+   *
+   * This is a legacy access method that we're in the process of deprecating;
+   * if you have a choice you should use `_fetchTokenUsingOAuth` above.
+   *
+   * @returns {Promise}
+   * @private
+   */
+  async _fetchTokenUsingBrowserID(key) {
+    this._log.debug("Getting a token using BrowserID");
+    const fxa = this._fxaService;
+    const audience = Services.io.newURI(this._tokenServerUrl).prePath;
+    const assertion = await fxa._internal.getAssertion(audience);
+    const headers = {
+      "X-Client-State": fxa._internal.keys.kidAsHex(key),
+    };
+    return this._tokenServerClient
+      .getTokenFromBrowserIDAssertion(this._tokenServerUrl, assertion, headers)
+      .catch(async err => {
+        if (err.response && err.response.status === 401) {
+          this._log.warn(
+            "Token server returned 401, refreshing certificate and retrying token fetch"
+          );
+          await fxa._internal.invalidateCertificate();
         }
 
         // continue the error chain, so other handlers can deal with the error.

@@ -129,12 +129,20 @@ function BulkKeyBundle(collection) {
 
   this._collection = collection;
 }
+
 BulkKeyBundle.fromHexKey = function(hexKey) {
   let key = CommonUtils.hexToBytes(hexKey);
   let bundle = new BulkKeyBundle();
   // [encryptionKey, hmacKey]
   bundle.keyPair = [key.slice(0, 32), key.slice(32, 64)];
   return bundle;
+};
+
+BulkKeyBundle.fromJWK = function(jwk) {
+  if (!jwk || !jwk.k || jwk.kty !== "oct") {
+    throw new Error("Invalid JWK provided to BulkKeyBundle.fromJWK");
+  }
+  return BulkKeyBundle.fromHexKey(CommonUtils.base64urlToHex(jwk.k));
 };
 
 BulkKeyBundle.prototype = {

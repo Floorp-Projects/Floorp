@@ -921,8 +921,7 @@ function getTestUser(name) {
     email: name + "@example.com",
     uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
     sessionToken: name + "'s session token",
-    keyFetchToken: name + "'s keyfetch token",
-    unwrapBKey: expandHex("44"),
     verified: false,
+    ...MOCK_ACCOUNT_KEYS,
   };
 }

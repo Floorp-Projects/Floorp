@@ -27,6 +27,9 @@ const {
 const { BulkKeyBundle } = ChromeUtils.import(
   "resource://services-sync/keys.js"
 );
+const { FxAccountsKeys } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsKeys.jsm"
+);
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
@@ -500,11 +503,11 @@ async function withSignedInUser(user, f) {
       return Promise.resolve();
     },
     keys: {
-      getKeys() {
-        return Promise.resolve({
-          kExtSync: user.kExtSync,
-          kExtKbHash: user.kExtKbHash,
-        });
+      getKeyForScope(scope) {
+        return Promise.resolve({ ...user.scopedKeys[scope] });
+      },
+      kidAsHex(jwk) {
+        return new FxAccountsKeys({}).kidAsHex(jwk);
       },
     },
   };
@@ -628,16 +631,18 @@ const assertExtensionRecord = async function(fxaService, post, extension, key) {
 const defaultExtensionId = "{13bdde76-4dc7-11e6-9bdc-54ee758d6342}";
 const defaultExtension = { id: defaultExtensionId };
 
-const kExtSync =
-  "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b31";
-const KB_HASH =
-  "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc800";
 const loggedInUser = {
   uid: "0123456789abcdef0123456789abcdef",
-  kExtSync,
-  kExtKbHash: KB_HASH,
+  scopedKeys: {
+    "sync:addon_storage": {
+      kid: "1234567890123-I1DLqPztWi-647HxgLr4YPePZUK-975wn9qWzT49yAA",
+      k:
+        "Y_kFdXfAS7u58MP9hbXUAytg4T7cH43TCb9DBdZvLMMS3eFs5GAhpJb3E5UNCmxWbOGBUhpEcm576Xz1d7MbMQ",
+      kty: "oct",
+    },
+  },
   oauthTokens: {
-    "sync:addon-storage": {
+    "sync:addon_storage": {
       token: "some-access-token",
     },
   },
@@ -1316,14 +1321,16 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
     });
 
     // The user changes their password. This is their new kbHash, with
-    // the last 0 changed to a 1.
-    const NEW_KB_HASH =
-      "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc801";
-    const NEW_KEXT =
-      "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b30";
+    // the last character changed.
     const newUser = Object.assign({}, loggedInUser, {
-      kExtKbHash: NEW_KB_HASH,
-      kExtSync: NEW_KEXT,
+      scopedKeys: {
+        "sync:addon_storage": {
+          kid: "1234567890123-I1DLqPztWi-647HxgLr4YPePZUK-975wn9qWzT49yAE",
+          k:
+            "Y_kFdXfAS7u58MP9hbXUAytg4T7cH43TCb9DBdZvLMMS3eFs5GAhpJb3E5UNCmxWbOGBUhpEcm576Xz1d7MbMA",
+          kty: "oct",
+        },
+      },
     });
     let postedKeys;
     await withSignedInUser(newUser, async function(
@@ -1386,14 +1393,16 @@ add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
   await withSyncContext(async function(context) {
     await withServer(async function(server) {
       // The old device has this kbHash, which is very similar to the
-      // current kbHash but with the last 0 changed to a 1.
-      const NEW_KB_HASH =
-        "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc801";
-      const NEW_KEXT =
-        "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b30";
+      // current kbHash but with the last character changed.
       const oldUser = Object.assign({}, loggedInUser, {
-        kExtKbHash: NEW_KB_HASH,
-        kExtSync: NEW_KEXT,
+        scopedKeys: {
+          "sync:addon_storage": {
+            kid: "1234567890123-I1DLqPztWi-647HxgLr4YPePZUK-975wn9qWzT49yAE",
+            k:
+              "Y_kFdXfAS7u58MP9hbXUAytg4T7cH43TCb9DBdZvLMMS3eFs5GAhpJb3E5UNCmxWbOGBUhpEcm576Xz1d7MbMA",
+            kty: "oct",
+          },
+        },
       });
       server.installDeleteBucket();
       await withSignedInUser(oldUser, async function(

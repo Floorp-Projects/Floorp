@@ -76,12 +76,15 @@ add_task(async function test_reset() {
     uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
-    kSync: "beef",
-    kXCS: "cafe",
-    kExtSync: "bacon",
-    kExtKbHash: "cheese",
     verified: true,
+    ...MOCK_ACCOUNT_KEYS,
   };
+  // FxA will try to register its device record in the background after signin.
+  const registerDevice = sinon
+    .stub(fxAccounts._internal.fxAccountsClient, "registerDevice")
+    .callsFake(async () => {
+      return { id: "foo" };
+    });
   await fxAccounts._internal.setSignedInUser(credentials);
   ok(!Services.prefs.prefHasUserValue(testPref));
   // signing the user out should reset the name pref.
@@ -89,6 +92,7 @@ add_task(async function test_reset() {
   ok(Services.prefs.prefHasUserValue(namePref));
   await fxAccounts.signOut(/* localOnly = */ true);
   ok(!Services.prefs.prefHasUserValue(namePref));
+  registerDevice.restore();
 });
 
 add_task(async function test_name_sanitization() {
