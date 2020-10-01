@@ -2129,7 +2129,7 @@
             getter = () => browser.getAttribute("remote") == "true";
             break;
           case "permitUnload":
-            getter = () => () => ({ permitUnload: true });
+            getter = () => () => ({ permitUnload: true, timedOut: false });
             break;
           case "reload":
           case "reloadWithFlags":
@@ -3418,15 +3418,15 @@
         // processes the event queue and may lead to another removeTab()
         // call before permitUnload() returns.
         aTab._pendingPermitUnload = true;
-        let { permitUnload } = browser.permitUnload();
-        aTab._pendingPermitUnload = false;
+        let { permitUnload, timedOut } = browser.permitUnload();
+        delete aTab._pendingPermitUnload;
 
         TelemetryStopwatch.finish("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
 
         // If we were closed during onbeforeunload, we return false now
         // so we don't (try to) close the same tab again. Of course, we
         // also stop if the unload was cancelled by the user:
-        if (aTab.closing || !permitUnload) {
+        if (aTab.closing || (!timedOut && !permitUnload)) {
           return false;
         }
       }
