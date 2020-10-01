@@ -42,6 +42,32 @@ class DownloadsUseCases(
         }
     }
 
+    /**
+     * Use case that allows to remove a download.
+     */
+    class RemoveDownloadUseCase(private val store: BrowserStore) {
+        /**
+         * Removes the download with the given [downloadId].
+         */
+        operator fun invoke(downloadId: String) {
+            store.dispatch(DownloadAction.RemoveDownloadAction(downloadId))
+        }
+    }
+
+    /**
+     * Use case that allows to remove all downloads.
+     */
+    class RemoveAllDownloadsUseCase(private val store: BrowserStore) {
+        /**
+         * Removes all downloads.
+         */
+        operator fun invoke() {
+            store.dispatch(DownloadAction.RemoveAllDownloadsAction)
+        }
+    }
+
     val consumeDownload = ConsumeDownloadUseCase(store)
     val restoreDownloads = RestoreDownloadsUseCase(store)
+    val removeDownload = RemoveDownloadUseCase(store)
+    val removeAllDownloads = RemoveAllDownloadsUseCase(store)
 }

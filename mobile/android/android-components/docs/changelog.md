@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8585) fixed regression files not been added to the downloads database system.
+  * 🌟 Added new use cases for removing individual downloads (`removeDownload`) and all downloads (`removeAllDownloads`).
 
 * **service-glean**
   * Glean was upgraded to v33.0.0

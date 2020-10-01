@@ -33,4 +33,22 @@ class DownloadUseCasesTest {
         useCases.restoreDownloads()
         verify(store).dispatch(DownloadAction.RestoreDownloadsStateAction)
     }
+
+    @Test
+    fun removeDownloadUseCase() {
+        val store: BrowserStore = mock()
+        val useCases = DownloadsUseCases(store)
+
+        useCases.removeDownload("downloadId")
+        verify(store).dispatch(DownloadAction.RemoveDownloadAction("downloadId"))
+    }
+
+    @Test
+    fun removeAllDownloadsUseCase() {
+        val store: BrowserStore = mock()
+        val useCases = DownloadsUseCases(store)
+
+        useCases.removeAllDownloads()
+        verify(store).dispatch(DownloadAction.RemoveAllDownloadsAction)
+    }
 }
