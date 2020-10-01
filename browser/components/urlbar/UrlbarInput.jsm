@@ -357,10 +357,7 @@ class UrlbarInput {
     // the URI is valid, exit search mode.  This must happen after setting
     // proxystate above because search mode depends on it.
     if (dueToTabSwitch) {
-      let searchMode = this._searchModesByBrowser.get(
-        this.window.gBrowser.selectedBrowser
-      );
-      this.setSearchMode(searchMode || {});
+      this.restoreSearchModeState();
     } else if (valid) {
       this.setSearchMode({});
     }
@@ -1454,6 +1451,16 @@ class UrlbarInput {
     }
 
     this._searchModesByBrowser.set(browser, searchMode);
+  }
+
+  /**
+   * Restores the current browser search mode from a previously stored state.
+   */
+  restoreSearchModeState() {
+    let state = this._searchModesByBrowser.get(
+      this.window.gBrowser.selectedBrowser
+    );
+    this.setSearchMode(state || {});
   }
 
   /**
