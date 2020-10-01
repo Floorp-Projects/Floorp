@@ -17,10 +17,11 @@ import java.util.Calendar
 import java.util.Date
 
 enum class HistoryItemTimeGroup {
-    Today, ThisWeek, ThisMonth, Older;
+    Today, Yesterday, ThisWeek, ThisMonth, Older;
 
     fun humanReadable(context: Context): String = when (this) {
-        Today -> context.getString(R.string.history_24_hours)
+        Today -> context.getString(R.string.history_today)
+        Yesterday -> context.getString(R.string.history_yesterday)
         ThisWeek -> context.getString(R.string.history_7_days)
         ThisMonth -> context.getString(R.string.history_30_days)
         Older -> context.getString(R.string.history_older)
@@ -81,11 +82,14 @@ class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
 
     companion object {
         private const val zeroDays = 0
+        private const val oneDay = 1
         private const val sevenDays = 7
         private const val thirtyDays = 30
-        private val oneDayAgo = getDaysAgo(zeroDays).time
+        private val zeroDaysAgo = getDaysAgo(zeroDays).time
+        private val oneDayAgo = getDaysAgo(oneDay).time
         private val sevenDaysAgo = getDaysAgo(sevenDays).time
         private val thirtyDaysAgo = getDaysAgo(thirtyDays).time
+        private val yesterdayRange = LongRange(oneDayAgo, zeroDaysAgo)
         private val lastWeekRange = LongRange(sevenDaysAgo, oneDayAgo)
         private val lastMonthRange = LongRange(thirtyDaysAgo, sevenDaysAgo)
 
@@ -99,6 +103,7 @@ class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
         private fun timeGroupForHistoryItem(item: HistoryItem): HistoryItemTimeGroup {
             return when {
                 DateUtils.isToday(item.visitedAt) -> HistoryItemTimeGroup.Today
+                yesterdayRange.contains(item.visitedAt) -> HistoryItemTimeGroup.Yesterday
                 lastWeekRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisWeek
                 lastMonthRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisMonth
                 else -> HistoryItemTimeGroup.Older

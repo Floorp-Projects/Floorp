@@ -42,7 +42,7 @@ class HistoryRobot {
     fun verifyVisitedTimeTitle() {
         mDevice.waitNotNull(
             Until.findObject(
-                By.text("Last 24 hours")
+                By.text("Today")
             ),
             waitingTime
         )
@@ -99,7 +99,7 @@ class HistoryRobot {
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuHistoryItemRobot.() -> Unit):
-            ThreeDotMenuHistoryItemRobot.Transition {
+                ThreeDotMenuHistoryItemRobot.Transition {
 
             threeDotMenu().click()
 
@@ -143,7 +143,7 @@ private fun assertEmptyHistoryView() =
         .check(matches(withText("No history here")))
 
 private fun assertVisitedTimeTitle() =
-    onView(withId(R.id.header_title)).check(matches(withText("Last 24 hours")))
+    onView(withId(R.id.header_title)).check(matches(withText("Today")))
 
 private fun assertTestPageTitle(title: String) = testPageTitle()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
