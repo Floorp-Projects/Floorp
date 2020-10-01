@@ -21,12 +21,44 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Поверителните раздели ще бъдат показани тук.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 отворен раздел. Докоснете за превключване на раздели.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s отворени раздели. Докоснете за превключване между тях.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d избрани</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Създаване на списък</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Име</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Избор на списък</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Изход от режим на множествен избор</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Запазване на избраните раздели в списък</string>
+
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Отментат %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Неотментат %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Излизане от режим на множествен избор</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Режим на множествен избор, изберете раздели за добавяне към списък</string>
+
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Избран</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s е произведен от Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вие сте в поверителен прозорец</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s изчиства историята на търсенето и разглеждането, когато ги затворите или излезете от приложението. Въпреки че това не ви прави анонимни за уеб сайтовете или доставчиците на интернет услуги, улеснява запазването на анонимността на действия ви в мрежата, от останалите ползващи същото устройство.</string>
     <string name="private_browsing_common_myths">Разпространени легенди относно поверителното разглеждане</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Изтриване на сесията</string>
@@ -47,6 +79,26 @@
     <string name="search_widget_cfr_pos_button_text">Добавяне на джаджа</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Не сега</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Може да настроите Firefox автоматично да отваря препратки в приложения</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Към настройки</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Прекратяване</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Към настройки</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Прекратяване</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Настройте отворените раздели да бъдат автоматично затваряни ако не са преглеждани през последния ден, седмица или месец.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Настройки</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Прекратяване</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -98,7 +150,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Нов раздел</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection_2">Добавяне в списък</string>
+    <string name="browser_menu_save_to_collection_2">Добавяне към списък</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Споделяне</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -140,14 +192,12 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Сканиране</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Преки пътища</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Търсеща машина</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Настройки на търсачките</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Търсене с</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Този път търсете с:</string>
+    <string name="search_engines_search_with">Този път търсете с:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Използване на препратка от буфера</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -202,7 +252,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Банкови карти и адреси</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Задаване като стандартен четец</string>
+    <string name="preferences_set_as_default_browser">Четец по подразбиране</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Разширени</string>
 
@@ -216,13 +266,19 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Поверително разглеждане</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Отваряне препратките в поверителен раздел</string>
+    <string name="preferences_open_links_in_a_private_tab">Отваряне препратки в поверителен раздел</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Снимки на екрана в поверителен режим</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Ако е включено, поверителните раздели ще са видими от отворените приложения</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Добавяне на икона за поверителен режим</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Достъпност</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Личен сървър за Firefox Account</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Личен сървър за Sync</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Сметка</string>
     <!-- Preference shown on banner to sign into account -->
@@ -231,8 +287,12 @@
     <string name="preferences_toolbar">Лента с инструменти</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Начален екран</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Жестове</string>
     <!-- Preference for settings related to visual options -->
-    <string name="preferences_customize">Персонализиране</string>
+    <string name="preferences_customize">Външен вид</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Синхронизирайте отметки, пароли и други с вашия Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -251,26 +311,35 @@
     <string name="developer_tools_category">Развойни инструменти</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Отдалечено отстраняване на дефекти през USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Преки пътища за търсене</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Показване на търсещи машини</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Показване на предложения</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Показване на гласово търсене</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">Показване в поверителен режим</string>
+    <string name="preferences_show_search_suggestions_in_private">В поверителен режим също</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Показване на предложения от буфера</string>
+    <string name="preferences_show_clipboard_suggestions">Предложения от буфера</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Търсене на историята на разглеждане</string>
+    <string name="preferences_search_browsing_history">В история на разглеждане</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">Търсене в отметките</string>
+    <string name="preferences_search_bookmarks">В отметките</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">В синхронизираните раздели</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Настройки на сметката</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Автоматично довършване на адреси</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Отваряне на препратки в приложения</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Външно приложение за изтегляния</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Добавки</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Известия</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -347,8 +416,12 @@
     <string name="preferences_usage_data_description">Споделя данни за използването, производителността, хардуера, настройките на четеца с Mozilla, за да ни помогне да направим %1$s по-добър</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетингови данни</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Споделя данни за използваните от вас възможности на %1$s чрез Leanplum, нашият партньор за мобилен маркетинг.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Експерименти</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Позволява на Mozilla да инсталира експериментални възможности и да събира данни за тях</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Доклади за срив</string>
     <!-- Preference switch for Mozilla location service -->
@@ -374,7 +447,7 @@
     <string name="pair_instructions_2"><![CDATA[Сканирайте кода на QR, показан на <b>firefox.com/pair</b>]]></string>
 
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Отваряне на камерата</string>
+    <string name="pair_open_camera">Отваряне на камера</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Отказ</string>
 
@@ -391,9 +464,13 @@
     <string name="preference_dark_theme">Тъмна</string>
 
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">Зададена от приложението за пестене на батерия</string>
+    <string name="preference_auto_battery_theme">Зададена от приложение за пестене на батерия</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Следва темата на устройството</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Издърпайте за презареждане</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -427,6 +504,32 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Затваряне</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Последно затворени раздели</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Цялата история</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d раздела</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d раздел</string>
+
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Няма затворени раздели</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Затваряне на раздели</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Ръчно</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">След един ден</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">След една седмица</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">След един месец</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Отворени раздели</string>
@@ -443,9 +546,13 @@
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Отворени раздели</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Добавяне в списък</string>
+    <string name="tab_tray_menu_item_save">Добавяне към списък</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Споделяне на всички раздели</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Последно затворени раздели</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Настройки на раздели</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Затваряне на всички раздели</string>
     <!-- Shortcut action to open new tab -->
@@ -481,17 +588,242 @@
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Заглавна пиктограма на текущото меню на сесия</string>
 
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Добавяне към списък</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Изтриване на списък</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Преименуване на списък</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Отваряне на раздели</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Премахване</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Премахване от историята</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (поверителен режим)</string>
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Запазване</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Изчистване на история</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Сигурни ли сте, че желаете да изтриете историята на разглеждане?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Историята е изчистена</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Изтрито %1$s</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Изчистване</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Копиране</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Споделяне</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Отваряне в раздел</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Отваряне в поверителен раздел</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Изтриване</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d избрани</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Изтриване на %1$d записа</string>
+
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Последните 24 часа</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Последните 7 дни</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Последните 30 дни</string>
+
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">По-стари</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Липсва история</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Няма изтегляния</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d избрани</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Извинете. %1$s не можа да зареди страницата.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Oпитайте да възстановите или затворите раздела.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Изпращане на доклад за срива до Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Затваряне на раздел</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Възстановяване на раздел</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Настройки на сесия</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Споделяне на сесия</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Меню отметки</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Промяна на отметка</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Избор на папка</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Наистина ли искате да изтриете папката?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ще изтрие избраните елементи.</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Изтрита %1$s</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Добавяне на папка</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Отметката е създадена.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Отметката е запазена!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ПРОМЕНЯНЕ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Променяне</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Избиране</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Копиране</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Споделяне</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Отваряне в нов раздел</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Отваряне в поверителен раздел</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Изтриване</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Запазване</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d избрани</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Промяна на отметка</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Промяна на папка</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Влезте, за да видите синхронизираните отметки</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">ПАПКА</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">ИМЕ</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Добавяне на папка</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Избиране на папка</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Заглавието е задължително</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Неправилен адрес</string>
+
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Липсват отметки</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Изтрита %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Отметките са изтрити</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Изтриване на избраните папки</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ОТМЕНЯНЕ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Права</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Към настройките</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Списък с бързи настройки</string>
 
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Препоръчително</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Управление на права на страница</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Изчистване на правата</string>
+
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Изчистване на правото</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Изчистване на правата на всички страници</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Автоматично възпроизвеждане</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Камера</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Микрофон</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Местоположение</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Известие</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Винаги да пита</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Забраняване</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Разрешаване</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Забранено от Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Изключения</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Включено</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Изключено</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Разрешаване на звук и видео</string>
+
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Включено</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Изключено</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Списъци</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Меню Списъци</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Съберете важните за вас неща.\nГрупирайте търсения, страници и раздели за бърз достъп по-късно.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Избиране на раздели</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Създаване на списък</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Избиране на всички</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Отменяне всички</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Изберете раздели за запазване</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d раздела избрани</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d раздел избран</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Разделите са запазени!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Колекция запазена!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Разделът е запазен!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -499,14 +831,112 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Запазване</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Преглед</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Списък %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Изпращане и споделяне</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Споделяне</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Споделяне</string>
 
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Споделяне на препратка</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Всички действия</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Последно използвани</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Вписване в Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Изпращане до всички устройства</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Повторно свързване със Sync</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Без мрежа</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Добавяне на устройство</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">За да изпращате раздели е необходимо да бъдете вписани във Firefox на поне едно устройство.</string>
+
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Разбрах</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Невъзможно е споделяне с това приложение</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Изпращане към устройство</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Няма свързани устройства</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Повече за изпращане на раздели…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Добавяне на устройство…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Поверителна сесия</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Изчистване на поверителни раздели</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Затваряне на поверителни раздели</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Отваряне</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Изчистване и отваряне</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Разрешете %1$s да отвори %2$s</string>
 
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Изтриване на %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Изтриване</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Отказ</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Режим на цял екран</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Адресът е копиран</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Отворени раздели</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d раздела</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d адреса</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">История</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d страници</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Бисквитки</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Изход</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Отказ</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Изтриване</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Преминете към новият Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly е преместен</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Здравейте от %s!</string>
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Запознайте се с %s</string>
@@ -517,17 +947,21 @@
     <string name="onboarding_whats_new_description">Имате въпроси относно новия дизайн на %s? Искате ли да разберете какви са промените?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Получете отговори тук</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Извлечете максимума от %s</string>
-
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Синхронизирайте отметки, пароли и други чрез вашата сметка във Firefox.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Научете повече</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Вписване…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Вписване във Firefox</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Автоматична поверителност</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description_2">Настройките за поверителност и сигурност спират проследяващ и злонамерен код, както и компании, които ви преследват.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Стандартна (по подразбиране)</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Стандартна (подразбиране)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_2">Спира малко проследявания. Страниците зареждат нормално.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -536,42 +970,311 @@
     <string name="onboarding_tracking_protection_strict_option">Строга</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_2">Спира повече проследявания, реклами и изскачащи прозорци. Страниците зареждат по-бързо, но може да не работят.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Изберете страна</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Изпробвайте работа с една ръка, с лента инструменти отдолу, или я преместете отгоре.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Разглеждайте поверително</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">За да отворите поверителен раздел: докоснете иконата %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">За да се отваря поверителен раздел всеки път: променете настройките за поверително разглеждане.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Отваряне на настройки</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Поверителност</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Проектирали сме %s така, че да ви предоставя контрол върху това, което споделяте както онлайн, така и с нас.
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Бележка за поверителността</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Затваряне</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Започнете да разглеждате</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Изберете тема</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Запазете батерия и зрението си с избиране на тъмна тема.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Автоматичнa</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Приспособява се към настройките на устройството</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Тъмна тема</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Светла тема</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Разделите са изпратени!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Разделът е изпратен!</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">НОВ ОПИТ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Сканиране на код</string>
+
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Отказ</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Настройки на защитата</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Подобрена защита от проследяване</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Преглеждайте без да бъдете следени</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Разглеждайте без да сте следени</string>
   
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Пазете вашите данни само ваши. %s ви предпазва от много от най-разпространените проследявания, които следват вашите действия онлайн.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Пазете вашите данни лични. %s ви предпазва от най-разпространените проследявания, които дебнат действията ви онлайн.</string>
   
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Научете повече</string>
 
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартна (подразбиране)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Спира малко проследявания. Страниците зареждат нормално.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Строга</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Спира повече проследявания, реклами и изскачащи прозорци. Страниците зареждат по-бързо, но може да не работят.</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">По избор</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Изберете какво проследяване и кои скриптове да спрете.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Бисквитки</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Проследяване в различни сайтове и социални медии</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Бисквитки от непосетени страници</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Всички бисквитки от трети страни (може наруши работата на страници)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Всички бисквитки (ще наруши работата на страници)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Проследяващо съдържание</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Във всички раздели</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Само в поверителни раздели</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Добиване на криптовалути</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Снемане на цифров отпечатък</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Разрешено</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Проследяване от социални мрежи</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Ограничава възможността социалните мрежи да проследяват вашата активност в Мрежата.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Бисквитки за следене в различни сайтове</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Спира бисквитки, които компаниите за реклама и анализ използват за събиране на ваши данни от посещения в множество страници.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Добиване на криптовалути</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Предотвратява зловредни скриптове, придобиващи достъп до устройството ви, с цел добив на цифрова валута.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Снемане на цифров отпечатък</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Предотвратява събирането на уникални данни за обратно установяване, които могат да бъдат използвани за проследяване. </string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Проследяващо съдържание</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Спира зареждането на външни реклами, видео и друго съдържание, съдържащо проследяващ код. Може да засегне някои страници.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Всеки път, когато щитът е лилав, %s е спрял проследяване на сайт. Докоснете за повече информация.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Защитите са ВКЛЮЧЕНИ за този сайт</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Защитите са ИЗКЛЮЧЕНИ за този сайт</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Подобрената защита от проследяване е изключена за тези сайтове</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Връщане назад</string>
 
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | библиотеки с отворен код</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Поддръжка</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Политика на поверителност</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Знайте правата си</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Лицензна информация</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Използвани библиотеки</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Меню за отстраняване на грешки: %1$d оставащи натискания до включване</string>
+    <string name="about_debug_menu_toast_done">Меню за отстраняване на грешки включено</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 раздел</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d раздела</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Копиране</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Поставяне и посещаване</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Поставяне</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Адресът е копиран в системния буфер</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Добавяне към началния екран</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Отказ</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Добавяне</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Към страницата</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Име на пряк път</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Регистрации и пароли</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Запазване на регистрации и пароли</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Питане за запазване</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Никога</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Автоматично попълване</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Синхронизиране на регистрации</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Включено</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Изключено</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Повторно свързване</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Вписване в Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Запазени регистрации</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Тук се показват нещата, които запазвате или синхронизирате във %s.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Научете повече за Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Изключения</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Тук се показват регистрации и пароли, които не са запазени.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Търсене на регистрация</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Азбучен ред</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Последно използвани</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Страница</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Потребителско име</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Парола</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Въведете отново своя PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Отключете, за да видите запазените регистрации</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Връзката е незащитена. Въведените тук данни за вход могат да бъдат компрометирани.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Научете повече</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню за сортиране на регистрации</string>
 
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Добавяне на търсеща машина</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Промяна на търсеща машина</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Добавяне</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description">Запазване</string>
 
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Променяне</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Премахване</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Друга</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Име</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Низ за търсене, който да се използва</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Заменете заявката с „%s“. Пример:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Научете повече</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Данни за търсещата машина на потребителя</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Препратка научете повече</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Въведете име на търсещата машина</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Търсеща машина с име „%s“ вече съществува.</string>
+
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Уверете се, че низът за търсене съвпада с примера</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Грешка при свързване с „%s“</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s е създадена</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s е запазена</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s е изтрита</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Добре дошли в един чисто нов %s</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Добавете друго на устройство.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Няма отворени раздели във Firefox на други ваши устройства.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Вижте разделите от други ваши устройства.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Вписване в Sync</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Няма отворени раздели</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Добре, разбрах</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Премахване</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Извлечете максимума от %s</string>
 
     </resources>

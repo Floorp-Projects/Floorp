@@ -144,6 +144,8 @@
     <string name="browser_menu_install_on_homescreen">Installer</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Synkroniserede faneblade</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Synkroniser igen</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Find på siden</string>
     <!-- Browser menu button that creates a private tab -->
@@ -265,6 +267,8 @@
     <string name="preferences_open_links_in_a_private_tab">Åbn links i et privat faneblad</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Tillad skærmbilleder i privat browsing</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Hvis du tillader det, vil private faneblade også være synlige, når flere apps er åbne</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tilføj genvej til privat browsing</string>
     <!-- Preference for accessibility -->
@@ -285,6 +289,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Startside</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Bevægelser</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tilpas</string>
     <!-- Preference description for banner about signing in -->
@@ -319,8 +325,12 @@
     <string name="preferences_search_browsing_history">Søg i browserhistorik</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Søg i bogmærker</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Søg i synkroniserede faneblade</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoindstillinger</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autofuldfør adresser</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Åbn links i apps</string>
     <!-- Preference for open download with an external download manager app -->
@@ -455,6 +465,16 @@
     <string name="preference_auto_battery_theme">Indstil med strømstyring</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Samme som enhedens tema</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Træk for at genindlæse</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Scroll for at skjule værktøjslinje</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Stryg værktøjslinje sidelæns for at skifte faneblade</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Stryg værktøjslinje op for at åbne faneblade</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1040,6 +1060,10 @@
     <string name="onboarding_account_sign_in_header">Begynd at synkronisere bogmærker, adgangskoder m.m. med din Firefox-konto.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Læs mere</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Du er logget ind som %s i en anden version af Firefox på denne enhed. Vil du logge ind med denne konto?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, log mig ind</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1129,6 +1153,8 @@
     <string name="sign_in_with_camera">Log in med dit kamera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Brug mail i stedet</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ingen konto? <u>Opret en</u> for at synkronisere Firefox mellem enheder.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox vil ikke længere synkronisere med din konto, men sletter ikke dine browserdata på denne enhed.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1236,6 +1262,12 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-biblioteker</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Sporing via omdirigeringer</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Rydder cookies, der sættes af omdirigeringer til websteder, der er kendt for at spore deres brugere.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Hjælp</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1279,6 +1311,9 @@
     <string name="add_to_homescreen_continue">Fortsæt til websted</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Genvejsnavn</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Du kan nemt føje dette websted til din enheds startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Logins og adgangskoder</string>
@@ -1348,8 +1383,12 @@
     <string name="logins_site_copied">Websted er kopieret til udklipsholder</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopier adgangskode</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Ryd adgangskode</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopier brugernavn</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Ryd brugernavn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopier websted</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1523,6 +1562,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Grænsen for Mest besøgte websider er nået</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Fjern en webside for at erstatte den med en ny. Tryk og hold på websiden, og vælg så Fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, forstået</string>
 

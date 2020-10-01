@@ -100,7 +100,7 @@
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Zobrazit možnosti</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_close_tabs_banner_negative_button_text">Zavřít</string>
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Ne, děkuji</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

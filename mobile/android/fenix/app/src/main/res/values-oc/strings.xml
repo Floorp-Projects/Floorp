@@ -77,6 +77,9 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Pas ara</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Podètz configurar Firefox per dobrir automaticament los ligams dins las aplicacions.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Anar als paramètres</string>
     <!-- Text for the negative action button -->
@@ -321,6 +324,8 @@
     <string name="preferences_search_browsing_history">Recercar dins l’istoric de navegacion</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Cercar dins los marcapaginas</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Cercar dins los onglets sincronizats</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paramètres del compte</string>
     <!-- Preference for enabling url autocomplete-->
@@ -469,6 +474,11 @@
     <string name="preference_gestures_website_pull_to_refresh">Tirar per actualizar</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Desfilar per amagar la barra d’aisinas</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Cambiar d’onglet en lisant la barra d’aisinas cap las costats</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Dobrir los ligams en lisant la barra d’aisina amont</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -811,6 +821,8 @@
     <string name="collections_header">Colleccions</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de colleccion</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Amassatz çò important per vos\nGropatz las recèrcas, los sites e onglets similars per i tornar mai tard.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleccionar d’onglets</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -940,6 +952,8 @@
     <string name="qr_scanner_dialog_negative">REFUSAR</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Volètz vertadièrament suprimir %1$s ?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">La supression d’aqueste onglet suprimirà tota la collecion. Podètz crear colleccions novèlas quand volgatz.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Suprimir %1$s ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -992,6 +1006,8 @@
     <string name="preferences_delete_browsing_data_on_quit">Suprimir las donadas de navegacion en quitant</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Suprimís automaticament las donadas de navegacion quand seleccionatz « Quitar » al menú principal</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Suprimís automaticament las donadas de navegacion quand seleccionatz « Quitar » al menú principal</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sortir</string>
 

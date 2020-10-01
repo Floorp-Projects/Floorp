@@ -423,6 +423,9 @@
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Служба месцазнаходжання Mozilla</string>
 
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Справаздача аб здароўі %s</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Уключыць сінхранізацыю</string>
@@ -468,6 +471,9 @@
     <string name="preference_gestures_dynamic_toolbar">Пракруціце, каб схаваць панэль інструментаў</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Пасуньце ўбок панэль інструментаў, каб пераключыць карткі</string>
+
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Пасуньце ўверх панэль інструментаў, каб адкрыць карткі</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1142,6 +1148,8 @@
     <string name="sign_in_with_camera">Увайдзіце з дапамогай камеры</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Выкарыстаць электронную пошту</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Не маеце ўліковага запісу? <u> Стварыце яго, </u> каб сінхранізаваць Firefox паміж прыладамі.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox спыніць сінхранізацыю з вашым уліковым запісам, але не выдаліць дадзеныя аглядання на гэтай прыладзе.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1424,6 +1432,8 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Падрабязней</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Інфармацыя аб дададзенай пошукавай сістэме</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Спасылка на падрабязныя звесткі</string>
 
@@ -1545,6 +1555,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Дасягнуты ліміт папулярных сайтаў</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Каб дадаць новы топ-сайт, выдаліце якісь іншы. Націсніце  на сайт і ўтрымлівайце, пасля абярыце &quot;Выдаліць&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>
 

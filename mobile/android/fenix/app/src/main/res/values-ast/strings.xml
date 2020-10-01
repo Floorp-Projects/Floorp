@@ -405,6 +405,8 @@
     <string name="preferences_marketing_data_description">Comparte los datos tocante a les carauterístiques qu\'uses en %1$s con Leanplum, el nuesu fornidor de marketing móvil.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Esperimentos</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Permite que Mozilla instale y recueya datos pa carauterístiques esperimentales</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Informador de casques</string>
 
@@ -1079,6 +1081,8 @@
     <string name="sign_in_with_camera">Aniciu de sesión cola cámara</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar una direición de corréu</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[¿Nun tienes cuenta? <u>Crea una</u> pa sincronizar Firefox ente preseos.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox va dexar de sincronizase cola to cuenta mas nun va desaniciar nengún datu d\'esti preséu.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1186,6 +1190,12 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Biblioteques OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Redireiciones de rastrexadores</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Llimpia les cookies creaes poles redireiciones a sitios web conocíos que rastrexen.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Sofitu</string>
@@ -1464,6 +1474,9 @@
     <string name="synced_tabs_sign_in_message">Ve una llista de les llingüetes que tienes nos demás preseos de to.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Aniciar sesión pa sincronizar</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Nun hai llingüetes abiertes</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

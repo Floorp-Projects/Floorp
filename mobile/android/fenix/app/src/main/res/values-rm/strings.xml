@@ -1272,6 +1272,12 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Bibliotecas open source</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Fastizaders da renviament</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Stizza cookies definids cun agid da renviaments a websites enconuschentas per fastizar.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Agid</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1316,6 +1322,9 @@
     <string name="add_to_homescreen_continue">Cuntinuar vers la website</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Num da la scursanida</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Ti pos agiuntar a moda simpla questa website al visur da partenza da tes apparat per avair access direct e navigar pli svelt, sco sch\'i fiss ina app.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Infurmaziuns d\'annunzia e pleds-clav</string>
@@ -1387,8 +1396,12 @@
     <string name="logins_site_copied">Copià la pagina en l\'archiv provisoric</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar il pled-clav</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Stizzar il pled-clav</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar il num d\'utilisader</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Stizzar il num d\'utilisader</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar la pagina</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1565,6 +1578,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Cuntanschì la limita da paginas preferidas</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Per pudair agiuntar ina nova pagina preferida stos ti l\'emprim allontanar in\'autra. Tegna smatgà la pagina e tscherna «Allontanar».</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, chapì</string>
 

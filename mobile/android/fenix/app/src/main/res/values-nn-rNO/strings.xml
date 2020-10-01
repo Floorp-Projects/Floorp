@@ -1287,6 +1287,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-bibliotek</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Omdirigeringssporarar</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Fjernar infokapslar stilte inn av omdirigeringar til kjende sporingsnettstadar.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Brukarstøtte</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->

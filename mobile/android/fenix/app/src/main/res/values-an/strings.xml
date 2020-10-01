@@ -143,6 +143,8 @@
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Pestanyas sincronizadas</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Resincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Mirar en a pachina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -465,6 +467,11 @@
     <string name="preference_gestures_website_pull_to_refresh">Estirar pa refrescar</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Desplazar pa amagar la barra de ferramientas</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eslizar la barra de ferramientas enta los costaus pa cambiar de pestanya</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Eslizar la barra de ferramientas enta alto pa ubrir las pestanyas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1351,8 +1358,12 @@
     <string name="logins_site_copied">Puesto copiau a lo portafuellas</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar clau</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Borrar la clau</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar nombre d’usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Borrar lo nombre d\'usuario</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar puesto</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1523,6 +1534,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">S’ha arribau a lo limite de puestos principals.</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Pa anyadir un nuevo puesto principal, has de borrar-ne belatro. Toca y mantiene pretau lo puesto y tría borrar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendiu</string>
     <!-- Label for the show most visited sites preference -->
