@@ -551,27 +551,25 @@
       <hbox id="ctrlTab-showAll-container" pack="center"/>
     </panel>
 
-    <html:template id="pageActionPanelTemplate">
-      <panel id="pageActionPanel"
-             class="cui-widget-panel panel-no-padding"
-             role="group"
-             type="arrow"
-             hidden="true"
-             flip="slide"
-             position="bottomcenter topright"
-             tabspecific="true"
-             noautofocus="true">
-        <panelmultiview id="pageActionPanelMultiView"
-                        mainViewId="pageActionPanelMainView"
-                        viewCacheId="appMenu-viewCache">
-          <panelview id="pageActionPanelMainView"
-                     context="pageActionContextMenu"
-                     class="PanelUI-subView">
-            <vbox class="panel-subview-body"/>
-          </panelview>
-        </panelmultiview>
-      </panel>
-    </html:template>
+    <panel id="pageActionPanel"
+           class="cui-widget-panel panel-no-padding"
+           role="group"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           position="bottomcenter topright"
+           tabspecific="true"
+           noautofocus="true">
+      <panelmultiview id="pageActionPanelMultiView"
+                      mainViewId="pageActionPanelMainView"
+                      viewCacheId="appMenu-viewCache">
+        <panelview id="pageActionPanelMainView"
+                   context="pageActionContextMenu"
+                   class="PanelUI-subView">
+          <vbox class="panel-subview-body"/>
+        </panelview>
+      </panelmultiview>
+    </panel>
 
     <html:template id="confirmation-hint-wrapper">
       <panel id="confirmation-hint"

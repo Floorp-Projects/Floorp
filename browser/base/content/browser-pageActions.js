@@ -14,7 +14,6 @@ ChromeUtils.defineModuleGetter(
 );
 
 var BrowserPageActions = {
-  _panelNode: null,
   /**
    * The main page action button in the urlbar (DOM node)
    */
@@ -27,12 +26,8 @@ var BrowserPageActions = {
    * The main page action panel DOM node (DOM node)
    */
   get panelNode() {
-    // Lazy load the page action panel the first time we need to display it
-    if (!this._panelNode) {
-      this.initializePanel();
-    }
     delete this.panelNode;
-    return (this.panelNode = this._panelNode);
+    return (this.panelNode = document.getElementById("pageActionPanel"));
   },
 
   /**
@@ -69,12 +64,16 @@ var BrowserPageActions = {
    * Inits.  Call to init.
    */
   init() {
-    this.placeAllActionsInUrlbar();
+    this.placeAllActions();
     this._onPanelShowing = this._onPanelShowing.bind(this);
+    this.panelNode.addEventListener("popupshowing", this._onPanelShowing);
+    this.panelNode.addEventListener("popuphiding", () => {
+      this.mainButtonNode.removeAttribute("open");
+    });
   },
 
   _onPanelShowing() {
-    this.initializePanel();
+    this.placeLazyActionsInPanel();
     for (let action of PageActions.actionsInPanel(window)) {
       let buttonNode = this.panelButtonNodeForActionID(action.id);
       action.onShowingInPanel(buttonNode);
@@ -94,34 +93,17 @@ var BrowserPageActions = {
   _actionsToLazilyPlaceInPanel: [],
 
   /**
-   * Places all registered actions in the urlbar.
+   * Places all registered actions.
    */
-  placeAllActionsInUrlbar() {
+  placeAllActions() {
+    let panelActions = PageActions.actionsInPanel(window);
+    for (let action of panelActions) {
+      this.placeActionInPanel(action);
+    }
     let urlbarActions = PageActions.actionsInUrlbar(window);
     for (let action of urlbarActions) {
       this.placeActionInUrlbar(action);
     }
-  },
-
-  /**
-   * Initializes the panel if necessary.
-   */
-  initializePanel() {
-    // Lazy load the page action panel the first time we need to display it
-    if (!this._panelNode) {
-      let template = document.getElementById("pageActionPanelTemplate");
-      template.replaceWith(template.content);
-      this._panelNode = document.getElementById("pageActionPanel");
-      this._panelNode.addEventListener("popupshowing", this._onPanelShowing);
-      this._panelNode.addEventListener("popuphiding", () => {
-        this.mainButtonNode.removeAttribute("open");
-      });
-    }
-
-    for (let action of PageActions.actionsInPanel(window)) {
-      this.placeActionInPanel(action);
-    }
-    this.placeLazyActionsInPanel();
   },
 
   /**
@@ -142,7 +124,7 @@ var BrowserPageActions = {
    *         The action to place.
    */
   placeActionInPanel(action) {
-    if (this._panelNode && this.panelNode.state != "closed") {
+    if (this.panelNode.state != "closed") {
       this._placeActionInPanelNow(action);
     } else {
       // Lazily place the action in the panel the next time it opens.

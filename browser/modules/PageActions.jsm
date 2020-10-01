@@ -76,11 +76,11 @@ var PageActions = {
 
     // Now place them all in each window.  Instead of splitting the register and
     // place steps, we could simply call addAction, which does both, but doing
-    // it this way means that all windows initially place their actions in the
-    // urlbar the same way -- placeAllActions -- regardless of whether they're
-    // open when this method is called or opened later.
+    // it this way means that all windows initially place their actions the same
+    // way -- placeAllActions -- regardless of whether they're open when this
+    // method is called or opened later.
     for (let bpa of allBrowserPageActions()) {
-      bpa.placeAllActionsInUrlbar();
+      bpa.placeAllActions();
     }
 
     // These callbacks are deferred until init happens and all built-in actions
