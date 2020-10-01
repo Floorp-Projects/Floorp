@@ -71,6 +71,8 @@ class IDBError {
   friend class IDBError;
 
  public:
+  MOZ_IMPLICIT IDBError(nsresult aRv) : mVariant(ErrorResult{aRv}) {}
+
   IDBError(ExceptionType, ErrorResult&& aErrorResult)
       : mVariant(std::move(aErrorResult)) {}
 
