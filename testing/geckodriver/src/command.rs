@@ -8,8 +8,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use uuid::Uuid;
 use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand};
-use webdriver::common::WebElement;
-use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
+use webdriver::error::{WebDriverResult};
 use webdriver::httpapi::WebDriverExtensionRoute;
 use webdriver::Parameters;
 
@@ -26,16 +25,6 @@ pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
             Method::POST,
             "/session/{sessionId}/moz/context",
             GeckoExtensionRoute::SetContext,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
-            GeckoExtensionRoute::XblAnonymousChildren,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
-            GeckoExtensionRoute::XblAnonymousByAttribute,
         ),
         (
             Method::POST,
@@ -59,8 +48,6 @@ pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
 pub enum GeckoExtensionRoute {
     GetContext,
     SetContext,
-    XblAnonymousChildren,
-    XblAnonymousByAttribute,
     InstallAddon,
     UninstallAddon,
     TakeFullScreenshot,
@@ -71,7 +58,7 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
 
     fn command(
         &self,
-        params: &Parameters,
+        _params: &Parameters,
         body_data: &Value,
     ) -> WebDriverResult<WebDriverCommand<GeckoExtensionCommand>> {
         use self::GeckoExtensionRoute::*;
@@ -80,26 +67,6 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
             GetContext => GeckoExtensionCommand::GetContext,
             SetContext => {
                 GeckoExtensionCommand::SetContext(serde_json::from_value(body_data.clone())?)
-            }
-            XblAnonymousChildren => {
-                let element_id = try_opt!(
-                    params.get("elementId"),
-                    ErrorStatus::InvalidArgument,
-                    "Missing elementId parameter"
-                );
-                let element = WebElement(element_id.as_str().to_string());
-                GeckoExtensionCommand::XblAnonymousChildren(element)
-            }
-            XblAnonymousByAttribute => {
-                let element_id = try_opt!(
-                    params.get("elementId"),
-                    ErrorStatus::InvalidArgument,
-                    "Missing elementId parameter"
-                );
-                GeckoExtensionCommand::XblAnonymousByAttribute(
-                    WebElement(element_id.as_str().into()),
-                    serde_json::from_value(body_data.clone())?,
-                )
             }
             InstallAddon => {
                 GeckoExtensionCommand::InstallAddon(serde_json::from_value(body_data.clone())?)
@@ -118,8 +85,6 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
 pub enum GeckoExtensionCommand {
     GetContext,
     SetContext(GeckoContextParameters),
-    XblAnonymousChildren(WebElement),
-    XblAnonymousByAttribute(WebElement, XblLocatorParameters),
     InstallAddon(AddonInstallParameters),
     UninstallAddon(AddonUninstallParameters),
     TakeFullScreenshot,
@@ -133,8 +98,6 @@ impl WebDriverExtensionCommand for GeckoExtensionCommand {
             InstallAddon(x) => Some(serde_json::to_value(x).unwrap()),
             SetContext(x) => Some(serde_json::to_value(x).unwrap()),
             UninstallAddon(x) => Some(serde_json::to_value(x).unwrap()),
-            XblAnonymousByAttribute(_, x) => Some(serde_json::to_value(x).unwrap()),
-            XblAnonymousChildren(_) => None,
             TakeFullScreenshot => None,
         }
     }
@@ -371,23 +334,5 @@ mod tests {
         assert!(serde_json::from_value::<P>(json!({})).is_err());
         assert!(serde_json::from_value::<P>(json!({ "context": null })).is_err());
         assert!(serde_json::from_value::<P>(json!({"context": "foo"})).is_err());
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute() {
-        let locator = XblLocatorParameters {
-            name: "foo".to_string(),
-            value: "bar".to_string(),
-        };
-        assert_de(&locator, json!({"name": "foo", "value": "bar"}));
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute_with_name_invalid() {
-        type P = XblLocatorParameters;
-        assert!(serde_json::from_value::<P>(json!({"value": "bar"})).is_err());
-        assert!(serde_json::from_value::<P>(json!({"name": null, "value": "bar"})).is_err());
-        assert!(serde_json::from_value::<P>(json!({"name": "foo"})).is_err());
-        assert!(serde_json::from_value::<P>(json!({"name": "foo", "value": null})).is_err());
     }
 }

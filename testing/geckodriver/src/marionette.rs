@@ -1,7 +1,7 @@
 use crate::android::AndroidHandler;
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
+    GeckoExtensionCommand, GeckoExtensionRoute, CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
@@ -862,27 +862,6 @@ impl MarionetteSession {
             Extension(ref extension) => match extension {
                 GetContext => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 SetContext(_) => WebDriverResponse::Void,
-                XblAnonymousChildren(_) => {
-                    let els_vec = try_opt!(
-                        resp.result.as_array(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret body as array"
-                    );
-                    let els = els_vec
-                        .iter()
-                        .map(|x| self.to_web_element(x))
-                        .collect::<Result<Vec<_>, _>>()?;
-
-                    WebDriverResponse::Generic(ValueResponse(serde_json::to_value(els)?))
-                }
-                XblAnonymousByAttribute(_, _) => {
-                    let el = self.to_web_element(try_opt!(
-                        resp.result.get("value"),
-                        ErrorStatus::UnknownError,
-                        "Failed to find value field"
-                    ))?;
-                    WebDriverResponse::Generic(ValueResponse(serde_json::to_value(el)?))
-                }
                 InstallAddon(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 UninstallAddon(_) => WebDriverResponse::Void,
                 TakeFullScreenshot => WebDriverResponse::Generic(resp.into_value_response(true)?),
@@ -1165,18 +1144,6 @@ impl MarionetteCommand {
                     InstallAddon(x) => (Some("Addon:Install"), Some(x.to_marionette())),
                     SetContext(x) => (Some("Marionette:SetContext"), Some(x.to_marionette())),
                     UninstallAddon(x) => (Some("Addon:Uninstall"), Some(x.to_marionette())),
-                    XblAnonymousByAttribute(e, x) => {
-                        let mut data = x.to_marionette()?;
-                        data.insert("element".to_string(), Value::String(e.to_string()));
-                        (Some("WebDriver:FindElement"), Some(Ok(data)))
-                    }
-                    XblAnonymousChildren(e) => {
-                        let mut data = Map::new();
-                        data.insert("using".to_owned(), serde_json::to_value("anon")?);
-                        data.insert("value".to_owned(), Value::Null);
-                        data.insert("element".to_string(), serde_json::to_value(e.to_string())?);
-                        (Some("WebDriver:FindElements"), Some(Ok(data)))
-                    }
                     _ => (None, None),
                 },
                 _ => (None, None),
@@ -1578,21 +1545,6 @@ impl ToMarionette<MarionettePrintMargins> for PrintMargins {
             left: self.left,
             right: self.right,
         })
-    }
-}
-
-impl ToMarionette<Map<String, Value>> for XblLocatorParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut value = Map::new();
-        value.insert(self.name.to_owned(), Value::String(self.value.clone()));
-
-        let mut data = Map::new();
-        data.insert(
-            "using".to_owned(),
-            Value::String("anon attribute".to_string()),
-        );
-        data.insert("value".to_owned(), Value::Object(value));
-        Ok(data)
     }
 }
 
