@@ -20,6 +20,11 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/net/rust_helper.h"
+
+#ifdef XP_WIN
+#  include <shlobj_core.h>  // for SHGetSpecialFolderPathA
+#endif                      // XP_WIN
 
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
@@ -40,6 +45,7 @@ extern mozilla::LazyLogModule gHostResolverLog;
 
 TRRService* gTRRService = nullptr;
 StaticRefPtr<nsIThread> sTRRBackgroundThread;
+static Atomic<TRRService*> sTRRServicePtr;
 
 NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
@@ -155,9 +161,10 @@ nsresult TRRService::Init() {
     prefBranch->AddObserver(kRolloutModePref, this, true);
   }
 
-  ReadPrefs(nullptr);
-
   gTRRService = this;
+  sTRRServicePtr = this;
+
+  ReadPrefs(nullptr);
 
   if (XRE_IsParentProcess()) {
     mCaptiveIsPassed = CheckCaptivePortalIsPassed();
@@ -376,6 +383,57 @@ void TRRService::ClearEntireCache() {
   dns->ClearCache(true);
 }
 
+void TRRService::AddEtcHosts(const nsTArray<nsCString>& aArray) {
+  MutexAutoLock lock(mLock);
+  for (const auto& item : aArray) {
+    LOG(("Adding %s from /etc/hosts to excluded domains", item.get()));
+    mEtcHostsDomains.PutEntry(item);
+  }
+}
+
+void TRRService::ReadEtcHostsFile() {
+  if (!StaticPrefs::network_trr_exclude_etc_hosts()) {
+    return;
+  }
+
+  auto readHostsTask = []() {
+    MOZ_ASSERT(!NS_IsMainThread(), "Must not run on the main thread");
+#ifdef XP_WIN
+    // Inspired by libevent/evdns.c
+    // Windows is a little coy about where it puts its configuration
+    // files.  Sure, they're _usually_ in C:\windows\system32, but
+    // there's no reason in principle they couldn't be in
+    // W:\hoboken chicken emergency
+
+    nsCString path;
+    path.SetLength(MAX_PATH + 1);
+    if (!SHGetSpecialFolderPathA(NULL, path.BeginWriting(), CSIDL_SYSTEM,
+                                 false)) {
+      LOG(("Calling SHGetSpecialFolderPathA failed"));
+      return;
+    }
+
+    path.SetLength(strlen(path.get()));
+    path.Append("\\drivers\\etc\\hosts");
+#else
+    nsAutoCString path("/etc/hosts"_ns);
+#endif
+
+    LOG(("Reading hosts file at %s", path.get()));
+    rust_parse_etc_hosts(&path, [](const nsTArray<nsCString>* aArray) -> bool {
+      RefPtr<TRRService> service(sTRRServicePtr);
+      if (service && aArray) {
+        service->AddEtcHosts(*aArray);
+      }
+      return !!service;
+    });
+  };
+
+  Unused << NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("Read /etc/hosts file", readHostsTask),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+}
+
 nsresult TRRService::GetURI(nsACString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateURI;
@@ -524,6 +582,7 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
         sTRRBackgroundThread = nullptr;
       }
       MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
+      sTRRServicePtr = nullptr;
     }
   }
   return NS_OK;
@@ -694,6 +753,11 @@ bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
     }
     if (mDNSSuffixDomains.GetEntry(subdomain)) {
       LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
+           subdomain.BeginReading(), aHost.BeginReading()));
+      return true;
+    }
+    if (mEtcHostsDomains.GetEntry(subdomain)) {
+      LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR by /etc/hosts\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;
     }

@@ -13,3 +13,6 @@ includes = ["nsError.h", "nsString.h"]
 
 [export]
 item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
+
+[export.rename]
+"ThinVec" = "nsTArray"

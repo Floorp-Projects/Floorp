@@ -3292,6 +3292,7 @@ version = "0.0.1"
 dependencies = [
  "nserror",
  "nsstring",
+ "thin-vec",
 ]
 
 [[package]]
