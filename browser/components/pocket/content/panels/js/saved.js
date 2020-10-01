@@ -106,6 +106,13 @@ var PKT_SAVED_OVERLAY = function(options) {
     this.wrapper.on("click", function(e) {
       myself.closeValid = false;
     });
+    $("body").on("keydown", function(e) {
+      var key = e.keyCode || e.which;
+      if (key === 9) {
+        myself.mouseInside = true;
+        myself.stopCloseTimer();
+      }
+    });
   };
   this.startCloseTimer = function(manualtime) {
     var settime = manualtime ? manualtime : myself.autocloseTiming;
@@ -263,6 +270,9 @@ var PKT_SAVED_OVERLAY = function(options) {
             if (e.which == 37) {
               myself.updateSlidingTagList();
             }
+            if (e.which === 9) {
+              $("a.pkt_ext_learn_more").focus();
+            }
           })
           .on("keypress", "input", function(e) {
             if (e.which == 13) {
@@ -294,6 +304,7 @@ var PKT_SAVED_OVERLAY = function(options) {
       },
       onShowDropdown() {
         if (myself.ho2 !== "show_prompt_preview") {
+          $(".pkt_ext_item_recs").hide(); // hide recs when tag input begins
           thePKT_SAVED.sendMessage("expandSavePanel");
         }
       },
@@ -321,7 +332,6 @@ var PKT_SAVED_OVERLAY = function(options) {
           .parent()
           .hasClass("token-input-input-token")
       ) {
-        $(".pkt_ext_subshell").hide(); // hide recs when tag input begins
         e.stopImmediatePropagation();
       }
     });
