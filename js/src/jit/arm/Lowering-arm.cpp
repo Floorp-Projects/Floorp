@@ -959,18 +959,31 @@ void LIRGenerator::visitSubstr(MSubstr* ins) {
 }
 
 void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
+  MOZ_CRASH("We don't use MWasmTruncateToInt64 for arm");
+}
+
+void LIRGeneratorARM::lowerWasmBuiltinTruncateToInt64(
+    MWasmBuiltinTruncateToInt64* ins) {
   MDefinition* opd = ins->input();
+  MDefinition* tls = ins->tls();
   MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
 
-  defineReturn(new (alloc()) LWasmTruncateToInt64(useRegisterAtStart(opd)),
+  defineReturn(new (alloc()) LWasmTruncateToInt64(
+                   useRegisterAtStart(opd), useFixedAtStart(tls, WasmTlsReg)),
                ins);
 }
 
 void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
+  MOZ_CRASH("We use BuiltinInt64ToFloatingPoint instead.");
+}
+
+void LIRGeneratorARM::lowerBuiltinInt64ToFloatingPoint(
+    MBuiltinInt64ToFloatingPoint* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Float32);
 
-  auto* lir = new (alloc()) LInt64ToFloatingPointCall();
-  lir->setInt64Operand(0, useInt64RegisterAtStart(ins->input()));
+  auto* lir = new (alloc())
+      LInt64ToFloatingPointCall(useInt64RegisterAtStart(ins->input()),
+                                useFixedAtStart(ins->tls(), WasmTlsReg));
   defineReturn(lir, ins);
 }
 

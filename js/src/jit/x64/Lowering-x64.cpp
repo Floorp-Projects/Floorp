@@ -393,6 +393,11 @@ void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
               ins);
 }
 
+void LIRGeneratorX64::lowerWasmBuiltinTruncateToInt64(
+    MWasmBuiltinTruncateToInt64* ins) {
+  MOZ_CRASH("We don't use it for this architecture");
+}
+
 void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Int64);
@@ -401,6 +406,11 @@ void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
   LDefinition maybeTemp = ins->isUnsigned() ? temp() : LDefinition::BogusTemp();
   define(new (alloc()) LInt64ToFloatingPoint(useInt64Register(opd), maybeTemp),
          ins);
+}
+
+void LIRGeneratorX64::lowerBuiltinInt64ToFloatingPoint(
+    MBuiltinInt64ToFloatingPoint* ins) {
+  MOZ_CRASH("We don't use it for this architecture");
 }
 
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
