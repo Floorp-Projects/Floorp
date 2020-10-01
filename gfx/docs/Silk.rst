@@ -210,7 +210,7 @@ touch events, and then dispatch the resampled touch event to APZ. Touch
 events on Firefox OS occur on a *Touch Input Thread* whereas they are
 processed by APZ on the *APZ Controller Thread*. We use `Google
 Android’s touch
-resampling <http://www.masonchang.com/blog/2014/8/25/androids-touch-resampling-algorithm>`__
+resampling <https://web.archive.org/web/20200909082458/http://www.masonchang.com/blog/2014/8/25/androids-touch-resampling-algorithm>`__
 algorithm to resample touch events.
 
 Currently, we have a strict ordering between Composites and touch
@@ -247,7 +247,7 @@ down <https://hg.mozilla.org/mozilla-central/file/0df249a0e4d3/widget/nsBaseWidg
 During nsBaseWidget::DestroyCompositor, it first destroys the
 CompositorBridgeChild. CompositorBridgeChild sends a sync IPC call to
 CompositorBridgeParent::RecvStop, which calls
-`CompositorBridgeParent::Destroy <https://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorBridgeParent.cpp#l509>`__.
+`CompositorBridgeParent::Destroy <https://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorParent.cpp#l509>`__.
 During this time, the *main thread* is blocked on the parent process.
 CompositorBridgeParent::RecvStop runs on the *Compositor thread* and
 cleans up some resources, including setting the
@@ -269,7 +269,7 @@ destruction and the CompositorBridgeParent::DeferredDestroy releases a
 reference to the CompositorBridgeParent on the *Compositor Thread*.
 Finally, the CompositorBridgeParent itself is destroyed on the *main
 thread* once both references are gone due to explicit `main thread
-destruction <https://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorBridgeParent.h#l148>`__.
+destruction <https://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorParent.h#l148>`__.
 
 With the ``CompositorVsyncScheduler::Observer``, any accesses to the
 widget after nsBaseWidget::DestroyCompositor executes are invalid. Any
