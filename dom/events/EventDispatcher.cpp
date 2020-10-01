@@ -1063,19 +1063,18 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
             }
           };
 
-          profiler_add_marker<DOMEventMarker>(
-              "DOMEvent", geckoprofiler::category::DOM,
-              {MarkerTiming::IntervalStart(),
-               MarkerInnerWindowId(innerWindowId)},
-              typeStr, aEvent->mTimeStamp);
+          profiler_add_marker("DOMEvent", geckoprofiler::category::DOM,
+                              {MarkerTiming::IntervalStart(),
+                               MarkerInnerWindowId(innerWindowId)},
+                              DOMEventMarker{}, typeStr, aEvent->mTimeStamp);
 
           EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                        aCallback, cd);
 
-          profiler_add_marker<DOMEventMarker>(
+          profiler_add_marker(
               "DOMEvent", geckoprofiler::category::DOM,
-              {MarkerTiming::IntervalEnd(), std::move(innerWindowId)}, typeStr,
-              aEvent->mTimeStamp);
+              {MarkerTiming::IntervalEnd(), std::move(innerWindowId)},
+              DOMEventMarker{}, typeStr, aEvent->mTimeStamp);
         } else
 #endif
         {

@@ -3449,16 +3449,18 @@ void TestProfiler() {
         baseprofiler::FileIOMarkerPayload(
             "operation", "source", "filename", TimeStamp::NowUnfuzzed(),
             TimeStamp::NowUnfuzzed(), std::move(cause)));
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
-        "m2fileio", mozilla::baseprofiler::category::OTHER, {}, "op2", "src2",
-        "f2", MarkerThreadId{});
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
+    baseprofiler::AddMarker("m2fileio", mozilla::baseprofiler::category::OTHER,
+                            {}, mozilla::baseprofiler::markers::FileIO{}, "op2",
+                            "src2", "f2", MarkerThreadId{});
+    baseprofiler::AddMarker(
         "m2fileio-capture", mozilla::baseprofiler::category::OTHER,
-        MarkerStack::Capture(), "op2", "src2", "f2", MarkerThreadId{});
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
+        MarkerStack::Capture(), mozilla::baseprofiler::markers::FileIO{}, "op2",
+        "src2", "f2", MarkerThreadId{});
+    baseprofiler::AddMarker(
         "m2fileio-take-backtrace", mozilla::baseprofiler::category::OTHER,
         MarkerStack::TakeBacktrace(baseprofiler::profiler_capture_backtrace()),
-        "op2", "src2", "f2", MarkerThreadId{});
+        mozilla::baseprofiler::markers::FileIO{}, "op2", "src2", "f2",
+        MarkerThreadId{});
 
     baseprofiler::profiler_add_marker(
         "UserTimingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
@@ -3545,50 +3547,48 @@ void TestProfiler() {
         "default-templated markers 2.0 with option",
         mozilla::baseprofiler::category::OTHER, MarkerInnerWindowId(123)));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<::mozilla::baseprofiler::markers::NoPayload>(
-            "explicitly-default-templated markers 2.0 without options",
-            mozilla::baseprofiler::category::OTHER, {}));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "explicitly-default-templated markers 2.0 without options",
+        mozilla::baseprofiler::category::OTHER, {},
+        ::mozilla::baseprofiler::markers::NoPayload{}));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<::mozilla::baseprofiler::markers::NoPayload>(
-            "explicitly-default-templated markers 2.0 with option",
-            mozilla::baseprofiler::category::OTHER, MarkerInnerWindowId(123)));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "explicitly-default-templated markers 2.0 with option",
+        mozilla::baseprofiler::category::OTHER, MarkerInnerWindowId(123),
+        ::mozilla::baseprofiler::markers::NoPayload{}));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Tracing>(
-            "tracing", mozilla::baseprofiler::category::OTHER, {}, "category"));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "tracing", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::Tracing{}, "category"));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::UserTimingMark>(
-            "mark", mozilla::baseprofiler::category::OTHER, {}, "mark name"));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "mark", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::UserTimingMark{}, "mark name"));
 
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker<
-                       mozilla::baseprofiler::markers::UserTimingMeasure>(
-        "measure", mozilla::baseprofiler::category::OTHER, {}, "measure name",
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "measure", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name",
         Some(ProfilerString8View("start")), Some(ProfilerString8View("end"))));
 
     MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Hang>(
-            "hang", mozilla::baseprofiler::category::OTHER, {}));
+        baseprofiler::AddMarker("hang", mozilla::baseprofiler::category::OTHER,
+                                {}, mozilla::baseprofiler::markers::Hang{}));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::LongTask>(
-            "longtask", mozilla::baseprofiler::category::OTHER, {}));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "longtask", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::LongTask{}));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Text>(
-            "text", mozilla::baseprofiler::category::OTHER, {}, "text text"));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "text", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::Text{}, "text text"));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Log>(
-            "log", mozilla::baseprofiler::category::OTHER, {}, "module",
-            "text"));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "log", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::Log{}, "module", "text"));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::MediaSample>(
-            "media sample", mozilla::baseprofiler::category::OTHER, {}, 123,
-            456));
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "media sample", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::MediaSample{}, 123, 456));
 
     printf("Sleep 1s...\n");
     {
@@ -3797,62 +3797,55 @@ void TestUserMarker() {
   mozilla::ProfileChunkedBuffer buffer(
       mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling, {},
-          std::string("payload text")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling, {},
+      MarkerTypeTestMinimal{}, std::string("payload text")));
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerThreadId(123), std::string("ThreadId(123)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerThreadId(123), MarkerTypeTestMinimal{},
+      std::string("ThreadId(123)")));
 
   auto start = mozilla::TimeStamp::NowUnfuzzed();
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerTiming::InstantAt(start),
-          std::string("InstantAt(start)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerTiming::InstantAt(start), MarkerTypeTestMinimal{},
+      std::string("InstantAt(start)")));
 
   auto then = mozilla::TimeStamp::NowUnfuzzed();
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerTiming::IntervalStart(start),
-          std::string("IntervalStart(start)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerTiming::IntervalStart(start), MarkerTypeTestMinimal{},
+      std::string("IntervalStart(start)")));
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerTiming::IntervalEnd(then),
-          std::string("IntervalEnd(then)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerTiming::IntervalEnd(then), MarkerTypeTestMinimal{},
+      std::string("IntervalEnd(then)")));
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerTiming::Interval(start, then),
-          std::string("Interval(start, then)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerTiming::Interval(start, then), MarkerTypeTestMinimal{},
+      std::string("Interval(start, then)")));
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerTiming::IntervalUntilNowFrom(start),
-          std::string("IntervalUntilNowFrom(start)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerTiming::IntervalUntilNowFrom(start),
+      MarkerTypeTestMinimal{}, std::string("IntervalUntilNowFrom(start)")));
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerStack::NoStack(), std::string("NoStack")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerStack::NoStack(), MarkerTypeTestMinimal{},
+      std::string("NoStack")));
   // Note: We cannot test stack-capture here, because the profiler is not
   // initialized.
 
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          mozilla::MarkerInnerWindowId(123),
-          std::string("InnerWindowId(123)")));
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
+      mozilla::MarkerInnerWindowId(123), MarkerTypeTestMinimal{},
+      std::string("InnerWindowId(123)")));
 
 #  ifdef DEBUG
   buffer.Dump();
@@ -3882,47 +3875,42 @@ void TestPredefinedMarkers() {
   mozilla::ProfileChunkedBuffer buffer(
       mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Tracing>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("tracing"),
-      mozilla::baseprofiler::category::OTHER, {}, "category"));
+      mozilla::baseprofiler::category::OTHER, {},
+      mozilla::baseprofiler::markers::Tracing{}, "category"));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::UserTimingMark>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("mark"), mozilla::baseprofiler::category::OTHER,
-      {}, "mark name"));
+      {}, mozilla::baseprofiler::markers::UserTimingMark{}, "mark name"));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::UserTimingMeasure>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("measure"),
-      mozilla::baseprofiler::category::OTHER, {}, "measure name ",
+      mozilla::baseprofiler::category::OTHER, {},
+      mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name ",
       mozilla::Some(mozilla::ProfilerString8View(" start ")),
       mozilla::Some(mozilla::ProfilerString8View("end"))));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Hang>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("hang"), mozilla::baseprofiler::category::OTHER,
-      {}));
+      {}, mozilla::baseprofiler::markers::Hang{}));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::LongTask>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("long task"),
-      mozilla::baseprofiler::category::OTHER, {}));
+      mozilla::baseprofiler::category::OTHER, {},
+      mozilla::baseprofiler::markers::LongTask{}));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Text>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,
-      {}, "text text"));
+      {}, mozilla::baseprofiler::markers::Text{}, "text text"));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Log>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("log"), mozilla::baseprofiler::category::OTHER,
-      {}, "module", "text"));
+      {}, mozilla::baseprofiler::markers::Log{}, "module", "text"));
 
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::MediaSample>(
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
-      {}, 123, 456));
+      {}, mozilla::baseprofiler::markers::MediaSample{}, 123, 456));
 
 #  ifdef DEBUG
   buffer.Dump();
