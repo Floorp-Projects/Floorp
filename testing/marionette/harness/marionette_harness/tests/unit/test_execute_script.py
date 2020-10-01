@@ -170,7 +170,7 @@ class TestExecuteContent(MarionetteTestCase):
     def test_permission(self):
         for sandbox in ["default", None]:
             with self.assertRaises(errors.JavascriptException):
-               self.marionette.execute_script(
+                self.marionette.execute_script(
                     "Components.classes['@mozilla.org/preferences-service;1']")
 
     def test_return_web_element(self):
@@ -267,7 +267,10 @@ class TestExecuteContent(MarionetteTestCase):
             exists = send("return typeof {} != 'undefined'".format(property))
             self.assertTrue(exists, "property {} is undefined".format(property))
 
-        self.assertTrue(send("return (typeof Components == 'undefined') || (typeof Components.utils == 'undefined')"))
+        self.assertTrue(send("""
+            return (typeof Components == 'undefined') ||
+                (typeof Components.utils == 'undefined')
+        """))
         self.assertTrue(send("return typeof window.wrappedJSObject == 'undefined'"))
 
     def test_no_callback(self):
@@ -335,8 +338,8 @@ class TestExecuteContent(MarionetteTestCase):
               toJSON () {
                 return "foo";
               }
-            }""",
-            sandbox=None)
+            }
+        """, sandbox=None)
         self.assertEqual("foo", foo)
 
     def test_unsafe_toJSON(self):
@@ -345,9 +348,11 @@ class TestExecuteContent(MarionetteTestCase):
               toJSON () {
                 return document.documentElement;
               }
-            }""",
-            sandbox=None)
+            }
+        """, sandbox=None)
         self.assert_is_web_element(el)
+        self.assertEqual(el, self.marionette.find_element(By.CSS_SELECTOR, ":root"))
+        self.assertEqual(el.get_property("localName"), "html")
 
     def test_comment_in_last_line(self):
         self.marionette.execute_script(" // comment ")
