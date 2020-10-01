@@ -2779,6 +2779,30 @@ class LModD : public LBinaryMath<1> {
   MMod* mir() const { return mir_->toMod(); }
 };
 
+class LWasmBuiltinModD : public LInstructionHelper<1, 3, 0> {
+  static const size_t LhsIndex = 0;
+  static const size_t RhsIndex = 1;
+  static const size_t TlsIndex = 2;
+
+ public:
+  LIR_HEADER(WasmBuiltinModD)
+
+  LWasmBuiltinModD(const LAllocation& lhs, const LAllocation& rhs,
+                   const LAllocation& tls)
+      : LInstructionHelper(classOpcode) {
+    setOperand(LhsIndex, lhs);
+    setOperand(RhsIndex, rhs);
+    setOperand(TlsIndex, tls);
+    setIsCall();
+  }
+
+  const LAllocation* lhs() { return this->getOperand(LhsIndex); }
+  const LAllocation* rhs() { return this->getOperand(RhsIndex); }
+  const LAllocation* tls() { return this->getOperand(TlsIndex); }
+
+  MWasmBuiltinModD* mir() const { return mir_->toWasmBuiltinModD(); }
+};
+
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:

@@ -507,6 +507,15 @@ class FunctionCompiler {
     }
 #endif
 
+    // Should be handled separately because we call BuiltinThunk for this case
+    // and so, need to add the dependency from tlsPointer.
+    if (type == MIRType::Double) {
+      auto* ins = MWasmBuiltinModD::New(alloc(), lhs, rhs, tlsPointer_, type,
+                                        bytecodeOffset());
+      curBlock_->add(ins);
+      return ins;
+    }
+
     auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError,
                           bytecodeOffset());
     curBlock_->add(ins);
