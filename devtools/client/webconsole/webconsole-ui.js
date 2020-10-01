@@ -684,8 +684,12 @@ class WebConsoleUI {
     this[id] = node;
   }
 
-  // Retrieves the debugger's currently selected frame front
-  async getFrameActor() {
+  /**
+   * Retrieves the actorID of the debugger's currently selected FrameFront.
+   *
+   * @return {String} actorID of the FrameFront
+   */
+  getFrameActor() {
     const state = this.hud.getDebuggerFrames();
     if (!state) {
       return null;
