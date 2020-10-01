@@ -29,6 +29,7 @@ nsPrintSettings::nsPrintSettings()
       mShrinkToFit(true),
       mShowPrintProgress(true),
       mShowMarginGuides(false),
+      mHonorPageRuleMargins(true),
       mPrintPageDelay(50),
       mPaperWidth(8.5),
       mPaperHeight(11.0),
@@ -600,8 +601,19 @@ NS_IMETHODIMP nsPrintSettings::GetShowMarginGuides(bool* aShowMarginGuides) {
   *aShowMarginGuides = mShowMarginGuides;
   return NS_OK;
 }
+
 NS_IMETHODIMP nsPrintSettings::SetShowMarginGuides(bool aShowMarginGuides) {
   mShowMarginGuides = aShowMarginGuides;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::GetHonorPageRuleMargins(bool* aResult) {
+  *aResult = mHonorPageRuleMargins;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::SetHonorPageRuleMargins(bool aHonor) {
+  mHonorPageRuleMargins = aHonor;
   return NS_OK;
 }
 

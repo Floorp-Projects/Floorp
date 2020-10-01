@@ -682,6 +682,29 @@ async function runTest27() {
       printBGImages: false,
     }
   });
+  requestAnimationFrame(() => setTimeout(runTest28));
+}
+
+async function runTest28() {
+  await compareFiles("data:text/html,<style>@page { margin: 0 }</style>Foo", "data:text/html,Foo", {
+    settings: {
+      honorPageRuleMargins: false,
+      marginTop: 1,
+    }
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest29));
+}
+
+async function runTest29() {
+  await compareFiles("data:text/html,<style>@page { margin: 0 }</style>Foo", "data:text/html,Foo", {
+    settings: {
+      honorPageRuleMargins: true,
+      marginTop: 1,
+    },
+    expectDifference: true,
+  });
+
   finish();
 }
 
