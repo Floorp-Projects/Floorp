@@ -477,6 +477,21 @@ TEST(ThreadUtils, NewNamedCancelableRunnableFunction)
     EXPECT_EQ(foo->refCount(), 1u);
     EXPECT_FALSE(ran);
   }
+
+  // Test no-op after cancelation.
+  {
+    auto foo = MakeRefPtr<TestRefCounted>();
+    bool ran = false;
+
+    RefPtr<CancelableRunnable> func =
+        NS_NewCancelableRunnableFunction("unused", [foo, &ran] { ran = true; });
+
+    EXPECT_EQ(foo->refCount(), 2u);
+    func->Cancel();
+    func->Run();
+
+    EXPECT_FALSE(ran);
+  }
 }
 
 static void TestNewRunnableMethod(bool aNamed) {
