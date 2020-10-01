@@ -277,3 +277,9 @@ cfr-doorhanger-doh-secondary-button = Disable
 cfr-whatsnew-clear-cookies-header = Automatic protection from sneaky tracking tactics
 cfr-whatsnew-clear-cookies-body = Some trackers redirect you to other websites that secretly set cookies. { -brand-short-name } now automatically clears those cookies so you can’t be followed.
 cfr-whatsnew-clear-cookies-image-alt = Cookie blocked illustration
+
+## What's new: Media controls message
+
+cfr-whatsnew-media-keys-header = More media controls
+cfr-whatsnew-media-keys-body = Play and pause audio or video right from your keyboard or headset, making it easy to control media from another tab, program, or even when your computer is locked. You can also move between tracks using the forward and back keys.
+cfr-whatsnew-media-keys-button = Learn how
