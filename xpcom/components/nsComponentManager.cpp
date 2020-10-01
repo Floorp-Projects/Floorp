@@ -1325,7 +1325,7 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
   {
     SafeMutexAutoUnlock unlock(mLock);
     AUTO_PROFILER_MARKER_TEXT(
-        "GetService", OTHER.WithOptions(MarkerStack::Capture()),
+        "GetService", OTHER, MarkerStack::Capture(),
         nsDependentCString(nsIDToCString(aEntry.CID()).get()));
     rv = aEntry.CreateInstance(nullptr, aIID, getter_AddRefs(service));
   }

@@ -82,12 +82,12 @@ struct StreamFunctionTypeHelper<R(JSONWriter&, As...)> {
   // references-to-const, permitted implicit conversions can happen.
   static ProfileBufferBlockIndex Serialize(
       ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
-      MarkerOptions&& aOptions, Streaming::DeserializerTag aDeserializerTag,
-      const As&... aAs) {
+      const MarkerCategory& aCategory, MarkerOptions&& aOptions,
+      Streaming::DeserializerTag aDeserializerTag, const As&... aAs) {
     // Note that options are first after the entry kind, because they contain
     // the thread id, which is handled first to filter markers by threads.
     return aBuffer.PutObjects(ProfileBufferEntryKind::Marker, aOptions, aName,
-                              aDeserializerTag, aAs...);
+                              aCategory, aDeserializerTag, aAs...);
   }
 };
 
@@ -111,6 +111,7 @@ struct MarkerTypeSerialization {
   template <typename... Ts>
   static ProfileBufferBlockIndex Serialize(ProfileChunkedBuffer& aBuffer,
                                            const ProfilerString8View& aName,
+                                           const MarkerCategory& aCategory,
                                            MarkerOptions&& aOptions,
                                            const Ts&... aTs) {
     static_assert(!std::is_same_v<MarkerType,
@@ -126,8 +127,8 @@ struct MarkerTypeSerialization {
     // everybody, even the majority of users not using the profiler.
     static const Streaming::DeserializerTag tag =
         Streaming::TagForDeserializer(Deserialize);
-    return StreamFunctionType::Serialize(aBuffer, aName, std::move(aOptions),
-                                         tag, aTs...);
+    return StreamFunctionType::Serialize(aBuffer, aName, aCategory,
+                                         std::move(aOptions), tag, aTs...);
   }
 
  private:
@@ -175,7 +176,8 @@ struct MarkerTypeSerialization<::mozilla::baseprofiler::markers::NoPayload> {
 template <typename MarkerType, typename... Ts>
 static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
     ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
-    MarkerOptions&& aOptions, const Ts&... aTs) {
+    const MarkerCategory& aCategory, MarkerOptions&& aOptions,
+    const Ts&... aTs) {
   if constexpr (std::is_same_v<MarkerType,
                                ::mozilla::baseprofiler::markers::NoPayload>) {
     static_assert(sizeof...(Ts) == 0,
@@ -183,11 +185,11 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
     // Note that options are first after the entry kind, because they contain
     // the thread id, which is handled first to filter markers by threads.
     return aBuffer.PutObjects(
-        ProfileBufferEntryKind::Marker, std::move(aOptions), aName,
+        ProfileBufferEntryKind::Marker, std::move(aOptions), aName, aCategory,
         base_profiler_markers_detail::Streaming::DeserializerTag(0));
   } else {
     return MarkerTypeSerialization<MarkerType>::Serialize(
-        aBuffer, aName, std::move(aOptions), aTs...);
+        aBuffer, aName, aCategory, std::move(aOptions), aTs...);
   }
 }
 
@@ -201,7 +203,7 @@ using BacktraceCaptureFunction = bool (*)(ProfileChunkedBuffer&);
 template <typename MarkerType, typename... Ts>
 ProfileBufferBlockIndex AddMarkerToBuffer(
     ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
-    MarkerOptions&& aOptions,
+    const MarkerCategory& aCategory, MarkerOptions&& aOptions,
     BacktraceCaptureFunction aBacktraceCaptureFunction, const Ts&... aTs) {
   if (aOptions.ThreadId().IsUnspecified()) {
     // If yet unspecified, set thread to this thread where the marker is added.
@@ -226,11 +228,11 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
         aBacktraceCaptureFunction(chunkedBuffer) ? &chunkedBuffer : nullptr);
     // This call must be made from here, while chunkedBuffer is in scope.
     return AddMarkerWithOptionalStackToBuffer<MarkerType>(
-        aBuffer, aName, std::move(aOptions), aTs...);
+        aBuffer, aName, aCategory, std::move(aOptions), aTs...);
   }
 
   return AddMarkerWithOptionalStackToBuffer<MarkerType>(
-      aBuffer, aName, std::move(aOptions), aTs...);
+      aBuffer, aName, aCategory, std::move(aOptions), aTs...);
 }
 
 template <typename NameCallback, typename StackCallback>
@@ -254,7 +256,7 @@ template <typename NameCallback, typename StackCallback>
   aWriter.StartArrayElement();
   {
     std::forward<NameCallback>(aNameCallback)(
-        aEntryReader.ReadObject<mozilla::ProfilerString8View>());
+        aEntryReader.ReadObject<ProfilerString8View>());
 
     const double startTime = options.Timing().GetStartTime();
     aWriter.DoubleElement(startTime);
@@ -264,7 +266,8 @@ template <typename NameCallback, typename StackCallback>
 
     aWriter.IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
 
-    aWriter.IntElement(static_cast<int64_t>(options.Category().GetCategory()));
+    MarkerCategory category = aEntryReader.ReadObject<MarkerCategory>();
+    aWriter.IntElement(static_cast<int64_t>(category.GetCategory()));
 
     if (const auto tag =
             aEntryReader.ReadObject<mozilla::base_profiler_markers_detail::
@@ -422,8 +425,7 @@ template <>
 struct ProfileBufferEntryReader::Deserializer<MarkerCategory> {
   static void ReadInto(ProfileBufferEntryReader& aER,
                        MarkerCategory& aCategory) {
-    aCategory.mCategoryPair = static_cast<baseprofiler::ProfilingCategoryPair>(
-        aER.ReadULEB128<uint32_t>());
+    aCategory = Read(aER);
   }
 
   static MarkerCategory Read(ProfileBufferEntryReader& aER) {
@@ -584,14 +586,13 @@ struct ProfileBufferEntryReader::Deserializer<MarkerStack> {
 template <>
 struct ProfileBufferEntryWriter::Serializer<MarkerOptions> {
   static Length Bytes(const MarkerOptions& aOptions) {
-    return SumBytes(aOptions.Category(), aOptions.ThreadId(), aOptions.Timing(),
-                    aOptions.Stack(), aOptions.InnerWindowId());
+    return SumBytes(aOptions.ThreadId(), aOptions.Timing(), aOptions.Stack(),
+                    aOptions.InnerWindowId());
   }
 
   static void Write(ProfileBufferEntryWriter& aEW,
                     const MarkerOptions& aOptions) {
-    aEW.WriteObjects(aOptions.Category(), aOptions.ThreadId(),
-                     aOptions.Timing(), aOptions.Stack(),
+    aEW.WriteObjects(aOptions.ThreadId(), aOptions.Timing(), aOptions.Stack(),
                      aOptions.InnerWindowId());
   }
 };
@@ -599,8 +600,7 @@ struct ProfileBufferEntryWriter::Serializer<MarkerOptions> {
 template <>
 struct ProfileBufferEntryReader::Deserializer<MarkerOptions> {
   static void ReadInto(ProfileBufferEntryReader& aER, MarkerOptions& aOptions) {
-    aER.ReadIntoObjects(aOptions.mCategory, aOptions.mThreadId,
-                        aOptions.mTiming, aOptions.mStack,
+    aER.ReadIntoObjects(aOptions.mThreadId, aOptions.mTiming, aOptions.mStack,
                         aOptions.mInnerWindowId);
   }
 

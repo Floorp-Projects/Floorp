@@ -523,7 +523,7 @@ TEST(GeckoProfiler, Pause)
 
   // Check that we are writing markers while not paused.
   info1 = profiler_get_buffer_info();
-  PROFILER_MARKER_UNTYPED("Not paused", OTHER);
+  PROFILER_MARKER_UNTYPED("Not paused", OTHER, {});
   info2 = profiler_get_buffer_info();
   ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
 
@@ -540,10 +540,10 @@ TEST(GeckoProfiler, Pause)
 
   // Check that we are now writing markers while paused.
   info1 = profiler_get_buffer_info();
-  PROFILER_MARKER_UNTYPED("Paused", OTHER);
+  PROFILER_MARKER_UNTYPED("Paused", OTHER, {});
   info2 = profiler_get_buffer_info();
   ASSERT_TRUE(info1->mRangeEnd == info2->mRangeEnd);
-  PROFILER_MARKER_UNTYPED("Paused v2", OTHER);
+  PROFILER_MARKER_UNTYPED("Paused v2", OTHER, {});
   Maybe<ProfilerBufferInfo> info3 = profiler_get_buffer_info();
   ASSERT_TRUE(info2->mRangeEnd == info3->mRangeEnd);
 
@@ -650,10 +650,10 @@ TEST(GeckoProfiler, Markers)
 
   { AUTO_PROFILER_TRACING_MARKER("C", "auto tracing", OTHER); }
 
-  PROFILER_MARKER_UNTYPED("M1", OTHER);
+  PROFILER_MARKER_UNTYPED("M1", OTHER, {});
   PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, TracingMarkerPayload,
                                    ("C", TRACING_EVENT, ts0));
-  PROFILER_MARKER_UNTYPED("M3", OTHER);
+  PROFILER_MARKER_UNTYPED("M3", OTHER, {});
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "M4", OTHER, TracingMarkerPayload,
       ("C", TRACING_EVENT, ts0, mozilla::Nothing(), profiler_get_backtrace()));
@@ -704,19 +704,19 @@ TEST(GeckoProfiler, Markers)
 
   // Test basic markers 2.0.
   MOZ_RELEASE_ASSERT(
-      profiler_add_marker<>("default-templated markers 2.0 with empty options",
-                            geckoprofiler::category::OTHER));
+      profiler_add_marker("default-templated markers 2.0 with empty options",
+                          geckoprofiler::category::OTHER, {}));
 
-  PROFILER_MARKER_UNTYPED("default-templated markers 2.0 with option",
-                          OTHER.WithOptions(MarkerStack::TakeBacktrace(
-                              profiler_capture_backtrace())));
+  PROFILER_MARKER_UNTYPED(
+      "default-templated markers 2.0 with option", OTHER,
+      MarkerStack::TakeBacktrace(profiler_capture_backtrace()));
 
   PROFILER_MARKER("explicitly-default-templated markers 2.0 with empty options",
-                  OTHER, NoPayload);
+                  OTHER, {}, NoPayload);
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<::geckoprofiler::markers::NoPayload>(
       "explicitly-default-templated markers 2.0 with option",
-      geckoprofiler::category::OTHER));
+      geckoprofiler::category::OTHER, {}));
 
   // Used in markers below.
   TimeStamp ts1 = TimeStamp::NowUnfuzzed();
@@ -739,20 +739,18 @@ TEST(GeckoProfiler, Markers)
       ("operation", "source", "filename", ts1, ts2, nullptr));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::FileIO>(
-      "FileIOMarkerPayload marker 2.0",
-      geckoprofiler::category::OTHER.WithOptions(
-          MarkerTiming::Interval(ts1, ts2)),
-      "operation", "source", "filename", MarkerThreadId{}));
+      "FileIOMarkerPayload marker 2.0", geckoprofiler::category::OTHER,
+      MarkerTiming::Interval(ts1, ts2), "operation", "source", "filename",
+      MarkerThreadId{}));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "FileIOMarkerPayload marker off-MT", OTHER, FileIOMarkerPayload,
       ("operation2", "source2", "filename2", ts1, ts2, nullptr, Some(123)));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::FileIO>(
-      "FileIOMarkerPayload marker 2.0 off-MT",
-      geckoprofiler::category::OTHER.WithOptions(
-          MarkerTiming::Interval(ts1, ts2)),
-      "operation2", "source2", "filename2", MarkerThreadId{123}));
+      "FileIOMarkerPayload marker 2.0 off-MT", geckoprofiler::category::OTHER,
+      MarkerTiming::Interval(ts1, ts2), "operation2", "source2", "filename2",
+      MarkerThreadId{123}));
 
   // Other markers in alphabetical order of payload class names.
 
@@ -859,35 +857,35 @@ TEST(GeckoProfiler, Markers)
        mozilla::ipc::MessagePhase::Endpoint, false, ts1));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Tracing>(
-      "Tracing", geckoprofiler::category::OTHER, "category"));
+      "Tracing", geckoprofiler::category::OTHER, {}, "category"));
 
   MOZ_RELEASE_ASSERT(
       profiler_add_marker<geckoprofiler::markers::UserTimingMark>(
-          "UserTimingMark", geckoprofiler::category::OTHER, "mark name"));
+          "UserTimingMark", geckoprofiler::category::OTHER, {}, "mark name"));
 
   MOZ_RELEASE_ASSERT(
       profiler_add_marker<geckoprofiler::markers::UserTimingMeasure>(
-          "UserTimingMeasure", geckoprofiler::category::OTHER, "measure name",
-          Some(mozilla::ProfilerString8View("start")),
+          "UserTimingMeasure", geckoprofiler::category::OTHER, {},
+          "measure name", Some(mozilla::ProfilerString8View("start")),
           Some(mozilla::ProfilerString8View("end"))));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Hang>(
-      "Hang", geckoprofiler::category::OTHER));
+      "Hang", geckoprofiler::category::OTHER, {}));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::LongTask>(
-      "LongTask", geckoprofiler::category::OTHER));
+      "LongTask", geckoprofiler::category::OTHER, {}));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Text>(
-      "Text", geckoprofiler::category::OTHER, "Text text"));
+      "Text", geckoprofiler::category::OTHER, {}, "Text text"));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Log>(
-      "Log", geckoprofiler::category::OTHER, "module", "log text"));
+      "Log", geckoprofiler::category::OTHER, {}, "module", "log text"));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::MediaSample>(
-      "MediaSample", geckoprofiler::category::OTHER, 123, 456));
+      "MediaSample", geckoprofiler::category::OTHER, {}, 123, 456));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Budget>(
-      "Budget", geckoprofiler::category::OTHER));
+      "Budget", geckoprofiler::category::OTHER, {}));
 
   SpliceableChunkedJSONWriter w;
   w.Start();
@@ -2015,7 +2013,7 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   // Add at least a marker, which should go straight into the buffer.
   Maybe<baseprofiler::ProfilerBufferInfo> info0 =
       baseprofiler::profiler_get_buffer_info();
-  BASE_PROFILER_MARKER_UNTYPED("Marker from base profiler", OTHER);
+  BASE_PROFILER_MARKER_UNTYPED("Marker from base profiler", OTHER, {});
   Maybe<baseprofiler::ProfilerBufferInfo> info1 =
       baseprofiler::profiler_get_buffer_info();
   ASSERT_GT(info1->mRangeEnd, info0->mRangeEnd);
