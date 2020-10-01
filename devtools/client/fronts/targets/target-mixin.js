@@ -42,7 +42,6 @@ function TargetMixin(parentClass) {
       this._forceChrome = false;
 
       this.destroy = this.destroy.bind(this);
-      this._onNewSource = this._onNewSource.bind(this);
 
       this.threadFront = null;
 
@@ -566,14 +565,7 @@ function TargetMixin(parentClass) {
 
       await this.threadFront.attach(options);
 
-      this.threadFront.on("newSource", this._onNewSource);
-
       return this.threadFront;
-    }
-
-    // Listener for "newSource" event fired by the thread actor
-    _onNewSource(packet) {
-      this.emit("source-updated", packet);
     }
 
     /**
@@ -594,11 +586,6 @@ function TargetMixin(parentClass) {
         this.client.off("closed", this.destroy);
       }
       this.off("tabDetached", this.destroy);
-
-      // Remove listeners set in attachThread
-      if (this.threadFront) {
-        this.threadFront.off("newSource", this._onNewSource);
-      }
 
       // Remove listeners set in attachConsole
       if (this.removeOnInspectObjectListener) {
