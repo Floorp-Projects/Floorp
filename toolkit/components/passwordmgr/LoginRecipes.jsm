@@ -14,6 +14,9 @@ const OPTIONAL_KEYS = [
   "passwordSelector",
   "pathRegex",
   "usernameSelector",
+  "schema",
+  "id",
+  "last_modified",
 ];
 const SUPPORTED_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
 
@@ -23,7 +26,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "fetch"]);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -34,6 +37,10 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyGetter(this, "log", () =>
   LoginHelper.createLogger("LoginRecipes")
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+});
 
 /**
  * Create an instance of the object to manage recipes in the parent process.
@@ -75,6 +82,12 @@ LoginRecipesParent.prototype = {
   _recipesByHost: null,
 
   /**
+   * @type {Object} Instance of Remote Settings client that has access to the
+   *                "password-recipes" collection
+   */
+  _rsClient: null,
+
+  /**
    * @param {Object} aRecipes an object containing recipes to load for use. The object
    *                          should be compatible with JSON (e.g. no RegExp).
    * @return {Promise} resolving when the recipes are loaded
@@ -92,11 +105,9 @@ LoginRecipesParent.prototype = {
         log.error("Error loading recipe", rawRecipe, ex);
       }
     }
-
     if (recipeErrors) {
       return Promise.reject(`There were ${recipeErrors} recipe error(s)`);
     }
-
     return Promise.resolve();
   },
 
@@ -106,37 +117,34 @@ LoginRecipesParent.prototype = {
   reset() {
     log.debug("Resetting recipes with defaults:", this._defaults);
     this._recipesByHost = new Map();
-
     if (this._defaults) {
-      let channel = NetUtil.newChannel({
-        uri: NetUtil.newURI(this._defaults, "UTF-8"),
-        loadUsingSystemPrincipal: true,
-      });
-      channel.contentType = "application/json";
-
-      try {
-        this.initializationPromise = new Promise(function(resolve) {
-          NetUtil.asyncFetch(channel, function(stream, result) {
-            if (!Components.isSuccessCode(result)) {
-              throw new Error("Error fetching recipe file:" + result);
-            }
-            let count = stream.available();
-            let data = NetUtil.readInputStreamToString(stream, count, {
-              charset: "UTF-8",
-            });
-            resolve(JSON.parse(data));
-          });
-        })
-          .then(recipes => {
-            Services.ppmm.broadcastAsyncMessage("clearRecipeCache");
-            return this.load(recipes);
-          })
-          .then(resolve => {
-            return this;
-          });
-      } catch (e) {
-        throw new Error("Error reading recipe file:" + e);
+      let initPromise;
+      /**
+       * Both branches rely on a JSON dump of the Remote Settings collection, packaged both in Desktop and Android.
+       * The «legacy» mode will read the dump directly from the packaged resources.
+       * With Remote Settings, the dump is used to initialize the local database without network,
+       * and the list of password recipes can be refreshed without restarting and without software update.
+       */
+      if (LoginHelper.remoteRecipesEnabled) {
+        if (!this._rsClient) {
+          this._rsClient = RemoteSettings(LoginHelper.remoteRecipesCollection);
+          // Set up sync observer to update local recipes from Remote Settings recipes
+          this._rsClient.on("sync", event => this.onRemoteSettingsSync(event));
+        }
+        initPromise = this._rsClient.get();
+      } else if (this._defaults.startsWith("resource://")) {
+        initPromise = fetch(this._defaults)
+          .then(resp => resp.json())
+          .then(({ data }) => data);
+      } else {
+        log.error("Invalid recipe path found, setting empty recipes list!");
+        initPromise = new Promise(() => []);
       }
+      this.initializationPromise = initPromise.then(async siteRecipes => {
+        Services.ppmm.broadcastAsyncMessage("clearRecipeCache");
+        await this.load({ siteRecipes });
+        return this;
+      });
     } else {
       this.initializationPromise = Promise.resolve(this);
     }
@@ -212,6 +220,27 @@ LoginRecipesParent.prototype = {
     }
 
     return hostRecipes;
+  },
+
+  /**
+   * Handles the Remote Settings sync event for the "password-recipes" collection.
+   *
+   * @param {Object} aEvent
+   * @param {Array} event.current Records in the "password-recipes" collection after the sync event
+   * @param {Array} event.created Records that were created with this particular sync
+   * @param {Array} event.updated Records that were updated with this particular sync
+   * @param {Array} event.deleted Records that were deleted with this particular sync
+   */
+  onRemoteSettingsSync(aEvent) {
+    this._recipesByHost = new Map();
+    let {
+      data: { current },
+    } = aEvent;
+    let recipes = {
+      siteRecipes: current,
+    };
+    Services.ppmm.broadcastAsyncMessage("clearRecipeCache");
+    this.load(recipes);
   },
 };
 
