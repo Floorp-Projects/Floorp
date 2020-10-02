@@ -6,18 +6,21 @@
 
 #ifndef jit_JitContext_h
 #define jit_JitContext_h
-#include "mozilla/MemoryReporting.h"
+
+#include "mozilla/Assertions.h"
 #include "mozilla/Result.h"
 
-#include "jit/CompileWrappers.h"
-#include "jit/JitOptions.h"
-#include "vm/JSContext.h"
-#include "vm/Realm.h"
-#include "vm/TypeInference.h"
+#include <stdint.h>
+
+#include "jstypes.h"
+
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 namespace jit {
 
+class CompileRealm;
+class CompileRuntime;
 class TempAllocator;
 
 enum MethodStatus {
