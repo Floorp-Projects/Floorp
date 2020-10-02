@@ -2729,15 +2729,15 @@ void BrowsingContext::RemoveFromSessionHistory() {
   }
 }
 
-void BrowsingContext::HistoryGo(int32_t aOffset,
+void BrowsingContext::HistoryGo(int32_t aIndex,
                                 std::function<void(int32_t&&)>&& aResolver) {
   if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendHistoryGo(
-        this, aOffset, std::move(aResolver),
+        this, aIndex, std::move(aResolver),
         [](mozilla::ipc::
                ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
   } else {
-    Canonical()->HistoryGo(aOffset, std::move(aResolver));
+    Canonical()->HistoryGo(aIndex, std::move(aResolver));
   }
 }
 
