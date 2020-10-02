@@ -90,10 +90,13 @@ macro_rules! visit_integer_method {
         {
             match FromPrimitive::$from_method(v) {
                 Some(v) => Ok(v),
-                None => Err(Error::invalid_value(Unexpected::$group(v as $group_ty), &self)),
+                None => Err(Error::invalid_value(
+                    Unexpected::$group(v as $group_ty),
+                    &self,
+                )),
             }
         }
-    }
+    };
 }
 
 macro_rules! visit_float_method {
@@ -105,7 +108,7 @@ macro_rules! visit_float_method {
         {
             Ok(v as Self::Value)
         }
-    }
+    };
 }
 
 macro_rules! impl_deserialize_num {
@@ -1310,7 +1313,7 @@ macro_rules! variant_identifier {
                         formatter.write_str($expecting_message)
                     }
 
-                    fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -1318,7 +1321,7 @@ macro_rules! variant_identifier {
                             $(
                                 $index => Ok($name_kind :: $variant),
                             )*
-                            _ => Err(Error::invalid_value(Unexpected::Unsigned(value as u64), &self),),
+                            _ => Err(Error::invalid_value(Unexpected::Unsigned(value), &self),),
                         }
                     }
 
@@ -2323,7 +2326,7 @@ where
                         formatter.write_str("`Unbounded`, `Included` or `Excluded`")
                     }
 
-                    fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -2332,7 +2335,7 @@ where
                             1 => Ok(Field::Included),
                             2 => Ok(Field::Excluded),
                             _ => Err(Error::invalid_value(
-                                Unexpected::Unsigned(value as u64),
+                                Unexpected::Unsigned(value),
                                 &self,
                             )),
                         }
@@ -2489,7 +2492,7 @@ where
                         formatter.write_str("`Ok` or `Err`")
                     }
 
-                    fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -2497,7 +2500,7 @@ where
                             0 => Ok(Field::Ok),
                             1 => Ok(Field::Err),
                             _ => Err(Error::invalid_value(
-                                Unexpected::Unsigned(value as u64),
+                                Unexpected::Unsigned(value),
                                 &self,
                             )),
                         }

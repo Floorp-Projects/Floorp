@@ -37,8 +37,8 @@
 //!   used for IPC within the Servo rendering engine.
 //! - [CBOR], a Concise Binary Object Representation designed for small message
 //!   size without the need for version negotiation.
-//! - [YAML], a popular human-friendly configuration language that ain't markup
-//!   language.
+//! - [YAML], a self-proclaimed human-friendly configuration language that ain't
+//!   markup language.
 //! - [MessagePack], an efficient binary format that resembles a compact JSON.
 //! - [TOML], a minimal configuration format used by [Cargo].
 //! - [Pickle], a format common in the Python world.
@@ -48,14 +48,18 @@
 //!   definition.
 //! - [JSON5], A superset of JSON including some productions from ES5.
 //! - [Postcard], a no\_std and embedded-systems friendly compact binary format.
-//! - [URL], the x-www-form-urlencoded format.
+//! - [URL] query strings, in the x-www-form-urlencoded format.
 //! - [Envy], a way to deserialize environment variables into Rust structs.
 //!   *(deserialization only)*
 //! - [Envy Store], a way to deserialize [AWS Parameter Store] parameters into
 //!   Rust structs. *(deserialization only)*
+//! - [S-expressions], the textual representation of code and data used by the
+//!   Lisp language family.
+//! - [D-Bus]'s binary wire format.
+//! - [FlexBuffers], the schemaless cousin of Google's FlatBuffers zero-copy serialization format.
 //!
 //! [JSON]: https://github.com/serde-rs/json
-//! [Bincode]: https://github.com/TyOverby/bincode
+//! [Bincode]: https://github.com/servo/bincode
 //! [CBOR]: https://github.com/pyfisch/cbor
 //! [YAML]: https://github.com/dtolnay/serde-yaml
 //! [MessagePack]: https://github.com/3Hren/msgpack-rust
@@ -66,23 +70,26 @@
 //! [Avro]: https://github.com/flavray/avro-rs
 //! [JSON5]: https://github.com/callum-oakley/json5-rs
 //! [Postcard]: https://github.com/jamesmunns/postcard
-//! [URL]: https://github.com/nox/serde_urlencoded
+//! [URL]: https://docs.rs/serde_qs
 //! [Envy]: https://github.com/softprops/envy
 //! [Envy Store]: https://github.com/softprops/envy-store
 //! [Cargo]: http://doc.crates.io/manifest.html
 //! [AWS Parameter Store]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html
+//! [S-expressions]: https://github.com/rotty/lexpr-rs
+//! [D-Bus]: https://docs.rs/zvariant
+//! [FlexBuffers]: https://github.com/google/flatbuffers/tree/master/rust/flexbuffers
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Serde types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/serde/1.0.104")]
+#![doc(html_root_url = "https://docs.rs/serde/1.0.116")]
 // Support using Serde without the standard library!
 #![cfg_attr(not(feature = "std"), no_std)]
 // Unstable functionality only if the user asks for it. For tracking and
 // discussion of these features please refer to this issue:
 //
 //    https://github.com/serde-rs/serde/issues/812
-#![cfg_attr(feature = "unstable", feature(specialization, never_type))]
+#![cfg_attr(feature = "unstable", feature(never_type))]
 #![allow(unknown_lints, bare_trait_objects, deprecated)]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
@@ -90,6 +97,8 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
+        // clippy bug: https://github.com/rust-lang/rust-clippy/issues/5704
+        unnested_or_patterns,
         // not available in our oldest supported compiler
         checked_conversions,
         empty_enum,
@@ -102,23 +111,30 @@
         // things are often more readable this way
         cast_lossless,
         module_name_repetitions,
+        option_if_let_else,
         single_match_else,
         type_complexity,
         use_self,
         zero_prefixed_literal,
+        // correctly used
+        enum_glob_use,
+        wildcard_imports,
         // not practical
         needless_pass_by_value,
         similar_names,
         too_many_lines,
         // preference
         doc_markdown,
+        unseparated_literal_suffix,
         // false positive
         needless_doctest_main,
         // noisy
+        missing_errors_doc,
         must_use_candidate,
     )
 )]
 // Rustc lints.
+#![forbid(unsafe_code)]
 #![deny(missing_docs, unused_imports)]
 
 ////////////////////////////////////////////////////////////////////////////////
