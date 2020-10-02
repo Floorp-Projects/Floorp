@@ -126,6 +126,11 @@ class RenderCompositor {
   virtual bool RequestFullRender() { return false; }
   virtual uint32_t GetMaxPartialPresentRects() { return 0; }
   virtual bool ShouldDrawPreviousPartialPresentRegions() { return false; }
+  // Returns the age of the current backbuffer., This should be used, if
+  // ShouldDrawPreviousPartialPresentRegions() returns true, to determine the
+  // region which must be rendered in addition to the current frame's dirty
+  // rect.
+  virtual size_t GetBufferAge() const { return 0; }
 
   // Whether the surface origin is top-left.
   virtual bool SurfaceOriginIsTopLeft() { return false; }

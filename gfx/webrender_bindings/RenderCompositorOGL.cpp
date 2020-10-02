@@ -113,7 +113,7 @@ uint32_t RenderCompositorOGL::GetMaxPartialPresentRects() {
 }
 
 bool RenderCompositorOGL::RequestFullRender() {
-  return mIsEGL && (mBufferAge != 2);
+  return mIsEGL && (mBufferAge == 0);
 }
 
 bool RenderCompositorOGL::UsePartialPresent() {
@@ -122,6 +122,13 @@ bool RenderCompositorOGL::UsePartialPresent() {
 
 bool RenderCompositorOGL::ShouldDrawPreviousPartialPresentRegions() {
   return mIsEGL && gl::GLContextEGL::Cast(gl())->HasBufferAge();
+}
+
+size_t RenderCompositorOGL::GetBufferAge() const {
+  if (mIsEGL) {
+    return mBufferAge;
+  }
+  return 0;
 }
 
 }  // namespace wr
