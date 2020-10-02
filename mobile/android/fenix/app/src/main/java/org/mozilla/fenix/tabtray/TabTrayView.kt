@@ -100,6 +100,14 @@ class TabTrayView(
 
     private val components = container.context.components
 
+    private val checkOpenTabs = {
+        if (isPrivateModeSelected) {
+            view.context.components.core.store.state.privateTabs.isNotEmpty()
+        } else {
+            view.context.components.core.store.state.normalTabs.isNotEmpty()
+        }
+    }
+
     init {
         components.analytics.metrics.track(Event.TabsTrayOpened)
 
@@ -214,14 +222,9 @@ class TabTrayView(
         tabTrayItemMenu =
             TabTrayItemMenu(
                 context = view.context,
-                shouldShowSaveToCollection = { tabs.isNotEmpty() && view.tab_layout.selectedTabPosition == 0 },
-                hasOpenTabs = {
-                    if (isPrivateModeSelected) {
-                        view.context.components.core.store.state.privateTabs.isNotEmpty()
-                    } else {
-                        view.context.components.core.store.state.normalTabs.isNotEmpty()
-                    }
-                }) {
+                shouldShowSaveToCollection = { checkOpenTabs.invoke() && view.tab_layout.selectedTabPosition == 0 },
+                hasOpenTabs = checkOpenTabs
+            ) {
                 when (it) {
                     is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
                         isPrivateModeSelected
