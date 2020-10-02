@@ -45,22 +45,27 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean inSafeMode;
 
   /**
-   * The status of a given experiment, as stored in a preference by Normandy.
+   * The status of a given normandy experiment.
    */
   cenum ExperimentStatus : 8 {
-    // The experiment status is unknown, and behavior should not be modified.
-    eUnknown = 0,
+    // The user is not actively enrolled in the experiment.
+    eExperimentStatusUnenrolled = 0,
     // The user is enrolled in the control group, and should see the default
     // behavior.
-    eEnrolledControl = 1,
+    eExperimentStatusControl = 1,
     // The user is enrolled in the treatment group, and should see the
     // experimental behavior which is being tested.
-    eEnrolledTreatment = 2,
-    eExperimentStatusMax = 2,
+    eExperimentStatusTreatment = 2,
+    // The user was enrolled in the experiment, but became ineligible due to
+    // manually modifying a relevant preference.
+    eExperimentStatusDisqualified = 3,
+
+    eExperimentStatusCount,
   };
 
   /**
    * Whether Fission should be automatically enabled for new browser windows.
+   * This may not match the value of the 'fission.autostart' pref.
    *
    * This value is guaranteed to remain constant for the length of a browser
    * session.
@@ -68,17 +73,10 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean fissionAutostart;
 
   /**
-   * The user's enrollment status in the Fission rollout experiment. May be
-   * one of:
+   * The user's enrollment status in the Fission experiment at process startup.
+   * See `ExperimentStatus` for the potential values.
    *
-   *  - eUnknown: The user's enrollment status is unknown, and the experiment
-   *    should be ignored.
-   *
-   *  - eEnrolledControl: The user is enrolled in the control group, and Fission
-   *    should be disabled.
-   *
-   *  - eEnrolledTreatment: The user is enrolled in the treatment group, and
-   *    Fission should be enabled.
+   * Only available in the parent process.
    *
    * This value is guaranteed to remain constant for the length of a browser
    * session.
