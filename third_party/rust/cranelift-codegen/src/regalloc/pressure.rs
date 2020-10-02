@@ -274,18 +274,29 @@ impl fmt::Display for Pressure {
 #[cfg(feature = "arm32")]
 mod tests {
     use super::Pressure;
-    use crate::isa::registers::{RegBank, RegClassData};
-    use crate::isa::{RegClass, RegInfo, RegUnit};
+    use crate::isa::{RegClass, TargetIsa};
     use crate::regalloc::RegisterSet;
+    use alloc::boxed::Box;
     use core::borrow::Borrow;
+    use core::str::FromStr;
+    use target_lexicon::triple;
 
-    // Arm32 `TargetIsa` is now `TargetIsaAdapter`, which does not hold any info
-    // about registers, so we directly access `INFO` from registers-arm32.rs.
-    include!(concat!(env!("OUT_DIR"), "/registers-arm32.rs"));
+    // Make an arm32 `TargetIsa`, if possible.
+    fn arm32() -> Option<Box<dyn TargetIsa>> {
+        use crate::isa;
+        use crate::settings;
+
+        let shared_builder = settings::builder();
+        let shared_flags = settings::Flags::new(shared_builder);
+
+        isa::lookup(triple!("arm"))
+            .ok()
+            .map(|b| b.finish(shared_flags))
+    }
 
     // Get a register class by name.
-    fn rc_by_name(reginfo: &RegInfo, name: &str) -> RegClass {
-        reginfo
+    fn rc_by_name(isa: &dyn TargetIsa, name: &str) -> RegClass {
+        isa.register_info()
             .classes
             .iter()
             .find(|rc| rc.name == name)
@@ -294,10 +305,11 @@ mod tests {
 
     #[test]
     fn basic_counting() {
-        let reginfo = INFO.borrow();
-        let gpr = rc_by_name(&reginfo, "GPR");
-        let s = rc_by_name(&reginfo, "S");
-
+        let isa = arm32().expect("This test requires arm32 support");
+        let isa = isa.borrow();
+        let gpr = rc_by_name(isa, "GPR");
+        let s = rc_by_name(isa, "S");
+        let reginfo = isa.register_info();
         let regs = RegisterSet::new();
 
         let mut pressure = Pressure::new(&reginfo, &regs);
@@ -321,10 +333,12 @@ mod tests {
 
     #[test]
     fn arm_float_bank() {
-        let reginfo = INFO.borrow();
-        let s = rc_by_name(&reginfo, "S");
-        let d = rc_by_name(&reginfo, "D");
-        let q = rc_by_name(&reginfo, "Q");
+        let isa = arm32().expect("This test requires arm32 support");
+        let isa = isa.borrow();
+        let s = rc_by_name(isa, "S");
+        let d = rc_by_name(isa, "D");
+        let q = rc_by_name(isa, "Q");
+        let reginfo = isa.register_info();
         let regs = RegisterSet::new();
 
         let mut pressure = Pressure::new(&reginfo, &regs);
