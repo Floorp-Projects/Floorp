@@ -22,8 +22,6 @@
 // by the headers included above.
 namespace JS {
 
-class WTF8Chars;
-
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
@@ -64,7 +62,6 @@ using JS::Latin1Char;
 using JS::UniqueChars;
 using JS::UniqueLatin1Chars;
 using JS::UniqueTwoByteChars;
-using JS::WTF8Chars;
 
 using JS::Ok;
 using JS::OOM;
