@@ -1114,7 +1114,7 @@ JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
 
   AtomizeUTF8OrWTF8CharsWrapper<CharsT> chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
-  if (std::is_same_v<CharsT, WTF8Chars>) {
+  if (std::is_same_v<CharsT, JS::WTF8Chars>) {
     lookup.type = AtomHasher::Lookup::WTF8;
   }
   return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom,
@@ -1128,7 +1128,7 @@ JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
 
 JSAtom* js::AtomizeWTF8Chars(JSContext* cx, const char* wtf8Chars,
                              size_t wtf8ByteLength) {
-  return AtomizeUTF8OrWTF8Chars<WTF8Chars>(cx, wtf8Chars, wtf8ByteLength);
+  return AtomizeUTF8OrWTF8Chars<JS::WTF8Chars>(cx, wtf8Chars, wtf8ByteLength);
 }
 
 bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
