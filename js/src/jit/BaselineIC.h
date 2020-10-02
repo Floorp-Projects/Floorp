@@ -14,12 +14,10 @@
 #include <stdint.h>
 #include <utility>
 
-#include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "gc/GC.h"
 #include "gc/Rooting.h"
 #include "jit/BaselineICList.h"
-#include "jit/BaselineJIT.h"
 #include "jit/ICState.h"
 #include "jit/ICStubSpace.h"
 #include "jit/JitCode.h"
@@ -28,14 +26,10 @@
 #include "jit/RegisterSets.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/SharedICRegisters.h"
-#include "js/GCVector.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/ArrayObject.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/JSContext.h"
 #include "vm/JSScript.h"
-#include "vm/Realm.h"
 
 class JS_PUBLIC_API JSTracer;
 
