@@ -86,7 +86,7 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
 
     auto texType = layers::TextureType::Unknown;
     if (imageBridge) {
-      texType = layers::PreferredCanvasTextureType(*imageBridge);
+      texType = layers::PreferredCanvasTextureType(imageBridge);
     }
     if (kIsAndroid && StaticPrefs::webgl_enable_surface_texture()) {
       texType = layers::TextureType::AndroidNativeWindow;
