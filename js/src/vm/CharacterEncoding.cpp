@@ -34,6 +34,7 @@ using mozilla::Tuple;
 using mozilla::Unused;
 using mozilla::Utf8Unit;
 
+using JS::Latin1CharsZ;
 using namespace js;
 using namespace js::unicode;
 

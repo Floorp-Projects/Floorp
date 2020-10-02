@@ -2159,7 +2159,7 @@ UniqueChars js::EncodeLatin1(JSContext* cx, JSString* str) {
 
   JS::AutoCheckCannotGC nogc;
   if (linear->hasTwoByteChars()) {
-    Latin1CharsZ chars =
+    JS::Latin1CharsZ chars =
         JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->twoByteRange(nogc));
     return UniqueChars(chars.c_str());
   }
