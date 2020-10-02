@@ -50,7 +50,6 @@ const defaultSymbolDeclarations = {
 describe("sources", () => {
   const unicode = "\u6e2c";
   const encodedUnicode = encodeURIComponent(unicode);
-  const punycode = "xn--g6w";
 
   describe("getFilename", () => {
     it("should give us a default of (index)", () => {
@@ -216,15 +215,6 @@ describe("sources", () => {
           makeMockSource("http://localhost.com:7999/increment/hello.html")
         )
       ).toBe("http://localhost.com:7999/increment/hello.html");
-    });
-    it("should give us the readable Unicode file URL if encoded", () => {
-      expect(
-        getFileURL(
-          makeMockSource(
-            `http://${punycode}.${punycode}:7999/increment/${encodedUnicode}.html`
-          )
-        )
-      ).toBe(`http://${unicode}.${unicode}:7999/increment/${unicode}.html`);
     });
     it("should truncate the file url when it is more than 50 chars", () => {
       expect(

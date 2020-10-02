@@ -44,6 +44,7 @@ module.exports = {
     "^chrome": "<rootDir>/src/test/fixtures/Chrome",
     "^ChromeUtils": "<rootDir>/src/test/fixtures/ChromeUtils",
     "\\/plural-form$": "<rootDir>/src/test/fixtures/plural-form",
+    "\\/unicode-url$": "<rootDir>/src/test/fixtures/unicode-url",
     // Map all require("devtools/...") to the real devtools root.
     "^devtools\\/(.*)": "<rootDir>/../../$1",
   },

@@ -9,7 +9,8 @@
  * @module utils/source
  */
 
-import { getUnicodeUrl } from "devtools-modules";
+// $FlowIgnore
+const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
 import { isOriginalSource } from "../utils/source-maps";
 import { endTruncateStr } from "./utils";
