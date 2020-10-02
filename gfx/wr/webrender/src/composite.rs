@@ -200,13 +200,10 @@ pub enum CompositorConfig {
         /// then the operating system supports a form of 'partial present' where
         /// only dirty regions of the framebuffer need to be updated.
         max_partial_present_rects: usize,
-        /// If this is true, WR must draw the previous frames' dirty regions when
+        /// If this is true, WR would draw the previous frame's dirty region when
         /// doing a partial present. This is used for EGL which requires the front
         /// buffer to always be fully consistent.
         draw_previous_partial_present_regions: bool,
-        /// A client provided interface to a compositor handling partial present.
-        /// Required if webrender must query the backbuffer's age.
-        partial_present: Option<Box<dyn PartialPresentCompositor>>,
     },
     /// Use a native OS compositor to draw tiles. This requires clients to implement
     /// the Compositor trait, but can be significantly more power efficient on operating
@@ -232,18 +229,6 @@ impl CompositorConfig {
             }
         }
     }
-
-    pub fn partial_present(&mut self) -> Option<&mut Box<dyn PartialPresentCompositor>> {
-        match self {
-            CompositorConfig::Native { .. } => {
-                None
-            }
-            CompositorConfig::Draw { ref mut partial_present, .. } => {
-                partial_present.as_mut()
-            }
-        }
-    }
-
 }
 
 impl Default for CompositorConfig {
@@ -252,7 +237,6 @@ impl Default for CompositorConfig {
         CompositorConfig::Draw {
             max_partial_present_rects: 0,
             draw_previous_partial_present_regions: false,
-            partial_present: None,
         }
     }
 }
@@ -1015,21 +999,6 @@ pub trait Compositor {
     fn get_capabilities(&self) -> CompositorCapabilities;
 }
 
-/// Defines an interface to a non-native (application-level) Compositor which handles
-/// partial present. This is required if webrender must query the backbuffer's age.
-/// TODO: Use the Compositor trait for native and non-native compositors, and integrate
-/// this functionality there.
-pub trait PartialPresentCompositor {
-    /// Returns the age of the current backbuffer. This should be used, if
-    /// draw_previous_partial_present_regions is true, to determine the
-    /// region which must be rendered in addition to the current frame's dirty rect.
-    fn get_buffer_age(&self) -> usize;
-    /// Allows webrender to specify the total region that will be rendered to this frame,
-    /// ie the frame's dirty region and some previous frames' dirty regions, if applicable
-    /// (calculated using the buffer age). Must be called before anything has been rendered
-    /// to the main framebuffer.
-    fn set_buffer_damage_region(&mut self, rects: &[DeviceIntRect]);
-}
 
 /// Information about an opaque surface used to occlude tiles.
 #[cfg_attr(feature = "capture", derive(Serialize))]
