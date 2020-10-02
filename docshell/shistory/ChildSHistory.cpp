@@ -166,7 +166,7 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     }
   }
 
-  GotoIndex(index.value(), aOffset, aRv);
+  GotoIndex(index.value(), aRv);
 }
 
 void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
@@ -187,11 +187,10 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
   NS_DispatchToCurrentThread(asyncNav.forget());
 }
 
-void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
-                              ErrorResult& aRv) {
+void ChildSHistory::GotoIndex(int32_t aIndex, ErrorResult& aRv) {
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
-    mBrowsingContext->HistoryGo(aOffset, [shistory](int32_t&& aRequestedIndex) {
+    mBrowsingContext->HistoryGo(aIndex, [shistory](int32_t&& aRequestedIndex) {
       // FIXME Should probably only do this for non-fission.
       if (shistory) {
         shistory->InternalSetRequestedIndex(aRequestedIndex);
