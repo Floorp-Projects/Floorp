@@ -22,7 +22,6 @@
 // by the headers included above.
 namespace JS {
 
-class UTF8Chars;
 class WTF8Chars;
 class UTF8CharsZ;
 
@@ -66,7 +65,6 @@ using JS::Latin1Char;
 using JS::UniqueChars;
 using JS::UniqueLatin1Chars;
 using JS::UniqueTwoByteChars;
-using JS::UTF8Chars;
 using JS::UTF8CharsZ;
 using JS::WTF8Chars;
 

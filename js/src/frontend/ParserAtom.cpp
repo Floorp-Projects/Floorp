@@ -398,7 +398,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internUtf8(
   // If source text is ASCII, then the length of the target char buffer
   // is the same as the length of the UTF8 input.  Convert it to a Latin1
   // encoded string on the heap.
-  UTF8Chars utf8(utf8Ptr, nbyte);
+  JS::UTF8Chars utf8(utf8Ptr, nbyte);
   JS::SmallestEncoding minEncoding = FindSmallestEncoding(utf8);
   if (minEncoding == JS::SmallestEncoding::ASCII) {
     // As ascii strings are a subset of Latin1 strings, and each encoding
@@ -573,7 +573,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
 
   // Well-known atoms are all currently ASCII with length <= MaxWellKnownLength.
   MOZ_ASSERT(len <= MaxWellKnownLength);
-  MOZ_ASSERT(FindSmallestEncoding(UTF8Chars(str, len)) ==
+  MOZ_ASSERT(FindSmallestEncoding(JS::UTF8Chars(str, len)) ==
              JS::SmallestEncoding::ASCII);
 
   // Strings matched by lookupTiny are stored in static table and aliases should
@@ -614,7 +614,7 @@ bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
 
   // Well-known atoms are all currently ASCII with length <= MaxWellKnownLength.
   MOZ_ASSERT(len <= MaxWellKnownLength);
-  MOZ_ASSERT(FindSmallestEncoding(UTF8Chars(str, len)) ==
+  MOZ_ASSERT(FindSmallestEncoding(JS::UTF8Chars(str, len)) ==
              JS::SmallestEncoding::ASCII);
 
   // NOTE: If this assert fails, you may need to change which list is it belongs
