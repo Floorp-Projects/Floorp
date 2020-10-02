@@ -83,7 +83,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Activado</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">Desactivado</string>
+    <string name="mozac_feature_addons_settings_off">Desactivada</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitir en navegación privada</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->

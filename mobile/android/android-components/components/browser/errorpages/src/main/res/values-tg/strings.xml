@@ -22,7 +22,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
-        <li>Саҳифае, ки шумо дидан мехоҳед, нишон дода намешавад, зеро эътиборнокии маълумоти гирифташуда наметавонад тасдиқ карда шавад.</li>
+        <li>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро эътиборнокии маълумоти гирифташуда наметавонад тасдиқ карда шавад.</li>
         <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
       </ul>
     ]]></string>
@@ -46,6 +46,14 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Пайваст ғайриимкон аст</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Сомона метавонад муваққатан дастнорас бошад ё бо дархостҳои зиёд хеле машғул бошад. Пас аз чанд лаҳза аз нав кӯшиш кунед.</li>
+        <li>Агар шумо ягон саҳифаро бор карда натавонед, пайвасти мобилии дастгоҳ ё пайвасти Wi-Fi -ро санҷед.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Ҷавоби ногаҳон аз сервер</string>
 
@@ -59,6 +67,15 @@
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Реҷаи офлайн</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Браузер дар реҷаи офлайн қарор дорад ва бо сомонаи дархостшуда пайваст шуда наметавонад.</p>
+      <ul>
+        <li>Оё дастгоҳ ба шабакаи фаъол пайваст аст?</li>
+        <li>Барои гузаштан ба реҷаи онлайн ва аз нав бор кардани саҳифа, тугмаи "Аз нав кӯшиш кардан"-ро пахш кунед.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Порт бо сабабҳои амниятӣ маҳдуд карда шудааст</string>
@@ -79,11 +96,33 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Хатои муҳтавои вайроншуда</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
+      <ul>
+        <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Муҳтавои вайрон</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
+      <ul>
+        <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Хатои рамзгузории муҳтаво</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро он аз шакли фишурдасозии дастгиринашаванда ё беэътибор истифода мебарад.</p>
+      <ul>
+        <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Нишонӣ ёфт нашуд</string>
@@ -98,8 +137,19 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Нишонии нодуруст</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Нишонии пешниҳодшуда дар шакли эътирофшуда намебошад. Лутфан, навори нишониро барои хатоҳо санҷед ва аз нав кӯшиш намоед.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Нишонӣ дуруст нест</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Нишониҳои сомона одатан дар ин шакл навишта мешаванд: <strong>http://www.example.com/</strong></li>
+        <li>Мутмаин шавед, ки шумо хатҳои каҷро истифода мебаред (масалан, <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Протоколи номаълум</string>
