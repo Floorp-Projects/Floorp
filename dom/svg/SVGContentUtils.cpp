@@ -800,10 +800,11 @@ bool SVGContentUtils::ParseInteger(const nsAString& aString, int32_t& aValue) {
 }
 
 float SVGContentUtils::CoordToFloat(SVGElement* aContent,
-                                    const LengthPercentage& aLength) {
+                                    const LengthPercentage& aLength,
+                                    uint8_t aCtxType) {
   float result = aLength.ResolveToCSSPixelsWith([&] {
     SVGViewportElement* ctx = aContent->GetCtx();
-    return CSSCoord(ctx ? ctx->GetLength(SVGContentUtils::XY) : 0.0f);
+    return CSSCoord(ctx ? ctx->GetLength(aCtxType) : 0.0f);
   });
   if (aLength.IsCalc()) {
     const auto& calc = aLength.AsCalc();
