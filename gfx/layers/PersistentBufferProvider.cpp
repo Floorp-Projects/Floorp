@@ -117,8 +117,7 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
   // instability, unless we are remoting the canvas drawing to the GPU process.
   if (gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() ==
           BackendType::DIRECT2D1_1 &&
-      !TextureData::IsRemote(aKnowsCompositor->GetCompositorBackendType(),
-                             BackendSelector::Canvas)) {
+      !TextureData::IsRemote(aKnowsCompositor, BackendSelector::Canvas)) {
     return nullptr;
   }
 #endif

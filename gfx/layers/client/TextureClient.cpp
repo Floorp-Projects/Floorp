@@ -263,32 +263,36 @@ static inline gfx::BackendType BackendTypeForBackendSelector(
 
 static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
                                   gfx::IntSize aSize,
-                                  LayersBackend aLayersBackend,
-                                  gfx::BackendType aBackendType,
+                                  KnowsCompositor* aKnowsCompositor,
                                   BackendSelector aSelector,
-                                  int32_t aMaxTextureSize,
                                   TextureAllocationFlags aAllocFlags) {
+  LayersBackend layersBackend = aKnowsCompositor->GetCompositorBackendType();
+  gfx::BackendType moz2DBackend =
+      BackendTypeForBackendSelector(layersBackend, aSelector);
+  int32_t maxTextureSize = aKnowsCompositor->GetMaxTextureSize();
 #ifdef XP_WIN
-  if ((aLayersBackend == LayersBackend::LAYERS_D3D11 ||
-       aLayersBackend == LayersBackend::LAYERS_WR) &&
-      (aBackendType == gfx::BackendType::DIRECT2D ||
-       aBackendType == gfx::BackendType::DIRECT2D1_1 ||
+  if ((layersBackend == LayersBackend::LAYERS_D3D11 ||
+       (layersBackend == LayersBackend::LAYERS_WR &&
+        !aKnowsCompositor->GetTextureFactoryIdentifier()
+             .mUsingSoftwareWebRender)) &&
+      (moz2DBackend == gfx::BackendType::DIRECT2D ||
+       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT))) &&
-      aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
+      aSize.width <= maxTextureSize && aSize.height <= maxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
   }
 
-  if (aLayersBackend != LayersBackend::LAYERS_WR &&
+  if (layersBackend != LayersBackend::LAYERS_WR &&
       aFormat == SurfaceFormat::B8G8R8X8 &&
-      aBackendType == gfx::BackendType::CAIRO && NS_IsMainThread()) {
+      moz2DBackend == gfx::BackendType::CAIRO && NS_IsMainThread()) {
     return TextureType::DIB;
   }
 #endif
 
 #ifdef MOZ_WAYLAND
-  if ((aLayersBackend == LayersBackend::LAYERS_OPENGL ||
-       aLayersBackend == LayersBackend::LAYERS_WR) &&
+  if ((layersBackend == LayersBackend::LAYERS_OPENGL ||
+       layersBackend == LayersBackend::LAYERS_WR) &&
       gfxPlatformGtk::GetPlatform()->UseDMABufTextures() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::DMABUF;
@@ -299,11 +303,11 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   gfxSurfaceType type =
       gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
 
-  if (aLayersBackend == LayersBackend::LAYERS_BASIC &&
-      aBackendType == gfx::BackendType::CAIRO && type == gfxSurfaceType::Xlib) {
+  if (layersBackend == LayersBackend::LAYERS_BASIC &&
+      moz2DBackend == gfx::BackendType::CAIRO && type == gfxSurfaceType::Xlib) {
     return TextureType::X11;
   }
-  if (aLayersBackend == LayersBackend::LAYERS_OPENGL &&
+  if (layersBackend == LayersBackend::LAYERS_OPENGL &&
       type == gfxSurfaceType::Xlib && aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap()) {
     return TextureType::X11;
@@ -329,13 +333,9 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   return TextureType::Unknown;
 }
 
-TextureType PreferredCanvasTextureType(
-    const KnowsCompositor& aKnowsCompositor) {
-  const auto layersBackend = aKnowsCompositor.GetCompositorBackendType();
-  const auto moz2DBackend =
-      BackendTypeForBackendSelector(layersBackend, BackendSelector::Canvas);
-  return GetTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1}, layersBackend,
-                        moz2DBackend, BackendSelector::Canvas, 2,
+TextureType PreferredCanvasTextureType(KnowsCompositor* aKnowsCompositor) {
+  return GetTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1}, aKnowsCompositor,
+                        BackendSelector::Canvas,
                         TextureAllocationFlags::ALLOC_DEFAULT);
 }
 
@@ -360,17 +360,12 @@ static bool ShouldRemoteTextureType(TextureType aTextureType,
 /* static */
 TextureData* TextureData::Create(TextureForwarder* aAllocator,
                                  gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
-                                 LayersBackend aLayersBackend,
-                                 int32_t aMaxTextureSize,
+                                 KnowsCompositor* aKnowsCompositor,
                                  BackendSelector aSelector,
                                  TextureFlags aTextureFlags,
                                  TextureAllocationFlags aAllocFlags) {
-  gfx::BackendType moz2DBackend =
-      BackendTypeForBackendSelector(aLayersBackend, aSelector);
-
   TextureType textureType =
-      GetTextureType(aFormat, aSize, aLayersBackend, moz2DBackend, aSelector,
-                     aMaxTextureSize, aAllocFlags);
+      GetTextureType(aFormat, aSize, aKnowsCompositor, aSelector, aAllocFlags);
 
   if (ShouldRemoteTextureType(textureType, aSelector)) {
     RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
@@ -394,6 +389,8 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 
 #ifdef MOZ_WAYLAND
     case TextureType::DMABUF:
+      gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(
+          aKnowsCompositor->GetCompositorBackendType(), aSelector);
       return DMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif
 
@@ -403,6 +400,8 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 #endif
 #ifdef XP_MACOSX
     case TextureType::MacIOSurface:
+      gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(
+          aKnowsCompositor->GetCompositorBackendType(), aSelector);
       return MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
@@ -417,15 +416,11 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 }
 
 /* static */
-bool TextureData::IsRemote(LayersBackend aLayersBackend,
+bool TextureData::IsRemote(KnowsCompositor* aKnowsCompositor,
                            BackendSelector aSelector) {
-  gfx::BackendType moz2DBackend =
-      BackendTypeForBackendSelector(aLayersBackend, aSelector);
-
-  TextureType textureType =
-      GetTextureType(gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1),
-                     aLayersBackend, moz2DBackend, aSelector, INT32_MAX,
-                     TextureAllocationFlags::ALLOC_DEFAULT);
+  TextureType textureType = GetTextureType(
+      gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1), aKnowsCompositor,
+      aSelector, TextureAllocationFlags::ALLOC_DEFAULT);
 
   return ShouldRemoteTextureType(textureType, aSelector);
 }
@@ -1209,25 +1204,25 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     KnowsCompositor* aAllocator, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
     BackendSelector aSelector, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
-  LayersBackend layersBackend = aAllocator->GetCompositorBackendType();
   if (aAllocator->SupportsTextureDirectMapping() &&
       std::max(aSize.width, aSize.height) <= aAllocator->GetMaxTextureSize()) {
     aAllocFlags =
         TextureAllocationFlags(aAllocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
   }
-  return TextureClient::CreateForDrawing(
-      aAllocator->GetTextureForwarder(), aFormat, aSize, layersBackend,
-      aAllocator->GetMaxTextureSize(), aSelector, aTextureFlags, aAllocFlags);
+  return TextureClient::CreateForDrawing(aAllocator->GetTextureForwarder(),
+                                         aFormat, aSize, aAllocator, aSelector,
+                                         aTextureFlags, aAllocFlags);
 }
 
 // static
 already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
-    gfx::IntSize aSize, LayersBackend aLayersBackend, int32_t aMaxTextureSize,
+    gfx::IntSize aSize, KnowsCompositor* aKnowsCompositor,
     BackendSelector aSelector, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
+  LayersBackend layersBackend = aKnowsCompositor->GetCompositorBackendType();
   gfx::BackendType moz2DBackend =
-      BackendTypeForBackendSelector(aLayersBackend, aSelector);
+      BackendTypeForBackendSelector(layersBackend, aSelector);
 
   // also test the validity of aAllocator
   if (!aAllocator || !aAllocator->IPCOpen()) {
@@ -1238,9 +1233,9 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     return nullptr;
   }
 
-  TextureData* data = TextureData::Create(
-      aAllocator, aFormat, aSize, aLayersBackend, aMaxTextureSize, aSelector,
-      aTextureFlags, aAllocFlags);
+  TextureData* data =
+      TextureData::Create(aAllocator, aFormat, aSize, aKnowsCompositor,
+                          aSelector, aTextureFlags, aAllocFlags);
 
   if (data) {
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
@@ -1248,7 +1243,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
 
   // Can't do any better than a buffer texture client.
   return TextureClient::CreateForRawBufferAccess(aAllocator, aFormat, aSize,
-                                                 moz2DBackend, aLayersBackend,
+                                                 moz2DBackend, layersBackend,
                                                  aTextureFlags, aAllocFlags);
 }
 
