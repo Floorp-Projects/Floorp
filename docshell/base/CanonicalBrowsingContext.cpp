@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -654,14 +655,25 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory() {
 }
 
 void CanonicalBrowsingContext::HistoryGo(
-    int32_t aIndex, std::function<void(int32_t&&)>&& aResolver) {
+    int32_t aOffset, std::function<void(int32_t&&)>&& aResolver) {
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (!shistory) {
     return;
   }
 
+  CheckedInt<int32_t> index = shistory->GetRequestedIndex() >= 0
+                                  ? shistory->GetRequestedIndex()
+                                  : shistory->Index();
+  index += aOffset;
+  if (!index.isValid()) {
+    return;
+  }
+
+  // FIXME userinteraction bits may needs tweaks here.
+
+  // GoToIndex checks that index is >= 0 and < length.
   nsTArray<nsSHistory::LoadEntryResult> loadResults;
-  nsresult rv = shistory->GotoIndex(aIndex, loadResults);
+  nsresult rv = shistory->GotoIndex(index.value(), loadResults);
   if (NS_FAILED(rv)) {
     return;
   }
