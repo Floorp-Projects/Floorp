@@ -175,7 +175,7 @@ class FunctionFlags {
 
   bool isNonBuiltinConstructor() const {
     // Note: keep this in sync with emitGuardFunctionIsNonBuiltinCtor in
-    // CacheIRCompiler.cpp.
+    // {CacheIRCompiler, WarpCacheIRTranspiler}.cpp.
     return hasFlags(BASESCRIPT) && hasFlags(CONSTRUCTOR) &&
            !hasFlags(SELF_HOSTED);
   }
@@ -329,6 +329,10 @@ class FunctionFlags {
       flags |= WASM_JIT_ENTRY;
     }
     return flags;
+  }
+
+  static FunctionFlags clearMutableflags(FunctionFlags flags) {
+    return FunctionFlags(flags.toRaw() & ~FunctionFlags::MUTABLE_FLAGS);
   }
 };
 
