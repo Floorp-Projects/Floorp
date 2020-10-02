@@ -599,19 +599,15 @@ void GLContextEGL::GetWSIInfo(nsCString* const out) const {
 // for the lifetime of this context.
 void GLContextEGL::HoldSurface(gfxASurface* aSurf) { mThebesSurface = aSurf; }
 
-bool GLContextEGL::HasExtBufferAge() const {
+bool GLContextEGL::HasBufferAge() const {
   return mEgl->IsExtensionSupported(EGLExtension::EXT_buffer_age);
-}
-
-bool GLContextEGL::HasKhrPartialUpdate() const {
-  return mEgl->IsExtensionSupported(EGLExtension::KHR_partial_update);
 }
 
 EGLint GLContextEGL::GetBufferAge() const {
   EGLSurface surface =
       mSurfaceOverride != EGL_NO_SURFACE ? mSurfaceOverride : mSurface;
 
-  if (surface && (HasExtBufferAge() || HasKhrPartialUpdate())) {
+  if (surface && HasBufferAge()) {
     EGLint result;
     mEgl->fQuerySurface(surface, LOCAL_EGL_BUFFER_AGE_EXT, &result);
     return result;
