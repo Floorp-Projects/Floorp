@@ -101,8 +101,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
            [&tryCleanupRan](const auto& result) {
-             EXPECT_TRUE(result.isErr());
-             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+             EXPECT_EQ(result, NS_ERROR_FAILURE);
 
              tryCleanupRan = true;
            });
@@ -126,10 +125,9 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
 
   [&tryCleanupRan, &tryDidNotReturn](nsresult& aRv) -> void {
     QM_TRY(NS_ERROR_FAILURE, QM_VOID, ([&tryCleanupRan, &aRv](auto& result) {
-             EXPECT_TRUE(result.isErr());
-             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+             EXPECT_EQ(result, NS_ERROR_FAILURE);
 
-             aRv = result.unwrapErr();
+             aRv = result;
 
              tryCleanupRan = true;
            }));
@@ -460,8 +458,7 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup)
     QM_TRY_INSPECT(const auto& x,
                    (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
                    QM_PROPAGATE, [&tryInspectCleanupRan](const auto& result) {
-                     EXPECT_TRUE(result.isErr());
-                     EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                     EXPECT_EQ(result, NS_ERROR_FAILURE);
 
                      tryInspectCleanupRan = true;
                    });
@@ -488,10 +485,9 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup_UnwrapErr)
     QM_TRY_INSPECT(const auto& x,
                    (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}), QM_VOID,
                    ([&tryInspectCleanupRan, &aRv](auto& result) {
-                     EXPECT_TRUE(result.isErr());
-                     EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                     EXPECT_EQ(result, NS_ERROR_FAILURE);
 
-                     aRv = result.unwrapErr();
+                     aRv = result;
 
                      tryInspectCleanupRan = true;
                    }));
@@ -870,8 +866,7 @@ TEST(QuotaCommon_TryReturn, Failure_WithCleanup)
               &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
     QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
                   QM_PROPAGATE, [&tryReturnCleanupRan](const auto& result) {
-                    EXPECT_TRUE(result.isErr());
-                    EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                    EXPECT_EQ(result, NS_ERROR_FAILURE);
 
                     tryReturnCleanupRan = true;
                   });

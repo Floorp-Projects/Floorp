@@ -391,7 +391,7 @@
 
 #define QM_VOID
 
-#define QM_PROPAGATE tryTempResult.propagateErr()
+#define QM_PROPAGATE Err(tryTempError)
 
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
 // QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
@@ -426,7 +426,7 @@
   auto tryResult = ::mozilla::ToResult(expr);                            \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);          \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();          \
     ns::QM_HANDLE_ERROR(expr);                                           \
     return customRetVal;                                                 \
   }
@@ -438,9 +438,9 @@
   auto tryResult = ::mozilla::ToResult(expr);                                 \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);      \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);               \
+    auto tryTempError = tryResult.unwrapErr();                                \
     ns::QM_HANDLE_ERROR(expr);                                                \
-    cleanup(tryTempResult);                                                   \
+    cleanup(tryTempError);                                                    \
     return customRetVal;                                                      \
   }
 
@@ -503,7 +503,7 @@
                                   customRetVal)                                \
   auto tryResult = (expr);                                                     \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                       \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);                \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();                \
     ns::QM_HANDLE_ERROR(expr);                                                 \
     return customRetVal;                                                       \
   }                                                                            \
@@ -515,9 +515,9 @@
     ns, tryResult, accessFunction, target, expr, customRetVal, cleanup) \
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);         \
+    auto tryTempError = tryResult.unwrapErr();                          \
     ns::QM_HANDLE_ERROR(expr);                                          \
-    cleanup(tryTempResult);                                             \
+    cleanup(tryTempError);                                              \
     return customRetVal;                                                \
   }                                                                     \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
@@ -595,7 +595,7 @@
 #define QM_TRY_RETURN_CUSTOM_RET_VAL(ns, tryResult, expr, customRetVal) \
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);         \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();         \
     ns::QM_HANDLE_ERROR(expr);                                          \
     return customRetVal;                                                \
   }                                                                     \
@@ -607,9 +607,9 @@
                                                   customRetVal, cleanup) \
   auto tryResult = (expr);                                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);          \
+    auto tryTempError = tryResult.unwrapErr();                           \
     ns::QM_HANDLE_ERROR(expr);                                           \
-    cleanup(tryTempResult);                                              \
+    cleanup(tryTempError);                                               \
     return customRetVal;                                                 \
   }                                                                      \
   return tryResult.unwrap();
