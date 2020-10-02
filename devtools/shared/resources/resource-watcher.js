@@ -417,6 +417,10 @@ class ResourceWatcher {
         nestedResourceUpdates,
       } = update;
 
+      if (!resourceId) {
+        console.warn(`Expected resource ${resourceType} to have a resourceId`);
+      }
+
       const existingResource = this._cache.find(
         cachedResource =>
           cachedResource.resourceType === resourceType &&
@@ -664,8 +668,9 @@ class ResourceWatcher {
     }
 
     const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
-    const onDestroyed = this._onResourceDestroyed.bind(this, { targetFront });
     const onUpdated = this._onResourceUpdated.bind(this, { targetFront });
+    const onDestroyed = this._onResourceDestroyed.bind(this, { targetFront });
+
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
@@ -746,6 +751,12 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   STYLESHEET: "stylesheet",
   NETWORK_EVENT: "network-event",
   WEBSOCKET: "websocket",
+  COOKIE: "cookie",
+  LOCAL_STORAGE: "local-storage",
+  SESSION_STORAGE: "session-storage",
+  CACHE_STORAGE: "Cache",
+  EXTENSION_STORAGE: "extension-storage",
+  INDEXED_DB: "indexed-db",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
 };
 module.exports = { ResourceWatcher };
@@ -790,6 +801,18 @@ const LegacyListeners = {
   [ResourceWatcher.TYPES
     .WEBSOCKET]: require("devtools/shared/resources/legacy-listeners/websocket"),
   [ResourceWatcher.TYPES
+    .COOKIE]: require("devtools/shared/resources/legacy-listeners/cookie"),
+  [ResourceWatcher.TYPES
+    .LOCAL_STORAGE]: require("devtools/shared/resources/legacy-listeners/local-storage"),
+  [ResourceWatcher.TYPES
+    .SESSION_STORAGE]: require("devtools/shared/resources/legacy-listeners/session-storage"),
+  [ResourceWatcher.TYPES
+    .CACHE_STORAGE]: require("devtools/shared/resources/legacy-listeners/cache-storage"),
+  [ResourceWatcher.TYPES
+    .EXTENSION_STORAGE]: require("devtools/shared/resources/legacy-listeners/extension-storage"),
+  [ResourceWatcher.TYPES
+    .INDEXED_DB]: require("devtools/shared/resources/legacy-listeners/indexed-db"),
+  [ResourceWatcher.TYPES
     .NETWORK_EVENT_STACKTRACE]: require("devtools/shared/resources/legacy-listeners/network-event-stacktraces"),
 };
 
@@ -802,6 +825,8 @@ const ResourceTransformers = {
     .CONSOLE_MESSAGE]: require("devtools/shared/resources/transformers/console-messages"),
   [ResourceWatcher.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
+  [ResourceWatcher.TYPES
+    .INDEXED_DB]: require("devtools/shared/resources/transformers/storage-indexed-db.js"),
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
 };
