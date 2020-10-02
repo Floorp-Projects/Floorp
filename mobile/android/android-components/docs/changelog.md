@@ -15,6 +15,12 @@ permalink: /changelog/
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8585) fixed regression files not been added to the downloads database system.
 
+* **service-glean**
+  * Glean was upgraded to v32.4.1
+    * Update `glean_parser` to 1.28.6
+      * BUGFIX: Ensure Kotlin arguments are deterministically ordered
+    * BUGFIX: Transform ping directory size from bytes to kilobytes before accumulating to `glean.upload.pending_pings_directory_size`
+
 # 61.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v60.0.0...v61.0.0)
@@ -30,7 +36,7 @@ permalink: /changelog/
 * **feature-webcompat-reporter**
   * Added the ability to automatically add a screenshot as well as more technical details when submitting a WebCompat report.
 * **feature-addons**
-  * ⚠️ This is a breaking change for call sites that don't rely on named arguments: 
+  * ⚠️ This is a breaking change for call sites that don't rely on named arguments:
     * `AddonCollectionProvider` now supports configuring a custom collection owner (via AMO user ID or name).
     * `AddonCollectionProvider` now supports configuring the sort order of recommended collections, defaulting to sorting descending by popularity
   ```kotlin
