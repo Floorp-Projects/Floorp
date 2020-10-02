@@ -852,57 +852,6 @@ extern JS_FRIEND_API bool ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 extern JS_FRIEND_API JSObject* ConvertArgsToArray(JSContext* cx,
                                                   const JS::CallArgs& args);
 
-}  // namespace js
-
-namespace JS {
-
-/**
- * Create and add the Intl.MozDateTimeFormat constructor function to the
- * provided object.
- *
- * This custom date/time formatter constructor gives users the ability to
- * specify a custom format pattern. This pattern is passed *directly* to ICU
- * with NO SYNTAX PARSING OR VALIDATION WHATSOEVER.  ICU appears to have a
- * modicum of testing of this, and it won't fall over completely if passed bad
- * input.  But the current behavior is entirely under-specified and emphatically
- * not shippable on the web, and it *must* be fixed before this functionality
- * can be exposed in the real world.  (There are also some questions about
- * whether the format exposed here is the *right* one to standardize, that will
- * also need to be resolved to ship this.)
- *
- * If JS was built without JS_HAS_INTL_API, this function will throw an
- * exception.
- */
-extern JS_FRIEND_API bool AddMozDateTimeFormatConstructor(
-    JSContext* cx, Handle<JSObject*> intl);
-
-/**
- * Create and add the Intl.MozDisplayNames constructor function to the
- * provided object.  This constructor acts like the standard |Intl.DisplayNames|
- * but accepts certain additional syntax that isn't standardized to the point of
- * being shippable.
- *
- * If JS was built without JS_HAS_INTL_API, this function will throw an
- * exception.
- */
-extern JS_FRIEND_API bool AddMozDisplayNamesConstructor(JSContext* cx,
-                                                        Handle<JSObject*> intl);
-
-/**
- * Create and add the Intl.DisplayNames constructor function to the provided
- * object, implementing standardized behavior (that isn't yet shippable because
- * we're not *quite* comfortable with the spec's progress yet).
- *
- * If JS was built without JS_HAS_INTL_API, this function will throw an
- * exception.
- */
-extern JS_FRIEND_API bool AddDisplayNamesConstructor(JSContext* cx,
-                                                     Handle<JSObject*> intl);
-
-}  // namespace JS
-
-namespace js {
-
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
  public:
   explicit AutoAssertNoContentJS(JSContext* cx);
