@@ -17,7 +17,6 @@
 
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Value.h"
-#include "vm/StringType.h"
 
 namespace js {
 
