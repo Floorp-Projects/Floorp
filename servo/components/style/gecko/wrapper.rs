@@ -959,7 +959,6 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
         context: &crate::values::computed::Context,
         base_size: FontBaseSize,
         orientation: FontMetricsOrientation,
-        retrieve_math_scales: bool,
     ) -> FontMetrics {
         let pc = match context.device().pres_context() {
             Some(pc) => pc,
@@ -989,23 +988,12 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
                 size,
                 // we don't use the user font set in a media query
                 !context.in_media_query,
-                retrieve_math_scales,
             )
         };
         FontMetrics {
             x_height: Some(gecko_metrics.mXSize),
             zero_advance_measure: if gecko_metrics.mChSize.px() >= 0. {
                 Some(gecko_metrics.mChSize)
-            } else {
-                None
-            },
-            script_percent_scale_down: if gecko_metrics.mScriptPercentScaleDown > 0. {
-                Some(gecko_metrics.mScriptPercentScaleDown)
-            } else {
-                None
-            },
-            script_script_percent_scale_down: if gecko_metrics.mScriptScriptPercentScaleDown > 0. {
-                Some(gecko_metrics.mScriptScriptPercentScaleDown)
             } else {
                 None
             },

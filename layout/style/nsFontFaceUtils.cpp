@@ -53,7 +53,7 @@ static FontUsageKind StyleFontUsage(ComputedStyle* aComputedStyle,
   }
 
   if (aComputedStyle->DependsOnFontMetrics()) {
-    MOZ_ASSERT(aPresContext->UsesFontMetricsFromStyle());
+    MOZ_ASSERT(aPresContext->UsesExChUnits());
     return FontUsageKind::FrameAndFontMetrics;
   }
 
@@ -174,7 +174,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       }
 
       if (alreadyScheduled == ReflowAlreadyScheduled::No ||
-          pc->UsesFontMetricsFromStyle()) {
+          pc->UsesExChUnits()) {
         if (f->IsPlaceholderFrame()) {
           nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
           if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
