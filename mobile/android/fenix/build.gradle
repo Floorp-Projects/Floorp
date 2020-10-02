@@ -29,7 +29,7 @@ buildscript {
         } else {
             google() {
                 content {
-                    // Improve performance: only check google maven for mozilla deps.
+                    // Improve performance: only check google maven for google deps.
                     includeGroupByRegex RepoMatching.androidx
                     includeGroupByRegex RepoMatching.comGoogleAndroid
                     includeGroupByRegex RepoMatching.comGoogleFirebase
@@ -102,7 +102,7 @@ allprojects {
         } else {
             google() {
                 content {
-                    // Improve performance: only check google maven for mozilla deps.
+                    // Improve performance: only check google maven for google deps.
                     includeGroupByRegex RepoMatching.androidx
                     includeGroupByRegex RepoMatching.comGoogleAndroid
                     includeGroupByRegex RepoMatching.comGoogleFirebase
