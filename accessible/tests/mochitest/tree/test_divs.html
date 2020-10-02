@@ -213,6 +213,63 @@ function doTest() {
     };
   testAccessibleTree("c11", tree);
 
+  // c12: Div shouldn't be rendered if first/last child text node is invisible.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { role: ROLE_PARAGRAPH,
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ],
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c12", tree);
+
+  // c13: Div should be rendered if there is an inline frame after/before
+  // invisible text nodes.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { role: ROLE_SECTION, // l2
+          children: [
+            { TEXT_LEAF: [] }, // l2
+          ], // end children l2
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c13", tree);
+
+  // c14: Div should be rendered if it contains an inline-block.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { role: ROLE_SECTION, // l2
+          children: [
+            { role: ROLE_PUSHBUTTON,
+              children: [
+                { TEXT_LEAF: [] },
+              ],
+            },
+          ], // end children l2
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c14", tree);
+
+  // c15: Div should be rendered if previous sibling is text.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { SECTION: [] }, // Block break
+        { TEXT_LEAF: [] }, // l2
+      ], // end children outer div
+    };
+  testAccessibleTree("c15", tree);
+
   SimpleTest.finish();
 }
 
@@ -256,5 +313,21 @@ addA11yLoadEvent(doTest);
 
   <!-- Div must be rendered if it contains a br -->
   <div id="c11"><div>first line.</div><div><br /></div><div>third line</div></div>
+
+  <!-- Inner div shouldn't be rendered because although its first and last
+    children are text nodes, they are invisible.
+    -->
+  <div id="c12"><div> <p>Test</p> </div></div>
+
+  <!-- Inner div should be rendered because despite the first/last invisible
+    text nodes, there is also an inline frame.
+    -->
+  <div id="c13">l1<div> <span>l2 </span> </div></div>
+
+  <!-- Inner div should be rendered because it contains an inline-block. -->
+  <div id="c14">l1<div><button>l2</button></div></div>
+
+  <!-- Inner div should be rendered because previous sibling is text. -->
+  <div id="c15">l1<div></div>l2</div>
 </body>
 </html>
