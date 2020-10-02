@@ -9,7 +9,10 @@
 
 // This file declares various analysis passes that operate on MIR.
 
+#include "mozilla/Attributes.h"
+
 #include "jit/JitAllocPolicy.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 

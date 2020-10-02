@@ -29,10 +29,12 @@
 #include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit{,Conservative}DontReport
+#include "js/RegExpFlags.h"
 #include "js/Value.h"
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
 #include "vm/NativeObject.h"
+#include "vm/RegExpShared.h"
 
 // Forward declaration of classes
 namespace v8 {

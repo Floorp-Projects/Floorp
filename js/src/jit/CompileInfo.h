@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include "jit/CompileWrappers.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitFrames.h"
 #include "jit/Registers.h"
