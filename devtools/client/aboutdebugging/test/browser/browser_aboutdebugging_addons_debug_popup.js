@@ -20,17 +20,8 @@ const ADDON_NAME = "test-devtools-webextension";
 
 /**
  * This test file ensures that the webextension addon developer toolbox:
- * - when the debug button is clicked on a webextension, the opened toolbox
- *   has a working webconsole with the background page as default target;
- * - the webextension developer toolbox has a working Inspector panel, with the
- *   background page as default target;
- * - the webextension developer toolbox is connected to a fallback page when the
- *   background page is not available (and in the fallback page document body contains
- *   the expected message, which warns the user that the current page is not a real
- *   webextension context);
- * - the webextension developer toolbox has a frame list menu and the noautohide toolbar
- *   toggle button, and they can be used to switch the current target to the extension
- *   popup page.
+ * - has a frame list menu and the noautohide toolbar toggle button, and they
+ *   can be used to switch the current target to the extension popup page.
  */
 add_task(async function testWebExtensionsToolboxWebConsole() {
   await enableExtensionDebugging();
@@ -40,46 +31,6 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     false,
     "disable_autohide should be initially false"
   );
-
-  info("Create promises waiting for the messages emitted by the test addon");
-  let onReadyForOpenPopup;
-  let onPopupCustomMessage;
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm",
-    null
-  );
-  Management.on("startup", function listener(event, extension) {
-    if (extension.name != ADDON_NAME) {
-      return;
-    }
-
-    Management.off("startup", listener);
-
-    function waitForExtensionTestMessage(expectedMessage) {
-      return new Promise(done => {
-        extension.on("test-message", function testLogListener(evt, ...args) {
-          const [message] = args;
-
-          if (message !== expectedMessage) {
-            return;
-          }
-
-          extension.off("test-message", testLogListener);
-          done(args);
-        });
-      });
-    }
-
-    // Wait for the test script running in the browser toolbox process
-    // to be ready for selecting the popup page in the frame list selector.
-    onReadyForOpenPopup = waitForExtensionTestMessage("readyForOpenPopup");
-
-    // Wait for a notification sent by a script evaluated the test addon via
-    // the web console.
-    onPopupCustomMessage = waitForExtensionTestMessage(
-      "popupPageFunctionCalled"
-    );
-  });
 
   const {
     document,
@@ -91,12 +42,139 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     aboutDebuggingWindow.AboutDebugging.store
   );
 
+  const extension = await installTestAddon(document);
+
+  const onBackgroundFunctionCalled = waitForExtensionTestMessage(
+    extension,
+    "onBackgroundFunctionCalled"
+  );
+  const onPopupPageFunctionCalled = waitForExtensionTestMessage(
+    extension,
+    "onPopupPageFunctionCalled"
+  );
+
+  info("Open a toolbox to debug the addon");
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    aboutDebuggingWindow,
+    ADDON_NAME
+  );
+  const toolbox = getToolbox(devtoolsWindow);
+  const webconsole = await toolbox.selectTool("webconsole");
+
+  info("Clicking the menu button to disable autohide");
+  await disablePopupAutohide(toolbox);
+
+  info("Check that console messages are evaluated in the background context");
+  const consoleWrapper = webconsole.hud.ui.wrapper;
+  consoleWrapper.dispatchEvaluateExpression("backgroundFunction()");
+  await onBackgroundFunctionCalled;
+
+  // Find the browserAction button that will show the webextension popup.
+  const widgetId = ADDON_ID.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+  const browserActionId = widgetId + "-browser-action";
+  const browserActionEl = window.document.getElementById(browserActionId);
+  ok(browserActionEl, "Got the browserAction button from the browser UI");
+
+  // Create a promise that will resolve when popup.html appears in the list of
+  // frames known by the toolbox.
+  const popupFramePromise = new Promise(resolve => {
+    const listener = data => {
+      if (data.frames.some(({ url }) => url && url.endsWith("popup.html"))) {
+        toolbox.target.off("frame-update", listener);
+        resolve();
+      }
+    };
+    toolbox.target.on("frame-update", listener);
+  });
+
+  info("Show the web extension popup");
+  browserActionEl.click();
+
+  info("Wait until popup.html appears in the frames list menu button");
+  await popupFramePromise;
+
+  info("Clicking the frame list button");
+  const btn = toolbox.doc.getElementById("command-button-frames");
+  btn.click();
+
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const frames = Array.from(menuList.querySelectorAll(".command"));
+  is(frames.length, 2, "Has the expected number of frames");
+
+  const popupFrameBtn = frames
+    .filter(frame => {
+      return frame.querySelector(".label").textContent.endsWith("popup.html");
+    })
+    .pop();
+
+  ok(popupFrameBtn, "Extension Popup frame found in the listed frames");
+
+  info("Click on the extension popup frame and wait for `navigate`");
+  const waitForNavigated = toolbox.target.once("navigate");
+  popupFrameBtn.click();
+  await waitForNavigated;
+
+  info("Execute `popupPageFunction()`");
+  consoleWrapper.dispatchEvaluateExpression("popupPageFunction()");
+
+  const args = await onPopupPageFunctionCalled;
+  ok(true, "Received console message from the popup page function as expected");
+  is(args[0], "onPopupPageFunctionCalled", "Got the expected console message");
+  is(
+    args[1] && args[1].name,
+    ADDON_NAME,
+    "Got the expected manifest from WebExtension API"
+  );
+
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, aboutDebuggingWindow);
+
+  is(
+    Services.prefs.getBoolPref("ui.popup.disable_autohide"),
+    false,
+    "disable_autohide should be reset to false when the toolbox is closed"
+  );
+
+  await removeTemporaryExtension(ADDON_NAME, document);
+  await removeTab(tab);
+});
+
+/**
+ * Helper to wait for a specific message on an Extension instance.
+ */
+function waitForExtensionTestMessage(extension, expectedMessage) {
+  return new Promise(done => {
+    extension.on("test-message", function testLogListener(evt, ...args) {
+      const [message] = args;
+
+      if (message !== expectedMessage) {
+        return;
+      }
+
+      extension.off("test-message", testLogListener);
+      done(args);
+    });
+  });
+}
+
+/**
+ * Install the addon used for this test.
+ * Returns a Promise that resolve the Extension instance that was just
+ * installed.
+ */
+async function installTestAddon(doc) {
+  // Start watching for the extension on the Extension Management before we
+  // install it.
+  const onExtensionReady = waitForExtension(ADDON_NAME);
+
+  // Install the extension.
   await installTemporaryExtensionFromXPI(
     {
       background: function() {
         const { browser } = this;
-        window.myWebExtensionShowPopup = function() {
-          browser.test.sendMessage("readyForOpenPopup");
+        window.backgroundFunction = function() {
+          browser.test.sendMessage("onBackgroundFunctionCalled");
         };
       },
       extraProperties: {
@@ -119,9 +197,9 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
       `,
         "popup.js": function() {
           const { browser } = this;
-          window.myWebExtensionPopupAddonFunction = function() {
+          window.popupPageFunction = function() {
             browser.test.sendMessage(
-              "popupPageFunctionCalled",
+              "onPopupPageFunctionCalled",
               browser.runtime.getManifest()
             );
           };
@@ -130,75 +208,40 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
       id: ADDON_ID,
       name: ADDON_NAME,
     },
-    document
+    doc
   );
 
-  info("Open a toolbox to debug the addon");
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
-    document,
-    tab,
-    aboutDebuggingWindow,
-    ADDON_NAME
-  );
-  const toolbox = getToolbox(devtoolsWindow);
+  // The onExtensionReady promise will resolve the extension instance.
+  return onExtensionReady;
+}
 
-  const onToolboxClose = gDevTools.once("toolbox-destroyed");
-  toolboxTestScript(toolbox, devtoolsTab);
-
-  info("Wait until the addon popup is opened from the test script");
-  await onReadyForOpenPopup;
-
-  const widgetId = ADDON_ID.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
-  const browserActionId = widgetId + "-browser-action";
-  const browserActionEl = window.document.getElementById(browserActionId);
-
-  ok(browserActionEl, "Got the browserAction button from the browser UI");
-  browserActionEl.click();
-  info("Clicked on the browserAction button");
-
-  const args = await onPopupCustomMessage;
-  ok(true, "Received console message from the popup page function as expected");
-  is(args[0], "popupPageFunctionCalled", "Got the expected console message");
-  is(
-    args[1] && args[1].name,
-    ADDON_NAME,
-    "Got the expected manifest from WebExtension API"
+/**
+ * Helper to retrieve the Extension instance.
+ */
+async function waitForExtension(addonName) {
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
   );
 
-  info("Wait for the toolbox to close");
-  await onToolboxClose;
-
-  is(
-    Services.prefs.getBoolPref("ui.popup.disable_autohide"),
-    false,
-    "disable_autohide should be reset to false when the toolbox is closed"
-  );
-
-  // The test script will not close the toolbox and will timeout if it fails, so reaching
-  // this point in the test is enough to assume the test was successful.
-  ok(true, "Addon toolbox closed");
-
-  await removeTemporaryExtension(ADDON_NAME, document);
-  await removeTab(tab);
-});
-
-async function toolboxTestScript(toolbox, devtoolsTab) {
-  const popupFramePromise = new Promise(resolve => {
-    const listener = data => {
-      if (data.frames.some(({ url }) => url && url.endsWith("popup.html"))) {
-        toolbox.target.off("frame-update", listener);
-        resolve();
+  return new Promise(resolve => {
+    Management.on("startup", function listener(event, extension) {
+      if (extension.name != addonName) {
+        return;
       }
-    };
-    toolbox.target.on("frame-update", listener);
+
+      Management.off("startup", listener);
+      resolve(extension);
+    });
   });
+}
 
-  const waitForFrameListUpdate = toolbox.target.once("frame-update");
-
-  const webconsole = await toolbox.selectTool("webconsole");
-
-  info("Clicking the menu button");
-  await new Promise(resolve => {
+/**
+ * Disables the popup autohide feature, which is mandatory to debug webextension
+ * popups.
+ */
+function disablePopupAutohide(toolbox) {
+  return new Promise(resolve => {
     toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
     toolbox.doc.addEventListener(
       "popupshown",
@@ -212,47 +255,4 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
       { once: true }
     );
   });
-  info("Clicked the menu button");
-
-  const consoleWrapper = webconsole.hud.ui.wrapper;
-  consoleWrapper.dispatchEvaluateExpression("myWebExtensionShowPopup()");
-
-  await Promise.all([
-    // Wait the initial frame update (which list the background page).
-    waitForFrameListUpdate,
-    // Wait the new frame update (once the extension popup has been opened).
-    popupFramePromise,
-  ]);
-
-  info("Clicking the frame list button");
-  const btn = toolbox.doc.getElementById("command-button-frames");
-  btn.click();
-
-  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
-  const frames = Array.from(menuList.querySelectorAll(".command"));
-
-  is(frames.length, 2, "Has the expected number of frames");
-
-  const popupFrameBtn = frames
-    .filter(frame => {
-      return frame.querySelector(".label").textContent.endsWith("popup.html");
-    })
-    .pop();
-
-  ok(popupFrameBtn, "Extension Popup frame found in the listed frames");
-
-  info("Click on the extension popup frame and wait for `navigate`");
-  const waitForNavigated = toolbox.target.once("navigate");
-  popupFrameBtn.click();
-  await waitForNavigated;
-
-  info("Execute `myWebExtensionPopupAddonFunction()`");
-  consoleWrapper.dispatchEvaluateExpression(
-    "myWebExtensionPopupAddonFunction()"
-  );
-
-  info("Wait for all pending requests to settle on the DevToolsClient");
-  await toolbox.target.client.waitForRequestsToSettle();
-
-  await removeTab(devtoolsTab);
 }
