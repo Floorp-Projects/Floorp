@@ -1200,7 +1200,7 @@
     "TIMEOUT"
   ],
   "Page Page.close should *not* run beforeunload by default (page.spec.ts)": [
-    "PASS"
+    "TIMEOUT"
   ],
   "Page Page.close should set the page close state (page.spec.ts)": [
     "PASS"
