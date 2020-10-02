@@ -882,7 +882,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
             }
           },
           fallible),
-      nullptr, [&aRv](auto& result) { aRv = result.unwrapErr(); });
+      nullptr, [&aRv](const nsresult result) { aRv = result; });
 
   const auto& params =
       aOverwrite ? RequestParams{ObjectStorePutParams(std::move(commonParams))}

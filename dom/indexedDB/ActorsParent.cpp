@@ -12502,8 +12502,8 @@ void ValueCursorBase::ProcessFiles(CursorResponse& aResponse,
                   SerializeStructuredCloneFiles((*this->mBackgroundParent),
                                                 this->mDatabase, files,
                                                 /* aForPreprocess */ false),
-                  QM_VOID, [&aResponse](auto& result) {
-                    aResponse = ClampResultCode(result.unwrapErr());
+                  QM_VOID, [&aResponse](const nsresult result) {
+                    aResponse = ClampResultCode(result);
                   });
     }
   }
@@ -21133,8 +21133,7 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
                     std::move(info));
               },
               fallible),
-          QM_VOID,
-          [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
+          QM_VOID, [&aResponse](const nsresult result) { aResponse = result; });
     }
 
     return;
@@ -21152,7 +21151,7 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
                 ConvertResponse<SerializedStructuredCloneReadInfo>(
                     std::move(mResponse[0])),
                 QM_VOID,
-                [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
+                [&aResponse](const nsresult result) { aResponse = result; });
   }
 }
 
@@ -21631,9 +21630,8 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
                         return convertResponse(std::move(info));
                       },
                       fallible),
-                  QM_VOID, [&aResponse](auto& result) {
-                    aResponse = result.unwrapErr();
-                  });
+                  QM_VOID,
+                  [&aResponse](const nsresult result) { aResponse = result; });
     }
 
     return;
@@ -21649,7 +21647,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
     *aResponseSize += mResponse[0].Size();
     IDB_TRY_VAR(serializedInfo, convertResponse(std::move(mResponse[0])),
                 QM_VOID,
-                [&aResponse](auto& result) { aResponse = result.unwrapErr(); });
+                [&aResponse](const nsresult result) { aResponse = result; });
   }
 }
 
