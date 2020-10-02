@@ -377,7 +377,6 @@ this.TopSitesFeed = class TopSitesFeed {
    */
   shouldFilterSearchTile(hostname) {
     if (
-      !this._useRemoteSetting &&
       this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
       (SEARCH_FILTERS.includes(hostname) ||
         hostname === this._currentSearchHostname)
