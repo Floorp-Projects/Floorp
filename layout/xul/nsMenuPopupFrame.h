@@ -261,10 +261,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // (or the frame for mAnchorContent if aAnchorFrame is null), anchored at a
   // rectangle, or at a specific point if a screen position is set. The popup
   // will be adjusted so that it is on screen. If aIsMove is true, then the
-  // popup is being moved, and should not be flipped. If aNotify is true, then
-  // a popuppositioned event is sent.
+  // popup is being moved, and should not be flipped.
   nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove,
-                            bool aSizedToPopup, bool aNotify);
+                            bool aSizedToPopup);
 
   // Force the children to be generated if they have not already been generated.
   void GenerateFrames();
