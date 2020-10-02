@@ -438,7 +438,7 @@ void nsXULPopupManager::AdjustPopupsOnWindowChange(
   }
 
   for (int32_t l = list.Length() - 1; l >= 0; l--) {
-    list[l]->SetPopupPosition(nullptr, true, false, true);
+    list[l]->SetPopupPosition(nullptr, true, false);
   }
 }
 
@@ -484,7 +484,7 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt) {
   // the specified screen coordinates.
   if (menuPopupFrame->IsAnchored() &&
       menuPopupFrame->PopupLevel() == ePopupLevelParent) {
-    menuPopupFrame->SetPopupPosition(nullptr, true, false, true);
+    menuPopupFrame->SetPopupPosition(nullptr, true, false);
   } else {
     CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
                       menuPopupFrame->PresContext()->CSSToDevPixelScale();
@@ -2598,17 +2598,13 @@ nsXULPopupHidingEvent::Run() {
   return NS_OK;
 }
 
-bool nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent* aPopup,
-                                                 bool aIsContextMenu,
-                                                 bool aSelectFirstItem) {
+bool nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent* aPopup) {
   // The popuppositioned event only fires on arrow panels for now.
   if (aPopup->IsElement() &&
       aPopup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                        nsGkAtoms::arrow, eCaseMatters)) {
-    nsCOMPtr<nsIRunnable> event =
-        new nsXULPopupPositionedEvent(aPopup, aIsContextMenu, aSelectFirstItem);
+    nsCOMPtr<nsIRunnable> event = new nsXULPopupPositionedEvent(aPopup);
     aPopup->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
-
     return true;
   }
 
@@ -2643,8 +2639,7 @@ nsXULPopupPositionedEvent::Run() {
       // popup rather than opening it. In that case, we are done.
       nsMenuPopupFrame* popupFrame = do_QueryFrame(mPopup->GetPrimaryFrame());
       if (popupFrame && popupFrame->PopupState() == ePopupPositioning) {
-        pm->ShowPopupCallback(mPopup, popupFrame, mIsContextMenu,
-                              mSelectFirstItem);
+        pm->ShowPopupCallback(mPopup, popupFrame, false, false);
       }
     }
   }
