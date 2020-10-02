@@ -59,66 +59,72 @@ function funcForBooleanLength(context, node, conditionCheck) {
   return newText;
 }
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
+module.exports = {
+  meta: {
+    type: "suggestion",
+    fixable: "code",
+  },
+  create(context) {
+    // ---------------------------------------------------------------------------
+    // Public
+    //  --------------------------------------------------------------------------
 
-  const conditionStatement = [
-    "IfStatement",
-    "WhileStatement",
-    "DoWhileStatement",
-    "ForStatement",
-    "ForInStatement",
-    "ConditionalExpression",
-  ];
+    const conditionStatement = [
+      "IfStatement",
+      "WhileStatement",
+      "DoWhileStatement",
+      "ForStatement",
+      "ForInStatement",
+      "ConditionalExpression",
+    ];
 
-  return {
-    BinaryExpression(node) {
-      if (
-        ["==", "!=", ">", "<"].includes(node.operator) &&
-        ((node.right.type == "Literal" &&
-          node.right.value == 0 &&
-          node.left.property &&
-          node.left.property.name == "length") ||
-          (node.left.type == "Literal" &&
-            node.left.value == 0 &&
-            node.right.property &&
-            node.right.property.name == "length"))
-      ) {
+    return {
+      BinaryExpression(node) {
         if (
-          conditionStatement.includes(node.parent.type) ||
-          (node.parent.type == "LogicalExpression" &&
-            conditionStatement.includes(node.parent.parent.type))
+          ["==", "!=", ">", "<"].includes(node.operator) &&
+          ((node.right.type == "Literal" &&
+            node.right.value == 0 &&
+            node.left.property &&
+            node.left.property.name == "length") ||
+            (node.left.type == "Literal" &&
+              node.left.value == 0 &&
+              node.right.property &&
+              node.right.property.name == "length"))
         ) {
-          context.report({
-            node,
-            fix: fixer => {
-              let generateExpression = funcForBooleanLength(
-                context,
-                node,
-                true
-              );
+          if (
+            conditionStatement.includes(node.parent.type) ||
+            (node.parent.type == "LogicalExpression" &&
+              conditionStatement.includes(node.parent.parent.type))
+          ) {
+            context.report({
+              node,
+              fix: fixer => {
+                let generateExpression = funcForBooleanLength(
+                  context,
+                  node,
+                  true
+                );
 
-              return fixer.replaceText(node, generateExpression);
-            },
-            message: "Prefer boolean length check",
-          });
-        } else {
-          context.report({
-            node,
-            fix: fixer => {
-              let generateExpression = funcForBooleanLength(
-                context,
-                node,
-                false
-              );
-              return fixer.replaceText(node, generateExpression);
-            },
-            message: "Prefer boolean length check",
-          });
+                return fixer.replaceText(node, generateExpression);
+              },
+              message: "Prefer boolean length check",
+            });
+          } else {
+            context.report({
+              node,
+              fix: fixer => {
+                let generateExpression = funcForBooleanLength(
+                  context,
+                  node,
+                  false
+                );
+                return fixer.replaceText(node, generateExpression);
+              },
+              message: "Prefer boolean length check",
+            });
+          }
         }
-      }
-    },
-  };
+      },
+    };
+  },
 };
