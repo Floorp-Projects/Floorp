@@ -690,8 +690,6 @@ static inline jsbytecode* GetNextPc(jsbytecode* pc) {
   return pc + GetBytecodeLength(pc);
 }
 
-typedef Vector<jsbytecode*, 4, SystemAllocPolicy> PcVector;
-
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 enum class DisassembleSkeptically { No, Yes };
