@@ -2968,12 +2968,14 @@ impl Renderer {
                     // to re-order based on `DocumentLayer` during rendering.
                     match self.active_documents.iter().position(|&(id, _)| id == document_id) {
                         Some(pos) => {
-                            // If the document we are replacing must be drawn
-                            // (in order to update the texture cache), issue
-                            // a render just to off-screen targets.
+                            // If the document we are replacing must be drawn (in order to
+                            // update the texture cache), issue a render just to
+                            // off-screen targets, ie pass None to render_impl. We do this
+                            // because a) we don't need to render to the main framebuffer
+                            // so it is cheaper not to, and b) doing so without a
+                            // subsequent present would break partial present.
                             if self.active_documents[pos].1.frame.must_be_drawn() {
-                                let device_size = self.device_size;
-                                self.render_impl(device_size).ok();
+                                self.render_impl(None).ok();
                             }
 
                             self.active_documents[pos].1 = doc;
@@ -3045,8 +3047,10 @@ impl Renderer {
                             });
 
                         if must_be_drawn {
-                            let device_size = self.device_size;
-                            self.render_impl(device_size).ok();
+                            // As this render will not be presented, we must pass None to
+                            // render_impl. This avoids interfering with partial present
+                            // logic, as well as being more efficient.
+                            self.render_impl(None).ok();
                         }
                     }
 
@@ -3533,10 +3537,10 @@ impl Renderer {
         }
     }
 
-    // If device_size is None, don't render
-    // to the main frame buffer. This is useful
-    // to update texture cache render tasks but
-    // avoid doing a full frame render.
+    // If device_size is None, don't render to the main frame buffer. This is useful to
+    // update texture cache render tasks but avoid doing a full frame render. If the
+    // render is not going to be presented, then this must be set to None, as performing a
+    // composite without a present will confuse partial present.
     fn render_impl(
         &mut self,
         device_size: Option<DeviceIntSize>,
@@ -6240,6 +6244,10 @@ impl Renderer {
                                 &mut results.stats,
                             );
                         }
+                    } else {
+                        // Rendering a frame without presenting it will confuse the partial
+                        // present logic, so force a full present for the next frame.
+                        self.force_redraw();
                     }
                 }
                 RenderPassKind::OffScreen {
