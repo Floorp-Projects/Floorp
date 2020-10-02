@@ -290,6 +290,19 @@ identity-passive-loaded = Parts of this page are not secure (such as images).
 identity-active-loaded = You have disabled protection on this page.
 identity-weak-encryption = This page uses weak encryption.
 identity-insecure-login-forms = Logins entered on this page could be compromised.
+
+identity-https-only-connection-upgraded = (upgraded to HTTPS)
+identity-https-only-label = HTTPS-Only Mode
+identity-https-only-dropdown-on =
+    .label = On
+identity-https-only-dropdown-off =
+    .label = Off
+identity-https-only-dropdown-off-temporarily =
+    .label = Off temporarily
+identity-https-only-info-turn-on = Turn on if you want { -brand-short-name } to upgrade to a secure connection when possible.
+identity-https-only-info-turn-off = If the site seems broken, you may want to turn off HTTPS-Only Mode to reload using insecure HTTP.
+identity-https-only-info-no-upgrade = Unable to upgrade connection from HTTP.
+
 identity-permissions =
     .value = Permissions
 identity-permissions-reload-hint = You may need to reload the page for changes to apply.
