@@ -9,6 +9,7 @@ permalink: /contributing/release-checklist
 - Make sure version number is correct or update version in `.buildconfig.yml`.
 - Update [CHANGELOG](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md)
   - Use milestone and commit log for identifying interesting changes.
+  - Add the milestone to any related issue that doesn't have it.
 - Close milestone
   - Milestone should be 100% complete. Incomplete issues should have been moved in planning meeting.
 
