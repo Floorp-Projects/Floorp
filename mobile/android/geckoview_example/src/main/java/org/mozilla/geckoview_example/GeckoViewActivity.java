@@ -37,6 +37,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -418,6 +419,9 @@ public class GeckoViewActivity
 
     private LinkedList<WebResponse> mPendingDownloads = new LinkedList<>();
 
+    private int mNextActivityResultCode = 10;
+    private HashMap<Integer, GeckoResult<Intent>> mPendingActivityResult = new HashMap<>();
+
     private LocationView.CommitListener mCommitListener = new LocationView.CommitListener() {
         @Override
         public void onCommit(String text) {
@@ -672,6 +676,18 @@ public class GeckoViewActivity
             sGeckoRuntime.setDelegate(() -> {
                 mKillProcessOnDestroy = true;
                 finish();
+            });
+
+            sGeckoRuntime.setActivityDelegate(pendingIntent -> {
+                final GeckoResult<Intent> result = new GeckoResult<>();
+                try {
+                    final int code = mNextActivityResultCode++;
+                    mPendingActivityResult.put(code, result);
+                    GeckoViewActivity.this.startIntentSenderForResult(pendingIntent.getIntentSender(), code, null, 0, 0, 0);
+                } catch (IntentSender.SendIntentException e) {
+                    result.completeExceptionally(e);
+                }
+                return result;
             });
         }
 
@@ -1170,6 +1186,14 @@ public class GeckoViewActivity
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mTabSessionManager.getCurrentSession().getPromptDelegate();
             prompt.onFileCallbackResult(resultCode, data);
+        } else if (mPendingActivityResult.containsKey(requestCode)) {
+            final GeckoResult<Intent> result = mPendingActivityResult.remove(requestCode);
+
+            if (resultCode == Activity.RESULT_OK) {
+                result.complete(data);
+            } else {
+                result.completeExceptionally(new RuntimeException("Unknown error"));
+            }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
