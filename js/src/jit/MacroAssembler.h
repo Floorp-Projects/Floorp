@@ -1875,11 +1875,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <class T>
   inline void storeFloat32(FloatRegister src, const T& dest);
 
-  inline void storeFloat32x3(FloatRegister src,
-                             const Address& dest) PER_SHARED_ARCH;
-  inline void storeFloat32x3(FloatRegister src,
-                             const BaseIndex& dest) PER_SHARED_ARCH;
-
   template <typename T>
   void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
                          const T& dest, MIRType slotType) PER_ARCH;
@@ -2195,10 +2190,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Lane-wise integer rounding average
 
-  inline void averageInt8x16(FloatRegister rhs, FloatRegister lhsDest)
+  inline void unsignedAverageInt8x16(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
-  inline void averageInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+  inline void unsignedAverageInt16x8(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
   // Lane-wise integer absolute value
@@ -2403,7 +2398,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void storeUnalignedSimd128(FloatRegister src, const BaseIndex& dest)
       DEFINED_ON(x86_shared);
 
-  // Floating point negation.  The input and output registers must differ.
+  // Floating point negation
 
   inline void negFloat32x4(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared);

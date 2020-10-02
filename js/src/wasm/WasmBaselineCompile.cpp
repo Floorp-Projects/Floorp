@@ -8217,53 +8217,42 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitStructSet();
   MOZ_MUST_USE bool emitStructNarrow();
 #ifdef ENABLE_WASM_SIMD
-  template <typename SourceRegType, typename ResultRegType>
-  void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceRegType rs,
-                                 ResultRegType rd));
+  template <typename SourceType, typename DestType>
+  void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceType rs,
+                                 DestType rd));
 
-  template <typename TempRegType>
-  void emitVectorUnopWithTemp(void (*op)(MacroAssembler& masm, RegV128 rs,
-                                         RegV128 rd, TempRegType temp));
+  template <typename SourceType, typename DestType, typename TempType>
+  void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceType rs,
+                                 DestType rd, TempType temp));
 
-  void emitVectorBinop(void (*op)(MacroAssembler& masm, RegV128 src,
-                                  RegV128 srcDest));
+  template <typename SourceType, typename DestType, typename ImmType>
+  void emitVectorUnop(ImmType immediate, void (*op)(MacroAssembler&, ImmType,
+                                                    SourceType, DestType));
 
-  template <typename TempRegType>
-  void emitVectorBinopWithTemp(void (*)(MacroAssembler& masm, RegV128 rs,
-                                        RegV128 rsd, TempRegType temp));
+  template <typename RhsType, typename LhsDestType>
+  void emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType src,
+                                  LhsDestType srcDest));
 
-  template <typename TempRegType1, typename TempRegType2>
-  void emitVectorBinopWithTwoTemps(void (*)(MacroAssembler& masm, RegV128 rs,
-                                            RegV128 rsd, TempRegType1 temp1,
-                                            TempRegType2 temp2));
+  template <typename RhsType, typename LhsDestType, typename TempType>
+  void emitVectorBinop(void (*)(MacroAssembler& masm, RhsType rs,
+                                LhsDestType rsd, TempType temp));
 
-  void emitVectorComparison(Assembler::Condition cond,
-                            void (*)(MacroAssembler& masm,
-                                     Assembler::Condition cond, RegV128 rs,
-                                     RegV128 rsd));
+  template <typename RhsType, typename LhsDestType, typename TempType1,
+            typename TempType2>
+  void emitVectorBinop(void (*)(MacroAssembler& masm, RhsType rs,
+                                LhsDestType rsd, TempType1 temp1,
+                                TempType2 temp2));
 
-  void emitVectorComparisonWithTwoTemps(Assembler::Condition cond,
-                                        void (*)(MacroAssembler& masm,
-                                                 Assembler::Condition cond,
-                                                 RegV128 rs, RegV128 rsd,
-                                                 RegV128 temp1, RegV128 temp2));
+  template <typename RhsType, typename LhsDestType, typename ImmType>
+  void emitVectorBinop(ImmType immediate, void (*op)(MacroAssembler&, ImmType,
+                                                     RhsType, LhsDestType));
 
-  void emitVectorVariableShiftWithTemp(void (*op)(MacroAssembler& masm,
-                                                  RegI32 rs, RegV128 rsd,
-                                                  RegI32 temp));
-
-  void emitVectorVariableShiftWithTwoTemps(void (*op)(MacroAssembler& masm,
-                                                      RegI32 rs, RegV128 rsd,
-                                                      RegI32 temp1,
-                                                      RegV128 temp2));
-
-  template <typename ResultRegType>
-  void emitExtractLane(uint32_t laneIndex, void (*op)(MacroAssembler&, uint32_t,
-                                                      RegV128, ResultRegType));
-
-  template <typename ValueRegType>
-  void emitReplaceLane(uint32_t laneIndex, void (*op)(MacroAssembler&, uint32_t,
-                                                      ValueRegType, RegV128));
+  template <typename RhsType, typename LhsDestType, typename ImmType,
+            typename TempType1, typename TempType2>
+  void emitVectorBinop(ImmType immediate,
+                       void (*op)(MacroAssembler&, ImmType, RhsType,
+                                  LhsDestType, TempType1 temp1,
+                                  TempType2 temp2));
 
   void emitVectorAndNot();
 
@@ -13169,12 +13158,12 @@ static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
   masm.unsignedRightShiftInt64x2(rs, rsd, temp);
 }
 
-static void AverageI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.averageInt8x16(rs, rsd);
+static void AverageUI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedAverageInt8x16(rs, rsd);
 }
 
-static void AverageI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.averageInt16x8(rs, rsd);
+static void AverageUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.unsignedAverageInt16x8(rs, rsd);
 }
 
 static void MinI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -13430,116 +13419,104 @@ static void ConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
   masm.unsignedTruncSatFloat32x4ToInt32x4(rs, rd, temp);
 }
 
-template <typename SourceRegType, typename ResultRegType>
+template <typename SourceType, typename DestType>
 void BaseCompiler::emitVectorUnop(void (*op)(MacroAssembler& masm,
-                                             SourceRegType rs,
-                                             ResultRegType rd)) {
-  SourceRegType rs = pop<SourceRegType>();
-  ResultRegType rd = need<ResultRegType>();
+                                             SourceType rs, DestType rd)) {
+  SourceType rs = pop<SourceType>();
+  DestType rd = need<DestType>();
   op(masm, rs, rd);
   free(rs);
   push(rd);
 }
 
-template <typename TempRegType>
-void BaseCompiler::emitVectorUnopWithTemp(void (*op)(MacroAssembler& masm,
-                                                     RegV128 rs, RegV128 rd,
-                                                     TempRegType temp)) {
-  RegV128 rs = popV128();
-  RegV128 rd = needV128();
-  TempRegType temp = need<TempRegType>();
+template <typename SourceType, typename DestType, typename TempType>
+void BaseCompiler::emitVectorUnop(void (*op)(MacroAssembler& masm,
+                                             SourceType rs, DestType rd,
+                                             TempType temp)) {
+  SourceType rs = pop<SourceType>();
+  DestType rd = need<DestType>();
+  TempType temp = need<TempType>();
   op(masm, rs, rd, temp);
-  freeV128(rs);
+  free(rs);
   free(temp);
-  pushV128(rd);
+  push(rd);
 }
 
-void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm, RegV128 src,
-                                              RegV128 srcDest)) {
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  op(masm, rs, r);
-  freeV128(rs);
-  pushV128(r);
+template <typename SourceType, typename DestType, typename ImmType>
+void BaseCompiler::emitVectorUnop(ImmType immediate,
+                                  void (*op)(MacroAssembler&, ImmType,
+                                             SourceType, DestType)) {
+  SourceType rs = pop<SourceType>();
+  DestType rd = need<DestType>();
+  op(masm, immediate, rs, rd);
+  free(rs);
+  push(rd);
 }
 
-template <typename TempRegType>
-void BaseCompiler::emitVectorBinopWithTemp(void (*op)(MacroAssembler& masm,
-                                                      RegV128 rs, RegV128 rsd,
-                                                      TempRegType temp)) {
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  TempRegType temp = need<TempRegType>();
-  op(masm, rs, r, temp);
-  freeV128(rs);
+template <typename RhsType, typename LhsDestType>
+void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType src,
+                                              LhsDestType srcDest)) {
+  RhsType rs = pop<RhsType>();
+  LhsDestType rsd = pop<LhsDestType>();
+  op(masm, rs, rsd);
+  free(rs);
+  push(rsd);
+}
+
+template <typename RhsType, typename LhsDestType, typename TempType>
+void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType rs,
+                                              LhsDestType rsd, TempType temp)) {
+  RhsType rs = pop<RhsType>();
+  LhsDestType rsd = pop<LhsDestType>();
+  TempType temp = need<TempType>();
+  op(masm, rs, rsd, temp);
+  free(rs);
   free(temp);
-  pushV128(r);
+  push(rsd);
 }
 
-template <typename TempRegType1, typename TempRegType2>
-void BaseCompiler::emitVectorBinopWithTwoTemps(
-    void (*op)(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
-               TempRegType1 temp1, TempRegType2 temp2)) {
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  TempRegType1 temp1 = need<TempRegType1>();
-  TempRegType2 temp2 = need<TempRegType2>();
-  op(masm, rs, r, temp1, temp2);
-  freeV128(rs);
+template <typename RhsType, typename LhsDestType, typename TempType1,
+          typename TempType2>
+void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType rs,
+                                              LhsDestType rsd, TempType1 temp1,
+                                              TempType2 temp2)) {
+  RhsType rs = pop<RhsType>();
+  LhsDestType rsd = pop<LhsDestType>();
+  TempType1 temp1 = need<TempType1>();
+  TempType2 temp2 = need<TempType2>();
+  op(masm, rs, rsd, temp1, temp2);
+  free(rs);
   free(temp1);
   free(temp2);
-  pushV128(r);
+  push(rsd);
 }
 
-void BaseCompiler::emitVectorComparison(Assembler::Condition cond,
-                                        void (*op)(MacroAssembler& masm,
-                                                   Assembler::Condition cond,
-                                                   RegV128 rs, RegV128 rsd)) {
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  op(masm, cond, rs, r);
-  freeV128(rs);
-  pushV128(r);
+template <typename RhsType, typename LhsDestType, typename ImmType>
+void BaseCompiler::emitVectorBinop(ImmType immediate,
+                                   void (*op)(MacroAssembler&, ImmType, RhsType,
+                                              LhsDestType)) {
+  RhsType rs = pop<RhsType>();
+  LhsDestType rsd = pop<LhsDestType>();
+  op(masm, immediate, rs, rsd);
+  free(rs);
+  push(rsd);
 }
 
-void BaseCompiler::emitVectorComparisonWithTwoTemps(
-    Assembler::Condition cond,
-    void (*op)(MacroAssembler& masm, Assembler::Condition cond, RegV128 rs,
-               RegV128 rsd, RegV128 tmp1, RegV128 tmp2)) {
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  RegV128 tmp1 = needV128();
-  RegV128 tmp2 = needV128();
-  op(masm, cond, rs, r, tmp1, tmp2);
-  freeV128(rs);
-  freeV128(tmp1);
-  freeV128(tmp2);
-  pushV128(r);
-}
-
-void BaseCompiler::emitVectorVariableShiftWithTemp(
-    void (*op)(MacroAssembler& masm, RegI32 rs, RegV128 rsd, RegI32 temp)) {
-  RegI32 rs = popI32();
-  RegV128 rsd = popV128();
-  RegI32 temp = needI32();
-  op(masm, rs, rsd, temp);
-  freeI32(rs);
-  freeI32(temp);
-  pushV128(rsd);
-}
-
-void BaseCompiler::emitVectorVariableShiftWithTwoTemps(
-    void (*op)(MacroAssembler& masm, RegI32 rs, RegV128 rsd, RegI32 temp1,
-               RegV128 temp2)) {
-  RegI32 rs = popI32();
-  RegV128 rsd = popV128();
-  RegI32 temp1 = needI32();
-  RegV128 temp2 = needV128();
-  op(masm, rs, rsd, temp1, temp2);
-  freeI32(rs);
-  freeI32(temp1);
-  freeV128(temp2);
-  pushV128(rsd);
+template <typename RhsType, typename LhsDestType, typename ImmType,
+          typename TempType1, typename TempType2>
+void BaseCompiler::emitVectorBinop(ImmType immediate,
+                                   void (*op)(MacroAssembler&, ImmType, RhsType,
+                                              LhsDestType, TempType1 temp1,
+                                              TempType2 temp2)) {
+  RhsType rs = pop<RhsType>();
+  LhsDestType rsd = pop<LhsDestType>();
+  TempType1 temp1 = need<TempType1>();
+  TempType2 temp2 = need<TempType2>();
+  op(masm, immediate, rs, rsd, temp1, temp2);
+  free(rs);
+  free(temp1);
+  free(temp2);
+  push(rsd);
 }
 
 void BaseCompiler::emitVectorAndNot() {
@@ -13550,28 +13527,6 @@ void BaseCompiler::emitVectorAndNot() {
   masm.bitwiseNotAndSimd128(r, rs);
   freeV128(r);
   pushV128(rs);
-}
-
-template <typename ResultRegType>
-void BaseCompiler::emitExtractLane(uint32_t laneIndex,
-                                   void (*op)(MacroAssembler&, uint32_t,
-                                              RegV128, ResultRegType)) {
-  RegV128 rs = popV128();
-  ResultRegType rd = need<ResultRegType>();
-  op(masm, laneIndex, rs, rd);
-  freeV128(rs);
-  push(rd);
-}
-
-template <typename ValueRegType>
-void BaseCompiler::emitReplaceLane(uint32_t laneIndex,
-                                   void (*op)(MacroAssembler&, uint32_t,
-                                              ValueRegType, RegV128)) {
-  ValueRegType rs = pop<ValueRegType>();
-  RegV128 rd = popV128();
-  op(masm, laneIndex, rs, rd);
-  free(rs);
-  pushV128(rd);
 }
 
 bool BaseCompiler::emitLoadSplat(Scalar::Type viewType) {
@@ -13816,37 +13771,30 @@ bool BaseCompiler::emitBody() {
   iter_.readBinary(type, &unused_a, &unused_b) &&   \
       (deadCode_ || doEmit(symbol, type))
 
-#define dispatchVectorBinary(doEmit, op)                   \
+#define dispatchVectorBinary(op)                           \
   iter_.readBinary(ValType::V128, &unused_a, &unused_b) && \
-      (deadCode_ || (doEmit(op), true))
+      (deadCode_ || (emitVectorBinop(op), true))
 
-#define dispatchVectorUnary(doEmit, op) \
-  iter_.readUnary(ValType::V128, &unused_a) && (deadCode_ || (doEmit(op), true))
+#define dispatchVectorUnary(op)                \
+  iter_.readUnary(ValType::V128, &unused_a) && \
+      (deadCode_ || (emitVectorUnop(op), true))
 
 #define dispatchVectorComparison(op, compareOp)            \
   iter_.readBinary(ValType::V128, &unused_a, &unused_b) && \
-      (deadCode_ || (emitVectorComparison(compareOp, op), true))
+      (deadCode_ || (emitVectorBinop(compareOp, op), true))
 
-#define dispatchVectorUnsignedComparison(op, compareOp)    \
-  iter_.readBinary(ValType::V128, &unused_a, &unused_b) && \
-      (deadCode_ || (emitVectorComparisonWithTwoTemps(compareOp, op), true))
-
-#define dispatchVectorVariableShiftWithTemp(op)  \
+#define dispatchVectorVariableShift(op)          \
   iter_.readVectorShift(&unused_a, &unused_b) && \
-      (deadCode_ || (emitVectorVariableShiftWithTemp(op), true))
-
-#define dispatchVectorVariableShiftWithTwoTemps(op) \
-  iter_.readVectorShift(&unused_a, &unused_b) &&    \
-      (deadCode_ || (emitVectorVariableShiftWithTwoTemps(op), true))
+      (deadCode_ || (emitVectorBinop(op), true))
 
 #define dispatchExtractLane(op, outType, laneLimit)                   \
   iter_.readExtractLane(outType, laneLimit, &laneIndex, &unused_a) && \
-      (deadCode_ || (emitExtractLane(laneIndex, op), true))
+      (deadCode_ || (emitVectorUnop(laneIndex, op), true))
 
 #define dispatchReplaceLane(op, inType, laneLimit)                \
   iter_.readReplaceLane(inType, laneLimit, &laneIndex, &unused_a, \
                         &unused_b) &&                             \
-      (deadCode_ || (emitReplaceLane(laneIndex, op), true))
+      (deadCode_ || (emitVectorBinop(laneIndex, op), true))
 
 #define dispatchSplat(op, inType)                           \
   iter_.readConversion(inType, ValType::V128, &unused_a) && \
@@ -14628,26 +14576,24 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I8x16LtS):
             CHECK_NEXT(dispatchVectorComparison(CmpI8x16, Assembler::LessThan));
           case uint32_t(SimdOp::I8x16LtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI8x16, Assembler::Below));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI8x16, Assembler::Below));
           case uint32_t(SimdOp::I8x16GtS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI8x16, Assembler::GreaterThan));
           case uint32_t(SimdOp::I8x16GtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI8x16, Assembler::Above));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI8x16, Assembler::Above));
           case uint32_t(SimdOp::I8x16LeS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI8x16, Assembler::LessThanOrEqual));
           case uint32_t(SimdOp::I8x16LeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI8x16, Assembler::BelowOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI8x16, Assembler::BelowOrEqual));
           case uint32_t(SimdOp::I8x16GeS):
             CHECK_NEXT(dispatchVectorComparison(CmpI8x16,
                                                 Assembler::GreaterThanOrEqual));
           case uint32_t(SimdOp::I8x16GeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI8x16, Assembler::AboveOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI8x16, Assembler::AboveOrEqual));
           case uint32_t(SimdOp::I16x8Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpI16x8, Assembler::Equal));
           case uint32_t(SimdOp::I16x8Ne):
@@ -14655,26 +14601,24 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I16x8LtS):
             CHECK_NEXT(dispatchVectorComparison(CmpI16x8, Assembler::LessThan));
           case uint32_t(SimdOp::I16x8LtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI16x8, Assembler::Below));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI16x8, Assembler::Below));
           case uint32_t(SimdOp::I16x8GtS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI16x8, Assembler::GreaterThan));
           case uint32_t(SimdOp::I16x8GtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI16x8, Assembler::Above));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI16x8, Assembler::Above));
           case uint32_t(SimdOp::I16x8LeS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI16x8, Assembler::LessThanOrEqual));
           case uint32_t(SimdOp::I16x8LeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI16x8, Assembler::BelowOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI16x8, Assembler::BelowOrEqual));
           case uint32_t(SimdOp::I16x8GeS):
             CHECK_NEXT(dispatchVectorComparison(CmpI16x8,
                                                 Assembler::GreaterThanOrEqual));
           case uint32_t(SimdOp::I16x8GeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI16x8, Assembler::AboveOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI16x8, Assembler::AboveOrEqual));
           case uint32_t(SimdOp::I32x4Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpI32x4, Assembler::Equal));
           case uint32_t(SimdOp::I32x4Ne):
@@ -14682,26 +14626,24 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I32x4LtS):
             CHECK_NEXT(dispatchVectorComparison(CmpI32x4, Assembler::LessThan));
           case uint32_t(SimdOp::I32x4LtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI32x4, Assembler::Below));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI32x4, Assembler::Below));
           case uint32_t(SimdOp::I32x4GtS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI32x4, Assembler::GreaterThan));
           case uint32_t(SimdOp::I32x4GtU):
-            CHECK_NEXT(
-                dispatchVectorUnsignedComparison(CmpUI32x4, Assembler::Above));
+            CHECK_NEXT(dispatchVectorComparison(CmpUI32x4, Assembler::Above));
           case uint32_t(SimdOp::I32x4LeS):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpI32x4, Assembler::LessThanOrEqual));
           case uint32_t(SimdOp::I32x4LeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI32x4, Assembler::BelowOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI32x4, Assembler::BelowOrEqual));
           case uint32_t(SimdOp::I32x4GeS):
             CHECK_NEXT(dispatchVectorComparison(CmpI32x4,
                                                 Assembler::GreaterThanOrEqual));
           case uint32_t(SimdOp::I32x4GeU):
-            CHECK_NEXT(dispatchVectorUnsignedComparison(
-                CmpUI32x4, Assembler::AboveOrEqual));
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpUI32x4, Assembler::AboveOrEqual));
           case uint32_t(SimdOp::F32x4Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpF32x4, Assembler::Equal));
           case uint32_t(SimdOp::F32x4Ne):
@@ -14733,238 +14675,228 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorComparison(CmpF64x2,
                                                 Assembler::GreaterThanOrEqual));
           case uint32_t(SimdOp::V128And):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AndV128));
+            CHECK_NEXT(dispatchVectorBinary(AndV128));
           case uint32_t(SimdOp::V128Or):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, OrV128));
+            CHECK_NEXT(dispatchVectorBinary(OrV128));
           case uint32_t(SimdOp::V128Xor):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, XorV128));
+            CHECK_NEXT(dispatchVectorBinary(XorV128));
           case uint32_t(SimdOp::V128AndNot):
             CHECK_NEXT(dispatchBinary(emitVectorAndNot, ValType::V128));
           case uint32_t(SimdOp::I8x16AvgrU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AverageI8x16));
+            CHECK_NEXT(dispatchVectorBinary(AverageUI8x16));
           case uint32_t(SimdOp::I16x8AvgrU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AverageI16x8));
+            CHECK_NEXT(dispatchVectorBinary(AverageUI16x8));
           case uint32_t(SimdOp::I8x16Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddI8x16));
+            CHECK_NEXT(dispatchVectorBinary(AddI8x16));
           case uint32_t(SimdOp::I8x16AddSaturateS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddSatI8x16));
+            CHECK_NEXT(dispatchVectorBinary(AddSatI8x16));
           case uint32_t(SimdOp::I8x16AddSaturateU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddSatUI8x16));
+            CHECK_NEXT(dispatchVectorBinary(AddSatUI8x16));
           case uint32_t(SimdOp::I8x16Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubI8x16));
+            CHECK_NEXT(dispatchVectorBinary(SubI8x16));
           case uint32_t(SimdOp::I8x16SubSaturateS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubSatI8x16));
+            CHECK_NEXT(dispatchVectorBinary(SubSatI8x16));
           case uint32_t(SimdOp::I8x16SubSaturateU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubSatUI8x16));
+            CHECK_NEXT(dispatchVectorBinary(SubSatUI8x16));
           case uint32_t(SimdOp::I8x16MinS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinI8x16));
+            CHECK_NEXT(dispatchVectorBinary(MinI8x16));
           case uint32_t(SimdOp::I8x16MinU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinUI8x16));
+            CHECK_NEXT(dispatchVectorBinary(MinUI8x16));
           case uint32_t(SimdOp::I8x16MaxS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxI8x16));
+            CHECK_NEXT(dispatchVectorBinary(MaxI8x16));
           case uint32_t(SimdOp::I8x16MaxU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxUI8x16));
+            CHECK_NEXT(dispatchVectorBinary(MaxUI8x16));
           case uint32_t(SimdOp::I16x8Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddI16x8));
+            CHECK_NEXT(dispatchVectorBinary(AddI16x8));
           case uint32_t(SimdOp::I16x8AddSaturateS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddSatI16x8));
+            CHECK_NEXT(dispatchVectorBinary(AddSatI16x8));
           case uint32_t(SimdOp::I16x8AddSaturateU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddSatUI16x8));
+            CHECK_NEXT(dispatchVectorBinary(AddSatUI16x8));
           case uint32_t(SimdOp::I16x8Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubI16x8));
+            CHECK_NEXT(dispatchVectorBinary(SubI16x8));
           case uint32_t(SimdOp::I16x8SubSaturateS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubSatI16x8));
+            CHECK_NEXT(dispatchVectorBinary(SubSatI16x8));
           case uint32_t(SimdOp::I16x8SubSaturateU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubSatUI16x8));
+            CHECK_NEXT(dispatchVectorBinary(SubSatUI16x8));
           case uint32_t(SimdOp::I16x8Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MulI16x8));
+            CHECK_NEXT(dispatchVectorBinary(MulI16x8));
           case uint32_t(SimdOp::I16x8MinS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinI16x8));
+            CHECK_NEXT(dispatchVectorBinary(MinI16x8));
           case uint32_t(SimdOp::I16x8MinU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinUI16x8));
+            CHECK_NEXT(dispatchVectorBinary(MinUI16x8));
           case uint32_t(SimdOp::I16x8MaxS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxI16x8));
+            CHECK_NEXT(dispatchVectorBinary(MaxI16x8));
           case uint32_t(SimdOp::I16x8MaxU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxUI16x8));
+            CHECK_NEXT(dispatchVectorBinary(MaxUI16x8));
           case uint32_t(SimdOp::I32x4Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddI32x4));
+            CHECK_NEXT(dispatchVectorBinary(AddI32x4));
           case uint32_t(SimdOp::I32x4Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubI32x4));
+            CHECK_NEXT(dispatchVectorBinary(SubI32x4));
           case uint32_t(SimdOp::I32x4Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MulI32x4));
+            CHECK_NEXT(dispatchVectorBinary(MulI32x4));
           case uint32_t(SimdOp::I32x4MinS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinI32x4));
+            CHECK_NEXT(dispatchVectorBinary(MinI32x4));
           case uint32_t(SimdOp::I32x4MinU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinUI32x4));
+            CHECK_NEXT(dispatchVectorBinary(MinUI32x4));
           case uint32_t(SimdOp::I32x4MaxS):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxI32x4));
+            CHECK_NEXT(dispatchVectorBinary(MaxI32x4));
           case uint32_t(SimdOp::I32x4MaxU):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MaxUI32x4));
+            CHECK_NEXT(dispatchVectorBinary(MaxUI32x4));
           case uint32_t(SimdOp::I64x2Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddI64x2));
+            CHECK_NEXT(dispatchVectorBinary(AddI64x2));
           case uint32_t(SimdOp::I64x2Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubI64x2));
+            CHECK_NEXT(dispatchVectorBinary(SubI64x2));
           case uint32_t(SimdOp::I64x2Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, MulI64x2));
+            CHECK_NEXT(dispatchVectorBinary(MulI64x2));
           case uint32_t(SimdOp::F32x4Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddF32x4));
+            CHECK_NEXT(dispatchVectorBinary(AddF32x4));
           case uint32_t(SimdOp::F32x4Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubF32x4));
+            CHECK_NEXT(dispatchVectorBinary(SubF32x4));
           case uint32_t(SimdOp::F32x4Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MulF32x4));
+            CHECK_NEXT(dispatchVectorBinary(MulF32x4));
           case uint32_t(SimdOp::F32x4Div):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DivF32x4));
+            CHECK_NEXT(dispatchVectorBinary(DivF32x4));
           case uint32_t(SimdOp::F32x4Min):
-            CHECK_NEXT(
-                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MinF32x4));
+            CHECK_NEXT(dispatchVectorBinary(MinF32x4));
           case uint32_t(SimdOp::F32x4Max):
-            CHECK_NEXT(
-                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MaxF32x4));
+            CHECK_NEXT(dispatchVectorBinary(MaxF32x4));
           case uint32_t(SimdOp::F64x2Add):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddF64x2));
+            CHECK_NEXT(dispatchVectorBinary(AddF64x2));
           case uint32_t(SimdOp::F64x2Sub):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubF64x2));
+            CHECK_NEXT(dispatchVectorBinary(SubF64x2));
           case uint32_t(SimdOp::F64x2Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MulF64x2));
+            CHECK_NEXT(dispatchVectorBinary(MulF64x2));
           case uint32_t(SimdOp::F64x2Div):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DivF64x2));
+            CHECK_NEXT(dispatchVectorBinary(DivF64x2));
           case uint32_t(SimdOp::F64x2Min):
-            CHECK_NEXT(
-                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MinF64x2));
+            CHECK_NEXT(dispatchVectorBinary(MinF64x2));
           case uint32_t(SimdOp::F64x2Max):
-            CHECK_NEXT(
-                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MaxF64x2));
+            CHECK_NEXT(dispatchVectorBinary(MaxF64x2));
           case uint32_t(SimdOp::I8x16NarrowSI16x8):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowI16x8));
+            CHECK_NEXT(dispatchVectorBinary(NarrowI16x8));
           case uint32_t(SimdOp::I8x16NarrowUI16x8):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowUI16x8));
+            CHECK_NEXT(dispatchVectorBinary(NarrowUI16x8));
           case uint32_t(SimdOp::I16x8NarrowSI32x4):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowI32x4));
+            CHECK_NEXT(dispatchVectorBinary(NarrowI32x4));
           case uint32_t(SimdOp::I16x8NarrowUI32x4):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowUI32x4));
+            CHECK_NEXT(dispatchVectorBinary(NarrowUI32x4));
           case uint32_t(SimdOp::V8x16Swizzle):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, Swizzle));
+            CHECK_NEXT(dispatchVectorBinary(Swizzle));
           case uint32_t(SimdOp::F32x4PMaxExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMaxF32x4));
+            CHECK_NEXT(dispatchVectorBinary(PMaxF32x4));
           case uint32_t(SimdOp::F32x4PMinExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMinF32x4));
+            CHECK_NEXT(dispatchVectorBinary(PMinF32x4));
           case uint32_t(SimdOp::F64x2PMaxExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMaxF64x2));
+            CHECK_NEXT(dispatchVectorBinary(PMaxF64x2));
           case uint32_t(SimdOp::F64x2PMinExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMinF64x2));
+            CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DotI16x8));
+            CHECK_NEXT(dispatchVectorBinary(DotI16x8));
           case uint32_t(SimdOp::I8x16Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegI8x16));
+            CHECK_NEXT(dispatchVectorUnary(NegI8x16));
           case uint32_t(SimdOp::I16x8Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegI16x8));
+            CHECK_NEXT(dispatchVectorUnary(NegI16x8));
           case uint32_t(SimdOp::I16x8WidenLowSI8x16):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenLowI8x16));
+            CHECK_NEXT(dispatchVectorUnary(WidenLowI8x16));
           case uint32_t(SimdOp::I16x8WidenHighSI8x16):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenHighI8x16));
+            CHECK_NEXT(dispatchVectorUnary(WidenHighI8x16));
           case uint32_t(SimdOp::I16x8WidenLowUI8x16):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenLowUI8x16));
+            CHECK_NEXT(dispatchVectorUnary(WidenLowUI8x16));
           case uint32_t(SimdOp::I16x8WidenHighUI8x16):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenHighUI8x16));
+            CHECK_NEXT(dispatchVectorUnary(WidenHighUI8x16));
           case uint32_t(SimdOp::I32x4Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegI32x4));
+            CHECK_NEXT(dispatchVectorUnary(NegI32x4));
           case uint32_t(SimdOp::I32x4WidenLowSI16x8):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenLowI16x8));
+            CHECK_NEXT(dispatchVectorUnary(WidenLowI16x8));
           case uint32_t(SimdOp::I32x4WidenHighSI16x8):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenHighI16x8));
+            CHECK_NEXT(dispatchVectorUnary(WidenHighI16x8));
           case uint32_t(SimdOp::I32x4WidenLowUI16x8):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenLowUI16x8));
+            CHECK_NEXT(dispatchVectorUnary(WidenLowUI16x8));
           case uint32_t(SimdOp::I32x4WidenHighUI16x8):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, WidenHighUI16x8));
+            CHECK_NEXT(dispatchVectorUnary(WidenHighUI16x8));
           case uint32_t(SimdOp::I32x4TruncSSatF32x4):
-            CHECK_NEXT(
-                dispatchVectorUnary(emitVectorUnop, ConvertF32x4ToI32x4));
+            CHECK_NEXT(dispatchVectorUnary(ConvertF32x4ToI32x4));
           case uint32_t(SimdOp::I32x4TruncUSatF32x4):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnopWithTemp,
-                                           ConvertF32x4ToUI32x4));
+            CHECK_NEXT(dispatchVectorUnary(ConvertF32x4ToUI32x4));
           case uint32_t(SimdOp::I64x2Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegI64x2));
+            CHECK_NEXT(dispatchVectorUnary(NegI64x2));
           case uint32_t(SimdOp::F32x4Abs):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsF32x4));
+            CHECK_NEXT(dispatchVectorUnary(AbsF32x4));
           case uint32_t(SimdOp::F32x4Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegF32x4));
+            CHECK_NEXT(dispatchVectorUnary(NegF32x4));
           case uint32_t(SimdOp::F32x4Sqrt):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, SqrtF32x4));
+            CHECK_NEXT(dispatchVectorUnary(SqrtF32x4));
           case uint32_t(SimdOp::F32x4ConvertSI32x4):
-            CHECK_NEXT(
-                dispatchVectorUnary(emitVectorUnop, ConvertI32x4ToF32x4));
+            CHECK_NEXT(dispatchVectorUnary(ConvertI32x4ToF32x4));
           case uint32_t(SimdOp::F32x4ConvertUI32x4):
-            CHECK_NEXT(
-                dispatchVectorUnary(emitVectorUnop, ConvertUI32x4ToF32x4));
+            CHECK_NEXT(dispatchVectorUnary(ConvertUI32x4ToF32x4));
           case uint32_t(SimdOp::F64x2Abs):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsF64x2));
+            CHECK_NEXT(dispatchVectorUnary(AbsF64x2));
           case uint32_t(SimdOp::F64x2Neg):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegF64x2));
+            CHECK_NEXT(dispatchVectorUnary(NegF64x2));
           case uint32_t(SimdOp::F64x2Sqrt):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, SqrtF64x2));
+            CHECK_NEXT(dispatchVectorUnary(SqrtF64x2));
           case uint32_t(SimdOp::V128Not):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NotV128));
+            CHECK_NEXT(dispatchVectorUnary(NotV128));
           case uint32_t(SimdOp::I8x16Abs):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsI8x16));
+            CHECK_NEXT(dispatchVectorUnary(AbsI8x16));
           case uint32_t(SimdOp::I16x8Abs):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsI16x8));
+            CHECK_NEXT(dispatchVectorUnary(AbsI16x8));
           case uint32_t(SimdOp::I32x4Abs):
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsI32x4));
+            CHECK_NEXT(dispatchVectorUnary(AbsI32x4));
           case uint32_t(SimdOp::F32x4CeilExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, CeilF32x4));
+            CHECK_NEXT(dispatchVectorUnary(CeilF32x4));
           case uint32_t(SimdOp::F32x4FloorExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, FloorF32x4));
+            CHECK_NEXT(dispatchVectorUnary(FloorF32x4));
           case uint32_t(SimdOp::F32x4TruncExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, TruncF32x4));
+            CHECK_NEXT(dispatchVectorUnary(TruncF32x4));
           case uint32_t(SimdOp::F32x4NearestExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NearestF32x4));
+            CHECK_NEXT(dispatchVectorUnary(NearestF32x4));
           case uint32_t(SimdOp::F64x2CeilExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, CeilF64x2));
+            CHECK_NEXT(dispatchVectorUnary(CeilF64x2));
           case uint32_t(SimdOp::F64x2FloorExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, FloorF64x2));
+            CHECK_NEXT(dispatchVectorUnary(FloorF64x2));
           case uint32_t(SimdOp::F64x2TruncExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, TruncF64x2));
+            CHECK_NEXT(dispatchVectorUnary(TruncF64x2));
           case uint32_t(SimdOp::F64x2NearestExperimental):
             CHECK_EXPERIMENTAL_SIMD();
-            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NearestF64x2));
+            CHECK_NEXT(dispatchVectorUnary(NearestF64x2));
           case uint32_t(SimdOp::I8x16Shl):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTwoTemps(ShiftLeftI8x16));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI8x16));
           case uint32_t(SimdOp::I8x16ShrS):
-            CHECK_NEXT(
-                dispatchVectorVariableShiftWithTwoTemps(ShiftRightI8x16));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightI8x16));
           case uint32_t(SimdOp::I8x16ShrU):
-            CHECK_NEXT(
-                dispatchVectorVariableShiftWithTwoTemps(ShiftRightUI8x16));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI8x16));
           case uint32_t(SimdOp::I16x8Shl):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftLeftI16x8));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI16x8));
           case uint32_t(SimdOp::I16x8ShrS):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightI16x8));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightI16x8));
           case uint32_t(SimdOp::I16x8ShrU):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightUI16x8));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI16x8));
           case uint32_t(SimdOp::I32x4Shl):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftLeftI32x4));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI32x4));
           case uint32_t(SimdOp::I32x4ShrS):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightI32x4));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightI32x4));
           case uint32_t(SimdOp::I32x4ShrU):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightUI32x4));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI32x4));
           case uint32_t(SimdOp::I64x2Shl):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftLeftI64x2));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI64x2));
           case uint32_t(SimdOp::I64x2ShrS):
             CHECK_NEXT(emitVectorShiftRightI64x2());
           case uint32_t(SimdOp::I64x2ShrU):
-            CHECK_NEXT(dispatchVectorVariableShiftWithTemp(ShiftRightUI64x2));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI64x2));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK_NEXT(emitBitselect());
           case uint32_t(SimdOp::V8x16Shuffle):
@@ -15320,9 +15252,6 @@ bool BaseCompiler::emitBody() {
 #undef dispatchVectorBinary
 #undef dispatchVectorUnary
 #undef dispatchVectorComparison
-#undef dispatchVectorUnsignedComparison
-#undef dispatchVectorVariableShiftWithTemp
-#undef dispatchVectorVariableShiftWithTwoTemps
 #undef dispatchExtractLane
 #undef dispatchReplaceLane
 #undef dispatchSplat
