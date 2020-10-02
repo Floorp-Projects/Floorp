@@ -1,5 +1,7 @@
 //! An asynchronous fibonacci sequence generator.
 
+extern crate crossbeam_channel;
+
 use std::thread;
 
 use crossbeam_channel::{bounded, Sender};
