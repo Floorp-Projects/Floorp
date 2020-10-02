@@ -1242,6 +1242,11 @@ extern "C" {
     fn wr_compositor_unmap_tile(compositor: *mut c_void);
 
     fn wr_partial_present_compositor_get_buffer_age(compositor: *const c_void) -> usize;
+    fn wr_partial_present_compositor_set_buffer_damage_region(
+        compositor: *mut c_void,
+        rects: *const DeviceIntRect,
+        n_rects: usize,
+    );
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1361,6 +1366,12 @@ pub struct WrPartialPresentCompositor(*mut c_void);
 impl PartialPresentCompositor for WrPartialPresentCompositor {
     fn get_buffer_age(&self) -> usize {
         unsafe { wr_partial_present_compositor_get_buffer_age(self.0) }
+    }
+
+    fn set_buffer_damage_region(&mut self, rects: &[DeviceIntRect]) {
+        unsafe {
+            wr_partial_present_compositor_set_buffer_damage_region(self.0, rects.as_ptr(), rects.len());
+        }
     }
 }
 

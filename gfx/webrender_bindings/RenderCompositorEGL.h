@@ -43,6 +43,8 @@ class RenderCompositorEGL : public RenderCompositor {
   uint32_t GetMaxPartialPresentRects() override;
   bool ShouldDrawPreviousPartialPresentRegions() override;
   size_t GetBufferAge() const override;
+  void SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
+                             size_t aNumRects) override;
 
   ipc::FileDescriptor GetAndResetReleaseFence() override;
 

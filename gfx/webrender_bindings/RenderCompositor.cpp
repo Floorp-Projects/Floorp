@@ -131,6 +131,12 @@ size_t wr_partial_present_compositor_get_buffer_age(const void* aCompositor) {
   return compositor->GetBufferAge();
 }
 
+void wr_partial_present_compositor_set_buffer_damage_region(
+    void* aCompositor, const wr::DeviceIntRect* aRects, size_t aNumRects) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->SetBufferDamageRegion(aRects, aNumRects);
+}
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
