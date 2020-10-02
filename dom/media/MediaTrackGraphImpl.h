@@ -427,14 +427,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /* Called on the graph thread before the first Notify*Data after an
    * AudioCallbackDriver starts. */
   void NotifyStarted() override;
-  /* Called on the audio callback thread when there is new input data for
-   * listeners. This is the raw audio input for this MediaTrackGraph. Actual
-   * processing happens in ProcessInputData */
+  /* Called on the graph thread when there is new input data for listeners. This
+   * is the raw audio input for this MediaTrackGraph. */
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override;
-  /* Called on the graph thread to process the input data delivered in each
-   * iteration by NotifyInputData.  */
-  void ProcessInputData();
   /* Called every time there are changes to input/output audio devices like
    * plug/unplug etc. This can be called on any thread, and posts a message to
    * the main thread so that it can post a message to the graph thread. */
@@ -779,11 +775,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // This is only touched on the graph thread.
   nsDataHashtable<nsVoidPtrHashKey, nsTArray<RefPtr<AudioDataListener>>>
       mInputDeviceUsers;
-
-  // Only valid for the current iteration: if non nullptr, there is input data.
-  const AudioDataValue* mInputData;
-  uint32_t mInputChannelCount;
-  uint32_t mInputFrames;
 
   /**
    * List of resume operations waiting for a switch to an AudioCallbackDriver.
