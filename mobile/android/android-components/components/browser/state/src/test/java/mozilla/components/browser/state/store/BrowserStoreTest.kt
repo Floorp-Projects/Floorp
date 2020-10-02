@@ -7,12 +7,15 @@ package mozilla.components.browser.state.store
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
+import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.lib.state.Middleware
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -76,5 +79,17 @@ class BrowserStoreTest {
         val store = BrowserStore(middleware = listOf(testMiddleware))
         store.waitUntilIdle()
         assertTrue(initActionObserved)
+    }
+
+    @Test
+    fun `RestoreCompleteAction updates state`() {
+        val store = BrowserStore()
+        assertFalse(store.state.restoreComplete)
+
+        store.dispatch(RestoreCompleteAction).joinBlocking()
+        assertTrue(store.state.restoreComplete)
+
+        store.dispatch(RestoreCompleteAction).joinBlocking()
+        assertTrue(store.state.restoreComplete)
     }
 }

@@ -23,6 +23,8 @@ import mozilla.components.lib.state.State
  * @property search the state of search for this browser state.
  * @property downloads Downloads ([DownloadState]s) mapped to their IDs.
  * @property undoHistory History of recently closed tabs to support "undo" (Requires UndoMiddleware).
+ * @property restoreComplete Whether or not restoring [BrowserState] has completed. This can be used
+ * on application startup e.g. as an indicator that tabs have been restored.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -34,5 +36,6 @@ data class BrowserState(
     val media: MediaState = MediaState(),
     val downloads: Map<String, DownloadState> = emptyMap(),
     val search: SearchState = SearchState(),
-    val undoHistory: UndoHistoryState = UndoHistoryState()
+    val undoHistory: UndoHistoryState = UndoHistoryState(),
+    val restoreComplete: Boolean = false
 ) : State

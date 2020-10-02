@@ -55,6 +55,11 @@ sealed class BrowserAction : Action
 object InitAction : BrowserAction()
 
 /**
+ * [BrowserAction] to indicate that restoring [BrowserState] is complete.
+ */
+object RestoreCompleteAction : BrowserAction()
+
+/**
  * [BrowserAction] implementations to react to system events.
  */
 sealed class SystemAction : BrowserAction() {

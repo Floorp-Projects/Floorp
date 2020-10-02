@@ -19,6 +19,7 @@ import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
+import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -39,6 +40,7 @@ internal object BrowserStateReducer {
     fun reduce(state: BrowserState, action: BrowserAction): BrowserState {
         return when (action) {
             is InitAction -> state
+            is RestoreCompleteAction -> state.copy(restoreComplete = true)
             is ContainerAction -> ContainerReducer.reduce(state, action)
             is RecentlyClosedAction -> RecentlyClosedReducer.reduce(state, action)
             is ContentAction -> ContentStateReducer.reduce(state, action)
