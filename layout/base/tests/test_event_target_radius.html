@@ -61,6 +61,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div id="t11" class="target" style="cursor:pointer" hidden></div>
   <div id="t11_with_child" class="target" style="cursor:pointer" hidden><div id="t11_child" style="width:100px; height:100px; background:green;"></div></div>
   <div id="t11_covered" class="target" style="cursor:pointer" hidden><div id="t11_coverer" style="width:100px; height:100px; background:green; cursor:text"></div></div>
+
+  <div id="t12" class="target" hidden>
+    <input id="t12_input" style="width: 100px; height: 20px; border: 0; padding: 0"></input>
+    <div id="t12_zisland" style="width: 100px; height: 50px; position:relative; z-index: 5">
+      <div id="t12_target" style="width: 100px; height: 20px; background-color: green"></div>
+    </div>
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -335,6 +342,11 @@ function test3() {
   testMouseClick("t11_covered", 100 + 11*mm, 10, "body",
                  "Elements that override an inherited cursor:pointer are not fluff targets");
   setShowing("t11_covered", false);
+
+  setShowing("t12", true);
+  testMouseClick("t12_target", 1, 1, "t12_target",
+                 "Event retargeting should not escape out from a z-index ancestor");
+  setShowing("t12", false);
 
   // Not yet tested:
   // -- visited link weight

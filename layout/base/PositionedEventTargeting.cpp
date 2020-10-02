@@ -463,6 +463,21 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
   return bestTarget;
 }
 
+// Walk from aTarget up to aRoot, and return the first frame found with an
+// explicit z-index set on it. If no such frame is found, aRoot is returned.
+static const nsIFrame* FindZIndexAncestor(const nsIFrame* aTarget,
+                                          const nsIFrame* aRoot) {
+  const nsIFrame* candidate = aTarget;
+  while (candidate && candidate != aRoot) {
+    if (candidate->ZIndex().valueOr(0) > 0) {
+      PET_LOG("Restricting search to z-index root %p\n", candidate);
+      return candidate;
+    }
+    candidate = candidate->GetParent();
+  }
+  return aRoot;
+}
+
 nsIFrame* FindFrameTargetedByInputEvent(
     WidgetGUIEvent* aEvent, RelativeTo aRootFrame,
     const nsPoint& aPointRelativeToRootFrame, uint32_t aFlags) {
@@ -506,6 +521,12 @@ nsIFrame* FindFrameTargetedByInputEvent(
     }
     return aRootFrame.mFrame;
   }();
+
+  // If the target element inside an element with a z-index, restrict the
+  // search to other elements inside that z-index. This is a heuristic
+  // intended to help with a class of scenarios involving web modals or
+  // web popup type things. In particular it helps alleviate bug 1666792.
+  restrictToDescendants = FindZIndexAncestor(target, restrictToDescendants);
 
   nsRect targetRect = GetTargetRect(aRootFrame, aPointRelativeToRootFrame,
                                     restrictToDescendants, prefs, aFlags);
@@ -555,7 +576,11 @@ nsIFrame* FindFrameTargetedByInputEvent(
   // Note that dumping the frame tree at the top of the function may flood
   // logcat on Android devices and cause the PET_LOGs to get dropped.
   if (MOZ_LOG_TEST(sEvtTgtLog, LogLevel::Verbose)) {
-    aRootFrame.mFrame->DumpFrameTree();
+    if (target) {
+      target->DumpFrameTree();
+    } else {
+      aRootFrame.mFrame->DumpFrameTree();
+    }
   }
 #endif
 
