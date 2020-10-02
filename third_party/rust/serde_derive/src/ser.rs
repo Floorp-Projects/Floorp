@@ -87,6 +87,9 @@ struct Parameters {
 
     /// Type has a `serde(remote = "...")` attribute.
     is_remote: bool,
+
+    /// Type has a repr(packed) attribute.
+    is_packed: bool,
 }
 
 impl Parameters {
@@ -103,13 +106,16 @@ impl Parameters {
             None => cont.ident.clone().into(),
         };
 
+        let is_packed = cont.attrs.is_packed();
+
         let generics = build_generics(cont);
 
         Parameters {
-            self_var: self_var,
-            this: this,
-            generics: generics,
-            is_remote: is_remote,
+            self_var,
+            this,
+            generics,
+            is_remote,
+            is_packed,
         }
     }
 
@@ -538,17 +544,17 @@ fn serialize_externally_tagged_variant(
         }
         Style::Tuple => serialize_tuple_variant(
             TupleVariant::ExternallyTagged {
-                type_name: type_name,
-                variant_index: variant_index,
-                variant_name: variant_name,
+                type_name,
+                variant_index,
+                variant_name,
             },
             params,
             &variant.fields,
         ),
         Style::Struct => serialize_struct_variant(
             StructVariant::ExternallyTagged {
-                variant_index: variant_index,
-                variant_name: variant_name,
+                variant_index,
+                variant_name,
             },
             params,
             &variant.fields,
@@ -614,10 +620,7 @@ fn serialize_internally_tagged_variant(
             }
         }
         Style::Struct => serialize_struct_variant(
-            StructVariant::InternallyTagged {
-                tag: tag,
-                variant_name: variant_name,
-            },
+            StructVariant::InternallyTagged { tag, variant_name },
             params,
             &variant.fields,
             &type_name,
@@ -870,9 +873,9 @@ fn serialize_struct_variant<'a>(
     }
 
     let struct_trait = match context {
-        StructVariant::ExternallyTagged { .. } => (StructTrait::SerializeStructVariant),
+        StructVariant::ExternallyTagged { .. } => StructTrait::SerializeStructVariant,
         StructVariant::InternallyTagged { .. } | StructVariant::Untagged => {
-            (StructTrait::SerializeStruct)
+            StructTrait::SerializeStruct
         }
     };
 
@@ -1241,9 +1244,19 @@ fn mut_if(is_mut: bool) -> Option<TokenStream> {
 fn get_member(params: &Parameters, field: &Field, member: &Member) -> TokenStream {
     let self_var = &params.self_var;
     match (params.is_remote, field.attrs.getter()) {
-        (false, None) => quote!(&#self_var.#member),
+        (false, None) => {
+            if params.is_packed {
+                quote!(&{#self_var.#member})
+            } else {
+                quote!(&#self_var.#member)
+            }
+        }
         (true, None) => {
-            let inner = quote!(&#self_var.#member);
+            let inner = if params.is_packed {
+                quote!(&{#self_var.#member})
+            } else {
+                quote!(&#self_var.#member)
+            };
             let ty = field.ty;
             quote!(_serde::private::ser::constrain::<#ty>(#inner))
         }
