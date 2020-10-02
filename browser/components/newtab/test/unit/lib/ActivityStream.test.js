@@ -214,9 +214,9 @@ describe("ActivityStream", () => {
     it("should enable 1 row layout pref based on region layout pref", () => {
       getStringPrefStub
         .withArgs(
-          "browser.newtabpage.activity-stream.discoverystream.region-layout-config"
+          "browser.newtabpage.activity-stream.discoverystream.region-basic-config"
         )
-        .returns("US");
+        .returns("CA");
 
       as._updateDynamicPrefs();
 
@@ -227,9 +227,9 @@ describe("ActivityStream", () => {
     it("should enable 7 row layout pref based on region layout pref", () => {
       getStringPrefStub
         .withArgs(
-          "browser.newtabpage.activity-stream.discoverystream.region-layout-config"
+          "browser.newtabpage.activity-stream.discoverystream.region-basic-config"
         )
-        .returns("US,CA");
+        .returns("");
 
       as._updateDynamicPrefs();
 
