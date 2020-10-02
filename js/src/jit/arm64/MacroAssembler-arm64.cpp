@@ -34,6 +34,20 @@ void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
       Operand(ImmShiftedTag(type).value));
 }
 
+#ifdef ENABLE_WASM_SIMD
+bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op) {
+  MOZ_CRASH("NYI - ion porting interface not in use");
+}
+
+bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
+  MOZ_CRASH("NYI - ion porting interface not in use");
+}
+
+bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm) {
+  MOZ_CRASH("NYI - ion porting interface not in use");
+}
+#endif
+
 void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
   ARMRegister dest(output, 32);
   Fcvtns(dest, ARMFPRegister(input, 64));
@@ -360,17 +374,19 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
         Ldr(SelectGPReg(outany, out64), srcAddr);
         break;
       case Scalar::Float32:
-        MOZ_ASSERT(!access.isZeroExtendSimd128Load());
+        // LDR does the right thing also for access.isZeroExtendSimdLoad()
         Ldr(SelectFPReg(outany, out64, 32), srcAddr);
         break;
       case Scalar::Float64:
-        MOZ_ASSERT(!access.isZeroExtendSimd128Load());
+        // LDR does the right thing also for access.isZeroExtendSimdLoad()
         Ldr(SelectFPReg(outany, out64, 64), srcAddr);
+        break;
+      case Scalar::Simd128:
+        Ldr(SelectFPReg(outany, out64, 128), srcAddr);
         break;
       case Scalar::Uint8Clamped:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-      case Scalar::Simd128:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
@@ -427,16 +443,205 @@ void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
       case Scalar::Float64:
         Str(SelectFPReg(valany, val64, 64), dstAddr);
         break;
+      case Scalar::Simd128:
+        Str(SelectFPReg(valany, val64, 128), dstAddr);
+        break;
       case Scalar::Uint8Clamped:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-      case Scalar::Simd128:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
   }
 
   asMasm().memoryBarrierAfter(access.sync());
+}
+
+void MacroAssemblerCompat::compareSimd128Int(Assembler::Condition cond,
+                                             ARMFPRegister dest,
+                                             ARMFPRegister lhs,
+                                             ARMFPRegister rhs) {
+  switch (cond) {
+    case Assembler::Equal:
+      Cmeq(dest, lhs, rhs);
+      break;
+    case Assembler::NotEqual:
+      Cmeq(dest, lhs, rhs);
+      Mvn(lhs, lhs);
+      break;
+    case Assembler::GreaterThan:
+      Cmgt(dest, lhs, rhs);
+      break;
+    case Assembler::GreaterThanOrEqual:
+      Cmge(dest, lhs, rhs);
+      break;
+    case Assembler::LessThan:
+      Cmgt(dest, rhs, lhs);
+      break;
+    case Assembler::LessThanOrEqual:
+      Cmge(dest, rhs, lhs);
+      break;
+    case Assembler::Above:
+      Cmhi(dest, lhs, rhs);
+      break;
+    case Assembler::AboveOrEqual:
+      Cmhs(dest, lhs, rhs);
+      break;
+    case Assembler::Below:
+      Cmhi(dest, rhs, lhs);
+      break;
+    case Assembler::BelowOrEqual:
+      Cmhs(dest, rhs, lhs);
+      break;
+    default:
+      MOZ_CRASH("Unexpected SIMD integer condition");
+  }
+}
+
+void MacroAssemblerCompat::compareSimd128Float(Assembler::Condition cond,
+                                               ARMFPRegister dest,
+                                               ARMFPRegister lhs,
+                                               ARMFPRegister rhs) {
+  switch (cond) {
+    case Assembler::Equal:
+      Fcmeq(dest, lhs, rhs);
+      break;
+    case Assembler::NotEqual:
+      Fcmeq(dest, lhs, rhs);
+      Mvn(lhs, lhs);
+      break;
+    case Assembler::GreaterThan:
+      Fcmgt(dest, lhs, rhs);
+      break;
+    case Assembler::GreaterThanOrEqual:
+      Fcmge(dest, lhs, rhs);
+      break;
+    case Assembler::LessThan:
+      Fcmgt(dest, rhs, lhs);
+      break;
+    case Assembler::LessThanOrEqual:
+      Fcmge(dest, rhs, lhs);
+      break;
+    default:
+      MOZ_CRASH("Unexpected SIMD integer condition");
+  }
+}
+
+void MacroAssemblerCompat::rightShiftInt8x16(Register rhs,
+                                             FloatRegister lhsDest,
+                                             FloatRegister temp,
+                                             bool isUnsigned) {
+  ScratchSimd128Scope scratch_(asMasm());
+  ARMFPRegister shift = Simd8H(scratch_);
+
+  // Compute 8 - (shift & 7) in all 16-bit lanes
+  {
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireW();
+    And(scratch, ARMRegister(rhs, 32), 7);
+    Neg(scratch, scratch);
+    Add(scratch, scratch, 8);
+    Dup(shift, scratch);
+  }
+
+  // Widen high bytes, shift left variable, then recover top bytes.
+  if (isUnsigned) {
+    Ushll2(Simd8H(temp), Simd16B(lhsDest), 0);
+  } else {
+    Sshll2(Simd8H(temp), Simd16B(lhsDest), 0);
+  }
+  Ushl(Simd8H(temp), Simd8H(temp), shift);
+  Shrn(Simd8B(temp), Simd8H(temp), 8);
+
+  // Ditto low bytes, leaving them in the correct place for the output.
+  if (isUnsigned) {
+    Ushll(Simd8H(lhsDest), Simd8B(lhsDest), 0);
+  } else {
+    Sshll(Simd8H(lhsDest), Simd8B(lhsDest), 0);
+  }
+  Ushl(Simd8H(lhsDest), Simd8H(lhsDest), shift);
+  Shrn(Simd8B(lhsDest), Simd8H(lhsDest), 8);
+
+  // Reassemble: insert the high bytes.
+  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
+}
+
+void MacroAssemblerCompat::rightShiftInt16x8(Register rhs,
+                                             FloatRegister lhsDest,
+                                             FloatRegister temp,
+                                             bool isUnsigned) {
+  ScratchSimd128Scope scratch_(asMasm());
+  ARMFPRegister shift = Simd4S(scratch_);
+
+  // Compute 16 - (shift & 15) in all 32-bit lanes
+  {
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireW();
+    And(scratch, ARMRegister(rhs, 32), 15);
+    Neg(scratch, scratch);
+    Add(scratch, scratch, 16);
+    Dup(shift, scratch);
+  }
+
+  // Widen high halfwords, shift left variable, then recover top halfwords
+  if (isUnsigned) {
+    Ushll2(Simd4S(temp), Simd8H(lhsDest), 0);
+  } else {
+    Sshll2(Simd4S(temp), Simd8H(lhsDest), 0);
+  }
+  Ushl(Simd4S(temp), Simd4S(temp), shift);
+  Shrn(Simd4H(temp), Simd4S(temp), 16);
+
+  // Ditto low halfwords
+  if (isUnsigned) {
+    Ushll(Simd4S(lhsDest), Simd4H(lhsDest), 0);
+  } else {
+    Sshll(Simd4S(lhsDest), Simd4H(lhsDest), 0);
+  }
+  Ushl(Simd4S(lhsDest), Simd4S(lhsDest), shift);
+  Shrn(Simd4H(lhsDest), Simd4S(lhsDest), 16);
+
+  // Reassemble: insert the high halfwords.
+  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
+}
+
+void MacroAssemblerCompat::rightShiftInt32x4(Register rhs,
+                                             FloatRegister lhsDest,
+                                             FloatRegister temp,
+                                             bool isUnsigned) {
+  ScratchSimd128Scope scratch_(asMasm());
+  ARMFPRegister shift = Simd2D(scratch_);
+
+  // Compute 32 - (shift & 31) in all 64-bit lanes
+  {
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireX();
+    And(scratch, ARMRegister(rhs, 64), 31);
+    Neg(scratch, scratch);
+    Add(scratch, scratch, 32);
+    Dup(shift, scratch);
+  }
+
+  // Widen high words, shift left variable, then recover top words
+  if (isUnsigned) {
+    Ushll2(Simd2D(temp), Simd4S(lhsDest), 0);
+  } else {
+    Sshll2(Simd2D(temp), Simd4S(lhsDest), 0);
+  }
+  Ushl(Simd2D(temp), Simd2D(temp), shift);
+  Shrn(Simd2S(temp), Simd2D(temp), 32);
+
+  // Ditto high words
+  if (isUnsigned) {
+    Ushll(Simd2D(lhsDest), Simd2S(lhsDest), 0);
+  } else {
+    Sshll(Simd2D(lhsDest), Simd2S(lhsDest), 0);
+  }
+  Ushl(Simd2D(lhsDest), Simd2D(lhsDest), shift);
+  Shrn(Simd2S(lhsDest), Simd2D(lhsDest), 32);
+
+  // Reassemble: insert the high words.
+  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
 }
 
 void MacroAssembler::reserveStack(uint32_t amount) {
