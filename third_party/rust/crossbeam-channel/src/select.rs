@@ -7,13 +7,13 @@ use std::time::{Duration, Instant};
 
 use crossbeam_utils::Backoff;
 
-use crate::channel::{self, Receiver, Sender};
-use crate::context::Context;
-use crate::err::{ReadyTimeoutError, TryReadyError};
-use crate::err::{RecvError, SendError};
-use crate::err::{SelectTimeoutError, TrySelectError};
-use crate::flavors;
-use crate::utils;
+use channel::{self, Receiver, Sender};
+use context::Context;
+use err::{ReadyTimeoutError, TryReadyError};
+use err::{RecvError, SendError};
+use err::{SelectTimeoutError, TrySelectError};
+use flavors;
+use utils;
 
 /// Temporary data that gets initialized during select or a blocking operation, and is consumed by
 /// `read` or `write`.
@@ -119,7 +119,7 @@ pub trait SelectHandle {
     fn unwatch(&self, oper: Operation);
 }
 
-impl<T: SelectHandle> SelectHandle for &T {
+impl<'a, T: SelectHandle> SelectHandle for &'a T {
     fn try_select(&self, token: &mut Token) -> bool {
         (**self).try_select(token)
     }
@@ -585,8 +585,8 @@ pub struct Select<'a> {
     next_index: usize,
 }
 
-unsafe impl Send for Select<'_> {}
-unsafe impl Sync for Select<'_> {}
+unsafe impl<'a> Send for Select<'a> {}
+unsafe impl<'a> Sync for Select<'a> {}
 
 impl<'a> Select<'a> {
     /// Creates an empty list of channel operations for selection.
@@ -615,6 +615,7 @@ impl<'a> Select<'a> {
     /// # Examples
     ///
     /// ```
+    /// use std::thread;
     /// use crossbeam_channel::{unbounded, Select};
     ///
     /// let (s, r) = unbounded::<i32>();
@@ -637,6 +638,7 @@ impl<'a> Select<'a> {
     /// # Examples
     ///
     /// ```
+    /// use std::thread;
     /// use crossbeam_channel::{unbounded, Select};
     ///
     /// let (s, r) = unbounded::<i32>();
@@ -667,6 +669,7 @@ impl<'a> Select<'a> {
     /// # Examples
     ///
     /// ```
+    /// use std::thread;
     /// use crossbeam_channel::{unbounded, Select};
     ///
     /// let (s1, r1) = unbounded::<i32>();
@@ -725,6 +728,7 @@ impl<'a> Select<'a> {
     /// # Examples
     ///
     /// ```
+    /// use std::thread;
     /// use crossbeam_channel::{unbounded, Select};
     ///
     /// let (s1, r1) = unbounded();
@@ -870,6 +874,7 @@ impl<'a> Select<'a> {
     /// # Examples
     ///
     /// ```
+    /// use std::thread;
     /// use crossbeam_channel::{unbounded, Select};
     ///
     /// let (s1, r1) = unbounded();
@@ -1012,8 +1017,8 @@ impl<'a> Default for Select<'a> {
     }
 }
 
-impl fmt::Debug for Select<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<'a> fmt::Debug for Select<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad("Select { .. }")
     }
 }
@@ -1044,7 +1049,7 @@ pub struct SelectedOperation<'a> {
     _marker: PhantomData<&'a ()>,
 }
 
-impl SelectedOperation<'_> {
+impl<'a> SelectedOperation<'a> {
     /// Returns the index of the selected operation.
     ///
     /// # Examples
@@ -1148,13 +1153,13 @@ impl SelectedOperation<'_> {
     }
 }
 
-impl fmt::Debug for SelectedOperation<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<'a> fmt::Debug for SelectedOperation<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad("SelectedOperation { .. }")
     }
 }
 
-impl Drop for SelectedOperation<'_> {
+impl<'a> Drop for SelectedOperation<'a> {
     fn drop(&mut self) {
         panic!("dropped `SelectedOperation` without completing the operation");
     }
