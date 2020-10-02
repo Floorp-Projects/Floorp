@@ -121,7 +121,7 @@ bool RenderCompositorOGL::UsePartialPresent() {
 }
 
 bool RenderCompositorOGL::ShouldDrawPreviousPartialPresentRegions() {
-  return mIsEGL && gl::GLContextEGL::Cast(gl())->HasBufferAge();
+  return true;
 }
 
 size_t RenderCompositorOGL::GetBufferAge() const {

@@ -245,9 +245,47 @@ uint32_t RenderCompositorEGL::GetMaxPartialPresentRects() {
 }
 
 bool RenderCompositorEGL::ShouldDrawPreviousPartialPresentRegions() {
-  return gl::GLContextEGL::Cast(gl())->HasBufferAge();
+  return true;
 }
 
 size_t RenderCompositorEGL::GetBufferAge() const { return mBufferAge; }
+
+void RenderCompositorEGL::SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
+                                                size_t aNumRects) {
+  const auto& gle = gl::GLContextEGL::Cast(gl());
+  const auto& egl = gle->mEgl;
+  if (gle->HasKhrPartialUpdate()) {
+    std::vector<EGLint> rects;
+    rects.reserve(4 * aNumRects);
+    const auto bufferSize = GetBufferSize();
+    for (size_t i = 0; i < aNumRects; i++) {
+      const auto left =
+          std::max(0, std::min(bufferSize.width, aRects[i].origin.x));
+      const auto top =
+          std::max(0, std::min(bufferSize.height, aRects[i].origin.y));
+
+      const auto right =
+          std::min(bufferSize.width,
+                   std::max(0, aRects[i].origin.x + aRects[i].size.width));
+      const auto bottom =
+          std::min(bufferSize.height,
+                   std::max(0, aRects[i].origin.y + aRects[i].size.height));
+
+      const auto width = right - left;
+      const auto height = bottom - top;
+
+      rects.push_back(left);
+      rects.push_back(bufferSize.height - bottom);
+      rects.push_back(width);
+      rects.push_back(height);
+    }
+    const auto ret =
+        egl->fSetDamageRegion(mEGLSurface, rects.data(), rects.size() / 4);
+    if (ret == LOCAL_EGL_FALSE) {
+      const auto err = egl->mLib->fGetError();
+      gfxCriticalError() << "Error in eglSetDamageRegion: " << gfx::hexa(err);
+    }
+  }
+}
 
 }  // namespace mozilla::wr
