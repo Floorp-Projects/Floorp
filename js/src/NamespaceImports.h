@@ -34,8 +34,6 @@ class HandleValueArray;
 class ObjectOpResult;
 class PropertyResult;
 
-enum class SymbolCode : uint32_t;
-
 }  // namespace JS
 
 // Do the importing.
@@ -143,9 +141,6 @@ using JS::PropertyResult;
 using JS::Compartment;
 using JS::Realm;
 using JS::Zone;
-
-using JS::Symbol;
-using JS::SymbolCode;
 
 using JS::BigInt;
 
