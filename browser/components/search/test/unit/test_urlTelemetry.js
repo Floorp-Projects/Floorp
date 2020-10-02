@@ -114,11 +114,13 @@ const TESTS = [
     expectedSearchCountEntry: "duckduckgo.in-content:sap:ffab",
     expectedAdKey: "duckduckgo",
     adUrls: [
-      "https://duckduckgo.com/y.js?foo",
+      "https://duckduckgo.com/y.js?ad_provider=foo",
+      "https://duckduckgo.com/y.js?f=bar&ad_provider=foo",
       "https://www.amazon.co.uk/foo?tag=duckduckgo-ffab-uk-32-xk",
     ],
     nonAdUrls: [
       "https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images",
+      "https://duckduckgo.com/y.js?ifu=foo",
       "https://improving.duckduckgo.com/t/bar",
     ],
   },
