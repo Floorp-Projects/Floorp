@@ -139,6 +139,7 @@ class NewRenderer : public RendererEvent {
             compositor->ShouldUseNativeCompositor() ? compositor.get()
                                                     : nullptr,
             compositor->GetMaxUpdateRects(),
+            compositor->UsePartialPresent() ? compositor.get() : nullptr,
             compositor->GetMaxPartialPresentRects(),
             compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
             &wrRenderer, mMaxTextureSize, &errorMessage,

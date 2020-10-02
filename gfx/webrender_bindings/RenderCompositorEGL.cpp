@@ -238,7 +238,7 @@ bool RenderCompositorEGL::UsePartialPresent() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
 }
 
-bool RenderCompositorEGL::RequestFullRender() { return mBufferAge != 2; }
+bool RenderCompositorEGL::RequestFullRender() { return mBufferAge == 0; }
 
 uint32_t RenderCompositorEGL::GetMaxPartialPresentRects() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects();
@@ -247,5 +247,7 @@ uint32_t RenderCompositorEGL::GetMaxPartialPresentRects() {
 bool RenderCompositorEGL::ShouldDrawPreviousPartialPresentRegions() {
   return gl::GLContextEGL::Cast(gl())->HasBufferAge();
 }
+
+size_t RenderCompositorEGL::GetBufferAge() const { return mBufferAge; }
 
 }  // namespace mozilla::wr

@@ -36,9 +36,9 @@ use tracy_rs::register_thread_with_profiler;
 use webrender::{
     api::units::*, api::*, render_api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, FastHashMap,
-    NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer,
-    RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod,
-    WrShaders, ONE_TIME_USAGE_HINT,
+    NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks,
+    RecordedFrameHandle, Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders,
+    ThreadListener, UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1240,6 +1240,8 @@ extern "C" {
         stride: &mut i32,
     );
     fn wr_compositor_unmap_tile(compositor: *mut c_void);
+
+    fn wr_partial_present_compositor_get_buffer_age(compositor: *const c_void) -> usize;
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1354,6 +1356,14 @@ impl Compositor for WrCompositor {
     }
 }
 
+pub struct WrPartialPresentCompositor(*mut c_void);
+
+impl PartialPresentCompositor for WrPartialPresentCompositor {
+    fn get_buffer_age(&self) -> usize {
+        unsafe { wr_partial_present_compositor_get_buffer_age(self.0) }
+    }
+}
+
 /// Information about the underlying data buffer of a mapped tile.
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1430,6 +1440,7 @@ pub extern "C" fn wr_window_new(
     document_id: u32,
     compositor: *mut c_void,
     max_update_rects: usize,
+    partial_present_compositor: *mut c_void,
     max_partial_present_rects: usize,
     draw_previous_partial_present_regions: bool,
     out_handle: &mut *mut DocumentHandle,
@@ -1520,6 +1531,11 @@ pub extern "C" fn wr_window_new(
         CompositorConfig::Draw {
             max_partial_present_rects,
             draw_previous_partial_present_regions,
+            partial_present: if partial_present_compositor != ptr::null_mut() {
+                Some(Box::new(WrPartialPresentCompositor(partial_present_compositor)))
+            } else {
+                None
+            },
         }
     };
 
