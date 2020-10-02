@@ -26,9 +26,6 @@ using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 
-template <typename UnitT>
-class SourceText;
-
 class HandleValueArray;
 
 class ObjectOpResult;
