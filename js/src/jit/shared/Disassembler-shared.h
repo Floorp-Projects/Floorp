@@ -10,9 +10,6 @@
 #include "mozilla/Atomics.h"
 
 #include "jit/Label.h"
-#ifdef JS_DISASM_SUPPORTED
-#  include "jit/shared/IonAssemblerBuffer.h"
-#endif
 
 using js::Sprinter;
 using js::jit::Label;
