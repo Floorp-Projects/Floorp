@@ -235,7 +235,7 @@ object Deps {
 object RepoMatching {
     const val mozilla = "org\\.mozilla\\..*"
     const val androidx = "androidx\\..*"
-    const val comAndroid = "com\\.android\\..*"
+    const val comAndroid = "com\\.android.*"
     const val comGoogleFirebase = "com\\.google\\.firebase"
 
     /**
