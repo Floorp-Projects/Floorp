@@ -461,16 +461,16 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0102);
       APPEND_DEVICE(0x0106);
       APPEND_DEVICE(0x010a);
-#endif
 
-      [[fallthrough]];
-    case DeviceFamily::IntelModernRolloutWebRender:
       // sandybridge gen6 gt2
       APPEND_DEVICE(0x0112);
       APPEND_DEVICE(0x0116);
       APPEND_DEVICE(0x0122);
       APPEND_DEVICE(0x0126);
+#endif
 
+      [[fallthrough]];
+    case DeviceFamily::IntelModernRolloutWebRender:
       // ivybridge gen7 gt1
       APPEND_DEVICE(0x0152);
       APPEND_DEVICE(0x0156);
