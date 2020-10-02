@@ -194,7 +194,6 @@ pub(crate) fn define() -> SettingGroup {
             "windows_fastcall",
             "baldrdash_system_v",
             "baldrdash_windows",
-            "baldrdash_2020",
             "probestack",
         ],
     );

@@ -1,6 +1,5 @@
 // This file defines the `Triple` type and support code shared by all targets.
 
-use crate::data_model::CDataModel;
 use crate::parse_error::ParseError;
 use crate::targets::{
     default_binary_format, Architecture, ArmArchitecture, BinaryFormat, Environment,
@@ -31,9 +30,9 @@ impl PointerWidth {
     /// Return the number of bits in a pointer.
     pub fn bits(self) -> u8 {
         match self {
-            Self::U16 => 16,
-            Self::U32 => 32,
-            Self::U64 => 64,
+            PointerWidth::U16 => 16,
+            PointerWidth::U32 => 32,
+            PointerWidth::U64 => 64,
         }
     }
 
@@ -42,9 +41,9 @@ impl PointerWidth {
     /// For these purposes, there are 8 bits in a byte.
     pub fn bytes(self) -> u8 {
         match self {
-            Self::U16 => 2,
-            Self::U32 => 4,
-            Self::U64 => 8,
+            PointerWidth::U16 => 2,
+            PointerWidth::U32 => 4,
+            PointerWidth::U64 => 8,
         }
     }
 }
@@ -52,6 +51,7 @@ impl PointerWidth {
 /// The calling convention, which specifies things like which registers are
 /// used for passing arguments, which registers are callee-saved, and so on.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[allow(missing_docs)]
 pub enum CallingConvention {
     /// "System V", which is used on most Unix-like platfoms. Note that the
     /// specific conventions vary between hardware architectures; for example,
@@ -72,10 +72,6 @@ pub enum CallingConvention {
 
 /// A target "triple". Historically such things had three fields, though they've
 /// added additional fields over time.
-///
-/// Note that `Triple` doesn't implement `Default` itself. If you want a type
-/// which defaults to the host triple, or defaults to unknown-unknown-unknown,
-/// use `DefaultToHost` or `DefaultToUnknown`, respectively.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Triple {
     /// The "architecture" (and sometimes the subarchitecture).
@@ -112,7 +108,6 @@ impl Triple {
             | OperatingSystem::Freebsd
             | OperatingSystem::Fuchsia
             | OperatingSystem::Haiku
-            | OperatingSystem::Hermit
             | OperatingSystem::Ios
             | OperatingSystem::L4re
             | OperatingSystem::Linux
@@ -132,41 +127,10 @@ impl Triple {
             _ => return Err(()),
         })
     }
+}
 
-    /// The C data model for a given target. If the model is not known, returns `Err(())`.
-    pub fn data_model(&self) -> Result<CDataModel, ()> {
-        match self.pointer_width()? {
-            PointerWidth::U64 => {
-                if self.operating_system == OperatingSystem::Windows {
-                    Ok(CDataModel::LLP64)
-                } else if self.default_calling_convention() == Ok(CallingConvention::SystemV)
-                    || self.architecture == Architecture::Wasm64
-                {
-                    Ok(CDataModel::LP64)
-                } else {
-                    Err(())
-                }
-            }
-            PointerWidth::U32 => {
-                if self.operating_system == OperatingSystem::Windows
-                    || self.default_calling_convention() == Ok(CallingConvention::SystemV)
-                    || self.architecture == Architecture::Wasm32
-                {
-                    Ok(CDataModel::ILP32)
-                } else {
-                    Err(())
-                }
-            }
-            // TODO: on 16-bit machines there is usually a distinction
-            // between near-pointers and far-pointers.
-            // Additionally, code pointers sometimes have a different size than data pointers.
-            // We don't handle this case.
-            PointerWidth::U16 => Err(()),
-        }
-    }
-
-    /// Return a `Triple` with all unknown fields.
-    pub fn unknown() -> Self {
+impl Default for Triple {
+    fn default() -> Self {
         Self {
             architecture: Architecture::Unknown,
             vendor: Vendor::Unknown,
@@ -174,6 +138,36 @@ impl Triple {
             environment: Environment::Unknown,
             binary_format: BinaryFormat::Unknown,
         }
+    }
+}
+
+impl Default for Architecture {
+    fn default() -> Self {
+        Architecture::Unknown
+    }
+}
+
+impl Default for Vendor {
+    fn default() -> Self {
+        Vendor::Unknown
+    }
+}
+
+impl Default for OperatingSystem {
+    fn default() -> Self {
+        OperatingSystem::Unknown
+    }
+}
+
+impl Default for Environment {
+    fn default() -> Self {
+        Environment::Unknown
+    }
+}
+
+impl Default for BinaryFormat {
+    fn default() -> Self {
+        BinaryFormat::Unknown
     }
 }
 
@@ -191,7 +185,6 @@ impl fmt::Display for Triple {
                 || self.operating_system == OperatingSystem::Wasi
                 || (self.operating_system == OperatingSystem::None_
                     && (self.architecture == Architecture::Arm(ArmArchitecture::Armebv7r)
-                        || self.architecture == Architecture::Arm(ArmArchitecture::Armv7a)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Armv7r)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv6m)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv7em)
@@ -225,7 +218,7 @@ impl FromStr for Triple {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split('-');
-        let mut result = Self::unknown();
+        let mut result = Self::default();
         let mut current_part;
 
         current_part = parts.next();
@@ -351,22 +344,22 @@ mod tests {
     fn defaults() {
         assert_eq!(
             Triple::from_str("unknown-unknown-unknown"),
-            Ok(Triple::unknown())
+            Ok(Triple::default())
         );
         assert_eq!(
             Triple::from_str("unknown-unknown-unknown-unknown"),
-            Ok(Triple::unknown())
+            Ok(Triple::default())
         );
         assert_eq!(
             Triple::from_str("unknown-unknown-unknown-unknown-unknown"),
-            Ok(Triple::unknown())
+            Ok(Triple::default())
         );
     }
 
     #[test]
     fn unknown_properties() {
-        assert_eq!(Triple::unknown().endianness(), Err(()));
-        assert_eq!(Triple::unknown().pointer_width(), Err(()));
-        assert_eq!(Triple::unknown().default_calling_convention(), Err(()));
+        assert_eq!(Triple::default().endianness(), Err(()));
+        assert_eq!(Triple::default().pointer_width(), Err(()));
+        assert_eq!(Triple::default().default_calling_convention(), Err(()));
     }
 }
