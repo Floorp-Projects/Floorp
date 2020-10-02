@@ -146,19 +146,15 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
 
   [copy release];
 
-  int16_t pageRange;
-  aSettings->GetPrintRange(&pageRange);
-  if (pageRange != nsIPrintSettings::kRangeSelection) {
-    PMPrintSettings nativePrintSettings = settingsX->GetPMPrintSettings();
-    UInt32 firstPage, lastPage;
-    OSStatus status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
-    if (status == noErr) {
-      status = ::PMGetLastPage(nativePrintSettings, &lastPage);
-      if (status == noErr && lastPage != UINT32_MAX) {
-        aSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-        aSettings->SetStartPageRange(firstPage);
-        aSettings->SetEndPageRange(lastPage);
-      }
+  PMPrintSettings nativePrintSettings = settingsX->GetPMPrintSettings();
+  UInt32 firstPage, lastPage;
+  OSStatus status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
+  if (status == noErr) {
+    status = ::PMGetLastPage(nativePrintSettings, &lastPage);
+    if (status == noErr && lastPage != UINT32_MAX) {
+      aSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
+      aSettings->SetStartPageRange(firstPage);
+      aSettings->SetEndPageRange(lastPage);
     }
   }
 
@@ -260,9 +256,7 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 }
 
 - (void)exportSettings {
-  if ([mPrintSelectionOnlyCheckbox state] == NSOnState) {
-    mSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
-  }
+  mSettings->SetPrintSelectionOnly([mPrintSelectionOnlyCheckbox state] == NSOnState);
   mSettings->SetShrinkToFit([mShrinkToFitCheckbox state] == NSOnState);
   mSettings->SetPrintBGColors([mPrintBGColorsCheckbox state] == NSOnState);
   mSettings->SetPrintBGImages([mPrintBGImagesCheckbox state] == NSOnState);
@@ -373,9 +367,7 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
   mSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canPrintSelection);
   [mPrintSelectionOnlyCheckbox setEnabled:canPrintSelection];
 
-  int16_t printRange;
-  mSettings->GetPrintRange(&printRange);
-  if (printRange == nsIPrintSettings::kRangeSelection) {
+  if (mSettings->GetPrintSelectionOnly()) {
     [mPrintSelectionOnlyCheckbox setState:NSOnState];
   }
 
