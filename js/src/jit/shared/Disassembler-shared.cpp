@@ -7,8 +7,12 @@
 #include "jit/shared/Disassembler-shared.h"
 
 #include "jit/JitSpewer.h"
+#include "jit/Label.h"
+#include "vm/Printer.h"
 
 using namespace js::jit;
+
+using js::Sprinter;
 
 #ifdef JS_DISASM_SUPPORTED
 // Concurrent assemblers are disambiguated by prefixing every disassembly with a

@@ -30,6 +30,7 @@
 #include "jit/arm64/vixl/Constants-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 
+#include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/Disassembler-shared.h"
 #include "jit/shared/IonAssemblerBufferWithConstantPools.h"
@@ -39,6 +40,7 @@ namespace vixl {
 
 using js::jit::BufferOffset;
 using js::jit::DisassemblerSpew;
+using js::jit::Label;
 
 using LabelDoc = DisassemblerSpew::LabelDoc;
 using LiteralDoc = DisassemblerSpew::LiteralDoc;
