@@ -7,7 +7,9 @@
 #ifndef jit_Label_h
 #define jit_Label_h
 
+#include "jit/CompileWrappers.h"
 #include "jit/JitContext.h"
+#include "js/Utility.h"
 
 namespace js {
 namespace jit {
