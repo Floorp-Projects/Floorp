@@ -210,7 +210,6 @@ bool WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
     return true;
   }
   if (aTrackInfo.mMimeType.EqualsLiteral("audio/mpeg") &&
-      !StaticPrefs::media_ffmpeg_mp3_enabled() &&
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
