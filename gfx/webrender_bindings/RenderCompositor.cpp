@@ -125,6 +125,12 @@ void wr_compositor_unmap_tile(void* aCompositor) {
   compositor->UnmapTile();
 }
 
+size_t wr_partial_present_compositor_get_buffer_age(const void* aCompositor) {
+  const RenderCompositor* compositor =
+      static_cast<const RenderCompositor*>(aCompositor);
+  return compositor->GetBufferAge();
+}
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
