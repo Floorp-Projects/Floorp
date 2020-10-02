@@ -337,6 +337,10 @@ const SNAPSHOT_SCHEMA = {
           required: false,
           type: "boolean",
         },
+        "fission.autostart.session": {
+          required: false,
+          type: "boolean",
+        },
       },
     },
     graphics: {
