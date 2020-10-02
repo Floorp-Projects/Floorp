@@ -1046,7 +1046,11 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
     }
 
     if (layer) {
-      static_cast<CanvasLayer*>(layer)->Updated();
+      if (CanvasLayer* canvas = layer->AsCanvasLayer()) {
+        canvas->Updated();
+      } else {
+        layer->SetInvalidRectToVisibleRegion();
+      }
     } else {
       // This path is taken in two situations:
       // 1) WebRender is enabled and has not yet processed a display list.
