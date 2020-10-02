@@ -4686,7 +4686,7 @@ impl PicturePrimitive {
         spatial_tree: &SpatialTree,
     ) -> RasterSpace {
         let prim_spatial_node = &spatial_tree.spatial_nodes[prim_spatial_node_index.0 as usize];
-        if prim_spatial_node.is_ancestor_or_self_zooming() {
+        if prim_spatial_node.is_ancestor_or_self_zooming {
             let scale_factors = spatial_tree
                 .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
                 .scale_factors();
@@ -6028,7 +6028,7 @@ impl PicturePrimitive {
             let spatial_node = &frame_context
                 .spatial_tree
                 .spatial_nodes[cluster.spatial_node_index.0 as usize];
-            if !spatial_node.is_invertible() {
+            if !spatial_node.invertible {
                 continue;
             }
 
