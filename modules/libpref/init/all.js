@@ -3750,7 +3750,9 @@ pref("signon.privateBrowsingCapture.enabled",     true);
 pref("signon.storeWhenAutocompleteOff",     true);
 pref("signon.userInputRequiredToCapture.enabled", true);
 pref("signon.debug",                        false);
-pref("signon.recipes.path",                 "chrome://passwordmgr/content/recipes.json");
+pref("signon.recipes.path", "resource://app/defaults/settings/main/password-recipes.json");
+pref("signon.recipes.remoteRecipesEnabled", true);
+
 pref("signon.schemeUpgrades",                     true);
 pref("signon.includeOtherSubdomainsInLookup",     true);
 // This temporarily prevents the master password to reprompt for autocomplete.

@@ -38,6 +38,8 @@ this.LoginHelper = {
   includeOtherSubdomainsInLookup: null,
   insecureAutofill: null,
   privateBrowsingCaptureEnabled: null,
+  remoteRecipesEnabled: null,
+  remoteRecipesCollection: "password-recipes",
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
   showAutoCompleteImport: null,
@@ -151,6 +153,9 @@ this.LoginHelper = {
 
     this.userInputRequiredToCapture = Services.prefs.getBoolPref(
       "signon.userInputRequiredToCapture.enabled"
+    );
+    this.remoteRecipesEnabled = Services.prefs.getBoolPref(
+      "signon.recipes.remoteRecipesEnabled"
     );
   },
 
