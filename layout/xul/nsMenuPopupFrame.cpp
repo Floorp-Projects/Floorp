@@ -494,18 +494,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
   SchedulePaint();
 
-  bool shouldPosition = [&] {
-    if (!IsAnchored()) {
-      return true;
-    }
-    if (ShouldFollowAnchor()) {
-      return true;
-    }
-    // Don't reposition anchored popups that shouldn't follow the anchor and
-    // have already been positioned.
-    return mPopupState != ePopupShown || mUsedScreenRect.IsEmpty();
-  }();
-
+  bool shouldPosition = true;
   bool isOpen = IsOpen();
   if (!isOpen) {
     // if the popup is not open, only do layout while showing or if the menu
@@ -561,7 +550,8 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
   bool needCallback = false;
   if (shouldPosition) {
-    SetPopupPosition(aParentMenu, false, aSizedToPopup);
+    SetPopupPosition(aParentMenu, false, aSizedToPopup,
+                     mPopupState == ePopupPositioning);
     needCallback = true;
   }
 
@@ -587,7 +577,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
 
   if (rePosition) {
-    SetPopupPosition(aParentMenu, false, aSizedToPopup);
+    SetPopupPosition(aParentMenu, false, aSizedToPopup, false);
   }
 
   nsPresContext* pc = PresContext();
@@ -653,7 +643,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
 bool nsMenuPopupFrame::ReflowFinished() {
   SetPopupPosition(mReflowCallbackData.mAnchor, false,
-                   mReflowCallbackData.mSizedToPopup);
+                   mReflowCallbackData.mSizedToPopup, true);
 
   mReflowCallbackData.Clear();
 
@@ -1320,7 +1310,8 @@ nsRect nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext,
 }
 
 nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
-                                            bool aIsMove, bool aSizedToPopup) {
+                                            bool aIsMove, bool aSizedToPopup,
+                                            bool aNotify) {
   if (!mShouldAutoPosition) return NS_OK;
 
   // If this is due to a move, return early if the popup hasn't been laid out
@@ -1671,8 +1662,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       (mPopupState == ePopupShown && !newRect.IsEqualEdges(mUsedScreenRect)) ||
       (mPopupState == ePopupShown && oldAlignmentOffset != mAlignmentOffset)) {
     mUsedScreenRect = newRect;
-    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-      nsXULPopupPositionedEvent::DispatchIfNeeded(mContent);
+    if (aNotify) {
+      nsXULPopupPositionedEvent::DispatchIfNeeded(mContent, false, false);
     }
   }
 
@@ -2330,7 +2321,7 @@ void nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs) {
   mScreenRect.x = aPos.x - nsPresContext::AppUnitsToIntCSSPixels(margin.left);
   mScreenRect.y = aPos.y - nsPresContext::AppUnitsToIntCSSPixels(margin.top);
 
-  SetPopupPosition(nullptr, true, false);
+  SetPopupPosition(nullptr, true, false, true);
 
   RefPtr<Element> popup = mContent->AsElement();
   if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
@@ -2355,7 +2346,7 @@ void nsMenuPopupFrame::MoveToAnchor(nsIContent* aAnchorContent,
   mPopupState = oldstate;
 
   // Pass false here so that flipping and adjusting to fit on the screen happen.
-  SetPopupPosition(nullptr, false, false);
+  SetPopupPosition(nullptr, false, false, true);
 }
 
 bool nsMenuPopupFrame::GetAutoPosition() { return mShouldAutoPosition; }
@@ -2541,7 +2532,7 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
   // If the rectangles are different, move the popup.
   if (!anchorRect.IsEqualEdges(aRect)) {
     aRect = anchorRect;
-    SetPopupPosition(nullptr, true, false);
+    SetPopupPosition(nullptr, true, false, true);
   }
 }
 
