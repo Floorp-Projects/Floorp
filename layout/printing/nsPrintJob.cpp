@@ -144,8 +144,6 @@ static uint32_t gDumpLOFileNameCnt = 0;
 #define PRT_YESNO(_p) ((_p) ? "YES" : "NO")
 static const char* gFrameTypesStr[] = {"eDoc", "eFrame", "eIFrame",
                                        "eFrameSet"};
-static const char* gPrintRangeStr[] = {
-    "kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection"};
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
@@ -1598,16 +1596,10 @@ void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale) {
   // Here is where we set the shrinkage value into the DC
   // and this is what actually makes it shrink
   if (aSetPixelScale && aPO->mFrameType != eIFrame) {
-    int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
-    mPrt->mPrintSettings->GetPrintRange(&printRangeType);
-
-    float ratio;
-    if (printRangeType != nsIPrintSettings::kRangeSelection) {
-      ratio = mPrt->mShrinkRatio - 0.005f;  // round down
-    } else {
-      ratio = aPO->mShrinkRatio - 0.005f;  // round down
-    }
-    aPO->mZoomRatio = ratio;
+    // Round down
+    aPO->mZoomRatio = mPrt->mPrintSettings->GetPrintSelectionOnly()
+                          ? aPO->mShrinkRatio - 0.005f
+                          : mPrt->mShrinkRatio - 0.005f;
   } else if (!mPrt->mShrinkToFit) {
     double scaling;
     mPrt->mPrintSettings->GetScaling(&scaling);
@@ -1800,9 +1792,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   // If we're printing selection then remove the nonselected nodes from our
   // cloned document.
-  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
-  printData->mPrintSettings->GetPrintRange(&printRangeType);
-  if (printRangeType == nsIPrintSettings::kRangeSelection) {
+  if (printData->mPrintSettings->GetPrintSelectionOnly()) {
     // If we fail to remove the nodes then we should fail to print, because if
     // the user was trying to print a small selection from a large document,
     // sending the whole document to a real printer would be very frustrating.
@@ -2452,23 +2442,16 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
     return NS_ERROR_FAILURE;
   }
 
-  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
-  printData->mPrintSettings->GetPrintRange(&printRangeType);
-
   PR_PL(("\n"));
   PR_PL(("********* nsPrintJob::EnablePOsForPrinting *********\n"));
-  PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
-  PR_PL(("----\n"));
 
-  if (printRangeType == nsIPrintSettings::kRangeAllPages ||
-      printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
+  if (!printData->mPrintSettings->GetPrintSelectionOnly()) {
     printData->mPrintObject->EnablePrinting(true);
     return NS_OK;
   }
 
   // This means we are either printing a selected iframe or
   // we are printing the current selection.
-  MOZ_ASSERT(printRangeType == nsIPrintSettings::kRangeSelection);
   NS_ENSURE_STATE(!mDisallowSelectionPrint && printData->mSelectionRoot);
 
   // If mSelectionRoot is a selected iframe without a selection, then just

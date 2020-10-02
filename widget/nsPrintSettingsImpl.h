@@ -95,6 +95,7 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mShowPrintProgress;
   bool mShowMarginGuides;
   bool mHonorPageRuleMargins;
+  bool mPrintSelectionOnly;
   int32_t mPrintPageDelay;
 
   nsString mTitle;
