@@ -30,6 +30,7 @@
 #include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"
+#include "js/experimental/Intl.h"  // JS::AddMozDateTimeFormatConstructor, JS::AddDisplayNamesConstructor
 #include "js/GCVector.h"
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
