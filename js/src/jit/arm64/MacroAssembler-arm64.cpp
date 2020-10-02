@@ -463,12 +463,12 @@ void MacroAssembler::flush() { Assembler::flush(); }
 
 // ===============================================================
 // Stack manipulation functions.
+//
+// These all assume no SIMD registers, because SIMD registers are handled with
+// other routines when that is necessary.  See lengthy comment in
+// Architecture-arm64.h.
 
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
-
   for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more();) {
     vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
                                 vixl::NoCPUReg};
@@ -497,10 +497,6 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
 
 void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
                                      Register scratch) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
-
   FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
   unsigned numFpu = fpuSet.size();
   int32_t diffF = fpuSet.getPushSizeInBytes();
@@ -537,10 +533,6 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
 
 void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
                                          LiveRegisterSet ignore) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
-
   // The offset of the data from the stack pointer.
   uint32_t offset = 0;
 
@@ -598,6 +590,100 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
   MOZ_ASSERT(offset == bytesPushed);
   freeStack(bytesPushed);
 }
+
+#ifdef ENABLE_WASM_SIMD
+void MacroAssemblerCompat::PushRegsInMaskForWasmStubs(LiveRegisterSet set) {
+  for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more();) {
+    vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
+                                vixl::NoCPUReg};
+
+    for (size_t i = 0; i < 4 && iter.more(); i++) {
+      src[i] = ARMRegister(*iter, 64);
+      ++iter;
+      asMasm().adjustFrame(8);
+    }
+    vixl::MacroAssembler::Push(src[0], src[1], src[2], src[3]);
+  }
+
+  // reduceSetForPush returns a set with the unique encodings and kind==0.  For
+  // each encoding in the set, just push the SIMD register.
+  for (FloatRegisterBackwardIterator iter(set.fpus().reduceSetForPush());
+       iter.more();) {
+    vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
+                                vixl::NoCPUReg};
+
+    for (size_t i = 0; i < 4 && iter.more(); i++) {
+      src[i] = ARMFPRegister(*iter, 128);
+      ++iter;
+      asMasm().adjustFrame(FloatRegister::SizeOfSimd128);
+    }
+    vixl::MacroAssembler::Push(src[0], src[1], src[2], src[3]);
+  }
+}
+
+void MacroAssemblerCompat::PopRegsInMaskForWasmStubs(LiveRegisterSet set,
+                                                     LiveRegisterSet ignore) {
+  // The offset of the data from the stack pointer.
+  uint32_t offset = 0;
+
+  // See comments above
+  for (FloatRegisterIterator iter(set.fpus().reduceSetForPush());
+       iter.more();) {
+    vixl::CPURegister dest[2] = {vixl::NoCPUReg, vixl::NoCPUReg};
+    uint32_t nextOffset = offset;
+
+    for (size_t i = 0; i < 2 && iter.more(); i++) {
+      if (!ignore.has(*iter)) {
+        dest[i] = ARMFPRegister(*iter, 128);
+      }
+      ++iter;
+      nextOffset += FloatRegister::SizeOfSimd128;
+    }
+
+    if (!dest[0].IsNone() && !dest[1].IsNone()) {
+      Ldp(dest[0], dest[1], MemOperand(GetStackPointer64(), offset));
+    } else if (!dest[0].IsNone()) {
+      Ldr(dest[0], MemOperand(GetStackPointer64(), offset));
+    } else if (!dest[1].IsNone()) {
+      Ldr(dest[1], MemOperand(GetStackPointer64(), offset + 16));
+    }
+
+    offset = nextOffset;
+  }
+
+  MOZ_ASSERT(offset ==
+             FloatRegister::GetPushSizeInBytesForWasmStubs(set.fpus()));
+
+  for (GeneralRegisterIterator iter(set.gprs()); iter.more();) {
+    vixl::CPURegister dest[2] = {vixl::NoCPUReg, vixl::NoCPUReg};
+    uint32_t nextOffset = offset;
+
+    for (size_t i = 0; i < 2 && iter.more(); i++) {
+      if (!ignore.has(*iter)) {
+        dest[i] = ARMRegister(*iter, 64);
+      }
+      ++iter;
+      nextOffset += sizeof(uint64_t);
+    }
+
+    if (!dest[0].IsNone() && !dest[1].IsNone()) {
+      Ldp(dest[0], dest[1], MemOperand(GetStackPointer64(), offset));
+    } else if (!dest[0].IsNone()) {
+      Ldr(dest[0], MemOperand(GetStackPointer64(), offset));
+    } else if (!dest[1].IsNone()) {
+      Ldr(dest[1], MemOperand(GetStackPointer64(), offset + sizeof(uint64_t)));
+    }
+
+    offset = nextOffset;
+  }
+
+  size_t bytesPushed =
+      set.gprs().size() * sizeof(uint64_t) +
+      FloatRegister::GetPushSizeInBytesForWasmStubs(set.fpus());
+  MOZ_ASSERT(offset == bytesPushed);
+  asMasm().freeStack(bytesPushed);
+}
+#endif
 
 void MacroAssembler::Push(Register reg) {
   push(reg);

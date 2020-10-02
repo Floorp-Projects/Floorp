@@ -3363,6 +3363,9 @@ class DebugFrame {
   // alignment.
   uint32_t padding_;
 #endif
+#if defined(ENABLE_WASM_SIMD) && defined(JS_CODEGEN_ARM64)
+  uint64_t padding_;
+#endif
 
  private:
   // The Frame goes at the end since the stack grows down.
