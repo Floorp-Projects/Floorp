@@ -2314,10 +2314,10 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.bitwiseNotAndSimd128(rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16AvgrU:
-      masm.averageInt8x16(rhs, lhsDest);
+      masm.unsignedAverageInt8x16(rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8AvgrU:
-      masm.averageInt16x8(rhs, lhsDest);
+      masm.unsignedAverageInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16Add:
       masm.addInt8x16(rhs, lhsDest);

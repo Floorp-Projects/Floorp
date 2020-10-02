@@ -1764,13 +1764,6 @@ void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
   doBaseIndex(ARMFPRegister(src, 32), addr, vixl::STR_s);
 }
 
-void MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest) {
-  MOZ_CRASH("NYI");
-}
-void MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest) {
-  MOZ_CRASH("NYI");
-}
-
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
   if (barrier == MembarStoreStore) {
     Dmb(vixl::InnerShareable, vixl::BarrierWrites);
