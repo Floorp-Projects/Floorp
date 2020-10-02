@@ -1460,6 +1460,8 @@ pub extern "C" fn wr_window_new(
     out_err: &mut *mut c_char,
     enable_gpu_markers: bool,
     panic_on_gl_error: bool,
+    picture_tile_width: i32,
+    picture_tile_height: i32,
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1550,6 +1552,12 @@ pub extern "C" fn wr_window_new(
         }
     };
 
+    let picture_tile_size = if picture_tile_width > 0 && picture_tile_height > 0 {
+        Some(DeviceIntSize::new(picture_tile_width, picture_tile_height))
+    } else {
+        None
+    };
+
     let opts = RendererOptions {
         enable_aa: true,
         force_subpixel_aa: false,
@@ -1595,6 +1603,7 @@ pub extern "C" fn wr_window_new(
         compositor_config,
         enable_gpu_markers,
         panic_on_gl_error,
+        picture_tile_size,
         ..Default::default()
     };
 
