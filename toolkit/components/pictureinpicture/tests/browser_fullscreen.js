@@ -111,6 +111,8 @@ add_task(async () => {
       url: TEST_PAGE,
     },
     async browser => {
+      await ensureVideosReady(browser);
+
       for (let videoId of VIDEOS) {
         let pipWin = await triggerPictureInPicture(browser, videoId);
         ok(pipWin, "Got Picture-In-Picture window.");
