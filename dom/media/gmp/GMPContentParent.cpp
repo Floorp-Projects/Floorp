@@ -101,6 +101,7 @@ void GMPContentParent::RemoveCloseBlocker() {
 }
 
 void GMPContentParent::CloseIfUnused() {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_LOG_DEBUG(
       "GMPContentParent::CloseIfUnused(this=%p) mVideoDecoders.IsEmpty=%s, "
       "mVideoEncoders.IsEmpty=%s, mChromiumCDMs.IsEmpty=%s, "
