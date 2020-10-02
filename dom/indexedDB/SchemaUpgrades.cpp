@@ -107,7 +107,8 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   {
     mozStorageStatementScoper scoper(stmt);
 
-    IDB_TRY_VAR(const bool hasResults, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+    IDB_TRY_INSPECT(const bool& hasResults,
+                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResults)) {
       return NS_ERROR_FAILURE;
@@ -1447,7 +1448,7 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
 
   // Read out the previous value. It may be NULL, in which case we'll just end
   // up with an empty array.
-  IDB_TRY_VAR(auto indexValues, ReadCompressedIndexDataValues(*aValues, 0));
+  IDB_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 0));
 
   IndexOrObjectStoreId indexId;
   nsresult rv = aValues->GetInt64(1, &indexId);
@@ -1475,8 +1476,8 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
   }
 
   // Compress the array.
-  IDB_TRY_VAR((auto [indexValuesBlob, indexValuesBlobLength]),
-              MakeCompressedIndexDataValues(indexValues));
+  IDB_TRY_UNWRAP((auto [indexValuesBlob, indexValuesBlobLength]),
+                 MakeCompressedIndexDataValues(indexValues));
 
   // The compressed blob is the result of this function.
   nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(
@@ -2300,7 +2301,8 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   {
     mozStorageStatementScoper scoper(stmt);
 
-    IDB_TRY_VAR(const bool hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+    IDB_TRY_INSPECT(const bool& hasResult,
+                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResult)) {
       MOZ_ASSERT(false, "This should never be possible!");
@@ -2412,8 +2414,8 @@ UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
   IndexDataValuesArray result;
   for (auto remainder = aBlobData; !remainder.IsEmpty();) {
     if (!nextIndexIdAlreadyRead) {
-      IDB_TRY_VAR((std::tie(indexId, unique, remainder)),
-                  ReadCompressedIndexId(remainder));
+      IDB_TRY_UNWRAP((std::tie(indexId, unique, remainder)),
+                     ReadCompressedIndexId(remainder));
     }
     nextIndexIdAlreadyRead = false;
 
@@ -2505,8 +2507,8 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(
   IDB_TRY_INSPECT(const auto& oldIdv,
                   ReadOldCompressedIDVFromBlob(Span(oldBlob, oldBlobLength)));
 
-  IDB_TRY_VAR((auto [newIdv, newIdvLength]),
-              MakeCompressedIndexDataValues(oldIdv));
+  IDB_TRY_UNWRAP((auto [newIdv, newIdvLength]),
+                 MakeCompressedIndexDataValues(oldIdv));
 
   nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(
       std::pair(newIdv.release(), newIdvLength));
@@ -2884,8 +2886,8 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     return NS_ERROR_UNEXPECTED;
   }
 
-  IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromValueArray(
-                                  aArguments, 1, 0, *mFileManager));
+  IDB_TRY_UNWRAP(auto cloneInfo, GetStructuredCloneReadInfoFromValueArray(
+                                     aArguments, 1, 0, *mFileManager));
 
   nsAutoString fileIds;
   // XXX does this really need non-const cloneInfo?
@@ -2991,8 +2993,8 @@ Result<bool, nsresult> MaybeUpgradeSchema(mozIStorageConnection& aConnection,
         });
     }
 
-    IDB_TRY_VAR(schemaVersion,
-                MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+    IDB_TRY_UNWRAP(schemaVersion,
+                   MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
   }
 
   MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
