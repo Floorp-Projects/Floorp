@@ -25,7 +25,6 @@ const ADDON_NOBG_NAME = "test-devtools-webextension-nobg";
 add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   await enableExtensionDebugging();
   const { document, tab, window } = await openAboutDebugging();
-  const store = window.AboutDebugging.store;
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   await installTemporaryExtensionFromXPI(
@@ -46,22 +45,6 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   );
   const toolbox = getToolbox(devtoolsWindow);
 
-  const onToolboxClose = gDevTools.once("toolbox-destroyed");
-  toolboxTestScript(toolbox, devtoolsTab, window);
-
-  // we need to wait for the tabs request to complete before continuing
-  await waitForDispatch(store, "REQUEST_TABS_SUCCESS");
-  // The test script will not close the toolbox and will timeout if it fails, so reaching
-  // this point in the test is enough to assume the test was successful.
-  info("Wait for the toolbox to close");
-  await onToolboxClose;
-  ok(true, "Addon toolbox closed");
-
-  await removeTemporaryExtension(ADDON_NOBG_NAME, document);
-  await removeTab(tab);
-});
-
-async function toolboxTestScript(toolbox, devtoolsTab) {
   const targetName = toolbox.target.name;
   const isAddonTarget = toolbox.target.isAddon;
   ok(isAddonTarget, "Toolbox target is an addon");
@@ -87,8 +70,7 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
     "nodeActor has the expected inlineTextChild value"
   );
 
-  info("Wait for all pending requests to settle on the DevToolsClient");
-  await toolbox.target.client.waitForRequestsToSettle();
-
-  await removeTab(devtoolsTab);
-}
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await removeTemporaryExtension(ADDON_NOBG_NAME, document);
+  await removeTab(tab);
+});

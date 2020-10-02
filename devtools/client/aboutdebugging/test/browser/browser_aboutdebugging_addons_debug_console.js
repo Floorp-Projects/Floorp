@@ -52,28 +52,6 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   );
   const toolbox = getToolbox(devtoolsWindow);
 
-  const onToolboxClose = gDevTools.once("toolbox-destroyed");
-  toolboxTestScript(toolbox, devtoolsTab);
-
-  // The test script will not close the toolbox and will timeout if it fails, so reaching
-  // this point in the test is enough to assume the test was successful.
-  info("Wait for the toolbox to close");
-  await onToolboxClose;
-  ok(true, "Addon toolbox closed");
-
-  await removeTemporaryExtension(ADDON_NAME, document);
-  await removeTab(tab);
-});
-
-async function toolboxTestScript(toolbox, devtoolsTab) {
-  function findMessages(hud, text, selector = ".message") {
-    const messages = hud.ui.outputNode.querySelectorAll(selector);
-    const elements = Array.prototype.filter.call(messages, el =>
-      el.textContent.includes(text)
-    );
-    return elements;
-  }
-
   const webconsole = await toolbox.selectTool("webconsole");
   const { hud } = webconsole;
   const onMessage = waitUntil(() => {
@@ -82,8 +60,15 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
   hud.ui.wrapper.dispatchEvaluateExpression("myWebExtensionAddonFunction()");
   await onMessage;
 
-  info("Wait for all pending requests to settle on the DevToolsClient");
-  await toolbox.target.client.waitForRequestsToSettle();
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await removeTemporaryExtension(ADDON_NAME, document);
+  await removeTab(tab);
+});
 
-  await removeTab(devtoolsTab);
+function findMessages(hud, text, selector = ".message") {
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.prototype.filter.call(messages, el =>
+    el.textContent.includes(text)
+  );
+  return elements;
 }
