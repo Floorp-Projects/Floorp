@@ -1327,6 +1327,17 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Fcmp(ARMFPRegister(lhs, 32), ARMFPRegister(rhs, 32));
   }
 
+  void compareSimd128Int(Assembler::Condition cond, ARMFPRegister dest,
+                         ARMFPRegister lhs, ARMFPRegister rhs);
+  void compareSimd128Float(Assembler::Condition cond, ARMFPRegister dest,
+                           ARMFPRegister lhs, ARMFPRegister rhs);
+  void rightShiftInt8x16(Register rhs, FloatRegister lhsDest,
+                         FloatRegister temp, bool isUnsigned);
+  void rightShiftInt16x8(Register rhs, FloatRegister lhsDest,
+                         FloatRegister temp, bool isUnsigned);
+  void rightShiftInt32x4(Register rhs, FloatRegister lhsDest,
+                         FloatRegister temp, bool isUnsigned);
+
   void branchNegativeZero(FloatRegister reg, Register scratch, Label* label) {
     MOZ_CRASH("branchNegativeZero");
   }
