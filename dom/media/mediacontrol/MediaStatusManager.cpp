@@ -198,9 +198,8 @@ MediaMetadataBase MediaStatusManager::CreateDefaultMetadata() const {
 }
 
 nsString MediaStatusManager::GetDefaultTitle() const {
-  // TODO : maybe need l10n? (bug1657701)
-  nsString defaultTitle;
-  defaultTitle.AssignLiteral("Firefox is playing media");
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  nsString defaultTitle = service->GetFallbackTitle();
 
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);

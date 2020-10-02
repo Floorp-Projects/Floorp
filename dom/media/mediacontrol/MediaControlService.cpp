@@ -6,13 +6,15 @@
 
 #include "MediaController.h"
 #include "MediaControlUtils.h"
-
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/Localization.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
+
+using mozilla::intl::Localization;
 
 #undef LOG
 #define LOG(msg, ...)                        \
@@ -111,6 +113,24 @@ void MediaControlService::Init() {
   MOZ_ASSERT(mMediaControlKeyManager->IsOpened());
   mMediaControlKeyManager->AddListener(mMediaKeysHandler.get());
   mControllerManager = MakeUnique<ControllerManager>(this);
+
+  // Initialize the fallback title
+  nsCOMPtr<nsIGlobalObject> global =
+      xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  RefPtr<Localization> l10n = Localization::Create(global, true, {});
+  l10n->AddResourceId(u"branding/brand.ftl"_ns);
+  l10n->AddResourceId(u"dom/media.ftl"_ns);
+  {
+    AutoSafeJSContext cx;
+
+    nsAutoCString translation;
+    ErrorResult rv;
+    l10n->FormatValueSync(cx, "mediastatus-fallback-title"_ns, {}, translation,
+                          rv);
+    if (!rv.Failed()) {
+      mFallbackTitle = NS_ConvertUTF8toUTF16(translation);
+    }
+  }
 }
 
 MediaControlService::~MediaControlService() {
@@ -260,6 +280,10 @@ MediaSessionPlaybackState MediaControlService::GetMainControllerPlaybackState()
   }
   return GetMainController() ? GetMainController()->PlaybackState()
                              : MediaSessionPlaybackState::None;
+}
+
+nsString MediaControlService::GetFallbackTitle() const {
+  return mFallbackTitle;
 }
 
 // Following functions belong to ControllerManager
