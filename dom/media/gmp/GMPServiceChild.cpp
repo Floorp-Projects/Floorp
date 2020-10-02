@@ -396,7 +396,7 @@ GeckoMediaPluginServiceChild::GetServiceChild() {
 }
 
 void GeckoMediaPluginServiceChild::SetServiceChild(
-    UniquePtr<GMPServiceChild>&& aServiceChild) {
+    RefPtr<GMPServiceChild>&& aServiceChild) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   mServiceChild = std::move(aServiceChild);
@@ -420,10 +420,6 @@ void GeckoMediaPluginServiceChild::RemoveGMPContentParent(
     }
   }
 }
-
-GMPServiceChild::GMPServiceChild() = default;
-
-GMPServiceChild::~GMPServiceChild() = default;
 
 already_AddRefed<GMPContentParent> GMPServiceChild::GetBridgedGMPContentParent(
     ProcessId aOtherPid, ipc::Endpoint<PGMPContentParent>&& endpoint) {
@@ -468,7 +464,7 @@ void GMPServiceChild::GetAlreadyBridgedTo(
 
 class OpenPGMPServiceChild : public mozilla::Runnable {
  public:
-  OpenPGMPServiceChild(UniquePtr<GMPServiceChild>&& aGMPServiceChild,
+  OpenPGMPServiceChild(RefPtr<GMPServiceChild>&& aGMPServiceChild,
                        ipc::Endpoint<PGMPServiceChild>&& aEndpoint)
       : Runnable("gmp::OpenPGMPServiceChild"),
         mGMPServiceChild(std::move(aGMPServiceChild)),
@@ -487,7 +483,7 @@ class OpenPGMPServiceChild : public mozilla::Runnable {
   }
 
  private:
-  UniquePtr<GMPServiceChild> mGMPServiceChild;
+  RefPtr<GMPServiceChild> mGMPServiceChild;
   ipc::Endpoint<PGMPServiceChild> mEndpoint;
 };
 
@@ -497,7 +493,7 @@ bool GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService) {
       GeckoMediaPluginServiceChild::GetSingleton();
   MOZ_ASSERT(!gmp->mServiceChild);
 
-  UniquePtr<GMPServiceChild> serviceChild(new GMPServiceChild());
+  RefPtr<GMPServiceChild> serviceChild(new GMPServiceChild());
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
