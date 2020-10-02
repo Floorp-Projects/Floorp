@@ -310,7 +310,8 @@ class SVGContentUtils {
    * Converts a LengthPercentage into a userspace value, resolving percentage
    * values relative to aContent's SVG viewport.
    */
-  static float CoordToFloat(dom::SVGElement* aContent, const LengthPercentage&);
+  static float CoordToFloat(dom::SVGElement* aContent, const LengthPercentage&,
+                            uint8_t aCtxType = SVGContentUtils::XY);
   /**
    * Parse the SVG path string
    * Returns a path
