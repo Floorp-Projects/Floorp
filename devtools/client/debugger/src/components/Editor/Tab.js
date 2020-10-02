@@ -7,7 +7,7 @@
 import React, { PureComponent } from "react";
 import { connect } from "../../utils/connect";
 
-import { showMenu, buildMenu } from "devtools-contextmenu";
+import { showMenu, buildMenu } from "../../context-menu/menu";
 
 import SourceIcon from "../shared/SourceIcon";
 import { CloseButton } from "../shared/Button";
