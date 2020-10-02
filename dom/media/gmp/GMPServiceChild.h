@@ -35,7 +35,7 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService {
 
   NS_DECL_NSIOBSERVER
 
-  void SetServiceChild(UniquePtr<GMPServiceChild>&& aServiceChild);
+  void SetServiceChild(RefPtr<GMPServiceChild>&& aServiceChild);
 
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
 
@@ -65,13 +65,16 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService {
   RefPtr<GetServiceChildPromise> GetServiceChild();
 
   nsTArray<MozPromiseHolder<GetServiceChildPromise>> mGetServiceChildPromises;
-  UniquePtr<GMPServiceChild> mServiceChild;
+  RefPtr<GMPServiceChild> mServiceChild;
 };
 
 class GMPServiceChild : public PGMPServiceChild {
  public:
-  explicit GMPServiceChild();
-  virtual ~GMPServiceChild();
+  // Mark AddRef and Release as `final`, as they overload pure virtual
+  // implementations in PGMPServiceChild.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPServiceChild, final)
+
+  explicit GMPServiceChild() = default;
 
   already_AddRefed<GMPContentParent> GetBridgedGMPContentParent(
       ProcessId aOtherPid, ipc::Endpoint<PGMPContentParent>&& endpoint);
@@ -87,6 +90,8 @@ class GMPServiceChild : public PGMPServiceChild {
   bool HaveContentParents() const;
 
  private:
+  ~GMPServiceChild() = default;
+
   nsRefPtrHashtable<nsUint64HashKey, GMPContentParent> mContentParents;
 };
 
