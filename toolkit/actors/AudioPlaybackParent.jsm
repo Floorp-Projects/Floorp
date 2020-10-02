@@ -7,23 +7,39 @@
 var EXPORTED_SYMBOLS = ["AudioPlaybackParent"];
 
 class AudioPlaybackParent extends JSWindowActorParent {
+  constructor() {
+    super();
+    this._hasAudioPlayback = false;
+    this._hasBlockMedia = false;
+  }
   receiveMessage(aMessage) {
-    let topBrowsingContext = this.browsingContext.top;
-    let browser = topBrowsingContext.embedderElement;
-
+    const browser = this.browsingContext.top.embedderElement;
     switch (aMessage.name) {
       case "AudioPlayback:Start":
+        this._hasAudioPlayback = true;
         browser.audioPlaybackStarted();
         break;
       case "AudioPlayback:Stop":
+        this._hasAudioPlayback = false;
         browser.audioPlaybackStopped();
         break;
       case "AudioPlayback:ActiveMediaBlockStart":
+        this._hasBlockMedia = true;
         browser.activeMediaBlockStarted();
         break;
       case "AudioPlayback:ActiveMediaBlockStop":
+        this._hasBlockMedia = false;
         browser.activeMediaBlockStopped();
         break;
+    }
+  }
+  didDestroy() {
+    const browser = this.browsingContext.top.embedderElement;
+    if (browser && this._hasAudioPlayback) {
+      browser.audioPlaybackStopped();
+    }
+    if (browser && this._hasBlockMedia) {
+      browser.activeMediaBlockStopped();
     }
   }
 }
