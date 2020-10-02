@@ -447,17 +447,17 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument,
 
   PresShell* rootPresShell = rootDoc->GetPresShell();
   if (!rootPresShell || rootPresShell->IsDestroying()) {
-    return Nothing();
+    return Some(OopIframeMetrics{});
   }
 
   nsIFrame* inProcessRootFrame = rootPresShell->GetRootFrame();
   if (!inProcessRootFrame) {
-    return Nothing();
+    return Some(OopIframeMetrics{});
   }
 
   BrowserChild* browserChild = BrowserChild::GetFrom(rootDoc->GetDocShell());
   if (!browserChild) {
-    return Nothing();
+    return Some(OopIframeMetrics{});
   }
   MOZ_DIAGNOSTIC_ASSERT(!browserChild->IsTopLevel());
 
@@ -470,7 +470,7 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(Document& aDocument,
   Maybe<LayoutDeviceRect> remoteDocumentVisibleRect =
       browserChild->GetTopLevelViewportVisibleRectInSelfCoords();
   if (!remoteDocumentVisibleRect) {
-    return Nothing();
+    return Some(OopIframeMetrics{});
   }
 
   return Some(OopIframeMetrics{
