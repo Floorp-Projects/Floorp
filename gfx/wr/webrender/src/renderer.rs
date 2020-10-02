@@ -78,7 +78,7 @@ use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSe
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
 use malloc_size_of::MallocSizeOfOps;
-use crate::picture::{RecordedDirtyRegion, tile_cache_sizes, ResolvedSurfaceTexture};
+use crate::picture::{self, RecordedDirtyRegion, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -2781,6 +2781,11 @@ impl Renderer {
             .as_ref()
             .map(|handler| handler.create_similar());
 
+        let mut picture_tile_size = options.picture_tile_size.unwrap_or(picture::TILE_SIZE_DEFAULT);
+        // Clamp the picture tile size to reasonable values.
+        picture_tile_size.width = picture_tile_size.width.max(128).min(4096);
+        picture_tile_size.height = picture_tile_size.height.max(128).min(4096);
+
         let rb_scene_tx = scene_tx.clone();
         let rb_low_priority_scene_tx = scene_tx.clone();
         let rb_font_instances = font_instances.clone();
@@ -2791,14 +2796,21 @@ impl Renderer {
                 thread_listener.thread_started(&rb_thread_name);
             }
 
+            let prealloc_sizes = [
+                picture_tile_size,
+                picture::TILE_SIZE_SCROLLBAR_HORIZONTAL,
+                picture::TILE_SIZE_SCROLLBAR_VERTICAL,
+            ];
+
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
-                if config.global_enable_picture_caching {
-                    tile_cache_sizes(config.testing)
-                } else {
-                    &[]
+                match (config.global_enable_picture_caching, config.testing) {
+                    (true, false) => &prealloc_sizes,
+                    (true, true) => &picture::TILE_SIZE_FOR_TESTS,
+                    _ => &[],
                 },
+                picture_tile_size,
                 start_size,
                 color_cache_formats,
                 swizzle_settings,
@@ -7295,6 +7307,7 @@ pub struct RendererOptions {
     /// If true, panic whenever a GL error occurs. This has a significant
     /// performance impact, so only use when debugging specific problems!
     pub panic_on_gl_error: bool,
+    pub picture_tile_size: Option<DeviceIntSize>,
 }
 
 impl RendererOptions {
@@ -7362,6 +7375,7 @@ impl Default for RendererOptions {
             compositor_config: CompositorConfig::default(),
             enable_gpu_markers: true,
             panic_on_gl_error: false,
+            picture_tile_size: None,
         }
     }
 }

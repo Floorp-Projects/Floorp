@@ -304,12 +304,14 @@ impl SharedTextures {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PictureTextures {
     textures: Vec<WholeTextureArray>,
+    default_tile_size: DeviceIntSize,
 }
 
 impl PictureTextures {
     fn new(
         initial_window_size: DeviceIntSize,
         picture_tile_sizes: &[DeviceIntSize],
+        default_tile_size: DeviceIntSize,
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
     ) -> Self {
@@ -347,7 +349,10 @@ impl PictureTextures {
             textures.push(texture);
         }
 
-        PictureTextures { textures }
+        PictureTextures {
+            textures,
+            default_tile_size,
+        }
     }
 
     fn get_or_allocate_tile(
@@ -523,6 +528,7 @@ impl TextureCache {
         max_texture_size: i32,
         mut max_texture_layers: usize,
         picture_tile_sizes: &[DeviceIntSize],
+        default_picture_tile_size: DeviceIntSize,
         initial_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
@@ -571,6 +577,7 @@ impl TextureCache {
             picture_textures: PictureTextures::new(
                 initial_size,
                 picture_tile_sizes,
+                default_picture_tile_size,
                 &mut next_texture_id,
                 &mut pending_updates,
             ),
@@ -602,6 +609,7 @@ impl TextureCache {
             max_texture_size,
             max_texture_layers,
             &[],
+            crate::picture::TILE_SIZE_DEFAULT,
             DeviceIntSize::zero(),
             TextureFormatPair::from(image_format),
             None,
@@ -1277,6 +1285,11 @@ impl TextureCache {
 
     pub fn shared_color_expected_format(&self) -> ImageFormat {
         self.shared_textures.array_color8_linear.formats.external
+    }
+
+
+    pub fn default_picture_tile_size(&self) -> DeviceIntSize {
+        self.picture_textures.default_tile_size
     }
 }
 

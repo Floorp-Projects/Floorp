@@ -113,6 +113,9 @@ class NewRenderer : public RendererEvent {
     bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
     char* errorMessage = nullptr;
+    int picTileWidth = StaticPrefs::gfx_webrender_picture_tile_width();
+    int picTileHeight = StaticPrefs::gfx_webrender_picture_tile_height();
+
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions, supportLowPriorityThreadpool,
@@ -144,7 +147,7 @@ class NewRenderer : public RendererEvent {
             compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
             &wrRenderer, mMaxTextureSize, &errorMessage,
             StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
-            panic_on_gl_error)) {
+            panic_on_gl_error, picTileWidth, picTileHeight)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       MOZ_ASSERT(errorMessage);
       mError->AssignASCII(errorMessage);
