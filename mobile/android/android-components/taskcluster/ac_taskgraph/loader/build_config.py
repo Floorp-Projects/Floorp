@@ -27,7 +27,16 @@ _GIT_ZERO_HASHES = (
     "0000000000000000000000000000000000000000000000000000000000000000", # sha256
 )
 
-CONFIGURATIONS_WITH_DEPENDENCIES = ("implementation", "api")
+CONFIGURATIONS_WITH_DEPENDENCIES = (
+    "api",
+    "compileOnly",
+# This seem like they should be included as well (because of https://github.com/mozilla-mobile/android-components/blob/2bc8627e160196c544bb8584cf926765fce4889c/samples/browser/build.gradle#L131)
+# but gradle doesn't accept them as a configuration for some reason.
+#    "geckoNightlyImplementation",
+#    "geckoBetaImplementation",
+#    "geckoReleaseImplementation",
+    "implementation",
+)
 ALL_COMPONENTS = object()
 
 def get_components_changed(files_changed):
