@@ -8,18 +8,23 @@
 #define jit_shared_Disassembler_shared_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
 
-#include "jit/Label.h"
-
-using js::Sprinter;
-using js::jit::Label;
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #if defined(JS_DISASM_ARM) || defined(JS_DISASM_ARM64)
 #  define JS_DISASM_SUPPORTED
 #endif
 
 namespace js {
+
+class Sprinter;
+
 namespace jit {
+
+class Label;
 
 // A wrapper around spew/disassembly functionality.  The disassembler is built
 // on a per-instruction disassembler (as in our ARM, ARM64 back-ends) and
