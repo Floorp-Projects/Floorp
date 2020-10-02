@@ -5242,14 +5242,14 @@ impl Renderer {
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
-                    let dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    combined_dirty_rect = combined_dirty_rect.union(&tile_dirty_rect);
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
                 let combined_dirty_rect_i32 = combined_dirty_rect.to_i32();
-                // If nothing has changed, don't return any dirty rects at all (the client
-                // can use this as a signal to skip present completely).
+                // Return this frame's dirty region. If nothing has changed, don't return any dirty
+                // rects at all (the client can use this as a signal to skip present completely).
                 if !combined_dirty_rect.is_empty() {
                     results.dirty_rects.push(combined_dirty_rect_i32);
                 }
@@ -5260,15 +5260,23 @@ impl Renderer {
                 }
 
                 // If the implementation requires manually keeping the buffer consistent,
-                // combine the previous frames' damage rects for tile clipping.
-                // (Not for the returned region though, that should be from this frame only)
+                // then we must combine this frame's dirty region with that of previous frames
+                // to determine the total_dirty_rect. The is used to determine what region we
+                // render to, and is what we send to the compositor as the buffer damage region
+                // (eg for KHR_partial_update).
+                let total_dirty_rect = if draw_previous_partial_present_regions {
+                    combined_dirty_rect.union(&prev_frames_damage_rect.unwrap())
+                } else {
+                    combined_dirty_rect
+                };
+
                 partial_present_mode = Some(PartialPresentMode::Single {
-                    dirty_rect: if draw_previous_partial_present_regions {
-                        combined_dirty_rect.union(&prev_frames_damage_rect.unwrap())
-                    } else {
-                        combined_dirty_rect
-                    },
+                    dirty_rect: total_dirty_rect,
                 });
+
+                if let Some(partial_present) = self.compositor_config.partial_present() {
+                    partial_present.set_buffer_damage_region(&[total_dirty_rect.to_i32()]);
+                }
             } else {
                 // If we don't have a valid partial present scenario, return a single
                 // dirty rect to the client that covers the entire framebuffer.

@@ -76,7 +76,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_MOZ_create_context_provoking_vertex_dont_care",
     "EGL_EXT_swap_buffers_with_damage",
     "EGL_KHR_swap_buffers_with_damage",
-    "EGL_EXT_buffer_age"};
+    "EGL_EXT_buffer_age",
+    "EGL_KHR_partial_update"};
 
 PRLibrary* LoadApitraceLibrary() {
   const char* path = nullptr;
@@ -596,6 +597,12 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
     const SymLoadStruct symbols[] = {
         {(PRFuncPtr*)&mSymbols.fSwapBuffersWithDamage,
          {{"eglSwapBuffersWithDamageKHR"}}},
+        END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
+  {
+    const SymLoadStruct symbols[] = {
+        {(PRFuncPtr*)&mSymbols.fSetDamageRegion, {{"eglSetDamageRegionKHR"}}},
         END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
