@@ -28,15 +28,21 @@ if CONFIG['MOZ_GLEAN']:
         'pytest/python.ini',
     ]
 
+    # Provides us the list of dependent metrics|pings.yaml.
+    include('metrics_index.py')
+    # GeneratedFile's `inputs` are relative to our dir.
+    # The yamls arrays are relative to topsrcdir, so we need to transform:
+    metrics_yamls = ['../../../' + x for x in metrics_yamls]
+    pings_yamls = ['../../../' + x for x in pings_yamls]
     GeneratedFile('api/src/metrics.rs',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
-                  flags=['METRICS', CONFIG['MOZ_APP_VERSION']],
-                  inputs=['metrics_index.py'])
+                  flags=[CONFIG['MOZ_APP_VERSION']],
+                  inputs=['metrics_index.py'] + metrics_yamls)
 
     GeneratedFile('api/src/pings.rs',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
-                  flags=['PINGS', CONFIG['MOZ_APP_VERSION']],
-                  inputs=['metrics_index.py'])
+                  flags=[CONFIG['MOZ_APP_VERSION']],
+                  inputs=['metrics_index.py'] + pings_yamls)
 
     DIRS += [
         'xpcom',
