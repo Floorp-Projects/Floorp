@@ -11,8 +11,10 @@
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
+#include "SVGGeometryProperty.h"
 
 using namespace mozilla::dom;
+namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -54,13 +56,23 @@ nsresult SVGUseFrame::AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
   return SVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
 }
 
-void SVGUseFrame::PositionAttributeChanged() {
-  // make sure our cached transform matrix gets (lazily) updated
-  mCanvasTM = nullptr;
-  nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), RestyleHint{0},
-                                  nsChangeHint_InvalidateRenderingObservers);
-  SVGUtils::ScheduleReflowSVG(this);
-  SVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+void SVGUseFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+  SVGGFrame::DidSetComputedStyle(aOldComputedStyle);
+
+  if (!aOldComputedStyle) {
+    return;
+  }
+  const auto* newSVGReset = StyleSVGReset();
+  const auto* oldSVGReset = aOldComputedStyle->StyleSVGReset();
+
+  if (newSVGReset->mX != oldSVGReset->mX ||
+      newSVGReset->mY != oldSVGReset->mY) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nullptr;
+    SVGObserverUtils::InvalidateRenderingObservers(this);
+    SVGUtils::ScheduleReflowSVG(this);
+    SVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+  }
 }
 
 void SVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
@@ -91,10 +103,8 @@ void SVGUseFrame::ReflowSVG() {
   // We only handle x/y offset here, since any width/height that is in force is
   // handled by the SVGOuterSVGFrame for the anonymous <svg> that will be
   // created for that purpose.
-  float x, y;
-  static_cast<SVGUseElement*>(GetContent())
-      ->GetAnimatedLengthValues(&x, &y, nullptr);
-  mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(gfxRect(x, y, 0.0, 0.0),
+  auto [x, y] = ResolvePosition();
+  mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(gfxRect(x, y, 0, 0),
                                                     AppUnitsPerCSSPixel())
                    .TopLeft());
 
@@ -111,9 +121,7 @@ void SVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
   if (aFlags & COORD_CONTEXT_CHANGED && !(aFlags & TRANSFORM_CHANGED)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
-    SVGUseElement* use = static_cast<SVGUseElement*>(GetContent());
-    if (use->mLengthAttributes[SVGUseElement::ATTR_X].IsPercentage() ||
-        use->mLengthAttributes[SVGUseElement::ATTR_Y].IsPercentage()) {
+    if (StyleSVGReset()->mX.HasPercent() || StyleSVGReset()->mY.HasPercent()) {
       aFlags |= TRANSFORM_CHANGED;
       // Ancestor changes can't affect how we render from the perspective of
       // any rendering observers that we may have, so we don't need to
@@ -138,12 +146,18 @@ SVGBBox SVGUseFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
       SVGDisplayContainerFrame::GetBBoxContribution(aToBBoxUserspace, aFlags);
 
   if (aFlags & SVGUtils::eForGetClientRects) {
-    float x, y;
-    static_cast<SVGUseElement*>(GetContent())
-        ->GetAnimatedLengthValues(&x, &y, nullptr);
+    auto [x, y] = ResolvePosition();
     bbox.MoveBy(x, y);
   }
   return bbox;
+}
+
+std::pair<float, float> SVGUseFrame::ResolvePosition() const {
+  auto* content = SVGUseElement::FromNode(GetContent());
+  return std::make_pair(SVGContentUtils::CoordToFloat(
+                            content, StyleSVGReset()->mX, SVGContentUtils::X),
+                        SVGContentUtils::CoordToFloat(
+                            content, StyleSVGReset()->mY, SVGContentUtils::Y));
 }
 
 }  // namespace mozilla

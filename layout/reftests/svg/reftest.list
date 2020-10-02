@@ -192,6 +192,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-03.svg 
 == dynamic-use-05.svg pass.svg
 == dynamic-use-06.svg pass.svg
 == dynamic-use-07.svg pass.svg
+== dynamic-use-08.svg pass.svg
 random == dynamic-use-nested-01a.svg dynamic-use-nested-01-ref.svg
 random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
