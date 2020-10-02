@@ -317,26 +317,20 @@ fn is_valid_scheme_char(a_char: u8) -> bool {
     a_char.is_ascii_alphanumeric() || a_char == b'+' || a_char == b'.' || a_char == b'-'
 }
 
-type ParsingCallback = fn(&ThinVec<nsCString>) -> bool;
+pub type ParsingCallback = extern "C" fn(&ThinVec<nsCString>) -> bool;
+
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "C" fn rust_parse_etc_hosts<'a>(path: &'a nsACString, callback: ParsingCallback) {
-    let file = File::open(&path.to_string());
-    if file.is_err() {
-        return;
-    }
-    let mut lines = io::BufReader::new(file.unwrap()).lines();
+    let file = match File::open(&*path.to_utf8()) {
+        Ok(file) => io::BufReader::new(file),
+        Err(..) => return,
+    };
 
     let mut array = ThinVec::new();
-    loop {
-        let line = match lines.next() {
-            None => {
-                break;
-            }
-            Some(Err(_)) => {
-                break;
-            }
-            Some(Ok(line)) => line,
+    for line in file.lines() {
+        let line = match line {
+            Ok(l) => l,
+            Err(..) => break,
         };
 
         let mut iter = line.split('#').next().unwrap().split_whitespace();
@@ -350,7 +344,7 @@ pub extern "C" fn rust_parse_etc_hosts<'a>(path: &'a nsACString, callback: Parsi
                 ];
                 host.parse::<Ipv4Addr>().is_err() && !host.contains(&invalid[..])
             })
-            .map(move |host| nsCString::from(host)),
+            .map(nsCString::from),
         );
 
         // /etc/hosts files can be huge. To make sure we don't block shutdown
