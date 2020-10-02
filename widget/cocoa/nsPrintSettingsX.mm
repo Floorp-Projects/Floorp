@@ -394,8 +394,10 @@ NS_IMETHODIMP nsPrintSettingsX::SetPrintRange(int16_t aPrintRange) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // In this case (PrintRange) we store the state in the base class in both the
-  // parent and content process since the platform specific NSPrintInfo isn't
-  // capable of representing the kRangeSelection state:
+  // parent and content process.
+  //
+  // TODO(emilio): This was only for kRangeSelection, probably this can be
+  // tweaked now (but then we'd have to tweak the getters).
   nsPrintSettings::SetPrintRange(aPrintRange);
 
   // However, we do need to keep NSPrintAllPages on mPrintInfo in sync in the
