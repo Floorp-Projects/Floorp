@@ -28,6 +28,7 @@
 #include "js/friend/DOMProxy.h"     // JS::ExpandoAndGeneration
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "proxy/DOMProxy.h"
 #include "proxy/Proxy.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"

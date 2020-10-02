@@ -10,6 +10,7 @@
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
+#include "proxy/DOMProxy.h"
 #include "vm/Iteration.h"
 #include "vm/Runtime.h"
 #include "vm/WrapperObject.h"
