@@ -129,7 +129,7 @@ export class ProjectSearch extends Component<Props, State> {
     this.props.searchSources(this.props.cx, searchTerm);
   }
 
-  toggleProjectTextSearch = (key: string, e: KeyboardEvent) => {
+  toggleProjectTextSearch = (e: KeyboardEvent) => {
     const { cx, closeProjectSearch, setActiveSearch } = this.props;
     if (e) {
       e.preventDefault();

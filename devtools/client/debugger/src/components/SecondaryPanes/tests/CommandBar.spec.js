@@ -38,7 +38,7 @@ describe("CommandBar", () => {
     keyEventHandlers
       .filter(i => i[0] === "F8")
       .forEach(([_, handler]) => {
-        handler(null, mockEvent);
+        handler(mockEvent);
       });
 
     expect(props.breakOnNext).toHaveBeenCalled();
@@ -73,7 +73,7 @@ describe("CommandBar", () => {
     keyEventHandlers
       .filter(i => i[0] === "F8")
       .forEach(([_, handler]) => {
-        handler(null, mockEvent);
+        handler(mockEvent);
       });
     expect(props.resume).toHaveBeenCalled();
     expect(props.breakOnNext).not.toHaveBeenCalled();
