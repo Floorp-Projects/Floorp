@@ -12,6 +12,7 @@
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
+#include "gc/Allocator.h"
 #include "gc/Barrier.h"
 #include "gc/GCProbes.h"
 #include "js/CharacterEncoding.h"

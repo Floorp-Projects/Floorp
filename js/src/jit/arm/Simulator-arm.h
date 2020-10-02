@@ -36,6 +36,7 @@
 #  include "jit/arm/Architecture-arm.h"
 #  include "jit/arm/disasm/Disasm-arm.h"
 #  include "jit/IonTypes.h"
+#  include "js/AllocPolicy.h"
 #  include "js/ProfilingFrameIterator.h"
 #  include "threading/Thread.h"
 #  include "vm/MutexIDs.h"
