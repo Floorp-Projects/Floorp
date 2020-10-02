@@ -77,8 +77,7 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
       mWaitingForPluginsSyncShutdown(false),
       mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor"),
       mInitPromise(&mInitPromiseMonitor),
-      mLoadPluginsFromDiskComplete(false),
-      mMainThread(GetCurrentSerialEventTarget()) {
+      mLoadPluginsFromDiskComplete(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -92,12 +91,15 @@ nsresult GeckoMediaPluginServiceParent::Init() {
   nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
   MOZ_ASSERT(obsService);
+
   MOZ_ALWAYS_SUCCEEDS(
       obsService->AddObserver(this, "profile-change-teardown", false));
   MOZ_ALWAYS_SUCCEEDS(
       obsService->AddObserver(this, "last-pb-context-exited", false));
   MOZ_ALWAYS_SUCCEEDS(
       obsService->AddObserver(this, "browser:purge-session-history", false));
+  MOZ_ALWAYS_SUCCEEDS(
+      obsService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false));
 
 #ifdef DEBUG
   MOZ_ALWAYS_SUCCEEDS(
@@ -1491,18 +1493,6 @@ nsresult GeckoMediaPluginServiceParent::ForgetThisSiteNative(
 
 static bool IsNodeIdValid(GMPParent* aParent) {
   return !aParent->GetNodeId().IsEmpty();
-}
-
-static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-  MOZ_RELEASE_ASSERT(svc);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier;
-  nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
-
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_RELEASE_ASSERT(barrier);
-  return barrier;
 }
 
 NS_IMETHODIMP
