@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineSession
@@ -126,7 +127,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private var isVisuallyComplete = false
 
-    private var privateNotificationObserver: PrivateNotificationFeature<PrivateNotificationService>? = null
+    private var privateNotificationObserver: PrivateNotificationFeature<PrivateNotificationService>? =
+        null
 
     private var isToolbarInflated = false
 
@@ -192,14 +194,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (isActivityColdStarted(intent, savedInstanceState)) {
-            externalSourceIntentProcessors.any {
+        if (isActivityColdStarted(
+                intent,
+                savedInstanceState
+            ) && !externalSourceIntentProcessors.any {
                 it.process(
                     intent,
                     navHost.navController,
                     this.intent
                 )
             }
+        ) {
+            navigateToBrowserOnColdStart()
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
@@ -240,7 +246,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
 
-    protected open fun startupTelemetryOnCreateCalled(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
+    protected open fun startupTelemetryOnCreateCalled(
+        safeIntent: SafeIntent,
+        hasSavedInstanceState: Boolean
+    ) {
         components.appStartupTelemetry.onHomeActivityOnCreate(
             safeIntent,
             hasSavedInstanceState,
@@ -322,6 +331,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     final override fun onPause() {
+        // We should return to the browser if there were normal tabs when we left the app
+        settings().shouldReturnToBrowser =
+            components.core.store.state.getNormalOrPrivateTabs(private = false).isNotEmpty()
+
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
@@ -760,6 +773,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 startTime,
                 "newTab: $newTab"
             )
+        }
+    }
+
+    open fun navigateToBrowserOnColdStart() {
+        // Normal tabs + cold start -> Should go back to browser if we had any tabs open when we left last
+        // except for PBM + Cold Start there won't be any tabs since they're evicted so we never will navigate
+        if (settings().shouldReturnToBrowser && !browsingModeManager.mode.isPrivate) {
+            openToBrowser(BrowserDirection.FromGlobal, null)
         }
     }
 

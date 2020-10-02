@@ -32,6 +32,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,6 +42,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
@@ -189,6 +191,28 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         val activity = activity as HomeActivity
+        components = requireComponents
+
+        if (customTabSessionId == null) {
+            // Once tab restoration is complete, if there are no tabs to show in the browser, go home
+            components.core.store.flowScoped(viewLifecycleOwner) { flow ->
+                flow.map { state -> state.restoreComplete }
+                    .ifChanged()
+                    .collect { restored ->
+                        if (restored) {
+                            val tabs =
+                                components.core.store.state.getNormalOrPrivateTabs(
+                                    activity.browsingModeManager.mode.isPrivate
+                                )
+                            if (tabs.isEmpty()) findNavController().popBackStack(
+                                R.id.homeFragment,
+                                false
+                            )
+                        }
+                    }
+            }
+        }
+
         activity.themeManager.applyStatusBarTheme(activity)
 
         browserFragmentStore = StoreProvider.get(this) {
@@ -196,8 +220,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 BrowserFragmentState()
             )
         }
-
-        components = requireComponents
 
         return view
     }

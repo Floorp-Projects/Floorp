@@ -21,6 +21,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.session.undo.UndoMiddleware
+import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -231,6 +232,8 @@ class Core(
                         }
                     }
                 }
+
+                store.dispatch(RestoreCompleteAction)
             }
 
             WebNotificationFeature(

@@ -54,6 +54,19 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldReturnToBrowser() {
+        // When just created
+        // Then
+        assertFalse(settings.shouldReturnToBrowser)
+
+        // When
+        settings.shouldReturnToBrowser = true
+
+        // Then
+        assertTrue(settings.shouldReturnToBrowser)
+    }
+
+    @Test
     fun clearDataOnQuit() {
         // When just created
         // Then

@@ -182,6 +182,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true
     )
 
+    var shouldReturnToBrowser by booleanPreference(
+        appContext.getString(R.string.pref_key_return_to_browser),
+        false
+    )
+
     // If any of the prefs have been modified, quit displaying the fenix moved tip
     fun shouldDisplayFenixMovingTip(): Boolean =
         preferences.getBoolean(

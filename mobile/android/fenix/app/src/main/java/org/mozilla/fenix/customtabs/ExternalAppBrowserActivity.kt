@@ -46,6 +46,10 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         )
     }
 
+    override fun navigateToBrowserOnColdStart() {
+        // No-op for external app
+    }
+
     override fun getNavDirections(
         from: BrowserDirection,
         customTabSessionId: String?
