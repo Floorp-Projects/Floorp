@@ -33,7 +33,6 @@
 #include "gc/Tracer.h"
 #include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
-#include "js/CompilationAndEvaluation.h"
 #include "js/Debug.h"
 #include "js/experimental/SourceHook.h"  // js::SourceHook
 #include "js/friend/StackLimits.h"       // js::ReportOverRecursed
