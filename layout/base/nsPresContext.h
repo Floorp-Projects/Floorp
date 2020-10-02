@@ -1028,11 +1028,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void NotifyPaintStatusReset();
   void NotifyDOMContentFlushed();
 
-  bool UsesFontMetricsFromStyle() const { return mUsesFontMetricsFromStyle; }
+  bool UsesExChUnits() const { return mUsesExChUnits; }
 
-  void SetUsesFontMetricsFromStyle(bool aValue) {
-    mUsesFontMetricsFromStyle = aValue;
-  }
+  void SetUsesExChUnits(bool aValue) { mUsesExChUnits = aValue; }
 
   bool IsDeviceSizePageSize();
 
@@ -1295,7 +1293,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   //
   // TODO(emilio): It's a bit weird that this lives here but all the other
   // relevant bits live in Device on the rust side.
-  unsigned mUsesFontMetricsFromStyle : 1;
+  unsigned mUsesExChUnits : 1;
 
   // Is the current mCounterStyleManager valid?
   unsigned mCounterStylesDirty : 1;
