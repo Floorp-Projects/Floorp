@@ -1,5 +1,8 @@
 #![feature(test)]
 
+extern crate crossbeam_channel;
+extern crate crossbeam_utils;
+extern crate num_cpus;
 extern crate test;
 
 use crossbeam_channel::{bounded, unbounded};
