@@ -7,7 +7,7 @@
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";

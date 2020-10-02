@@ -17,7 +17,7 @@ import { getLineText } from "./../../utils/source";
 import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
 
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 import {
   createBreakpointItems,
   breakpointItemActions,

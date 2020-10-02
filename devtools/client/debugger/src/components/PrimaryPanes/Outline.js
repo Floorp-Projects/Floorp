@@ -5,7 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
 import { score as fuzzaldrinScore } from "fuzzaldrin-plus";
 const classnames = require("classnames");
