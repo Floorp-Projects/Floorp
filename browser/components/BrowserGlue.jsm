@@ -3252,7 +3252,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 98;
+    const UI_VERSION = 99;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3882,6 +3882,10 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 98) {
       Services.prefs.clearUserPref("browser.search.cohort");
+    }
+
+    if (currentUIVersion < 99) {
+      Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
     }
 
     // Update the migration version.
