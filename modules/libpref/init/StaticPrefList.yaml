@@ -459,7 +459,7 @@
 # new scrollbar code for desktop zooming
 - name: apz.force_disable_desktop_zooming_scrollbars
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_ANDROID@
   mirror: always
 
 #ifdef MOZ_WIDGET_GTK
