@@ -24,7 +24,9 @@ import {
 import type { OrientationType } from "../reducers/types";
 import type { Source } from "../types";
 
-import { KeyShortcuts } from "devtools-modules";
+// $FlowIgnore
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+
 import Services from "devtools-services";
 const shortcuts = new KeyShortcuts({ window });
 
@@ -113,8 +115,8 @@ class App extends Component<Props, State> {
     verticalLayoutBreakpoint.addListener(this.onLayoutChange);
     this.setOrientation();
 
-    shortcuts.on(L10N.getStr("symbolSearch.search.key2"), (_, e) =>
-      this.toggleQuickOpenModal(_, e, "@")
+    shortcuts.on(L10N.getStr("symbolSearch.search.key2"), e =>
+      this.toggleQuickOpenModal(e, "@")
     );
 
     const searchKeys = [
@@ -123,8 +125,8 @@ class App extends Component<Props, State> {
     ];
     searchKeys.forEach(key => shortcuts.on(key, this.toggleQuickOpenModal));
 
-    shortcuts.on(L10N.getStr("gotoLineModal.key3"), (_, e) =>
-      this.toggleQuickOpenModal(_, e, ":")
+    shortcuts.on(L10N.getStr("gotoLineModal.key3"), e =>
+      this.toggleQuickOpenModal(e, ":")
     );
 
     shortcuts.on("Escape", this.onEscape);
@@ -150,7 +152,7 @@ class App extends Component<Props, State> {
     shortcuts.off("Escape", this.onEscape);
   }
 
-  onEscape = (_: mixed, e: KeyboardEvent) => {
+  onEscape = (e: KeyboardEvent) => {
     const {
       activeSearch,
       closeActiveSearch,
@@ -183,11 +185,7 @@ class App extends Component<Props, State> {
     return this.props.orientation === "horizontal";
   }
 
-  toggleQuickOpenModal = (
-    _: mixed,
-    e: SyntheticEvent<HTMLElement>,
-    query?: string
-  ) => {
+  toggleQuickOpenModal = (e: SyntheticEvent<HTMLElement>, query?: string) => {
     const { quickOpenEnabled, openQuickOpen, closeQuickOpen } = this.props;
 
     e.preventDefault();
