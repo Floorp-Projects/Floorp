@@ -1595,11 +1595,13 @@ class UrlbarInput {
       return;
     }
 
-    if (UrlbarPrefs.get("disableExtendForTests")) {
-      this.setAttribute("breakout-extend-disabled", "true");
-      return;
+    if (Cu.isInAutomation) {
+      if (UrlbarPrefs.get("disableExtendForTests")) {
+        this.setAttribute("breakout-extend-disabled", "true");
+        return;
+      }
+      this.removeAttribute("breakout-extend-disabled");
     }
-    this.removeAttribute("breakout-extend-disabled");
 
     this._toolbar.setAttribute("urlbar-exceeds-toolbar-bounds", "true");
     this.setAttribute("breakout-extend", "true");

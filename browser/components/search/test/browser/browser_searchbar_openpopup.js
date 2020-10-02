@@ -48,10 +48,6 @@ let searchIcon;
 let goButton;
 
 add_task(async function init() {
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.disableExtendForTests", true]],
-  });
-
   searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
