@@ -383,8 +383,6 @@ class nsChildView final : public nsBaseWidget {
                                nsTArray<mozilla::CommandInt>& aCommands, uint32_t aGeckoKeyCode,
                                uint32_t aCocoaKeyCode);
 
-  virtual nsTransparencyMode GetTransparencyMode() override;
-  virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual void SuppressAnimation(bool aSuppress) override;
 
   virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
