@@ -579,14 +579,16 @@
 // QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_RETURN_GLUE macros are
 // implementation details of QM_TRY_RETURN and shouldn't be used directly.
 
-// Handles the three arguments case when the error is propagated.
+// Handles the three arguments case when the error is (also) propagated.
+// Note that this deliberately uses a single return statement without going
+// through unwrap/unwrapErr/propagateErr, so that this does not prevent NRVO or
+// tail call optimizations when possible.
 #define QM_TRY_RETURN_PROPAGATE_ERR(ns, tryResult, expr) \
   auto tryResult = (expr);                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                 \
     ns::QM_HANDLE_ERROR(expr);                           \
-    return tryResult.propagateErr();                     \
   }                                                      \
-  return tryResult.unwrap();
+  return tryResult;
 
 // Handles the four arguments case when a custom return value needs to be
 // returned

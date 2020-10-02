@@ -700,9 +700,7 @@ template <typename StepFunc>
 mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
     mozIStorageStatement& aStmt, StepFunc&& aStepFunc) {
   return CollectWhile(
-      [&aStmt]() -> Result<bool, nsresult> {
-        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
-      },
+      [&aStmt] { IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep)); },
       [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
 }
 
@@ -12864,7 +12862,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
     bool hasJournals = false;
 
     IDB_TRY(CollectEach(
-        [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        [&entries] {
           IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                     GetNextFile));
         },
@@ -12976,7 +12974,7 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
   FileUsageType usage;
 
   IDB_TRY(CollectEach(
-      [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+      [&entries] {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                   GetNextFile));
       },
