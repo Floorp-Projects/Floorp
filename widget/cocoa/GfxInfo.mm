@@ -29,7 +29,7 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-GfxInfo::GfxInfo() : mAdapterRAM(0), mOSXVersion{0} {}
+GfxInfo::GfxInfo() : mNumGPUsDetected(0), mOSXVersion{0} { mAdapterRAM[0] = mAdapterRAM[1] = 0; }
 
 static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
   if (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion) == 10) {
@@ -80,17 +80,49 @@ static uint32_t IntValueOfCFData(CFDataRef d) {
 }
 
 void GfxInfo::GetDeviceInfo() {
-  io_registry_entry_t dsp_port = CGDisplayIOServicePort(kCGDirectMainDisplay);
-  CFTypeRef vendor_id_ref = SearchPortForProperty(dsp_port, CFSTR("vendor-id"));
-  if (vendor_id_ref) {
-    mAdapterVendorID.AppendPrintf("0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
-    CFRelease(vendor_id_ref);
+  mNumGPUsDetected = 0;
+
+  CFMutableDictionaryRef pci_dev_dict = IOServiceMatching("IOPCIDevice");
+  io_iterator_t io_iter;
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, pci_dev_dict, &io_iter) !=
+      kIOReturnSuccess) {
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "Failed to detect any GPUs (couldn't enumerate IOPCIDevice services)");
+    return;
   }
-  CFTypeRef device_id_ref = SearchPortForProperty(dsp_port, CFSTR("device-id"));
-  if (device_id_ref) {
-    mAdapterDeviceID.AppendPrintf("0x%04x", IntValueOfCFData((CFDataRef)device_id_ref));
-    CFRelease(device_id_ref);
+
+  io_registry_entry_t entry = IO_OBJECT_NULL;
+  while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
+    constexpr uint32_t kClassCodeDisplayVGA = 0x30000;
+    CFTypeRef class_code_ref = SearchPortForProperty(entry, CFSTR("class-code"));
+    if (class_code_ref) {
+      const uint32_t class_code = IntValueOfCFData((CFDataRef)class_code_ref);
+      CFRelease(class_code_ref);
+
+      if (class_code == kClassCodeDisplayVGA) {
+        CFTypeRef vendor_id_ref = SearchPortForProperty(entry, CFSTR("vendor-id"));
+        if (vendor_id_ref) {
+          mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
+              "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
+          CFRelease(vendor_id_ref);
+        }
+        CFTypeRef device_id_ref = SearchPortForProperty(entry, CFSTR("device-id"));
+        if (device_id_ref) {
+          mAdapterDeviceID[mNumGPUsDetected].AppendPrintf(
+              "0x%04x", IntValueOfCFData((CFDataRef)device_id_ref));
+          CFRelease(device_id_ref);
+        }
+        ++mNumGPUsDetected;
+      }
+    }
+    IOObjectRelease(entry);
+    if (mNumGPUsDetected == 2) {
+      break;
+    }
   }
+  IOObjectRelease(io_iter);
+
+  MOZ_DIAGNOSTIC_ASSERT(mNumGPUsDetected > 0, "Failed to detect any GPUs");
 }
 
 nsresult GfxInfo::Init() {
@@ -146,18 +178,30 @@ GfxInfo::GetAdapterDescription(nsAString& aAdapterDescription) {
 
 /* readonly attribute DOMString adapterDescription2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDescription.AssignLiteral("");
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterRAM; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(uint32_t* aAdapterRAM) {
-  *aAdapterRAM = mAdapterRAM;
+  *aAdapterRAM = mAdapterRAM[0];
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterRAM2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  *aAdapterRAM = mAdapterRAM[1];
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterDriver; */
 NS_IMETHODIMP
@@ -168,7 +212,13 @@ GfxInfo::GetAdapterDriver(nsAString& aAdapterDriver) {
 
 /* readonly attribute DOMString adapterDriver2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDriver.AssignLiteral("");
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterDriverVendor; */
 NS_IMETHODIMP
@@ -179,7 +229,13 @@ GfxInfo::GetAdapterDriverVendor(nsAString& aAdapterDriverVendor) {
 
 /* readonly attribute DOMString adapterDriverVendor2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDriverVendor.AssignLiteral("");
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterDriverVersion; */
 NS_IMETHODIMP
@@ -190,7 +246,13 @@ GfxInfo::GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) {
 
 /* readonly attribute DOMString adapterDriverVersion2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVersion2(nsAString& aAdapterDriverVersion) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDriverVersion2(nsAString& aAdapterDriverVersion) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDriverVersion.AssignLiteral("");
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterDriverDate; */
 NS_IMETHODIMP
@@ -201,29 +263,47 @@ GfxInfo::GetAdapterDriverDate(nsAString& aAdapterDriverDate) {
 
 /* readonly attribute DOMString adapterDriverDate2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverDate2(nsAString& aAdapterDriverDate) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDriverDate2(nsAString& aAdapterDriverDate) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDriverDate.AssignLiteral("");
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterVendorID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(nsAString& aAdapterVendorID) {
-  aAdapterVendorID = mAdapterVendorID;
+  aAdapterVendorID = mAdapterVendorID[0];
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterVendorID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(nsAString& aAdapterVendorID) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterVendorID2(nsAString& aAdapterVendorID) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterVendorID = mAdapterVendorID[1];
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterDeviceID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(nsAString& aAdapterDeviceID) {
-  aAdapterDeviceID = mAdapterDeviceID;
+  aAdapterDeviceID = mAdapterDeviceID[0];
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterDeviceID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(nsAString& aAdapterDeviceID) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterDeviceID2(nsAString& aAdapterDeviceID) {
+  if (mNumGPUsDetected < 2) {
+    return NS_ERROR_FAILURE;
+  }
+  aAdapterDeviceID = mAdapterDeviceID[1];
+  return NS_OK;
+}
 
 /* readonly attribute DOMString adapterSubsysID; */
 NS_IMETHODIMP
@@ -408,19 +488,19 @@ nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
 
 /* void spoofVendorID (in DOMString aVendorID); */
 NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString& aVendorID) {
-  mAdapterVendorID = aVendorID;
+  mAdapterVendorID[0] = aVendorID;
   return NS_OK;
 }
 
 /* void spoofDeviceID (in unsigned long aDeviceID); */
 NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString& aDeviceID) {
-  mAdapterDeviceID = aDeviceID;
+  mAdapterDeviceID[0] = aDeviceID;
   return NS_OK;
 }
 
 /* void spoofDriverVersion (in DOMString aDriverVersion); */
 NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString& aDriverVersion) {
-  mDriverVersion = aDriverVersion;
+  mDriverVersion[0] = aDriverVersion;
   return NS_OK;
 }
 
