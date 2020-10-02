@@ -23,6 +23,7 @@
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
+#include "js/experimental/Intl.h"  // JS::AddMozDateTimeFormatConstructor
 #include "js/GCAPI.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
