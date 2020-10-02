@@ -16,8 +16,11 @@ class GMPChild;
 
 class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
  public:
-  explicit GMPContentChild(GMPChild* aChild);
-  virtual ~GMPContentChild();
+  // Mark AddRef and Release as `final`, as they overload pure virtual
+  // implementations in PGMPContentChild.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPContentChild, final)
+
+  explicit GMPContentChild(GMPChild* aChild) : mGMPChild(aChild) {}
 
   MessageLoop* GMPMessageLoop();
 
@@ -45,6 +48,9 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   bool IsUsed();
 
   GMPChild* mGMPChild;
+
+ private:
+  ~GMPContentChild() = default;
 };
 
 }  // namespace gmp
