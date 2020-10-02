@@ -31,6 +31,8 @@ class HandleValueArray;
 class ObjectOpResult;
 class PropertyResult;
 
+struct JS_PUBLIC_API PropertyDescriptor;
+
 }  // namespace JS
 
 // Do the importing.
@@ -134,6 +136,8 @@ using JS::HandleValueArray;
 
 using JS::ObjectOpResult;
 using JS::PropertyResult;
+
+using JS::PropertyDescriptor;
 
 using JS::Compartment;
 using JS::Realm;
