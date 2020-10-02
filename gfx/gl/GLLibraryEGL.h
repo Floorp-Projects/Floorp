@@ -104,7 +104,6 @@ enum class EGLExtension {
   EXT_swap_buffers_with_damage,
   KHR_swap_buffers_with_damage,
   EXT_buffer_age,
-  KHR_partial_update,
   Max
 };
 
@@ -447,12 +446,6 @@ class GLLibraryEGL final {
     WRAP(fSwapBuffersWithDamage(dpy, surface, rects, n_rects));
   }
 
-  // EGL_KHR_partial_update
-  EGLBoolean fSetDamageRegion(EGLDisplay dpy, EGLSurface surface,
-                              const EGLint* rects, EGLint n_rects) {
-    WRAP(fSetDamageRegion(dpy, surface, rects, n_rects));
-  }
-
 #undef WRAP
 #undef PROFILE_CALL
 #undef BEFORE_CALL
@@ -578,10 +571,6 @@ class GLLibraryEGL final {
                                                    EGLSurface surface,
                                                    const EGLint* rects,
                                                    EGLint n_rects);
-    // EGL_KHR_partial_update
-    EGLBoolean(GLAPIENTRY* fSetDamageRegion)(EGLDisplay dpy, EGLSurface surface,
-                                             const EGLint* rects,
-                                             EGLint n_rects);
     EGLClientBuffer(GLAPIENTRY* fGetNativeClientBufferANDROID)(
         const struct AHardwareBuffer* buffer);
   } mSymbols = {};
@@ -834,13 +823,6 @@ class EglDisplay final {
         IsExtensionSupported(EGLExtension::EXT_swap_buffers_with_damage) ||
         IsExtensionSupported(EGLExtension::KHR_swap_buffers_with_damage));
     return mLib->fSwapBuffersWithDamage(mDisplay, surface, rects, n_rects);
-  }
-
-  // EGL_KHR_partial_update
-  EGLBoolean fSetDamageRegion(EGLSurface surface, const EGLint* rects,
-                              EGLint n_rects) {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_partial_update));
-    return mLib->fSetDamageRegion(mDisplay, surface, rects, n_rects);
   }
 };
 

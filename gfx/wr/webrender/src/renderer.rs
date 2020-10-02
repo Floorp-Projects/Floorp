@@ -2172,61 +2172,6 @@ impl VertexDataTextures {
     }
 }
 
-/// Tracks buffer damage rects over a series of frames.
-#[derive(Debug)]
-struct BufferDamageTracker {
-    damage_rects: [DeviceRect; 2],
-    current_offset: usize,
-}
-
-impl Default for BufferDamageTracker {
-    fn default() -> Self {
-        Self {
-            damage_rects: [DeviceRect::default(); 2],
-            current_offset: 0,
-        }
-     }
-}
-
-impl BufferDamageTracker {
-    /// Sets the damage rect for the current frame. Should only be called *after*
-    /// get_damage_rect() has been called to get the current backbuffer's damage rect.
-    fn push_dirty_rect(&mut self, rect: &DeviceRect) {
-        self.damage_rects[self.current_offset] = rect.clone();
-        self.current_offset = match self.current_offset {
-            0 => self.damage_rects.len() - 1,
-            n => n - 1,
-        }
-    }
-
-    /// Gets the damage rect for the current backbuffer, given the backbuffer's age.
-    /// (The number of frames since it was previously the backbuffer.)
-    /// Returns an empty rect if the buffer is valid, and None if the entire buffer is invalid.
-    fn get_damage_rect(&self, buffer_age: usize) -> Option<DeviceRect> {
-        match buffer_age {
-            // 0 means this is a new buffer, so is completely invalid.
-            0 => None,
-            // 1 means this backbuffer was also the previous frame's backbuffer
-            // (so must have been copied to the frontbuffer). It is therefore entirely valid.
-            1 => Some(DeviceRect::zero()),
-            // We must calculate the union of the damage rects since this buffer was previously
-            // the backbuffer.
-            n if n <= self.damage_rects.len() + 1 => {
-                Some(
-                    self.damage_rects.iter()
-                        .cycle()
-                        .skip(self.current_offset + 1)
-                        .take(n - 1)
-                        .fold(DeviceRect::zero(), |acc, r| acc.union(r))
-                )
-            }
-            // The backbuffer is older than the number of frames for which we track,
-            // so we treat it as entirely invalid.
-            _ => None,
-        }
-    }
-}
-
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
 ///
@@ -2353,10 +2298,10 @@ pub struct Renderer {
     /// State related to the debug / profiling overlays
     debug_overlay_state: DebugOverlayState,
 
-    /// Tracks the dirty rectangles from previous frames. Used on platforms
-    /// that require keeping the front buffer fully correct when doing
+    /// The dirty rectangle from the previous frame, used on platforms that
+    /// require keeping the front buffer fully correct when doing
     /// partial present (e.g. unix desktop with EGL_EXT_buffer_age).
-    buffer_damage_tracker: BufferDamageTracker,
+    prev_dirty_rect: DeviceRect,
 
     max_primitive_instance_count: usize,
 }
@@ -2647,7 +2592,7 @@ impl Renderer {
         };
 
         let compositor_kind = match options.compositor_config {
-            CompositorConfig::Draw { max_partial_present_rects, draw_previous_partial_present_regions, .. } => {
+            CompositorConfig::Draw { max_partial_present_rects, draw_previous_partial_present_regions } => {
                 CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions }
             }
             CompositorConfig::Native { ref compositor, max_update_rects, .. } => {
@@ -2931,7 +2876,7 @@ impl Renderer {
             current_compositor_kind: compositor_kind,
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
-            buffer_damage_tracker: BufferDamageTracker::default(),
+            prev_dirty_rect: DeviceRect::zero(),
             max_primitive_instance_count:
                 RendererOptions::MAX_INSTANCE_BUFFER_SIZE / mem::size_of::<PrimitiveInstanceData>(),
         };
@@ -5222,19 +5167,9 @@ impl Renderer {
         let mut partial_present_mode = None;
 
         if max_partial_present_rects > 0 {
-            let prev_frames_damage_rect = if let Some(partial_present) = self.compositor_config.partial_present() {
-                self.buffer_damage_tracker
-                    .get_damage_rect(partial_present.get_buffer_age())
-                    .or_else(|| Some(DeviceRect::from_size(draw_target.dimensions().to_f32())))
-            } else {
-                None
-            };
-
-            let can_use_partial_present =
-                composite_state.dirty_rects_are_valid &&
-                !self.force_redraw &&
-                !(prev_frames_damage_rect.is_none() && draw_previous_partial_present_regions) &&
-                !self.debug_overlay_state.is_enabled;
+            let can_use_partial_present = composite_state.dirty_rects_are_valid &&
+                                          !self.force_redraw &&
+                                          !self.debug_overlay_state.is_enabled;
 
             if can_use_partial_present {
                 let mut combined_dirty_rect = DeviceRect::zero();
@@ -5242,40 +5177,29 @@ impl Renderer {
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
-                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
-                    combined_dirty_rect = combined_dirty_rect.union(&tile_dirty_rect);
+                    let dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
                 let combined_dirty_rect_i32 = combined_dirty_rect.to_i32();
-                // Return this frame's dirty region. If nothing has changed, don't return any dirty
-                // rects at all (the client can use this as a signal to skip present completely).
+                // If nothing has changed, don't return any dirty rects at all (the client
+                // can use this as a signal to skip present completely).
                 if !combined_dirty_rect.is_empty() {
                     results.dirty_rects.push(combined_dirty_rect_i32);
                 }
 
-                // Track this frame's dirty region, for calculating subsequent frames' damage.
-                if draw_previous_partial_present_regions {
-                    self.buffer_damage_tracker.push_dirty_rect(&combined_dirty_rect);
-                }
-
                 // If the implementation requires manually keeping the buffer consistent,
-                // then we must combine this frame's dirty region with that of previous frames
-                // to determine the total_dirty_rect. The is used to determine what region we
-                // render to, and is what we send to the compositor as the buffer damage region
-                // (eg for KHR_partial_update).
-                let total_dirty_rect = if draw_previous_partial_present_regions {
-                    combined_dirty_rect.union(&prev_frames_damage_rect.unwrap())
-                } else {
-                    combined_dirty_rect
-                };
-
+                // combine the previous frame's damage for tile clipping.
+                // (Not for the returned region though, that should be from this frame only)
                 partial_present_mode = Some(PartialPresentMode::Single {
-                    dirty_rect: total_dirty_rect,
+                    dirty_rect: if draw_previous_partial_present_regions {
+                        combined_dirty_rect.union(&self.prev_dirty_rect)
+                    } else { combined_dirty_rect },
                 });
 
-                if let Some(partial_present) = self.compositor_config.partial_present() {
-                    partial_present.set_buffer_damage_region(&[total_dirty_rect.to_i32()]);
+                if draw_previous_partial_present_regions {
+                    self.prev_dirty_rect = combined_dirty_rect;
                 }
             } else {
                 // If we don't have a valid partial present scenario, return a single
@@ -5287,7 +5211,7 @@ impl Renderer {
                 results.dirty_rects.push(fb_rect);
 
                 if draw_previous_partial_present_regions {
-                    self.buffer_damage_tracker.push_dirty_rect(&fb_rect.to_f32());
+                    self.prev_dirty_rect = fb_rect.to_f32();
                 }
             }
 
@@ -7937,38 +7861,5 @@ impl CompositeState {
             );
         }
         compositor.start_compositing();
-    }
-}
-
-mod tests {
-    #[test]
-    fn test_buffer_damage_tracker() {
-        use super::BufferDamageTracker;
-        use api::units::{DevicePoint, DeviceRect, DeviceSize};
-
-        let mut tracker = BufferDamageTracker::default();
-        assert_eq!(tracker.get_damage_rect(0), None);
-        assert_eq!(tracker.get_damage_rect(1), Some(DeviceRect::zero()));
-        assert_eq!(tracker.get_damage_rect(2), Some(DeviceRect::zero()));
-        assert_eq!(tracker.get_damage_rect(3), Some(DeviceRect::zero()));
-        assert_eq!(tracker.get_damage_rect(4), None);
-
-        let damage1 = DeviceRect::new(DevicePoint::new(10, 10), DeviceSize::new(10, 10));
-        let damage2 = DeviceRect::new(DevicePoint::new(20, 20), DeviceSize::new(10, 10));
-        let combined = damage1.union(&damage2);
-
-        tracker.push_dirty_rect(&damage1);
-        assert_eq!(tracker.get_damage_rect(0), None);
-        assert_eq!(tracker.get_damage_rect(1), Some(DeviceRect::zero()));
-        assert_eq!(tracker.get_damage_rect(2), Some(damage1));
-        assert_eq!(tracker.get_damage_rect(3), Some(damage1));
-        assert_eq!(tracker.get_damage_rect(4), None);
-
-        tracker.push_dirty_rect(&damage2);
-        assert_eq!(tracker.get_damage_rect(0), None);
-        assert_eq!(tracker.get_damage_rect(1), Some(DeviceRect::zero()));
-        assert_eq!(tracker.get_damage_rect(2), Some(damage2));
-        assert_eq!(tracker.get_damage_rect(3), Some(combined));
-        assert_eq!(tracker.get_damage_rect(4), None);
     }
 }

@@ -126,17 +126,6 @@ class RenderCompositor {
   virtual bool RequestFullRender() { return false; }
   virtual uint32_t GetMaxPartialPresentRects() { return 0; }
   virtual bool ShouldDrawPreviousPartialPresentRegions() { return false; }
-  // Returns the age of the current backbuffer., This should be used, if
-  // ShouldDrawPreviousPartialPresentRegions() returns true, to determine the
-  // region which must be rendered in addition to the current frame's dirty
-  // rect.
-  virtual size_t GetBufferAge() const { return 0; }
-  // Allows webrender to specify the total region that will be rendered to this
-  // frame, ie the frame's dirty region and some previous frames' dirty regions,
-  // if applicable (calculated using the buffer age). Must be called before
-  // anything has been rendered to the main framebuffer.
-  virtual void SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
-                                     size_t aNumRects) {}
 
   // Whether the surface origin is top-left.
   virtual bool SurfaceOriginIsTopLeft() { return false; }

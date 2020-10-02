@@ -98,8 +98,7 @@ class GLContextEGL final : public GLContext {
 
   EGLSurface GetEGLSurface() const { return mSurface; }
 
-  bool HasExtBufferAge() const;
-  bool HasKhrPartialUpdate() const;
+  bool HasBufferAge() const;
   EGLint GetBufferAge() const;
 
   bool BindTex2DOffscreen(GLContext* aOffscreen);
