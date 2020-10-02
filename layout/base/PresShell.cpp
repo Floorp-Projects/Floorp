@@ -2340,7 +2340,7 @@ PresShell::PageMove(bool aForward, bool aExtend) {
         GetScrollableFrameToScroll(ScrollableDirection::Vertical));
     // If there is no scrollable frame, get the frame to move caret instead.
   }
-  if (!frame) {
+  if (!frame || frame->PresContext() != mPresContext) {
     frame = mSelection->GetFrameToPageSelect();
     if (!frame) {
       return NS_OK;
