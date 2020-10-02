@@ -6913,10 +6913,10 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
-    const MaybeDiscarded<BrowsingContext>& aContext, int32_t aIndex,
+    const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
     HistoryGoResolver&& aResolveRequestedIndex) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->HistoryGo(aIndex,
+    aContext.get_canonical()->HistoryGo(aOffset,
                                         std::move(aResolveRequestedIndex));
   }
   return IPC_OK();
