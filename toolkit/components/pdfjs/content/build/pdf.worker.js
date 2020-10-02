@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.81';
-const pdfjsBuild = '120c5c226';
+const pdfjsVersion = '2.7.99';
+const pdfjsBuild = '88f72d6b1';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.81';
+    const workerVersion = '2.7.99';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -27630,7 +27630,7 @@ var Font = function FontClosure() {
         (0, _util.warn)('Font file is empty in "' + name + '" (' + this.loadedName + ")");
       }
 
-      this.fallbackToSystemFont();
+      this.fallbackToSystemFont(properties);
       return;
     }
 
@@ -27673,7 +27673,7 @@ var Font = function FontClosure() {
       }
     } catch (e) {
       (0, _util.warn)(e);
-      this.fallbackToSystemFont();
+      this.fallbackToSystemFont(properties);
       return;
     }
 
@@ -28184,7 +28184,7 @@ var Font = function FontClosure() {
       return data;
     },
 
-    fallbackToSystemFont: function Font_fallbackToSystemFont() {
+    fallbackToSystemFont(properties) {
       this.missingFile = true;
       var name = this.name;
       var type = this.type;
@@ -28200,7 +28200,8 @@ var Font = function FontClosure() {
       this.remeasure = Object.keys(this.widths).length > 0;
 
       if (isStandardFont && type === "CIDFontType2" && this.cidEncoding.startsWith("Identity-")) {
-        const GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)();
+        const GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)(),
+              cidToGidMap = properties.cidToGidMap;
         const map = [];
 
         for (const charCode in GlyphMapForStandardFonts) {
@@ -28218,6 +28219,16 @@ var Font = function FontClosure() {
 
           for (const charCode in SupplementalGlyphMapForCalibri) {
             map[+charCode] = SupplementalGlyphMapForCalibri[charCode];
+          }
+        }
+
+        if (cidToGidMap) {
+          for (const charCode in map) {
+            const cid = map[charCode];
+
+            if (cidToGidMap[cid] !== undefined) {
+              map[+charCode] = cidToGidMap[cid];
+            }
           }
         }
 
@@ -28273,6 +28284,7 @@ var Font = function FontClosure() {
       this.loadedName = fontName.split("-")[0];
       this.fontType = getFontType(type, subtype);
     },
+
     checkAndRepair: function Font_checkAndRepair(name, font, properties) {
       const VALID_TABLES = ["OS/2", "cmap", "head", "hhea", "hmtx", "maxp", "name", "post", "loca", "glyf", "fpgm", "prep", "cvt ", "CFF "];
 
