@@ -15,8 +15,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
-#include "mozwayland/mozwayland.h"
-#include "wayland/gtk-primary-selection-client-protocol.h"
 
 struct FastTrackClipboard;
 
@@ -69,6 +67,7 @@ class WaylandDataOffer : public DataOffer {
 class PrimaryDataOffer : public DataOffer {
  public:
   explicit PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+  explicit PrimaryDataOffer(zwp_primary_selection_offer_v1* aPrimaryDataOffer);
   void SetAvailableDragActions(uint32_t aWaylandActions){};
 
   virtual ~PrimaryDataOffer();
@@ -76,7 +75,8 @@ class PrimaryDataOffer : public DataOffer {
  private:
   bool RequestDataTransfer(const char* aMimeType, int fd) override;
 
-  gtk_primary_selection_offer* mPrimaryDataOffer;
+  gtk_primary_selection_offer* mPrimaryDataOfferGtk;
+  zwp_primary_selection_offer_v1* mPrimaryDataOfferZwpV1;
 };
 
 class nsWaylandDragContext : public nsISupports {
@@ -124,9 +124,11 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
 
   void RegisterNewDataOffer(wl_data_offer* aWaylandDataOffer);
   void RegisterNewDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+  void RegisterNewDataOffer(zwp_primary_selection_offer_v1* aPrimaryDataOffer);
 
   void SetClipboardDataOffer(wl_data_offer* aWaylandDataOffer);
   void SetPrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+  void SetPrimaryDataOffer(zwp_primary_selection_offer_v1* aPrimaryDataOffer);
   void AddDragAndDropDataOffer(wl_data_offer* aWaylandDataOffer);
   nsWaylandDragContext* GetDragContext();
 
