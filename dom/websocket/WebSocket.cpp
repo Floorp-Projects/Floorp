@@ -2216,7 +2216,11 @@ void WebSocket::GetProtocol(nsAString& aProtocol) {
 void WebSocket::Send(const nsAString& aData, ErrorResult& aRv) {
   AssertIsOnTargetThread();
 
-  NS_ConvertUTF16toUTF8 msgString(aData);
+  nsAutoCString msgString;
+  if (!AppendUTF16toUTF8(aData, msgString, mozilla::fallible_t())) {
+    aRv.Throw(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
   Send(nullptr, msgString, msgString.Length(), false, aRv);
 }
 
@@ -2252,7 +2256,11 @@ void WebSocket::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   uint32_t len = aData.Length();
   char* data = reinterpret_cast<char*>(aData.Data());
 
-  nsDependentCSubstring msgString(data, len);
+  nsDependentCSubstring msgString;
+  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
+    aRv.Throw(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
   Send(nullptr, msgString, len, true, aRv);
 }
 
@@ -2266,7 +2274,11 @@ void WebSocket::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   uint32_t len = aData.Length();
   char* data = reinterpret_cast<char*>(aData.Data());
 
-  nsDependentCSubstring msgString(data, len);
+  nsDependentCSubstring msgString;
+  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
+    aRv.Throw(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
   Send(nullptr, msgString, len, true, aRv);
 }
 
