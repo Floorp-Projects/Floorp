@@ -113,7 +113,7 @@ function testStore(type, ext, base, offset, align, value) {
 function testStoreOOB(type, ext, base, offset, align, value) {
     if (type === 'i64') {
         assertErrorMessage(() => wasmAssert(
-            storeModuleSrc(type, ext, offset, align, value),
+            storeModuleSrc(type, ext, offset, align),
             [{type, func: '$store', args: [`i32.const ${base}`, `i64.const ${value}`]}]
         ), RuntimeError, /index out of bounds/);
     } else {
