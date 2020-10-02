@@ -486,27 +486,6 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 
 #pragma mark -
 
-nsTransparencyMode nsChildView::GetTransparencyMode() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  nsCocoaWindow* windowWidget = GetAppWindowWidget();
-  return windowWidget ? windowWidget->GetTransparencyMode() : eTransparencyOpaque;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
-}
-
-// This is called by nsContainerFrame on the root widget for all window types
-// except popup windows (when nsCocoaWindow::SetTransparencyMode is used instead).
-void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  nsCocoaWindow* windowWidget = GetAppWindowWidget();
-  if (windowWidget) {
-    windowWidget->SetTransparencyMode(aMode);
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
 
 void nsChildView::SuppressAnimation(bool aSuppress) {
   GetAppWindowWidget()->SuppressAnimation(aSuppress);
