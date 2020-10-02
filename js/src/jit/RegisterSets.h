@@ -7,13 +7,16 @@
 #ifndef jit_RegisterSets_h
 #define jit_RegisterSets_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include <new>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "jit/JitAllocPolicy.h"
+#include "jit/IonTypes.h"
 #include "jit/Registers.h"
+#include "js/Value.h"
 
 namespace js {
 namespace jit {
@@ -232,9 +235,9 @@ class ConstantOrRegister {
  public:
   ConstantOrRegister() = delete;
 
-  MOZ_IMPLICIT ConstantOrRegister(const Value& value) : constant_(true) {
+  MOZ_IMPLICIT ConstantOrRegister(const JS::Value& value) : constant_(true) {
     MOZ_ASSERT(constant());
-    new (&data.constant) Value(value);
+    new (&data.constant) JS::Value(value);
   }
 
   MOZ_IMPLICIT ConstantOrRegister(TypedOrValueRegister reg) : constant_(false) {
@@ -244,7 +247,7 @@ class ConstantOrRegister {
 
   bool constant() const { return constant_; }
 
-  Value value() const {
+  JS::Value value() const {
     MOZ_ASSERT(constant());
     return data.constant;
   }
