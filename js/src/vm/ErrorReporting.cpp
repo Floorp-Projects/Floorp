@@ -555,7 +555,7 @@ bool js::ReportErrorVA(JSContext* cx, IsWarning isWarning, const char* format,
   } else {
     MOZ_ASSERT(argumentsType == ArgumentsAreLatin1);
     JS::Latin1Chars latin1(message.get(), strlen(message.get()));
-    UTF8CharsZ utf8(JS::CharsToNewUTF8CharsZ(cx, latin1));
+    JS::UTF8CharsZ utf8(JS::CharsToNewUTF8CharsZ(cx, latin1));
     if (!utf8) {
       return false;
     }

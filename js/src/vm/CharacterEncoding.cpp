@@ -37,6 +37,7 @@ using mozilla::Utf8Unit;
 using JS::Latin1CharsZ;
 using JS::TwoByteCharsZ;
 using JS::UTF8Chars;
+using JS::UTF8CharsZ;
 using namespace js;
 using namespace js::unicode;
 
