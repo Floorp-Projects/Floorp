@@ -217,11 +217,11 @@ pub extern "C" fn rust_net_is_valid_ipv6_addr<'a>(addr: &'a nsACString) -> bool 
 }
 
 #[inline(always)]
-fn fast_is_hex_digit(c: char) -> bool {
+fn fast_is_hex_digit(c: u8) -> bool {
     match c {
-        '0'..='9' => true,
-        'a'..='f' => true,
-        'A'..='F' => true,
+        b'0'..=b'9' => true,
+        b'a'..=b'f' => true,
+        b'A'..=b'F' => true,
         _ => false,
     }
 }
@@ -240,7 +240,7 @@ pub fn is_valid_ipv6_addr<'a>(addr: &'a [u8]) -> bool {
     //Enumerate with an u8 for cache locality
     for (i, c) in (0u8..).zip(addr) {
         match c {
-            maybe_digit if fast_is_hex_digit(*maybe_digit as char) => {
+            maybe_digit if fast_is_hex_digit(*maybe_digit) => {
                 // Too many digits in the block
                 if digits == 4 {
                     return false;
