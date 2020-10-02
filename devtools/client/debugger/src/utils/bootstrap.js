@@ -11,7 +11,9 @@ const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
 import { isFirefoxPanel, isDevelopment, isTesting } from "devtools-environment";
-import { AppConstants } from "devtools-modules";
+
+// $FlowIgnore
+const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 import SourceMaps, {
   startSourceMapWorker,
@@ -69,7 +71,7 @@ export function bootstrapStore(
   panel: Panel,
   initialState: Object
 ): any {
-  const debugJsModules = AppConstants.AppConstants.DEBUG_JS_MODULES == "1";
+  const debugJsModules = AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
     log: prefs.logging || isTesting(),
     timing: debugJsModules || isDevelopment(),
