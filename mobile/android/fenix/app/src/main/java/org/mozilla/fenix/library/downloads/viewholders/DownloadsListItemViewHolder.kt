@@ -8,12 +8,12 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.download_list_item.view.*
 import kotlinx.android.synthetic.main.library_site_item.view.*
+import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.downloads.DownloadInteractor
 import org.mozilla.fenix.library.downloads.DownloadItem
-import mozilla.components.feature.downloads.toMegabyteString
 import org.mozilla.fenix.ext.getIcon
 
 class DownloadsListItemViewHolder(
@@ -29,7 +29,7 @@ class DownloadsListItemViewHolder(
     ) {
         itemView.download_layout.visibility = View.VISIBLE
         itemView.download_layout.titleView.text = item.fileName
-        itemView.download_layout.urlView.text = item.size.toLong().toMegabyteString()
+        itemView.download_layout.urlView.text = item.size.toLong().toMegabyteOrKilobyteString()
 
         itemView.download_layout.setSelectionInteractor(item, selectionHolder, downloadInteractor)
         itemView.download_layout.changeSelected(item in selectionHolder.selectedItems)

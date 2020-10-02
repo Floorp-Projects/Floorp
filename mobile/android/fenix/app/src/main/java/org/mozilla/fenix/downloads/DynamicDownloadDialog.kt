@@ -11,7 +11,7 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.download_dialog_layout.view.*
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
-import mozilla.components.feature.downloads.toMegabyteString
+import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
@@ -86,7 +86,7 @@ class DynamicDownloadDialog(
         } else {
             val titleText = container.context.getString(
                 R.string.mozac_feature_downloads_completed_notification_text2
-            ) + " (${downloadState.contentLength?.toMegabyteString()})"
+            ) + " (${downloadState.contentLength?.toMegabyteOrKilobyteString()})"
 
             view.download_dialog_title.text = titleText
 
