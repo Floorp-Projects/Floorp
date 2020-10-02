@@ -131,7 +131,12 @@ fn extend_input_to_reg(ctx: Ctx, spec: InsnInput, ext_spec: ExtSpec) -> Reg {
     let ext_mode = match (input_size, requested_size) {
         (a, b) if a == b => return put_input_in_reg(ctx, spec),
         (1, 8) => return put_input_in_reg(ctx, spec),
-        (a, b) => ExtMode::new(a, b).expect(&format!("invalid extension: {} -> {}", a, b)),
+        (a, 16) | (a, 32) if a == 1 || a == 8 => ExtMode::BL,
+        (a, 64) if a == 1 || a == 8 => ExtMode::BQ,
+        (16, 32) => ExtMode::WL,
+        (16, 64) => ExtMode::WQ,
+        (32, 64) => ExtMode::LQ,
+        _ => unreachable!("extend {} -> {}", input_size, requested_size),
     };
 
     let src = input_to_reg_mem(ctx, spec);
@@ -501,11 +506,8 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
 
         Opcode::Iadd
         | Opcode::IaddIfcout
-        | Opcode::SaddSat
-        | Opcode::UaddSat
         | Opcode::Isub
         | Opcode::Imul
-        | Opcode::AvgRound
         | Opcode::Band
         | Opcode::Bor
         | Opcode::Bxor => {
@@ -517,24 +519,14 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                         types::I16X8 => SseOpcode::Paddw,
                         types::I32X4 => SseOpcode::Paddd,
                         types::I64X2 => SseOpcode::Paddq,
-                        _ => panic!("Unsupported type for packed iadd instruction: {}", ty),
-                    },
-                    Opcode::SaddSat => match ty {
-                        types::I8X16 => SseOpcode::Paddsb,
-                        types::I16X8 => SseOpcode::Paddsw,
-                        _ => panic!("Unsupported type for packed sadd_sat instruction: {}", ty),
-                    },
-                    Opcode::UaddSat => match ty {
-                        types::I8X16 => SseOpcode::Paddusb,
-                        types::I16X8 => SseOpcode::Paddusw,
-                        _ => panic!("Unsupported type for packed uadd_sat instruction: {}", ty),
+                        _ => panic!("Unsupported type for packed Iadd instruction"),
                     },
                     Opcode::Isub => match ty {
                         types::I8X16 => SseOpcode::Psubb,
                         types::I16X8 => SseOpcode::Psubw,
                         types::I32X4 => SseOpcode::Psubd,
                         types::I64X2 => SseOpcode::Psubq,
-                        _ => panic!("Unsupported type for packed isub instruction: {}", ty),
+                        _ => panic!("Unsupported type for packed Isub instruction"),
                     },
                     Opcode::Imul => match ty {
                         types::I16X8 => SseOpcode::Pmullw,
@@ -640,14 +632,9 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                             ctx.emit(Inst::gen_move(dst, rhs_1.to_reg(), ty));
                             return Ok(());
                         }
-                        _ => panic!("Unsupported type for packed imul instruction: {}", ty),
+                        _ => panic!("Unsupported type for packed Imul instruction"),
                     },
-                    Opcode::AvgRound => match ty {
-                        types::I8X16 => SseOpcode::Pavgb,
-                        types::I16X8 => SseOpcode::Pavgw,
-                        _ => panic!("Unsupported type for packed avg_round instruction: {}", ty),
-                    },
-                    _ => panic!("Unsupported packed instruction: {}", op),
+                    _ => panic!("Unsupported packed instruction"),
                 };
                 let lhs = put_input_in_reg(ctx, inputs[0]);
                 let rhs = input_to_reg_mem(ctx, inputs[1]);
@@ -696,65 +683,6 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 let dst = get_output_reg(ctx, outputs[0]);
                 ctx.emit(Inst::mov_r_r(true, lhs, dst));
                 ctx.emit(Inst::alu_rmi_r(is_64, alu_op, rhs, dst));
-            }
-        }
-
-        Opcode::Iabs => {
-            let src = input_to_reg_mem(ctx, inputs[0]);
-            let dst = get_output_reg(ctx, outputs[0]);
-            let ty = ty.unwrap();
-            if ty.is_vector() {
-                let opcode = match ty {
-                    types::I8X16 => SseOpcode::Pabsb,
-                    types::I16X8 => SseOpcode::Pabsw,
-                    types::I32X4 => SseOpcode::Pabsd,
-                    _ => panic!("Unsupported type for packed iabs instruction: {}", ty),
-                };
-                ctx.emit(Inst::xmm_unary_rm_r(opcode, src, dst));
-            } else {
-                unimplemented!("iabs is unimplemented for non-vector type: {}", ty);
-            }
-        }
-
-        Opcode::Imax | Opcode::Umax | Opcode::Imin | Opcode::Umin => {
-            let lhs = put_input_in_reg(ctx, inputs[0]);
-            let rhs = input_to_reg_mem(ctx, inputs[1]);
-            let dst = get_output_reg(ctx, outputs[0]);
-            let ty = ty.unwrap();
-            if ty.is_vector() {
-                let sse_op = match op {
-                    Opcode::Imax => match ty {
-                        types::I8X16 => SseOpcode::Pmaxsb,
-                        types::I16X8 => SseOpcode::Pmaxsw,
-                        types::I32X4 => SseOpcode::Pmaxsd,
-                        _ => panic!("Unsupported type for packed {} instruction: {}", op, ty),
-                    },
-                    Opcode::Umax => match ty {
-                        types::I8X16 => SseOpcode::Pmaxub,
-                        types::I16X8 => SseOpcode::Pmaxuw,
-                        types::I32X4 => SseOpcode::Pmaxud,
-                        _ => panic!("Unsupported type for packed {} instruction: {}", op, ty),
-                    },
-                    Opcode::Imin => match ty {
-                        types::I8X16 => SseOpcode::Pminsb,
-                        types::I16X8 => SseOpcode::Pminsw,
-                        types::I32X4 => SseOpcode::Pminsd,
-                        _ => panic!("Unsupported type for packed {} instruction: {}", op, ty),
-                    },
-                    Opcode::Umin => match ty {
-                        types::I8X16 => SseOpcode::Pminub,
-                        types::I16X8 => SseOpcode::Pminuw,
-                        types::I32X4 => SseOpcode::Pminud,
-                        _ => panic!("Unsupported type for packed {} instruction: {}", op, ty),
-                    },
-                    _ => unreachable!("This is a bug: the external and internal `match op` should be over the same opcodes."),
-                };
-
-                // Move the `lhs` to the same register as `dst`.
-                ctx.emit(Inst::gen_move(dst, lhs, ty));
-                ctx.emit(Inst::xmm_rm_r(sse_op, rhs, dst));
-            } else {
-                panic!("Unsupported type for {} instruction: {}", op, ty);
             }
         }
 
@@ -1261,13 +1189,18 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             let src = input_to_reg_mem(ctx, inputs[0]);
             let dst = get_output_reg(ctx, outputs[0]);
 
-            let ext_mode = ExtMode::new(src_ty.bits(), dst_ty.bits());
-            assert!(
-                (src_ty.bits() < dst_ty.bits() && ext_mode.is_some()) || ext_mode.is_none(),
-                "unexpected extension: {} -> {}",
-                src_ty,
-                dst_ty
-            );
+            let ext_mode = match (src_ty.bits(), dst_ty.bits()) {
+                (1, 8) | (1, 16) | (1, 32) | (8, 16) | (8, 32) => Some(ExtMode::BL),
+                (1, 64) | (8, 64) => Some(ExtMode::BQ),
+                (16, 32) => Some(ExtMode::WL),
+                (16, 64) => Some(ExtMode::WQ),
+                (32, 64) => Some(ExtMode::LQ),
+                (x, y) if x >= y => None,
+                _ => unreachable!(
+                    "unexpected extension kind from {:?} to {:?}",
+                    src_ty, dst_ty
+                ),
+            };
 
             // All of these other opcodes are simply a move from a zero-extended source.  Here
             // is why this works, in each case:
@@ -1396,7 +1329,7 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 ctx.emit(Inst::gen_move(dst, lhs, input_ty));
 
                 // Emit the comparison.
-                ctx.emit(Inst::xmm_rm_r_imm(op, rhs, dst, imm.encode(), false));
+                ctx.emit(Inst::xmm_rm_r_imm(op, rhs, dst, imm.encode()));
             }
         }
 
@@ -1861,7 +1794,6 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                         RegMem::reg(tmp.to_reg()),
                         tmp,
                         cond.encode(),
-                        false,
                     );
                     ctx.emit(cmpps);
 
@@ -2005,7 +1937,12 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 _ => unimplemented!(),
             };
 
-            let ext_mode = ExtMode::new(elem_ty.bits(), 64);
+            let ext_mode = match elem_ty.bytes() {
+                1 => Some(ExtMode::BQ),
+                2 => Some(ExtMode::WQ),
+                4 => Some(ExtMode::LQ),
+                _ => None,
+            };
 
             let sign_extend = match op {
                 Opcode::Sload8
@@ -2260,11 +2197,12 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             if ty_access == types::I64 {
                 ctx.emit(Inst::mov64_rm_r(rm, data, srcloc));
             } else {
-                let ext_mode = ExtMode::new(ty_access.bits(), 64).expect(&format!(
-                    "invalid extension during AtomicLoad: {} -> {}",
-                    ty_access.bits(),
-                    64
-                ));
+                let ext_mode = match ty_access {
+                    types::I8 => ExtMode::BQ,
+                    types::I16 => ExtMode::WQ,
+                    types::I32 => ExtMode::LQ,
+                    _ => panic!("lowering AtomicLoad: invalid type"),
+                };
                 ctx.emit(Inst::movzx_rm_r(ext_mode, rm, data, srcloc));
             }
         }
@@ -2634,209 +2572,6 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             let dst = get_output_reg(ctx, outputs[0]);
             let ty = ty.unwrap();
             ctx.emit(Inst::gen_move(dst, src, ty));
-        }
-
-        Opcode::Shuffle => {
-            let ty = ty.unwrap();
-            let dst = get_output_reg(ctx, outputs[0]);
-            let lhs_ty = ctx.input_ty(insn, 0);
-            let lhs = put_input_in_reg(ctx, inputs[0]);
-            let rhs = put_input_in_reg(ctx, inputs[1]);
-            let mask = if let &InstructionData::Shuffle { mask, .. } = ctx.data(insn) {
-                ctx.get_immediate(mask).clone()
-            } else {
-                unreachable!("shuffle should always have the shuffle format")
-            };
-
-            // A mask-building helper: in 128-bit SIMD, 0-15 indicate which lane to read from and a
-            // 1 in the most significant position zeroes the lane.
-            let zero_unknown_lane_index = |b: u8| if b > 15 { 0b10000000 } else { b };
-
-            ctx.emit(Inst::gen_move(dst, rhs, ty));
-            if rhs == lhs {
-                // If `lhs` and `rhs` are the same we can use a single PSHUFB to shuffle the XMM
-                // register. We statically build `constructed_mask` to zero out any unknown lane
-                // indices (may not be completely necessary: verification could fail incorrect mask
-                // values) and fix the indexes to all point to the `dst` vector.
-                let constructed_mask = mask
-                    .iter()
-                    // If the mask is greater than 15 it still may be referring to a lane in b.
-                    .map(|&b| if b > 15 { b.wrapping_sub(16) } else { b })
-                    .map(zero_unknown_lane_index)
-                    .collect();
-                let tmp = ctx.alloc_tmp(RegClass::V128, types::I8X16);
-                ctx.emit(Inst::xmm_load_const_seq(constructed_mask, tmp, ty));
-                // After loading the constructed mask in a temporary register, we use this to
-                // shuffle the `dst` register (remember that, in this case, it is the same as
-                // `src` so we disregard this register).
-                ctx.emit(Inst::xmm_rm_r(SseOpcode::Pshufb, RegMem::from(tmp), dst));
-            } else {
-                // If `lhs` and `rhs` are different, we must shuffle each separately and then OR
-                // them together. This is necessary due to PSHUFB semantics. As in the case above,
-                // we build the `constructed_mask` for each case statically.
-
-                // PSHUFB the `lhs` argument into `tmp0`, placing zeroes for unused lanes.
-                let tmp0 = ctx.alloc_tmp(RegClass::V128, lhs_ty);
-                ctx.emit(Inst::gen_move(tmp0, lhs, lhs_ty));
-                let constructed_mask = mask.iter().cloned().map(zero_unknown_lane_index).collect();
-                let tmp1 = ctx.alloc_tmp(RegClass::V128, types::I8X16);
-                ctx.emit(Inst::xmm_load_const_seq(constructed_mask, tmp1, ty));
-                ctx.emit(Inst::xmm_rm_r(SseOpcode::Pshufb, RegMem::from(tmp1), tmp0));
-
-                // PSHUFB the second argument, placing zeroes for unused lanes.
-                let constructed_mask = mask
-                    .iter()
-                    .map(|b| b.wrapping_sub(16))
-                    .map(zero_unknown_lane_index)
-                    .collect();
-                let tmp2 = ctx.alloc_tmp(RegClass::V128, types::I8X16);
-                ctx.emit(Inst::xmm_load_const_seq(constructed_mask, tmp2, ty));
-                ctx.emit(Inst::xmm_rm_r(SseOpcode::Pshufb, RegMem::from(tmp2), dst));
-
-                // OR the shuffled registers (the mechanism and lane-size for OR-ing the registers
-                // is not important).
-                ctx.emit(Inst::xmm_rm_r(SseOpcode::Orps, RegMem::from(tmp0), dst));
-
-                // TODO when AVX512 is enabled we should replace this sequence with a single VPERMB
-            }
-        }
-
-        Opcode::Swizzle => {
-            // SIMD swizzle; the following inefficient implementation is due to the Wasm SIMD spec
-            // requiring mask indexes greater than 15 to have the same semantics as a 0 index. For
-            // the spec discussion, see https://github.com/WebAssembly/simd/issues/93. The CLIF
-            // semantics match the Wasm SIMD semantics for this instruction.
-            // The instruction format maps to variables like: %dst = swizzle %src, %mask
-            let ty = ty.unwrap();
-            let dst = get_output_reg(ctx, outputs[0]);
-            let src = put_input_in_reg(ctx, inputs[0]);
-            let swizzle_mask = put_input_in_reg(ctx, inputs[1]);
-
-            // Inform the register allocator that `src` and `dst` should be in the same register.
-            ctx.emit(Inst::gen_move(dst, src, ty));
-
-            // Create a mask for zeroing out-of-bounds lanes of the swizzle mask.
-            let zero_mask = ctx.alloc_tmp(RegClass::V128, types::I8X16);
-            let zero_mask_value = vec![
-                0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70,
-                0x70, 0x70,
-            ];
-            ctx.emit(Inst::xmm_load_const_seq(zero_mask_value, zero_mask, ty));
-
-            // Use the `zero_mask` on a writable `swizzle_mask`.
-            let swizzle_mask = Writable::from_reg(swizzle_mask);
-            ctx.emit(Inst::xmm_rm_r(
-                SseOpcode::Paddusb,
-                RegMem::from(zero_mask),
-                swizzle_mask,
-            ));
-
-            // Shuffle `dst` using the fixed-up `swizzle_mask`.
-            ctx.emit(Inst::xmm_rm_r(
-                SseOpcode::Pshufb,
-                RegMem::from(swizzle_mask),
-                dst,
-            ));
-        }
-
-        Opcode::Insertlane => {
-            // The instruction format maps to variables like: %dst = insertlane %in_vec, %src, %lane
-            let ty = ty.unwrap();
-            let dst = get_output_reg(ctx, outputs[0]);
-            let in_vec = put_input_in_reg(ctx, inputs[0]);
-            let src_ty = ctx.input_ty(insn, 1);
-            debug_assert!(!src_ty.is_vector());
-            let src = input_to_reg_mem(ctx, inputs[1]);
-            let lane = if let InstructionData::TernaryImm8 { imm, .. } = ctx.data(insn) {
-                *imm
-            } else {
-                unreachable!();
-            };
-            debug_assert!(lane < ty.lane_count() as u8);
-
-            ctx.emit(Inst::gen_move(dst, in_vec, ty));
-            if !src_ty.is_float() {
-                let (sse_op, w_bit) = match ty.lane_bits() {
-                    8 => (SseOpcode::Pinsrb, false),
-                    16 => (SseOpcode::Pinsrw, false),
-                    32 => (SseOpcode::Pinsrd, false),
-                    64 => (SseOpcode::Pinsrd, true),
-                    _ => panic!("Unable to insertlane for lane size: {}", ty.lane_bits()),
-                };
-                ctx.emit(Inst::xmm_rm_r_imm(sse_op, src, dst, lane, w_bit));
-            } else if src_ty == types::F32 {
-                let sse_op = SseOpcode::Insertps;
-                // Insert 32-bits from replacement (at index 00, bits 7:8) to vector (lane
-                // shifted into bits 5:6).
-                let lane = 0b00_00_00_00 | lane << 4;
-                ctx.emit(Inst::xmm_rm_r_imm(sse_op, src, dst, lane, false));
-            } else if src_ty == types::F64 {
-                let sse_op = match lane {
-                    // Move the lowest quadword in replacement to vector without changing
-                    // the upper bits.
-                    0 => SseOpcode::Movsd,
-                    // Move the low 64 bits of replacement vector to the high 64 bits of the
-                    // vector.
-                    1 => SseOpcode::Movlhps,
-                    _ => unreachable!(),
-                };
-                // Here we use the `xmm_rm_r` encoding because it correctly tells the register
-                // allocator how we are using `dst`: we are using `dst` as a `mod` whereas other
-                // encoding formats like `xmm_unary_rm_r` treat it as a `def`.
-                ctx.emit(Inst::xmm_rm_r(sse_op, src, dst));
-            } else {
-                panic!("Unable to insertlane for type: {}", ty);
-            }
-        }
-
-        Opcode::Extractlane => {
-            // The instruction format maps to variables like: %dst = extractlane %src, %lane
-            let ty = ty.unwrap();
-            let dst = get_output_reg(ctx, outputs[0]);
-            let src_ty = ctx.input_ty(insn, 0);
-            assert_eq!(src_ty.bits(), 128);
-            let src = put_input_in_reg(ctx, inputs[0]);
-            let lane = if let InstructionData::BinaryImm8 { imm, .. } = ctx.data(insn) {
-                *imm
-            } else {
-                unreachable!();
-            };
-            debug_assert!(lane < src_ty.lane_count() as u8);
-
-            if !ty.is_float() {
-                let (sse_op, w_bit) = match ty.lane_bits() {
-                    8 => (SseOpcode::Pextrb, false),
-                    16 => (SseOpcode::Pextrw, false),
-                    32 => (SseOpcode::Pextrd, false),
-                    64 => (SseOpcode::Pextrd, true),
-                    _ => panic!("Unable to extractlane for lane size: {}", ty.lane_bits()),
-                };
-                let src = RegMem::reg(src);
-                ctx.emit(Inst::xmm_rm_r_imm(sse_op, src, dst, lane, w_bit));
-            } else {
-                if lane == 0 {
-                    // Remove the extractlane instruction, leaving the float where it is. The upper
-                    // bits will remain unchanged; for correctness, this relies on Cranelift type
-                    // checking to avoid using those bits.
-                    ctx.emit(Inst::gen_move(dst, src, ty));
-                } else {
-                    // Otherwise, shuffle the bits in `lane` to the lowest lane.
-                    let sse_op = SseOpcode::Pshufd;
-                    let mask = match src_ty {
-                        // Move the value at `lane` to lane 0, copying existing value at lane 0 to
-                        // other lanes. Again, this relies on Cranelift type checking to avoid
-                        // using those bits.
-                        types::F32X4 => 0b00_00_00_00 | lane,
-                        // Move the value at `lane` 1 (we know it must be 1 because of the `if`
-                        // statement above) to lane 0 and leave lane 1 unchanged. The Cranelift type
-                        // checking assumption also applies here.
-                        types::F64X2 => 0b11_10_11_10,
-                        _ => unreachable!(),
-                    };
-                    let src = RegMem::reg(src);
-                    ctx.emit(Inst::xmm_rm_r_imm(sse_op, src, dst, mask, false));
-                }
-            }
         }
 
         Opcode::IaddImm

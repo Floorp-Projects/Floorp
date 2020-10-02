@@ -972,13 +972,12 @@ mod tests {
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
 
-        let triple =
-            ::target_lexicon::Triple::from_str("riscv32").expect("Couldn't create riscv32 triple");
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
 
         let target = isa::lookup(triple)
             .ok()
             .map(|b| b.finish(shared_flags))
-            .expect("This test requires riscv32 support.");
+            .expect("This test requires arm support.");
 
         let mut sig = Signature::new(target.default_call_conv());
         sig.returns.push(AbiParam::new(I32));
@@ -1034,13 +1033,12 @@ block0:
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
 
-        let triple =
-            ::target_lexicon::Triple::from_str("riscv32").expect("Couldn't create riscv32 triple");
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
 
         let target = isa::lookup(triple)
             .ok()
             .map(|b| b.finish(shared_flags))
-            .expect("This test requires riscv32 support.");
+            .expect("This test requires arm support.");
 
         let mut sig = Signature::new(target.default_call_conv());
         sig.returns.push(AbiParam::new(I32));
@@ -1092,13 +1090,12 @@ block0:
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
 
-        let triple =
-            ::target_lexicon::Triple::from_str("riscv32").expect("Couldn't create riscv32 triple");
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
 
         let target = isa::lookup(triple)
             .ok()
             .map(|b| b.finish(shared_flags))
-            .expect("This test requires riscv32 support.");
+            .expect("This test requires arm support.");
 
         let mut sig = Signature::new(target.default_call_conv());
         sig.returns.push(AbiParam::new(I32));
@@ -1153,13 +1150,12 @@ block0:
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
 
-        let triple =
-            ::target_lexicon::Triple::from_str("riscv32").expect("Couldn't create riscv32 triple");
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
 
         let target = isa::lookup(triple)
             .ok()
             .map(|b| b.finish(shared_flags))
-            .expect("This test requires riscv32 support.");
+            .expect("This test requires arm support.");
 
         let mut sig = Signature::new(target.default_call_conv());
         sig.returns.push(AbiParam::new(I32));
@@ -1206,13 +1202,12 @@ block0:
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
 
-        let triple =
-            ::target_lexicon::Triple::from_str("riscv32").expect("Couldn't create riscv32 triple");
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
 
         let target = isa::lookup(triple)
             .ok()
             .map(|b| b.finish(shared_flags))
-            .expect("This test requires riscv32 support.");
+            .expect("This test requires arm support.");
 
         let mut sig = Signature::new(target.default_call_conv());
         sig.returns.push(AbiParam::new(I32));
