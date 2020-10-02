@@ -161,7 +161,7 @@ async function ensureVideosReady(browser) {
     let videos = this.content.document.querySelectorAll("video");
     for (let video of videos) {
       if (video.readyState < content.HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        await ContentTaskUtils.waitForEvent(video, "canplay");
+        await ContentTaskUtils.waitForEvent(video, "canplaythrough");
       }
     }
   });
