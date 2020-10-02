@@ -1,5 +1,8 @@
 //! Tests for channel readiness using the `Select` struct.
 
+extern crate crossbeam_channel;
+extern crate crossbeam_utils;
+
 use std::any::Any;
 use std::cell::Cell;
 use std::thread;
@@ -769,7 +772,7 @@ fn fairness1() {
 
 #[test]
 fn fairness2() {
-    const COUNT: usize = 100_000;
+    const COUNT: usize = 10_000;
 
     let (s1, r1) = unbounded::<()>();
     let (s2, r2) = bounded::<()>(1);
@@ -828,7 +831,7 @@ fn fairness2() {
                 }
             }
         }
-        assert!(hits.iter().all(|x| x.get() > 0));
+        assert!(hits.iter().all(|x| x.get() >= COUNT / hits.len() / 10));
     })
     .unwrap();
 }

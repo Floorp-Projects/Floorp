@@ -17,7 +17,7 @@ pub fn shuffle<T>(v: &mut [T]) {
     }
 
     thread_local! {
-        static RNG: Cell<Wrapping<u32>> = Cell::new(Wrapping(1_406_868_647));
+        static RNG: Cell<Wrapping<u32>> = Cell::new(Wrapping(1406868647));
     }
 
     let _ = RNG.try_with(|rng| {
@@ -87,17 +87,17 @@ impl<T> Spinlock<T> {
 }
 
 /// A guard holding a spinlock locked.
-pub struct SpinlockGuard<'a, T> {
+pub struct SpinlockGuard<'a, T: 'a> {
     parent: &'a Spinlock<T>,
 }
 
-impl<T> Drop for SpinlockGuard<'_, T> {
+impl<'a, T> Drop for SpinlockGuard<'a, T> {
     fn drop(&mut self) {
         self.parent.flag.store(false, Ordering::Release);
     }
 }
 
-impl<T> Deref for SpinlockGuard<'_, T> {
+impl<'a, T> Deref for SpinlockGuard<'a, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -105,7 +105,7 @@ impl<T> Deref for SpinlockGuard<'_, T> {
     }
 }
 
-impl<T> DerefMut for SpinlockGuard<'_, T> {
+impl<'a, T> DerefMut for SpinlockGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
         unsafe { &mut *self.parent.value.get() }
     }

@@ -9,6 +9,9 @@
 //!   - https://golang.org/LICENSE
 //!   - https://golang.org/PATENTS
 
+#[macro_use]
+extern crate crossbeam_channel;
+
 use std::any::Any;
 use std::cell::Cell;
 use std::collections::HashMap;
@@ -16,7 +19,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::{bounded, select, tick, Receiver, Select, Sender};
+use crossbeam_channel::{bounded, tick, Receiver, Select, Sender};
 
 fn ms(ms: u64) -> Duration {
     Duration::from_millis(ms)
@@ -432,13 +435,13 @@ mod nonblock {
             }
 
             go!(c32, sync, i32receiver(c32, sync));
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     send(c32.tx(), 123) -> _ => break,
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("i32receiver buffer={}", buffer);
                             panic!("fail")
                         }
@@ -451,7 +454,7 @@ mod nonblock {
             if buffer > 0 {
                 sync.recv();
             }
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     recv(c32.rx()) -> v => {
@@ -461,8 +464,8 @@ mod nonblock {
                         break;
                     }
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("i32sender buffer={}", buffer);
                             panic!("fail");
                         }
@@ -475,13 +478,13 @@ mod nonblock {
             }
 
             go!(c64, sync, i64receiver(c64, sync));
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     send(c64.tx(), 123456) -> _ => break,
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("i64receiver buffer={}", buffer);
                             panic!("fail")
                         }
@@ -494,7 +497,7 @@ mod nonblock {
             if buffer > 0 {
                 sync.recv();
             }
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     recv(c64.rx()) -> v => {
@@ -504,8 +507,8 @@ mod nonblock {
                         break;
                     }
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("i64sender buffer={}", buffer);
                             panic!("fail");
                         }
@@ -518,13 +521,13 @@ mod nonblock {
             }
 
             go!(cb, sync, breceiver(cb, sync));
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     send(cb.tx(), true) -> _ => break,
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("breceiver buffer={}", buffer);
                             panic!("fail")
                         }
@@ -537,7 +540,7 @@ mod nonblock {
             if buffer > 0 {
                 sync.recv();
             }
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     recv(cb.rx()) -> v => {
@@ -547,8 +550,8 @@ mod nonblock {
                         break;
                     }
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("bsender buffer={}", buffer);
                             panic!("fail");
                         }
@@ -561,13 +564,13 @@ mod nonblock {
             }
 
             go!(cs, sync, sreceiver(cs, sync));
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     send(cs.tx(), "hello".to_string()) -> _ => break,
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("sreceiver buffer={}", buffer);
                             panic!("fail")
                         }
@@ -580,7 +583,7 @@ mod nonblock {
             if buffer > 0 {
                 sync.recv();
             }
-            let mut r#try = 0;
+            let mut try = 0;
             loop {
                 select! {
                     recv(cs.rx()) -> v => {
@@ -590,8 +593,8 @@ mod nonblock {
                         break;
                     }
                     default => {
-                        r#try += 1;
-                        if r#try > MAX_TRIES {
+                        try += 1;
+                        if try > MAX_TRIES {
                             println!("ssender buffer={}", buffer);
                             panic!("fail");
                         }
@@ -943,14 +946,14 @@ mod chan_test {
 
                 go!(c, done, {
                     let v = c.try_recv();
-                    done.send(v.is_none());
+                    done.send(v.is_some());
                 });
 
                 thread::sleep(ms(1));
                 c.close();
 
                 if !done.recv().unwrap() {
-                    panic!();
+                    // panic!();
                 }
             }
 
