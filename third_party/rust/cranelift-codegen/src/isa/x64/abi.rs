@@ -20,6 +20,11 @@ use std::convert::TryFrom;
 /// with 32-bit arithmetic: for now, 128 MB.
 static STACK_ARG_RET_SIZE_LIMIT: u64 = 128 * 1024 * 1024;
 
+/// Offset in stack-arg area to callee-TLS slot in Baldrdash-2020 calling convention.
+static BALDRDASH_CALLEE_TLS_OFFSET: i64 = 0;
+/// Offset in stack-arg area to caller-TLS slot in Baldrdash-2020 calling convention.
+static BALDRDASH_CALLER_TLS_OFFSET: i64 = 8;
+
 /// Try to fill a Baldrdash register, returning it if it was found.
 fn try_fill_baldrdash_reg(call_conv: CallConv, param: &ir::AbiParam) -> Option<ABIArg> {
     if call_conv.extends_baldrdash() {
@@ -30,6 +35,7 @@ fn try_fill_baldrdash_reg(call_conv: CallConv, param: &ir::AbiParam) -> Option<A
                     regs::r14().to_real_reg(),
                     types::I64,
                     param.extension,
+                    param.purpose,
                 ))
             }
             &ir::ArgumentPurpose::SignatureId => {
@@ -38,6 +44,27 @@ fn try_fill_baldrdash_reg(call_conv: CallConv, param: &ir::AbiParam) -> Option<A
                     regs::r10().to_real_reg(),
                     types::I64,
                     param.extension,
+                    param.purpose,
+                ))
+            }
+            &ir::ArgumentPurpose::CalleeTLS => {
+                // This is SpiderMonkey's callee TLS slot in the extended frame of Wasm's ABI-2020.
+                assert!(call_conv == isa::CallConv::Baldrdash2020);
+                Some(ABIArg::Stack(
+                    BALDRDASH_CALLEE_TLS_OFFSET,
+                    ir::types::I64,
+                    ir::ArgumentExtension::None,
+                    param.purpose,
+                ))
+            }
+            &ir::ArgumentPurpose::CallerTLS => {
+                // This is SpiderMonkey's caller TLS slot in the extended frame of Wasm's ABI-2020.
+                assert!(call_conv == isa::CallConv::Baldrdash2020);
+                Some(ABIArg::Stack(
+                    BALDRDASH_CALLER_TLS_OFFSET,
+                    ir::types::I64,
+                    ir::ArgumentExtension::None,
+                    param.purpose,
                 ))
             }
             _ => None,
@@ -59,6 +86,10 @@ pub(crate) struct X64ABIMachineSpec;
 impl ABIMachineSpec for X64ABIMachineSpec {
     type I = Inst;
 
+    fn word_bits() -> u32 {
+        64
+    }
+
     fn compute_arg_locs(
         call_conv: isa::CallConv,
         params: &[ir::AbiParam],
@@ -66,11 +97,18 @@ impl ABIMachineSpec for X64ABIMachineSpec {
         add_ret_area_ptr: bool,
     ) -> CodegenResult<(Vec<ABIArg>, i64, Option<usize>)> {
         let is_baldrdash = call_conv.extends_baldrdash();
+        let has_baldrdash_tls = call_conv == isa::CallConv::Baldrdash2020;
 
         let mut next_gpr = 0;
         let mut next_vreg = 0;
         let mut next_stack: u64 = 0;
         let mut ret = vec![];
+
+        if args_or_rets == ArgsOrRets::Args && has_baldrdash_tls {
+            // Baldrdash ABI-2020 always has two stack-arg slots reserved, for the callee and
+            // caller TLS-register values, respectively.
+            next_stack = 16;
+        }
 
         for i in 0..params.len() {
             // Process returns backward, according to the SpiderMonkey ABI (which we
@@ -86,7 +124,9 @@ impl ABIMachineSpec for X64ABIMachineSpec {
                 &ir::ArgumentPurpose::VMContext
                 | &ir::ArgumentPurpose::Normal
                 | &ir::ArgumentPurpose::StackLimit
-                | &ir::ArgumentPurpose::SignatureId => {}
+                | &ir::ArgumentPurpose::SignatureId
+                | &ir::ArgumentPurpose::CalleeTLS
+                | &ir::ArgumentPurpose::CallerTLS => {}
                 _ => panic!(
                     "Unsupported argument purpose {:?} in signature: {:?}",
                     param.purpose, params
@@ -126,6 +166,7 @@ impl ABIMachineSpec for X64ABIMachineSpec {
                     reg.to_real_reg(),
                     param.value_type,
                     param.extension,
+                    param.purpose,
                 ));
                 *next_reg += 1;
             } else {
@@ -140,6 +181,7 @@ impl ABIMachineSpec for X64ABIMachineSpec {
                     next_stack as i64,
                     param.value_type,
                     param.extension,
+                    param.purpose,
                 ));
                 next_stack += size;
             }
@@ -156,12 +198,14 @@ impl ABIMachineSpec for X64ABIMachineSpec {
                     reg.to_real_reg(),
                     types::I64,
                     ir::ArgumentExtension::None,
+                    ir::ArgumentPurpose::Normal,
                 ));
             } else {
                 ret.push(ABIArg::Stack(
                     next_stack as i64,
                     types::I64,
                     ir::ArgumentExtension::None,
+                    ir::ArgumentPurpose::Normal,
                 ));
                 next_stack += 8;
             }
@@ -191,65 +235,23 @@ impl ABIMachineSpec for X64ABIMachineSpec {
     }
 
     fn gen_load_stack(mem: StackAMode, into_reg: Writable<Reg>, ty: Type) -> Self::I {
-        let (is_int, ext_mode) = match ty {
-            types::B1 | types::B8 | types::I8 => (true, Some(ExtMode::BQ)),
-            types::B16 | types::I16 => (true, Some(ExtMode::WQ)),
-            types::B32 | types::I32 => (true, Some(ExtMode::LQ)),
-            types::B64 | types::I64 | types::R64 => (true, None),
-            types::F32 | types::F64 => (false, None),
+        let ext_kind = match ty {
+            types::B1
+            | types::B8
+            | types::I8
+            | types::B16
+            | types::I16
+            | types::B32
+            | types::I32 => ExtKind::SignExtend,
+            types::B64 | types::I64 | types::R64 | types::F32 | types::F64 => ExtKind::None,
+            _ if ty.bytes() == 16 => ExtKind::None,
             _ => panic!("load_stack({})", ty),
         };
-
-        let mem = SyntheticAmode::from(mem);
-
-        if is_int {
-            match ext_mode {
-                Some(ext_mode) => Inst::movsx_rm_r(
-                    ext_mode,
-                    RegMem::mem(mem),
-                    into_reg,
-                    /* infallible load */ None,
-                ),
-                None => Inst::mov64_m_r(mem, into_reg, None /* infallible */),
-            }
-        } else {
-            let sse_op = match ty {
-                types::F32 => SseOpcode::Movss,
-                types::F64 => SseOpcode::Movsd,
-                _ => unreachable!(),
-            };
-            Inst::xmm_mov(
-                sse_op,
-                RegMem::mem(mem),
-                into_reg,
-                None, /* infallible */
-            )
-        }
+        Inst::load(ty, mem, into_reg, ext_kind, /* infallible */ None)
     }
 
     fn gen_store_stack(mem: StackAMode, from_reg: Reg, ty: Type) -> Self::I {
-        let (is_int, size) = match ty {
-            types::B1 | types::B8 | types::I8 => (true, 1),
-            types::B16 | types::I16 => (true, 2),
-            types::B32 | types::I32 => (true, 4),
-            types::B64 | types::I64 | types::R64 => (true, 8),
-            types::F32 => (false, 4),
-            types::F64 => (false, 8),
-            _ => unimplemented!("store_stack({})", ty),
-        };
-
-        let mem = SyntheticAmode::from(mem);
-
-        if is_int {
-            Inst::mov_r_m(size, from_reg, mem, /* infallible store */ None)
-        } else {
-            let sse_op = match size {
-                4 => SseOpcode::Movss,
-                8 => SseOpcode::Movsd,
-                _ => unreachable!(),
-            };
-            Inst::xmm_mov_r_m(sse_op, from_reg, mem, /* infallible store */ None)
-        }
+        Inst::store(ty, from_reg, mem, /* infallible */ None)
     }
 
     fn gen_move(to_reg: Writable<Reg>, from_reg: Reg, ty: Type) -> Self::I {
@@ -264,12 +266,8 @@ impl ABIMachineSpec for X64ABIMachineSpec {
         from_bits: u8,
         to_bits: u8,
     ) -> Self::I {
-        let ext_mode = match from_bits {
-            1 | 8 => ExtMode::BQ,
-            16 => ExtMode::WQ,
-            32 => ExtMode::LQ,
-            _ => panic!("Bad extension: {} bits to {} bits", from_bits, to_bits),
-        };
+        let ext_mode = ExtMode::new(from_bits as u16, to_bits as u16)
+            .expect(&format!("invalid extension: {} -> {}", from_bits, to_bits));
         if is_signed {
             Inst::movsx_rm_r(ext_mode, RegMem::reg(from_reg), to_reg, None)
         } else {
@@ -389,14 +387,17 @@ impl ABIMachineSpec for X64ABIMachineSpec {
 
     fn gen_clobber_save(
         call_conv: isa::CallConv,
+        _: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
+        fixed_frame_storage_size: u32,
     ) -> (u64, SmallVec<[Self::I; 16]>) {
         let mut insts = SmallVec::new();
         // Find all clobbered registers that are callee-save. These are only I64
         // registers (all XMM registers are caller-save) so we can compute the
         // total size of the needed stack space easily.
         let clobbered = get_callee_saves(&call_conv, clobbers);
-        let stack_size = 8 * clobbered.len() as u32;
+        let clobbered_size = 8 * clobbered.len() as u32;
+        let stack_size = clobbered_size + fixed_frame_storage_size;
         // Align to 16 bytes.
         let stack_size = (stack_size + 15) & !15;
         // Adjust the stack pointer downward with one `sub rsp, IMM`
@@ -429,11 +430,12 @@ impl ABIMachineSpec for X64ABIMachineSpec {
             }
         }
 
-        (stack_size as u64, insts)
+        (clobbered_size as u64, insts)
     }
 
     fn gen_clobber_restore(
         call_conv: isa::CallConv,
+        flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
     ) -> SmallVec<[Self::I; 16]> {
         let mut insts = SmallVec::new();
@@ -465,6 +467,18 @@ impl ABIMachineSpec for X64ABIMachineSpec {
                 AluRmiROpcode::Add,
                 RegMemImm::imm(stack_size),
                 Writable::from_reg(regs::rsp()),
+            ));
+        }
+
+        // If this is Baldrdash-2020, restore the callee (i.e., our) TLS
+        // register. We may have allocated it for something else and clobbered
+        // it, but the ABI expects us to leave the TLS register unchanged.
+        if call_conv == isa::CallConv::Baldrdash2020 {
+            let off = BALDRDASH_CALLEE_TLS_OFFSET + Self::fp_to_arg_offset(call_conv, flags);
+            insts.push(Inst::mov64_m_r(
+                Amode::imm_reg(off as u32, regs::rbp()),
+                Writable::from_reg(regs::r14()),
+                None,
             ));
         }
 
@@ -636,7 +650,11 @@ fn in_vec_reg(ty: types::Type) -> bool {
 
 fn get_intreg_for_arg_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
     match call_conv {
-        CallConv::Fast | CallConv::Cold | CallConv::SystemV | CallConv::BaldrdashSystemV => {}
+        CallConv::Fast
+        | CallConv::Cold
+        | CallConv::SystemV
+        | CallConv::BaldrdashSystemV
+        | CallConv::Baldrdash2020 => {}
         _ => panic!("int args only supported for SysV calling convention"),
     };
     match idx {
@@ -652,7 +670,11 @@ fn get_intreg_for_arg_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
 
 fn get_fltreg_for_arg_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
     match call_conv {
-        CallConv::Fast | CallConv::Cold | CallConv::SystemV | CallConv::BaldrdashSystemV => {}
+        CallConv::Fast
+        | CallConv::Cold
+        | CallConv::SystemV
+        | CallConv::BaldrdashSystemV
+        | CallConv::Baldrdash2020 => {}
         _ => panic!("float args only supported for SysV calling convention"),
     };
     match idx {
@@ -679,7 +701,7 @@ fn get_intreg_for_retval_systemv(
             1 => Some(regs::rdx()),
             _ => None,
         },
-        CallConv::BaldrdashSystemV => {
+        CallConv::BaldrdashSystemV | CallConv::Baldrdash2020 => {
             if intreg_idx == 0 && retval_idx == 0 {
                 Some(regs::rax())
             } else {
@@ -701,7 +723,7 @@ fn get_fltreg_for_retval_systemv(
             1 => Some(regs::xmm1()),
             _ => None,
         },
-        CallConv::BaldrdashSystemV => {
+        CallConv::BaldrdashSystemV | CallConv::Baldrdash2020 => {
             if fltreg_idx == 0 && retval_idx == 0 {
                 Some(regs::xmm0())
             } else {
@@ -743,7 +765,7 @@ fn is_callee_save_baldrdash(r: RealReg) -> bool {
 
 fn get_callee_saves(call_conv: &CallConv, regs: &Set<Writable<RealReg>>) -> Vec<Writable<RealReg>> {
     let mut regs: Vec<Writable<RealReg>> = match call_conv {
-        CallConv::BaldrdashSystemV => regs
+        CallConv::BaldrdashSystemV | CallConv::Baldrdash2020 => regs
             .iter()
             .cloned()
             .filter(|r| is_callee_save_baldrdash(r.to_reg()))
