@@ -72,6 +72,8 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Descartar</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Se necesita acceso a la cámara. Ve a los ajustes de Android, toca en permisos y luego en permitir.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Ir a ajustes</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -255,6 +257,8 @@
     <string name="preferences_open_links_in_a_private_tab">Abrir enlaces en una pestaña privada</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de pantalla en navegación privada</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Si está permitido, las pestañas privadas también serán visibles cuando hayan varias aplicaciones abiertas</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agregar acceso directo a la navegación privada</string>
     <!-- Preference for accessibility -->
@@ -545,6 +549,8 @@
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Pestañas cerradas recientemente</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Ajustes de pestañas</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Cerrar todas las pestañas</string>
     <!-- Shortcut action to open new tab -->
@@ -1562,6 +1568,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Límite de sitios frecuentes alcanzado</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Para añadir un nuevo sitio frecuente, elimina uno. Toca y mantén presionado el sitio y selecciona eliminar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendido</string>
 

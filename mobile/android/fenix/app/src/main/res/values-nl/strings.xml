@@ -481,11 +481,11 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Trek om te vernieuwen</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Scroll om de werkbalk te verbergen</string>
+    <string name="preference_gestures_dynamic_toolbar">Scrollen om de werkbalk te verbergen</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Veeg de werkbalk opzij om van tabblad te wisselen</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">De werkbalk opzij vegen om van tabblad te wisselen</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Veeg de werkbalk omhoog om tabbladen te openen</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">De werkbalk omhoog vegen om tabbladen te openen</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
