@@ -288,12 +288,3 @@
    */
   animation: cursor-blink calc(var(--caret-blink-time, 0.53s) * 2) steps(1) infinite;
 }
-
-
-/*
- * Always align CodeMirror lines to the left.
- * See Bug 1651443 for more information.
- */
-.CodeMirror-lines {
-  text-align: left;
-}
