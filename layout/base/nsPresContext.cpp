@@ -206,7 +206,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingUIResolutionChanged(false),
       mPostedPrefChangedRunnable(false),
       mIsGlyph(false),
-      mUsesExChUnits(false),
+      mUsesFontMetricsFromStyle(false),
       mCounterStylesDirty(true),
       mFontFeatureValuesDirty(true),
       mSuppressResizeReflow(false),
@@ -1530,7 +1530,7 @@ void nsPresContext::PostRebuildAllStyleDataEvent(
     return;
   }
   if (aRestyleHint.DefinitelyRecascadesAllSubtree()) {
-    mUsesExChUnits = false;
+    mUsesFontMetricsFromStyle = false;
   }
   RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
@@ -1722,8 +1722,8 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // TODO(emilio): We could be more granular if we knew which families have
   // potentially changed.
   if (!aUpdatedFont) {
-    auto hint =
-        UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
+    auto hint = UsesFontMetricsFromStyle() ? RestyleHint::RecascadeSubtree()
+                                           : RestyleHint{0};
     PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, hint);
     return;
   }

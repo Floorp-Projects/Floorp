@@ -13,6 +13,7 @@
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
+#include "gfxMathTable.h"
 #include "gfxTextRun.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
@@ -1431,7 +1432,8 @@ void AssertIsMainThreadOrServoFontMetricsLocked() {
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
                                       bool aIsVertical,
                                       const nsStyleFont* aFont,
-                                      Length aFontSize, bool aUseUserFontSet) {
+                                      Length aFontSize, bool aUseUserFontSet,
+                                      bool aRetrieveMathScales) {
   AutoWriteLock guard(*sServoFFILock);
 
   // Getting font metrics can require some main thread only work to be
@@ -1446,20 +1448,29 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
   // ArrayBuffer-backed FontFace objects are handled synchronously.
 
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
-  presContext->SetUsesExChUnits(true);
+  presContext->SetUsesFontMetricsFromStyle(true);
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
-  const auto& metrics =
-      fm->GetThebesFontGroup()->GetFirstValidFont()->GetMetrics(
-          fm->Orientation());
+  auto* firstValidFont = fm->GetThebesFontGroup()->GetFirstValidFont();
+  const auto& metrics = firstValidFont->GetMetrics(fm->Orientation());
+
+  float scriptPercentScaleDown = 0;
+  float scriptScriptPercentScaleDown = 0;
+  if (aRetrieveMathScales && firstValidFont->TryGetMathTable()) {
+    scriptPercentScaleDown = firstValidFont->MathTable()->Constant(
+        gfxMathTable::ScriptPercentScaleDown);
+    scriptScriptPercentScaleDown = firstValidFont->MathTable()->Constant(
+        gfxMathTable::ScriptScriptPercentScaleDown);
+  }
 
   int32_t d2a = aPresContext->AppUnitsPerDevPixel();
   auto ToLength = [](nscoord aLen) {
     return Length::FromPixels(CSSPixel::FromAppUnits(aLen));
   };
   return {ToLength(NS_round(metrics.xHeight * d2a)),
-          ToLength(NS_round(metrics.zeroWidth * d2a))};
+          ToLength(NS_round(metrics.zeroWidth * d2a)), scriptPercentScaleDown,
+          scriptScriptPercentScaleDown};
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);

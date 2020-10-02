@@ -18,6 +18,12 @@ pub struct FontMetrics {
     pub x_height: Option<Length>,
     /// The zero advance. This is usually writing mode dependent
     pub zero_advance_measure: Option<Length>,
+    /// Script scale down factor for math-depth 1.
+    /// https://mathml-refresh.github.io/mathml-core/#dfn-scriptpercentscaledown
+    pub script_percent_scale_down: Option<f32>,
+    /// Script scale down factor for math-depth 2.
+    /// https://mathml-refresh.github.io/mathml-core/#dfn-scriptscriptpercentscaledown
+    pub script_script_percent_scale_down: Option<f32>,
 }
 
 /// Type of font metrics to retrieve.
@@ -38,6 +44,7 @@ pub trait FontMetricsProvider {
         _context: &crate::values::computed::Context,
         _base_size: crate::values::specified::length::FontBaseSize,
         _orientation: FontMetricsOrientation,
+        _retrieve_math_scales: bool,
     ) -> FontMetrics {
         Default::default()
     }
