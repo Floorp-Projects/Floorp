@@ -1448,7 +1448,7 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter() {
       }
     }
     js::SetProxyReservedSlot(proxy, OUTER_WINDOW_SLOT,
-                             js::PrivateValue(nullptr));
+                             JS::PrivateValue(nullptr));
   }
 
   // An outer window is destroyed with inner windows still possibly
@@ -2272,7 +2272,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       MOZ_ASSERT(js::IsWindowProxy(outer));
 
       js::SetProxyReservedSlot(outer, OUTER_WINDOW_SLOT,
-                               js::PrivateValue(ToSupports(this)));
+                               JS::PrivateValue(ToSupports(this)));
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outer);
@@ -2291,9 +2291,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       MOZ_ASSERT(js::IsWindowProxy(obj));
 
       js::SetProxyReservedSlot(obj, OUTER_WINDOW_SLOT,
-                               js::PrivateValue(nullptr));
+                               JS::PrivateValue(nullptr));
       js::SetProxyReservedSlot(outerObject, OUTER_WINDOW_SLOT,
-                               js::PrivateValue(nullptr));
+                               JS::PrivateValue(nullptr));
       js::SetProxyReservedSlot(obj, HOLDER_WEAKMAP_SLOT, JS::UndefinedValue());
 
 #ifdef NIGHTLY_BUILD
@@ -2309,7 +2309,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       }
 
       js::SetProxyReservedSlot(outerObject, OUTER_WINDOW_SLOT,
-                               js::PrivateValue(ToSupports(this)));
+                               JS::PrivateValue(ToSupports(this)));
 
       SetWrapper(outerObject);
 
@@ -2527,7 +2527,7 @@ void nsGlobalWindowOuter::PrepareForProcessChange(JSObject* aProxy) {
   MOZ_ASSERT(bc->GetWindowProxy() == localProxy);
   bc->ClearWindowProxy();
   js::SetProxyReservedSlot(localProxy, OUTER_WINDOW_SLOT,
-                           js::PrivateValue(nullptr));
+                           JS::PrivateValue(nullptr));
   js::SetProxyReservedSlot(localProxy, HOLDER_WEAKMAP_SLOT,
                            JS::UndefinedValue());
 
