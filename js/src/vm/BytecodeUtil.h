@@ -11,22 +11,29 @@
  * JS bytecode definitions.
  */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 
 #include <algorithm>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
-#include "frontend/SourceNotes.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Utility.h"
+#include "js/Value.h"
 #include "vm/BytecodeFormatFlags.h"  // JOF_*
 #include "vm/Opcodes.h"
-#include "vm/Printer.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
+
+namespace js {
+class Sprinter;
+}  // namespace js
 
 /*
  * JS operation bytecodes.
