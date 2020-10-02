@@ -1214,7 +1214,7 @@ void nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext, const CGRect&
     separatorRect.size.width -= 42;
     separatorRect.origin.x += 21;
     // Use a gray color similar to the native separator
-    DeviceColor color = ToDeviceColor(mozilla::gfx::sRGBColor::FromU8(193, 208, 208, 255));
+    DeviceColor color = ToDeviceColor(mozilla::gfx::sRGBColor::FromU8(211, 211, 211, 255));
     CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
     CGContextFillRect(cgContext, separatorRect);
     return;
