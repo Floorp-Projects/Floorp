@@ -4,7 +4,7 @@
 
 // @flow
 
-import { buildMenu, showMenu } from "devtools-contextmenu";
+import { buildMenu, showMenu } from "../../../context-menu/menu";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import actions from "../../../actions";
 import { features } from "../../../utils/prefs";

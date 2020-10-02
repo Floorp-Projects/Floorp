@@ -6,7 +6,7 @@
 
 import { Component } from "react";
 import { connect } from "../../utils/connect";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 
 import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import { isPretty } from "../../utils/source";
