@@ -1128,24 +1128,35 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     mut table: *const u16,
     mut num_entries: i32,
 ) -> *mut qcms_profile {
+    let table = slice::from_raw_parts(table, num_entries as usize);
+    let profile = profile_create_rgb_with_table(white_point, primaries, table);
+    match profile {
+        Some(profile) => Box::into_raw(profile),
+        None => null_mut(),
+    }
+}
+fn profile_create_rgb_with_table(
+    mut white_point: qcms_CIE_xyY,
+    mut primaries: qcms_CIE_xyYTRIPLE,
+    table: &[u16],
+) -> Option<Box<qcms_profile>> {
     let mut profile = qcms_profile_create();
     //XXX: should store the whitepoint
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return 0 as *mut qcms_profile;
+        return None;
     }
-    let table = slice::from_raw_parts(table, num_entries as usize);
     (*profile).redTRC = Some(curve_from_table(table));
     (*profile).blueTRC = Some(curve_from_table(table));
     (*profile).greenTRC = Some(curve_from_table(table));
     if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
     {
-        return 0 as *mut qcms_profile;
+        return None;
     }
     (*profile).class_type = DISPLAY_DEVICE_PROFILE;
     (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
     (*profile).color_space = RGB_SIGNATURE;
     (*profile).pcs = XYZ_TYPE;
-    return Box::into_raw(profile);
+    return Some(profile);
 }
 /* from lcms: cmsWhitePointFromTemp */
 /* tempK must be >= 4000. and <= 25000.
