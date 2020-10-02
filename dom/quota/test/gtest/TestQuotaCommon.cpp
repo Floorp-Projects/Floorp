@@ -799,7 +799,7 @@ TEST(QuotaCommon_TryReturn, Success)
 {
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+  auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
 
     tryReturnDidNotReturn = true;
@@ -834,7 +834,7 @@ TEST(QuotaCommon_TryReturn, Failure_PropagateErr)
 {
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+  auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
 
     tryReturnDidNotReturn = true;
@@ -888,7 +888,7 @@ TEST(QuotaCommon_TryReturn, Failure_WithCleanup)
 TEST(QuotaCommon_TryReturn, SameLine)
 {
   // clang-format off
-  auto res1 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }(); auto res2 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }();
+  auto res1 = [] { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }(); auto res2 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }();
   // clang-format on
 
   EXPECT_TRUE(res1.isOk());
@@ -902,14 +902,12 @@ TEST(QuotaCommon_TryReturn, NestingMadness_Success)
   bool nestedTryReturnDidNotReturn = false;
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&nestedTryReturnDidNotReturn,
-              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-    QM_TRY_RETURN(
-        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-          QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
+  auto res = [&nestedTryReturnDidNotReturn, &tryReturnDidNotReturn] {
+    QM_TRY_RETURN(([&nestedTryReturnDidNotReturn] {
+      QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
 
-          nestedTryReturnDidNotReturn = true;
-        }()));
+      nestedTryReturnDidNotReturn = true;
+    }()));
 
     tryReturnDidNotReturn = true;
   }();
@@ -925,14 +923,12 @@ TEST(QuotaCommon_TryReturn, NestingMadness_Failure)
   bool nestedTryReturnDidNotReturn = false;
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&nestedTryReturnDidNotReturn,
-              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-    QM_TRY_RETURN(
-        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-          QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+  auto res = [&nestedTryReturnDidNotReturn, &tryReturnDidNotReturn] {
+    QM_TRY_RETURN(([&nestedTryReturnDidNotReturn] {
+      QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
 
-          nestedTryReturnDidNotReturn = true;
-        }()));
+      nestedTryReturnDidNotReturn = true;
+    }()));
 
     tryReturnDidNotReturn = true;
   }();
