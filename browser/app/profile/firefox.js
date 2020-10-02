@@ -354,12 +354,16 @@ pref("browser.urlbar.update2.oneOffsRefresh", true);
 // be restyled and deduped against form history. This only happens when
 // search mode is active.
 pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
+// Whether we display a tab-to-complete result when the user types an engine
+// name.
+pref("browser.urlbar.update2.tabToComplete", true);
 #else
 pref("browser.urlbar.update2", false);
 pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", false);
 pref("browser.urlbar.update2.localOneOffs", false);
 pref("browser.urlbar.update2.oneOffsRefresh", false);
 pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", false);
+pref("browser.urlbar.update2.tabToComplete", false);
 #endif
 
 // Controls the empty search behavior in Search Mode:
@@ -367,9 +371,6 @@ pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", false);
 //  1 - Show search history
 //  2 - Show search and browsing history
 pref("browser.urlbar.update2.emptySearchBehavior", 2);
-// Whether we display a tab-to-complete result when the user types an engine
-// name.
-pref("browser.urlbar.update2.tabToComplete", false);
 
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
