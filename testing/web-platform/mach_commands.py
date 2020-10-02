@@ -95,6 +95,11 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["binary"] is None:
             kwargs["binary"] = self.get_binary_path()
 
+        if kwargs["specialpowers_path"] is None:
+            kwargs["specialpowers_path"] = os.path.join(self.distdir,
+                                                        "xpi-stage",
+                                                        "specialpowers@mozilla.org.xpi")
+
         if kwargs["certutil_binary"] is None:
             kwargs["certutil_binary"] = self.get_binary_path('certutil')
 

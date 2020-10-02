@@ -157,15 +157,19 @@ class Test(object):
     default_timeout = 10  # seconds
     long_timeout = 60  # seconds
 
-    def __init__(self, tests_root, url, inherit_metadata, test_metadata,
+    def __init__(self, url_base, tests_root, url, inherit_metadata, test_metadata,
                  timeout=None, path=None, protocol="http", quic=False):
+        self.url_base = url_base
         self.tests_root = tests_root
         self.url = url
         self._inherit_metadata = inherit_metadata
         self._test_metadata = test_metadata
         self.timeout = timeout if timeout is not None else self.default_timeout
         self.path = path
-        self.environment = {"protocol": protocol, "prefs": self.prefs, "quic": quic}
+        self.environment = {"url_base": url_base,
+                            "protocol": protocol,
+                            "prefs": self.prefs,
+                            "quic": quic}
 
     def __eq__(self, other):
         if not isinstance(other, Test):
@@ -182,9 +186,10 @@ class Test(object):
         return metadata
 
     @classmethod
-    def from_manifest(cls, manifest_file, manifest_item, inherit_metadata, test_metadata):
+    def from_manifest(cls, url_base, manifest_file, manifest_item, inherit_metadata, test_metadata):
         timeout = cls.long_timeout if manifest_item.timeout == "long" else cls.default_timeout
-        return cls(manifest_file.tests_root,
+        return cls(manifest_file.url_base,
+                   manifest_file.tests_root,
                    manifest_item.url,
                    inherit_metadata,
                    test_metadata,
@@ -393,10 +398,10 @@ class TestharnessTest(Test):
     subtest_result_cls = TestharnessSubtestResult
     test_type = "testharness"
 
-    def __init__(self, tests_root, url, inherit_metadata, test_metadata,
+    def __init__(self, url_base, tests_root, url, inherit_metadata, test_metadata,
                  timeout=None, path=None, protocol="http", testdriver=False,
                  jsshell=False, scripts=None, quic=False):
-        Test.__init__(self, tests_root, url, inherit_metadata, test_metadata, timeout,
+        Test.__init__(self, url_base, tests_root, url, inherit_metadata, test_metadata, timeout,
                       path, protocol, quic)
 
         self.testdriver = testdriver
@@ -412,7 +417,8 @@ class TestharnessTest(Test):
         script_metadata = manifest_item.script_metadata or []
         scripts = [v for (k, v) in script_metadata
                    if k == "script"]
-        return cls(manifest_file.tests_root,
+        return cls(manifest_file.url_base,
+                   manifest_file.tests_root,
                    manifest_item.url,
                    inherit_metadata,
                    test_metadata,
@@ -452,10 +458,10 @@ class ReftestTest(Test):
     result_cls = ReftestResult
     test_type = "reftest"
 
-    def __init__(self, tests_root, url, inherit_metadata, test_metadata, references,
+    def __init__(self, url_base, tests_root, url, inherit_metadata, test_metadata, references,
                  timeout=None, path=None, viewport_size=None, dpi=None, fuzzy=None, protocol="http",
                  quic=False):
-        Test.__init__(self, tests_root, url, inherit_metadata, test_metadata, timeout,
+        Test.__init__(self, url_base, tests_root, url, inherit_metadata, test_metadata, timeout,
                       path, protocol, quic)
 
         for _, ref_type in references:
@@ -486,7 +492,8 @@ class ReftestTest(Test):
 
         url = manifest_test.url
 
-        node = cls(manifest_file.tests_root,
+        node = cls(manifest_file.url_base,
+                   manifest_file.tests_root,
                    manifest_test.url,
                    inherit_metadata,
                    test_metadata,
@@ -605,7 +612,7 @@ class ReftestTest(Test):
 class PrintReftestTest(ReftestTest):
     test_type = "print-reftest"
 
-    def __init__(self, tests_root, url, inherit_metadata, test_metadata, references,
+    def __init__(self, url_base, tests_root, url, inherit_metadata, test_metadata, references,
                  timeout=None, path=None, viewport_size=None, dpi=None, fuzzy=None,
                  page_ranges=None, protocol="http", quic=False):
         super(PrintReftestTest, self).__init__(tests_root, url, inherit_metadata, test_metadata,
