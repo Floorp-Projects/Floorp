@@ -301,7 +301,7 @@ void LIRGeneratorShared::assignWasmSafepoint(LInstruction* ins,
   }
 }
 
-#ifndef ENABLE_WASM_SIMD
+#if !defined(ENABLE_WASM_SIMD) || defined(JS_CODEGEN_ARM64)
 
 void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128*) {
   MOZ_CRASH("SIMD not enabled");
