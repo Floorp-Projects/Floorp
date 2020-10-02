@@ -65,23 +65,18 @@ function mkdirs(filePath) {
   }
 }
 
-if (false) {
-  const code = transform("devtools/client/debugger/src/utils/prefs.js");
-  console.log(code.slice(0, 1500));
-} else {
-  const deps = [__filename, _path.resolve(__dirname, "babel.js")];
-  const outputDir = process.argv[process.argv.length - 1];
-  mkdirs(outputDir);
+const deps = [__filename, _path.resolve(__dirname, "babel.js")];
+const outputDir = process.argv[process.argv.length - 1];
+mkdirs(outputDir);
 
-  for (let i = 2; i < process.argv.length - 1; i++) {
-    const srcPath = process.argv[i];
-    const code = transform(srcPath);
-    const fullPath = _path.join(outputDir, _path.basename(srcPath));
-    fs.writeFileSync(fullPath, code);
-    deps.push(srcPath);
-  }
-
-  // Print all dependencies prefixed with 'dep:' in order to help node.py, the script that
-  // calls this module, to report back the precise list of all dependencies.
-  console.log(deps.map(file => "dep:" + file).join("\n"));
+for (let i = 2; i < process.argv.length - 1; i++) {
+  const srcPath = process.argv[i];
+  const code = transform(srcPath);
+  const fullPath = _path.join(outputDir, _path.basename(srcPath));
+  fs.writeFileSync(fullPath, code);
+  deps.push(srcPath);
 }
+
+// Print all dependencies prefixed with 'dep:' in order to help node.py, the script that
+// calls this module, to report back the precise list of all dependencies.
+console.log(deps.map(file => "dep:" + file).join("\n"));
