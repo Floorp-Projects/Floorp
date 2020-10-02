@@ -38,7 +38,6 @@ fn trim_token(token: &[u8]) -> &[u8] {
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 /// Allocates an nsACString that contains a ISO 639 language list
 /// notated with HTTP "q" values for output with an HTTP Accept-Language
 /// header. Previous q values will be stripped because the order of
@@ -154,7 +153,6 @@ fn canonicalize_language_tag(token: &mut [u8]) {
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "C" fn rust_net_is_valid_ipv4_addr<'a>(addr: &'a nsACString) -> bool {
     is_valid_ipv4_addr(addr)
 }
@@ -214,7 +212,6 @@ pub fn is_valid_ipv4_addr<'a>(addr: &'a [u8]) -> bool {
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "C" fn rust_net_is_valid_ipv6_addr<'a>(addr: &'a nsACString) -> bool {
     is_valid_ipv6_addr(addr)
 }
@@ -291,13 +288,11 @@ pub fn is_valid_ipv6_addr<'a>(addr: &'a [u8]) -> bool {
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "C" fn rust_net_is_valid_scheme_char(a_char: u8) -> bool {
     is_valid_scheme_char(a_char)
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "C" fn rust_net_is_valid_scheme<'a>(scheme: &'a nsACString) -> bool {
     if scheme.is_empty() {
         return false;
