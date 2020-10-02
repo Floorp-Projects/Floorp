@@ -472,6 +472,9 @@ struct ResponsiveImageDescriptors {
   // We don't support "h" descriptors yet and they are not spec'd, but the
   // current spec does specify that they can be silently ignored (whereas
   // entirely unknown descriptors cause us to invalidate the candidate)
+  //
+  // If we ever start honoring them we should serialize them in
+  // AppendDescriptors.
   Maybe<int32_t> mFutureCompatHeight;
   // If this descriptor set is bogus, e.g. a value was added twice (and thus
   // dropped) or an unknown descriptor was added.
@@ -674,6 +677,26 @@ double ResponsiveImageCandidate::Density(
   MOZ_ASSERT(mType == CandidateType::Default || mType == CandidateType::Density,
              "unhandled candidate type");
   return Density(-1);
+}
+
+void ResponsiveImageCandidate::AppendDescriptors(
+    nsAString& aDescriptors) const {
+  MOZ_ASSERT(IsValid());
+  switch (mType) {
+    case CandidateType::Default:
+    case CandidateType::Invalid:
+      return;
+    case CandidateType::ComputedFromWidth:
+      aDescriptors.Append(' ');
+      aDescriptors.AppendInt(mValue.mWidth);
+      aDescriptors.Append('w');
+      return;
+    case CandidateType::Density:
+      aDescriptors.Append(' ');
+      aDescriptors.AppendFloat(mValue.mDensity);
+      aDescriptors.Append('x');
+      return;
+  }
 }
 
 double ResponsiveImageCandidate::Density(double aMatchingWidth) const {

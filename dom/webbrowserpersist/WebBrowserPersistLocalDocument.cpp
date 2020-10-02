@@ -12,6 +12,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
@@ -20,8 +21,10 @@
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TreeWalker.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -415,9 +418,18 @@ nsresult ResourceReader::OnWalkDOMNode(nsINode* aNode) {
   }
 
   // Test the node to see if it's an image, frame, iframe, css, js
-  if (aNode->IsHTMLElement(nsGkAtoms::img)) {
-    return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE,
-                           "src");
+  if (auto* img = dom::HTMLImageElement::FromNode(*aNode)) {
+    MOZ_TRY(OnWalkAttribute(img, nsIContentPolicy::TYPE_IMAGE, "src"));
+    if (auto* selector = img->GetResponsiveImageSelector()) {
+      for (const auto& candidate : selector->AllCandidates()) {
+        if (!candidate.IsValid()) {
+          continue;
+        }
+        MOZ_TRY(OnWalkURI(NS_ConvertUTF16toUTF8(candidate.URLString()),
+                          nsIContentPolicy::TYPE_IMAGE));
+      }
+    }
+    return NS_OK;
   }
 
   if (aNode->IsSVGElement(nsGkAtoms::img)) {
@@ -891,18 +903,41 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
     return rv;
   }
 
-  if (content->IsHTMLElement(nsGkAtoms::img)) {
-    nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
-    if (NS_SUCCEEDED(rv) && *aNodeOut) {
-      // Disable image loads
-      nsCOMPtr<nsIImageLoadingContent> imgCon = do_QueryInterface(*aNodeOut);
-      if (imgCon) {
-        imgCon->SetLoadingEnabled(false);
-      }
-      FixupAnchor(*aNodeOut);
-      FixupAttribute(*aNodeOut, "src");
+  if (auto* img = dom::HTMLImageElement::FromNode(*content)) {
+    MOZ_TRY(GetNodeToFixup(aNodeIn, aNodeOut));
+    if (!*aNodeOut) {
+      return NS_OK;
     }
-    return rv;
+
+    // Disable image loads
+    nsCOMPtr<nsIImageLoadingContent> imgCon = do_QueryInterface(*aNodeOut);
+    if (imgCon) {
+      imgCon->SetLoadingEnabled(false);
+    }
+    // FIXME(emilio): Why fixing up <img href>? Looks bogus
+    FixupAnchor(*aNodeOut);
+    FixupAttribute(*aNodeOut, "src");
+
+    if (auto* selector = img->GetResponsiveImageSelector()) {
+      nsAutoString srcset;
+      bool first = true;
+      for (const auto& candidate : selector->AllCandidates()) {
+        if (!candidate.IsValid()) {
+          continue;
+        }
+        if (!first) {
+          srcset.AppendLiteral(", ");
+        }
+        first = false;
+        nsAutoString uri(candidate.URLString());
+        FixupURI(uri);
+        srcset.Append(uri);
+        candidate.AppendDescriptors(srcset);
+      }
+      (*aNodeOut)->AsElement()->SetAttr(nsGkAtoms::srcset, srcset,
+                                        IgnoreErrors());
+    }
+    return NS_OK;
   }
 
   if (content->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
