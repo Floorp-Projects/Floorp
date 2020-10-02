@@ -4,7 +4,8 @@
 
 // @flow
 
-import { PrefsHelper } from "devtools-modules";
+// $FlowIgnore
+const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
