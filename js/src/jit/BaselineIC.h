@@ -17,11 +17,9 @@
 #include "jit/ICState.h"
 #include "jit/SharedICRegisters.h"
 #include "js/GCVector.h"
-#include "proxy/DOMProxy.h"  // js::GetDOMProxyHandlerFamily
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSContext.h"
-#include "vm/ProxyObject.h"
 #include "vm/Realm.h"
 
 namespace js {
@@ -1830,21 +1828,6 @@ class ICNewObject_Fallback : public ICFallbackStub {
 
   void setTemplateObject(JSObject* obj) { templateObject_ = obj; }
 };
-
-inline bool IsCacheableDOMProxy(JSObject* obj) {
-  if (!obj->is<ProxyObject>()) {
-    return false;
-  }
-
-  const BaseProxyHandler* handler = obj->as<ProxyObject>().handler();
-  if (handler->family() != GetDOMProxyHandlerFamily()) {
-    return false;
-  }
-
-  // Some DOM proxies have dynamic prototypes.  We can't really cache those very
-  // well.
-  return obj->hasStaticPrototype();
-}
 
 struct IonOsrTempData;
 

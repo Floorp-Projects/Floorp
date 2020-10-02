@@ -51,6 +51,7 @@
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}CallArgs, JSJitMethodCallArgsTraits, JSJitInfo
 #include "js/RegExpFlags.h"  // JS::RegExpFlag
 #include "js/ScalarType.h"   // js::Scalar::Type
+#include "proxy/DOMProxy.h"
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferViewObject.h"

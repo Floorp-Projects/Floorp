@@ -25,10 +25,12 @@
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo, JS::XrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "js/Wrapper.h"
+#include "proxy/DOMProxy.h"  // js::GetDOMProxyHandlerFamily
 #include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/PlainObject.h"  // js::PlainObject
+#include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/ThrowMsgKind.h"  // ThrowCondition
 
@@ -268,6 +270,17 @@ enum class ProxyStubType {
   DOMUnshadowed,
   Generic
 };
+
+static bool IsCacheableDOMProxy(JSObject* obj) {
+  const BaseProxyHandler* handler = obj->as<ProxyObject>().handler();
+  if (handler->family() != GetDOMProxyHandlerFamily()) {
+    return false;
+  }
+
+  // Some DOM proxies have dynamic prototypes.  We can't really cache those very
+  // well.
+  return obj->hasStaticPrototype();
+}
 
 static ProxyStubType GetProxyStubType(JSContext* cx, HandleObject obj,
                                       HandleId id) {

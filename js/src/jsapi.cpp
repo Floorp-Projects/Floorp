@@ -76,6 +76,7 @@
 #include "js/Utility.h"
 #include "js/WasmModule.h"
 #include "js/Wrapper.h"
+#include "proxy/DOMProxy.h"
 #include "util/CompleteFile.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
