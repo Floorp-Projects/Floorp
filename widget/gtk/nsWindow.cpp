@@ -7959,17 +7959,17 @@ void nsWindow::SetProgress(unsigned long progressPercent) {
 
 #ifdef MOZ_X11
 void nsWindow::SetCompositorHint(WindowComposeRequest aState) {
-  if (mIsX11Display &&
-      (!GetLayerManager() ||
-       GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC)) {
-    gulong value = aState;
-    GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-    gdk_property_change(gtk_widget_get_window(mShell),
-                        gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
-                        cardinal_atom,
-                        32,  // format
-                        GDK_PROP_MODE_REPLACE, (guchar*)&value, 1);
+  if (!mIsX11Display) {
+    return;
   }
+
+  gulong value = aState;
+  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+  gdk_property_change(gtk_widget_get_window(mShell),
+                      gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
+                      cardinal_atom,
+                      32,  // format
+                      GDK_PROP_MODE_REPLACE, (guchar*)&value, 1);
 }
 #endif
 
