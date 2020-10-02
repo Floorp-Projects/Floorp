@@ -6,10 +6,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::context::Context;
-use crate::err::{RecvTimeoutError, TryRecvError};
-use crate::select::{Operation, SelectHandle, Token};
-use crate::utils;
+use context::Context;
+use err::{RecvTimeoutError, TryRecvError};
+use select::{Operation, SelectHandle, Token};
+use utils;
 
 /// Result of a receive operation.
 pub type AfterToken = Option<Instant>;

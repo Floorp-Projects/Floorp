@@ -122,6 +122,10 @@
 //! It's also possible to share senders and receivers by reference:
 //!
 //! ```
+//! # extern crate crossbeam_channel;
+//! # extern crate crossbeam_utils;
+//! # fn main() {
+//! use std::thread;
 //! use crossbeam_channel::bounded;
 //! use crossbeam_utils::thread::scope;
 //!
@@ -138,6 +142,7 @@
 //!     s.send(1).unwrap();
 //!     r.recv().unwrap();
 //! }).unwrap();
+//! # }
 //! ```
 //!
 //! # Disconnection
@@ -266,9 +271,12 @@
 //! An example of receiving a message from two channels:
 //!
 //! ```
+//! # #[macro_use]
+//! # extern crate crossbeam_channel;
+//! # fn main() {
 //! use std::thread;
 //! use std::time::Duration;
-//! use crossbeam_channel::{select, unbounded};
+//! use crossbeam_channel::unbounded;
 //!
 //! let (s1, r1) = unbounded();
 //! let (s2, r2) = unbounded();
@@ -282,6 +290,7 @@
 //!     recv(r2) -> msg => assert_eq!(msg, Ok(20)),
 //!     default(Duration::from_secs(1)) => println!("timed out"),
 //! }
+//! # }
 //! ```
 //!
 //! If you need to select over a dynamically created list of channel operations, use [`Select`]
@@ -301,8 +310,11 @@
 //! An example that prints elapsed time every 50 milliseconds for the duration of 1 second:
 //!
 //! ```
+//! # #[macro_use]
+//! # extern crate crossbeam_channel;
+//! # fn main() {
 //! use std::time::{Duration, Instant};
-//! use crossbeam_channel::{after, select, tick};
+//! use crossbeam_channel::{after, tick};
 //!
 //! let start = Instant::now();
 //! let ticker = tick(Duration::from_millis(50));
@@ -314,6 +326,7 @@
 //!         recv(timeout) -> _ => break,
 //!     }
 //! }
+//! # }
 //! ```
 //!
 //! [`std::sync::mpsc`]: https://doc.rust-lang.org/std/sync/mpsc/index.html
@@ -331,46 +344,36 @@
 //! [`Sender`]: struct.Sender.html
 //! [`Receiver`]: struct.Receiver.html
 
-#![doc(test(
-    no_crate_inject,
-    attr(
-        deny(warnings, rust_2018_idioms),
-        allow(dead_code, unused_assignments, unused_variables)
-    )
-))]
-#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 
-use cfg_if::cfg_if;
+extern crate crossbeam_utils;
+extern crate maybe_uninit;
 
-cfg_if! {
-    if #[cfg(feature = "std")] {
-        mod channel;
-        mod context;
-        mod counter;
-        mod err;
-        mod flavors;
-        mod select;
-        mod select_macro;
-        mod utils;
-        mod waker;
+mod channel;
+mod context;
+mod counter;
+mod err;
+mod flavors;
+mod select;
+mod select_macro;
+mod utils;
+mod waker;
 
-        /// Crate internals used by the `select!` macro.
-        #[doc(hidden)]
-        pub mod internal {
-            pub use crate::select::SelectHandle;
-            pub use crate::select::{select, select_timeout, try_select};
-        }
-
-        pub use crate::channel::{after, never, tick};
-        pub use crate::channel::{bounded, unbounded};
-        pub use crate::channel::{IntoIter, Iter, TryIter};
-        pub use crate::channel::{Receiver, Sender};
-
-        pub use crate::select::{Select, SelectedOperation};
-
-        pub use crate::err::{ReadyTimeoutError, SelectTimeoutError, TryReadyError, TrySelectError};
-        pub use crate::err::{RecvError, RecvTimeoutError, TryRecvError};
-        pub use crate::err::{SendError, SendTimeoutError, TrySendError};
-    }
+/// Crate internals used by the `select!` macro.
+#[doc(hidden)]
+pub mod internal {
+    pub use select::SelectHandle;
+    pub use select::{select, select_timeout, try_select};
 }
+
+pub use channel::{after, never, tick};
+pub use channel::{bounded, unbounded};
+pub use channel::{IntoIter, Iter, TryIter};
+pub use channel::{Receiver, Sender};
+
+pub use select::{Select, SelectedOperation};
+
+pub use err::{ReadyTimeoutError, SelectTimeoutError, TryReadyError, TrySelectError};
+pub use err::{RecvError, RecvTimeoutError, TryRecvError};
+pub use err::{SendError, SendTimeoutError, TrySendError};

@@ -3,9 +3,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, ThreadId};
 
-use crate::context::Context;
-use crate::select::{Operation, Selected};
-use crate::utils::Spinlock;
+use context::Context;
+use select::{Operation, Selected};
+use utils::Spinlock;
 
 /// Represents a thread blocked on a specific channel operation.
 pub struct Entry {
@@ -221,14 +221,12 @@ impl SyncWaker {
     pub fn notify(&self) {
         if !self.is_empty.load(Ordering::SeqCst) {
             let mut inner = self.inner.lock();
-            if !self.is_empty.load(Ordering::SeqCst) {
-                inner.try_select();
-                inner.notify();
-                self.is_empty.store(
-                    inner.selectors.is_empty() && inner.observers.is_empty(),
-                    Ordering::SeqCst,
-                );
-            }
+            inner.try_select();
+            inner.notify();
+            self.is_empty.store(
+                inner.selectors.is_empty() && inner.observers.is_empty(),
+                Ordering::SeqCst,
+            );
         }
     }
 
