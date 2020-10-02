@@ -4510,7 +4510,7 @@
 
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
   value: 1
 #else
   value: 0
