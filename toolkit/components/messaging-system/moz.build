@@ -19,7 +19,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 XPCSHELL_TESTS_MANIFESTS += ['targeting/test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    'schemas/NimbusExperiment.schema.json',
     'schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json',
     'schemas/TriggerActionSchemas/TriggerActionSchemas.json',
     'test/MSTestUtils.jsm',
