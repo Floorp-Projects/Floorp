@@ -502,8 +502,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
       [mWindow setCollectionBehavior:behavior];
     }
   } else {
-    // Make sure that regular windows are opaque from the start, so that
-    // nsChildView::WidgetTypeSupportsAcceleration returns true for them.
+    // Non-popup windows are always opaque.
     [mWindow setOpaque:YES];
   }
 
@@ -1077,15 +1076,16 @@ nsTransparencyMode nsCocoaWindow::GetTransparencyMode() {
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
 }
 
-// This is called from nsMenuPopupFrame when making a popup transparent, or
-// from nsChildView::SetTransparencyMode for other window types.
+// This is called from nsMenuPopupFrame when making a popup transparent.
 void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mWindow) return;
+  // Only respect calls for popup windows.
+  if (!mWindow || mWindowType != eWindowType_popup) {
+    return;
+  }
 
-  // Transparent windows are only supported on popups.
-  BOOL isTransparent = aMode == eTransparencyTransparent && mWindowType == eWindowType_popup;
+  BOOL isTransparent = aMode == eTransparencyTransparent;
   BOOL currentTransparency = ![mWindow isOpaque];
   if (isTransparent != currentTransparency) {
     [mWindow setOpaque:!isTransparent];
