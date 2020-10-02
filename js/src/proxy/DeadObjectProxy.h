@@ -25,45 +25,47 @@ class DeadObjectProxy : public BaseProxyHandler {
 
   /* Standard internal methods. */
   virtual bool getOwnPropertyDescriptor(
-      JSContext* cx, HandleObject wrapper, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const override;
-  virtual bool defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
-                              Handle<PropertyDescriptor> desc,
-                              ObjectOpResult& result) const override;
-  virtual bool ownPropertyKeys(JSContext* cx, HandleObject wrapper,
-                               MutableHandleIdVector props) const override;
-  virtual bool delete_(JSContext* cx, HandleObject wrapper, HandleId id,
-                       ObjectOpResult& result) const override;
-  virtual bool getPrototype(JSContext* cx, HandleObject proxy,
-                            MutableHandleObject protop) const override;
+      JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
+      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+  virtual bool defineProperty(JSContext* cx, JS::HandleObject wrapper,
+                              JS::HandleId id,
+                              JS::Handle<JS::PropertyDescriptor> desc,
+                              JS::ObjectOpResult& result) const override;
+  virtual bool ownPropertyKeys(JSContext* cx, JS::HandleObject wrapper,
+                               JS::MutableHandleIdVector props) const override;
+  virtual bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
+                       JS::ObjectOpResult& result) const override;
+  virtual bool getPrototype(JSContext* cx, JS::HandleObject proxy,
+                            JS::MutableHandleObject protop) const override;
   virtual bool getPrototypeIfOrdinary(
-      JSContext* cx, HandleObject proxy, bool* isOrdinary,
-      MutableHandleObject protop) const override;
-  virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
-                                 ObjectOpResult& result) const override;
-  virtual bool isExtensible(JSContext* cx, HandleObject proxy,
+      JSContext* cx, JS::HandleObject proxy, bool* isOrdinary,
+      JS::MutableHandleObject protop) const override;
+  virtual bool preventExtensions(JSContext* cx, JS::HandleObject proxy,
+                                 JS::ObjectOpResult& result) const override;
+  virtual bool isExtensible(JSContext* cx, JS::HandleObject proxy,
                             bool* extensible) const override;
-  virtual bool call(JSContext* cx, HandleObject proxy,
-                    const CallArgs& args) const override;
-  virtual bool construct(JSContext* cx, HandleObject proxy,
-                         const CallArgs& args) const override;
+  virtual bool call(JSContext* cx, JS::HandleObject proxy,
+                    const JS::CallArgs& args) const override;
+  virtual bool construct(JSContext* cx, JS::HandleObject proxy,
+                         const JS::CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
   // BaseProxyHandler::enumerate will throw by calling ownKeys.
-  virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                          const CallArgs& args) const override;
-  virtual bool hasInstance(JSContext* cx, HandleObject proxy,
-                           MutableHandleValue v, bool* bp) const override;
-  virtual bool getBuiltinClass(JSContext* cx, HandleObject proxy,
+  virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
+                          JS::NativeImpl impl,
+                          const JS::CallArgs& args) const override;
+  virtual bool hasInstance(JSContext* cx, JS::HandleObject proxy,
+                           JS::MutableHandleValue v, bool* bp) const override;
+  virtual bool getBuiltinClass(JSContext* cx, JS::HandleObject proxy,
                                ESClass* cls) const override;
-  virtual bool isArray(JSContext* cx, HandleObject proxy,
+  virtual bool isArray(JSContext* cx, JS::HandleObject proxy,
                        JS::IsArrayAnswer* answer) const override;
   virtual const char* className(JSContext* cx,
-                                HandleObject proxy) const override;
-  virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
+                                JS::HandleObject proxy) const override;
+  virtual JSString* fun_toString(JSContext* cx, JS::HandleObject proxy,
                                  bool isToSource) const override;
   virtual RegExpShared* regexp_toShared(JSContext* cx,
-                                        HandleObject proxy) const override;
+                                        JS::HandleObject proxy) const override;
 
   // Use the regular paths for private values
   virtual bool useProxyExpandoObjectForPrivateFields() const override {
@@ -90,7 +92,7 @@ class DeadObjectProxy : public BaseProxyHandler {
 
 bool IsDeadProxyObject(JSObject* obj);
 
-Value DeadProxyTargetValue(ProxyObject* obj);
+JS::Value DeadProxyTargetValue(ProxyObject* obj);
 
 JSObject* NewDeadProxyObject(JSContext* cx, JSObject* origObj = nullptr);
 
