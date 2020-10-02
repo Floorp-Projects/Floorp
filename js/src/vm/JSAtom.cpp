@@ -1123,7 +1123,7 @@ JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
 
 JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                              size_t utf8ByteLength) {
-  return AtomizeUTF8OrWTF8Chars<UTF8Chars>(cx, utf8Chars, utf8ByteLength);
+  return AtomizeUTF8OrWTF8Chars<JS::UTF8Chars>(cx, utf8Chars, utf8ByteLength);
 }
 
 JSAtom* js::AtomizeWTF8Chars(JSContext* cx, const char* wtf8Chars,
