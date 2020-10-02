@@ -36,6 +36,9 @@ var SessionHistory = Object.freeze({
   },
 
   collect(docShell, aFromIdx = -1) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      throw new Error("Use SessionHistory.collectFromParent instead");
+    }
     return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
@@ -50,6 +53,9 @@ var SessionHistory = Object.freeze({
   },
 
   restore(docShell, tabData) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      throw new Error("Use SessionHistory.restoreFromParent instead");
+    }
     return SessionHistoryInternal.restore(
       docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
         .legacySHistory,
