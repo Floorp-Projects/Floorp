@@ -368,17 +368,12 @@ enum class MaxSizeExceededBehaviour {
 
 static bool GetDisplayPortImpl(
     nsIContent* aContent, nsRect* aResult, float aMultiplier,
-    MaxSizeExceededBehaviour aBehaviour = MaxSizeExceededBehaviour::Assert,
-    bool* aOutPainted = nullptr) {
+    MaxSizeExceededBehaviour aBehaviour = MaxSizeExceededBehaviour::Assert) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
 
   if (!GetDisplayPortData(aContent, &rectData, &marginsData)) {
     return false;
-  }
-
-  if (aOutPainted) {
-    *aOutPainted = rectData ? rectData->mPainted : marginsData->mPainted;
   }
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
@@ -444,14 +439,13 @@ static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
 
 bool DisplayPortUtils::GetDisplayPort(
     nsIContent* aContent, nsRect* aResult,
-    DisplayportRelativeTo aRelativeTo /* = DisplayportRelativeTo::ScrollPort */,
-    bool* aOutPainted /* = nullptr */) {
+    DisplayportRelativeTo
+        aRelativeTo /* = DisplayportRelativeTo::ScrollPort */) {
   float multiplier = StaticPrefs::layers_low_precision_buffer()
                          ? 1.0f / StaticPrefs::layers_low_precision_resolution()
                          : 1.0f;
-  bool usingDisplayPort =
-      GetDisplayPortImpl(aContent, aResult, multiplier,
-                         MaxSizeExceededBehaviour::Assert, aOutPainted);
+  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier,
+                                             MaxSizeExceededBehaviour::Assert);
   if (aResult && usingDisplayPort &&
       aRelativeTo == DisplayportRelativeTo::ScrollFrame) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
@@ -694,11 +688,10 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
 }
 
 bool DisplayPortUtils::GetCriticalDisplayPort(nsIContent* aContent,
-                                              nsRect* aResult,
-                                              bool* aOutPainted) {
+                                              nsRect* aResult) {
   if (StaticPrefs::layers_low_precision_buffer()) {
     return GetDisplayPortImpl(aContent, aResult, 1.0f,
-                              MaxSizeExceededBehaviour::Assert, aOutPainted);
+                              MaxSizeExceededBehaviour::Assert);
   }
   return false;
 }
@@ -708,13 +701,11 @@ bool DisplayPortUtils::HasCriticalDisplayPort(nsIContent* aContent) {
 }
 
 bool DisplayPortUtils::GetHighResolutionDisplayPort(nsIContent* aContent,
-                                                    nsRect* aResult,
-                                                    bool* aOutPainted) {
+                                                    nsRect* aResult) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetCriticalDisplayPort(aContent, aResult, aOutPainted);
+    return GetCriticalDisplayPort(aContent, aResult);
   }
-  return GetDisplayPort(aContent, aResult, DisplayportRelativeTo::ScrollPort,
-                        aOutPainted);
+  return GetDisplayPort(aContent, aResult, DisplayportRelativeTo::ScrollPort);
 }
 
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {
