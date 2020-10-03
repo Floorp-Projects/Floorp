@@ -3,18 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// This file is a chrome-API-dependent version of the file
-// packages/devtools-modules/src/unicode-url.js at
-// https://github.com/firefox-devtools/devtools-core, so that this
-// chrome-API-dependent version can take advantage of utilizing chrome APIs. But
-// because of this, it isn't intended to be used in Chrome-API-free
-// applications, such as the Launchpad.
-//
-// Please keep in mind that if the feature in this file has changed, don't
-// forget to also change that accordingly in the file
-// packages/devtools-modules/src/unicode-url.js at
-// https://github.com/firefox-devtools/devtools-core
-
 const { Cc, Ci } = require("chrome");
 const idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
   Ci.nsIIDNService

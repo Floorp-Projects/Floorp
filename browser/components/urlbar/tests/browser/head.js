@@ -80,24 +80,6 @@ async function updateTopSites(condition, searchShortcuts = false) {
 }
 
 /**
- * Simple convenience method to append a space to token aliases but not to other
- * values.
- *
- * TODO (Bug 1661882): Remove this function and simply use the passed-in string
- * directly.
- *
- * @param {string} val
- * @returns {string}
- *   `val` with a space appended if it's a token alias, or just `val` otherwise.
- */
-function getAutofillSearchString(val) {
-  if (!val.startsWith("@")) {
-    return val;
-  }
-  return val + " ";
-}
-
-/**
  * Waits for a load in any browser or a timeout, whichever comes first.
  *
  * @param {window} win

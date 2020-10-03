@@ -1700,9 +1700,8 @@ function RecvStartPrint(isPrintSelection, printRange)
     ps.printToFile = true;
     ps.toFileName = file.path;
     ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-    if (isPrintSelection) {
-        ps.printRange = Ci.nsIPrintSettings.kRangeSelection;
-    } else if (printRange) {
+    ps.printSelectionOnly = isPrintSelection;
+    if (printRange) {
         ps.printRange = Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
         let range = printRange.split('-');
         ps.startPageRange = +range[0] || 1;

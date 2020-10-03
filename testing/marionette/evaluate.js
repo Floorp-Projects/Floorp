@@ -203,9 +203,9 @@ evaluate.sandbox = function(
  *     If `seenEls` is an `element.Store` and the web element reference has not
  *     been seen before.
  * @throws {StaleElementReferenceError}
- *     If `seenEls` is an `element.Store` and the element has gone stale,
- *     indicating it is no longer attached to the DOM, or its node document
- *     is no longer the active document.
+ *     If `seenEls` is an `element.ReferenceStore` or `element.Store` and the
+ *     element has gone stale, indicating it is no longer attached to the DOM,
+ *     or its node document is no longer the active document.
  */
 evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
   switch (typeof obj) {

@@ -57,11 +57,11 @@ class MarionetteFrameChild extends JSWindowActorChild {
   }
 
   async receiveMessage(msg) {
-    const { name, data: serializedData } = msg;
-    const data = evaluate.fromJSON(serializedData);
-
     try {
       let result;
+
+      const { name, data: serializedData } = msg;
+      const data = evaluate.fromJSON(serializedData);
 
       switch (name) {
         case "MarionetteFrameParent:clearElement":

@@ -120,14 +120,14 @@ class CommandBar extends Component<Props> {
     const { shortcuts } = this.context;
 
     COMMANDS.forEach(action =>
-      shortcuts.on(getKey(action), (_, e) => this.handleEvent(e, action))
+      shortcuts.on(getKey(action), e => this.handleEvent(e, action))
     );
 
     if (isMacOS) {
       // The Mac supports both the Windows Function keys
       // as well as the Mac non-Function keys
       COMMANDS.forEach(action =>
-        shortcuts.on(getKeyForOS("WINNT", action), (_, e) =>
+        shortcuts.on(getKeyForOS("WINNT", action), e =>
           this.handleEvent(e, action)
         )
       );

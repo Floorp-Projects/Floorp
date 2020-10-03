@@ -957,8 +957,8 @@ static bool GuardSpecificAtomOrSymbol(CacheIRReader& reader, ICStub* stub,
     if (!reader.matchOp(CacheOp::GuardSpecificSymbol, keyId)) {
       return false;
     }
-    Symbol* sym =
-        stubInfo->getStubField<Symbol*>(stub, reader.stubOffset()).get();
+    JS::Symbol* sym =
+        stubInfo->getStubField<JS::Symbol*>(stub, reader.stubOffset()).get();
     if (SYMBOL_TO_JSID(sym) != id) {
       return false;
     }

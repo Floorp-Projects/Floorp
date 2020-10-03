@@ -451,8 +451,12 @@ var PrintEventHandler = {
       paperHeight
     ) {
       let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginTop = settingsToUpdate.customMargins.marginTop = marginTop;
-      settingsToUpdate.marginBottom = settingsToUpdate.customMargins.marginBottom = marginBottom;
+      settingsToUpdate.marginTop = marginTop;
+      settingsToUpdate.marginBottom = marginBottom;
+      if (settingsToUpdate.customMargins) {
+        settingsToUpdate.customMargins.marginTop = marginTop;
+        settingsToUpdate.customMargins.marginBottom = marginBottom;
+      }
     }
 
     if (
@@ -461,8 +465,12 @@ var PrintEventHandler = {
       paperWidth
     ) {
       let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginLeft = settingsToUpdate.customMargins.marginLeft = marginLeft;
-      settingsToUpdate.marginRight = settingsToUpdate.customMargins.marginRight = marginRight;
+      settingsToUpdate.marginLeft = marginLeft;
+      settingsToUpdate.marginRight = marginRight;
+      if (settingsToUpdate.customMargins) {
+        settingsToUpdate.customMargins.marginLeft = marginLeft;
+        settingsToUpdate.customMargins.marginRight = marginRight;
+      }
     }
 
     return settingsToUpdate;
@@ -968,7 +976,11 @@ var PrintSettingsViewProxy = {
 
     // prepare the available paper sizes for this printer
     if (!printerInfo.paperList?.length) {
-      logger.warn("Printer has empty paperList: ", printerInfo.printer.id);
+      logger.warn(
+        "Printer has empty paperList: ",
+        printerInfo.printer.id,
+        "using fallbackPaperList"
+      );
       printerInfo.paperList = this.fallbackPaperList;
     }
     let paperSizeUnit = printerInfo.settings.paperSizeUnit;

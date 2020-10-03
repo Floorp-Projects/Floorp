@@ -10,7 +10,7 @@ import classnames from "classnames";
 import { getDocument, toEditorLine } from "../../utils/editor";
 import { getSelectedLocation } from "../../utils/selected-location";
 import { features } from "../../utils/prefs";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 import { breakpointItems } from "./menus/breakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
 import type { EditorItemActions } from "./menus/editor";

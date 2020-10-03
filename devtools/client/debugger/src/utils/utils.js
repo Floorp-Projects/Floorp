@@ -5,7 +5,9 @@
 // @flow
 
 import type { SourceContent } from "../types";
-import { DevToolsUtils } from "devtools-modules";
+
+// $FlowIgnore
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 /**
  * Utils for utils, by utils

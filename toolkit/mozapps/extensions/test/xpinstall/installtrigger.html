@@ -19,9 +19,14 @@ function installCallback(url, status) {
   target.dispatchEvent(event);
 }
 
-function startInstall() {
+function startInstall(viaWindowLoaded = false) {
   var event = new CustomEvent("InstallTriggered");
-  var text = decodeURIComponent(document.location.search.substring(1));
+  var text;
+  if (viaWindowLoaded) {
+    text = decodeURIComponent(document.location.search.substring(1));
+  } else {
+    text = decodeURIComponent(document.location.search.substring("?manualStartInstall".length));
+  }
   var triggers = JSON.parse(text);
   try {
     document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);
@@ -31,12 +36,20 @@ function startInstall() {
     document.getElementById("return").textContent = "exception";
     dump("Sending InstallTriggered\n");
     window.dispatchEvent(event);
-    throw e;
+    if (viaWindowLoaded) {
+      throw e;
+    }
+  }
+}
+
+window.onload = function () {
+  if (!document.location.search.startsWith("?manualStartInstall")) {
+    startInstall(true);
   }
 }
 </script>
 </head>
-<body onload="startInstall()">
+<body>
 <p>InstallTrigger tests</p>
 <p id="return"></p>
 <p id="status"></p>

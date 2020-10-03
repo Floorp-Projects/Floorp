@@ -1130,7 +1130,7 @@ bool js::ParseRegExpFlags(JSContext* cx, JSString* flagStr,
   }
 
   if (!ok) {
-    TwoByteChars range(&invalidFlag, 1);
+    JS::TwoByteChars range(&invalidFlag, 1);
     UniqueChars utf8(JS::CharsToNewUTF8CharsZ(cx, range).c_str());
     if (!utf8) {
       return false;

@@ -70,7 +70,6 @@ interface nsIPrintSettings : nsISupports
   /* Print Range Enums */
   const long kRangeAllPages           = 0;
   const long kRangeSpecifiedPageRange = 1;
-  const long kRangeSelection          = 2;
 
   /* Justification Enums */
   const long kJustLeft   = 0;
@@ -185,6 +184,9 @@ interface nsIPrintSettings : nsISupports
 
   /** Whether to draw guidelines showing the margin settings */
   [infallible] attribute boolean showMarginGuides;
+
+  /** Whether to only print the selected nodes */
+  [infallible] attribute boolean printSelectionOnly;
 
   attribute short   printRange;
 

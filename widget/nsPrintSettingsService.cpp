@@ -115,6 +115,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   data->honorPageRuleMargins() = aSettings->GetHonorPageRuleMargins();
   data->showMarginGuides() = aSettings->GetShowMarginGuides();
+  data->printSelectionOnly() = aSettings->GetPrintSelectionOnly();
 
   aSettings->GetPrintRange(&data->printRange());
 
@@ -214,6 +215,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintBGImages(data.printBGImages());
   settings->SetHonorPageRuleMargins(data.honorPageRuleMargins());
   settings->SetShowMarginGuides(data.showMarginGuides());
+  settings->SetPrintSelectionOnly(data.printSelectionOnly());
   settings->SetPrintRange(data.printRange());
 
   settings->SetTitle(data.title());

@@ -4,7 +4,7 @@
 
 // @flow
 import React, { PureComponent } from "react";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
 import { features } from "../../utils/prefs";

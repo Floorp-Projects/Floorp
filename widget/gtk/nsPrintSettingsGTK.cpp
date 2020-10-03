@@ -38,8 +38,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsGTK, nsPrintSettings,
 nsPrintSettingsGTK::nsPrintSettingsGTK()
     : mPageSetup(nullptr),
       mPrintSettings(nullptr),
-      mGTKPrinter(nullptr),
-      mPrintSelectionOnly(false) {
+      mGTKPrinter(nullptr) {
   // The aim here is to set up the objects enough that silent printing works
   // well. These will be replaced anyway if the print dialog is used.
   mPrintSettings = gtk_print_settings_new();
@@ -80,8 +79,7 @@ nsPrintSettingsGTK::~nsPrintSettingsGTK() {
 nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS)
     : mPageSetup(nullptr),
       mPrintSettings(nullptr),
-      mGTKPrinter(nullptr),
-      mPrintSelectionOnly(false) {
+      mGTKPrinter(nullptr) {
   *this = aPS;
 }
 
@@ -106,8 +104,6 @@ nsPrintSettingsGTK& nsPrintSettingsGTK::operator=(
 
   if (mGTKPrinter) g_object_unref(mGTKPrinter);
   mGTKPrinter = (GtkPrinter*)g_object_ref(rhs.mGTKPrinter);
-
-  mPrintSelectionOnly = rhs.mPrintSelectionOnly;
 
   return *this;
 }
@@ -214,10 +210,6 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t* aOutputFormat) {
 
 NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t* aPrintRange) {
   NS_ENSURE_ARG_POINTER(aPrintRange);
-  if (mPrintSelectionOnly) {
-    *aPrintRange = kRangeSelection;
-    return NS_OK;
-  }
 
   GtkPrintPages gtkRange = gtk_print_settings_get_print_pages(mPrintSettings);
   if (gtkRange == GTK_PRINT_PAGES_RANGES)
@@ -228,12 +220,6 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t* aPrintRange) {
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(int16_t aPrintRange) {
-  if (aPrintRange == kRangeSelection) {
-    mPrintSelectionOnly = true;
-    return NS_OK;
-  }
-
-  mPrintSelectionOnly = false;
   if (aPrintRange == kRangeSpecifiedPageRange)
     gtk_print_settings_set_print_pages(mPrintSettings, GTK_PRINT_PAGES_RANGES);
   else

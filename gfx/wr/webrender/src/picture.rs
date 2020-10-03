@@ -6001,12 +6001,14 @@ impl PicturePrimitive {
                 // For in-preserve-3d primitives and pictures, the backface visibility is
                 // evaluated relative to the containing block.
                 if let Picture3DContext::In { ancestor_index, .. } = self.context_3d {
-                    match frame_context.spatial_tree
-                        .get_relative_transform(cluster.spatial_node_index, ancestor_index)
-                        .visible_face()
-                    {
-                        VisibleFace::Back => continue,
-                        VisibleFace::Front => (),
+                    let mut face = VisibleFace::Front;
+                    frame_context.spatial_tree.get_relative_transform_with_face(
+                        cluster.spatial_node_index,
+                        ancestor_index,
+                        Some(&mut face),
+                    );
+                    if face == VisibleFace::Back {
+                        continue
                     }
                 }
             }

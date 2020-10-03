@@ -161,7 +161,7 @@ class _RemoteSettingsExperimentLoader {
         if (await this.checkTargeting(r, context)) {
           matches++;
           log.debug(`${r.id} matched`);
-          await this.manager.onRecipe(r.arguments, "rs-loader");
+          await this.manager.onRecipe(r, "rs-loader");
         } else {
           log.debug(`${r.id} did not match due to targeting`);
         }

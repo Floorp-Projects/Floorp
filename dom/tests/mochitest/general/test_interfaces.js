@@ -180,11 +180,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioWorkletNode", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AuthenticatorAssertionResponse", android: false },
+  { name: "AuthenticatorAssertionResponse" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AuthenticatorAttestationResponse", android: false },
+  { name: "AuthenticatorAttestationResponse" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AuthenticatorResponse", android: false },
+  { name: "AuthenticatorResponse" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BarProp", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -236,9 +236,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ConvolverNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Credential", android: false },
+  { name: "Credential" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CredentialsContainer", android: false },
+  { name: "CredentialsContainer" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Crypto", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -942,7 +942,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PromiseRejectionEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PublicKeyCredential", android: false },
+  { name: "PublicKeyCredential" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PushManager", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

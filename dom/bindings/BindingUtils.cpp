@@ -780,7 +780,7 @@ static JSObject* CreateConstructor(JSContext* cx, JS::Handle<JSObject*> global,
   JSObject* constructor = JS_GetFunctionObject(fun);
   js::SetFunctionNativeReserved(
       constructor, CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT,
-      js::PrivateValue(const_cast<JSNativeHolder*>(nativeHolder)));
+      JS::PrivateValue(const_cast<JSNativeHolder*>(nativeHolder)));
   return constructor;
 }
 

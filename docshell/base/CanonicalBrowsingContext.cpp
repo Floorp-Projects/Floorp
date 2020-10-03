@@ -359,6 +359,9 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     MOZ_LOG(gSHLog, LogLevel::Verbose,
             ("SHEntry::GetByLoadId(%" PRIu64 ") -> %p",
              existingLoadingInfo->mLoadId, entry.get()));
+    if (!entry) {
+      return nullptr;
+    }
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     if (IsTop()) {

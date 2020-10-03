@@ -326,7 +326,44 @@ class FloatRegisters {
   typedef FPRegisterID Encoding;
   typedef uint64_t SetType;
 
-  enum Kind : uint8_t { Double, Single, NumTypes };
+  // WARNING!  About SIMD registers on Arm64:
+  //
+  // There is a Kind 'Simd128' but registers of this kind cannot be stored in
+  // register sets, the kind exists only to tag FloatRegisters as vector
+  // registers for use outside the sets, see below.  The reason for this
+  // weirdness is that the 64-bit SetType is too small to hold information about
+  // vector registers, and we have poor options for making SetType larger.
+  //
+  // (We have two options for increasing the size of SetType: __uint128_t and
+  // some simulation of __uint128_t or perhaps __uint96_t.  Using __uint128_t
+  // does not work because C++ compilers generate aligned accesses to
+  // __uint128_t fields, and structures containing register sets are frequently
+  // not properly aligned because they are allocated with TempAllocator.  Using
+  // a simulation will result in a lot of code, possibly reduce inlining of set
+  // operations, and slow down JS compilation.  We don't want to pay the penalty
+  // unless we have to.)
+  //
+  // Only the baseline compiler and the wasm stubs code need to deal with Arm64
+  // vector registers, Ion will never be exposed because JS does not have SIMD
+  // and we don't have Arm64 wasm support in Ion.  So a fix that introduces the
+  // notion of vector registers but does not allow them to be put into sets
+  // works fairly well: The baseline compiler manages vector registers by
+  // managing the double registers which alias the vector registers, while the
+  // stubs code uses special save and restore paths that always save and restore
+  // the vector registers when they may contain meaningful data.  The complexity
+  // is local to the stubs code, the lowest level of the register management
+  // code in the baseline compiler, and the code in this file.
+
+  enum Kind : uint8_t {
+    Double,
+    Single,
+#ifdef ENABLE_WASM_SIMD
+    Simd128,
+#endif
+    NumTypes
+  };
+
+  static constexpr int NumScalarTypes = 2;
 
   static constexpr Code Invalid = 0x80;
 
@@ -339,10 +376,17 @@ class FloatRegisters {
         "d30", "d31", "s0",  "s1",  "s2",  "s3",  "s4",  "s5",  "s6",  "s7",
         "s8",  "s9",  "s10", "s11", "s12", "s13", "s14", "s15", "s16", "s17",
         "s18", "s19", "s20", "s21", "s22", "s23", "s24", "s25", "s26", "s27",
-        "s28", "s29", "s30", "s31"};
-    static_assert(Total == sizeof(Names) / sizeof(Names[0]),
+        "s28", "s29", "s30", "s31",
+#ifdef ENABLE_WASM_SIMD
+        "v0",  "v1",  "v2",  "v3",  "v4",  "v5",  "v6",  "v7",  "v8",  "v9",
+        "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19",
+        "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29",
+        "v30", "v31",
+#endif
+    };
+    static_assert(TotalWithSimd == sizeof(Names) / sizeof(Names[0]),
                   "Table is the correct size");
-    if (code >= Total) {
+    if (code >= TotalWithSimd) {
       return "invalid";
     }
     return Names[code];
@@ -351,7 +395,8 @@ class FloatRegisters {
   static Code FromName(const char* name);
 
   static const uint32_t TotalPhys = 32;
-  static const uint32_t Total = TotalPhys * NumTypes;
+  static const uint32_t Total = TotalPhys * NumScalarTypes;
+  static const uint32_t TotalWithSimd = TotalPhys * NumTypes;
   static const uint32_t Allocatable = 31;  // Without d31, the scratch register.
 
   static_assert(sizeof(SetType) * 8 >= Total,
@@ -400,12 +445,14 @@ class FloatRegisters {
   };
 
   static constexpr Encoding encoding(Code c) {
-    // assert(c < Total);
+    // assert() not available in constexpr function.
+    // assert(c < TotalWithSimd);
     return Encoding(c & 31);
   }
 
   static constexpr Kind kind(Code c) {
-    // assert(c < Total && ((c >> 5) & 3) < NumTypes);
+    // assert() not available in constexpr function.
+    // assert(c < TotalWithSimd && ((c >> 5) & 3) < NumTypes);
     return Kind((c >> 5) & 3);
   }
 
@@ -461,11 +508,13 @@ struct FloatRegister {
     return 63 - mozilla::CountLeadingZeroes64(x);
   }
 
+  static constexpr size_t SizeOfSimd128 = 16;
+
  private:
   // These fields only hold valid values: an invalid register is always
   // represented as a valid encoding and kind with the invalid_ bit set.
   uint8_t encoding_;  // 32 encodings
-  uint8_t kind_;      // Double, Single; more later
+  uint8_t kind_;      // Double, Single, Simd128
   bool invalid_;
 
   typedef Codes::Kind Kind;
@@ -480,7 +529,7 @@ struct FloatRegister {
       : encoding_(0), kind_(FloatRegisters::Double), invalid_(true) {}
 
   static FloatRegister FromCode(uint32_t i) {
-    MOZ_ASSERT(i < Codes::Total);
+    MOZ_ASSERT(i < Codes::TotalWithSimd);
     return FloatRegister(FloatRegisters::encoding(i), FloatRegisters::kind(i));
   }
 
@@ -494,7 +543,11 @@ struct FloatRegister {
   }
   bool isSimd128() const {
     MOZ_ASSERT(!invalid_);
+#ifdef ENABLE_WASM_SIMD
+    return kind_ == FloatRegisters::Simd128;
+#else
     return false;
+#endif
   }
   bool isInvalid() const { return invalid_; }
 
@@ -506,15 +559,29 @@ struct FloatRegister {
     MOZ_ASSERT(!invalid_);
     return FloatRegister(Encoding(encoding_), FloatRegisters::Double);
   }
-  FloatRegister asSimd128() const { MOZ_CRASH(); }
+  FloatRegister asSimd128() const {
+    MOZ_ASSERT(!invalid_);
+#ifdef ENABLE_WASM_SIMD
+    return FloatRegister(Encoding(encoding_), FloatRegisters::Simd128);
+#else
+    MOZ_CRASH("No SIMD support");
+#endif
+  }
 
   constexpr uint32_t size() const {
     MOZ_ASSERT(!invalid_);
     if (kind_ == FloatRegisters::Double) {
       return sizeof(double);
     }
-    MOZ_ASSERT(kind_ == FloatRegisters::Single);
-    return sizeof(float);
+    if (kind_ == FloatRegisters::Single) {
+      return sizeof(float);
+    }
+#ifdef ENABLE_WASM_SIMD
+    MOZ_ASSERT(kind_ == FloatRegisters::Simd128);
+    return 16;
+#else
+    MOZ_CRASH("No SIMD support");
+#endif
   }
 
   constexpr Code code() const {
@@ -552,7 +619,10 @@ struct FloatRegister {
     return kind_ == other.kind_;
   }
 
-  uint32_t numAliased() const { return Codes::NumTypes; }
+  // numAliased is used only by Ion's register allocator, ergo we ignore SIMD
+  // registers here as Ion will not be exposed to SIMD on this platform.  See
+  // comments above in FloatRegisters.
+  uint32_t numAliased() const { return Codes::NumScalarTypes; }
   uint32_t numAlignedAliased() { return numAliased(); }
 
   FloatRegister aliased(uint32_t aliasIdx) {
@@ -585,6 +655,10 @@ struct FloatRegister {
   static TypedRegisterSet<FloatRegister> ReduceSetForPush(
       const TypedRegisterSet<FloatRegister>& s);
   static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
+#ifdef ENABLE_WASM_SIMD
+  static uint32_t GetPushSizeInBytesForWasmStubs(
+      const TypedRegisterSet<FloatRegister>& s);
+#endif
   uint32_t getRegisterDumpOffsetInBytes();
 };
 

@@ -939,8 +939,8 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
       auto chars = UniqueTwoByteChars(
           UTF8CharsToNewTwoByteCharsZ(
               cx,
-              UTF8Chars(reinterpret_cast<const char*>(buffer.begin()),
-                        buffer.length()),
+              JS::UTF8Chars(reinterpret_cast<const char*>(buffer.begin()),
+                            buffer.length()),
               &length, js::MallocArena)
               .get());
       if (!chars) {

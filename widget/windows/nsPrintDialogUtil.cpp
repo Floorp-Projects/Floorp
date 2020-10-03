@@ -303,15 +303,12 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     // fill the print options with the info from the dialog
 
     aPrintSettings->SetPrinterName(nsDependentString(device));
+    aPrintSettings->SetPrintSelectionOnly(prntdlg.Flags & PD_SELECTION);
 
-    if (prntdlg.Flags & PD_SELECTION) {
-      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
-
-    } else if (prntdlg.Flags & PD_PAGENUMS) {
+    if (prntdlg.Flags & PD_PAGENUMS) {
       aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
       aPrintSettings->SetStartPageRange(prntdlg.nFromPage);
       aPrintSettings->SetEndPageRange(prntdlg.nToPage);
-
     } else {  // (prntdlg.Flags & PD_ALLPAGES)
       aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
     }

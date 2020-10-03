@@ -146,8 +146,10 @@ function _augmentSrc(src, assertions) {
     return newSrc;
 }
 
-function wasmAssert(src, assertions, maybeImports = {}) {
+function wasmAssert(src, assertions, maybeImports = {}, exportBox = null) {
     let { exports } = wasmEvalText(_augmentSrc(src, assertions), maybeImports);
+    if (exportBox !== null)
+        exportBox.exports = exports;
     for (let i = 0; i < assertions.length; i++) {
         let { func, expected, params } = assertions[i];
         let paramText = params ? params.join(', ') : '';

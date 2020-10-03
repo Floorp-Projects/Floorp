@@ -30,6 +30,7 @@ nsPrintSettings::nsPrintSettings()
       mShowPrintProgress(true),
       mShowMarginGuides(false),
       mHonorPageRuleMargins(true),
+      mPrintSelectionOnly(false),
       mPrintPageDelay(50),
       mPaperWidth(8.5),
       mPaperHeight(11.0),
@@ -616,6 +617,16 @@ NS_IMETHODIMP nsPrintSettings::SetHonorPageRuleMargins(bool aHonor) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPrintSettings::GetPrintSelectionOnly(bool* aResult) {
+  *aResult = mPrintSelectionOnly;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::SetPrintSelectionOnly(bool aSelectionOnly) {
+  mPrintSelectionOnly = aSelectionOnly;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrintSettings::GetPaperId(nsAString& aPaperId) {
   aPaperId = mPaperId;
   return NS_OK;
@@ -795,6 +806,8 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShrinkToFit = rhs.mShrinkToFit;
   mShowPrintProgress = rhs.mShowPrintProgress;
   mShowMarginGuides = rhs.mShowMarginGuides;
+  mHonorPageRuleMargins = rhs.mHonorPageRuleMargins;
+  mPrintSelectionOnly = rhs.mPrintSelectionOnly;
   mPaperId = rhs.mPaperId;
   mPaperWidth = rhs.mPaperWidth;
   mPaperHeight = rhs.mPaperHeight;

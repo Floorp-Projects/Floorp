@@ -491,9 +491,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 }
 
 static void PushBailoutFrame(MacroAssembler& masm, Register spArg) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
+  // This assumes no SIMD registers, as JS does not support SIMD.
 
   // The stack saved in spArg must be (higher entries have higher memory
   // addresses):

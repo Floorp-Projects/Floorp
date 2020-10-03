@@ -315,9 +315,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
         }],
         [["--setpref"], {
             "action": "append",
+            "metavar": "PREF=VALUE",
             "dest": "extra_prefs",
             "default": [],
-            "help": "A preference to set. Must be a key-value pair separated by a ':'."
+            "help": "Set a browser preference. May be used multiple times."
         }],
         [["--cold"], {
             "action": "store_true",

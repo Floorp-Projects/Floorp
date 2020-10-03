@@ -115,7 +115,7 @@ def create_parser(mach_interface=False):
                  " Currently used for xperf only.")
     add_arg('--setpref', action='append', default=[], dest="extraPrefs",
             metavar="PREF=VALUE",
-            help="defines an extra user preference")
+            help="Set a browser preference. May be used multiple times.")
     add_arg("--firstNonBlankPaint", action='store_true', dest="fnbpaint",
             help="Wait for firstNonBlankPaint event before recording the time")
     add_arg("--pdfPaint", action='store_true', dest="pdfpaint",

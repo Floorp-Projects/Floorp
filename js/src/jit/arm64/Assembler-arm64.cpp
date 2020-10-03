@@ -59,6 +59,19 @@ ABIArg ABIArgGenerator::next(MIRType type) {
       floatRegIndex_++;
       break;
 
+#ifdef ENABLE_WASM_SIMD
+    case MIRType::Simd128:
+      if (floatRegIndex_ == NumFloatArgRegs) {
+        current_ = ABIArg(stackOffset_);
+        stackOffset_ += FloatRegister::SizeOfSimd128;
+        break;
+      }
+      current_ = ABIArg(FloatRegister(FloatRegisters::Encoding(floatRegIndex_),
+                                      FloatRegisters::Simd128));
+      floatRegIndex_++;
+      break;
+#endif
+
     default:
       // Note that in Assembler-x64.cpp there's a special case for Win64 which
       // does not allow passing SIMD by value.  Since there's Win64 on ARM64 we

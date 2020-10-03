@@ -16,6 +16,7 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -735,6 +736,72 @@ add_test(function test_installAddon_noServer() {
     () => {
       do_throw("check should not reject for install no server");
     }
+  );
+});
+
+/***
+ * Tests GMPExtractor (an internal component of GMPInstallManager) to ensure
+ * it handles paths with certain characters.
+ */
+
+add_task(async function test_GMPExtractor_paths() {
+  let GMPExtractor = GMPScope.GMPExtractor;
+  registerCleanupFunction(function() {
+    // Must stop holding on to the zip file using the JAR cache:
+    let zipFile = new FileUtils.File(
+      OS.Path.join(tempDir.path, "dummy_gmp.zip")
+    );
+    Services.obs.notifyObservers(zipFile, "flush-cache-entry");
+    extractedDir.remove(/* recursive */ true);
+    tempDir.remove(/* recursive */ true);
+  });
+  // Create a dir with the following in the name
+  // - # -- this is used to delimit URI fragments and tests that
+  //   we escape any internal URIs appropriately.
+  // - 猫 -- ensure we handle non-ascii characters appropriately.
+  let tempDirName = "TmpDir#猫";
+  let tempDir = FileUtils.getDir("TmpD", [tempDirName], true);
+  let zipPath = OS.Path.join(tempDir.path, "dummy_gmp.zip");
+  await OS.File.copy("zips/dummy_gmp.zip", zipPath, { noOverwrite: false });
+  // The path inside the profile dir we'll extract to. Make sure we handle
+  // the characters there too.
+  let relativeExtractPath = "extracted#猫";
+  let extractor = new GMPExtractor(zipPath, relativeExtractPath);
+  let extractedPaths = await extractor.install();
+  // extractedPaths should contain the files extracted. In this case we
+  // should have a single file extracted to our profile dir -- the zip
+  // contains two files, but one should be skipped by the extraction logic.
+  Assert.equal(extractedPaths.length, 1, "One file should be extracted");
+  Assert.ok(
+    extractedPaths[0].includes("dummy_file.txt"),
+    "dummy_file.txt should be on extracted path"
+  );
+  Assert.ok(
+    !extractedPaths[0].includes("verified_contents.json"),
+    "verified_contents.json should not be on extracted path"
+  );
+  let extractedDir = FileUtils.getDir("ProfD", [relativeExtractPath], false);
+  Assert.ok(
+    extractedDir.exists(),
+    "Extraction should have created a directory"
+  );
+  let extractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "dummy_file.txt"],
+    false
+  );
+  Assert.ok(
+    extractedFile.exists(),
+    "Extraction should have created dummy_file.txt"
+  );
+  let unextractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "verified_contents.json"],
+    false
+  );
+  Assert.ok(
+    !unextractedFile.exists(),
+    "Extraction should not have created verified_contents.json"
   );
 });
 

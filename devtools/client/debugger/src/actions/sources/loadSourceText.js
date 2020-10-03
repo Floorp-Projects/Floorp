@@ -26,7 +26,8 @@ import {
   type MemoizedAction,
 } from "../../utils/memoizableAction";
 
-import { Telemetry } from "devtools-modules";
+// $FlowIgnore
+const Telemetry = require("devtools/client/shared/telemetry");
 
 import type { ThunkArgs } from "../types";
 import type { Source, Context, SourceId } from "../../types";
