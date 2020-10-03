@@ -38,19 +38,10 @@ function waitAndCheckNoScrollEvent(aWindow) {
     gotScroll = true;
   }
   aWindow.addEventListener("scroll", recordScroll, {capture: true});
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(
-    () => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(
-      function() {
+  return waitToClearOutAnyPotentialScrolls(aWindow).then(function() {
         aWindow.removeEventListener("scroll", recordScroll, {capture: true});
         is(gotScroll, false, "check that we didn't get a scroll");
-        resolve();
-      }); } ); }, aWindow
-    ); }
-  ); }); });
-}
-
-function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
+      });
 }
 
 SimpleTest.waitForFocus(function() {

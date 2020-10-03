@@ -33,10 +33,6 @@ function doPageDown(targetExpectedToScroll) {
   return promise;
 }
 
-function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
-}
-
 promise_test(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
 

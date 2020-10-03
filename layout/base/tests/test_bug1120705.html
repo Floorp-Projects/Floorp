@@ -51,10 +51,6 @@ function clickDownButton() {
                   { type: "mouseup" });
 }
 
-function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
-}
-
 function waitForScrollEvent(aWindow) {
   return new Promise(resolve => {
     aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
