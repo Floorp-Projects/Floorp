@@ -18,7 +18,9 @@ import actions from "../../../actions";
 import { getThreadContext } from "../../../selectors";
 
 import AccessibleImage from "../../shared/AccessibleImage";
-import { DevToolsUtils } from "devtools-modules";
+
+// $FlowIgnore
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 import type { ThreadContext, StacktraceFrame, Exception } from "../../../types";
 

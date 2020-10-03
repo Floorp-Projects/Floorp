@@ -5,7 +5,7 @@
 // @flow
 import { PureComponent } from "react";
 import classnames from "classnames";
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 
 import { getDocument } from "../../utils/editor";
 import { breakpointItems, createBreakpointItems } from "./menus/breakpoints";

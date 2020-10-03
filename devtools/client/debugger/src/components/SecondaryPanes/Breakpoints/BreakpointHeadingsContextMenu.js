@@ -4,7 +4,7 @@
 
 // @flow
 
-import { buildMenu, showMenu } from "devtools-contextmenu";
+import { buildMenu, showMenu } from "../../../context-menu/menu";
 
 import actions from "../../../actions";
 import type { Breakpoint, Source, Context } from "../../../types";

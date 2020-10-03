@@ -391,7 +391,7 @@
 
 #define QM_VOID
 
-#define QM_PROPAGATE tryTempResult.propagateErr()
+#define QM_PROPAGATE Err(tryTempError)
 
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
 // QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
@@ -426,7 +426,7 @@
   auto tryResult = ::mozilla::ToResult(expr);                            \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);          \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();          \
     ns::QM_HANDLE_ERROR(expr);                                           \
     return customRetVal;                                                 \
   }
@@ -438,9 +438,9 @@
   auto tryResult = ::mozilla::ToResult(expr);                                 \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);      \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);               \
+    auto tryTempError = tryResult.unwrapErr();                                \
     ns::QM_HANDLE_ERROR(expr);                                                \
-    cleanup(tryTempResult);                                                   \
+    cleanup(tryTempError);                                                    \
     return customRetVal;                                                      \
   }
 
@@ -503,7 +503,7 @@
                                   customRetVal)                                \
   auto tryResult = (expr);                                                     \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                       \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);                \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();                \
     ns::QM_HANDLE_ERROR(expr);                                                 \
     return customRetVal;                                                       \
   }                                                                            \
@@ -515,9 +515,9 @@
     ns, tryResult, accessFunction, target, expr, customRetVal, cleanup) \
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);         \
+    auto tryTempError = tryResult.unwrapErr();                          \
     ns::QM_HANDLE_ERROR(expr);                                          \
-    cleanup(tryTempResult);                                             \
+    cleanup(tryTempError);                                              \
     return customRetVal;                                                \
   }                                                                     \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
@@ -540,7 +540,7 @@
                   accessFunction, ##__VA_ARGS__)
 
 /**
- * QM_TRY_VAR(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
+ * QM_TRY_UNWRAP(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
  * Rust's `target = try!(expr);`. First, it evaluates expr, which must produce
  * a Result value. On success, the result's success value is unwrapped and
  * assigned to target. On error, it calls HandleError and an additional cleanup
@@ -548,7 +548,7 @@
  * result or a custom return value (if the third argument was passed). |target|
  * must be an lvalue.
  */
-#define QM_TRY_VAR(...) QM_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define QM_TRY_UNWRAP(...) QM_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 
 /**
  * QM_TRY_INSPECT is similar to QM_TRY_VAR, but it does not unwrap a success
@@ -559,7 +559,7 @@
  *
  * should be preferred over
  *
- *   QM_TRY_VAR(const auto target, DoSomething())
+ *   QM_TRY_UNWRAP(const auto target, DoSomething())
  *
  * as it avoids unnecessary moves/copies.
  */
@@ -570,30 +570,32 @@
  * in non-debug builds.
  */
 #ifdef DEBUG
-#  define QM_DEBUG_TRY_VAR(...) QM_TRY_VAR(__VA_ARGS__)
+#  define QM_DEBUG_TRY_UNWRAP(...) QM_TRY_UNWRAP(__VA_ARGS__)
 #else
-#  define QM_DEBUG_TRY_VAR(...)
+#  define QM_DEBUG_TRY_UNWRAP(...)
 #endif
 
 // QM_TRY_RETURN_PROPAGATE_ERR, QM_TRY_RETURN_CUSTOM_RET_VAL,
 // QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_RETURN_GLUE macros are
 // implementation details of QM_TRY_RETURN and shouldn't be used directly.
 
-// Handles the three arguments case when the error is propagated.
+// Handles the three arguments case when the error is (also) propagated.
+// Note that this deliberately uses a single return statement without going
+// through unwrap/unwrapErr/propagateErr, so that this does not prevent NRVO or
+// tail call optimizations when possible.
 #define QM_TRY_RETURN_PROPAGATE_ERR(ns, tryResult, expr) \
   auto tryResult = (expr);                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                 \
     ns::QM_HANDLE_ERROR(expr);                           \
-    return tryResult.propagateErr();                     \
   }                                                      \
-  return tryResult.unwrap();
+  return tryResult;
 
 // Handles the four arguments case when a custom return value needs to be
 // returned
 #define QM_TRY_RETURN_CUSTOM_RET_VAL(ns, tryResult, expr, customRetVal) \
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);         \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();         \
     ns::QM_HANDLE_ERROR(expr);                                          \
     return customRetVal;                                                \
   }                                                                     \
@@ -605,9 +607,9 @@
                                                   customRetVal, cleanup) \
   auto tryResult = (expr);                                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
-    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);          \
+    auto tryTempError = tryResult.unwrapErr();                           \
     ns::QM_HANDLE_ERROR(expr);                                           \
-    cleanup(tryTempResult);                                              \
+    cleanup(tryTempError);                                               \
     return customRetVal;                                                 \
   }                                                                      \
   return tryResult.unwrap();

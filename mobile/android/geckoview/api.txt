@@ -1,4 +1,5 @@
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -563,6 +564,7 @@ package org.mozilla.geckoview {
     method @UiThread public void configurationChanged(@NonNull Configuration);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context, @NonNull GeckoRuntimeSettings);
+    method @UiThread @Nullable public GeckoRuntime.ActivityDelegate getActivityDelegate();
     method @UiThread @NonNull public ContentBlockingController getContentBlockingController();
     method @UiThread @NonNull public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
@@ -577,6 +579,7 @@ package org.mozilla.geckoview {
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
+    method @UiThread public void setActivityDelegate(@Nullable GeckoRuntime.ActivityDelegate);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
     method @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
@@ -587,6 +590,10 @@ package org.mozilla.geckoview {
     field public static final String EXTRA_CRASH_FATAL = "fatal";
     field public static final String EXTRA_EXTRAS_PATH = "extrasPath";
     field public static final String EXTRA_MINIDUMP_PATH = "minidumpPath";
+  }
+
+  public static interface GeckoRuntime.ActivityDelegate {
+    method @UiThread @Nullable public GeckoResult<Intent> onStartActivityForResult(@NonNull PendingIntent);
   }
 
   public static interface GeckoRuntime.Delegate {

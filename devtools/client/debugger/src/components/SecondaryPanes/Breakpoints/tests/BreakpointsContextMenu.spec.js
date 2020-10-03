@@ -8,7 +8,7 @@ import React from "react";
 import { shallow } from "enzyme";
 
 import BreakpointsContextMenu from "../BreakpointsContextMenu";
-import { buildMenu } from "devtools-contextmenu";
+import { buildMenu } from "../../../../context-menu/menu";
 
 import {
   makeMockBreakpoint,
@@ -16,7 +16,7 @@ import {
   mockcx,
 } from "../../../../utils/test-mockup";
 
-jest.mock("devtools-contextmenu");
+jest.mock("../../../../context-menu/menu");
 
 function render(disabled = false) {
   const props = generateDefaults(disabled);

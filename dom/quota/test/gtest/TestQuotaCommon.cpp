@@ -101,8 +101,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
            [&tryCleanupRan](const auto& result) {
-             EXPECT_TRUE(result.isErr());
-             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+             EXPECT_EQ(result, NS_ERROR_FAILURE);
 
              tryCleanupRan = true;
            });
@@ -126,10 +125,9 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
 
   [&tryCleanupRan, &tryDidNotReturn](nsresult& aRv) -> void {
     QM_TRY(NS_ERROR_FAILURE, QM_VOID, ([&tryCleanupRan, &aRv](auto& result) {
-             EXPECT_TRUE(result.isErr());
-             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+             EXPECT_EQ(result, NS_ERROR_FAILURE);
 
-             aRv = result.unwrapErr();
+             aRv = result;
 
              tryCleanupRan = true;
            }));
@@ -460,8 +458,7 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup)
     QM_TRY_INSPECT(const auto& x,
                    (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
                    QM_PROPAGATE, [&tryInspectCleanupRan](const auto& result) {
-                     EXPECT_TRUE(result.isErr());
-                     EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                     EXPECT_EQ(result, NS_ERROR_FAILURE);
 
                      tryInspectCleanupRan = true;
                    });
@@ -488,10 +485,9 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup_UnwrapErr)
     QM_TRY_INSPECT(const auto& x,
                    (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}), QM_VOID,
                    ([&tryInspectCleanupRan, &aRv](auto& result) {
-                     EXPECT_TRUE(result.isErr());
-                     EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                     EXPECT_EQ(result, NS_ERROR_FAILURE);
 
-                     aRv = result.unwrapErr();
+                     aRv = result;
 
                      tryInspectCleanupRan = true;
                    }));
@@ -505,15 +501,6 @@ TEST(QuotaCommon_TryInspect, Failure_WithCleanup_UnwrapErr)
   EXPECT_TRUE(tryInspectCleanupRan);
   EXPECT_FALSE(tryInspectDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-}
-
-TEST(QuotaCommon_TryVar, Decl)
-{
-  QM_TRY_VAR(int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
-
-  static_assert(std::is_same_v<decltype(x), int32_t>);
-
-  EXPECT_EQ(x, 42);
 }
 
 TEST(QuotaCommon_TryInspect, ConstDecl)
@@ -542,19 +529,6 @@ TEST(QuotaCommon_TryInspect, SameLine)
 
   EXPECT_EQ(x, 42);
   EXPECT_EQ(y, 42);
-}
-
-TEST(QuotaCommon_TryVar, ParenDecl)
-{
-  QM_TRY_VAR((const auto [x, y]),
-             (Result<std::pair<int32_t, bool>, nsresult>{std::pair{42, true}}),
-             QM_VOID);
-
-  static_assert(std::is_same_v<decltype(x), const int32_t>);
-  static_assert(std::is_same_v<decltype(y), const bool>);
-
-  EXPECT_EQ(x, 42);
-  EXPECT_EQ(y, true);
 }
 
 TEST(QuotaCommon_TryInspect, NestingMadness_Success)
@@ -721,76 +695,112 @@ TEST(QuotaCommon_TryInspect, NestingMadness_Multiple_Failure2)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
-TEST(QuotaCommon_DebugTryVar, Success)
+// We are not repeating all QM_TRY_INSPECT test cases for QM_TRY_UNWRAP, since
+// they are largely based on the same implementation. We just add some where
+// inspecting and unwrapping differ.
+
+TEST(QuotaCommon_TryUnwrap, NonConstDecl)
 {
-  bool debugTryVarBodyRan = false;
-  bool debugTryVarDidNotReturn = false;
+  QM_TRY_UNWRAP(int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), int32_t>);
+
+  EXPECT_EQ(x, 42);
+}
+
+TEST(QuotaCommon_TryUnwrap, RvalueDecl)
+{
+  QM_TRY_UNWRAP(int32_t && x, (Result<int32_t, nsresult>{42}), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), int32_t&&>);
+
+  EXPECT_EQ(x, 42);
+}
+
+TEST(QuotaCommon_TryUnwrap, ParenDecl)
+{
+  QM_TRY_UNWRAP(
+      (auto&& [x, y]),
+      (Result<std::pair<int32_t, bool>, nsresult>{std::pair{42, true}}),
+      QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), int32_t>);
+  static_assert(std::is_same_v<decltype(y), bool>);
+
+  EXPECT_EQ(x, 42);
+  EXPECT_EQ(y, true);
+}
+
+TEST(QuotaCommon_DebugTryUnwrap, Success)
+{
+  bool debugTryUnwrapBodyRan = false;
+  bool debugTryUnwrapDidNotReturn = false;
 
   nsresult rv = [
 #ifdef DEBUG
-                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
+                    &debugTryUnwrapBodyRan, &debugTryUnwrapDidNotReturn
 #else
-                    &debugTryVarDidNotReturn
+                    &debugTryUnwrapDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_VAR(const auto x,
-                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
-                       debugTryVarBodyRan = true;
+    QM_DEBUG_TRY_UNWRAP(
+        const auto x, ([&debugTryUnwrapBodyRan]() -> Result<int32_t, nsresult> {
+          debugTryUnwrapBodyRan = true;
 
-                       return 42;
-                     }()));
+          return 42;
+        }()));
 #ifdef DEBUG
     EXPECT_EQ(x, 42);
 #endif
 
-    debugTryVarDidNotReturn = true;
+    debugTryUnwrapDidNotReturn = true;
 
     return NS_OK;
   }();
 
 #ifdef DEBUG
-  EXPECT_TRUE(debugTryVarBodyRan);
+  EXPECT_TRUE(debugTryUnwrapBodyRan);
 #else
-  EXPECT_FALSE(debugTryVarBodyRan);
+  EXPECT_FALSE(debugTryUnwrapBodyRan);
 #endif
-  EXPECT_TRUE(debugTryVarDidNotReturn);
+  EXPECT_TRUE(debugTryUnwrapDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
 }
 
-TEST(QuotaCommon_DebugTryVar, Failure)
+TEST(QuotaCommon_DebugTryUnwrap, Failure)
 {
-  bool debugTryVarBodyRan = false;
-  bool debugTryVarDidNotReturn = false;
+  bool debugTryUnwrapBodyRan = false;
+  bool debugTryUnwrapDidNotReturn = false;
 
   nsresult rv = [
 #ifdef DEBUG
-                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
+                    &debugTryUnwrapBodyRan, &debugTryUnwrapDidNotReturn
 #else
-                    &debugTryVarDidNotReturn
+                    &debugTryUnwrapDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_VAR(const auto x,
-                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
-                       debugTryVarBodyRan = true;
+    QM_DEBUG_TRY_UNWRAP(
+        const auto x, ([&debugTryUnwrapBodyRan]() -> Result<int32_t, nsresult> {
+          debugTryUnwrapBodyRan = true;
 
-                       return Err(NS_ERROR_FAILURE);
-                     }()));
+          return Err(NS_ERROR_FAILURE);
+        }()));
 #ifdef DEBUG
     Unused << x;
 #endif
 
-    debugTryVarDidNotReturn = true;
+    debugTryUnwrapDidNotReturn = true;
 
     return NS_OK;
   }();
 
 #ifdef DEBUG
-  EXPECT_TRUE(debugTryVarBodyRan);
-  EXPECT_FALSE(debugTryVarDidNotReturn);
+  EXPECT_TRUE(debugTryUnwrapBodyRan);
+  EXPECT_FALSE(debugTryUnwrapDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 #else
-  EXPECT_FALSE(debugTryVarBodyRan);
-  EXPECT_TRUE(debugTryVarDidNotReturn);
+  EXPECT_FALSE(debugTryUnwrapBodyRan);
+  EXPECT_TRUE(debugTryUnwrapDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
 #endif
 }
@@ -799,7 +809,7 @@ TEST(QuotaCommon_TryReturn, Success)
 {
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+  auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
 
     tryReturnDidNotReturn = true;
@@ -834,7 +844,7 @@ TEST(QuotaCommon_TryReturn, Failure_PropagateErr)
 {
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+  auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
 
     tryReturnDidNotReturn = true;
@@ -870,8 +880,7 @@ TEST(QuotaCommon_TryReturn, Failure_WithCleanup)
               &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
     QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
                   QM_PROPAGATE, [&tryReturnCleanupRan](const auto& result) {
-                    EXPECT_TRUE(result.isErr());
-                    EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+                    EXPECT_EQ(result, NS_ERROR_FAILURE);
 
                     tryReturnCleanupRan = true;
                   });
@@ -888,7 +897,7 @@ TEST(QuotaCommon_TryReturn, Failure_WithCleanup)
 TEST(QuotaCommon_TryReturn, SameLine)
 {
   // clang-format off
-  auto res1 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }(); auto res2 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }();
+  auto res1 = [] { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }(); auto res2 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }();
   // clang-format on
 
   EXPECT_TRUE(res1.isOk());
@@ -902,14 +911,12 @@ TEST(QuotaCommon_TryReturn, NestingMadness_Success)
   bool nestedTryReturnDidNotReturn = false;
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&nestedTryReturnDidNotReturn,
-              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-    QM_TRY_RETURN(
-        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-          QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
+  auto res = [&nestedTryReturnDidNotReturn, &tryReturnDidNotReturn] {
+    QM_TRY_RETURN(([&nestedTryReturnDidNotReturn] {
+      QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
 
-          nestedTryReturnDidNotReturn = true;
-        }()));
+      nestedTryReturnDidNotReturn = true;
+    }()));
 
     tryReturnDidNotReturn = true;
   }();
@@ -925,14 +932,12 @@ TEST(QuotaCommon_TryReturn, NestingMadness_Failure)
   bool nestedTryReturnDidNotReturn = false;
   bool tryReturnDidNotReturn = false;
 
-  auto res = [&nestedTryReturnDidNotReturn,
-              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-    QM_TRY_RETURN(
-        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-          QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+  auto res = [&nestedTryReturnDidNotReturn, &tryReturnDidNotReturn] {
+    QM_TRY_RETURN(([&nestedTryReturnDidNotReturn] {
+      QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
 
-          nestedTryReturnDidNotReturn = true;
-        }()));
+      nestedTryReturnDidNotReturn = true;
+    }()));
 
     tryReturnDidNotReturn = true;
   }();

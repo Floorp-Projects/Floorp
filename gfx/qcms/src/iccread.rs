@@ -1011,7 +1011,7 @@ pub extern "C" fn qcms_profile_create() -> Box<qcms_profile> {
 }
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
-unsafe extern "C" fn build_sRGB_gamma_table(mut num_entries: i32) -> *mut u16 {
+fn build_sRGB_gamma_table(mut num_entries: i32) -> Vec<u16> {
     let mut i: i32;
     /* taken from lcms: Build_sRGBGamma() */
     let mut gamma: f64 = 2.4f64;
@@ -1019,13 +1019,9 @@ unsafe extern "C" fn build_sRGB_gamma_table(mut num_entries: i32) -> *mut u16 {
     let mut b: f64 = 0.055f64 / 1.055f64;
     let mut c: f64 = 1.0f64 / 12.92f64;
     let mut d: f64 = 0.04045f64;
-    let mut table: *mut u16 =
-        malloc(::std::mem::size_of::<u16>() * num_entries as usize) as *mut u16;
-    if table.is_null() {
-        return 0 as *mut u16;
-    }
-    i = 0;
-    while i < num_entries {
+    let mut table = Vec::with_capacity(num_entries as usize);
+
+    for i in 0..num_entries {
         let mut x: f64 = i as f64 / (num_entries - 1) as f64;
         let mut y: f64;
         let mut output: f64;
@@ -1050,8 +1046,7 @@ unsafe extern "C" fn build_sRGB_gamma_table(mut num_entries: i32) -> *mut u16 {
         if output < 0f64 {
             output = 0f64
         }
-        *table.offset(i as isize) = output.floor() as u16;
-        i += 1
+        table.push(output.floor() as u16);
     }
     return table;
 }
@@ -1130,27 +1125,38 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma(
 pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
-    mut table: *mut u16,
+    mut table: *const u16,
     mut num_entries: i32,
 ) -> *mut qcms_profile {
+    let table = slice::from_raw_parts(table, num_entries as usize);
+    let profile = profile_create_rgb_with_table(white_point, primaries, table);
+    match profile {
+        Some(profile) => Box::into_raw(profile),
+        None => null_mut(),
+    }
+}
+fn profile_create_rgb_with_table(
+    mut white_point: qcms_CIE_xyY,
+    mut primaries: qcms_CIE_xyYTRIPLE,
+    table: &[u16],
+) -> Option<Box<qcms_profile>> {
     let mut profile = qcms_profile_create();
     //XXX: should store the whitepoint
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return 0 as *mut qcms_profile;
+        return None;
     }
-    let table = slice::from_raw_parts(table, num_entries as usize);
     (*profile).redTRC = Some(curve_from_table(table));
     (*profile).blueTRC = Some(curve_from_table(table));
     (*profile).greenTRC = Some(curve_from_table(table));
     if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
     {
-        return 0 as *mut qcms_profile;
+        return None;
     }
     (*profile).class_type = DISPLAY_DEVICE_PROFILE;
     (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
     (*profile).color_space = RGB_SIGNATURE;
     (*profile).pcs = XYZ_TYPE;
-    return Box::into_raw(profile);
+    return Some(profile);
 }
 /* from lcms: cmsWhitePointFromTemp */
 /* tempK must be >= 4000. and <= 25000.
@@ -1211,7 +1217,7 @@ pub unsafe extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
     let mut profile: *mut qcms_profile;
-    let mut table: *mut u16;
+    let mut table: Vec<u16>;
     let mut Rec709Primaries: qcms_CIE_xyYTRIPLE = {
         let mut init = qcms_CIE_xyYTRIPLE {
             red: {
@@ -1243,11 +1249,8 @@ pub unsafe extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
     };
     let D65 = qcms_white_point_sRGB();
     table = build_sRGB_gamma_table(1024);
-    if table.is_null() {
-        return 0 as *mut qcms_profile;
-    }
-    profile = qcms_profile_create_rgb_with_table(D65, Rec709Primaries, table, 1024);
-    free(table as *mut libc::c_void);
+
+    profile = qcms_profile_create_rgb_with_table(D65, Rec709Primaries, table.as_ptr(), 1024);
     return profile;
 }
 /* qcms_profile_from_memory does not hold a reference to the memory passed in */

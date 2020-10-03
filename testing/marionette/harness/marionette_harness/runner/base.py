@@ -291,7 +291,7 @@ class BaseMarionetteArguments(ArgumentParser):
                           action='append',
                           metavar='PREF=VALUE',
                           dest='prefs_args',
-                          help="A preference to set. Must be a key-value pair separated by a ':'.")
+                          help="set a browser preference; repeat for multiple preferences.")
         self.add_argument('--preferences',
                           action='append',
                           dest='prefs_files',

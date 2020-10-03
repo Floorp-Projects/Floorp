@@ -8,7 +8,6 @@
 global.Worker = require("workerjs");
 
 import path from "path";
-import { readFileSync } from "fs";
 import Enzyme from "enzyme";
 // $FlowIgnore
 import Adapter from "enzyme-adapter-react-16";
@@ -35,71 +34,9 @@ env.testing = true;
 
 const rootPath = path.join(__dirname, "../../");
 
-function getL10nBundle() {
-  const read = file => readFileSync(path.join(rootPath, file));
-
-  try {
-    return read("./assets/panel/debugger.properties");
-  } catch (e) {
-    return read("../locales/en-US/debugger.properties");
-  }
-}
-
-global.DebuggerConfig = {};
-global.L10N = require("devtools-launchpad").L10N;
-global.L10N.setBundle(getL10nBundle());
-global.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
-global.performance = { now: () => 0 };
-global.isWorker = false;
-
-global.define = function() {};
-global.loader = {
-  lazyServiceGetter: () => {},
-  lazyGetter: (context, name, fn) => {
-    try {
-      global[name] = fn();
-    } catch (_) {}
-  },
-  lazyRequireGetter: (context, names, _path, destruct) => {
-    if (
-      !_path ||
-      _path.startsWith("resource://") ||
-      _path.match(/server\/actors/)
-    ) {
-      return;
-    }
-
-    const excluded = [
-      "Debugger",
-      "devtools/shared/event-emitter",
-      "devtools/client/shared/autocomplete-popup",
-      "devtools/client/framework/devtools",
-      "devtools/client/shared/keycodes",
-      "devtools/client/shared/sourceeditor/editor",
-      "devtools/client/shared/telemetry",
-      "devtools/shared/screenshot/save",
-      "devtools/client/shared/focus",
-    ];
-    if (!excluded.includes(_path)) {
-      if (!Array.isArray(names)) {
-        names = [names];
-      }
-
-      for (const name of names) {
-        // $FlowIgnore
-        const module = require(_path);
-        global[name] = destruct ? module[name] : module;
-      }
-    }
-  },
-};
-
-const { URL } = require("url");
-global.URL = URL;
-
-global.indexedDB = mockIndexeddDB();
-
 Enzyme.configure({ adapter: new Adapter() });
+
+global.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 function formatException(reason, p) {
   console && console.log("Unhandled Rejection at:", p, "reason:", reason);
@@ -145,34 +82,3 @@ beforeEach(async () => {
   // Ensures window.dbg is there to track telemetry
   setupHelper({ selectors: {} });
 });
-
-function mockIndexeddDB() {
-  const store = {};
-  return {
-    open: () => ({}),
-    getItem: async key => store[key],
-    setItem: async (key, value) => {
-      store[key] = value;
-    },
-  };
-}
-
-// NOTE: We polyfill finally because TRY uses node 8
-if (!global.Promise.prototype.finally) {
-  global.Promise.prototype.finally = function finallyPolyfill(callback) {
-    const { constructor } = this;
-
-    return this.then(
-      function(value) {
-        return constructor.resolve(callback()).then(function() {
-          return value;
-        });
-      },
-      function(reason) {
-        return constructor.resolve(callback()).then(function() {
-          throw reason;
-        });
-      }
-    );
-  };
-}

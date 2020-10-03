@@ -160,7 +160,8 @@ def create_parser(mach_interface=False):
     add_arg('--enable-fission', dest="enable_fission", action="store_true", default=False,
             help="Enable Fission (site isolation) in Gecko.")
     add_arg('--setpref', dest="extra_prefs", action="append", default=[],
-            help="A preference to set. Must be a key-value pair separated by a ':'.")
+            metavar="PREF=VALUE",
+            help="Set a browser preference. May be used multiple times.")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag which indicates if Raptor is running locally or in production")

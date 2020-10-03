@@ -969,12 +969,6 @@ void MacroAssembler::spectreZeroRegister(Condition cond, Register scratch,
 
 // ========================================================================
 // Memory access primitives.
-void MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest) {
-  MOZ_CRASH("NYI");
-}
-void MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest) {
-  MOZ_CRASH("NYI");
-}
 
 void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
                                                 const Address& addr) {

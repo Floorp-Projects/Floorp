@@ -511,6 +511,27 @@ const selectNetworkThrottling = (ui, value) =>
   ]);
 
 function getSessionHistory(browser) {
+  if (Services.appinfo.sessionHistoryInParent) {
+    const browsingContext = browser.browsingContext;
+    const uri = browsingContext.currentWindowGlobal.documentURI.displaySpec;
+    const history = browsingContext.sessionHistory;
+    const userContextId = browsingContext.originAttributes.userContextId;
+    const body = ContentTask.spawn(browser, browsingContext, function(
+      // eslint-disable-next-line no-shadow
+      browsingContext
+    ) {
+      const docShell = browsingContext.docShell.QueryInterface(
+        Ci.nsIWebNavigation
+      );
+      return docShell.document.body;
+    });
+    /* eslint-disable no-undef */
+    const { SessionHistory } = ChromeUtils.import(
+      "resource://gre/modules/sessionstore/SessionHistory.jsm"
+    );
+    return SessionHistory.collectFromParent(uri, body, history, userContextId);
+    /* eslint-enable no-undef */
+  }
   return ContentTask.spawn(browser, null, function() {
     /* eslint-disable no-undef */
     const { SessionHistory } = ChromeUtils.import(

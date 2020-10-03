@@ -60,6 +60,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
 
         let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
         let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
+        self.visible_face = VisibleFace::Front;
 
         self.kind = if self.ref_spatial_node_index == target_node_index {
             CoordinateSpaceMapping::Local
@@ -70,14 +71,17 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
             let transform = spatial_tree
-                .get_relative_transform(target_node_index, self.ref_spatial_node_index)
+                .get_relative_transform_with_face(
+                    target_node_index, 
+                    self.ref_spatial_node_index,
+                    Some(&mut self.visible_face),
+                )
                 .into_transform()
                 .with_source::<F>()
                 .with_destination::<T>();
             CoordinateSpaceMapping::Transform(transform)
         };
 
-        self.visible_face = self.kind.visible_face();
         self.current_target_spatial_node_index = target_node_index;
     }
 
