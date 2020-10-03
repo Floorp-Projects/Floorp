@@ -486,10 +486,8 @@ void DisplayPortUtils::MarkDisplayPortAsPainted(nsIContent* aContent) {
 }
 
 /* static */
-bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(
-    nsIContent* aContent, nsRect* aResult,
-    DisplayportRelativeTo
-        aRelativeTo /* = DisplayportRelativeTo::ScrollPort */) {
+bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
+                                                          nsRect* aResult) {
   MOZ_ASSERT(aResult);
   // Since the base rect might not have been updated very recently, it's
   // possible to end up with an extra-large displayport at this point, if the
@@ -498,7 +496,7 @@ bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(
   // call site is best-effort.
   bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, 1.0f,
                                              MaxSizeExceededBehaviour::Drop);
-  if (usingDisplayPort && aRelativeTo == DisplayportRelativeTo::ScrollFrame) {
+  if (usingDisplayPort) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
