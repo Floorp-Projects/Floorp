@@ -334,23 +334,21 @@ void WindowContext::Discard() {
   Group()->Unregister(this);
 }
 
-void WindowContext::AddSecurityState(uint32_t aStateFlags) {
+void WindowContext::AddMixedContentSecurityState(uint32_t aStateFlags) {
   MOZ_ASSERT(TopWindowContext() == this);
   MOZ_ASSERT((aStateFlags &
               (nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
                nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
                nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT |
-               nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
-               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED |
-               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED)) ==
+               nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT)) ==
                  aStateFlags,
              "Invalid flags specified!");
 
   if (XRE_IsParentProcess()) {
-    Canonical()->AddSecurityState(aStateFlags);
+    Canonical()->AddMixedContentSecurityState(aStateFlags);
   } else {
     ContentChild* child = ContentChild::GetSingleton();
-    child->SendAddSecurityState(this, aStateFlags);
+    child->SendAddMixedContentSecurityState(this, aStateFlags);
   }
 }
 
