@@ -357,6 +357,15 @@ bool DisplayPortUtils::IsMissingDisplayPortBaseRect(nsIContent* aContent) {
   return false;
 }
 
+static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
+                                                 nsRect* aRect) {
+  MOZ_ASSERT(aRect);
+  if (nsIScrollableFrame* scrollableFrame =
+          nsLayoutUtils::FindScrollableFrameFor(aContent)) {
+    *aRect += scrollableFrame->GetScrollPortRect().TopLeft();
+  }
+}
+
 static bool GetDisplayPortImpl(
     nsIContent* aContent, nsRect* aResult, float aMultiplier,
     const DisplayPortOptions& aOptions = DisplayPortOptions()) {
@@ -415,17 +424,12 @@ static bool GetDisplayPortImpl(
     }
   }
 
+  if (aOptions.mRelativeTo == DisplayportRelativeTo::ScrollFrame) {
+    TranslateFromScrollPortToScrollFrame(aContent, &result);
+  }
+
   *aResult = result;
   return true;
-}
-
-static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
-                                                 nsRect* aRect) {
-  MOZ_ASSERT(aRect);
-  if (nsIScrollableFrame* scrollableFrame =
-          nsLayoutUtils::FindScrollableFrameFor(aContent)) {
-    *aRect += scrollableFrame->GetScrollPortRect().TopLeft();
-  }
 }
 
 bool DisplayPortUtils::GetDisplayPort(nsIContent* aContent, nsRect* aResult,
@@ -433,12 +437,7 @@ bool DisplayPortUtils::GetDisplayPort(nsIContent* aContent, nsRect* aResult,
   float multiplier = StaticPrefs::layers_low_precision_buffer()
                          ? 1.0f / StaticPrefs::layers_low_precision_resolution()
                          : 1.0f;
-  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier);
-  if (aResult && usingDisplayPort &&
-      aOptions.mRelativeTo == DisplayportRelativeTo::ScrollFrame) {
-    TranslateFromScrollPortToScrollFrame(aContent, aResult);
-  }
-  return usingDisplayPort;
+  return GetDisplayPortImpl(aContent, aResult, multiplier, aOptions);
 }
 
 bool DisplayPortUtils::HasDisplayPort(nsIContent* aContent) {
@@ -482,13 +481,10 @@ bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
   // zoom level is changed by a lot. Instead of using the default behaviour of
   // asserting, we can just ignore the displayport if that happens, as this
   // call site is best-effort.
-  bool usingDisplayPort = GetDisplayPortImpl(
-      aContent, aResult, 1.0f,
-      DisplayPortOptions().With(MaxSizeExceededBehaviour::Drop));
-  if (usingDisplayPort) {
-    TranslateFromScrollPortToScrollFrame(aContent, aResult);
-  }
-  return usingDisplayPort;
+  return GetDisplayPortImpl(aContent, aResult, 1.0f,
+                            DisplayPortOptions()
+                                .With(MaxSizeExceededBehaviour::Drop)
+                                .With(DisplayportRelativeTo::ScrollFrame));
 }
 
 void DisplayPortUtils::InvalidateForDisplayPortChange(
