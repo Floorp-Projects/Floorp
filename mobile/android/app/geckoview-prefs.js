@@ -68,6 +68,10 @@ pref("browser.safebrowsing.features.fingerprinting.update", true);
 // Treat mouse as touch only on TV-ish devices
 pref("ui.android.mouse_as_touch", 2);
 
+// Fenix is currently not whitelisted for Web Authentication
+pref("security.webauth.webauthn_enable_android_fido2", false);
+pref("security.webauth.webauthn", false);
+
 // Enable autoplay permission prompts
 pref("media.geckoview.autoplay.request", true);
 
