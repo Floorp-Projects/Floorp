@@ -331,7 +331,7 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
   // real end is not known) is in cache. If we know nothing about the
   // end of the stream, this returns false.
   bool IsDataCachedToEndOfStream(int64_t aOffset);
-  // The mode is initially MODE_PLAYBACK.
+  // The mode is initially MODE_METADATA.
   void SetReadMode(ReadMode aMode);
   // This is the client's estimate of the playback rate assuming
   // the media plays continuously. The cache can't guess this itself
