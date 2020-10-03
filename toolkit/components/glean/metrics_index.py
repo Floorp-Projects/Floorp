@@ -6,12 +6,12 @@
 
 # The list of all Glean metrics.yaml files, relative to the top src dir.
 # New additions should be added to the bottom of the list.
-metrics_yamls = [
+METRICS = [
     'toolkit/components/glean/metrics.yaml',
 ]
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
 # New additions should be added to the bottom of the list.
-pings_yamls = [
+PINGS = [
     'toolkit/components/glean/pings.yaml',
 ]

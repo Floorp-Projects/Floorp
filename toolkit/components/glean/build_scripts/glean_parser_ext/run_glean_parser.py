@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import re
 import rust
 import sys
@@ -26,14 +27,33 @@ def get_parser_options(moz_app_version):
     }
 
 
-def main(output_fd, _metrics_index, *args):
+def input_files_from_index(metrics_index_path, which_array):
+    """
+    Get the paths to all input files to look at.
 
-    # Unfortunately, GeneratedFile appends `flags` directly after `inputs`
-    # instead of listifying either, so we need to pull stuff from a *args.
-    yaml_array = args[:-1]
-    moz_app_version = args[-1]
+    This select the input files to use by loading the index
+    and selecting the appropriate array.
+    It then normalizes relatives paths into absolute paths
+    based on the `TOPSRCDIR` environment variable.
+    """
 
-    input_files = [Path(x) for x in yaml_array]
+    # Source the list of input files from `metrics_index.py`
+    sys.path.append(str(Path(metrics_index_path).parent))
+    from metrics_index import METRICS, PINGS
+    if which_array == 'METRICS':
+        input_files = METRICS
+    elif which_array == 'PINGS':
+        input_files = PINGS
+    else:
+        print("Build system's asking for unknown array {}".format(which_array))
+        sys.exit(1)
+
+    topsrcdir = Path(os.environ.get("TOPSRCDIR", "."))
+    return [topsrcdir / Path(x) for x in input_files]
+
+
+def main(output_fd, metrics_index_path, which_array, moz_app_version):
+    input_files = input_files_from_index(metrics_index_path, which_array)
 
     # Derived heavily from glean_parser.translate.translate.
     # Adapted to how mozbuild sends us a fd, and to expire on versions not dates.
