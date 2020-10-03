@@ -5,7 +5,7 @@
 %endif
 
 /* Hide all conditional elements by default. */
-:is([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers],[when-httpsonlystatus]) {
+:is([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers]) {
   display: none;
 }
 
@@ -71,11 +71,6 @@
 #identity-popup[mixedcontent~=active-blocked]:not([mixedcontent~=passive-loaded]) [when-mixedcontent=active-blocked],
 /* Show the right elements when there is mixed passive content loaded and active blocked. */
 #identity-popup[mixedcontent~=active-blocked][mixedcontent~=passive-loaded] [when-mixedcontent~=active-blocked][when-mixedcontent~=passive-loaded],
-/* HTTPS-Only Mode */
-#identity-popup[httpsonlystatus=exception] [when-httpsonlystatus~=exception],
-#identity-popup[httpsonlystatus=upgraded] [when-httpsonlystatus~=upgraded],
-#identity-popup[httpsonlystatus=failed-top] [when-httpsonlystatus~=failed-top],
-#identity-popup[httpsonlystatus=failed-sub] [when-httpsonlystatus~=failed-sub],
 /* Show 'disable MCB' button always when there is mixed active content blocked. */
 #identity-popup-securityView-body[mixedcontent~=active-blocked] > button[when-mixedcontent=active-blocked] {
   display: inherit;
@@ -137,8 +132,7 @@
 
 #identity-popup-permissions-header,
 .identity-popup-security-connection,
-#identity-popup-security-description,
-#identity-popup-security-httpsonlymode {
+#identity-popup-security-description {
   /* icon indent + 16px icon width + 6px description margin
      (total of 12px margin with the native 6px description margin) */
   padding-inline: calc(2em + 22px) 1em;
@@ -146,32 +140,6 @@
 
 #identity-popup-security-description > description {
   margin-top: 0.5em;
-}
-
-#identity-popup-security-httpsonlymode > label {
-  margin-top: 0.5em;
-}
-#identity-popup-security-httpsonlymode > div {
-  /* Make the content fit in the panel for locales with longer text */
-  display: flex;
-  margin-inline-start: 0.3em;
-}
-#identity-popup-security-httpsonlymode > label {
-  margin-block: 0.5em 0;
-}
-
-#identity-popup-security-httpsonlymode-menulist {
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-#identity-popup-security-httpsonlymode-info {
-  font-size: 0.85em;
-  /* Temporary, will fix that with bug 1668857 */
-  opacity: 0.65;
-}
-
-.identity-popup-connection-secure.upgraded {
-  margin-inline: 0;
 }
 
 #identity-popup-permissions-content {

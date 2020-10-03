@@ -999,11 +999,11 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
     };
 
     bool hasMixedDisplay =
-        mSecurityState &
+        mMixedContentSecurityState &
         (nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
          nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT);
     bool hasMixedActive =
-        mSecurityState &
+        mMixedContentSecurityState &
         (nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
          nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT);
 
@@ -1115,26 +1115,24 @@ bool WindowGlobalParent::ShouldTrackSiteOriginTelemetry() {
   return DocumentPrincipal()->GetIsContentPrincipal();
 }
 
-void WindowGlobalParent::AddSecurityState(uint32_t aStateFlags) {
+void WindowGlobalParent::AddMixedContentSecurityState(uint32_t aStateFlags) {
   MOZ_ASSERT(TopWindowContext() == this);
   MOZ_ASSERT((aStateFlags &
               (nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
                nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
                nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT |
-               nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
-               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED |
-               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED)) ==
+               nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT)) ==
                  aStateFlags,
              "Invalid flags specified!");
 
-  if ((mSecurityState & aStateFlags) == aStateFlags) {
+  if ((mMixedContentSecurityState & aStateFlags) == aStateFlags) {
     return;
   }
 
-  mSecurityState |= aStateFlags;
+  mMixedContentSecurityState |= aStateFlags;
 
   if (GetBrowsingContext()->GetCurrentWindowGlobal() == this) {
-    GetBrowsingContext()->UpdateSecurityState();
+    GetBrowsingContext()->UpdateSecurityStateForLocationOrMixedContentChange();
   }
 }
 

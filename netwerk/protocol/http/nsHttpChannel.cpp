@@ -634,7 +634,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
       if (httpOnlyStatus &
           nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED) {
         RefPtr<nsHTTPSOnlyStreamListener> httpsOnlyListener =
-            new nsHTTPSOnlyStreamListener(mListener, mLoadInfo);
+            new nsHTTPSOnlyStreamListener(mListener);
         mListener = httpsOnlyListener;
 
         httpOnlyStatus ^=
