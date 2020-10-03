@@ -128,9 +128,7 @@ gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval) {
-  mInterval = aInterval;
-
+void gfxFontInfoLoader::StartLoader(uint32_t aDelay) {
   NS_ASSERTION(!mFontInfo, "fontinfo should be null when starting font loader");
 
   // sanity check
@@ -183,6 +181,12 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
+
+  PRThread* prThread;
+  if (NS_SUCCEEDED(mFontLoaderThread->GetPRThread(&prThread))) {
+    PR_SetThreadPriority(prThread, PR_PRIORITY_LOW);
+  }
+
   mState = stateAsyncLoad;
 
   nsCOMPtr<nsIRunnable> loadEvent = new AsyncFontInfoLoader(mFontInfo);
@@ -194,6 +198,32 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval) {
         ("(fontinit) fontloader started (fontinfo: %p)\n", mFontInfo.get()));
   }
 }
+
+class FinalizeLoaderRunnable : public Runnable {
+  virtual ~FinalizeLoaderRunnable() = default;
+
+ public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FinalizeLoaderRunnable, Runnable)
+
+  explicit FinalizeLoaderRunnable(gfxFontInfoLoader* aLoader)
+      : mozilla::Runnable("FinalizeLoaderRunnable"), mLoader(aLoader) {}
+
+  NS_IMETHOD Run() override {
+    nsresult rv;
+    if (mLoader->LoadFontInfo()) {
+      mLoader->CancelLoader();
+      rv = NS_OK;
+    } else {
+      nsCOMPtr<nsIRunnable> runnable = this;
+      rv = NS_DispatchToCurrentThreadQueue(
+          runnable.forget(), PR_INTERVAL_NO_TIMEOUT, EventQueuePriority::Idle);
+    }
+    return rv;
+  }
+
+ private:
+  gfxFontInfoLoader* mLoader;
+};
 
 void gfxFontInfoLoader::FinalizeLoader(FontInfoData* aFontInfo) {
   // Avoid loading data if loader has already been canceled.
@@ -207,24 +237,13 @@ void gfxFontInfoLoader::FinalizeLoader(FontInfoData* aFontInfo) {
 
   mLoadTime = mFontInfo->mLoadTime;
 
-  // try to load all font data immediately
-  if (LoadFontInfo()) {
-    CancelLoader();
-    return;
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> runnable = new FinalizeLoaderRunnable(this);
+  if (NS_FAILED(NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                                PR_INTERVAL_NO_TIMEOUT,
+                                                EventQueuePriority::Idle))) {
+    NS_WARNING("Failed to finalize async font info");
   }
-
-  NS_ASSERTION(!sFontLoaderShutdownObserved,
-               "Bug 1508626 - Finalize with interval timer for font loader "
-               "after shutdown observed");
-  NS_ASSERTION(!gXPCOMThreadsShutDown,
-               "Bug 1508626 - Finalize with interval timer for font loader "
-               "after shutdown but before observer");
-
-  // not all work completed ==> run load on interval
-  mState = stateTimerOnInterval;
-  mTimer->InitWithNamedFuncCallback(LoadFontInfoCallback, this, mInterval,
-                                    nsITimer::TYPE_REPEATING_SLACK,
-                                    "gfxFontInfoLoader::FinalizeLoader");
 }
 
 void gfxFontInfoLoader::CancelLoader() {
@@ -244,25 +263,6 @@ void gfxFontInfoLoader::CancelLoader() {
   }
   RemoveShutdownObserver();
   CleanupLoader();
-}
-
-void gfxFontInfoLoader::LoadFontInfoTimerFire() {
-  if (mState == stateTimerOnDelay) {
-    NS_ASSERTION(!sFontLoaderShutdownObserved,
-                 "Bug 1508626 - Setting interval timer for font loader after "
-                 "shutdown observed");
-    NS_ASSERTION(!gXPCOMThreadsShutDown,
-                 "Bug 1508626 - Setting interval timer for font loader after "
-                 "shutdown but before observer");
-
-    mState = stateTimerOnInterval;
-    mTimer->SetDelay(mInterval);
-  }
-
-  bool done = LoadFontInfo();
-  if (done) {
-    CancelLoader();
-  }
 }
 
 gfxFontInfoLoader::~gfxFontInfoLoader() {

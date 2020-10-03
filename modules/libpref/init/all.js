@@ -612,15 +612,6 @@ pref("gfx.downloadable_fonts.disable_cache", false);
 // whether to try and do something about it (e.g. download additional fonts)?
 pref("gfx.missing_fonts.notify", false);
 
-// prefs controlling the font (name/cmap) loader that runs shortly after startup
-#ifdef XP_WIN
-  pref("gfx.font_loader.delay", 120000);       // 2 minutes after startup
-  pref("gfx.font_loader.interval", 1000);      // every 1 second until complete
-#else
-  pref("gfx.font_loader.delay", 8000);         // 8 secs after startup
-  pref("gfx.font_loader.interval", 50);        // run every 50 ms
-#endif
-
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
