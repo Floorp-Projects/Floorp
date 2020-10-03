@@ -54,7 +54,7 @@ use crate::{
 };
 
 use ::libc::{self, free, malloc};
-use std::sync::atomic::Ordering;
+use std::{ptr::null_mut, sync::atomic::Ordering};
 use std::sync::Arc;
 
 const PRECACHE_OUTPUT_SIZE: usize = 8192;
@@ -122,6 +122,47 @@ pub struct qcms_transform {
     pub output_table_b: Option<Arc<precache_output>>,
     pub transform_fn: transform_fn_t,
 }
+
+impl Default for qcms_transform {
+    fn default() -> qcms_transform {
+        qcms_transform {
+            matrix: Default::default(),
+            input_gamma_table_r: null_mut(),
+            input_gamma_table_b: null_mut(),
+            input_gamma_table_g: null_mut(),
+            input_clut_table_r: null_mut(),
+            input_clut_table_g: null_mut(),
+            input_clut_table_b: null_mut(),
+            input_clut_table_length: Default::default(),
+            r_clut: null_mut(),
+            g_clut: null_mut(),
+            b_clut: null_mut(),
+            grid_size: Default::default(),
+            output_clut_table_r: null_mut(),
+            output_clut_table_g: null_mut(),
+            output_clut_table_b: null_mut(),
+            output_clut_table_length: Default::default(),
+            input_gamma_table_gray: null_mut(),
+            out_gamma_r: Default::default(),
+            out_gamma_g: Default::default(),
+            out_gamma_b: Default::default(),
+            out_gamma_gray: Default::default(),
+            output_gamma_lut_r: null_mut(),
+            output_gamma_lut_g: null_mut(),
+            output_gamma_lut_b: null_mut(),
+            output_gamma_lut_gray: null_mut(),
+            output_gamma_lut_r_length: Default::default(),
+            output_gamma_lut_g_length: Default::default(),
+            output_gamma_lut_b_length: Default::default(),
+            output_gamma_lut_gray_length: Default::default(),
+            output_table_r: Default::default(),
+            output_table_g: Default::default(),
+            output_table_b: Default::default(),
+            transform_fn: Default::default(),
+         }
+    }
+}
+
 pub type transform_fn_t = Option<
     unsafe extern "C" fn(
         _: *const qcms_transform,
@@ -1057,10 +1098,10 @@ fn precache_create() -> Arc<precache_output> {
 }
 
 unsafe extern "C" fn transform_alloc() -> *mut qcms_transform {
-    std::alloc::alloc_zeroed(std::alloc::Layout::new::<qcms_transform>()) as *mut qcms_transform
+    Box::into_raw(Box::new(Default::default()))
 }
 unsafe extern "C" fn transform_free(mut t: *mut qcms_transform) {
-    std::alloc::dealloc(t as *mut u8, std::alloc::Layout::new::<qcms_transform>())
+    drop(Box::from_raw(t))
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_release(mut t: *mut qcms_transform) {
