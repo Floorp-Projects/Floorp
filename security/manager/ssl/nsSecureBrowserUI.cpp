@@ -51,7 +51,7 @@ nsSecureBrowserUI::GetState(uint32_t* aState) {
   return NS_OK;
 }
 
-void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
+void nsSecureBrowserUI::RecomputeSecurityFlags() {
   // Our BrowsingContext either has a new WindowGlobalParent, or the
   // existing one has mutated its security state.
   // Recompute our security state and fire notifications to listeners
@@ -87,9 +87,20 @@ void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
     }
   }
 
-  // Add the mixed content flags from the window
+  // Add upgraded-state flags when request has been
+  // upgraded with HTTPS-Only Mode
   if (win) {
-    mState |= win->GetMixedContentSecurityFlags();
+    // Check if top-level load has been upgraded
+    uint32_t httpsOnlyStatus = win->HttpsOnlyStatus();
+    if (!(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) &&
+        !(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT)) {
+      mState |= nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED;
+    }
+  }
+
+  // Add the secruity flags from the window
+  if (win) {
+    mState |= win->GetSecurityFlags();
   }
 
   // If we have loaded mixed content and this is a secure page,
