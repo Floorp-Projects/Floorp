@@ -1,7 +1,7 @@
 .asrouter-toggle {
   position: fixed;
   top: 15px;
-  right: 48px;
+  inset-inline-end: 48px;
   border: 0;
   background: none;
   z-index: 1;
@@ -10,6 +10,10 @@
   .icon-devtools {
     background-image: url('chrome://browser/skin/developer.svg');
     padding: 15px;
+  }
+
+  &:dir(rtl) {
+    transform: scaleX(-1);
   }
 
   &:hover {
@@ -24,7 +28,7 @@
 .asrouter-admin {
   position: fixed;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   background: var(--newtab-background-color);
   height: 100%;
@@ -35,7 +39,7 @@
   $sidebar-width: 240px;
   margin: 0 auto;
   font-size: 14px;
-  padding-left: $sidebar-width;
+  padding-inline-start: $sidebar-width;
   color: var(--newtab-text-primary-color);
 
   &.collapsed {
@@ -79,6 +83,7 @@
   }
 
   .general-textarea {
+    direction: ltr;
     width: 740px;
     height: 500px;
     overflow: auto;
@@ -88,6 +93,7 @@
   }
 
   .wnp-textarea {
+    direction: ltr;
     width: 740px;
     height: 500px;
     overflow: auto;
@@ -181,11 +187,11 @@
       }
 
       &:first-child {
-        border-left: 1px solid $border-color;
+        border-inline-start: 1px solid $border-color;
       }
 
       &:last-child {
-        border-right: 1px solid $border-color;
+        border-inline-end: 1px solid $border-color;
       }
     }
 
