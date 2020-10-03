@@ -137,6 +137,12 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
    */
   void PaintMarkers(gfxContext& aContext, const gfxMatrix& aTransform,
                     imgDrawingParams& aImgParams);
+
+  /*
+   * Get the stroke width that markers should use, accounting for
+   * non-scaling stroke.
+   */
+  float GetStrokeWidthForMarkers();
 };
 
 //----------------------------------------------------------------------
