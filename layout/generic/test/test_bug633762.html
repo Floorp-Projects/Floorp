@@ -33,7 +33,7 @@ async function runTests() {
   win.focus();
 
   // clear out any potential scroll events so we can listen for the one we want without false positives
-  await new Promise(resolve => {window.requestAnimationFrame(() => { window.requestAnimationFrame(() => { flushApzRepaints(() => { window.requestAnimationFrame(() => { window.requestAnimationFrame(resolve); } ); }, window); }); }); });
+  await waitToClearOutAnyPotentialScrolls(window);
 
   step2();
 }

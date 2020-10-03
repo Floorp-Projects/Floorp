@@ -53,10 +53,6 @@ scroll
 /** Test for Bug 1303704 **/
 SimpleTest.waitForExplicitFinish();
 
-function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
-}
-
 function runTests() {
   let link1 = window.document.getElementById("link1");
   let mouseEvents = ["mousedown", "mouseup", "mousemove"];
