@@ -15,6 +15,7 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
 
 using namespace mozilla;
@@ -169,7 +170,7 @@ void nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // base rect.
     nsRect displayPortBase =
         aBuilder->GetVisibleRect().Intersect(nsRect(nsPoint(0, 0), GetSize()));
-    nsLayoutUtils::SetDisplayPortBase(mContent, displayPortBase);
+    DisplayPortUtils::SetDisplayPortBase(mContent, displayPortBase);
   }
 
   // root boxes don't need a debug border/outline or a selection overlay...
