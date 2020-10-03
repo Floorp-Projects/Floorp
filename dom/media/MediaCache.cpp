@@ -447,7 +447,7 @@ class MediaCache {
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
-  // Writer which performs IO, asynchronously writing cache blocks.
+
   RefPtr<MediaBlockCacheBase> mBlockCache;
   // The list of free blocks; they are not ordered.
   BlockList mFreeBlocks;
