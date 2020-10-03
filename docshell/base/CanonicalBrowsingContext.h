@@ -213,8 +213,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Called when the current URI changes (from an
   // nsIWebProgressListener::OnLocationChange event, so that we
   // can update our security UI for the new location, or when the
-  // mixed content/https-only state for our current window is changed.
-  void UpdateSecurityState();
+  // mixed content state for our current window is changed.
+  void UpdateSecurityStateForLocationOrMixedContentChange();
 
   void MaybeAddAsProgressListener(nsIWebProgress* aWebProgress);
 

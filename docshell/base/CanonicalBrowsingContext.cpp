@@ -177,9 +177,10 @@ void CanonicalBrowsingContext::ReplacedBy(
   mActiveEntry.swap(aNewContext->mActiveEntry);
 }
 
-void CanonicalBrowsingContext::UpdateSecurityState() {
+void CanonicalBrowsingContext::
+    UpdateSecurityStateForLocationOrMixedContentChange() {
   if (mSecureBrowserUI) {
-    mSecureBrowserUI->RecomputeSecurityFlags();
+    mSecureBrowserUI->UpdateForLocationOrMixedContentChange();
   }
 }
 

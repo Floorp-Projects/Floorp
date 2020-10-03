@@ -39,7 +39,7 @@ class nsSecureBrowserUI : public nsISecureBrowserUI,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECUREBROWSERUI
 
-  void RecomputeSecurityFlags();
+  void UpdateForLocationOrMixedContentChange();
 
  protected:
   virtual ~nsSecureBrowserUI() = default;

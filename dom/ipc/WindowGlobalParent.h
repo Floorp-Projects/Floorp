@@ -193,8 +193,8 @@ class WindowGlobalParent final : public WindowContext,
 
   uint32_t HttpsOnlyStatus() { return mHttpsOnlyStatus; }
 
-  void AddSecurityState(uint32_t aStateFlags);
-  uint32_t GetSecurityFlags() { return mSecurityState; }
+  void AddMixedContentSecurityState(uint32_t aStateFlags);
+  uint32_t GetMixedContentSecurityFlags() { return mMixedContentSecurityState; }
 
   nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
 
@@ -289,7 +289,7 @@ class WindowGlobalParent final : public WindowContext,
   // includes the activity log for all of the nested subdocuments as well.
   ContentBlockingLog mContentBlockingLog;
 
-  uint32_t mSecurityState = 0;
+  uint32_t mMixedContentSecurityState = 0;
 
   Maybe<ClientInfo> mClientInfo;
   // Fields being mirrored from the corresponding document

@@ -22,8 +22,7 @@ class nsHTTPSOnlyStreamListener : public nsIStreamListener {
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  explicit nsHTTPSOnlyStreamListener(nsIStreamListener* aListener,
-                                     nsILoadInfo* aLoadInfo);
+  explicit nsHTTPSOnlyStreamListener(nsIStreamListener* aListener);
 
  private:
   virtual ~nsHTTPSOnlyStreamListener() = default;

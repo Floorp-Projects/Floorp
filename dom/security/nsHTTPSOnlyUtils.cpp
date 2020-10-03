@@ -84,7 +84,7 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
 
   // if it's not a GET method, then there is nothing to do here either.
   nsAutoCString method;
-  mozilla::Unused << httpChannel->GetRequestMethod(method);
+  Unused << httpChannel->GetRequestMethod(method);
   if (!method.EqualsLiteral("GET")) {
     return;
   }
@@ -495,7 +495,7 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
     return NS_OK;
   }
 
-  mozilla::OriginAttributes attrs = origLoadInfo->GetOriginAttributes();
+  OriginAttributes attrs = origLoadInfo->GetOriginAttributes();
   RefPtr<nsIPrincipal> nullPrincipal =
       mozilla::NullPrincipal::CreateWithInheritedAttributes(attrs);
 

@@ -115,19 +115,6 @@ var gIdentityHandler = {
     );
   },
 
-  get _isContentHttpsOnlyModeUpgraded() {
-    return (
-      this._state & Ci.nsIWebProgressListener.STATE_HTTPS_ONLY_MODE_UPGRADED
-    );
-  },
-
-  get _isContentHttpsOnlyModeUpgradeFailed() {
-    return (
-      this._state &
-      Ci.nsIWebProgressListener.STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED
-    );
-  },
-
   get _isCertUserOverridden() {
     return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
   },
@@ -228,18 +215,6 @@ var gIdentityHandler = {
     delete this._identityPopupSecurityView;
     return (this._identityPopupSecurityView = document.getElementById(
       "identity-popup-securityView"
-    ));
-  },
-  get _identityPopupHttpsOnlyModeMenuList() {
-    delete this._identityPopupHttpsOnlyModeMenuList;
-    return (this._identityPopupHttpsOnlyModeMenuList = document.getElementById(
-      "identity-popup-security-httpsonlymode-menulist"
-    ));
-  },
-  get _identityPopupHttpsOnlyModeMenuListTempItem() {
-    delete this._identityPopupHttpsOnlyModeMenuListTempItem;
-    return (this._identityPopupHttpsOnlyModeMenuListTempItem = document.getElementById(
-      "identity-popup-security-menulist-tempitem"
     ));
   },
   get _identityPopupSecurityEVContentOwner() {
@@ -398,24 +373,7 @@ var gIdentityHandler = {
     );
     return this._protectionsPanelEnabled;
   },
-  get _httpsOnlyModeEnabled() {
-    delete this._httpsOnlyModeEnabled;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_httpsOnlyModeEnabled",
-      "dom.security.https_only_mode"
-    );
-    return this._httpsOnlyModeEnabled;
-  },
-  get _httpsOnlyModeEnabledPBM() {
-    delete this._httpsOnlyModeEnabledPBM;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_httpsOnlyModeEnabledPBM",
-      "dom.security.https_only_mode_pbm"
-    );
-    return this._httpsOnlyModeEnabledPBM;
-  },
+
   get _useGrayLockIcon() {
     delete this._useGrayLockIcon;
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -525,115 +483,6 @@ var gIdentityHandler = {
     if (this._popupInitialized) {
       PanelMultiView.hidePopup(this._identityPopup);
     }
-  },
-
-  /**
-   * Gets the current HTTPS-Only mode permission for the current page.
-   * Values are the same as in #identity-popup-security-httpsonlymode-menulist
-   */
-  _getHttpsOnlyPermission() {
-    const { state } = SitePermissions.getForPrincipal(
-      gBrowser.contentPrincipal,
-      "https-only-load-insecure"
-    );
-    switch (state) {
-      case Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION:
-        return 2; // Off temporarily
-      case Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW:
-        return 1; // Off
-      default:
-        return 0; // On
-    }
-  },
-
-  /**
-   * Sets/removes HTTPS-Only Mode exception and possibly reloads the page.
-   */
-  changeHttpsOnlyPermission() {
-    // Get the new value from the menulist and the current value
-    // Note: value and permission association is laid out
-    //       in _getHttpsOnlyPermission
-    const oldValue = this._getHttpsOnlyPermission();
-    let newValue = parseInt(
-      this._identityPopupHttpsOnlyModeMenuList.selectedItem.value,
-      10
-    );
-
-    // If nothing changed, just return here
-    if (newValue === oldValue) {
-      return;
-    }
-
-    // Permissions set in PMB get deleted anyway, but to make sure, let's make
-    // the permission session-only.
-    if (newValue === 1 && PrivateBrowsingUtils.isWindowPrivate(window)) {
-      newValue = 2;
-    }
-
-    // Usually we want to set the permission for the current site and therefore
-    // the current principal...
-    let principal = gBrowser.contentPrincipal;
-    // ...but if we're on the HTTPS-Only error page, the content-principal is
-    // for HTTPS but. We always want to set the exception for HTTP. (Code should
-    // be almost identical to the one in AboutHttpsOnlyErrorParent.jsm)
-    let newURI;
-    if (this._isAboutHttpsOnlyErrorPage) {
-      newURI = gBrowser.currentURI
-        .mutate()
-        .setScheme("http")
-        .finalize();
-      principal = Services.scriptSecurityManager.createContentPrincipal(
-        newURI,
-        gBrowser.contentPrincipal.originAttributes
-      );
-    }
-
-    // Set or remove the permission
-    if (newValue === 0) {
-      SitePermissions.removeFromPrincipal(
-        principal,
-        "https-only-load-insecure"
-      );
-    } else if (newValue === 1) {
-      SitePermissions.setForPrincipal(
-        principal,
-        "https-only-load-insecure",
-        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW,
-        SitePermissions.SCOPE_PERSISTENT
-      );
-    } else {
-      SitePermissions.setForPrincipal(
-        principal,
-        "https-only-load-insecure",
-        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION,
-        SitePermissions.SCOPE_SESSION
-      );
-    }
-
-    // If we're on the error-page, we have to redirect the user
-    // from HTTPS to HTTP. Otherwise we can just reload the page.
-    if (this._isAboutHttpsOnlyErrorPage) {
-      gBrowser.loadURI(newURI.spec, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-      });
-      if (this._popupInitialized) {
-        PanelMultiView.hidePopup(this._identityPopup);
-      }
-      return;
-    }
-    // The page only needs to reload if we switch between allow and block
-    // Because "off" is 1 and "off temporarily" is 2, we can just check if the
-    // sum of newValue and oldValue is 3.
-    if (newValue + oldValue !== 3) {
-      BrowserReloadSkipCache();
-      if (this._popupInitialized) {
-        PanelMultiView.hidePopup(this._identityPopup);
-      }
-      return;
-    }
-    // Otherwise we just refresh the interface
-    this.refreshIdentityPopup();
   },
 
   /**
@@ -1143,41 +992,6 @@ var gIdentityHandler = {
       this._useGrayLockIcon
     );
 
-    // If HTTPS-Only Mode is enabled, check the permission status
-    const privateBrowsingWindow = PrivateBrowsingUtils.isWindowPrivate(window);
-    let httpsOnlyStatus = "";
-    if (
-      this._httpsOnlyModeEnabled ||
-      (privateBrowsingWindow && this._httpsOnlyModeEnabledPBM)
-    ) {
-      // Note: value and permission association is laid out
-      //       in _getHttpsOnlyPermission
-      let value = this._getHttpsOnlyPermission();
-
-      // Because everything in PBM is temporary anyway, we don't need to make the distinction
-      if (privateBrowsingWindow) {
-        if (value === 2) {
-          value = 1;
-        }
-        // Hide "off temporarily" option
-        this._identityPopupHttpsOnlyModeMenuListTempItem.style.display = "none";
-      } else {
-        this._identityPopupHttpsOnlyModeMenuListTempItem.style.display = "";
-      }
-
-      this._identityPopupHttpsOnlyModeMenuList.value = value;
-
-      if (value > 0) {
-        httpsOnlyStatus = "exception";
-      } else if (this._isAboutHttpsOnlyErrorPage) {
-        httpsOnlyStatus = "failed-top";
-      } else if (this._isContentHttpsOnlyModeUpgradeFailed) {
-        httpsOnlyStatus = "failed-sub";
-      } else if (this._isContentHttpsOnlyModeUpgraded) {
-        httpsOnlyStatus = "upgraded";
-      }
-    }
-
     // Update all elements.
     let elementIDs = ["identity-popup", "identity-popup-securityView-body"];
 
@@ -1188,7 +1002,6 @@ var gIdentityHandler = {
       this._updateAttribute(element, "mixedcontent", mixedcontent);
       this._updateAttribute(element, "isbroken", this._isBrokenConnection);
       this._updateAttribute(element, "customroot", customRoot);
-      this._updateAttribute(element, "httpsonlystatus", httpsOnlyStatus);
     }
 
     // Initialize the optional strings to empty values
@@ -1687,7 +1500,8 @@ var gIdentityHandler = {
 
     if (
       (aPermission.id == "popup" && !isPolicyPermission) ||
-      aPermission.id == "autoplay-media"
+      aPermission.id == "autoplay-media" ||
+      aPermission.id == "https-only-load-insecure"
     ) {
       let menulist = document.createXULElement("menulist");
       let menupopup = document.createXULElement("menupopup");
