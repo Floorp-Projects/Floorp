@@ -4275,7 +4275,8 @@ bool ScrollFrameHelper::DecideScrollableLayer(
     MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
     nsRect displayPort;
     usingDisplayPort = DisplayPortUtils::GetDisplayPort(
-        content, &displayPort, DisplayportRelativeTo::ScrollFrame);
+        content, &displayPort,
+        DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
@@ -4395,7 +4396,8 @@ bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
   // Use the right rect depending on if a display port is set.
   nsRect displayPort;
   bool usingDisplayport = DisplayPortUtils::GetDisplayPort(
-      mOuter->GetContent(), &displayPort, DisplayportRelativeTo::ScrollFrame);
+      mOuter->GetContent(), &displayPort,
+      DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
   return aRect.Intersects(
       ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }

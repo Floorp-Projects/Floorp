@@ -6524,7 +6524,7 @@ bool nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(rootScrollFrame);
   Unused << DisplayPortUtils::GetDisplayPort(
       rootScrollFrame->GetContent(), &displayport,
-      DisplayportRelativeTo::ScrollFrame);
+      DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 
   nsRegion childVisibleRegion;
   // The visible region for the children may be much bigger than the hole we

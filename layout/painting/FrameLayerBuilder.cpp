@@ -4256,7 +4256,7 @@ nsRect ContainerState::GetDisplayPortForAnimatedGeometryRoot(
 
   bool usingDisplayport = DisplayPortUtils::GetDisplayPort(
       (*aAnimatedGeometryRoot)->GetContent(), &mLastDisplayPortRect,
-      DisplayportRelativeTo::ScrollFrame);
+      DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
   if (!usingDisplayport) {
     // No async scrolling, so all that matters is that the layer contents
     // cover the scrollport.
