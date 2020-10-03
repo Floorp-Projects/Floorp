@@ -22,7 +22,6 @@ add_task(async function setup() {
       [PREF_UI_ENABLED, false],
       [PREF_BANNER_SHOWN, 0],
       [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, MAX_SHOW_COUNT],
-      ["browser.urlbar.disableExtendForTests", true],
     ],
   });
 

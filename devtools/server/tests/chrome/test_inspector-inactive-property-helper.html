@@ -56,6 +56,7 @@ SimpleTest.waitForExplicitFinish();
 
   // Import all the test cases
   const tests =
+  // eslint-disable-next-line no-unsanitized/method
     (await Promise.all(testFiles.map(f => import(f).then(data => data.default)))).flat();
 
   for (const {

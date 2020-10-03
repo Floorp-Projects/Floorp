@@ -25,18 +25,11 @@ add_task(async function test() {
     expectUncaughtException();
   }
 
-  let URI = TESTROOT + "installtrigger.html?" + triggers;
-  await BrowserTestUtils.withNewTab({ gBrowser, url: TESTROOT }, async function(
+  let URI = TESTROOT + "installtrigger.html?manualStartInstall" + triggers;
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function(
     browser
   ) {
-    await SpecialPowers.spawn(browser, [URI], async function(URI) {
-      content.location.href = URI;
-
-      let loaded = ContentTaskUtils.waitForEvent(
-        docShell.chromeEventHandler,
-        "load",
-        true
-      );
+    await SpecialPowers.spawn(browser, [], async function() {
       let installTriggered = ContentTaskUtils.waitForEvent(
         docShell.chromeEventHandler,
         "InstallTriggered",
@@ -44,8 +37,8 @@ add_task(async function test() {
         null,
         true
       );
-      await Promise.all([loaded, installTriggered]);
-
+      content.wrappedJSObject.startInstall();
+      await installTriggered;
       let doc = content.document;
       is(
         doc.getElementById("return").textContent,

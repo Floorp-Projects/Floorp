@@ -46,11 +46,10 @@ FloatRegisters::Code FloatRegisters::FromName(const char* name) {
   return Invalid;
 }
 
-FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
+// These assume no SIMD registers as the register sets do not directly support
+// SIMD.  When SIMD is needed (wasm baseline + stubs), other routines are used.
 
+FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
   LiveFloatRegisterSet ret;
   for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
     ret.addUnchecked(FromCode((*iter).encoding()));
@@ -59,22 +58,21 @@ FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
 }
 
 uint32_t FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
-
   return s.size() * sizeof(double);
 }
 
 uint32_t FloatRegister::getRegisterDumpOffsetInBytes() {
-#ifdef ENABLE_WASM_SIMD
-#  error "Needs more careful logic if SIMD is enabled"
-#endif
-
   // Although registers are 128-bits wide, only the first 64 need saving per
   // ABI.
   return encoding() * sizeof(double);
 }
+
+#if defined(ENABLE_WASM_SIMD)
+uint32_t FloatRegister::GetPushSizeInBytesForWasmStubs(
+    const FloatRegisterSet& s) {
+  return s.size() * SizeOfSimd128;
+}
+#endif
 
 uint32_t GetARM64Flags() { return 0; }
 

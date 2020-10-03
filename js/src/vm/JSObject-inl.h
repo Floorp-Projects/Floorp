@@ -345,7 +345,7 @@ static MOZ_ALWAYS_INLINE bool HasNativeMethodPure(JSObject* obj,
 // Return whether 'obj' definitely has no @@toPrimitive method.
 static MOZ_ALWAYS_INLINE bool HasNoToPrimitiveMethodPure(JSObject* obj,
                                                          JSContext* cx) {
-  Symbol* toPrimitive = cx->wellKnownSymbols().toPrimitive;
+  JS::Symbol* toPrimitive = cx->wellKnownSymbols().toPrimitive;
   JSObject* holder;
   if (!MaybeHasInterestingSymbolProperty(cx, obj, toPrimitive, &holder)) {
 #ifdef DEBUG

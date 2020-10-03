@@ -65,8 +65,6 @@ void TestDocumentationExample() {
       (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, \
        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32))
 
-#define GENERATE_BOOL(aIndex) (bool, Flag##aIndex, 1)
-
 #define CHECK_BOOL(aIndex)                    \
   MOZ_ASSERT(val.GetFlag##aIndex() == false); \
   val.SetFlag##aIndex(true);                  \
@@ -74,14 +72,10 @@ void TestDocumentationExample() {
   val.SetFlag##aIndex(false);                 \
   MOZ_ASSERT(val.GetFlag##aIndex() == false);
 
-#define GENERATE_TEST_JAMMED_WITH_FLAGS(aSize)                     \
-  struct JammedWithFlags##aSize {                                  \
-    MOZ_ATOMIC_BITFIELDS(mAtomicFields, aSize,                     \
-                         (TIMES_##aSize(GENERATE_BOOL, (, ), ()))) \
-  };                                                               \
-  void TestJammedWithFlags##aSize() {                              \
-    JammedWithFlags##aSize val;                                    \
-    TIMES_##aSize(CHECK_BOOL, (;), ());                            \
+#define GENERATE_TEST_JAMMED_WITH_FLAGS(aSize) \
+  void TestJammedWithFlags##aSize() {          \
+    JammedWithFlags##aSize val;                \
+    TIMES_##aSize(CHECK_BOOL, (;), ());        \
   }
 
 #define TEST_JAMMED_WITH_FLAGS(aSize) TestJammedWithFlags##aSize();
@@ -134,6 +128,41 @@ void TestDocumentationExample() {
   TestLopsidedB##aSize();
 
 // ==================== generate and run the tests ======================
+
+// There's an unknown bug in clang-cl-9 (used for win64-ccov) that makes
+// generating these with the TIMES_N macro not work. So these are written out
+// explicitly to unbork CI.
+struct JammedWithFlags8 {
+  MOZ_ATOMIC_BITFIELDS(mAtomicFields, 8,
+                       ((bool, Flag1, 1), (bool, Flag2, 1), (bool, Flag3, 1),
+                        (bool, Flag4, 1), (bool, Flag5, 1), (bool, Flag6, 1),
+                        (bool, Flag7, 1), (bool, Flag8, 1)))
+};
+
+struct JammedWithFlags16 {
+  MOZ_ATOMIC_BITFIELDS(mAtomicFields, 16,
+                       ((bool, Flag1, 1), (bool, Flag2, 1), (bool, Flag3, 1),
+                        (bool, Flag4, 1), (bool, Flag5, 1), (bool, Flag6, 1),
+                        (bool, Flag7, 1), (bool, Flag8, 1), (bool, Flag9, 1),
+                        (bool, Flag10, 1), (bool, Flag11, 1), (bool, Flag12, 1),
+                        (bool, Flag13, 1), (bool, Flag14, 1), (bool, Flag15, 1),
+                        (bool, Flag16, 1)))
+};
+
+struct JammedWithFlags32 {
+  MOZ_ATOMIC_BITFIELDS(mAtomicFields, 32,
+                       ((bool, Flag1, 1), (bool, Flag2, 1), (bool, Flag3, 1),
+                        (bool, Flag4, 1), (bool, Flag5, 1), (bool, Flag6, 1),
+                        (bool, Flag7, 1), (bool, Flag8, 1), (bool, Flag9, 1),
+                        (bool, Flag10, 1), (bool, Flag11, 1), (bool, Flag12, 1),
+                        (bool, Flag13, 1), (bool, Flag14, 1), (bool, Flag15, 1),
+                        (bool, Flag16, 1), (bool, Flag17, 1), (bool, Flag18, 1),
+                        (bool, Flag19, 1), (bool, Flag20, 1), (bool, Flag21, 1),
+                        (bool, Flag22, 1), (bool, Flag23, 1), (bool, Flag24, 1),
+                        (bool, Flag25, 1), (bool, Flag26, 1), (bool, Flag27, 1),
+                        (bool, Flag28, 1), (bool, Flag29, 1), (bool, Flag30, 1),
+                        (bool, Flag31, 1), (bool, Flag32, 1)))
+};
 
 GENERATE_TEST_JAMMED_WITH_FLAGS(8)
 GENERATE_TEST_JAMMED_WITH_FLAGS(16)

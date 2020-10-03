@@ -201,8 +201,6 @@ class GeckoMediaPluginServiceParent final
   // processes we have. When this is empty we can safely shut down.
   // Synchronized across thread via mMutex in base class.
   nsTArray<GMPServiceParent*> mServiceParents;
-
-  const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
@@ -212,13 +210,22 @@ bool MatchOrigin(nsIFile* aPath, const nsACString& aSite,
 class GMPServiceParent final : public PGMPServiceParent {
  public:
   explicit GMPServiceParent(GeckoMediaPluginServiceParent* aService);
-  virtual ~GMPServiceParent();
+
+  // Our refcounting is thread safe, and when our refcount drops to zero
+  // we dispatch an event to the main thread to delete the GMPServiceParent.
+  // Note that this means it's safe for references to this object to be
+  // released on a non main thread, but the destructor will always run on
+  // the main thread.
+
+  // Mark AddRef and Release as `final`, as they overload pure virtual
+  // implementations in PGMPServiceParent.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(GMPServiceParent,
+                                                     Destroy(), final);
 
   ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
                                   const nsString& aTopLevelOrigin,
                                   const nsString& aGMPName,
                                   nsCString* aID) override;
-  void ActorDealloc() override;
 
   static bool Create(Endpoint<PGMPServiceParent>&& aGMPService);
 
@@ -239,6 +246,10 @@ class GMPServiceParent final : public PGMPServiceParent {
       nsCString* aOutErrorDescription) override;
 
  private:
+  ~GMPServiceParent();
+
+  void Destroy();
+
   RefPtr<GeckoMediaPluginServiceParent> mService;
 };
 

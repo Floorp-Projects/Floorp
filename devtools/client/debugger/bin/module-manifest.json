@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -702,7 +702,11 @@
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-config/src/feature.js": 551,
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-contextmenu/menu.js": 552,
       "../../extract-text-webpack-plugin/dist/loader.js??ref--3-0!../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": 553,
-      "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-environment/index.js": 554
+      "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-environment/index.js": 554,
+      "../../babel-loader/lib/index.js??ref--1!../../../src/context-menu/menu.js": 555,
+      "../../babel-loader/lib/index.js??ref--1!../../../../framework/menu.js": 556,
+      "../../babel-loader/lib/index.js??ref--1!../../../../framework/menu-item.js": 557,
+      "../../babel-loader/lib/index.js??ref--1!../../../../shared/telemetry.js": 558
     },
     "usedIds": {
       "0": 0,
@@ -1259,7 +1263,11 @@
       "551": 551,
       "552": 552,
       "553": 553,
-      "554": 554
+      "554": 554,
+      "555": 555,
+      "556": 556,
+      "557": 557,
+      "558": 558
     }
   },
   "chunks": {

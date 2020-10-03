@@ -31,7 +31,9 @@ import type { List } from "immutable";
 import type { ActiveSearchType } from "../reducers/types";
 import type { StatusType } from "../reducers/project-text-search";
 import type { Context, SourceId } from "../types";
-import { PluralForm } from "devtools-modules";
+
+// $FlowIgnore
+const { PluralForm } = require("devtools/shared/plural-form");
 
 import "./ProjectSearch.css";
 
@@ -127,7 +129,7 @@ export class ProjectSearch extends Component<Props, State> {
     this.props.searchSources(this.props.cx, searchTerm);
   }
 
-  toggleProjectTextSearch = (key: string, e: KeyboardEvent) => {
+  toggleProjectTextSearch = (e: KeyboardEvent) => {
     const { cx, closeProjectSearch, setActiveSearch } = this.props;
     if (e) {
       e.preventDefault();

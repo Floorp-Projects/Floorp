@@ -34,6 +34,7 @@ struct PrintData {
   bool printBGImages;
   bool honorPageRuleMargins;
   bool showMarginGuides;
+  bool printSelectionOnly;
   short printRange;
   nsString title;
   nsString docURL;

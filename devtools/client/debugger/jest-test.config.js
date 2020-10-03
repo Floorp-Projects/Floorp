@@ -40,9 +40,13 @@ module.exports = {
   moduleNameMapper: {
     "\\.css$": "<rootDir>/src/test/__mocks__/styleMock.js",
     "\\.svg$": "<rootDir>/src/test/__mocks__/svgMock.js",
+    "devtools-services": "<rootDir>/src/test/fixtures/Services",
     "^Services": "<rootDir>/src/test/fixtures/Services",
     "^chrome": "<rootDir>/src/test/fixtures/Chrome",
     "^ChromeUtils": "<rootDir>/src/test/fixtures/ChromeUtils",
+    "\\/plural-form$": "<rootDir>/src/test/fixtures/plural-form",
+    "shared\\/telemetry$": "<rootDir>/src/test/fixtures/telemetry",
+    "\\/unicode-url$": "<rootDir>/src/test/fixtures/unicode-url",
     // Map all require("devtools/...") to the real devtools root.
     "^devtools\\/(.*)": "<rootDir>/../../$1",
   },

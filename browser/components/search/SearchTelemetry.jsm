@@ -77,7 +77,7 @@ const SEARCH_PROVIDER_INFO = {
     codeParam: "t",
     codePrefixes: ["ff", "newext"],
     extraAdServersRegexps: [
-      /^https:\/\/duckduckgo.com\/y\.js/,
+      /^https:\/\/duckduckgo.com\/y\.js?.*ad_provider\=/,
       /^https:\/\/www\.amazon\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)/,
     ],
   },

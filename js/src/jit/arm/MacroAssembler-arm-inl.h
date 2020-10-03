@@ -2067,13 +2067,6 @@ void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
           addr.offset);
 }
 
-void MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest) {
-  MOZ_CRASH("NYI");
-}
-void MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest) {
-  MOZ_CRASH("NYI");
-}
-
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
   // On ARMv6 the optional argument (BarrierST, etc) is ignored.
   if (barrier == (MembarStoreStore | MembarSynchronizing)) {

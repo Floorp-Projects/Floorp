@@ -292,9 +292,13 @@ void LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir) {
                                  LFloatReg(ReturnDoubleReg)));
       break;
     case MIRType::Simd128:
+#ifdef ENABLE_WASM_SIMD
       lir->setDef(0, LDefinition(vreg, LDefinition::SIMD128,
                                  LFloatReg(ReturnSimd128Reg)));
       break;
+#else
+      MOZ_CRASH("No SIMD support");
+#endif
     default:
       LDefinition::Type type = LDefinition::TypeFrom(mir->type());
       switch (type) {

@@ -349,7 +349,7 @@ const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 let loggingEnabled = false;
 
 if (!isWorker) {
-  loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
+  loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit", false);
   const observer = {
     observe: () => {
       loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");

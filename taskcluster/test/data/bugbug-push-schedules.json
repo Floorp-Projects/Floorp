@@ -612,7 +612,12 @@
       "test-windows10-64/opt-*-spi-e10s",
       "test-linux1804-64/opt-*-spi-e10s"
     ],
-    "dom/media/tests/mochitest/mochitest.ini": [
+    "dom/media/webaudio/test/mochitest.ini": [
+      "test-windows10-64/opt-*-e10s",
+      "test-windows10-64-qr/debug-*-spi-e10s",
+      "test-windows10-64-qr/opt-*-spi-e10s"
+    ],
+    "dom/media/webrtc/tests/mochitests/mochitest.ini": [
       "test-linux1804-64/debug-*-e10s",
       "test-linux1804-64-qr/debug-*-fis-e10s",
       "test-windows10-64/debug-*-e10s",
@@ -623,11 +628,6 @@
       "test-macosx1014-64/opt-*-spi-e10s",
       "test-android-hw-p2-8-0-android-aarch64/debug-geckoview-*-spi-e10s",
       "test-windows7-32/debug-*-e10s"
-    ],
-    "dom/media/webaudio/test/mochitest.ini": [
-      "test-windows10-64/opt-*-e10s",
-      "test-windows10-64-qr/debug-*-spi-e10s",
-      "test-windows10-64-qr/opt-*-spi-e10s"
     ],
     "dom/media/webvtt/tests/xpcshell.ini": [
       "test-linux1804-64-qr/opt-*-e10s"
@@ -2273,8 +2273,8 @@
     "dom/media/mediasource/test/mochitest.ini": 0.82,
     "dom/media/test/crashtests/crashtests.list": 0.57,
     "dom/media/test/mochitest.ini": 0.95,
-    "dom/media/tests/mochitest/mochitest.ini": 0.98,
     "dom/media/webaudio/test/mochitest.ini": 0.61,
+    "dom/media/webrtc/tests/mochitests/mochitest.ini": 0.98,
     "dom/media/webvtt/tests/xpcshell.ini": 0.8,
     "dom/network/tests/chrome.ini": 0.57,
     "dom/performance/tests/mochitest.ini": 0.67,

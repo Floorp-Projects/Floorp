@@ -17,7 +17,7 @@ import { getLineText } from "./../../utils/source";
 import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
 
-import { showMenu } from "devtools-contextmenu";
+import { showMenu } from "../../context-menu/menu";
 import {
   createBreakpointItems,
   breakpointItemActions,
@@ -263,7 +263,7 @@ class Editor extends PureComponent<Props, State> {
     shortcuts.on("Esc", this.onEscape);
   }
 
-  onCloseShortcutPress = (key: mixed, e: KeyboardEvent) => {
+  onCloseShortcutPress = (e: KeyboardEvent) => {
     const { cx, selectedSource } = this.props;
     if (selectedSource) {
       e.preventDefault();
@@ -298,7 +298,7 @@ class Editor extends PureComponent<Props, State> {
     return toSourceLine(selectedSource.id, line);
   }
 
-  onToggleBreakpoint = (key: mixed, e: KeyboardEvent) => {
+  onToggleBreakpoint = (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -310,7 +310,7 @@ class Editor extends PureComponent<Props, State> {
     this.props.toggleBreakpointAtLine(this.props.cx, line);
   };
 
-  onToggleConditionalPanel = (key: mixed, e: KeyboardEvent) => {
+  onToggleConditionalPanel = (e: KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -390,7 +390,7 @@ class Editor extends PureComponent<Props, State> {
    * split console. Restore it here, but preventDefault if and only if there
    * is a multiselection.
    */
-  onEscape = (key: mixed, e: KeyboardEvent) => {
+  onEscape = (e: KeyboardEvent) => {
     if (!this.state.editor) {
       return;
     }

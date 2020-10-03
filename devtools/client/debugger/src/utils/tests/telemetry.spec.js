@@ -4,16 +4,16 @@
 
 // @flow
 
-jest.mock("devtools-modules", () => {
+jest.mock("devtools/client/shared/telemetry", () => {
   function MockTelemetry() {}
   MockTelemetry.prototype.recordEvent = jest.fn();
 
-  return {
-    Telemetry: MockTelemetry,
-  };
+  return MockTelemetry;
 });
 
-import { Telemetry } from "devtools-modules";
+// $FlowIgnore
+const Telemetry = require("devtools/client/shared/telemetry");
+
 import { recordEvent } from "../telemetry";
 
 const telemetry = new Telemetry();

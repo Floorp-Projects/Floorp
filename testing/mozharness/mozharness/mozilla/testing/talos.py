@@ -163,8 +163,8 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             "metavar": "PREF=VALUE",
             "dest": "extra_prefs",
             "default": [],
-            "help": "Defines an extra user preference."}
-         ],
+            "help": "Set a browser preference. May be used multiple times.",
+         }],
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):

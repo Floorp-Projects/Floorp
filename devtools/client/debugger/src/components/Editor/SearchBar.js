@@ -31,7 +31,9 @@ import type { Modifiers, SearchResults } from "../../reducers/file-search";
 import SearchInput from "../shared/SearchInput";
 import { debounce } from "lodash";
 import "./SearchBar.css";
-import { PluralForm } from "devtools-modules";
+
+// $FlowIgnore
+const { PluralForm } = require("devtools/shared/plural-form");
 
 import type SourceEditor from "../../utils/editor/source-editor";
 
@@ -116,14 +118,12 @@ class SearchBar extends Component<Props, State> {
       shiftSearchAgainShortcut,
     } = getShortcuts();
 
-    shortcuts.on(searchShortcut, (_, e) => this.toggleSearch(e));
-    shortcuts.on("Escape", (_, e) => this.onEscape(e));
+    shortcuts.on(searchShortcut, this.toggleSearch);
+    shortcuts.on("Escape", this.onEscape);
 
-    shortcuts.on(shiftSearchAgainShortcut, (_, e) =>
-      this.traverseResults(e, true)
-    );
+    shortcuts.on(shiftSearchAgainShortcut, e => this.traverseResults(e, true));
 
-    shortcuts.on(searchAgainShortcut, (_, e) => this.traverseResults(e, false));
+    shortcuts.on(searchAgainShortcut, e => this.traverseResults(e, false));
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
