@@ -303,8 +303,6 @@ class MediaCache {
       LOG("~MediaCache(Global file-backed MediaCache)");
       // This is the file-backed MediaCache, reset the global pointer.
       gMediaCache = nullptr;
-      LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u", this,
-          unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
       LOG("MediaCache::~MediaCache(this=%p) "
           "MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
           this, unsigned(mBlockOwnersWatermark));
@@ -452,8 +450,6 @@ class MediaCache {
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
-  // Keep track for highest number of blocks used, for telemetry purposes.
-  int32_t mIndexWatermark = 0;
   // Keep track for highest number of blocks owners, for telemetry purposes.
   uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
@@ -922,7 +918,6 @@ int32_t MediaCache::FindBlockForIncomingData(AutoLock& aLock, TimeStamp aNow,
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
       mIndex.AppendElement();
-      mIndexWatermark = std::max(mIndexWatermark, blockIndex + 1);
       mFreeBlocks.AddFirstBlock(blockIndex);
       return blockIndex;
     }
