@@ -4199,15 +4199,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: once
 
-- name: gfx.font_loader.delay
-  type: uint32_t
-#if defined(XP_WIN)
-  value: 60000
-#else
-  value: 8000
-#endif
-  mirror: once
-
 # Disable antialiasing of Ahem, for use in tests.
 - name: gfx.font_rendering.ahem_antialias_none
   type: RelaxedAtomicBool
