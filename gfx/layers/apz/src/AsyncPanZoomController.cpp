@@ -3928,7 +3928,7 @@ static CSSRect GetDisplayPortRect(const FrameMetrics& aFrameMetrics,
   // scroll offset. It's adjusted to be relative to the layout scroll offset
   // when the main thread processes a repaint request (in
   // APZCCallbackHelper::AdjustDisplayPortForScrollDelta()) and ultimately
-  // applied (in nsLayoutUtils::GetDisplayPort()) in this adjusted form.
+  // applied (in DisplayPortUtils::GetDisplayPort()) in this adjusted form.
   CSSRect baseRect(aFrameMetrics.GetVisualScrollOffset(),
                    aFrameMetrics.CalculateBoundedCompositedSizeInCssPixels());
   baseRect.Inflate(aDisplayportMargins /
