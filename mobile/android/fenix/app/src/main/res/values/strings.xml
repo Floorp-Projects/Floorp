@@ -211,6 +211,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Learn more</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Open a new Firefox tab</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Search</string>
     <!-- Text preview for larger sized widgets -->
@@ -615,6 +617,8 @@
     <string name="collection_rename">Rename collection</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Open tabs</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Collection name</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Remove</string>
     <!-- Text for the menu button to delete a top site from history -->
@@ -1586,6 +1590,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Get the most out of %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Click for more details</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Collect the things that matter to you</string>

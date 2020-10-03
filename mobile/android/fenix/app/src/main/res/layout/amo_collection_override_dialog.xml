@@ -3,30 +3,34 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/linear_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+    android:id="@+id/linear_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <EditText
         android:id="@+id/custom_amo_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/customize_addon_collection_user_hint"
-        android:singleLine="true"
         android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
-        android:textColor="?primaryText"/>
+        android:layout_marginEnd="16dp"
+        android:autofillHints="false"
+        android:hint="@string/customize_addon_collection_user_hint"
+        android:inputType="number"
+        android:singleLine="true"
+        android:textColor="?primaryText" />
 
     <EditText
         android:id="@+id/custom_amo_collection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/customize_addon_collection_hint"
-        android:singleLine="true"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:textColor="?primaryText"/>
+        android:autofillHints="false"
+        android:hint="@string/customize_addon_collection_hint"
+        android:inputType="text"
+        android:singleLine="true"
+        android:textColor="?primaryText" />
 
 </LinearLayout>

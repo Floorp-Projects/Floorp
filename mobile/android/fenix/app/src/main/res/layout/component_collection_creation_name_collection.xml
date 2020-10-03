@@ -16,16 +16,17 @@
         android:layout_height="0dp"
         android:layout_margin="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        app:drawableStartCompat="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
-        app:drawableTint="@color/neutral_text"
         android:gravity="start|center_vertical"
         android:text="@string/create_collection_name_collection"
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/neutral_text"
         android:textSize="20sp"
+        app:drawableStartCompat="@drawable/mozac_ic_back"
+        app:drawableTint="@color/neutral_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ButtonStyleXmlDetector" />
 
     <Button
         android:id="@+id/select_all_button"
@@ -40,7 +41,8 @@
         android:textSize="16sp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ButtonStyleXmlDetector" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/collections_list"
@@ -60,6 +62,7 @@
         android:autofillHints="false"
         android:background="?foundation"
         android:focusedByDefault="true"
+        android:hint="@string/collection_name_hint"
         android:imeOptions="actionDone"
         android:importantForAutofill="no"
         android:inputType="textCapSentences"
@@ -121,11 +124,11 @@
             android:layout_margin="16dp"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/create_collection_close"
-            app:srcCompat="@drawable/mozac_ic_close"
-            android:tint="?neutral"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/mozac_ic_close"
+            app:tint="?neutral" />
 
         <TextView
             android:id="@+id/bottom_bar_text"
@@ -154,6 +157,7 @@
             android:textColor="?neutral"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ButtonStyleXmlDetector" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

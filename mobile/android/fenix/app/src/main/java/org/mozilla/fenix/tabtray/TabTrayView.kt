@@ -581,7 +581,7 @@ class TabTrayView(
         view.tab_layout.getTabAt(0)?.contentDescription = if (count == 1) {
             view.context?.getString(R.string.open_tab_tray_single)
         } else {
-            view.context?.getString(R.string.open_tab_tray_plural, count.toString())
+            String.format(view.context.getString(R.string.open_tab_tray_plural), count.toString())
         }
 
         view.tabsTray.accessibilityDelegate = object : View.AccessibilityDelegate() {

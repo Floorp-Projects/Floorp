@@ -35,7 +35,7 @@
         android:layout_height="48dp"
         android:background="?selectableItemBackgroundBorderless"
         android:contentDescription="@string/create_collection_close"
-        android:tint="@color/primary_text_dark_theme"
+        app:tint="@color/primary_text_dark_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_close" />

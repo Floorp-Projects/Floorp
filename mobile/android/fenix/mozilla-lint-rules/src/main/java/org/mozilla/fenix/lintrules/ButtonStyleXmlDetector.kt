@@ -5,6 +5,7 @@
 package org.mozilla.fenix.lintrules
 
 import com.android.SdkConstants
+import com.android.SdkConstants.ATTR_STYLE
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
@@ -20,8 +21,6 @@ import org.w3c.dom.Element
  */
 class ButtonStyleXmlDetector : ResourceXmlDetector() {
     companion object {
-        const val SCHEMA = "http://schemas.android.com/apk/res-auto"
-
         const val ERROR_MESSAGE =
             "All buttons must have a style, try using NeutralButton or similar."
 
@@ -53,7 +52,7 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
     }
 
     override fun visitElement(context: XmlContext, element: Element) {
-        if (element.hasAttributeNS(SCHEMA, SdkConstants.ATTR_STYLE)) { return }
+        if (element.hasAttribute(ATTR_STYLE)) { return }
 
         context.report(
             issue = ISSUE_XML_STYLE,

@@ -39,7 +39,7 @@ class TabCounter @JvmOverloads constructor(
         counter_root.contentDescription = if (count == 1) {
             context?.getString(R.string.open_tab_tray_single)
         } else {
-            context?.getString(R.string.open_tab_tray_plural, count.toString())
+            String.format(context.getString(R.string.open_tab_tray_plural), count.toString())
         }
     }
 
@@ -191,7 +191,8 @@ class TabCounter @JvmOverloads constructor(
             ONE_DIGIT_SIZE_RATIO
         }
 
-        val counterBoxWidth = context.resources.getDimensionPixelSize(R.dimen.tab_counter_box_width_height)
+        val counterBoxWidth =
+            context.resources.getDimensionPixelSize(R.dimen.tab_counter_box_width_height)
         val textSize = newRatio * counterBoxWidth
         counter_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
         counter_text.setTypeface(null, Typeface.BOLD)

@@ -24,8 +24,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         super.onCreate(savedInstanceState)
 
         val context = requireContext()
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this) {
-            _, key ->
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this) { _, key ->
             if (key == getPreferenceKey(R.string.pref_key_telemetry)) {
                 if (context.settings().isTelemetryEnabled) {
                     context.components.analytics.metrics.start(MetricServiceType.Data)
@@ -63,7 +62,10 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isMarketingTelemetryEnabled
 
             val appName = context.getString(R.string.app_name)
-            summary = context.getString(R.string.preferences_marketing_data_description, appName)
+            summary = String.format(
+                context.getString(R.string.preferences_marketing_data_description),
+                appName
+            )
 
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }

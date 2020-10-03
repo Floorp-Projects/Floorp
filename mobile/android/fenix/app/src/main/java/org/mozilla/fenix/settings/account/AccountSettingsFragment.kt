@@ -403,8 +403,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     )
                 }
             }
-            is LastSyncTime.Success -> getString(
-                R.string.sync_last_synced_summary,
+            is LastSyncTime.Success -> String.format(
+                getString(R.string.sync_last_synced_summary),
                 DateUtils.getRelativeTimeSpanString(state.lastSyncedDate.lastSync)
             )
         }

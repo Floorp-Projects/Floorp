@@ -7,8 +7,6 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
-import androidx.core.content.res.TypedArrayUtils
-import androidx.core.content.withStyledAttributes
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 
@@ -32,29 +30,6 @@ class RadioButtonInfoPreference @JvmOverloads constructor(
 
     init {
         layoutResource = R.layout.preference_widget_radiobutton_with_info
-
-        context.withStyledAttributes(
-            attrs,
-            androidx.preference.R.styleable.Preference,
-            TypedArrayUtils.getAttr(
-                context,
-                androidx.preference.R.attr.preferenceStyle,
-                android.R.attr.preferenceStyle
-            ),
-            0
-        ) {
-            val defaultValue = when {
-                hasValue(androidx.preference.R.styleable.Preference_defaultValue) ->
-                    getBoolean(androidx.preference.R.styleable.Preference_defaultValue, false)
-                hasValue(androidx.preference.R.styleable.Preference_android_defaultValue) ->
-                    getBoolean(
-                        androidx.preference.R.styleable.Preference_android_defaultValue,
-                        false
-                    )
-                else -> false
-            }
-            setDefaultValue(defaultValue)
-        }
     }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {

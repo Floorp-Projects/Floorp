@@ -3,9 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="100dp"
     android:layout_height="50dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/rounded_search_widget_background"
     android:orientation="horizontal">
 
@@ -13,13 +13,15 @@
         android:id="@+id/button_search_widget_new_tab_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:contentDescription="@string/search_widget_content_description"
         android:scaleType="centerInside" />
 
     <ImageView
         android:id="@+id/button_search_widget_voice"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:contentDescription="@string/search_widget_voice"
         android:padding="10dp"
-        app:srcCompat="@drawable/ic_microphone_widget"
-        android:scaleType="centerInside" />
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_microphone_widget" />
 </LinearLayout>

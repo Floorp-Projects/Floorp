@@ -23,6 +23,7 @@
 
     <Button
         android:id="@+id/fxa_sign_in_button"
+        style="@style/NeutralButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -37,5 +38,4 @@
         android:textSize="14sp"
         android:textStyle="bold"
         app:backgroundTint="@color/onboarding_card_button_background_dark" />
-
 </LinearLayout>

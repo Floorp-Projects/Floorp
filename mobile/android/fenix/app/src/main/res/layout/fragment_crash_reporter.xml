@@ -55,6 +55,7 @@
         app:layout_constraintWidth_percent="0.9" />
 
     <Button
+        style="@style/PositiveButton"
         android:id="@+id/restoreTabButton"
         android:layout_width="0dp"
         android:layout_height="48dp"
@@ -66,7 +67,6 @@
         android:fontFamily="Sharp Sans"
         android:text="@string/tab_crash_restore"
         android:textAllCaps="false"
-        android:textColor="?contrastText"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -74,6 +74,7 @@
         app:layout_constraintWidth_percent="0.4" />
 
     <Button
+        style="@style/NeutralButton"
         android:id="@+id/closeTabButton"
         android:layout_width="0dp"
         android:layout_height="48dp"

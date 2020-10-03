@@ -13,6 +13,7 @@
 
     <ImageView
         android:id="@android:id/icon"
+        android:importantForAccessibility="no"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center"

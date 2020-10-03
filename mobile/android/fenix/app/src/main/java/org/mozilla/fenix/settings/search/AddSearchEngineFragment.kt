@@ -155,8 +155,9 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
             .map { it.toLowerCase(Locale.ROOT) }
 
         if (existingIdentifiers.contains(name.toLowerCase(Locale.ROOT))) {
-            custom_search_engine_name_field.error = resources
-                .getString(R.string.search_add_custom_engine_error_existing_name, name)
+            custom_search_engine_name_field.error = String.format(
+                resources.getString(R.string.search_add_custom_engine_error_existing_name), name
+            )
             hasError = true
         }
 

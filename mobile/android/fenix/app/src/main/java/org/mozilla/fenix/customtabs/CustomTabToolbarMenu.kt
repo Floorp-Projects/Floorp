@@ -25,6 +25,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getStringWithArgSafe
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
+import java.util.Locale
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the custom tab browser fragment.
@@ -121,7 +122,11 @@ class CustomTabToolbarMenu(
             BrowserMenuDivider(),
             menuToolbar
         )
-        if (shouldReverseItems) { menuItems.reversed() } else { menuItems }
+        if (shouldReverseItems) {
+            menuItems.reversed()
+        } else {
+            menuItems
+        }
     }
 
     private val desktopMode = BrowserMenuImageSwitch(
@@ -161,7 +166,8 @@ class CustomTabToolbarMenu(
     }
 
     private val poweredBy = BrowserMenuCategory(
-        label = context.getStringWithArgSafe(R.string.browser_menu_powered_by, appName).toUpperCase(),
+        label = context.getStringWithArgSafe(R.string.browser_menu_powered_by, appName)
+            .toUpperCase(Locale.getDefault()),
         textSize = CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor(),
         textStyle = Typeface.NORMAL

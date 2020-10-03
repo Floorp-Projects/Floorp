@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_tab_collection"
-            android:tint="@null"
+            app:tint="@null"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

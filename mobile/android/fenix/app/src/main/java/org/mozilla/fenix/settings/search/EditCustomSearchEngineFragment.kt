@@ -85,6 +85,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         }
     }
 
+    @Suppress("LongMethod")
     private fun saveCustomEngine() {
         custom_search_engine_name_field.error = ""
         custom_search_engine_search_string_field.error = ""
@@ -108,24 +109,30 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         val nameHasChanged = name != args.searchEngineIdentifier
 
         if (existingIdentifiers.contains(name.toLowerCase(Locale.ROOT)) && nameHasChanged) {
-            custom_search_engine_name_field.error = resources
-                .getString(R.string.search_add_custom_engine_error_existing_name, name)
+            custom_search_engine_name_field.error = String.format(
+                resources
+                    .getString(R.string.search_add_custom_engine_error_existing_name), name
+            )
             hasError = true
         }
 
         if (searchString.isEmpty()) {
             custom_search_engine_search_string_field
-                .error = resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
+                .error =
+                resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
             hasError = true
         }
 
         if (!searchString.contains("%s")) {
             custom_search_engine_search_string_field
-                .error = resources.getString(R.string.search_add_custom_engine_error_missing_template)
+                .error =
+                resources.getString(R.string.search_add_custom_engine_error_missing_template)
             hasError = true
         }
 
-        if (hasError) { return }
+        if (hasError) {
+            return
+        }
 
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             val result = withContext(IO) {
@@ -165,9 +172,5 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                 }
             }
         }
-    }
-
-    companion object {
-        private const val DPS_TO_INCREASE = 20
     }
 }

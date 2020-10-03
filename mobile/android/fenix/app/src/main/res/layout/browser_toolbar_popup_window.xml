@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -14,6 +15,7 @@
 
     <Button
         android:id="@+id/copy"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
@@ -26,6 +28,7 @@
 
     <Button
         android:id="@+id/paste"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
@@ -38,6 +41,7 @@
 
     <Button
         android:id="@+id/paste_and_go"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="?selectableItemBackground"
