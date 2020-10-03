@@ -303,9 +303,6 @@ class MediaCache {
       LOG("~MediaCache(Global file-backed MediaCache)");
       // This is the file-backed MediaCache, reset the global pointer.
       gMediaCache = nullptr;
-      LOG("MediaCache::~MediaCache(this=%p) "
-          "MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
-          this, unsigned(mBlockOwnersWatermark));
     } else {
       LOG("~MediaCache(Memory-backed MediaCache %p)", this);
     }
@@ -450,8 +447,6 @@ class MediaCache {
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
-  // Keep track for highest number of blocks owners, for telemetry purposes.
-  uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
   RefPtr<MediaBlockCacheBase> mBlockCache;
   // The list of free blocks; they are not ordered.
@@ -1116,8 +1111,6 @@ void MediaCache::AddBlockOwnerAsReadahead(AutoLock& aLock, int32_t aBlockIndex,
     mFreeBlocks.RemoveBlock(aBlockIndex);
   }
   BlockOwner* bo = block->mOwners.AppendElement();
-  mBlockOwnersWatermark =
-      std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
   bo->mStream = aStream;
   bo->mStreamBlock = aStreamBlockIndex;
   aStream->mBlocks[aStreamBlockIndex] = aBlockIndex;
@@ -1707,8 +1700,6 @@ void MediaCache::AllocateAndWriteBlock(AutoLock& aLock,
         block->mOwners.Clear();
         return;
       }
-      mBlockOwnersWatermark =
-          std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
       bo->mStream = stream;
     }
 
