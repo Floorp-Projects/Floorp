@@ -963,7 +963,7 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
 
     let mut output_table =
         Vec::with_capacity((num_output_table_entries * out_chan as u16) as usize);
-    for i in 0..num_output_table_entries * out_chan as u16 {
+    for i in 0..num_output_table_entries as i32 * out_chan as i32 {
         if type_0 == LUT8_TYPE {
             output_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
