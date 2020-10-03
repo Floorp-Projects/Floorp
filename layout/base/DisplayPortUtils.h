@@ -51,8 +51,7 @@ class DisplayPortUtils {
    */
   static bool GetDisplayPort(
       nsIContent* aContent, nsRect* aResult,
-      DisplayportRelativeTo aRelativeTo = DisplayportRelativeTo::ScrollPort,
-      bool* aOutPainted = nullptr);
+      DisplayportRelativeTo aRelativeTo = DisplayportRelativeTo::ScrollPort);
 
   /**
    * Check whether the given element has a displayport.
@@ -148,8 +147,7 @@ class DisplayPortUtils {
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult,
-                                     bool* aOutPainted = nullptr);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
 
   /**
    * Check whether the given element has a critical display port.
@@ -161,8 +159,7 @@ class DisplayPortUtils {
    * GetCriticalDisplayPort. Otherwise, delegates to GetDisplayPort.
    */
   static bool GetHighResolutionDisplayPort(nsIContent* aContent,
-                                           nsRect* aResult,
-                                           bool* aOutPainted = nullptr);
+                                           nsRect* aResult);
 
   /**
    * Remove the displayport for the given element.
