@@ -11,11 +11,13 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
+#include "nsIScrollableFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
 #include "nsCanvasFrame.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
 
 /**
@@ -1031,7 +1033,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
     nsIScrollableFrame* sf = do_QueryFrame(currentFrame);
     nsIContent* content = sf ? currentFrame->GetContent() : nullptr;
 
-    if (content && nsLayoutUtils::GetDisplayPort(content, &displayPort)) {
+    if (content && DisplayPortUtils::GetDisplayPort(content, &displayPort)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
 
       // Get overflow relative to the scrollport (from the scrollframe)
@@ -1412,8 +1414,8 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
   // We set the override dirty regions during ComputeRebuildRegion or in
-  // nsLayoutUtils::InvalidateForDisplayPortChange. The display port change also
-  // marks the frame modified, so those regions are cleared here as well.
+  // DisplayPortUtils::InvalidateForDisplayPortChange. The display port change
+  // also marks the frame modified, so those regions are cleared here as well.
   AutoClearFramePropsArray modifiedFrames(64);
   AutoClearFramePropsArray framesWithProps;
   GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(),

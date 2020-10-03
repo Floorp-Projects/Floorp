@@ -17,6 +17,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/ToString.h"
@@ -255,7 +256,7 @@ static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
     return;
   }
 
-  bool hadDisplayPort = nsLayoutUtils::HasDisplayPort(aContent);
+  bool hadDisplayPort = DisplayPortUtils::HasDisplayPort(aContent);
   if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
     if (!hadDisplayPort) {
       mozilla::layers::ScrollableLayerGuid::ViewID viewID =
@@ -267,16 +268,16 @@ static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
            ToString(aDisplayPortMargins).c_str(), viewID));
     }
   }
-  nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell,
-                                       aDisplayPortMargins, 0);
+  DisplayPortUtils::SetDisplayPortMargins(aContent, aPresShell,
+                                          aDisplayPortMargins, 0);
   if (!hadDisplayPort) {
-    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+    DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         aContent->GetPrimaryFrame());
   }
 
   nsRect base(0, 0, aDisplayPortBase.width * AppUnitsPerCSSPixel(),
               aDisplayPortBase.height * AppUnitsPerCSSPixel());
-  nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
+  DisplayPortUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 
 static void SetPaintRequestTime(nsIContent* aContent,
@@ -431,12 +432,12 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
     MOZ_LOG(
         sDisplayportLog, LogLevel::Debug,
         ("Initializing root displayport on scrollId=%" PRIu64 "\n", viewId));
-    nsLayoutUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
+    DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
     // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
-    nsLayoutUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(),
-                                         0);
-    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+    DisplayPortUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(),
+                                            0);
+    DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         content->GetPrimaryFrame());
   }
 }
@@ -609,11 +610,11 @@ static bool PrepareForSetTargetAPZCNotification(
   if (!guidIsValid) {
     return false;
   }
-  if (nsLayoutUtils::HasDisplayPort(dpElement)) {
+  if (DisplayPortUtils::HasDisplayPort(dpElement)) {
     // If the element has a displayport but it hasn't been painted yet,
     // we want the caller to wait for the paint to happen, but we don't
     // need to set the displayport here since it's already been set.
-    return !nsLayoutUtils::HasPaintedDisplayPort(dpElement);
+    return !DisplayPortUtils::HasPaintedDisplayPort(dpElement);
   }
 
   if (!scrollAncestor) {
@@ -631,14 +632,14 @@ static bool PrepareForSetTargetAPZCNotification(
   MOZ_LOG(sDisplayportLog, LogLevel::Debug,
           ("Activating displayport on scrollId=%" PRIu64 " for SetTargetAPZC\n",
            guid.mScrollId));
-  bool activated = nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-      scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
+  bool activated = DisplayPortUtils::CalculateAndSetDisplayPortMargins(
+      scrollAncestor, DisplayPortUtils::RepaintMode::Repaint);
   if (!activated) {
     return false;
   }
 
   nsIFrame* frame = do_QueryFrame(scrollAncestor);
-  nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
+  DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
 
   return true;
 }

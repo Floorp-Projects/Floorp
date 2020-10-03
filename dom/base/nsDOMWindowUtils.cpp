@@ -120,6 +120,7 @@
 #include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ViewportUtils.h"
 
@@ -476,8 +477,8 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
       new DisplayPortPropertyData(displayport, aPriority, wasPainted),
       nsINode::DeleteProperty<DisplayPortPropertyData>);
 
-  nsLayoutUtils::InvalidateForDisplayPortChange(aElement, hadDisplayPort,
-                                                oldDisplayPort, displayport);
+  DisplayPortUtils::InvalidateForDisplayPortChange(aElement, hadDisplayPort,
+                                                   oldDisplayPort, displayport);
 
   nsIFrame* rootFrame = presShell->GetRootFrame();
   if (rootFrame) {
@@ -527,8 +528,8 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(
   ScreenMargin displayportMargins(aTopMargin, aRightMargin, aBottomMargin,
                                   aLeftMargin);
 
-  nsLayoutUtils::SetDisplayPortMargins(aElement, presShell, displayportMargins,
-                                       aPriority);
+  DisplayPortUtils::SetDisplayPortMargins(aElement, presShell,
+                                          displayportMargins, aPriority);
 
   return NS_OK;
 }
@@ -550,7 +551,8 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX, int32_t aY,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsLayoutUtils::SetDisplayPortBase(aElement, nsRect(aX, aY, aWidth, aHeight));
+  DisplayPortUtils::SetDisplayPortBase(aElement,
+                                       nsRect(aX, aY, aWidth, aHeight));
 
   return NS_OK;
 }
