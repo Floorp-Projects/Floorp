@@ -43,26 +43,32 @@ function checkUnlockedPref(prefName, prefValue) {
 
 // Checks that a page was blocked by seeing if it was replaced with about:neterror
 async function checkBlockedPage(url, expectedBlocked) {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
+  let newTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = newTab;
+
+  if (expectedBlocked) {
+    let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+    BrowserTestUtils.loadURI(gBrowser, url);
+    await promise;
+    is(
+      newTab.linkedBrowser.documentURI.spec.startsWith(
+        "about:neterror?e=blockedByPolicy"
+      ),
+      true,
+      "Should be blocked by policy"
+    );
+  } else {
+    let promise = BrowserTestUtils.browserLoaded(gBrowser);
+    BrowserTestUtils.loadURI(gBrowser, url);
+    await promise;
+
+    is(
+      newTab.linkedBrowser.documentURI.spec,
       url,
-      waitForLoad: false,
-      waitForStateStop: true,
-    },
-    async function() {
-      await BrowserTestUtils.waitForCondition(async function() {
-        let blocked = await SpecialPowers.spawn(
-          gBrowser.selectedBrowser,
-          [],
-          async function() {
-            return content.document.documentURI.startsWith("about:neterror");
-          }
-        );
-        return blocked == expectedBlocked;
-      }, `Page ${url} block was correct (expected=${expectedBlocked}).`);
-    }
-  );
+      "Should not be blocked by policy"
+    );
+  }
+  BrowserTestUtils.removeTab(newTab);
 }
 
 async function check_homepage({
