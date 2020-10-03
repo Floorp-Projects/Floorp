@@ -867,15 +867,15 @@ static bool IntlNotEnabled(JSContext* cx) {
   return false;
 }
 
-bool js::AddMozDateTimeFormatConstructor(JSContext* cx, JS::HandleObject intl) {
+bool JS::AddMozDateTimeFormatConstructor(JSContext* cx, JS::HandleObject intl) {
   return IntlNotEnabled(cx);
 }
 
-bool js::AddMozDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
+bool JS::AddMozDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
   return IntlNotEnabled(cx);
 }
 
-bool js::AddDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
+bool JS::AddDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
   return IntlNotEnabled(cx);
 }
 
