@@ -27,7 +27,11 @@ jobs:
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
-      when: []  # disable for hgmo issues (bug 1668605)
+      when:
+          by-project:
+              # Match buildbot starts for now
+              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              # No default
 
     - name: nightly-desktop-linux
       job:
