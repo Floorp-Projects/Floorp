@@ -11,9 +11,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 
-import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -168,7 +166,6 @@ public final class GeckoRuntime implements Parcelable {
     private Delegate mDelegate;
     private ServiceWorkerDelegate mServiceWorkerDelegate;
     private WebNotificationDelegate mNotificationDelegate;
-    private ActivityDelegate mActivityDelegate;
     private StorageController mStorageController;
     private final WebExtensionController mWebExtensionController;
     private WebPushController mPushController;
@@ -190,7 +187,7 @@ public final class GeckoRuntime implements Parcelable {
 
     @WrapForJNI
     @UiThread
-    /* package */ @Nullable static GeckoRuntime getInstance() {
+    private @Nullable static GeckoRuntime getInstance() {
         return sRuntime;
     }
 
@@ -648,86 +645,6 @@ public final class GeckoRuntime implements Parcelable {
                 mNotificationDelegate.onCloseNotification(notification);
             }
         });
-    }
-
-    /**
-     * This is used to allow GeckoRuntime to start activities via the embedding
-     * application (and {@link android.app.Activity}). Currently this is used to invoke the
-     * Google Play FIDO Activity in order to integrate with the Web Authentication API.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API">Web Authentication API</a>
-     */
-    public interface ActivityDelegate {
-        /**
-         * Sometimes GeckoView needs the application to perform a
-         * {@link android.app.Activity#startActivityForResult(Intent, int)}
-         * on its behalf. Implementations of this method should call that based on the information
-         * in the passed {@link PendingIntent}, collect the result, and resolve the returned
-         * {@link GeckoResult} with that data. If the
-         * Activity does not return {@link android.app.Activity#RESULT_OK}, the {@link GeckoResult}
-         * must be completed with an exception of your choosing.
-         *
-         * @param intent The {@link PendingIntent} to launch
-         * @return A {@link GeckoResult} that is eventually resolved with the Activity result.
-         */
-        @UiThread
-        @Nullable GeckoResult<Intent> onStartActivityForResult(@NonNull PendingIntent intent);
-    }
-
-    /**
-     * Set the {@link ActivityDelegate} instance on this runtime.
-     * This delegate is used to provide GeckoView support for launching external
-     * activities and receiving results from those activities.
-     *
-     * @param delegate The {@link ActivityDelegate} handling intent launching requests.
-     */
-    @UiThread
-    public void setActivityDelegate(
-            final @Nullable ActivityDelegate delegate) {
-        ThreadUtils.assertOnUiThread();
-        mActivityDelegate = delegate;
-    }
-
-    /**
-     * Get the {@link ActivityDelegate} instance set on this runtime, if any,
-     *
-     * @return The {@link ActivityDelegate} set on this runtime.
-     */
-    @UiThread
-    public @Nullable ActivityDelegate getActivityDelegate() {
-        ThreadUtils.assertOnUiThread();
-        return mActivityDelegate;
-    }
-
-    @AnyThread
-    /* package */ GeckoResult<Intent> startActivityForResult(final @NonNull PendingIntent intent) {
-        if (!ThreadUtils.isOnUiThread()) {
-            // Delegates expect to be called on the UI thread.
-            final GeckoResult<Intent> result = new GeckoResult<>();
-
-            ThreadUtils.runOnUiThread(() -> {
-                final GeckoResult<Intent> delegateResult = startActivityForResult(intent);
-                if (delegateResult != null) {
-                    delegateResult.accept(val -> result.complete(val), e -> result.completeExceptionally(e));
-                } else {
-                    result.completeExceptionally(new IllegalStateException("No result"));
-                }
-            });
-
-            return result;
-        }
-
-        if (mActivityDelegate == null) {
-            return GeckoResult.fromException(new IllegalStateException("No delegate attached"));
-        }
-
-        @SuppressLint("WrongThread")
-        GeckoResult<Intent> result = mActivityDelegate.onStartActivityForResult(intent);
-        if (result == null) {
-            result = GeckoResult.fromException(new IllegalStateException("No result"));
-        }
-
-        return result;
     }
 
     @AnyThread

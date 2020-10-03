@@ -26,14 +26,10 @@ exclude: true
 - Added [`ContentBlocking.SafeBrowsingProvider`][83.3] to configure Safe
   Browsing providers.
   ([bug 1660241]({{bugzilla}}1660241))
-- Added [`GeckoRuntime.ActivityDelegate`][83.4] which allows applications to handle
-  starting external Activities on behalf of GeckoView. Currently this is used to integrate
-  FIDO support for WebAuthn.
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 [83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
 [83.3]: {{javadoc_uri}}/ContentBlocking.SafeBrowsingProvider.html
-[83.4]: {{javadoc_uri}}/GeckoRuntime.ActivityDelegate.html
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -823,4 +819,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d3186b70503f71a6476c765f76c6d49f9a1fb282
+[api-version]: 2a562a8a5620ba5db90a9e7f59f6396eaeb4356f
