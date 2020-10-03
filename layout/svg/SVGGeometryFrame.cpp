@@ -744,27 +744,50 @@ void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                                     const gfxMatrix& aTransform,
                                     imgDrawingParams& aImgParams) {
   auto* element = static_cast<SVGGeometryElement*>(GetContent());
-
-  if (element->IsMarkable()) {
-    SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
-    if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
-      nsTArray<SVGMark> marks;
-      element->GetMarkPoints(&marks);
-      if (uint32_t num = marks.Length()) {
-        SVGContextPaint* contextPaint =
-            SVGContextPaint::GetContextPaint(GetContent());
-        float strokeWidth = SVGUtils::GetStrokeWidth(this, contextPaint);
-        for (uint32_t i = 0; i < num; i++) {
-          const SVGMark& mark = marks[i];
-          SVGMarkerFrame* frame = markerFrames[mark.type];
-          if (frame) {
-            frame->PaintMark(aContext, aTransform, this, mark, strokeWidth,
-                             aImgParams);
-          }
-        }
-      }
+  if (!element->IsMarkable()) {
+    return;
+  }
+  SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
+  if (!SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
+    return;
+  }
+  nsTArray<SVGMark> marks;
+  element->GetMarkPoints(&marks);
+  if (marks.IsEmpty()) {
+    return;
+  }
+  float strokeWidth = GetStrokeWidthForMarkers();
+  for (const SVGMark& mark : marks) {
+    if (auto* frame = markerFrames[mark.type]) {
+      frame->PaintMark(aContext, aTransform, this, mark, strokeWidth,
+                       aImgParams);
     }
   }
+}
+
+float SVGGeometryFrame::GetStrokeWidthForMarkers() {
+  float strokeWidth = SVGUtils::GetStrokeWidth(
+      this, SVGContextPaint::GetContextPaint(GetContent()));
+  gfxMatrix userToOuterSVG;
+  if (SVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
+    // We're not interested in any translation here so we can treat this as
+    // Singular Value Decomposition (SVD) of a 2 x 2 matrix. That would give us
+    // sx and sy values as the X and Y scales. The value we want is the XY
+    // scale i.e. the normalised hypotenuse, which is sqrt(sx^2 + sy^2) /
+    // sqrt(2). If we use the formulae from
+    // https://scicomp.stackexchange.com/a/14103, we discover that the
+    // normalised hypotenuse is simply the square root of the sum of the squares
+    // of all the 2D matrix elements divided by sqrt(2).
+    //
+    // Note that this may need adjusting to support 3D transforms properly.
+
+    strokeWidth /= float(sqrt(userToOuterSVG._11 * userToOuterSVG._11 +
+                              userToOuterSVG._12 * userToOuterSVG._12 +
+                              userToOuterSVG._21 * userToOuterSVG._21 +
+                              userToOuterSVG._22 * userToOuterSVG._22) /
+                         M_SQRT2);
+  }
+  return strokeWidth;
 }
 
 uint16_t SVGGeometryFrame::GetHitTestFlags() {
