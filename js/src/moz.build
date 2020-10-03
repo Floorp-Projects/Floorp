@@ -224,6 +224,7 @@ EXPORTS.js += [
 # We expose them as-is, buyer beware.
 EXPORTS.js.experimental += [
     '../public/experimental/CodeCoverage.h',
+    '../public/experimental/Intl.h',
     '../public/experimental/JitInfo.h',
     '../public/experimental/SourceHook.h',
     '../public/experimental/TypedData.h',
