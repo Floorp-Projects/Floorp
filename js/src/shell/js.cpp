@@ -1320,11 +1320,11 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!js::AddMozDateTimeFormatConstructor(cx, intl)) {
+  if (!JS::AddMozDateTimeFormatConstructor(cx, intl)) {
     return false;
   }
 
-  if (!js::AddMozDisplayNamesConstructor(cx, intl)) {
+  if (!JS::AddMozDisplayNamesConstructor(cx, intl)) {
     return false;
   }
 

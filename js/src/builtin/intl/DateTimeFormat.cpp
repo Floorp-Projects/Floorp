@@ -209,7 +209,7 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::AddMozDateTimeFormatConstructor(JSContext* cx,
+bool JS::AddMozDateTimeFormatConstructor(JSContext* cx,
                                          JS::Handle<JSObject*> intl) {
   RootedObject ctor(
       cx, GlobalObject::createConstructor(cx, MozDateTimeFormat,
