@@ -174,9 +174,9 @@ class MediaCache {
   void CloseStreamsForPrivateBrowsing();
 
   // Cache-file access methods. These are the lowest-level cache methods.
-  // mReentrantMonitor must be held; these can be called on any thread.
+  // mMonitor must be held; these can be called on any thread.
   // This can return partial reads.
-  // Note mReentrantMonitor will be dropped while doing IO. The caller need
+  // Note mMonitor will be dropped while doing IO. The caller need
   // to handle changes happening when the monitor is not held.
   nsresult ReadCacheFile(AutoLock&, int64_t aOffset, void* aData,
                          int32_t aLength, int32_t* aBytes);
@@ -184,7 +184,7 @@ class MediaCache {
   // The generated IDs are always positive.
   int64_t AllocateResourceID(AutoLock&) { return ++mNextResourceID; }
 
-  // mReentrantMonitor must be held, called on main thread.
+  // mMonitor must be held, called on main thread.
   // These methods are used by the stream to set up and tear down streams,
   // and to handle reads and writes.
   // Add aStream to the list of streams.
@@ -199,7 +199,7 @@ class MediaCache {
       MediaCacheStream::ReadMode aMode, Span<const uint8_t> aData1,
       Span<const uint8_t> aData2 = Span<const uint8_t>());
 
-  // mReentrantMonitor must be held; can be called on any thread
+  // mMonitor must be held; can be called on any thread
   // Notify the cache that a seek has been requested. Some blocks may
   // need to change their class between PLAYED_BLOCK and READAHEAD_BLOCK.
   // This does not trigger channel seeks directly, the next Update()
