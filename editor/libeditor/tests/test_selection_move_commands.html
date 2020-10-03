@@ -200,7 +200,7 @@ async function testRunner() {
   is(body.getBoundingClientRect().height, 400,
      "Body height should be what we set it to");
 
-  await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(resolve, win); }); }); });
+  await waitToClearOutAnyPotentialScrolls(win);
 
   let curTest = runTests();
   while (true) {
@@ -208,8 +208,10 @@ async function testRunner() {
     if ((await curTest.next()).done) {
       break;
     }
+    // wait for the scroll
     await promise;
-    await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(() => { win.requestAnimationFrame(() => { win.requestAnimationFrame(resolve); } ); }, win); }); }); });
+    // clear out any other pending scrolls
+    await waitToClearOutAnyPotentialScrolls(win);
   }
 }
 

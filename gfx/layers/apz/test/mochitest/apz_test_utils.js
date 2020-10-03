@@ -1163,3 +1163,17 @@ function assertNotCheckerboarded(utils, scrollerId, msgPrefix) {
   ok(found, `${msgPrefix}: Found the scroller in the APZ data`);
   utils.restoreNormalRefresh();
 }
+
+function waitToClearOutAnyPotentialScrolls(aWindow) {
+  return new Promise(resolve => {
+    aWindow.requestAnimationFrame(() => {
+      aWindow.requestAnimationFrame(() => {
+        flushApzRepaints(() => {
+          aWindow.requestAnimationFrame(() => {
+            aWindow.requestAnimationFrame(resolve);
+          });
+        }, aWindow);
+      });
+    });
+  });
+}
