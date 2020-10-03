@@ -109,7 +109,6 @@
 #include "js/ErrorReport.h"                // JS::PrintError
 #include "js/Exception.h"                  // JS::StealPendingExceptionStack
 #include "js/experimental/CodeCoverage.h"  // js::EnableCodeCoverage
-#include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
@@ -1321,11 +1320,11 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!JS::AddMozDateTimeFormatConstructor(cx, intl)) {
+  if (!js::AddMozDateTimeFormatConstructor(cx, intl)) {
     return false;
   }
 
-  if (!JS::AddMozDisplayNamesConstructor(cx, intl)) {
+  if (!js::AddMozDisplayNamesConstructor(cx, intl)) {
     return false;
   }
 

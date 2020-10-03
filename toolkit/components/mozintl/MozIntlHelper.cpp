@@ -5,7 +5,6 @@
 
 #include "MozIntlHelper.h"
 #include "jsapi.h"
-#include "js/experimental/Intl.h"  // JS::AddMozDateTimeFormatConstructor
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 
@@ -73,7 +72,7 @@ MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val,
 
   JSAutoRealm ar(cx, realIntlObj);
 
-  if (!JS::AddMozDateTimeFormatConstructor(cx, realIntlObj)) {
+  if (!js::AddMozDateTimeFormatConstructor(cx, realIntlObj)) {
     return NS_ERROR_FAILURE;
   }
 

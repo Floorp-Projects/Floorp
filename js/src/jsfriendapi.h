@@ -852,6 +852,37 @@ extern JS_FRIEND_API bool ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 extern JS_FRIEND_API JSObject* ConvertArgsToArray(JSContext* cx,
                                                   const JS::CallArgs& args);
 
+// Create and add the Intl.MozDateTimeFormat constructor function to the
+// provided object.
+// If JS was built without JS_HAS_INTL_API, this function will throw an
+// exception.
+//
+// This custom date/time formatter constructor gives users the ability
+// to specify a custom format pattern. This pattern is passed *directly*
+// to ICU with NO SYNTAX PARSING OR VALIDATION WHATSOEVER. ICU appears to
+// have a a modicum of testing of this, and it won't fall over completely
+// if passed bad input. But the current behavior is entirely under-specified
+// and emphatically not shippable on the web, and it *must* be fixed before
+// this functionality can be exposed in the real world. (There are also some
+// questions about whether the format exposed here is the *right* one to
+// standardize, that will also need to be resolved to ship this.)
+extern bool AddMozDateTimeFormatConstructor(JSContext* cx,
+                                            JS::Handle<JSObject*> intl);
+
+// Create and add the Intl.MozDisplayNames constructor function to the
+// provided object.
+// If JS was built without JS_HAS_INTL_API, this function will throw an
+// exception.
+extern bool AddMozDisplayNamesConstructor(JSContext* cx,
+                                          JS::Handle<JSObject*> intl);
+
+// Create and add the Intl.DisplayNames constructor function to the provided
+// object.
+// If JS was built without JS_HAS_INTL_API, this function will throw an
+// exception.
+extern bool AddDisplayNamesConstructor(JSContext* cx,
+                                       JS::Handle<JSObject*> intl);
+
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
  public:
   explicit AutoAssertNoContentJS(JSContext* cx);
