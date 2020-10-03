@@ -43,6 +43,35 @@ struct DisplayPortMarginsPropertyData {
 // For GetDisplayPort
 enum class DisplayportRelativeTo { ScrollPort, ScrollFrame };
 
+enum class MaxSizeExceededBehaviour {
+  // Ask GetDisplayPort to assert if the calculated displayport exceeds
+  // the maximum allowed size.
+  Assert,
+  // Ask GetDisplayPort to pretend like there's no displayport at all, if
+  // the calculated displayport exceeds the maximum allowed size.
+  Drop,
+};
+
+struct DisplayPortOptions {
+  // The default options.
+  DisplayportRelativeTo mRelativeTo = DisplayportRelativeTo::ScrollPort;
+  MaxSizeExceededBehaviour mMaxSizeExceededBehaviour =
+      MaxSizeExceededBehaviour::Assert;
+
+  // Fluent interface for changing the defaults.
+  DisplayPortOptions With(DisplayportRelativeTo aRelativeTo) const {
+    DisplayPortOptions result = *this;
+    result.mRelativeTo = aRelativeTo;
+    return result;
+  }
+  DisplayPortOptions With(
+      MaxSizeExceededBehaviour aMaxSizeExceededBehaviour) const {
+    DisplayPortOptions result = *this;
+    result.mMaxSizeExceededBehaviour = aMaxSizeExceededBehaviour;
+    return result;
+  }
+};
+
 class DisplayPortUtils {
  public:
   /**
@@ -51,7 +80,7 @@ class DisplayPortUtils {
    */
   static bool GetDisplayPort(
       nsIContent* aContent, nsRect* aResult,
-      DisplayportRelativeTo aRelativeTo = DisplayportRelativeTo::ScrollPort);
+      const DisplayPortOptions& aOptions = DisplayPortOptions());
 
   /**
    * Check whether the given element has a displayport.
