@@ -357,18 +357,9 @@ bool DisplayPortUtils::IsMissingDisplayPortBaseRect(nsIContent* aContent) {
   return false;
 }
 
-enum class MaxSizeExceededBehaviour {
-  // Ask GetDisplayPortImpl to assert if the calculated displayport exceeds
-  // the maximum allowed size.
-  Assert,
-  // Ask GetDisplayPortImpl to pretend like there's no displayport at all, if
-  // the calculated displayport exceeds the maximum allowed size.
-  Drop,
-};
-
 static bool GetDisplayPortImpl(
     nsIContent* aContent, nsRect* aResult, float aMultiplier,
-    MaxSizeExceededBehaviour aBehaviour = MaxSizeExceededBehaviour::Assert) {
+    const DisplayPortOptions& aOptions = DisplayPortOptions()) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
 
@@ -414,7 +405,7 @@ static bool GetDisplayPortImpl(
     // exceeds the maximum allowed size
     nscoord maxSize = GetMaxDisplayPortSize(aContent, nullptr);
     if (result.width > maxSize || result.height > maxSize) {
-      switch (aBehaviour) {
+      switch (aOptions.mMaxSizeExceededBehaviour) {
         case MaxSizeExceededBehaviour::Assert:
           NS_ASSERTION(false, "Displayport must be a valid texture size");
           break;
@@ -437,17 +428,14 @@ static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
   }
 }
 
-bool DisplayPortUtils::GetDisplayPort(
-    nsIContent* aContent, nsRect* aResult,
-    DisplayportRelativeTo
-        aRelativeTo /* = DisplayportRelativeTo::ScrollPort */) {
+bool DisplayPortUtils::GetDisplayPort(nsIContent* aContent, nsRect* aResult,
+                                      const DisplayPortOptions& aOptions) {
   float multiplier = StaticPrefs::layers_low_precision_buffer()
                          ? 1.0f / StaticPrefs::layers_low_precision_resolution()
                          : 1.0f;
-  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier,
-                                             MaxSizeExceededBehaviour::Assert);
+  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier);
   if (aResult && usingDisplayPort &&
-      aRelativeTo == DisplayportRelativeTo::ScrollFrame) {
+      aOptions.mRelativeTo == DisplayportRelativeTo::ScrollFrame) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
@@ -494,8 +482,9 @@ bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
   // zoom level is changed by a lot. Instead of using the default behaviour of
   // asserting, we can just ignore the displayport if that happens, as this
   // call site is best-effort.
-  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, 1.0f,
-                                             MaxSizeExceededBehaviour::Drop);
+  bool usingDisplayPort = GetDisplayPortImpl(
+      aContent, aResult, 1.0f,
+      DisplayPortOptions().With(MaxSizeExceededBehaviour::Drop));
   if (usingDisplayPort) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
@@ -688,8 +677,9 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
 bool DisplayPortUtils::GetCriticalDisplayPort(nsIContent* aContent,
                                               nsRect* aResult) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetDisplayPortImpl(aContent, aResult, 1.0f,
-                              MaxSizeExceededBehaviour::Assert);
+    return GetDisplayPortImpl(
+        aContent, aResult, 1.0f,
+        DisplayPortOptions().With(MaxSizeExceededBehaviour::Assert));
   }
   return false;
 }
@@ -703,7 +693,9 @@ bool DisplayPortUtils::GetHighResolutionDisplayPort(nsIContent* aContent,
   if (StaticPrefs::layers_low_precision_buffer()) {
     return GetCriticalDisplayPort(aContent, aResult);
   }
-  return GetDisplayPort(aContent, aResult, DisplayportRelativeTo::ScrollPort);
+  return GetDisplayPort(
+      aContent, aResult,
+      DisplayPortOptions().With(DisplayportRelativeTo::ScrollPort));
 }
 
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {
