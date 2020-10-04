@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 function UpdateSessionStore(
   aBrowser,
+  aBrowsingContext,
   aFlushId,
   aIsFinal,
   aEpoch,
@@ -18,6 +19,7 @@ function UpdateSessionStore(
 ) {
   return SessionStoreFuncInternal.updateSessionStore(
     aBrowser,
+    aBrowsingContext,
     aFlushId,
     aIsFinal,
     aEpoch,
@@ -387,6 +389,7 @@ var SessionStoreFuncInternal = {
 
   updateSessionStore: function SSF_updateSessionStore(
     aBrowser,
+    aBrowsingContext,
     aFlushId,
     aIsFinal,
     aEpoch,
@@ -438,7 +441,7 @@ var SessionStoreFuncInternal = {
       }
     }
 
-    SessionStore.updateSessionStoreFromTablistener(aBrowser, {
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
       data: currentData,
       flushID: aFlushId,
       isFinal: aIsFinal,

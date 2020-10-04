@@ -2883,8 +2883,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   bool ok = ToJSValue(jsapi.cx(), data, &dataVal);
   NS_ENSURE_TRUE(ok, IPC_OK());
 
-  nsresult rv = funcs->UpdateSessionStore(
-      mFrameElement, aFlushId, aIsFinal, aEpoch, dataVal, aNeedCollectSHistory);
+  nsresult rv = funcs->UpdateSessionStore(mFrameElement, mBrowsingContext,
+                                          aFlushId, aIsFinal, aEpoch, dataVal,
+                                          aNeedCollectSHistory);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   return IPC_OK();

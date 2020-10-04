@@ -766,8 +766,8 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
   NS_ENSURE_TRUE(ok, false);
 
   nsresult rv = funcs->UpdateSessionStore(
-      mOwnerContent, aFlushId, aIsFinal, mEpoch, dataVal,
-      mSessionStore->GetAndClearSHistoryChanged());
+      mOwnerContent, mDocShell->GetBrowsingContext(), aFlushId, aIsFinal,
+      mEpoch, dataVal, mSessionStore->GetAndClearSHistoryChanged());
   NS_ENSURE_SUCCESS(rv, false);
   StopTimerForUpdate();
   return true;
