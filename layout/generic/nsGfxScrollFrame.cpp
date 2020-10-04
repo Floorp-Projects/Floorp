@@ -4332,6 +4332,9 @@ void ScrollFrameHelper::NotifyApzTransaction() {
   mApzScrollPos = GetScrollPosition();
   mApzAnimationRequested = IsLastScrollUpdateAnimating();
   mScrollUpdates.Clear();
+  if (mIsRoot) {
+    mOuter->PresShell()->SetResolutionUpdated(false);
+  }
 }
 
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(

@@ -767,6 +767,10 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
 void nsLayoutUtils::NotifyPaintSkipTransaction(ViewID aScrollId) {
   if (nsIScrollableFrame* scrollFrame =
           nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
+#ifdef DEBUG
+    nsIFrame* f = do_QueryFrame(scrollFrame);
+    MOZ_ASSERT(f && f->PresShell() && !f->PresShell()->IsResolutionUpdated());
+#endif
     scrollFrame->NotifyApzTransaction();
   }
 }
@@ -8537,8 +8541,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 
   if (presShell->IsResolutionUpdated()) {
     metadata.SetResolutionUpdated(true);
-    // We only need to tell APZ about the resolution update once.
-    presShell->SetResolutionUpdated(false);
   }
 
   // The cumulative resolution is the resolution at which the scroll frame's
