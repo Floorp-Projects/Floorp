@@ -35,6 +35,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/outOfProcess/browser.ini',
     'content/test/pageActions/browser.ini',
     'content/test/pageinfo/browser.ini',
+    'content/test/pageStyle/browser.ini',
     'content/test/performance/browser.ini',
     'content/test/performance/hidpi/browser.ini',
     'content/test/performance/io/browser.ini',
