@@ -20,20 +20,14 @@ const startupPhases = {
   // to run before we have even selected the user profile.
   "before profile selection": [],
 
-  "before opening first browser window": [
-    {
-      name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: LINUX,
-      maxCount: 1,
-    },
-  ],
+  "before opening first browser window": [],
 
   // We reach this phase right after showing the first browser window.
   // This means that any I/O at this point delayed first paint.
   "before first paint": [
     {
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
-      condition: MAC,
+      condition: MAC || LINUX,
       maxCount: 1,
     },
     {
