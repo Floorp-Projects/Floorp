@@ -152,3 +152,48 @@ add_task(async function trailingSpace_query() {
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
 });
+
+add_task(async function() {
+  info("Test search mode when typing an alias after selecting one-off button");
+
+  info("Open the result popup");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  info("Select one of one-off button");
+  const oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
+  await TestUtils.waitForCondition(
+    () => !oneOffs._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+  ok(oneOffs.selectedButton, "There is a selected one-off button");
+  const selectedEngine = oneOffs.selectedButton.engine;
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: selectedEngine.name,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "oneoff",
+    isPreview: true,
+  });
+
+  info("Type a search engine alias and query");
+  const inputString = "@default query";
+  inputString.split("").forEach(c => EventUtils.synthesizeKey(c));
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(
+    gURLBar.value,
+    inputString,
+    "Alias and query is inputed correctly to the urlbar"
+  );
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: selectedEngine.name,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "oneoff",
+  });
+
+  // When starting typing, as the search mode is promoted from preview,
+  // the one-off selection is removed.
+  ok(!oneOffs.selectedButton, "There is no any selected one-off button");
+});
