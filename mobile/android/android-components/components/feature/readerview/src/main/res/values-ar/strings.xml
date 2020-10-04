@@ -21,6 +21,8 @@
     <string name="mozac_feature_readerview_dark_color_scheme_desc">مخطّط ألوان داكن</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">بني داكن</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">مخطّط ألوان بني داكن</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">فاتح</string>
     <!-- Accessible description for the color option -->

@@ -22,7 +22,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
-        <li>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро эътиборнокии маълумоти гирифташуда наметавонад тасдиқ карда шавад.</li>
+        <li>Браузер саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонад, зеро эътиборнокии маълумоти гирифташуда наметавонад тасдиқ карда шавад.</li>
         <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
       </ul>
     ]]></string>
@@ -30,8 +30,22 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Пайвасти бехатар иҷро нашуд</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Ин метавонад дар танзимоти сервер мушкилӣ дошта бошад ё касе кӯшиш мекунад, ки серверро тақаллуб намояд.</li>
+        <li>Агар шумо қаблан ба ин сервер бо муваффақият пайваст шуда бошед, эҳтимол ин хато муваққатӣ аст ва шумо метавонед баъдтар амалро аз нав кӯшиш намоед.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Иловагӣ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Касе метавонад тақаллуб кардани сомонаро кӯшиш намояд ва шумо бояд идома надиҳед.</label>
+        <br><br>
+        <label>Сомонаҳо айнияти худро тавассути гувоҳиномаҳо исбот мекунанд. %1$s ба <b>%2$s</b> эътимод надорад, зеро барорандаи гувоҳинома номаълум аст, гувоҳинома ба таври худ имзо гузошааст ё сервер гувоҳиномаҳои фосилавии дурустро намефиристад.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Бозгашт (тавсия дода мешавад)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -39,6 +53,15 @@
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Пайвастшавӣ қатъ карда шуд</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Браузер бо муваффақият пайваст шуд, аммо ҳангоми интиқоли иттилоот пайвастшавӣ қатъ карда шуд. Лутфан, аз нав кӯшиш кунед.</p>
+      <ul>
+        <li>Сомона метавонад муваққатан дастнорас бошад ё бо дархостҳои зиёд хеле машғул бошад. Пас аз чанд лаҳза аз нав кӯшиш кунед.</li>
+        <li>Агар шумо ягон саҳифаро бор карда натавонед, пайвасти мобилии дастгоҳ ё пайвасти Wi-Fi -ро санҷед.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Вақти пайвастшавӣ ба анҷом расид</string>
@@ -83,6 +106,15 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Пайвастшавӣ аз нав танзим карда шуд</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Алоқаи шабақа ҳангоми танзими пайвастшавӣ қатъ карда шуд. Лутфан, аз нав кӯшиш кунед.</p>
+      <ul>
+        <li>Сомона метавонад муваққатан дастнорас бошад ё бо дархостҳои зиёд хеле машғул бошад. Пас аз чанд лаҳза аз нав кӯшиш кунед.</li>
+        <li>Агар шумо ягон саҳифаро бор карда натавонед, пайвасти мобилии дастгоҳ ё пайвасти Wi-Fi -ро санҷед.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Навъи файли беэътимод</string>
 
@@ -98,7 +130,7 @@
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
-      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
+      <p>Браузер саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонад, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
       <ul>
         <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
       </ul>
@@ -108,7 +140,7 @@
     <string name="mozac_browser_errorpages_content_crashed_title">Муҳтавои вайрон</string>
 
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
-      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
+      <p>Браузер саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонад, зеро дар интиқоли маълумот хато муайян карда шуд.</p>
       <ul>
         <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
       </ul>
@@ -118,7 +150,7 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Хатои рамзгузории муҳтаво</string>
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
-      <p>Саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонед, зеро он аз шакли фишурдасозии дастгиринашаванда ё беэътибор истифода мебарад.</p>
+      <p>Браузер саҳифаеро, ки шумо дидан мехоҳед, нишон дода наметавонад, зеро он аз шакли фишурдасозии дастгиринашаванда ё беэътибор истифода мебарад.</p>
       <ul>
         <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
       </ul>
@@ -126,6 +158,17 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Нишонӣ ёфт нашуд</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Браузер барои нишонии пешниҳодшуда мизбони серверро ёфт накард.</p>
+      <ul>
+        <li>Нишониро барои хатоҳои зерин санҷед:
+          <strong>ww</strong>.example.com ба ҷойи
+          <strong>www</strong>.example.com.</li>
+        <li>Агар шумо ягон саҳифаро бор карда натавонед, пайвасти мобилии дастгоҳ ё пайвасти Wi-Fi -ро санҷед.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Пайвасти интернет нест</string>

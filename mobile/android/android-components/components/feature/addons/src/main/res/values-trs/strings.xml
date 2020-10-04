@@ -4,6 +4,24 @@
     <string name="mozac_feature_addons_permissions_privacy_description">Gahiā nī nadunā dàj gā riña aché nun huìt</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">Gatū riña nej si datôt guendâ daran\’ nej sîtio</string>
+    <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_one_site_description">Gatū riña nej si datôt guendâ %1$s</string>
+    <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Gatū riña nej si datôt guendâ daran’ nej sitio nū riña %1$s</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Gatū riña nej si datôt riña 1 a’ngô sîtio</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
+     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Gatū riña nej si datôt riña %1$d a’ngô nej sîtio</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Gatū riña nej si datôt riña 1 a’ngô dominio</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Gatū riña nej si datôt riña %1$d a’ngô nej dominio</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Gatū riña nej rakïj ñanj huā \'iaj sa riñā nana\'uî\'t</string>
     <!-- Description for unlimited_storage permission. -->
@@ -102,8 +120,8 @@
     <string name="mozac_feature_addons_install_addon_content_description">Gā\'nïnj sa nūtâ\'t riñaj</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Dūyichin\'</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">Nej sû\' arâj sun: %1$s</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">Nuguan’ huā rayi’ij: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
