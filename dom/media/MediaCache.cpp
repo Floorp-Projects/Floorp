@@ -1511,6 +1511,14 @@ void MediaCache::Update() {
     } else if (!enableReading && !stream->mCacheSuspended) {
       actions[i].mTag = StreamAction::SUSPEND;
     }
+    LOG("Stream %p, mCacheSuspended=%d, enableReading=%d, action=%s", stream,
+        stream->mCacheSuspended, enableReading,
+        actions[i].mTag == StreamAction::SEEK
+            ? "SEEK"
+            : actions[i].mTag == StreamAction::RESUME
+                  ? "RESUME"
+                  : actions[i].mTag == StreamAction::SUSPEND ? "SUSPEND"
+                                                             : "NONE");
   }
 #ifdef DEBUG
   mInUpdate = false;
@@ -1751,7 +1759,10 @@ void MediaCache::AllocateAndWriteBlock(AutoLock& aLock,
 
 void MediaCache::OpenStream(AutoLock& aLock, MediaCacheStream* aStream,
                             bool aIsClone) {
-  LOG("Stream %p opened", aStream);
+  LOG("Stream %p opened, aIsClone=%d, mCacheSuspended=%d, "
+      "mDidNotifyDataEnded=%d",
+      aStream, aIsClone, aStream->mCacheSuspended,
+      aStream->mDidNotifyDataEnded);
   mStreams.AppendElement(aStream);
 
   // A cloned stream should've got the ID from its original.
@@ -2707,6 +2718,8 @@ void MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal) {
 void MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal) {
   MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   AutoLock lock(mMediaCache->Monitor());
+  LOG("MediaCacheStream::InitAsCloneInternal(this=%p, original=%p)", this,
+      aOriginal);
 
   // Download data and notify events if necessary. Note the order is important
   // in order to mimic the behavior of data being downloaded from the channel.
