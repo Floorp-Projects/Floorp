@@ -147,6 +147,7 @@ let multiActionFn = dispatch(multiAction);
 let executeScriptFn = dispatch(executeScript);
 let sendKeysToElementFn = dispatch(sendKeysToElement);
 let reftestWaitFn = dispatch(reftestWait);
+let setBrowsingContextIdFn = dispatch(setBrowsingContextId);
 
 function startListeners() {
   eventDispatcher.enable();
@@ -186,6 +187,7 @@ function startListeners() {
   addMessageListener("Marionette:releaseActions", releaseActionsFn);
   addMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
   addMessageListener("Marionette:Session:Delete", deleteSession);
+  addMessageListener("Marionette:setBrowsingContextId", setBrowsingContextIdFn);
   addMessageListener("Marionette:singleTap", singleTapFn);
   addMessageListener("Marionette:switchToFrame", switchToFrame);
   addMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
@@ -233,6 +235,10 @@ function deregister() {
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
   removeMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
   removeMessageListener("Marionette:Session:Delete", deleteSession);
+  removeMessageListener(
+    "Marionette:setBrowsingContextId",
+    setBrowsingContextIdFn
+  );
   removeMessageListener("Marionette:singleTap", singleTapFn);
   removeMessageListener("Marionette:switchToFrame", switchToFrame);
   removeMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
@@ -721,6 +727,17 @@ function getBrowsingContextId(topContext = false) {
   const bc = curContainer.frame.docShell.browsingContext;
 
   return topContext ? bc.top.id : bc.id;
+}
+
+/**
+ * Set the current browsing context.
+ *
+ * @param {number} browsingContextId
+ *     Id of the current BrowsingContext.
+ */
+function setBrowsingContextId(browsingContextId) {
+  const bc = BrowsingContext.get(browsingContextId);
+  curContainer.frame = bc.window;
 }
 
 /**
