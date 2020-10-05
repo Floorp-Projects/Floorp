@@ -3719,9 +3719,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       script = base->asJSScript();
-      if (!cih.rateMyCacheIR(cx, script)) {
-        return false;
-      }
+      cih.rateMyCacheIR(cx, script);
     }
   } else {
     RootedValue value(cx, args.get(0));
@@ -3736,9 +3734,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (!cih.rateMyCacheIR(cx, script)) {
-      return false;
-    }
+    cih.rateMyCacheIR(cx, script);
   }
 
   args.rval().setUndefined();
