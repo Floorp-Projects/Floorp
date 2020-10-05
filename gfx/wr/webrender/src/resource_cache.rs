@@ -10,7 +10,7 @@ use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageKey, VoidPtrToSizeFn};
 use api::{SharedFontInstanceMap, BaseFontInstance};
 use api::units::*;
-use crate::render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}; 
+use crate::{render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}, util::WeakTable};
 use crate::image_tiling::{compute_tile_size, compute_tile_range};
 #[cfg(feature = "capture")]
 use crate::capture::ExternalCaptureImage;
@@ -399,6 +399,10 @@ struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
     font_instances: SharedFontInstanceMap,
     image_templates: ImageTemplates,
+    // We keep a set of Weak references to the fonts so that we're able to include them in memory
+    // reports even if only the OS is holding on to the Vec<u8>. PtrWeakHashSet will periodically
+    // drop any references that have gone dead.
+    weak_fonts: WeakTable
 }
 
 impl BlobImageResources for Resources {
@@ -474,6 +478,7 @@ impl ResourceCache {
                 font_instances,
                 font_templates: FastHashMap::default(),
                 image_templates: ImageTemplates::default(),
+                weak_fonts: WeakTable::new(),
             },
             cached_glyph_dimensions: FastHashMap::default(),
             texture_cache,
@@ -666,6 +671,9 @@ impl ResourceCache {
     pub fn add_font_template(&mut self, font_key: FontKey, template: FontTemplate) {
         // Push the new font to the font renderer, and also store
         // it locally for glyph metric requests.
+        if let FontTemplate::Raw(ref font, _) = template {
+            self.resources.weak_fonts.insert(Arc::downgrade(font));
+        }
         self.glyph_rasterizer.add_font(font_key, template.clone());
         self.resources.font_templates.insert(font_key, template);
     }
@@ -1434,11 +1442,19 @@ impl ResourceCache {
     pub fn report_memory(&self, op: VoidPtrToSizeFn) -> MemoryReport {
         let mut report = MemoryReport::default();
 
+        let mut seen_fonts = std::collections::HashSet::new();
         // Measure fonts. We only need the templates here, because the instances
         // don't have big buffers.
         for (_, font) in self.resources.font_templates.iter() {
             if let FontTemplate::Raw(ref raw, _) = font {
                 report.fonts += unsafe { op(raw.as_ptr() as *const c_void) };
+                seen_fonts.insert(raw.as_ptr());
+            }
+        }
+
+        for font in self.resources.weak_fonts.iter() {
+            if !seen_fonts.contains(&font.as_ptr()) { 
+                report.weak_fonts += unsafe { op(font.as_ptr() as *const c_void) };
             }
         }
 

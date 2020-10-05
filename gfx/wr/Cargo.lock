@@ -1788,6 +1788,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "weak-table"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "webrender"
 version = "0.61.0"
 dependencies = [
@@ -1827,6 +1832,7 @@ dependencies = [
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracy-rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "weak-table 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender_api 0.61.0",
  "webrender_build 0.0.1",
  "wr_malloc_size_of 0.0.1",
@@ -2253,6 +2259,7 @@ dependencies = [
 "checksum wayland-protocols 0.21.13 (registry+https://github.com/rust-lang/crates.io-index)" = "4afde2ea2a428eee6d7d2c8584fdbe8b82eee8b6c353e129a434cd6e07f42145"
 "checksum wayland-scanner 0.21.13 (registry+https://github.com/rust-lang/crates.io-index)" = "bf3828c568714507315ee425a9529edc4a4aa9901409e373e9e0027e7622b79e"
 "checksum wayland-sys 0.21.13 (registry+https://github.com/rust-lang/crates.io-index)" = "520ab0fd578017a0ee2206623ba9ef4afe5e8f23ca7b42f6acfba2f4e66b1628"
+"checksum weak-table 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9a8f3bf74f2d43500dea6a8291b6ac943e3465ea9936b94bd017e61b7b21dd01"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "8093091eeb260906a183e6ae1abdba2ef5ef2257a21801128899c3fc699229c6"
 "checksum winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2d315eee3b34aca4797b2da6b13ed88266e6d612562a0c46390af8299fc699bc"
