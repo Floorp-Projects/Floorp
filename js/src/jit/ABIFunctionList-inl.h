@@ -115,6 +115,8 @@ namespace jit {
 // List of all ABI function signature which are using a computed function
 // pointer instead of a statically known function pointer.
 #define ABIFUNCTIONSIG_LIST(_)                       \
+  _(AtomicsCompareExchangeFn)                        \
+  _(AtomicsReadWriteModifyFn)                        \
   _(float (*)(float))                                \
   _(JSJitGetterOp)                                   \
   _(JSJitMethodOp)                                   \

@@ -7822,8 +7822,8 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     masm.passABIArg(index);
     masm.passABIArg(expected);
     masm.passABIArg(replacement);
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, AtomicsCompareExchange(elementType)));
+    masm.callWithABI(DynamicFunction<AtomicsCompareExchangeFn>(
+        AtomicsCompareExchange(elementType)));
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
@@ -7873,7 +7873,7 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
     masm.passABIArg(obj);
     masm.passABIArg(index);
     masm.passABIArg(value);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
+    masm.callWithABI(DynamicFunction<AtomicsReadWriteModifyFn>(fn));
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
