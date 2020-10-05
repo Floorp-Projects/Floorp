@@ -132,7 +132,7 @@ linux64-fuzzing/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 linux64/debug:
     description: "Linux64 Debug"
@@ -772,7 +772,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 linux64-asan-fuzzing/opt:
     description: "Linux64 Fuzzing Opt ASAN"
@@ -819,7 +819,7 @@ linux64-asan-fuzzing/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 linux64-asan-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt ASAN w/ Coverage"
@@ -911,7 +911,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-lucetc
             - wasi-sysroot-9
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 linux64-asan-reporter-shippable/opt:
     description: "Linux64 Opt ASAN Reporter (Shippable)"

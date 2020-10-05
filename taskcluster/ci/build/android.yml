@@ -112,7 +112,7 @@ android-x86-fuzzing/debug:
             - linux64-clang
             - linux64-sccache
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 android-x86-shippable/opt:
     description: "Android 4.2 x86 Shippable"
@@ -565,4 +565,4 @@ android-x86_64-asan-fuzzing/opt:
             - linux64-clang-android-cross
             - linux64-sccache
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
