@@ -74,6 +74,8 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Нодида гузарондан</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Дастрасии камера лозим аст. Ба «Танзимоти Android» гузаред, ба «Иҷозатҳо» зарба занед, пас ба «Иҷозат додан» зарба занед.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Гузариш ба танзимот</string>
 
@@ -190,6 +192,8 @@
     <string name="search_suggestions_onboarding_allow_button">Иҷозат додан</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Иҷозат дода нашавад</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Ба пешниҳодҳои ҷустуҷӯ дар ҷаласаҳои махфӣ иҷозат диҳед?</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Маълумоти бештар</string>
 
@@ -945,6 +949,8 @@
     <string name="sync_sent_tab_error_snackbar_action">АЗ НАВ КӮШИШ КАРДАН</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Ворид шудан ба воситаи камера</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Ба ҷояш почтаи электрониро истифода баред</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Қатъ кардани пайваст</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->

@@ -722,7 +722,7 @@
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d yer imi seçildi</string>
     <!-- Bookmark editing screen title -->
-    <string name="edit_bookmark_fragment_title">Yer imini düzenle</string>
+    <string name="edit_bookmark_fragment_title">Yer imi düzenle</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Klasörü düzenle</string>
     <!-- Bookmark sign in button message -->

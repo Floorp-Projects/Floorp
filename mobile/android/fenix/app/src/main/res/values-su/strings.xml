@@ -266,6 +266,8 @@
     <string name="preferences_open_links_in_a_private_tab">Buka tutumbu di tab nyamuni</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Ngidinan layar dina langlangan nyamuni</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Lamun diidinan, tab pribadi bakal katémbong nalika sababaraha aplikasi muka</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahan tarabas nyungsi nyamuni</string>
     <!-- Preference for accessibility -->
@@ -1056,10 +1058,6 @@
     <string name="onboarding_account_sign_in_header">Mimitian nyingkronkeun markah, kecap konci, jeung nu lianna maké akun Firefox anjeun.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Lenyepan</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Anjeun asup salaku %s dina séjén panyungsi Firefox di ieu telepon. Anjeun rék asup maké ieu akun?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Enya, asupkeun</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1306,8 +1304,6 @@
 
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Ngaran takulan</string>
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Anjeun bisa kalawan gampang nambahkeun ieu raramatloka kana layar Tepas ponsél pikeun aksés instan sarta maluruh leuwih gancang kawas muka aplikasi.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Login jeung kecap sandi</string>
@@ -1537,7 +1533,7 @@
     <string name="saved_login_duplicate">Login maké éta sandiasma geus aya</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Sambungkeun séjén paranti.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Mangga oténtikasi ulang.</string>
@@ -1556,8 +1552,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Wates loka top geus kahontal</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Pikeun nambah loka top anyar, piceun hiji. Pencét lila lokana sarta pilih piceun.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
 
@@ -1567,7 +1561,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Piceun</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Maksimalkeun %s.</string>
 
@@ -1575,4 +1569,9 @@
     <string name="no_collections_header1">Kumpulkeun hal anu penting pikeun anjeun</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Ngagabungkeun pamaluruhan, loka sareng tab anu sami pikeun aksés gancang engké.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Anjeun asup salaku %s dina séjén panyungsi Firefox di ieu telepon. Anjeun rék asup maké ieu akun?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Anjeun bisa kalawan gampang nambahkeun ieu raramatloka kana layar Tepas ponsél pikeun aksés instan sarta maluruh leuwih gancang kawas muka aplikasi.</string>
+
     </resources>

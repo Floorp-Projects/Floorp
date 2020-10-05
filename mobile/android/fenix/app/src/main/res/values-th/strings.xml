@@ -1160,6 +1160,8 @@
     <string name="sign_in_with_camera">ลงชื่อเข้าด้วยกล้องของคุณ</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">ใช้อีเมลแทน</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[ไม่มีบัญชีใช่หรือไม่? <u>สร้างบัญชี</u>เพื่อซิงค์ Firefox ระหว่างอุปกรณ์]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox จะหยุดการซิงค์กับบัญชีของคุณ แต่จะไม่ลบข้อมูลการเรียกดูใด ๆ ของคุณบนอุปกรณ์นี้</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1267,6 +1269,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | ไลบรารี OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">ตัวติดตามการเปลี่ยนเส้นทาง</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">ล้างคุกกี้ที่ตั้งโดยการเปลี่ยนเส้นทางไปยังเว็บไซต์ติดตามที่รู้จัก</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">การสนับสนุน</string>

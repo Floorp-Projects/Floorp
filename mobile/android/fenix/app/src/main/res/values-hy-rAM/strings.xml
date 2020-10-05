@@ -146,6 +146,8 @@
 
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Համաժամեցված ներդիրներ</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Կրկնահամաժամեցում</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Գտնել էջում</string>
     <!-- Browser menu button that creates a private tab -->
@@ -327,6 +329,8 @@
     <string name="preferences_search_browsing_history">Որոնել դիտարկումների պատմությունում</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Որոնել էջանիշեր</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Որոնել համաժամեցված ներդիրները</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Հաշվի կարգավորումներ</string>
     <!-- Preference for enabling url autocomplete-->
@@ -1159,6 +1163,8 @@
     <string name="sign_in_with_camera">Մուտք գործեք ձեր տեսախցիկի հետ</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Փոխարենը օգտ. էլ. փոստ</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Չունե՞ք հաշիվ: <u>Ստեղծեք նորը</u>՝ Firefox-ը տարբեր սարքերի միջև համաժամեցնելու համար:]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox-ը կկանգնեցնի համաժամացումը ձեր հաշվի հետ, բայց չի ջնջվի այս սարքում ձեր դիտարկման որևէ տվյալ։</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1267,6 +1273,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS գրադարաններ</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Վերաուղղորդել հետագծիչները</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Վերաուղղորդմամբ կայված՝ մաքրում է թխուկները հայտնի հետագծիչ կայքերից:</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Աջակցում</string>

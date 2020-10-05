@@ -429,6 +429,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Уключыць сінхранізацыю</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Скануйце код спалучэння ў Firefox на камп’ютары</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Увайсці</string>
 
@@ -1059,6 +1061,10 @@
     <string name="onboarding_account_sign_in_header">Пачніце сінхранізаваць закладкі, паролі і шмат іншага праз свой уліковы запіс Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Падрабязней</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Вы ўвайшлі як %s у іншым браўзеры Firefox на гэтай прыладзе. Ці хочаце аўтарызавацца з дапамогай гэтага ўліковага запісу?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Так, увайсці</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1216,10 +1222,14 @@
     <string name="enhanced_tracking_protection_allowed">Дазволены</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Трэкеры сацыяльных сетак</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Абмяжоўвае мажлівасць сацыяльных сетак асочваць вашу дзейнасць у сеціве.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Міжсайтавыя кукі асочвання</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Майнеры крыптавалют</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Не дазваляе шкодным скрыптам атрымаць доступ да Вашай прылады для здабычы крыптавалюты.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Збіральнікі лічбавых адбіткаў</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
@@ -1246,6 +1256,12 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Бібліятэкі OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Трэкеры перанакіравання</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Ачышчае кукі, усталяваныя шляхам перанакіравання на вядомыя асочвальныя вэб-сайты.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Падтрымка</string>
