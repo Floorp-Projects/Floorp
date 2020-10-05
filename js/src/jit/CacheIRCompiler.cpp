@@ -3136,10 +3136,11 @@ bool CacheIRCompiler::emitTruncateDoubleToUInt32(NumberOperandId inputId,
   save.takeUnchecked(floatReg.get().asSingle());
   masm.PushRegsInMask(save);
 
+  using Fn = int32_t (*)(double);
   masm.setupUnalignedABICall(res);
   masm.passABIArg(floatReg, MoveOp::DOUBLE);
-  masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
-                   MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  masm.callWithABI<Fn, JS::ToInt32>(MoveOp::GENERAL,
+                                    CheckUnsafeCallWithABI::DontCheckOther);
   masm.storeCallInt32Result(res);
 
   LiveRegisterSet ignore;
