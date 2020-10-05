@@ -8,8 +8,8 @@ richlistbox {
   appearance: auto;
   -moz-default-appearance: listbox;
   margin: 2px 4px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   overflow: auto;
 }
 
@@ -83,7 +83,7 @@ richlistbox.theme-listbox > richlistitem > label {
     --listitem-selectedFocusCurrentBottomBorder: var(--listitem-selectedFocusBottomBorder);
     --listitem-selectedFocusCurrentBackground: var(--listitem-selectedFocusColor);
 
-    color: -moz-FieldText;
+    color: FieldText;
     margin-inline: 1px;
     padding-block: 1px;
     border-width: 1px;

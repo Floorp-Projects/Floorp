@@ -8,7 +8,7 @@
   appearance: auto;
   -moz-default-appearance: menulist;
   margin: 2px 4px;
-  color: -moz-FieldText;
+  color: FieldText;
   text-shadow: none;
 }
 

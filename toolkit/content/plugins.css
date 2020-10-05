@@ -7,8 +7,8 @@
    ======================================================================= */
 
 body {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   font: message-box;
 }
 

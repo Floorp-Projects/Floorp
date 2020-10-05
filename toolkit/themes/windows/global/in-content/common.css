@@ -20,8 +20,8 @@ xul|radio {
 @media (-moz-windows-default-theme: 0) {
   xul|checkbox[checked] > xul|*.checkbox-check,
   xul|*.radio-check[selected] {
-    fill: -moz-fieldText;
-    background-color: -moz-field;
+    fill: FieldText;
+    background-color: Field;
   }
 }
 

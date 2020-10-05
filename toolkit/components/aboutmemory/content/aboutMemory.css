@@ -36,8 +36,8 @@ div.section {
   margin: 1em 0em;
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
-  background: -moz-Field;
-  color: -moz-FieldText;
+  background: Field;
+  color: FieldText;
 }
 
 div.outputContainer {
@@ -64,8 +64,8 @@ div.sidebarItem {
   margin: 1em 0em;
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
-  background: -moz-Field;
-  color: -moz-FieldText;
+  background: Field;
+  color: FieldText;
   user-select: none;  /* no need to include this when cutting+pasting */
 }
 
@@ -89,8 +89,8 @@ div.opsRow {
   margin-top: 0.5em;
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
-  background: -moz-Field;
-  color: -moz-FieldText;
+  background: Field;
+  color: FieldText;
   display: inline-block;
 }
 
@@ -144,7 +144,7 @@ a.upDownArrow {
 }
 
 .treeline {
-  color: -moz-FieldText;
+  color: FieldText;
   opacity: 0.5;
 }
 

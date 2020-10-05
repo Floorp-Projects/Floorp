@@ -16,8 +16,8 @@ body {
   min-width: 30em;
   max-width: 65em;
   margin: 4em auto;
-  background-color: -moz-field;
-  color: -moz-fieldtext;
+  background-color: Field;
+  color: FieldText;
 }
 
 h1 {

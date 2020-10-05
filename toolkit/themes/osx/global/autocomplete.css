@@ -13,8 +13,8 @@ html|input[nomatch="true"][highlightnonmatches="true"] {
 
 panel[type="autocomplete-richlistbox"] {
   padding: 0px !important;
-  color: -moz-FieldText;
-  background-color: -moz-Field;
+  color: FieldText;
+  background-color: Field;
   font: icon;
   appearance: none;
 }

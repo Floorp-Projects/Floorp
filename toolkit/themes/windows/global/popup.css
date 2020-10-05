@@ -128,5 +128,5 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
 menulist > menupopup {
   appearance: none;
   min-width: 0;
-  background-color: -moz-Field;
+  background-color: Field;
 }

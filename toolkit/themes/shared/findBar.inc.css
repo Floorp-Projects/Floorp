@@ -50,7 +50,7 @@ html|html[lwtheme-image] findbar {
 
 html|input.findbar-textbox {
   appearance: none;
-  background-color: -moz-Field;
+  background-color: Field;
   border: 1px solid var(--lwt-toolbar-field-border-color, ThreeDShadow);
   border-start-start-radius: 2px;
   border-end-start-radius: 2px;
@@ -61,13 +61,13 @@ html|input.findbar-textbox {
 }
 
 html|input.findbar-textbox:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-background-color, -moz-Field);
-  color: var(--lwt-toolbar-field-color, -moz-FieldText);
+  background-color: var(--lwt-toolbar-field-background-color, Field);
+  color: var(--lwt-toolbar-field-color, FieldText);
 }
 
 html|input.findbar-textbox:focus {
-  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, -moz-Field));
-  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, -moz-FieldText));
+  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, Field));
+  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, FieldText));
   border-color: var(--toolbar-field-focus-border-color, Highlight);
 }
 
