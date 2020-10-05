@@ -58,7 +58,28 @@ function TargetMixin(parentClass) {
       // [typeName:string => Front instance]
       this.fronts = new Map();
 
+      // `resource-available-form` events can be emitted by target actors before the
+      // ResourceWatcher could add event listeners. The target front will cache those
+      // events until the ResourceWatcher has added the listeners.
+      this._resourceCache = [];
+      this._onResourceAvailable = this._onResourceAvailable.bind(this);
+      // In order to avoid destroying the `_resourceCache`, we need to call `super.on()`
+      // instead of `this.on()`.
+      super.on("resource-available-form", this._onResourceAvailable);
+
       this._setupRemoteListeners();
+    }
+
+    on(eventName, listener) {
+      if (eventName === "resource-available-form" && this._resourceCache) {
+        this.off("resource-available-form", this._onResourceAvailable);
+        for (const cache of this._resourceCache) {
+          listener(cache);
+        }
+        this._resourceCache = null;
+      }
+
+      super.on(eventName, listener);
     }
 
     /**
@@ -735,6 +756,12 @@ function TargetMixin(parentClass) {
 
       this._title = null;
       this._url = null;
+    }
+
+    _onResourceAvailable(resources) {
+      if (this._resourceCache) {
+        this._resourceCache.push(resources);
+      }
     }
 
     toString() {
