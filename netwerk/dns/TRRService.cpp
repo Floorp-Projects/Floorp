@@ -22,7 +22,7 @@
 #include "mozilla/Tokenizer.h"
 #include "mozilla/net/rust_helper.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 #  include <shlobj_core.h>  // for SHGetSpecialFolderPathA
 #endif                      // XP_WIN
 
@@ -398,7 +398,7 @@ void TRRService::ReadEtcHostsFile() {
 
   auto readHostsTask = []() {
     MOZ_ASSERT(!NS_IsMainThread(), "Must not run on the main thread");
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
     // Inspired by libevent/evdns.c
     // Windows is a little coy about where it puts its configuration
     // files.  Sure, they're _usually_ in C:\windows\system32, but
@@ -415,6 +415,8 @@ void TRRService::ReadEtcHostsFile() {
 
     path.SetLength(strlen(path.get()));
     path.Append("\\drivers\\etc\\hosts");
+#elif defined(__MINGW32__)
+    nsAutoCString path("C:\\windows\\system32\\drivers\\etc\\hosts"_ns);
 #else
     nsAutoCString path("/etc/hosts"_ns);
 #endif
