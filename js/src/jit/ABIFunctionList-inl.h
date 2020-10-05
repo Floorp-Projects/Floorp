@@ -10,6 +10,9 @@
 #include "jslibmath.h"  // js::NumberMod
 #include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
                         // js::ecmaAtan2, js::powi
+#include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
+                                // js::RegExpInstanceOptimizableRaw
+
 #include "irregexp/RegExpAPI.h"
 // js::irregexp::CaseInsensitiveCompareNonUnicode,
 // js::irregexp::CaseInsensitiveCompareUnicode,
@@ -50,6 +53,8 @@ namespace jit {
   _(js::irregexp::GrowBacktrackStack)                       \
   _(js::NumberMod)                                          \
   _(js::powi)                                               \
+  _(js::RegExpInstanceOptimizableRaw)                       \
+  _(js::RegExpPrototypeOptimizableRaw)                      \
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
