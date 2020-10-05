@@ -29,6 +29,7 @@
 #else
 #  error "Unknown architecture!"
 #endif
+#include "jit/ABIFunctions.h"
 #include "jit/AtomicOp.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
@@ -557,12 +558,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // 4) Make the call:
   //
-  //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, Callee));
+  //      using Fn = int32_t (*)(int32_t)
+  //      masm.callWithABI<Fn, Callee>();
   //
   //    In the case where the call returns a double, that needs to be
   //    indicated to the callWithABI like this:
   //
-  //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ...), MoveOp::DOUBLE);
+  //      using Fn = double (*)(int32_t)
+  //      masm.callWithABI<Fn, Callee>(MoveOp::DOUBLE);
   //
   //    There are overloads to allow calls to registers and addresses.
   //
@@ -616,6 +619,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void callWithABI(
       void* fun, MoveOp::Type result = MoveOp::GENERAL,
+      CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
+  template <typename Sig, Sig fun>
+  inline void callWithABI(
+      MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
   inline void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
   inline void callWithABI(const Address& fun,
