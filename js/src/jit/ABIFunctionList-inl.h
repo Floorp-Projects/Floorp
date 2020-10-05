@@ -28,6 +28,7 @@
 
 #include "js/Conversions.h"  // JS::ToInt32
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
+#include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
 #include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
                                  // js::TraceLogStartEvent,
                                  // js::TraceLogStopEventPrivate
@@ -57,6 +58,7 @@ namespace jit {
   _(js::ecmaAtan2)                                          \
   _(js::ecmaHypot)                                          \
   _(js::ecmaPow)                                            \
+  _(js::ExecuteRegExpAtomRaw)                               \
   _(js::hypot3)                                             \
   _(js::hypot4)                                             \
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
