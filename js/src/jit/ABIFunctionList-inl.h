@@ -103,6 +103,12 @@ namespace jit {
   _(js::jit::AssertValidValue)                              \
   _(js::jit::AssumeUnreachable)                             \
   _(js::jit::Bailout)                                       \
+  _(js::jit::BigIntNumberEqual<EqualityKind::Equal>)        \
+  _(js::jit::BigIntNumberEqual<EqualityKind::NotEqual>)     \
+  _(js::jit::BigIntNumberCompare<ComparisonKind::LessThan>) \
+  _(js::jit::NumberBigIntCompare<ComparisonKind::LessThan>) \
+  _(js::jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>) \
+  _(js::jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>) \
   _(js::jit::CreateMatchResultFallbackFunc)                 \
   _(js::jit::FinishBailoutToBaseline)                       \
   _(js::jit::GetDynamicNamePure)                            \
@@ -153,6 +159,9 @@ namespace jit {
 #define ABIFUNCTIONSIG_LIST(_)                       \
   _(AtomicsCompareExchangeFn)                        \
   _(AtomicsReadWriteModifyFn)                        \
+  _(bool (*)(BigInt*, BigInt*))                      \
+  _(bool (*)(BigInt*, double))                       \
+  _(bool (*)(double, BigInt*))                       \
   _(float (*)(float))                                \
   _(JSJitGetterOp)                                   \
   _(JSJitMethodOp)                                   \

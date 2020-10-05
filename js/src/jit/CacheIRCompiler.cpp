@@ -6107,7 +6107,7 @@ bool CacheIRCompiler::emitCompareBigIntResult(JSOp op, BigIntOperandId lhsId,
     fn = jit::BigIntCompare<ComparisonKind::GreaterThanOrEqual>;
   }
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
+  masm.callWithABI(DynamicFunction<Fn>(fn));
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
@@ -6293,45 +6293,43 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
   using FnNumberBigInt = bool (*)(double, BigInt*);
-  void* fun;
   switch (op) {
     case JSOp::Eq: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::Equal>>();
       break;
     }
     case JSOp::Ne: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::NotEqual>>();
       break;
     }
     case JSOp::Lt: {
-      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Gt: {
-      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnNumberBigInt,
+                       jit::NumberBigIntCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Le: {
-      FnNumberBigInt fn =
-          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnNumberBigInt,
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     case JSOp::Ge: {
-      FnBigIntNumber fn =
-          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnBigIntNumber,
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     default:
       MOZ_CRASH("unhandled op");
   }
 
-  masm.callWithABI(fun);
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
@@ -6376,45 +6374,43 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult(JSOp op,
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
   using FnNumberBigInt = bool (*)(double, BigInt*);
-  void* fun;
   switch (op) {
     case JSOp::Eq: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::Equal>>();
       break;
     }
     case JSOp::Ne: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::NotEqual>>();
       break;
     }
     case JSOp::Lt: {
-      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnNumberBigInt,
+                       jit::NumberBigIntCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Gt: {
-      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Le: {
-      FnBigIntNumber fn =
-          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnBigIntNumber,
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     case JSOp::Ge: {
-      FnNumberBigInt fn =
-          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnNumberBigInt,
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     default:
       MOZ_CRASH("unhandled op");
   }
 
-  masm.callWithABI(fun);
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
