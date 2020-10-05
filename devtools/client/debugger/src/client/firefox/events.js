@@ -5,7 +5,6 @@
 // @flow
 
 import type {
-  SourcePacket,
   PausedPacket,
   ThreadFront,
   Target,
@@ -14,19 +13,23 @@ import type {
 
 import Actions from "../../actions";
 
-import { createPause, prepareSourcePayload } from "./create";
+import { createPause } from "./create";
 import sourceQueue from "../../utils/source-queue";
 import { recordEvent } from "../../utils/telemetry";
 import { prefs } from "../../utils/prefs";
+import { hasSourceActor } from "../../selectors";
+import { stringToSourceActorId } from "../../reducers/source-actors";
 
 type Dependencies = {
   actions: typeof Actions,
   devToolsClient: DevToolsClient,
+  store: any,
 };
 
 let actions: typeof Actions;
 let isInterrupted: boolean;
 let threadFrontListeners: WeakMap<ThreadFront, Array<Function>>;
+let store: any;
 
 function addThreadEventListeners(thread: ThreadFront): void {
   const removeListeners = [];
@@ -53,6 +56,7 @@ function attachAllTargets(currentTarget: Target): boolean {
 function setupEvents(dependencies: Dependencies): void {
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
+  store = dependencies.store;
 
   threadFrontListeners = new WeakMap();
 }
@@ -78,10 +82,7 @@ async function paused(
   if (packet.frame) {
     // When reloading we might receive a pause event before the
     // top frame's source has arrived.
-    await actions.ensureSourceActor(
-      threadFront.actorID,
-      packet.frame.where.actor
-    );
+    await ensureSourceActor(packet.frame.where.actor);
   }
 
   const pause = createPause(threadFront.actor, packet);
@@ -102,17 +103,36 @@ function resumed(threadFront: ThreadFront): void {
   actions.resumed(threadFront.actorID);
 }
 
-function newSource(threadFront: ThreadFront, { source }: SourcePacket): void {
-  sourceQueue.queue({
-    type: "generated",
-    data: prepareSourcePayload(threadFront, source),
-  });
+/**
+ * This method wait for the given source is registered in Redux store.
+ *
+ * @param {String} sourceActor
+ *                 Actor ID of the source to be waiting for.
+ */
+async function ensureSourceActor(sourceActor: string) {
+  const sourceActorId = stringToSourceActorId(sourceActor);
+  if (!hasSourceActor(store.getState(), sourceActorId)) {
+    await new Promise(resolve => {
+      const unsubscribe = store.subscribe(check);
+      let currentState = null;
+      function check() {
+        const previousState = currentState;
+        currentState = store.getState().sourceActors.values;
+        if (previousState == currentState) {
+          return;
+        }
+        if (hasSourceActor(store.getState(), sourceActorId)) {
+          unsubscribe();
+          resolve();
+        }
+      }
+    });
+  }
 }
 
 const clientEvents = {
   paused,
   resumed,
-  newSource,
 };
 
 export {
