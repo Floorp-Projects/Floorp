@@ -67,7 +67,7 @@ class CacheIRHealth {
                                      jsbytecode* pc, JSOp op);
   // If a JitScript exists, spew the health of all ICEntries that exist
   // for the specified script.
-  bool rateMyCacheIR(JSContext* cx, HandleScript script);
+  void rateMyCacheIR(JSContext* cx, HandleScript script);
 };
 
 }  // namespace jit
