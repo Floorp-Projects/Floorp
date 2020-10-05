@@ -788,9 +788,13 @@ MarkupContainer.prototype = {
   _onToggle: function(event) {
     event.stopPropagation();
 
-    // Prevent the html tree from expanding when an event bubble or display node is
-    // clicked.
-    if (event.target.dataset.event || event.target.dataset.display) {
+    // Prevent the html tree from expanding when an event bubble, display or scrollable
+    // node is clicked.
+    if (
+      event.target.dataset.event ||
+      event.target.dataset.display ||
+      event.target.dataset.scrollable
+    ) {
       return;
     }
 
