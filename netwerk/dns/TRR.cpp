@@ -1095,6 +1095,9 @@ nsresult TRR::DohDecode(nsCString& aHost) {
                 value.mValue.is<SvcParamIpv6Hint>()) {
               parsed.mHasIPHints = true;
             }
+            if (value.mValue.is<SvcParamEchConfig>()) {
+              parsed.mHasEchConfig = true;
+            }
             parsed.mSvcFieldValue.AppendElement(value);
           }
 
