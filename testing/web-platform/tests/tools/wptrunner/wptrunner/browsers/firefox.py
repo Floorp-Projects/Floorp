@@ -101,8 +101,7 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
             "config": config,
             "browser_channel": kwargs["browser_channel"],
             "headless": kwargs["headless"],
-            "preload_browser": kwargs["preload_browser"],
-            "specialpowers_path": kwargs["specialpowers_path"]}
+            "preload_browser": kwargs["preload_browser"]}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
@@ -118,7 +117,6 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     capabilities = {}
     if test_type == "testharness":
         capabilities["pageLoadStrategy"] = "eager"
-        executor_kwargs["specialpowers_path"] = kwargs["specialpowers_path"]
     if test_type in ("reftest", "print-reftest"):
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
@@ -681,8 +679,7 @@ class FirefoxBrowser(Browser):
                  ca_certificate_path=None, e10s=False, enable_webrender=False, enable_fission=False,
                  stackfix_dir=None, binary_args=None, timeout_multiplier=None, leak_check=False,
                  asan=False, stylo_threads=1, chaos_mode_flags=None, config=None,
-                 browser_channel="nightly", headless=None, preload_browser=False,
-                 specialpowers_path=None, **kwargs):
+                 browser_channel="nightly", headless=None, preload_browser=False, **kwargs):
         Browser.__init__(self, logger)
 
         self.logger = logger
@@ -691,7 +688,6 @@ class FirefoxBrowser(Browser):
             self.init_timeout = self.init_timeout * timeout_multiplier
 
         self.instance = None
-        self._settings = None
 
         self.stackfix_dir = stackfix_dir
         self.symbols_path = symbols_path
@@ -699,8 +695,6 @@ class FirefoxBrowser(Browser):
 
         self.asan = asan
         self.leak_check = leak_check
-
-        self.specialpowers_path = specialpowers_path
 
         profile_creator = ProfileCreator(logger,
                                          prefs_root,
@@ -734,14 +728,12 @@ class FirefoxBrowser(Browser):
 
 
     def settings(self, test):
-        self._settings = {"check_leaks": self.leak_check and not test.leaks,
-                          "lsan_disabled": test.lsan_disabled,
-                          "lsan_allowed": test.lsan_allowed,
-                          "lsan_max_stack_depth": test.lsan_max_stack_depth,
-                          "mozleak_allowed": self.leak_check and test.mozleak_allowed,
-                          "mozleak_thresholds": self.leak_check and test.mozleak_threshold,
-                          "special_powers": self.specialpowers_path and test.url_base == "/_mozilla/"}
-        return self._settings
+        return {"check_leaks": self.leak_check and not test.leaks,
+                "lsan_disabled": test.lsan_disabled,
+                "lsan_allowed": test.lsan_allowed,
+                "lsan_max_stack_depth": test.lsan_max_stack_depth,
+                "mozleak_allowed": self.leak_check and test.mozleak_allowed,
+                "mozleak_thresholds": self.leak_check and test.mozleak_threshold}
 
     def start(self, group_metadata=None, **kwargs):
         self.instance = self.instance_manager.get()
@@ -764,8 +756,7 @@ class FirefoxBrowser(Browser):
 
     def executor_browser(self):
         assert self.instance is not None
-        return ExecutorBrowser, {"marionette_port": self.instance.marionette_port,
-                                 "special_powers": self._settings.get("special_powers", False)}
+        return ExecutorBrowser, {"marionette_port": self.instance.marionette_port}
 
     def check_crash(self, process, test):
         dump_dir = os.path.join(self.instance.runner.profile.profile, "minidumps")

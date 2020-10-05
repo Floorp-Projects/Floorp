@@ -1,7 +1,5 @@
 import json
 import os
-import shutil
-import tempfile
 import threading
 import time
 import traceback
@@ -47,10 +45,15 @@ from ..webdriver_server import GeckoDriverServer
 
 
 def do_delayed_imports():
-    global errors, marionette, Addons
+    global errors, marionette
 
-    from marionette_driver import marionette, errors
-    from marionette_driver.addons import Addons
+    # Marionette client used to be called marionette, recently it changed
+    # to marionette_driver for unfathomable reasons
+    try:
+        import marionette
+        from marionette import errors
+    except ImportError:
+        from marionette_driver import marionette, errors
 
 
 def _switch_to_window(marionette, handle):
@@ -714,6 +717,7 @@ class MarionetteProtocol(Protocol):
 
 
 class ExecuteAsyncScriptRun(TimedRunner):
+
     def set_timeout(self):
         timeout = self.timeout
 
@@ -769,8 +773,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  close_after_done=True, debug_info=None, capabilities=None,
-                 debug=False, ccov=False, group_metadata=None,
-                 specialpowers_path=None, **kwargs):
+                 debug=False, ccov=False, **kwargs):
         """Marionette-based executor for testharness.js tests"""
         TestharnessExecutor.__init__(self, logger, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
@@ -786,10 +789,6 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         self.close_after_done = close_after_done
         self.window_id = str(uuid.uuid4())
         self.debug = debug
-        self.group_metadata = group_metadata
-
-        self.special_powers = browser.special_powers
-        self.specialpowers_path = specialpowers_path
 
         self.original_pref_values = {}
 
@@ -798,17 +797,6 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
     def setup(self, runner):
         super(MarionetteTestharnessExecutor, self).setup(runner)
-        if (self.special_powers and self.specialpowers_path is not None):
-            # install specialpowers addon
-            self.logger.info("Installing specialPowers extension from %s" %
-                             self.specialpowers_path)
-            try:
-                addons = Addons(self.protocol.marionette)
-                addons.install(self.specialpowers_path)
-            except Exception:
-                self.logger.critical(traceback.format_exc())
-                raise
-
         self.protocol.testharness.load_runner(self.last_environment["protocol"])
 
     def is_alive(self):
