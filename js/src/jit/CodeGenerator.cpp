@@ -2264,12 +2264,15 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
     masm.computeEffectiveAddress(matchPairsAddress, temp3);
 
     masm.PushRegsInMask(regsToSave);
+    using Fn = RegExpRunStatus (*)(RegExpShared * re, JSLinearString * input,
+                                   size_t start, MatchPairs * matchPairs);
     masm.setupUnalignedABICall(temp2);
     masm.passABIArg(regexpReg);
     masm.passABIArg(input);
     masm.passABIArg(lastIndex);
     masm.passABIArg(temp3);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ExecuteRegExpAtomRaw));
+    masm.callWithABI<Fn, js::ExecuteRegExpAtomRaw>();
+
     masm.storeCallInt32Result(temp1);
     masm.PopRegsInMask(regsToSave);
 
