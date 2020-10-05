@@ -873,7 +873,7 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintScrollbarthumbHorizontal(
     DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
   sRGBColor thumbColor = sScrollbarThumbColor;
-  if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
+  if (aState.HasState(NS_EVENT_STATE_ACTIVE)) {
     thumbColor = sScrollbarThumbColorActive;
   } else if (aState.HasState(NS_EVENT_STATE_HOVER)) {
     thumbColor = sScrollbarThumbColorHover;
@@ -884,7 +884,7 @@ void nsNativeBasicTheme::PaintScrollbarthumbHorizontal(
 void nsNativeBasicTheme::PaintScrollbarthumbVertical(
     DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
   sRGBColor thumbColor = sScrollbarThumbColor;
-  if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
+  if (aState.HasState(NS_EVENT_STATE_ACTIVE)) {
     thumbColor = sScrollbarThumbColorActive;
   } else if (aState.HasState(NS_EVENT_STATE_HOVER)) {
     thumbColor = sScrollbarThumbColorHover;
@@ -918,8 +918,7 @@ void nsNativeBasicTheme::PaintScrollbarbutton(DrawTarget* aDrawTarget,
                                               const Rect& aRect,
                                               const EventStates& aState,
                                               uint32_t aDpiRatio) {
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isActive = aState.HasState(NS_EVENT_STATE_ACTIVE);
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
 
   aDrawTarget->FillRect(
