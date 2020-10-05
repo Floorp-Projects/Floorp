@@ -58,7 +58,7 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
         context.report(
             issue = ISSUE_XML_STYLE,
             scope = element,
-            location = context.getLocation(element),
+            location = context.getElementLocation(element),
             message = ERROR_MESSAGE
         )
     }
