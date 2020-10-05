@@ -99,53 +99,53 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
      <input type="range" id="input_range">
      <input type="number" id="input_number">`;
 
-    document.getElementById("textarea").onbeforeinput = (aEvent) => {
+    document.getElementById("textarea").addEventListener("beforeinput", (aEvent) => {
       ++textareaBeforeInput;
       checkBeforeInputEvent(aEvent, "on textarea element");
-    };
-    document.getElementById("textarea").oninput = (aEvent) => {
+    });
+    document.getElementById("textarea").addEventListener("input", (aEvent) => {
       ++textareaInput;
       checkIfInputIsInputEvent(aEvent, "on textarea element");
-    };
+    });
 
     // These are the type were the input event apply.
     for (let id of ["input_text", "input_email", "input_search", "input_tel", "input_url", "input_password"]) {
-      document.getElementById(id).onbeforeinput = (aEvent) => {
+      document.getElementById(id).addEventListener("beforeinput", (aEvent) => {
         ++textBeforeInput[textTypes.indexOf(aEvent.target.type)];
         checkBeforeInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
-      };
-      document.getElementById(id).oninput = (aEvent) => {
+      });
+      document.getElementById(id).addEventListener("input", (aEvent) => {
         ++textInput[textTypes.indexOf(aEvent.target.type)];
         checkIfInputIsInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
-      };
+      });
     }
 
     // These are the type were the input event does not apply.
     for (let id of ["input_button", "input_submit", "input_image", "input_reset", "input_radio", "input_checkbox"]) {
-      document.getElementById(id).onbeforeinput = (aEvent) => {
+      document.getElementById(id).addEventListener("beforeinput", (aEvent) => {
         ++nonTextBeforeInput[nonTextTypes.indexOf(aEvent.target.type)];
-      };
-      document.getElementById(id).oninput = (aEvent) => {
+      });
+      document.getElementById(id).addEventListener("input", (aEvent) => {
         ++nonTextInput[nonTextTypes.indexOf(aEvent.target.type)];
         checkIfInputIsEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
-      };
+      });
     }
 
-    document.getElementById("input_range").onbeforeinput = (aEvent) => {
+    document.getElementById("input_range").addEventListener("beforeinput", (aEvent) => {
       ++rangeBeforeInput;
-    };
-    document.getElementById("input_range").oninput = (aEvent) => {
+    });
+    document.getElementById("input_range").addEventListener("input", (aEvent) => {
       ++rangeInput;
       checkIfInputIsEvent(aEvent, "on input element whose type is range");
-    };
+    });
 
-    document.getElementById("input_number").onbeforeinput = (aEvent) => {
+    document.getElementById("input_number").addEventListener("beforeinput", (aEvent) => {
       ++numberBeforeInput;
-    };
-    document.getElementById("input_number").oninput = (aEvent) => {
+    });
+    document.getElementById("input_number").addEventListener("input", (aEvent) => {
       ++numberInput;
       checkIfInputIsInputEvent(aEvent, "on input element whose type is number");
-    };
+    });
   }
 
   var MockFilePicker = SpecialPowers.MockFilePicker;
