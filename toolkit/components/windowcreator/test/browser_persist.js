@@ -13,6 +13,7 @@ const chromeBase =
 // Checks that the source and target documents are the same.
 const REFTESTS = [
   "file_persist_srcset.html",
+  "file_persist_picture_source.html",
   // ...
 ];
 
