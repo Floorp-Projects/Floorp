@@ -188,8 +188,8 @@
   --theme-graphs-full-blue: #00f;
 
   /* Common popup styles(used by HTMLTooltip and autocomplete) */
-  --theme-popup-background: -moz-field;
-  --theme-popup-color: -moz-fieldText;
+  --theme-popup-background: Field;
+  --theme-popup-color: FieldText;
   --theme-popup-border-color: ThreeDShadow;
   --theme-popup-dimmed: hsla(0, 0%, 80%, 0.3);
 
