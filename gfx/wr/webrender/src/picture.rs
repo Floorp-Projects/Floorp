@@ -4713,8 +4713,7 @@ impl PicturePrimitive {
         profile_scope!("take_context");
         // In rare circumstances (if the entire picture cache slice is drawn by background color
         // tiles without surfaces) the render_tasks field below will be None.
-        if self.num_render_tasks > 0 {
-            let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
+        if let Some(task_id) = frame_state.surfaces[parent_surface_index.0].render_tasks.map(|s| s.port) {
             frame_state.render_tasks[task_id].children.reserve(self.num_render_tasks);
         }
 
