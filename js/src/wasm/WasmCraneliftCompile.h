@@ -33,8 +33,8 @@ MOZ_MUST_USE bool CraneliftPlatformSupport();
 
 // Generates code with Cranelift.
 MOZ_MUST_USE bool CraneliftCompileFunctions(
-    const ModuleEnvironment& moduleEnv, LifoAlloc& lifo,
-    const FuncCompileInputVector& inputs, CompiledCode* code,
+    const ModuleEnvironment& moduleEnv, const CompilerEnvironment& compilerEnv,
+    LifoAlloc& lifo, const FuncCompileInputVector& inputs, CompiledCode* code,
     UniqueChars* error);
 
 void CraneliftFreeReusableData(void* data);
@@ -42,8 +42,8 @@ void CraneliftFreeReusableData(void* data);
 MOZ_MUST_USE inline bool CraneliftPlatformSupport() { return false; }
 
 MOZ_MUST_USE inline bool CraneliftCompileFunctions(
-    const ModuleEnvironment& moduleEnv, LifoAlloc& lifo,
-    const FuncCompileInputVector& inputs, CompiledCode* code,
+    const ModuleEnvironment& moduleEnv, const CompilerEnvironment& compilerEnv,
+    LifoAlloc& lifo, const FuncCompileInputVector& inputs, CompiledCode* code,
     UniqueChars* error) {
   MOZ_CRASH("Should not happen");
 }

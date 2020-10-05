@@ -138,6 +138,7 @@ class FunctionCompiler {
         stackResultPointer_(nullptr) {}
 
   const ModuleEnvironment& moduleEnv() const { return moduleEnv_; }
+
   IonOpIter& iter() { return iter_; }
   TempAllocator& alloc() const { return alloc_; }
   // FIXME(1401675): Replace with BlockType.
@@ -5363,11 +5364,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 }
 
 bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
+                               const CompilerEnvironment& compilerEnv,
                                LifoAlloc& lifo,
                                const FuncCompileInputVector& inputs,
                                CompiledCode* code, UniqueChars* error) {
-  MOZ_ASSERT(moduleEnv.tier() == Tier::Optimized);
-  MOZ_ASSERT(moduleEnv.optimizedBackend() == OptimizedBackend::Ion);
+  MOZ_ASSERT(compilerEnv.tier() == Tier::Optimized);
+  MOZ_ASSERT(compilerEnv.debug() == DebugEnabled::False);
+  MOZ_ASSERT(compilerEnv.optimizedBackend() == OptimizedBackend::Ion);
 
   TempAllocator alloc(&lifo);
   JitContext jitContext(&alloc);

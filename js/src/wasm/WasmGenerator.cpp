@@ -78,12 +78,14 @@ static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(const CompileArgs& args,
                                  ModuleEnvironment* moduleEnv,
+                                 CompilerEnvironment* compilerEnv,
                                  const Atomic<bool>* cancelled,
                                  UniqueChars* error)
     : compileArgs_(&args),
       error_(error),
       cancelled_(cancelled),
       moduleEnv_(moduleEnv),
+      compilerEnv_(compilerEnv),
       linkData_(nullptr),
       metadataTier_(nullptr),
       lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -435,7 +437,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
     return false;
   }
   for (size_t i = 0; i < numTasks; i++) {
-    tasks_.infallibleEmplaceBack(*moduleEnv_, taskState_,
+    tasks_.infallibleEmplaceBack(*moduleEnv_, *compilerEnv_, taskState_,
                                  COMPILATION_LIFO_DEFAULT_CHUNK_SIZE,
                                  telemetrySender);
   }
@@ -739,12 +741,13 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
   int compileTimeTelemetryID;
 #endif
 
-  switch (task->moduleEnv.tier()) {
+  switch (task->compilerEnv.tier()) {
     case Tier::Optimized:
-      switch (task->moduleEnv.optimizedBackend()) {
+      switch (task->compilerEnv.optimizedBackend()) {
         case OptimizedBackend::Cranelift:
-          if (!CraneliftCompileFunctions(task->moduleEnv, task->lifo,
-                                         task->inputs, &task->output, error)) {
+          if (!CraneliftCompileFunctions(task->moduleEnv, task->compilerEnv,
+                                         task->lifo, task->inputs,
+                                         &task->output, error)) {
             return false;
           }
 #ifdef ENABLE_SPIDERMONKEY_TELEMETRY
@@ -752,8 +755,9 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
 #endif
           break;
         case OptimizedBackend::Ion:
-          if (!IonCompileFunctions(task->moduleEnv, task->lifo, task->inputs,
-                                   &task->output, error)) {
+          if (!IonCompileFunctions(task->moduleEnv, task->compilerEnv,
+                                   task->lifo, task->inputs, &task->output,
+                                   error)) {
             return false;
           }
 #ifdef ENABLE_SPIDERMONKEY_TELEMETRY
@@ -763,8 +767,9 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
       }
       break;
     case Tier::Baseline:
-      if (!BaselineCompileFunctions(task->moduleEnv, task->lifo, task->inputs,
-                                    &task->output, error)) {
+      if (!BaselineCompileFunctions(task->moduleEnv, task->compilerEnv,
+                                    task->lifo, task->inputs, &task->output,
+                                    error)) {
         return false;
       }
 #ifdef ENABLE_SPIDERMONKEY_TELEMETRY
@@ -899,7 +904,7 @@ bool ModuleGenerator::compileFuncDef(uint32_t funcIndex,
       threshold = JitOptions.wasmBatchBaselineThreshold;
       break;
     case Tier::Optimized:
-      switch (moduleEnv_->optimizedBackend()) {
+      switch (compilerEnv_->optimizedBackend()) {
         case OptimizedBackend::Ion:
           threshold = JitOptions.wasmBatchIonThreshold;
           break;
@@ -1099,7 +1104,7 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
 #ifdef DEBUG
   // Check that each stack map is associated with a plausible instruction.
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
-    MOZ_ASSERT(IsValidStackMapKey(moduleEnv_->debugEnabled(),
+    MOZ_ASSERT(IsValidStackMapKey(compilerEnv_->debugEnabled(),
                                   metadataTier_->stackMaps.get(i).nextInsnAddr),
                "wasm stack map does not reference a valid insn");
   }
@@ -1129,7 +1134,7 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
 
   // Copy over additional debug information.
 
-  if (moduleEnv_->debugEnabled()) {
+  if (compilerEnv_->debugEnabled()) {
     metadata_->debugEnabled = true;
 
     const size_t numFuncTypes = moduleEnv_->funcTypes.length();
@@ -1254,7 +1259,7 @@ SharedModule ModuleGenerator::finishModule(
   UniqueBytes debugUnlinkedCode;
   UniqueLinkData debugLinkData;
   const ShareableBytes* debugBytecode = nullptr;
-  if (moduleEnv_->debugEnabled()) {
+  if (compilerEnv_->debugEnabled()) {
     MOZ_ASSERT(mode() == CompileMode::Once);
     MOZ_ASSERT(tier() == Tier::Debug);
 
@@ -1294,7 +1299,7 @@ SharedModule ModuleGenerator::finishModule(
 bool ModuleGenerator::finishTier2(const Module& module) {
   MOZ_ASSERT(mode() == CompileMode::Tier2);
   MOZ_ASSERT(tier() == Tier::Optimized);
-  MOZ_ASSERT(!moduleEnv_->debugEnabled());
+  MOZ_ASSERT(!compilerEnv_->debugEnabled());
 
   if (cancelled_ && *cancelled_) {
     return false;
