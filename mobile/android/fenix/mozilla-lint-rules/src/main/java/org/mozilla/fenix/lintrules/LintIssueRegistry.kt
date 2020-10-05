@@ -18,5 +18,5 @@ class LintIssueRegistry : IssueRegistry() {
         AndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE
-    )
+    ) + ConstraintLayoutPerfDetector.ISSUES
 }
