@@ -5811,9 +5811,10 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult(ObjOperandId objId) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSObject * obj);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+    masm.callWithABI<Fn, js::EmulatesUndefined>();
     masm.convertBoolToInt32(ReturnReg, scratch);
     masm.xor32(Imm32(1), scratch);
 
@@ -5901,9 +5902,10 @@ bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
         volatileRegs.takeUnchecked(output);
         masm.PushRegsInMask(volatileRegs);
 
+        using Fn = bool (*)(JSObject * obj);
         masm.setupUnalignedABICall(scratch2);
         masm.passABIArg(obj);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+        masm.callWithABI<Fn, js::EmulatesUndefined>();
         masm.storeCallBoolResult(scratch2);
 
         masm.PopRegsInMask(volatileRegs);
