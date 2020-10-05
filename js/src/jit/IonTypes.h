@@ -903,7 +903,10 @@ static constexpr int MakeABIFunctionType(
 
 }  // namespace detail
 
-enum ABIFunctionType {
+enum ABIFunctionType : uint32_t {
+  // The enum must be explicitly typed to avoid UB: some validly constructed
+  // members are larger than any explicitly declared members.
+
   // VM functions that take 0-9 non-double arguments
   // and return a non-double value.
   Args_General0 = ArgType_General << RetType_Shift,
