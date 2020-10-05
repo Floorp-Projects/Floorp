@@ -63,6 +63,14 @@ namespace jit {
 #  define ABIFUNCTION_JS_GC_PROBES_LIST(_)
 #endif
 
+#if defined(JS_CODEGEN_ARM)
+#  define ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)    \
+    _(__aeabi_idivmod)                          \
+    _(__aeabi_uidivmod)
+#else
+#  define ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)
+#endif
+
 #ifdef WASM_CODEGEN_DEBUG
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_) \
     _(js::wasm::PrintF32)                        \
@@ -76,6 +84,7 @@ namespace jit {
 
 #define ABIFUNCTION_LIST(_)                                 \
   ABIFUNCTION_JS_GC_PROBES_LIST(_)                          \
+  ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)                        \
   ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
   _(js::ArgumentsObject::finishForIonPure)                  \
   _(js::ArrayShiftMoveElements)                             \
@@ -180,6 +189,7 @@ namespace jit {
   _(bool (*)(BigInt*, double))                       \
   _(bool (*)(double, BigInt*))                       \
   _(float (*)(float))                                \
+  _(int64_t (*)(int, int))                           \
   _(JSJitGetterOp)                                   \
   _(JSJitMethodOp)                                   \
   _(JSJitSetterOp)                                   \
