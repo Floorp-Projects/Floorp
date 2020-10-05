@@ -127,6 +127,7 @@ namespace jit {
   _(js::jit::HasNativeElementPure)                          \
   _(js::jit::InitBaselineFrameForOsr)                       \
   _(js::jit::InvalidationBailout)                           \
+  _(js::jit::InvokeFromInterpreterStub)                     \
   _(js::jit::LazyLinkTopActivation)                         \
   _(js::jit::PostGlobalWriteBarrier)                        \
   _(js::jit::PostWriteBarrier)                              \
