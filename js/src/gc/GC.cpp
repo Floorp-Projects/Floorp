@@ -2207,6 +2207,14 @@ bool MovingTracer::onBigIntEdge(BigInt** bip) { return updateEdge(bip); }
 bool MovingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
   return updateEdge(groupp);
 }
+bool MovingTracer::onSymbolEdge(JS::Symbol** symp) {
+  MOZ_ASSERT(!(*symp)->isForwarded());
+  return true;
+}
+bool MovingTracer::onJitCodeEdge(jit::JitCode** jitp) {
+  MOZ_ASSERT(!(*jitp)->isForwarded());
+  return true;
+}
 
 void Zone::prepareForCompacting() {
   JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -8893,8 +8901,8 @@ extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(
 #endif
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
-    : CallbackTracer(rt, JS::TracerKind::ClearEdges,
-                     JS::WeakMapTraceAction::TraceKeysAndValues) {}
+    : GenericTracer(rt, JS::TracerKind::ClearEdges,
+                    JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer()
     : ClearEdgesTracer(TlsContext.get()->runtime()) {}
@@ -8939,10 +8947,6 @@ bool js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
 }
 bool js::gc::ClearEdgesTracer::onRegExpSharedEdge(js::RegExpShared** sharedp) {
   return clearEdge(sharedp);
-}
-bool js::gc::ClearEdgesTracer::onChild(const JS::GCCellPtr& thing) {
-  MOZ_CRASH();
-  return true;
 }
 
 JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
