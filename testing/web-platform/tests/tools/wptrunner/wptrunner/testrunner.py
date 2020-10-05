@@ -98,12 +98,7 @@ class TestRunner(object):
     def run(self):
         """Main loop accepting commands over the pipe and triggering
         the associated methods"""
-        try:
-            self.setup()
-        except Exception:
-            self.logger.warning("An error occured during executor setup:\n%s" %
-                                traceback.format_exc())
-            raise
+        self.setup()
         commands = {"run_test": self.run_test,
                     "reset": self.reset,
                     "stop": self.stop,
