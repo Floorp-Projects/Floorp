@@ -102,7 +102,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
                 AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
             if (Accessible* newPos =
                     doc->GetAccessibleOrContainer(point.node)) {
-              static_cast<AccessibleWrap*>(newPos)->Pivot(
+              static_cast<AccessibleWrap*>(newPos)->PivotTo(
                   java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
                   true);
             }
@@ -111,8 +111,8 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         break;
       }
       case nsIAccessibleEvent::EVENT_SCROLLING_START: {
-        accessible->Pivot(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
-                          true, true);
+        accessible->PivotTo(
+            java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true, true);
         break;
       }
       default:
@@ -294,8 +294,8 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return false;
 }
 
-void AccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
-                           bool aInclusive) {
+void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
+                             bool aInclusive) {
   AccessibleOrProxy accOrProxyRoot = AccessibleOrProxy(RootAccessible());
   a11y::Pivot pivot(accOrProxyRoot);
   TraversalRule rule(aGranularity);
