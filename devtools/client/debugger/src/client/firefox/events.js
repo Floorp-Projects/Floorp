@@ -141,4 +141,5 @@ export {
   addThreadEventListeners,
   removeThreadEventListeners,
   attachAllTargets,
+  ensureSourceActor,
 };
