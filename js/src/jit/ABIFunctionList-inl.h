@@ -14,6 +14,7 @@
 
 #include "jit/ABIFunctions.h"
 #include "js/Conversions.h"  // JS::ToInt32
+#include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
 
 #include "wasm/WasmBuiltins.h"  // js::wasm::*
 
@@ -35,6 +36,7 @@ namespace jit {
 
 #define ABIFUNCTION_LIST(_)                                 \
   ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
+  _(js::ArgumentsObject::finishForIonPure)                  \
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
