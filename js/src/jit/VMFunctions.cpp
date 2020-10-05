@@ -20,6 +20,7 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithExtra
 #include "js/friend/WindowProxy.h"  // js::IsWindow
+#include "js/Printf.h"
 #include "vm/ArrayObject.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/Interpreter.h"
@@ -2412,6 +2413,29 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
+}
+
+void AssumeUnreachable(const char* output) {
+  MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
+}
+
+void Printf0(const char* output) {
+  AutoUnsafeCallWithABI unsafe;
+
+  // Use stderr instead of stdout because this is only used for debug
+  // output. stderr is less likely to interfere with the program's normal
+  // output, and it's always unbuffered.
+  fprintf(stderr, "%s", output);
+}
+
+void Printf1(const char* output, uintptr_t value) {
+  AutoUnsafeCallWithABI unsafe;
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  js::UniqueChars line = JS_sprintf_append(nullptr, output, value);
+  if (!line) {
+    oomUnsafe.crash("OOM at masm.printf");
+  }
+  fprintf(stderr, "%s", line.get());
 }
 
 }  // namespace jit
