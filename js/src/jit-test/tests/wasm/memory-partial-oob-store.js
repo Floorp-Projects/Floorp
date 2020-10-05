@@ -1,12 +1,11 @@
 // Cloned from memory.js but kept separate because it may have to be disabled on
 // some devices until bugs are fixed.
 
-// Bug 1666747 - partially OOB stores are not handled correctly on ARM and ARM64.
-// The simulators don't implement the correct semantics anyhow, so when the bug
-// is fixed in the code generator they must remain excluded here.
+// Bug 1666747 - partially OOB unaligned stores are not handled correctly on ARM
+// and ARM64.  The simulators don't implement the correct semantics anyhow, so
+// when the bug is fixed in the code generator they must remain excluded here.
 var conf = getBuildConfiguration();
-if (conf.arm64 || conf["arm64-simulator"] || conf.arm || conf["arm-simulator"])
-    quit(0);
+var excluded = conf.arm64 || conf["arm64-simulator"] || conf.arm || conf["arm-simulator"];
 
 const RuntimeError = WebAssembly.RuntimeError;
 
@@ -66,48 +65,62 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 
 for (let align of [0,1,2,4]) {
 
-    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
+    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff0, 0xfff8]) {
         // Accesses of 1 byte.
         let lastValidIndex = 0x10000 - 1 - offset;
-        if (align < 2) {
+        if (align < 2 && !excluded) {
             testStoreOOB('i32', '8', lastValidIndex + 1, offset, align, -42);
         }
 
         // Accesses of 2 bytes.
         lastValidIndex = 0x10000 - 2 - offset;
-        if (align < 4) {
+        if (align < 4 && !excluded) {
             testStoreOOB('i32', '16', lastValidIndex + 1, offset, align, -32768);
         }
 
         // Accesses of 4 bytes.
         lastValidIndex = 0x10000 - 4 - offset;
-        testStoreOOB('i32', '', lastValidIndex + 1, offset, align, 1337);
-        testStoreOOB('f32', '', lastValidIndex + 1, offset, align, Math.fround(13.37));
+        if (!excluded) {
+            testStoreOOB('i32', '', lastValidIndex + 1, offset, align, 1337);
+            testStoreOOB('f32', '', lastValidIndex + 1, offset, align, Math.fround(13.37));
+        }
 
         // Accesses of 8 bytes.
         lastValidIndex = 0x10000 - 8 - offset;
-        testStoreOOB('f64', '', lastValidIndex + 1, offset, align, 1.23456789);
+        if (!excluded) {
+            testStoreOOB('f64', '', lastValidIndex + 1, offset, align, 1.23456789);
+        }
     }
 
-    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
+    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff0, 0xfff8]) {
         // Accesses of 1 byte.
         let lastValidIndex = 0x10000 - 1 - offset;
-        if (align < 2) {
+        if (align < 2 && !excluded) {
             testStoreOOB('i64', '8', lastValidIndex + 1, offset, align, -42);
         }
 
         // Accesses of 2 bytes.
         lastValidIndex = 0x10000 - 2 - offset;
-        if (align < 4) {
+        if (align < 4 && !excluded) {
             testStoreOOB('i64', '16', lastValidIndex + 1, offset, align, -32768);
         }
 
         // Accesses of 4 bytes.
         lastValidIndex = 0x10000 - 4 - offset;
-        testStoreOOB('i64', '32', lastValidIndex + 1, offset, align, 0xf1231337 | 0);
+        if (!excluded) {
+            testStoreOOB('i64', '32', lastValidIndex + 1, offset, align, 0xf1231337 | 0);
+        }
 
         // Accesses of 8 bytes.
         lastValidIndex = 0x10000 - 8 - offset;
-        testStoreOOB('i64', '', lastValidIndex + 1, offset, align, '0x1234567887654321');
+        if (!excluded) {
+            testStoreOOB('i64', '', lastValidIndex + 1, offset, align, '0x1234567887654321');
+        }
     }
 }
+
+// On 32-bit platforms, a declared-aligned i64 store is implemented as two
+// presumed-aligned 32-bit stores.  This tests that we don't store the low
+// word before the high word if the low word is in-bounds but the high word
+// is not.
+testStoreOOB('i64', '', 0x10000 - 4, 0, 0, '0x0123456789abcdef');
