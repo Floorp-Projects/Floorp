@@ -8,6 +8,7 @@
 #define jit_ABIFunctionList_inl_h
 
 #include "jit/ABIFunctions.h"
+#include "js/Conversions.h"  // JS::ToInt32
 
 #include "wasm/WasmBuiltins.h"  // js::wasm::*
 
@@ -37,6 +38,7 @@ namespace jit {
 // ABIFUNCTION_LIST instead. This list must be sorted with the name of the C++
 // function.
 #define ABIFUNCTION_AND_TYPE_LIST(_)                       \
+  _(JS::ToInt32, int32_t (*)(double))
 
 // GCC warns when the signature does not have matching attributes (for example
 // MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
