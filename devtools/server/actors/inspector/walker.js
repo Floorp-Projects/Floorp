@@ -329,8 +329,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       traits: {
         // Walker implements node picker starting with Firefox 80
         supportsNodePicker: true,
-        // Walker implements overflow debugging support starting with Firefox 81
-        supportsOverflowDebugging: true,
+        // Walker implements overflow debugging support starting with Firefox 83
+        supportsOverflowDebugging2: true,
       },
     };
   },
@@ -2871,9 +2871,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * Return the overflow causing elements for the given node.
+   * Returns an array of the overflow causing elements' NodeActor for the given node.
    *
    * @param {NodeActor} node The scrollable node.
+   * @return {Array<NodeActor>} An array of the overflow causing elements.
    */
   getOverflowCausingElements: function(node) {
     if (
@@ -2891,12 +2892,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         overflowCausingChild = overflowCausingChild.parentElement;
       }
 
-      this.attachElement(overflowCausingChild);
-
       return overflowCausingChild;
     });
 
-    return new NodeListActor(this, overflowCausingElements);
+    return this.attachElements(overflowCausingElements);
   },
 
   /**

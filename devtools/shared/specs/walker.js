@@ -385,7 +385,7 @@ const walkerSpec = generateActorSpec({
         node: Arg(0, "domnode"),
       },
       response: {
-        list: RetVal("domnodelist"),
+        list: RetVal("disconnectedNodeArray"),
       },
     },
     getScrollableAncestorNode: {
