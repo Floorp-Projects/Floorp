@@ -124,6 +124,9 @@ add_task(async () => {
         );
         await closeContextMenu(menu);
 
+        // Due to bug 1592539, we're hiding the Picture-in-Picture
+        // context menu item for <video> elements that have srcObject
+        // set to anything but null.
         await SpecialPowers.spawn(browser, [videoID], async videoID => {
           // Construct a new video element, and capture a stream from it
           // to redirect to the video that we're testing.
@@ -142,35 +145,8 @@ add_task(async () => {
         });
         menu = await openContextMenu(browser, videoID);
         Assert.ok(
-          !menuItem.hidden,
-          "Should be showing Picture-in-Picture menu item."
-        );
-        Assert.equal(
-          menuItem.getAttribute("checked"),
-          "false",
-          "Picture-in-Picture should be unchecked."
-        );
-        await closeContextMenu(menu);
-
-        pipWin = await triggerPictureInPicture(browser, videoID);
-        ok(pipWin, "Got Picture-in-Picture window.");
-
-        await SpecialPowers.spawn(browser, [videoID], async videoID => {
-          let video = content.document.getElementById(videoID);
-          await ContentTaskUtils.waitForCondition(() => {
-            return video.isCloningElementVisually;
-          }, "Video has started being cloned.");
-        });
-
-        menu = await openContextMenu(browser, videoID);
-        Assert.ok(
-          !menuItem.hidden,
-          "Should show Picture-in-Picture menu item."
-        );
-        Assert.equal(
-          menuItem.getAttribute("checked"),
-          "true",
-          "Picture-in-Picture should be checked."
+          menuItem.hidden,
+          "Should not be showing Picture-in-Picture menu item."
         );
         await closeContextMenu(menu);
       }

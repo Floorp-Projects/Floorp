@@ -4,15 +4,28 @@
 "use strict";
 
 /**
- * This test checks that the media stream video format has functional
- * support for PiP
+ * Due to bug 1592539, we've disabled the Picture-in-Picture toggle and
+ * context menu item for <video> elements with srcObject set to anything
+ * other than null. We will re-enable Picture-in-Picture support for these
+ * these types of video elements when the underlying bug is fixed.
  */
-add_task(async function test_mediaStreamVideos() {
+add_task(async function test_disabledForMediaStreamVideos() {
+  // Disabling of the toggle on MediaStream videos is overridden by the always-show
+  // pref.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "media.videocontrols.picture-in-picture.video-toggle.always-show",
+        false,
+      ],
+    ],
+  });
+
   await testToggle(
     TEST_PAGE,
     {
-      "with-controls": { canToggle: true },
-      "no-controls": { canToggle: true },
+      "with-controls": { canToggle: false },
+      "no-controls": { canToggle: false },
     },
     async browser => {
       await SpecialPowers.spawn(browser, [], async () => {
@@ -22,11 +35,6 @@ add_task(async function test_mediaStreamVideos() {
         newVideo.src = "test-video.mp4";
         content.document.body.appendChild(newVideo);
         newVideo.loop = true;
-      });
-      await ensureVideosReady(browser);
-
-      await SpecialPowers.spawn(browser, [], async () => {
-        let newVideo = content.document.body.lastChild;
         await newVideo.play();
 
         for (let videoID of ["with-controls", "no-controls"]) {
