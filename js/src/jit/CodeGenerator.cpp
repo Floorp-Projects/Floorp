@@ -8955,10 +8955,11 @@ void CodeGenerator::visitModD(LModD* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
   MOZ_ASSERT(!ins->temp()->isBogusTemp());
 
+  using Fn = double (*)(double a, double b);
   masm.setupUnalignedABICall(ToRegister(ins->temp()));
   masm.passABIArg(lhs, MoveOp::DOUBLE);
   masm.passABIArg(rhs, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, NumberMod>(MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
