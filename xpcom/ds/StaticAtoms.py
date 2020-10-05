@@ -82,7 +82,6 @@ STATIC_ATOMS = [
     Atom("allowfullscreen", "allowfullscreen"),
     Atom("allowmodals", "allow-modals"),
     Atom("alloworientationlock", "allow-orientation-lock"),
-    Atom("allowpaymentrequest", "allowpaymentrequest"),
     Atom("allowpointerlock", "allow-pointer-lock"),
     Atom("allowpopupstoescapesandbox", "allow-popups-to-escape-sandbox"),
     Atom("allowpopups", "allow-popups"),
