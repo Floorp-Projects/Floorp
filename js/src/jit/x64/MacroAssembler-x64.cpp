@@ -144,17 +144,17 @@ void MacroAssemblerX64::boxValue(JSValueType type, Register src,
   orq(src, dest);
 }
 
-void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
+void MacroAssemblerX64::handleFailureWithHandlerTail(void* handler,
+                                                     Label* profilerExitTail) {
   // Reserve space for exception information.
   subq(Imm32(sizeof(ResumeFromException)), rsp);
   movq(rsp, rax);
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
   asMasm().setupUnalignedABICall(rcx);
   asMasm().passABIArg(rax);
-  asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  asMasm().callWithABI(handler, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;

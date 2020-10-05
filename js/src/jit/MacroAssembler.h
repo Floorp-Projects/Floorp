@@ -29,7 +29,6 @@
 #else
 #  error "Unknown architecture!"
 #endif
-#include "jit/ABIFunctions.h"
 #include "jit/AtomicOp.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
@@ -227,12 +226,6 @@ enum class CheckUnsafeCallWithABI {
   // that we can't change and/or that we know won't GC.
   DontCheckOther,
 };
-
-// This is a global function made to create the DynFn type in a controlled
-// environment which would check if the function signature has been registered
-// as an ABI function signature.
-template <typename Sig>
-static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
@@ -564,14 +557,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // 4) Make the call:
   //
-  //      using Fn = int32_t (*)(int32_t)
-  //      masm.callWithABI<Fn, Callee>();
+  //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, Callee));
   //
   //    In the case where the call returns a double, that needs to be
   //    indicated to the callWithABI like this:
   //
-  //      using Fn = double (*)(int32_t)
-  //      masm.callWithABI<Fn, Callee>(MoveOp::DOUBLE);
+  //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ...), MoveOp::DOUBLE);
   //
   //    There are overloads to allow calls to registers and addresses.
   //
@@ -625,13 +616,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void callWithABI(
       void* fun, MoveOp::Type result = MoveOp::GENERAL,
-      CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-  inline void callWithABI(
-      DynFn fun, MoveOp::Type result = MoveOp::GENERAL,
-      CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-  template <typename Sig, Sig fun>
-  inline void callWithABI(
-      MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
   inline void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
   inline void callWithABI(const Address& fun,
@@ -4320,9 +4304,6 @@ static inline MIRType ToMIRType(ABIArgType argType) {
   }
   MOZ_CRASH("unexpected argType");
 }
-
-// Helper for generatePreBarrier.
-inline DynFn JitMarkFunction(MIRType type);
 
 template <class VecT>
 class ABIArgIter {

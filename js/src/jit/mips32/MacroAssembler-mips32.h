@@ -568,7 +568,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void storeTypeTag(ImmTag tag, Address dest);
   void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-  void handleFailureWithHandlerTail(Label* profilerExitTail);
+  void handleFailureWithHandlerTail(void* handler, Label* profilerExitTail);
 
   template <typename T>
   void wasmAtomicStore64(const wasm::MemoryAccessDesc& access, const T& mem,

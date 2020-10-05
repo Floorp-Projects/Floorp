@@ -22,7 +22,6 @@
 
 #include <algorithm>
 
-#include "jit/ABIFunctions.h"
 #include "jit/JitScript.h"
 #include "jit/RegisterAllocator.h"
 #include "js/Printf.h"
@@ -31,7 +30,6 @@
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
 
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
@@ -217,9 +215,8 @@ static void GenPrintf(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintText);
     } else {
-      using Fn = void (*)(const char* output);
-      masm.callWithABI<Fn, PrintText>(MoveOp::GENERAL,
-                                      CheckUnsafeCallWithABI::DontCheckOther);
+      masm.callWithABI((void*)PrintText, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckOther);
     }
   });
 }
@@ -231,9 +228,8 @@ static void GenPrintIsize(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintI32);
     } else {
-      using Fn = void (*)(int32_t val);
-      masm.callWithABI<Fn, PrintI32>(MoveOp::GENERAL,
-                                     CheckUnsafeCallWithABI::DontCheckOther);
+      masm.callWithABI((void*)PrintI32, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckOther);
     }
   });
 }
@@ -245,9 +241,8 @@ static void GenPrintPtr(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintPtr);
     } else {
-      using Fn = void (*)(uint8_t * val);
-      masm.callWithABI<Fn, PrintPtr>(MoveOp::GENERAL,
-                                     CheckUnsafeCallWithABI::DontCheckOther);
+      masm.callWithABI((void*)PrintPtr, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckOther);
     }
   });
 }
@@ -272,9 +267,8 @@ static void GenPrintF32(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintF32);
     } else {
-      using Fn = void (*)(float val);
-      masm.callWithABI<Fn, PrintF32>(MoveOp::GENERAL,
-                                     CheckUnsafeCallWithABI::DontCheckOther);
+      masm.callWithABI((void*)PrintF32, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckOther);
     }
   });
 }
@@ -286,9 +280,8 @@ static void GenPrintF64(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintF64);
     } else {
-      using Fn = void (*)(double val);
-      masm.callWithABI<Fn, PrintF64>(MoveOp::GENERAL,
-                                     CheckUnsafeCallWithABI::DontCheckOther);
+      masm.callWithABI((void*)PrintF64, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckOther);
     }
   });
 }

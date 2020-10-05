@@ -6,7 +6,6 @@
 
 #include "jit/VMFunctions.h"
 
-#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "builtin/String.h"
@@ -21,7 +20,6 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithExtra
 #include "js/friend/WindowProxy.h"  // js::IsWindow
-#include "js/Printf.h"
 #include "vm/ArrayObject.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/Interpreter.h"
@@ -132,12 +130,12 @@ const VMFunctionData& GetVMFunction(TailCallVMFunctionId id) {
   return tailCallVMFunctions[size_t(id)];
 }
 
-static DynFn GetVMFunctionTarget(VMFunctionId id) {
-  return DynFn{vmFunctionTargets[size_t(id)]};
+static void* GetVMFunctionTarget(VMFunctionId id) {
+  return vmFunctionTargets[size_t(id)];
 }
 
-static DynFn GetVMFunctionTarget(TailCallVMFunctionId id) {
-  return DynFn{tailCallVMFunctionTargets[size_t(id)]};
+static void* GetVMFunctionTarget(TailCallVMFunctionId id) {
+  return tailCallVMFunctionTargets[size_t(id)];
 }
 
 template <typename IdT>
@@ -1316,21 +1314,6 @@ void AutoDetectInvalidation::setReturnOverride() {
   cx_->setIonReturnOverride(rval_.get());
 }
 
-void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
-  AutoUnsafeCallWithABI unsafe;
-  // FIXME: check runtime?
-  MOZ_ASSERT(cx->zone() == bi->zone());
-  MOZ_ASSERT(bi->isAligned());
-  MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
-}
-
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj) {
-  AutoUnsafeCallWithABI unsafe;
-  if (obj) {
-    AssertValidObjectPtr(cx, obj);
-  }
-}
-
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
 #ifdef DEBUG
@@ -1349,6 +1332,13 @@ void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
     MOZ_ASSERT(gc::IsObjectAllocKind(kind));
   }
 #endif
+}
+
+void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj) {
+  AutoUnsafeCallWithABI unsafe;
+  if (obj) {
+    AssertValidObjectPtr(cx, obj);
+  }
 }
 
 void AssertValidStringPtr(JSContext* cx, JSString* str) {
@@ -1402,6 +1392,14 @@ void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym) {
   }
 
   MOZ_ASSERT(sym->getAllocKind() == gc::AllocKind::SYMBOL);
+}
+
+void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
+  AutoUnsafeCallWithABI unsafe;
+  // FIXME: check runtime?
+  MOZ_ASSERT(cx->zone() == bi->zone());
+  MOZ_ASSERT(bi->isAligned());
+  MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
 }
 
 void AssertValidValue(JSContext* cx, Value* v) {
@@ -2021,16 +2019,6 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   return true;
 }
 
-void* AllocateString(JSContext* cx) {
-  AutoUnsafeCallWithABI unsafe;
-  return js::AllocateString<JSString, NoGC>(cx, js::gc::TenuredHeap);
-}
-
-void* AllocateFatInlineString(JSContext* cx) {
-  AutoUnsafeCallWithABI unsafe;
-  return js::AllocateString<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
-}
-
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -2040,49 +2028,6 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
 
   return js::AllocateBigInt<NoGC>(cx, gc::TenuredHeap);
 }
-
-void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
-                                     int32_t count) {
-  AutoUnsafeCallWithABI unsafe;
-  using mozilla::CheckedUint32;
-
-  obj->initPrivate(nullptr);
-
-  // Negative numbers or zero will bail out to the slow path, which in turn will
-  // raise an invalid argument exception or create a correct object with zero
-  // elements.
-  if (count <= 0 || uint32_t(count) >= INT32_MAX / obj->bytesPerElement()) {
-    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
-    return;
-  }
-
-  obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
-
-  size_t nbytes = count * obj->bytesPerElement();
-  MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-             "RoundUp must not overflow");
-
-  nbytes = RoundUp(nbytes, sizeof(Value));
-  void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
-                                                 js::ArrayBufferContentsArena);
-  if (buf) {
-    InitObjectPrivate(obj, buf, nbytes, MemoryUse::TypedArrayElements);
-  }
-}
-
-void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
-                                    size_t nDynamicSlots) {
-  AutoUnsafeCallWithABI unsafe;
-  return js::AllocateObject<NoGC>(cx, kind, nDynamicSlots, gc::DefaultHeap,
-                                  &ArrayObject::class_);
-}
-
-#ifdef JS_GC_PROBES
-void TraceCreateObject(JSObject* obj) {
-  AutoUnsafeCallWithABI unsafe;
-  js::gc::gcprobes::CreateObject(obj);
-}
-#endif
 
 #if JS_BITS_PER_WORD == 32
 BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high) {
@@ -2467,44 +2412,6 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
-}
-
-bool GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v) {
-  AutoUnsafeCallWithABI unsafe;
-  if (group->unknownPropertiesDontCheckGeneration()) {
-    return true;
-  }
-  HeapTypeSet* propTypes = group->maybeGetPropertyDontCheckGeneration(*id);
-  if (!propTypes) {
-    return true;
-  }
-  if (!propTypes->nonConstantProperty()) {
-    return false;
-  }
-  return propTypes->hasType(TypeSet::GetValueType(*v));
-}
-
-void AssumeUnreachable(const char* output) {
-  MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
-}
-
-void Printf0(const char* output) {
-  AutoUnsafeCallWithABI unsafe;
-
-  // Use stderr instead of stdout because this is only used for debug
-  // output. stderr is less likely to interfere with the program's normal
-  // output, and it's always unbuffered.
-  fprintf(stderr, "%s", output);
-}
-
-void Printf1(const char* output, uintptr_t value) {
-  AutoUnsafeCallWithABI unsafe;
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  js::UniqueChars line = JS_sprintf_append(nullptr, output, value);
-  if (!line) {
-    oomUnsafe.crash("OOM at masm.printf");
-  }
-  fprintf(stderr, "%s", line.get());
 }
 
 }  // namespace jit

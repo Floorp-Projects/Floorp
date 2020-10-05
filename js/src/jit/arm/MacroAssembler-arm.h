@@ -1114,7 +1114,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void storeTypeTag(ImmTag tag, const Address& dest);
   void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-  void handleFailureWithHandlerTail(Label* profilerExitTail);
+  void handleFailureWithHandlerTail(void* handler, Label* profilerExitTail);
 
   /////////////////////////////////////////////////////////////////
   // Common interface.

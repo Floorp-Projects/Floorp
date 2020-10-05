@@ -134,17 +134,17 @@ void MacroAssemblerX86::finish() {
   }
 }
 
-void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
+void MacroAssemblerX86::handleFailureWithHandlerTail(void* handler,
+                                                     Label* profilerExitTail) {
   // Reserve space for exception information.
   subl(Imm32(sizeof(ResumeFromException)), esp);
   movl(esp, eax);
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
   asMasm().setupUnalignedABICall(ecx);
   asMasm().passABIArg(eax);
-  asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  asMasm().callWithABI(handler, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;

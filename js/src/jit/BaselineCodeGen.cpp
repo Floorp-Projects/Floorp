@@ -8,7 +8,6 @@
 
 #include "mozilla/Casting.h"
 
-#include "jit/ABIFunctions.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
@@ -36,7 +35,6 @@
 #endif
 
 #include "debugger/DebugAPI-inl.h"
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/BaselineFrameInfo-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -522,12 +520,11 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 #endif
   masm.pushValue(R0);
 
-  using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
   masm.setupUnalignedABICall(scratch);
   masm.movePtr(ImmPtr(cx->runtime()), scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(objReg);
-  masm.callWithABI<Fn, PostWriteBarrier>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
 
   restoreInterpreterPCReg();
 
@@ -759,11 +756,10 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
 }
 
 static void EmitCallFrameIsDebuggeeCheck(MacroAssembler& masm) {
-  using Fn = void (*)(BaselineFrame * frame);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
-  masm.callWithABI<Fn, FrameIsDebuggeeCheck>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::FrameIsDebuggeeCheck));
 }
 
 template <>
@@ -7006,11 +7002,11 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
-  using Fn1 = void (*)(BaselineFrame * frame);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
-  masm.callWithABI<Fn1, HandleCodeCoverageAtPrologue>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPrologue));
 
   restoreInterpreterPCReg();
   masm.ret();
@@ -7022,13 +7018,12 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
-  using Fn2 = void (*)(BaselineFrame * frame, jsbytecode * pc);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   Register pcReg = LoadBytecodePC(masm, R2.scratchReg());
   masm.passABIArg(pcReg);
-  masm.callWithABI<Fn2, HandleCodeCoverageAtPC>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPC));
 
   restoreInterpreterPCReg();
   masm.ret();
