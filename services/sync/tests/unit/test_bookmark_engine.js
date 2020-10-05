@@ -29,8 +29,8 @@ const LegacyEngine = BookmarksEngine;
 
 function checkRecordedEvents(object, expected, message) {
   // Ignore event telemetry from the merger.
-  let repairEvents = recordedEvents.filter(event => event.object == object);
-  deepEqual(repairEvents, expected, message);
+  let checkEvents = recordedEvents.filter(event => event.object == object);
+  deepEqual(checkEvents, expected, message);
   // and clear the list so future checks are easier to write.
   recordedEvents = [];
 }

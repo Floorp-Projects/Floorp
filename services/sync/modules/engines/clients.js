@@ -50,18 +50,6 @@ const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "getRepairRequestor",
-  "resource://services-sync/collection_repair.js"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "getRepairResponder",
-  "resource://services-sync/collection_repair.js"
-);
-
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
 const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
@@ -770,16 +758,6 @@ ClientEngine.prototype = {
       importance: 1,
       desc: "Instruct a client to display a URI",
     },
-    repairRequest: {
-      args: 1,
-      importance: 2,
-      desc: "Instruct a client to initiate a repair",
-    },
-    repairResponse: {
-      args: 1,
-      importance: 2,
-      desc: "Instruct a client a repair request is complete",
-    },
   },
 
   /**
@@ -887,55 +865,6 @@ ClientEngine.prototype = {
             let [uri, clientId, title] = args;
             URIsToDisplay.push({ uri, clientId, title });
             break;
-          case "repairResponse": {
-            // When we send a repair request to another device that understands
-            // it, that device will send a response indicating what it did.
-            let response = args[0];
-            let requestor = getRepairRequestor(response.collection);
-            if (!requestor) {
-              this._log.warn("repairResponse for unknown collection", response);
-              break;
-            }
-            if (!(await requestor.continueRepairs(response))) {
-              this._log.warn(
-                "repairResponse couldn't continue the repair",
-                response
-              );
-            }
-            break;
-          }
-          case "repairRequest": {
-            // Another device has sent us a request to make some repair.
-            let request = args[0];
-            let responder = getRepairResponder(request.collection);
-            if (!responder) {
-              this._log.warn("repairRequest for unknown collection", request);
-              break;
-            }
-            try {
-              if (await responder.repair(request, rawCommand)) {
-                // We've started a repair - once that collection has synced it
-                // will write a "response" command and arrange for this repair
-                // request to be removed from the local command list - if we
-                // removed it now we might fail to write a response in cases of
-                // premature shutdown etc.
-                shouldRemoveCommand = false;
-              }
-            } catch (ex) {
-              if (Async.isShutdownException(ex)) {
-                // Let's assume this error was caused by the shutdown, so let
-                // it try again next time.
-                throw ex;
-              }
-              // otherwise there are no second chances - the command is removed
-              // and will not be tried again.
-              // (Note that this shouldn't be hit in the normal case - it's
-              // expected the responder will handle all reasonable failures and
-              // write a response indicating that it couldn't do what was asked.)
-              this._log.error("Failed to handle a repair request", ex);
-            }
-            break;
-          }
           default:
             this._log.warn("Received an unknown command: " + command);
             break;

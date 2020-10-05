@@ -645,58 +645,6 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   },
 
   /**
-   * Returns an array of `{ recordId, syncable }` tuples for all items in
-   * `requestedRecordIds`. If any requested ID is a folder, all its descendants
-   * will be included. Ancestors of non-syncable items are not included; if
-   * any are missing on the server, the requesting client will need to make
-   * another repair request.
-   *
-   * Sync calls this method to respond to incoming bookmark repair requests
-   * and upload items that are missing on the server.
-   */
-  fetchRecordIdsForRepair(requestedRecordIds) {
-    let requestedGuids = requestedRecordIds.map(
-      BookmarkSyncUtils.recordIdToGuid
-    );
-    return PlacesUtils.withConnectionWrapper(
-      "BookmarkSyncUtils: fetchRecordIdsForRepair",
-      async function(db) {
-        let rows = await db.executeCached(`
-          WITH RECURSIVE
-          syncedItems(id) AS (
-            SELECT b.id FROM moz_bookmarks b
-            WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
-                             'mobile______')
-            UNION ALL
-            SELECT b.id FROM moz_bookmarks b
-            JOIN syncedItems s ON b.parent = s.id
-          ),
-          descendants(id) AS (
-            SELECT b.id FROM moz_bookmarks b
-            WHERE b.guid IN (${requestedGuids
-              .map(guid => JSON.stringify(guid))
-              .join(",")})
-            UNION ALL
-            SELECT b.id FROM moz_bookmarks b
-            JOIN descendants d ON d.id = b.parent
-          )
-          SELECT b.guid, s.id NOT NULL AS syncable
-          FROM descendants d
-          JOIN moz_bookmarks b ON b.id = d.id
-          LEFT JOIN syncedItems s ON s.id = d.id
-          `);
-        return rows.map(row => {
-          let recordId = BookmarkSyncUtils.guidToRecordId(
-            row.getResultByName("guid")
-          );
-          let syncable = !!row.getResultByName("syncable");
-          return { recordId, syncable };
-        });
-      }
-    );
-  },
-
-  /**
    * Migrates an array of `{ recordId, modified }` tuples from the old JSON-based
    * tracker to the new sync change counter. `modified` is when the change was
    * added to the old tracker, in milliseconds.
