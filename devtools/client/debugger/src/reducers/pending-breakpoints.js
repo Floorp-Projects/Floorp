@@ -25,7 +25,10 @@ export type PendingBreakpointsState = { [string]: PendingBreakpoint };
 function update(state: PendingBreakpointsState = {}, action: Action) {
   switch (action.type) {
     case "SET_BREAKPOINT":
-      return setBreakpoint(state, action);
+      if (action.status === "start") {
+        return setBreakpoint(state, action);
+      }
+      return state;
 
     case "REMOVE_BREAKPOINT":
       if (action.status === "start") {
