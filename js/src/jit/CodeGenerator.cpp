@@ -12623,11 +12623,12 @@ void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
   masm.bind(&slowCheck);
 
   saveVolatile(output);
+  using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(obj);
   masm.movePtr(ImmPtr(gen->runtime), output);
   masm.passABIArg(output);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::TypeOfObject));
+  masm.callWithABI<Fn, TypeOfObject>();
   masm.storeCallPointerResult(output);
   restoreVolatile(output);
 
@@ -14022,9 +14023,10 @@ void CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool) {
   Register output = ool->output();
 
   saveVolatile(output);
+  using Fn = bool (*)(JSObject * obj);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(object);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsCallable));
+  masm.callWithABI<Fn, ObjectIsCallable>();
   masm.storeCallBoolResult(output);
   restoreVolatile(output);
   masm.jump(ool->rejoin());
@@ -14060,9 +14062,10 @@ void CodeGenerator::visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool) {
   Register output = ToRegister(ins->output());
 
   saveVolatile(output);
+  using Fn = bool (*)(JSObject * obj);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(object);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsConstructor));
+  masm.callWithABI<Fn, ObjectIsConstructor>();
   masm.storeCallBoolResult(output);
   restoreVolatile(output);
   masm.jump(ool->rejoin());
@@ -14668,10 +14671,10 @@ void CodeGenerator::visitDebugger(LDebugger* ins) {
   Register temp = ToRegister(ins->getTemp(1));
 
   masm.loadJSContext(cx);
+  using Fn = bool (*)(JSContext * cx);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(cx);
-  masm.callWithABI(
-      JS_FUNC_TO_DATA_PTR(void*, GlobalHasLiveOnDebuggerStatement));
+  masm.callWithABI<Fn, GlobalHasLiveOnDebuggerStatement>();
 
   Label bail;
   masm.branchIfTrueBool(ReturnReg, &bail);
@@ -15200,12 +15203,13 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
 
   masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp2);
 
+  using Fn = bool (*)(JSContext* cx, JSObject* obj, Shape* propShape);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(object);
   masm.passABIArg(temp2);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
+  masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
 
   bailoutIfFalseBool(ReturnReg, lir->snapshot());
 }
