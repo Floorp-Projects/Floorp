@@ -110,6 +110,7 @@ struct TargetConfirmationFlags final {
   explicit TargetConfirmationFlags(bool aTargetConfirmed)
       : mTargetConfirmed(aTargetConfirmed),
         mRequiresTargetConfirmation(false),
+        mHitScrollbar(false),
         mHitScrollThumb(false) {}
 
   explicit TargetConfirmationFlags(
@@ -119,11 +120,14 @@ struct TargetConfirmationFlags final {
             (aHitTestInfo & gfx::CompositorHitTestDispatchToContent).isEmpty()),
         mRequiresTargetConfirmation(aHitTestInfo.contains(
             gfx::CompositorHitTestFlags::eRequiresTargetConfirmation)),
+        mHitScrollbar(
+            aHitTestInfo.contains(gfx::CompositorHitTestFlags::eScrollbar)),
         mHitScrollThumb(aHitTestInfo.contains(
             gfx::CompositorHitTestFlags::eScrollbarThumb)) {}
 
   bool mTargetConfirmed : 1;
   bool mRequiresTargetConfirmation : 1;
+  bool mHitScrollbar : 1;
   bool mHitScrollThumb : 1;
 };
 
