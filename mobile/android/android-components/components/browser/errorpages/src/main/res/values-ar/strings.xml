@@ -29,6 +29,10 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">متقدم…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>هناك احتمال بمحاولة أحد الأشخاص انتحال هوية هذا الموقع، وبذلك عليك عدم المواصلة.</label>
+<br><br>
+<label>تثبت المواقع على الوِب هويّتها باستعمال الشهادات. لا يثق %1$s بالموقع <b>%2$s</b> لأن مُصدر شهادته غير معلوم، أو أن الشهادة موقعة ذاتيا، أو أن الخادوم لم يرسل الشهادات الوسيطة كما ينبغي.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">عُد للخلف (يُنصح به)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -37,11 +41,33 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">قُوطِع الاتصال</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>اتصل المتصفح بنجاح، لكن قطع الاتصال أثناء نقل البيانات.  من فضلك أعد المحاولة.</p>
+<ul>
+<li>قد يكون الموقع متوقفًا مؤقتًا أو مشغولا جدًا. حاول ثانية بعد عدّة دقائق.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">انتهت مهلة الاتصال</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>لم يستجب الموقع المطلوب لطلب الاتصال، وتوقف المتصفح عن انتظار رده.</p>
+<ul>
+<li>ربما يواجه الخادوم طلبا متزايدا أو يعاني من انقطاع مؤقت؟  أعد المحاولة فيما بعد.</li>
+<li>ألا تستطيع تصفح المواقع الأخرى؟ راجع اتصال الجهاز بالشبكة.</li>
+<li>جهازك أو شبكتك محمية بجدار ناري أو وسيط؟  الإعدادات الخطأ قد تتعارض مع تصفح الوِب.</li>
+<li>أمازلت تواجه مشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة</li>
+</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">تعذّر الاتصال</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+<li>قد يكون الموقع غير متاح مؤقتًا أو مشغولًا جدًا. حاول مجددًا بعد قليل.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">استجابة غير متوقعة من الخادوم</string>
@@ -74,6 +100,13 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">صُفِّر الاتصال</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>قُوطع الاتصال الشبكي أثناء التفاوض على الاتصال. من فضلك أعد المحاولة.</p>
+<ul>
+<li>قد يكون الموقع متوقفًا مؤقتًا أو مشغولا جدًا. حاول ثانية بعد عدّة دقائق.</li>
+<li>إذا كنت غير قادر على تحميل أي صفحة، افحص اتصال الحاسوب بالشبكة.</li>
+</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">نوع ملف غير آمن</string>
 
@@ -100,6 +133,14 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">العنوان غير موجود</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>لم يجد المتصفح الخادوم المستضيف للعنوان المعطى.</p>
+<ul>
+<li>هل قمت بخطأ في كتابة النطاق؟ (مثل <q><strong>ww</strong>.example.org</q> بدلا من <q><strong>www</strong>.example.org</q>)</li>
+<li>أمتأكد من وجود عنوان النطاق هذا؟  ربما قد يكون انتهى تسجيله.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">لا يوجد اتصال بالإنترنت</string>

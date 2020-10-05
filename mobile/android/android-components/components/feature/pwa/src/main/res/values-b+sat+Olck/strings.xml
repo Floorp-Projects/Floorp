@@ -6,5 +6,5 @@
     <!-- Refresh button in site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_refresh">ᱱᱟᱶᱟ ᱟᱹᱨᱩ</string>
     <!-- Toast displayed when the website URL is copied. -->
-    <string name="mozac_feature_pwa_copy_success">URL ᱱᱚᱠᱚᱞᱮᱱᱟ.</string>
+    <string name="mozac_feature_pwa_copy_success">URL ᱱᱚᱠᱚᱞᱮᱱᱟ ᱾</string>
 </resources>
