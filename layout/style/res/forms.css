@@ -91,8 +91,8 @@ input {
      internal padding magic) */
   padding: 1px;
   border: 2px inset ThreeDLightShadow;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   font: -moz-field;
   text-rendering: optimizeLegibility;
   cursor: text;
@@ -113,8 +113,8 @@ textarea {
   border: 2px inset ThreeDLightShadow;
   /* The 1px inline padding is for parity with Win/IE */
   padding-inline: 1px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   font: medium -moz-fixed;
   text-rendering: optimizeLegibility;
   vertical-align: text-bottom;
@@ -244,8 +244,8 @@ select {
 
 select:-moz-select-list-box {
   overflow: auto;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   vertical-align: text-bottom;
   padding-block: 1px;
   appearance: auto;
