@@ -2871,8 +2871,6 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-  env->compilerEnv->computeParameters(d);
-
   if (!DecodeTypeSection(d, env)) {
     return false;
   }
@@ -3221,9 +3219,7 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
   Decoder d(bytecode.bytes, 0, error);
 
   FeatureArgs features = FeatureArgs::build(cx);
-  CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
-                                  OptimizedBackend::Ion, DebugEnabled::False);
-  ModuleEnvironment env(&compilerEnv, features);
+  ModuleEnvironment env(features);
   if (!DecodeModuleEnvironment(d, &env)) {
     return false;
   }

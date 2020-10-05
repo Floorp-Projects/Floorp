@@ -1359,7 +1359,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
         arrayViews_(cx),
         compilerEnv_(CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
                      DebugEnabled::False),
-        moduleEnv_(&compilerEnv_, FeatureArgs(), ModuleKind::AsmJS) {
+        moduleEnv_(FeatureArgs(), ModuleKind::AsmJS) {
     compilerEnv_.computeParameters();
     moduleEnv_.minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
   }
@@ -2123,7 +2123,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       return nullptr;
     }
 
-    ModuleGenerator mg(*args, &moduleEnv_, nullptr, nullptr);
+    ModuleGenerator mg(*args, &moduleEnv_, &compilerEnv_, nullptr, nullptr);
     if (!mg.init(asmJSMetadata_.get())) {
       return nullptr;
     }

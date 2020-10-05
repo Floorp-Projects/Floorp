@@ -132,15 +132,19 @@ struct CompileTaskState {
 
 struct CompileTask : public HelperThreadTask {
   const ModuleEnvironment& moduleEnv;
+  const CompilerEnvironment& compilerEnv;
+
   CompileTaskState& state;
   LifoAlloc lifo;
   FuncCompileInputVector inputs;
   CompiledCode output;
   JSTelemetrySender telemetrySender;
 
-  CompileTask(const ModuleEnvironment& moduleEnv, CompileTaskState& state,
+  CompileTask(const ModuleEnvironment& moduleEnv,
+              const CompilerEnvironment& compilerEnv, CompileTaskState& state,
               size_t defaultChunkSize, JSTelemetrySender telemetrySender)
       : moduleEnv(moduleEnv),
+        compilerEnv(compilerEnv),
         state(state),
         lifo(defaultChunkSize),
         telemetrySender(telemetrySender) {}
@@ -174,6 +178,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   UniqueChars* const error_;
   const Atomic<bool>* const cancelled_;
   ModuleEnvironment* const moduleEnv_;
+  CompilerEnvironment* const compilerEnv_;
   JSTelemetrySender telemetrySender_;
 
   // Data that is moved into the result of finish()
@@ -224,12 +229,13 @@ class MOZ_STACK_CLASS ModuleGenerator {
   SharedMetadata finishMetadata(const Bytes& bytecode);
 
   bool isAsmJS() const { return moduleEnv_->isAsmJS(); }
-  Tier tier() const { return moduleEnv_->tier(); }
-  CompileMode mode() const { return moduleEnv_->mode(); }
-  bool debugEnabled() const { return moduleEnv_->debugEnabled(); }
+  Tier tier() const { return compilerEnv_->tier(); }
+  CompileMode mode() const { return compilerEnv_->mode(); }
+  bool debugEnabled() const { return compilerEnv_->debugEnabled(); }
 
  public:
   ModuleGenerator(const CompileArgs& args, ModuleEnvironment* moduleEnv,
+                  CompilerEnvironment* compilerEnv,
                   const Atomic<bool>* cancelled, UniqueChars* error);
   ~ModuleGenerator();
   MOZ_MUST_USE bool init(
