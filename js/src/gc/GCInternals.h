@@ -220,7 +220,7 @@ void CheckHeapAfterGC(JSRuntime* rt);
 
 struct MovingTracer final : public JS::CallbackTracer {
   explicit MovingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, TraceWeakMapKeysValues) {}
+      : CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
@@ -247,7 +247,7 @@ struct MovingTracer final : public JS::CallbackTracer {
 
 struct SweepingTracer final : public JS::CallbackTracer {
   explicit SweepingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, TraceWeakMapKeysValues) {}
+      : CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;

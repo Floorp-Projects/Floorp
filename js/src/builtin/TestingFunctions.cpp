@@ -1882,7 +1882,7 @@ class HasChildTracer final : public JS::CallbackTracer {
 
  public:
   HasChildTracer(JSContext* cx, HandleValue child)
-      : JS::CallbackTracer(cx, TraceWeakMapKeysValues),
+      : JS::CallbackTracer(cx, JS::WeakMapTraceAction::TraceKeysAndValues),
         child_(cx, child),
         found_(false) {}
 
