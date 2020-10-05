@@ -8893,7 +8893,7 @@ extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(
 #endif
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
-    : CallbackTracer(rt, TraceWeakMapKeysValues) {}
+    : CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer()
     : ClearEdgesTracer(TlsContext.get()->runtime()) {}

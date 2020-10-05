@@ -2454,13 +2454,14 @@ inline void MarkStackIter::nextArray() {
 /*** GCMarker ***************************************************************/
 
 /*
- * ExpandWeakMaps: the GC is recomputing the liveness of WeakMap entries by
- * expanding each live WeakMap into its constituent key->value edges, a table
- * of which will be consulted in a later phase whenever marking a potential
- * key.
+ * WeakMapTraceAction::Expand: the GC is recomputing the liveness of WeakMap
+ * entries by expanding each live WeakMap into its constituent key->value edges,
+ * a table of which will be consulted in a later phase whenever marking a
+ * potential key.
  */
 GCMarker::GCMarker(JSRuntime* rt)
-    : JSTracer(rt, JSTracer::TracerKindTag::Marking, ExpandWeakMaps),
+    : JSTracer(rt, JSTracer::TracerKindTag::Marking,
+               JS::WeakMapTraceAction::Expand),
       stack(),
       auxStack(),
       mainStackColor(MarkColor::Black),
@@ -2611,7 +2612,7 @@ void GCMarker::repush(JSObject* obj) {
 }
 
 bool GCMarker::enterWeakMarkingMode() {
-  MOZ_ASSERT(weakMapAction() == ExpandWeakMaps);
+  MOZ_ASSERT(weakMapAction() == JS::WeakMapTraceAction::Expand);
   MOZ_ASSERT(state != MarkingState::WeakMarking);
   if (state == MarkingState::IterativeMarking) {
     return false;
@@ -4055,10 +4056,10 @@ struct AssertNonGrayTracer final : public JS::CallbackTracer {
 
 class UnmarkGrayTracer final : public JS::CallbackTracer {
  public:
-  // We set weakMapAction to DoNotTraceWeakMaps because the cycle collector
-  // will fix up any color mismatches involving weakmaps when it runs.
+  // We set weakMapAction to WeakMapTraceAction::Skip because the cycle
+  // collector will fix up any color mismatches involving weakmaps when it runs.
   explicit UnmarkGrayTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, DoNotTraceWeakMaps),
+      : JS::CallbackTracer(rt, JS::WeakMapTraceAction::Skip),
         unmarkedAny(false),
         oom(false),
         stack(rt->gc.unmarkGrayStack) {}
