@@ -112,4 +112,7 @@ def push_schedules(branch, rev):
     if "groups" in data:
         data["groups"] = {translate_group(k): v for k, v in data["groups"].items()}
 
+    if "config_groups" in data:
+        data["config_groups"] = {translate_group(k): v for k, v in data["config_groups"].items()}
+
     return data
