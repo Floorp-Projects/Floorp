@@ -219,7 +219,7 @@ void APZUpdater::UpdateScrollOffsets(LayersId aRootLayerTreeId,
           "APZUpdater::UpdateScrollOffsets",
           [=, updates = std::move(aUpdates)]() mutable {
             self->mScrollData[aOriginatingLayersId].ApplyUpdates(
-                updates, aPaintSequenceNumber);
+                std::move(updates), aPaintSequenceNumber);
             auto root = self->mScrollData.find(aRootLayerTreeId);
             if (root == self->mScrollData.end()) {
               return;

@@ -65,12 +65,12 @@ bool ReadScrollUpdates(const IPC::Message* aMsg, PickleIterator* aIter,
   layers::ScrollUpdatesMap map(count);
   for (size_t i = 0; i < count; ++i) {
     layers::ScrollableLayerGuid::ViewID key;
-    mozilla::ScrollPositionUpdate data;
+    nsTArray<mozilla::ScrollPositionUpdate> data;
     if (!ReadIPDLParam(aMsg, aIter, aActor, &key) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &data)) {
       return false;
     }
-    map.Put(key, data);
+    map.Put(key, std::move(data));
   }
 
   MOZ_RELEASE_ASSERT(map.Count() == count);
