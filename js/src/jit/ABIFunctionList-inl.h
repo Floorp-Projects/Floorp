@@ -35,6 +35,8 @@
 #include "js/Conversions.h"  // JS::ToInt32
 #include "js/experimental/JitInfo.h"
                              // JSJitGetterOp, JSJitSetterOp, JSJitMethodOp
+#include "js/Utility.h"      // js_free
+
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
 #include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
 #include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
@@ -67,6 +69,7 @@ namespace jit {
   _(js::ecmaHypot)                                          \
   _(js::ecmaPow)                                            \
   _(js::ExecuteRegExpAtomRaw)                               \
+  _(js_free)                                                \
   _(js::hypot3)                                             \
   _(js::hypot4)                                             \
   _(js::Int32ToStringHelperPure)                            \
