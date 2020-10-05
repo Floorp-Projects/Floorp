@@ -105,6 +105,8 @@ namespace jit {
   _(js::jit::GetNativeDataPropertyByValuePure<true>)        \
   _(js::jit::GetNativeDataPropertyPure<false>)              \
   _(js::jit::GetNativeDataPropertyPure<true>)               \
+  _(js::jit::HandleCodeCoverageAtPC)                        \
+  _(js::jit::HandleCodeCoverageAtPrologue)                  \
   _(js::jit::HandleException)                               \
   _(js::jit::HasNativeDataPropertyPure<false>)              \
   _(js::jit::HasNativeDataPropertyPure<true>)               \
