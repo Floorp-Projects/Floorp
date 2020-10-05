@@ -9,7 +9,7 @@
 
 #include "jslibmath.h"  // js::NumberMod
 #include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
-                        // js::ecmaAtan2, js::powi
+                        // js::ecmaAtan2, js::UnaryMathFunctionType, js::powi
 #include "builtin/Array.h"      // js::ArrayShiftMoveElements
 #include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
                                 // js::RegExpInstanceOptimizableRaw
@@ -91,6 +91,8 @@ namespace jit {
 // List of all ABI function signature which are using a computed function
 // pointer instead of a statically known function pointer.
 #define ABIFUNCTIONSIG_LIST(_)                       \
+  _(float (*)(float))                                \
+  _(js::UnaryMathFunctionType)                       \
   _(void (*)(JSRuntime * rt, JSObject * *objp))      \
   _(void (*)(JSRuntime * rt, JSString * *stringp))   \
   _(void (*)(JSRuntime * rt, ObjectGroup * *groupp)) \
