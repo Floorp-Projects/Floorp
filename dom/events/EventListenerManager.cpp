@@ -923,14 +923,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   if (!aBody) {
     if (aListener->mTypeAtom == nsGkAtoms::onSVGLoad) {
       attrName = nsGkAtoms::onload;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGUnload) {
-      attrName = nsGkAtoms::onunload;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGResize) {
-      attrName = nsGkAtoms::onresize;
     } else if (aListener->mTypeAtom == nsGkAtoms::onSVGScroll) {
       attrName = nsGkAtoms::onscroll;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGZoom) {
-      attrName = nsGkAtoms::onzoom;
     } else if (aListener->mTypeAtom == nsGkAtoms::onbeginEvent) {
       attrName = nsGkAtoms::onbegin;
     } else if (aListener->mTypeAtom == nsGkAtoms::onrepeatEvent) {
