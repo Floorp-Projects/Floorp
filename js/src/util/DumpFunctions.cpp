@@ -570,8 +570,8 @@ static void DumpHeapVisitCell(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
                               const JS::AutoRequireNoGC& nogc) {
   DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
   char cellDesc[1024 * 32];
-  JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, cellptr.asCell(),
-                       cellptr.kind(), true);
+  js::gc::GetTraceThingInfo(cellDesc, sizeof(cellDesc), cellptr.asCell(),
+                        cellptr.kind(), true);
 
   fprintf(dtrc->output, "%p %c %s", cellptr.asCell(),
           MarkDescriptor(cellptr.asCell()), cellDesc);

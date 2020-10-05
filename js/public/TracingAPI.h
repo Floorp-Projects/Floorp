@@ -510,11 +510,6 @@ extern JS_PUBLIC_API void TraceChildren(JSTracer* trc, GCCellPtr thing);
 
 }  // namespace JS
 
-extern JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
-                                               JSTracer* trc, void* thing,
-                                               JS::TraceKind kind,
-                                               bool includeDetails);
-
 namespace js {
 
 inline bool IsTracerKind(JSTracer* trc, JS::TracerKind kind) {
