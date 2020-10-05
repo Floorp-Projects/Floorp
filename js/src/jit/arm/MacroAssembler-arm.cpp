@@ -5694,15 +5694,16 @@ inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
     MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal1));
 
     masm.PushRegsInMask(volatileLiveRegs);
+    using Fn = int64_t (*)(int, int);
     {
       ScratchRegisterScope scratch(masm);
       masm.setupUnalignedABICall(scratch);
     }
     masm.passABIArg(lhsOutput);
     masm.passABIArg(rhs);
-    masm.callWithABI(isSigned ? JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod)
-                              : JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod),
-                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.callWithABI(
+        masm.DynamicFunction<Fn>(isSigned ? __aeabi_uidivmod : __aeabi_idivmod),
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
     if (isRemainder) {
       masm.mov(ReturnRegVal1, lhsOutput);
     } else {
@@ -5745,14 +5746,15 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
     MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal1));
     PushRegsInMask(volatileLiveRegs);
 
+    using Fn = int64_t (*)(int, int);
     {
       ScratchRegisterScope scratch(*this);
       setupUnalignedABICall(scratch);
     }
     passABIArg(lhsOutput);
     passABIArg(rhs);
-    callWithABI(isUnsigned ? JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod)
-                           : JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod),
+    callWithABI(masm.DynamicFunction<Fn>(isUnsigned ? __aeabi_uidivmod
+                                                    : __aeabi_idivmod),
                 MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
     moveRegPair(ReturnRegVal0, ReturnRegVal1, lhsOutput, remOutput);
 
