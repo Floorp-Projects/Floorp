@@ -2703,7 +2703,7 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
     nsID changeID = {};
     RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
     if (shistory) {
-      changeID = shistory->AddPendingHistoryChange(1, 1);
+      changeID = shistory->AddPendingHistoryChange();
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
         this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset,
