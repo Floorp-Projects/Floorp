@@ -23,6 +23,8 @@
 #include "jit/Bailouts.h"  // js::jit::FinishBailoutToBaseline, js::jit::Bailout,
                            // js::jit::InvalidationBailout
 
+#include "jit/VMFunctions.h"  // Rest of js::jit::* functions.
+
 #include "js/Conversions.h"  // JS::ToInt32
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
 
@@ -58,6 +60,7 @@ namespace jit {
   _(js::irregexp::GrowBacktrackStack)                       \
   _(js::jit::Bailout)                                       \
   _(js::jit::FinishBailoutToBaseline)                       \
+  _(js::jit::InitBaselineFrameForOsr)                       \
   _(js::jit::InvalidationBailout)                           \
   _(js::NumberMod)                                          \
   _(js::powi)                                               \
