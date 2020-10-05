@@ -7,6 +7,7 @@
 #include "FFmpegAudioDecoder.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
+#include "BufferReader.h"
 #include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
@@ -20,6 +21,9 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
   if (aConfig.mCodecSpecificConfig && aConfig.mCodecSpecificConfig->Length()) {
     mExtraData = new MediaByteBuffer;
     mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
+    BufferReader reader(mExtraData->Elements(), mExtraData->Length());
+    mEncoderDelay = reader.ReadU32().unwrapOr(0);
+    mEncoderPadding = reader.ReadU32().unwrapOr(0);
   }
 }
 
