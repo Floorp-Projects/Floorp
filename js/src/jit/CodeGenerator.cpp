@@ -12101,13 +12101,14 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.push(obj);
   masm.pushValue(value);
 
+  using Fn = bool (*)(JSContext * cx, NativeObject * obj, uint32_t newCount);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
   masm.move32(Imm32(ins->mir()->numNewSlots()), temp2);
   masm.passABIArg(temp2);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsPure));
+  masm.callWithABI<Fn, NativeObject::growSlotsPure>();
   masm.storeCallBoolResult(temp1);
 
   masm.popValue(value);
