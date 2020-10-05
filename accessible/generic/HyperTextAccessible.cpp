@@ -738,7 +738,7 @@ int32_t HyperTextAccessible::FindParagraphStartOffset(uint32_t aOffset) {
   }
 
   // Use the pivot class to search for the start  offset.
-  class Pivot p(this);
+  Pivot p = Pivot(this);
   ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule();
   AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
   AccessibleOrProxy match = p.Prev(wrappedChild, boundaryRule, true);
@@ -788,7 +788,7 @@ int32_t HyperTextAccessible::FindParagraphEndOffset(uint32_t aOffset) {
   }
 
   // Use the pivot class to search for the end offset.
-  class Pivot p(this);
+  Pivot p = Pivot(this);
   AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
   // In order to encompass all paragraphs inside embedded objects, not just
   // the first, pass the child to the rule constructor to skip its subtree.
