@@ -465,12 +465,12 @@ const WebRTCIndicator = {
   },
 
   onPopupShowing(event) {
-    let menupopup = event.target;
-    let type = menupopup.getAttribute("type");
-
-    if (!["Camera", "Microphone", "Screen"].includes(type)) {
+    if (!this.eventIsForDeviceMenuPopup(event)) {
       return;
     }
+
+    let menupopup = event.target;
+    let type = menupopup.getAttribute("type");
 
     // When the indicator is hidden by default, opening the menu from the
     // system tray _might_ cause the indicator to try to become visible again.
@@ -543,6 +543,10 @@ const WebRTCIndicator = {
   },
 
   onPopupHiding(event) {
+    if (!this.eventIsForDeviceMenuPopup(event)) {
+      return;
+    }
+
     let menu = event.target;
     while (menu.firstChild) {
       menu.firstChild.remove();
@@ -551,6 +555,22 @@ const WebRTCIndicator = {
 
   onCommand(event) {
     webrtcUI.showSharingDoorhanger(event.target.stream);
+  },
+
+  /**
+   * Returns true if an event was fired for one of the shared device
+   * menupopups.
+   *
+   * @param event (Event)
+   *   The event to check.
+   * @returns True if the event was for one of the shared device
+   *   menupopups.
+   */
+  eventIsForDeviceMenuPopup(event) {
+    let menupopup = event.target;
+    let type = menupopup.getAttribute("type");
+
+    return ["Camera", "Microphone", "Screen"].includes(type);
   },
 
   /**
