@@ -7698,11 +7698,12 @@ bool CacheIRCompiler::emitRegExpPrototypeOptimizableResult(
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSContext * cx, JSObject * proto);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(proto);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
+    masm.callWithABI<Fn, RegExpPrototypeOptimizableRaw>();
     masm.storeCallBoolResult(scratch);
 
     masm.PopRegsInMask(volatileRegs);
@@ -7735,12 +7736,13 @@ bool CacheIRCompiler::emitRegExpInstanceOptimizableResult(
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSContext * cx, JSObject * obj, JSObject * proto);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(regexp);
     masm.passABIArg(proto);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
+    masm.callWithABI<Fn, RegExpInstanceOptimizableRaw>();
     masm.storeCallBoolResult(scratch);
 
     masm.PopRegsInMask(volatileRegs);
