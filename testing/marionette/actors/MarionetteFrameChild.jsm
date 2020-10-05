@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-disable no-restricted-globals */
+
 "use strict";
 
 const EXPORTED_SYMBOLS = ["MarionetteFrameChild"];
@@ -11,10 +13,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  action: "chrome://marionette/content/action.js",
   atom: "chrome://marionette/content/atom.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
+  event: "chrome://marionette/content/event.js",
   interaction: "chrome://marionette/content/interaction.js",
   Log: "chrome://marionette/content/log.js",
   sandbox: "chrome://marionette/content/evaluate.js",
@@ -38,6 +42,22 @@ class MarionetteFrameChild extends JSWindowActorChild {
   actorCreated() {
     logger.trace(
       `[${this.browsingContext.id}] Child actor created for window id ${this.innerWindowId}`
+    );
+
+    // Listen for click event to indicate one click has happened, so actions
+    // code can send dblclick event
+    this.contentWindow.addEventListener(
+      "click",
+      event.DoubleClickTracker.setClick
+    );
+    this.contentWindow.addEventListener(
+      "dblclick",
+      event.DoubleClickTracker.resetClick
+    );
+    this.contentWindow.addEventListener(
+      "unload",
+      event.DoubleClickTracker.resetClick,
+      true
     );
   }
 
@@ -114,6 +134,12 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:isElementSelected":
           result = await this.isElementSelected(data);
+          break;
+        case "MarionetteFrameParent:performActions":
+          result = await this.performActions(data);
+          break;
+        case "MarionetteFrameParent:releaseActions":
+          result = await this.releaseActions();
           break;
         case "MarionetteFrameParent:sendKeysToElement":
           result = await this.sendKeysToElement(data);
@@ -345,6 +371,43 @@ class MarionetteFrameChild extends JSWindowActorChild {
       elem,
       capabilities["moz:accessibilityChecks"]
     );
+  }
+
+  /**
+   * Perform a series of grouped actions at the specified points in time.
+   *
+   * @param {Object} options
+   * @param {Object} options.actions
+   *     Array of objects with each representing an action sequence.
+   * @param {Object} options.capabilities
+   *     Object with a list of WebDriver session capabilities.
+   */
+  async performActions(options = {}) {
+    const { actions, capabilities } = options;
+
+    await action.dispatch(
+      action.Chain.fromJSON(actions),
+      this.contentWindow,
+      !capabilities["moz:useNonSpecCompliantPointerOrigin"]
+    );
+  }
+
+  /**
+   * The release actions command is used to release all the keys and pointer
+   * buttons that are currently depressed. This causes events to be fired
+   * as if the state was released by an explicit series of actions. It also
+   * clears all the internal state of the virtual devices.
+   */
+  async releaseActions() {
+    await action.dispatchTickActions(
+      action.inputsToCancel.reverse(),
+      0,
+      this.contentWindow
+    );
+    action.inputsToCancel.length = 0;
+    action.inputStateMap.clear();
+
+    event.DoubleClickTracker.resetClick();
   }
 
   /*

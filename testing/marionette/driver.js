@@ -1915,7 +1915,13 @@ GeckoDriver.prototype.performActions = async function(cmd) {
   assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
-  let actions = cmd.parameters.actions;
+  const actions = cmd.parameters.actions;
+
+  if (MarionettePrefs.useActors) {
+    await this.getActor().performActions(actions, this.capabilities);
+    return;
+  }
+
   await this.listener.performActions({ actions }, this.capabilities);
 };
 
@@ -1933,6 +1939,11 @@ GeckoDriver.prototype.releaseActions = async function() {
   assert.content(this.context);
   assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
+
+  if (MarionettePrefs.useActors) {
+    await this.getActor().releaseActions();
+    return;
+  }
 
   await this.listener.releaseActions();
 };
