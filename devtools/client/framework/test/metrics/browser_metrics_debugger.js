@@ -35,7 +35,6 @@ add_task(async function() {
     "chrome.js",
     "resource://devtools/client/shared/vendor/react-dom.js",
     "resource://devtools/client/shared/vendor/react.js",
-    "resource://devtools/client/shared/vendor/lodash.js",
     "resource://devtools/client/debugger/dist/vendors.js",
     "resource://devtools/client/shared/vendor/react-prop-types.js",
     "resource://devtools/client/shared/vendor/react-dom-factories.js",

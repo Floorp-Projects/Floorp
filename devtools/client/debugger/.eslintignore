@@ -6,7 +6,6 @@ src/**/fixtures/**
 src/test/mochitest/**
 bin/
 packages/**/fixtures/**
-packages/devtools-config/**
 packages/devtools-environment/**
 node_modules
 out
