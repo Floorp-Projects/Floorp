@@ -1601,11 +1601,15 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
 #endif
   }
 
+#ifdef MOZ_WAYLAND
   bool hasAnchorRect = true;
+#endif
   if (anchorRect.width == 0) {
     LOG(("  No anchor rect given, use aPosition for anchor"));
     anchorRect.SetRect(aPosition->x, aPosition->y, 1, 1);
+#ifdef MOZ_WAYLAND
     hasAnchorRect = false;
+#endif
   }
   LOG(("  anchor x %d y %d width %d height %d (absolute coords)\n",
        anchorRect.x, anchorRect.y, anchorRect.width, anchorRect.height));
