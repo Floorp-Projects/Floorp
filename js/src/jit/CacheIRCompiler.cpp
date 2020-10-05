@@ -2262,9 +2262,10 @@ bool CacheIRCompiler::emitGuardStringToIndex(StringOperandId strId,
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
+    using Fn = int32_t (*)(JSString * str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+    masm.callWithABI<Fn, GetIndexFromString>();
     masm.storeCallInt32Result(output);
 
     LiveRegisterSet ignore;
