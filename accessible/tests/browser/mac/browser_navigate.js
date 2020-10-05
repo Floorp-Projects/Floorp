@@ -269,3 +269,63 @@ addAccessibleTask(
     );
   }
 );
+
+
+/*
+ * Test rotor with graphics
+ */
+addAccessibleTask(
+  `
+  <img id="img1" alt="image one" src="http://example.com/a11y/accessible/tests/mochitest/moz.png"><br>
+  <a href="http://example.com">
+    <img id="img2" alt="image two" src="http://example.com/a11y/accessible/tests/mochitest/moz.png">
+  </a>
+  <img src="" id="img3">
+  `,
+  (browser, accDoc) => {
+    let searchPred = {
+      AXSearchKey: "AXGraphicSearchKey",
+      AXImmediateDescendantsOnly: 0,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    let images = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(images.length, 3, "Found three images");
+
+    const img1 = getNativeInterface(accDoc, "img1");
+    const img2 = getNativeInterface(accDoc, "img2");
+    const img3 = getNativeInterface(accDoc, "img3");
+
+    is(
+      img1.getAttributeValue("AXDescription"),
+      images[0].getAttributeValue("AXDescription"),
+      "Found correct image"
+    );
+
+    is(
+      img2.getAttributeValue("AXDescription"),
+      images[1].getAttributeValue("AXDescription"),
+      "Found correct image"
+    );
+
+    is(
+      img3.getAttributeValue("AXDescription"),
+      images[2].getAttributeValue("AXDescription"),
+      "Found correct image"
+    );
+  }
+);
