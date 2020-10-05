@@ -85,8 +85,6 @@ function ExtensionStorageEngineBridge(service) {
 ExtensionStorageEngineBridge.prototype = {
   __proto__: BridgedEngine.prototype,
   syncPriority: 10,
-  // we don't support repair at all!
-  _skipPercentageChance: 100,
 
   // Used to override the engine name in telemetry, so that we can distinguish .
   overrideTelemetryName: "rust-webext-storage",

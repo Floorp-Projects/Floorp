@@ -823,9 +823,6 @@ function SyncEngine(name, service) {
   // in the case of a conflict from the server, there's a window where our
   // record would be marked as modified more recently than a change that occurs
   // on another device change, and we lose data from the user.
-  //
-  // Additionally, we use this as the set of items to upload for bookmark
-  // repair reponse, which has similar constraints.
   this._needWeakUpload = new Map();
 
   this.asyncObserver = Async.asyncObserver(this, this._log);
