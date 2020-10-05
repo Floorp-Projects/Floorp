@@ -51,6 +51,7 @@ enum class WellKnownAtomId : uint32_t {
 #define ENUM_ENTRY_(name, clasp) name,
       JS_FOR_EACH_PROTOTYPE(ENUM_ENTRY_)
 #undef ENUM_ENTRY_
+          Limit,
 };
 
 // These types correspond into indices in the StaticStrings arrays.
@@ -183,13 +184,36 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
+  WellKnownAtomId toWellKnownAtomId() const {
+    MOZ_ASSERT(isWellKnownAtomId());
+    return WellKnownAtomId(atomIndex_);
+  }
+  StaticParserString1 toStaticParserString1() const {
+    MOZ_ASSERT(isStaticParserString1());
+    return StaticParserString1(atomIndex_);
+  }
+  StaticParserString2 toStaticParserString2() const {
+    MOZ_ASSERT(isStaticParserString2());
+    return StaticParserString2(atomIndex_);
+  }
+
+  bool isWellKnownAtomId() const {
+    return atomIndexKind_ == AtomIndexKind::WellKnown;
+  }
+  bool isStaticParserString1() const {
+    return atomIndexKind_ == AtomIndexKind::Static1;
+  }
+  bool isStaticParserString2() const {
+    return atomIndexKind_ == AtomIndexKind::Static2;
+  }
+
  private:
   void setAtomIndex(AtomIndex index) {
     atomIndex_ = index;
     atomIndexKind_ = AtomIndexKind::AtomIndex;
   }
-  constexpr void setWellKnownAtomId(WellKnownAtomId kind) {
-    atomIndex_ = static_cast<uint32_t>(kind);
+  constexpr void setWellKnownAtomId(WellKnownAtomId atomId) {
+    atomIndex_ = static_cast<uint32_t>(atomId);
     atomIndexKind_ = AtomIndexKind::WellKnown;
   }
   constexpr void setStaticParserString1(StaticParserString1 s) {
@@ -414,7 +438,7 @@ class WellKnownParserAtoms {
   bool initTinyStringAlias(JSContext* cx, const ParserName** name,
                            const char* str);
   bool initSingle(JSContext* cx, const ParserName** name, const char* str,
-                  WellKnownAtomId kind);
+                  WellKnownAtomId atomId);
 
  public:
   WellKnownParserAtoms() = default;
@@ -489,6 +513,10 @@ class ParserAtomsTable {
 
   JS::Result<const ParserAtom*, OOM> concatAtoms(
       JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
+
+  const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
+  const ParserAtom* getStatic1(StaticParserString1 s) const;
+  const ParserAtom* getStatic2(StaticParserString2 s) const;
 };
 
 template <typename CharT>

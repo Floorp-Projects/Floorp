@@ -111,7 +111,7 @@ namespace frontend {
 
 static JS::OOM PARSER_ATOMS_OOM;
 
-static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId kind) {
+static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
 #define ASSERT_OFFSET_(idpart, id, text)       \
   static_assert(offsetof(JSAtomState, id) ==   \
                 int32_t(WellKnownAtomId::id) * \
@@ -129,7 +129,7 @@ static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId kind) {
   static_assert(int32_t(WellKnownAtomId::abort) == 0,
                 "Unexpected order of WellKnownAtom");
 
-  return (&cx->names().abort)[int32_t(kind)];
+  return (&cx->names().abort)[int32_t(atomId)];
 }
 
 mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx) {
@@ -555,6 +555,33 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
                                                catLen);
 }
 
+const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
+#define ASSERT_OFFSET_(idpart, id, text)              \
+  static_assert(offsetof(WellKnownParserAtoms, id) == \
+                int32_t(WellKnownAtomId::id) * sizeof(ParserAtom*));
+  FOR_EACH_COMMON_PROPERTYNAME(ASSERT_OFFSET_);
+#undef ASSERT_OFFSET_
+
+#define ASSERT_OFFSET_(name, clasp)                     \
+  static_assert(offsetof(WellKnownParserAtoms, name) == \
+                int32_t(WellKnownAtomId::name) * sizeof(ParserAtom*));
+  JS_FOR_EACH_PROTOTYPE(ASSERT_OFFSET_);
+#undef ASSERT_OFFSET_
+
+  static_assert(int32_t(WellKnownAtomId::abort) == 0,
+                "Unexpected order of WellKnownAtom");
+
+  return (&wellKnownTable_.abort)[int32_t(atomId)];
+}
+
+const ParserAtom* ParserAtomsTable::getStatic1(StaticParserString1 s) const {
+  return WellKnownParserAtoms::rom_.length1Table[size_t(s)].asAtom();
+}
+
+const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
+  return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
+}
+
 template <typename CharT>
 const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
     const SpecificParserAtomLookup<CharT>& lookup) const {
@@ -566,7 +593,7 @@ const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
-                                      const char* str, WellKnownAtomId kind) {
+                                      const char* str, WellKnownAtomId atomId) {
   MOZ_ASSERT(name != nullptr);
 
   unsigned int len = strlen(str);
@@ -592,7 +619,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
     return false;
   }
   UniquePtr<ParserAtomEntry> entry = maybeEntry.unwrap();
-  entry->setWellKnownAtomId(kind);
+  entry->setWellKnownAtomId(atomId);
 
   // Save name for returning after moving entry into set.
   const ParserName* nm = entry.get()->asName();
@@ -665,9 +692,59 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 // XDR code.
 namespace js {
 
+enum class ParserAtomTag : uint32_t {
+  Normal = 0,
+  WellKnown,
+  Static1,
+  Static2,
+};
+
 template <XDRMode mode>
-static XDRResult XDRParserAtomIndex(XDRState<mode>* xdr, uint32_t* index) {
-  return xdr->codeUint32(index);
+static XDRResult XDRParserAtomTaggedIndex(XDRState<mode>* xdr,
+                                          ParserAtomTag* tag, uint32_t* index) {
+  // We encode 2 bit (tag) + 32 bit (index) data in the following format:
+  //
+  // index = 0bAABB'CCDD'EEFF'GGHH'IIJJ'KKLL'MMNN'OOPP
+  // tag = 0bTT
+  //
+  // if index < 0b0011'1111'1111'1111'1111'1111'1111'1111:
+  //   single uint32_t = 0bBBCC'DDEE'FFGG'HHII'JJKK'LLMM'NNOO'PPTT
+  // else:
+  //   two uint32_t    = 0b1111'1111'1111'1111'1111'1111'1111'11TT,
+  //                     0bAABB'CCDD'EEFF'GGHH'IIJJ'KKLL'MMNN'OOPP
+
+  constexpr uint32_t TagShift = 2;
+  constexpr uint32_t TagMask = 0b0011;
+  constexpr uint32_t TwoUnitPattern = UINT32_MAX ^ TagMask;
+  constexpr uint32_t CodeLimit = TwoUnitPattern >> TagShift;
+
+  MOZ_ASSERT((uint32_t(*tag) & TagMask) == uint32_t(*tag));
+
+  if (mode == XDR_ENCODE) {
+    if (*index < CodeLimit) {
+      uint32_t data = (*index) << TagShift | uint32_t(*tag);
+      return xdr->codeUint32(&data);
+    }
+
+    uint32_t data = TwoUnitPattern | uint32_t(*tag);
+    MOZ_TRY(xdr->codeUint32(&data));
+    return xdr->codeUint32(index);
+  }
+
+  MOZ_ASSERT(mode == XDR_DECODE);
+
+  uint32_t data;
+  MOZ_TRY(xdr->codeUint32(&data));
+
+  *tag = ParserAtomTag(data & TagMask);
+
+  if ((data & TwoUnitPattern) == TwoUnitPattern) {
+    MOZ_TRY(xdr->codeUint32(index));
+  } else {
+    *index = data >> TagShift;
+  }
+
+  return Ok();
 }
 
 template <XDRMode mode>
@@ -733,49 +810,86 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
   return Ok();
 }
 
+template XDRResult XDRParserAtomData(XDRState<XDR_ENCODE>* xdr,
+                                     const ParserAtom** atomp);
+template XDRResult XDRParserAtomData(XDRState<XDR_DECODE>* xdr,
+                                     const ParserAtom** atomp);
+
 template <XDRMode mode>
 XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
-  // If dedup tables aren't enabled for this XDR encoding, encode/decode
-  // the parser atoms inline.
-  if (!xdr->hasAtomMap() && !xdr->hasAtomTable()) {
-    return XDRParserAtomData(xdr, atomp);
-  }
-
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(xdr->hasAtomMap());
 
-    // Atom contents are encoded in a separate buffer, which is joined to the
-    // final result in XDRIncrementalEncoder::linearize. References to atoms
-    // are encoded as indices into the atom stream.
     uint32_t atomIndex;
-    XDRParserAtomMap::AddPtr p = xdr->parserAtomMap().lookupForAdd(*atomp);
-    if (p) {
-      atomIndex = p->value();
+    ParserAtomTag tag = ParserAtomTag::Normal;
+    if ((*atomp)->isWellKnownAtomId()) {
+      atomIndex = uint32_t((*atomp)->toWellKnownAtomId());
+      tag = ParserAtomTag::WellKnown;
+    } else if ((*atomp)->isStaticParserString1()) {
+      atomIndex = uint32_t((*atomp)->toStaticParserString1());
+      tag = ParserAtomTag::Static1;
+    } else if ((*atomp)->isStaticParserString2()) {
+      atomIndex = uint32_t((*atomp)->toStaticParserString2());
+      tag = ParserAtomTag::Static2;
     } else {
-      xdr->switchToAtomBuf();
-      MOZ_TRY(XDRParserAtomData(xdr, atomp));
-      xdr->switchToMainBuf();
+      // Either AtomIndexKind::Unresolved or AtomIndexKind::AtomIndex.
 
-      atomIndex = xdr->natoms();
-      xdr->natoms() += 1;
-      if (!xdr->parserAtomMap().add(p, *atomp, atomIndex)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+      // Atom contents are encoded in a separate buffer, which is joined to the
+      // final result in XDRIncrementalEncoder::linearize. References to atoms
+      // are encoded as indices into the atom stream.
+      XDRParserAtomMap::AddPtr p = xdr->parserAtomMap().lookupForAdd(*atomp);
+      if (p) {
+        atomIndex = p->value();
+      } else {
+        xdr->switchToAtomBuf();
+        MOZ_TRY(XDRParserAtomData(xdr, atomp));
+        xdr->switchToMainBuf();
+
+        atomIndex = xdr->natoms();
+        xdr->natoms() += 1;
+        if (!xdr->parserAtomMap().add(p, *atomp, atomIndex)) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
       }
+      tag = ParserAtomTag::Normal;
     }
-    MOZ_TRY(XDRParserAtomIndex(xdr, &atomIndex));
+    MOZ_TRY(XDRParserAtomTaggedIndex(xdr, &tag, &atomIndex));
     return Ok();
   }
 
   MOZ_ASSERT(mode == XDR_DECODE && xdr->hasAtomTable());
 
-  uint32_t atomIndex;
-  MOZ_TRY(XDRParserAtomIndex(xdr, &atomIndex));
-  if (atomIndex >= xdr->parserAtomTable().length()) {
-    return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-  }
-  const ParserAtom* atom = xdr->parserAtomTable()[atomIndex];
+  uint32_t atomIndex = 0;
+  ParserAtomTag tag = ParserAtomTag::Normal;
+  MOZ_TRY(XDRParserAtomTaggedIndex(xdr, &tag, &atomIndex));
 
-  *atomp = atom;
+  switch (tag) {
+    case ParserAtomTag::Normal:
+      if (atomIndex >= xdr->parserAtomTable().length()) {
+        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      }
+      *atomp = xdr->parserAtomTable()[atomIndex];
+      break;
+    case ParserAtomTag::WellKnown:
+      if (atomIndex >= uint32_t(WellKnownAtomId::Limit)) {
+        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      }
+      *atomp = xdr->frontendAtoms().getWellKnown(WellKnownAtomId(atomIndex));
+      break;
+    case ParserAtomTag::Static1:
+      if (atomIndex >= WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT) {
+        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      }
+      *atomp = xdr->frontendAtoms().getStatic1(StaticParserString1(atomIndex));
+      break;
+    case ParserAtomTag::Static2:
+      if (atomIndex >= WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES) {
+        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      }
+      *atomp = xdr->frontendAtoms().getStatic2(StaticParserString2(atomIndex));
+      break;
+  }
+
   return Ok();
 }
 
