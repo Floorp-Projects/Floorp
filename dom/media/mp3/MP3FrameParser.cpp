@@ -342,10 +342,12 @@ int64_t FrameParser::VBRHeader::Offset(float aDurationFac) const {
   return offset;
 }
 
-Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(
-    BufferReader* aReader) {
+Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
+                                                         size_t aFrameSize) {
   static const uint32_t XING_TAG = BigEndian::readUint32("Xing");
   static const uint32_t INFO_TAG = BigEndian::readUint32("Info");
+  static const uint32_t LAME_TAG = BigEndian::readUint32("LAME");
+  static const uint32_t LAVC_TAG = BigEndian::readUint32("Lavc");
 
   enum Flags {
     NUM_FRAMES = 0x01,
@@ -404,6 +406,41 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(
     mScale = Some(scale);
   }
 
+  uint32_t lameOrLavcTag;
+  MOZ_TRY_VAR(lameOrLavcTag, aReader->ReadU32());
+
+  if (lameOrLavcTag == LAME_TAG || lameOrLavcTag == LAVC_TAG) {
+    // Skip 17 bytes after the LAME tag:
+    // - http://gabriel.mp3-tech.org/mp3infotag.html
+    // - 5 bytes for the encoder short version string
+    // - 1 byte for the info tag revision + VBR method
+    // - 1 byte for the lowpass filter value
+    // - 8 bytes for the ReplayGain information
+    // - 1 byte for the encoding flags + ATH Type
+    // - 1 byte for the specified bitrate if ABR, else the minimal bitrate
+    if (!aReader->Read(17)) {
+      return mozilla::Err(NS_ERROR_FAILURE);
+    }
+
+    // The encoder delay is three bytes, for two 12-bits integers are the
+    // encoder delay and the padding.
+    const uint8_t* delayPadding = aReader->Read(3);
+    if (!delayPadding) {
+      return mozilla::Err(NS_ERROR_FAILURE);
+    }
+    mEncoderDelay =
+        uint32_t(delayPadding[0]) << 4 | (delayPadding[1] & 0xf0) >> 4;
+    mEncoderPadding = uint32_t(delayPadding[1] & 0x0f) << 8 | delayPadding[2];
+
+    constexpr uint16_t DEFAULT_DECODER_DELAY = 529;
+    mEncoderDelay += DEFAULT_DECODER_DELAY + aFrameSize;  // ignore first frame.
+    mEncoderPadding -= std::min(mEncoderPadding, DEFAULT_DECODER_DELAY);
+
+    MP3LOG("VBRHeader::ParseXing: LAME encoder delay section: delay: %" PRIu16
+           " frames, padding: %" PRIu16 " frames",
+           mEncoderDelay, mEncoderPadding);
+  }
+
   return mType == XING;
 }
 
@@ -443,8 +480,8 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
   return false;
 }
 
-bool FrameParser::VBRHeader::Parse(BufferReader* aReader) {
-  auto res = std::make_pair(ParseVBRI(aReader), ParseXing(aReader));
+bool FrameParser::VBRHeader::Parse(BufferReader* aReader, size_t aFrameSize) {
+  auto res = std::make_pair(ParseVBRI(aReader), ParseXing(aReader, aFrameSize));
   const bool rv = (res.first.isOk() && res.first.unwrap()) ||
                   (res.second.isOk() && res.second.unwrap());
   if (rv) {
@@ -480,7 +517,7 @@ const FrameParser::FrameHeader& FrameParser::Frame::Header() const {
 }
 
 bool FrameParser::ParseVBRHeader(BufferReader* aReader) {
-  return mVBRHeader.Parse(aReader);
+  return mVBRHeader.Parse(aReader, CurrentFrame().Header().SamplesPerFrame());
 }
 
 // ID3Parser
