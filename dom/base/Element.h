@@ -1240,7 +1240,7 @@ class Element : public FragmentOrElement {
   bool HasPointerCapture(long aPointerId) {
     PointerCaptureInfo* pointerCaptureInfo =
         PointerEventHandler::GetPointerCaptureInfo(aPointerId);
-    if (pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
+    if (pointerCaptureInfo && pointerCaptureInfo->mPendingElement == this) {
       return true;
     }
     return false;

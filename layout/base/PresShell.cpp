@@ -6946,14 +6946,14 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   }
 
   // Only capture mouse events and pointer events.
-  nsCOMPtr<nsIContent> pointerCapturingContent =
-      PointerEventHandler::GetPointerCapturingContent(aGUIEvent);
+  RefPtr<Element> pointerCapturingElement =
+      PointerEventHandler::GetPointerCapturingElement(aGUIEvent);
 
-  if (pointerCapturingContent) {
-    rootFrameToHandleEvent = pointerCapturingContent->GetPrimaryFrame();
+  if (pointerCapturingElement) {
+    rootFrameToHandleEvent = pointerCapturingElement->GetPrimaryFrame();
     if (!rootFrameToHandleEvent) {
       return HandleEventWithPointerCapturingContentWithoutItsFrame(
-          aFrameForPresShell, aGUIEvent, pointerCapturingContent, aEventStatus);
+          aFrameForPresShell, aGUIEvent, pointerCapturingElement, aEventStatus);
     }
   }
 
@@ -6971,7 +6971,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // mouse out events at the root EventStateManager.
   EventTargetData eventTargetData(rootFrameToHandleEvent);
   if (!isCaptureRetargeted && !isWindowLevelMouseExit &&
-      !pointerCapturingContent) {
+      !pointerCapturingElement) {
     if (!ComputeEventTargetFrameAndPresShellAtEventPoint(
             rootFrameToHandleEvent, aGUIEvent, &eventTargetData)) {
       *aEventStatus = nsEventStatus_eIgnore;
@@ -6983,7 +6983,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // retargeted at the capturing content instead. This will be the case when
   // capture retargeting is being used, no frame was found or the frame's
   // content is not a descendant of the capturing content.
-  if (capturingContent && !pointerCapturingContent &&
+  if (capturingContent && !pointerCapturingElement &&
       (PresShell::sCapturingContentInfo.mRetargetToElement ||
        !eventTargetData.mFrame->GetContent() ||
        !nsContentUtils::ContentIsCrossDocDescendantOf(
@@ -7028,7 +7028,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // pointer event listeners change the layout, eventTargetData is
   // automatically updated.
   if (!DispatchPrecedingPointerEvent(
-          aFrameForPresShell, aGUIEvent, pointerCapturingContent,
+          aFrameForPresShell, aGUIEvent, pointerCapturingElement,
           aDontRetargetEvents, &eventTargetData, aEventStatus)) {
     return NS_OK;
   }
