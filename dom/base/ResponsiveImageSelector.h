@@ -9,7 +9,6 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/FunctionRef.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsString.h"
@@ -32,10 +31,6 @@ class ResponsiveImageSelector {
 
   explicit ResponsiveImageSelector(nsIContent* aContent);
   explicit ResponsiveImageSelector(dom::Document* aDocument);
-
-  // Parses the raw candidates and calls into the callback for each one of them.
-  static void ParseSourceSet(const nsAString& aSrcSet,
-                             FunctionRef<void(ResponsiveImageCandidate&&)>);
 
   // NOTE ABOUT CURRENT SELECTION
   //
@@ -93,7 +88,7 @@ class ResponsiveImageSelector {
  private:
   // Append a candidate unless its selector is duplicated by a higher priority
   // candidate
-  void AppendCandidateIfUnique(ResponsiveImageCandidate&& aCandidate);
+  void AppendCandidateIfUnique(const ResponsiveImageCandidate& aCandidate);
 
   // Append a default candidate with this URL if necessary. Does not check if
   // the array already contains one, use SetDefaultSource instead.
@@ -132,8 +127,8 @@ class ResponsiveImageSelector {
 class ResponsiveImageCandidate {
  public:
   ResponsiveImageCandidate();
-  ResponsiveImageCandidate(const ResponsiveImageCandidate&) = delete;
-  ResponsiveImageCandidate(ResponsiveImageCandidate&&) = default;
+  ResponsiveImageCandidate(const nsAString& aURLString, double aDensity,
+                           nsIPrincipal* aTriggeringPrincipal = nullptr);
 
   void SetURLSpec(const nsAString& aURLString);
   void SetTriggeringPrincipal(nsIPrincipal* aPrincipal);
@@ -166,9 +161,6 @@ class ResponsiveImageCandidate {
   // If the width is already known. Useful when iterating over candidates to
   // avoid having each call re-compute the width.
   double Density(double aMatchingWidth) const;
-
-  // Append the descriptors for this candidate serialized as a string.
-  void AppendDescriptors(nsAString&) const;
 
   bool IsValid() const { return mType != CandidateType::Invalid; }
 
