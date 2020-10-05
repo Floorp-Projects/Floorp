@@ -256,6 +256,7 @@ class ResourceReader final : public nsIWebBrowserPersistDocumentReceiver {
                            const char* aAttribute,
                            const char* aNamespaceURI = "");
   nsresult OnWalkSubframe(nsINode* aNode);
+  nsresult OnWalkSrcSet(dom::Element* aElement);
 
   ~ResourceReader();
 
@@ -392,6 +393,24 @@ nsresult ResourceReader::OnWalkAttribute(dom::Element* aElement,
   return OnWalkURI(uriSpec, aContentPolicyType);
 }
 
+nsresult ResourceReader::OnWalkSrcSet(dom::Element* aElement) {
+  nsAutoString srcSet;
+  if (!aElement->GetAttr(nsGkAtoms::srcset, srcSet)) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  auto eachCandidate = [&](dom::ResponsiveImageCandidate&& aCandidate) {
+    if (!aCandidate.IsValid() || NS_FAILED(rv)) {
+      return;
+    }
+    rv = OnWalkURI(NS_ConvertUTF16toUTF8(aCandidate.URLString()),
+                   nsIContentPolicy::TYPE_IMAGE);
+  };
+  dom::ResponsiveImageSelector::ParseSourceSet(srcSet, eachCandidate);
+  return rv;
+}
+
 static nsresult GetXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
                                      nsAString& aHref) {
   nsAutoString data;
@@ -420,15 +439,7 @@ nsresult ResourceReader::OnWalkDOMNode(nsINode* aNode) {
   // Test the node to see if it's an image, frame, iframe, css, js
   if (auto* img = dom::HTMLImageElement::FromNode(*aNode)) {
     MOZ_TRY(OnWalkAttribute(img, nsIContentPolicy::TYPE_IMAGE, "src"));
-    if (auto* selector = img->GetResponsiveImageSelector()) {
-      for (const auto& candidate : selector->AllCandidates()) {
-        if (!candidate.IsValid()) {
-          continue;
-        }
-        MOZ_TRY(OnWalkURI(NS_ConvertUTF16toUTF8(candidate.URLString()),
-                          nsIContentPolicy::TYPE_IMAGE));
-      }
-    }
+    MOZ_TRY(OnWalkSrcSet(img));
     return NS_OK;
   }
 
@@ -443,6 +454,7 @@ nsresult ResourceReader::OnWalkDOMNode(nsINode* aNode) {
   }
 
   if (aNode->IsHTMLElement(nsGkAtoms::source)) {
+    MOZ_TRY(OnWalkSrcSet(aNode->AsElement()));
     return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_MEDIA,
                            "src");
   }
@@ -572,6 +584,8 @@ class PersistNodeFixup final : public nsIDocumentEncoderNodeFixup {
   nsresult FixupXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
                                   const nsAString& aHref);
 
+  nsresult FixupSrcSet(nsINode*);
+
   using IWBP = nsIWebBrowserPersist;
 };
 
@@ -636,6 +650,32 @@ nsresult PersistNodeFixup::FixupURI(nsAString& aURI) {
   if (!replacement->IsEmpty()) {
     CopyUTF8toUTF16(*replacement, aURI);
   }
+  return NS_OK;
+}
+
+nsresult PersistNodeFixup::FixupSrcSet(nsINode* aNode) {
+  dom::Element* element = aNode->AsElement();
+  nsAutoString originalSrcSet;
+  if (!element->GetAttr(nsGkAtoms::srcset, originalSrcSet)) {
+    return NS_OK;
+  }
+  nsAutoString newSrcSet;
+  bool first = true;
+  auto eachCandidate = [&](dom::ResponsiveImageCandidate&& aCandidate) {
+    if (!aCandidate.IsValid()) {
+      return;
+    }
+    if (!first) {
+      newSrcSet.AppendLiteral(", ");
+    }
+    first = false;
+    nsAutoString uri(aCandidate.URLString());
+    FixupURI(uri);
+    newSrcSet.Append(uri);
+    aCandidate.AppendDescriptors(newSrcSet);
+  };
+  dom::ResponsiveImageSelector::ParseSourceSet(originalSrcSet, eachCandidate);
+  element->SetAttr(nsGkAtoms::srcset, newSrcSet, IgnoreErrors());
   return NS_OK;
 }
 
@@ -903,7 +943,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
     return rv;
   }
 
-  if (auto* img = dom::HTMLImageElement::FromNode(*content)) {
+  if (content->IsHTMLElement(nsGkAtoms::img)) {
     MOZ_TRY(GetNodeToFixup(aNodeIn, aNodeOut));
     if (!*aNodeOut) {
       return NS_OK;
@@ -917,26 +957,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
     // FIXME(emilio): Why fixing up <img href>? Looks bogus
     FixupAnchor(*aNodeOut);
     FixupAttribute(*aNodeOut, "src");
-
-    if (auto* selector = img->GetResponsiveImageSelector()) {
-      nsAutoString srcset;
-      bool first = true;
-      for (const auto& candidate : selector->AllCandidates()) {
-        if (!candidate.IsValid()) {
-          continue;
-        }
-        if (!first) {
-          srcset.AppendLiteral(", ");
-        }
-        first = false;
-        nsAutoString uri(candidate.URLString());
-        FixupURI(uri);
-        srcset.Append(uri);
-        candidate.AppendDescriptors(srcset);
-      }
-      (*aNodeOut)->AsElement()->SetAttr(nsGkAtoms::srcset, srcset,
-                                        IgnoreErrors());
-    }
+    FixupSrcSet(*aNodeOut);
     return NS_OK;
   }
 
@@ -952,6 +973,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
     nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
     if (NS_SUCCEEDED(rv) && *aNodeOut) {
       FixupAttribute(*aNodeOut, "src");
+      FixupSrcSet(*aNodeOut);
     }
     return rv;
   }
