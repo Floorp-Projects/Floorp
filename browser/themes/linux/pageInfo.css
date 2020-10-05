@@ -12,7 +12,7 @@
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
-  color: -moz-FieldText;
+  color: FieldText;
 }
 
 #viewGroup > radio[selected="true"] {
@@ -27,8 +27,8 @@
 #topBar {
   border-bottom: 1px solid ThreeDShadow;
   padding-inline-start: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
 }
 
 #generalTab {
@@ -130,7 +130,7 @@ treechildren::-moz-tree-cell-text(broken) {
   -moz-default-appearance: listbox;
   margin: .5em;
   overflow: auto;
-  color: -moz-FieldText;
+  color: FieldText;
 }
 
 .permission {

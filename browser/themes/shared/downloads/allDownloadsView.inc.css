@@ -96,12 +96,12 @@
 
 .downloadButton:hover > .button-box {
   background-color: graytext;
-  color: -moz-field;
+  color: Field;
   border-radius: 50%;
 }
 
 .downloadButton:hover:active > .button-box {
-  background-color: -moz-fieldtext;
+  background-color: FieldText;
 }
 
 @itemFocused@ > .downloadButton:hover > .button-box {
@@ -110,8 +110,8 @@
 }
 
 @itemFocused@ > .downloadButton:hover:active > .button-box {
-  background-color: -moz-field;
-  color: -moz-fieldtext;
+  background-color: Field;
+  color: FieldText;
 }
 
 /*** Button icons ***/

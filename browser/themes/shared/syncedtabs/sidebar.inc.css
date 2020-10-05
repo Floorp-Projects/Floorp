@@ -13,8 +13,8 @@ body {
   height: 100%;
   margin: 0;
   font: message-box;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   user-select: none;
 }
 
