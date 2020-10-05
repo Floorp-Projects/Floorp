@@ -1834,7 +1834,21 @@ class UrlbarView {
     for (let item of this._rows.children) {
       let result = item.result;
 
-      if (!result.heuristic && result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
+      let isPrivateSearchWithoutPrivateEngine =
+        result.payload.inPrivateWindow && !result.payload.isPrivateEngine;
+      let isSearchHistory =
+        result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        result.source == UrlbarUtils.RESULT_SOURCE.HISTORY;
+      let isSearchSuggestion = result.payload.suggestion && !isSearchHistory;
+
+      // For one-off buttons having a source, we update the action for the
+      // heuristic result, or for any non-heuristic that is a remote search
+      // suggestion or a private search with no private engine.
+      if (
+        !result.heuristic &&
+        !isSearchSuggestion &&
+        !isPrivateSearchWithoutPrivateEngine
+      ) {
         continue;
       }
 
@@ -1878,14 +1892,9 @@ class UrlbarView {
         item.removeAttribute("source");
       }
 
-      if (
-        result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        (!result.heuristic &&
-          (!result.payload.suggestion ||
-            (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-              result.source == UrlbarUtils.RESULT_SOURCE.HISTORY)) &&
-          (!result.payload.inPrivateWindow || result.payload.isPrivateEngine))
-      ) {
+      // For one-off buttons having an engine, we update the action only for
+      // search results. All the other cases were already skipped earlier.
+      if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
         continue;
       }
 
