@@ -86,6 +86,71 @@ enum class WeakMapTraceAction {
   TraceKeysAndValues
 };
 
+class AutoTracingName;
+class AutoTracingIndex;
+class AutoTracingCallback;
+
+// Optional context information that can be used to construct human readable
+// descriptions of what is being traced.
+class TracingContext {
+ public:
+  // Access to the tracing context: When tracing with a JS::CallbackTracer, we
+  // invoke the callback with the edge location and the type of target. This is
+  // useful for operating on the edge in the abstract or on the target thing,
+  // satisfying most common use cases.  However, some tracers need additional
+  // detail about the specific edge that is being traced in order to be
+  // useful. Unfortunately, the raw pointer to the edge that we provide is not
+  // enough information to infer much of anything useful about that edge.
+  //
+  // In order to better support use cases that care in particular about edges --
+  // as opposed to the target thing -- tracing implementations are responsible
+  // for providing extra context information about each edge they trace, as it
+  // is traced. This contains, at a minimum, an edge name and, when tracing an
+  // array, the index. Further specialization can be achieved (with some
+  // complexity), by associating a functor with the tracer so that, when
+  // requested, the user can generate totally custom edge descriptions.
+
+  // Returns the current edge's name. It is only valid to call this when
+  // inside the trace callback, however, the edge name will always be set.
+  const char* name() const {
+    MOZ_ASSERT(name_);
+    return name_;
+  }
+
+  // Returns the current edge's index, if marked as part of an array of edges.
+  // This must be called only inside the trace callback. When not tracing an
+  // array, the value will be InvalidIndex.
+  constexpr static size_t InvalidIndex = size_t(-1);
+  size_t index() const { return index_; }
+
+  // Build a description of this edge in the heap graph. This call may invoke
+  // the context functor, if set, which may inspect arbitrary areas of the
+  // heap. On the other hand, the description provided by this method may be
+  // substantially more accurate and useful than those provided by only the
+  // name and index.
+  void getEdgeName(char* buffer, size_t bufferSize);
+
+  // The trace implementation may associate a callback with one or more edges
+  // using AutoTracingDetails. This functor is called by getEdgeName and
+  // is responsible for providing a textual representation of the edge currently
+  // being traced. The callback has access to the full heap, including the
+  // currently set tracing context.
+  class Functor {
+   public:
+    virtual void operator()(TracingContext* tcx, char* buf, size_t bufsize) = 0;
+  };
+
+ private:
+  friend class AutoTracingName;
+  const char* name_ = nullptr;
+
+  friend class AutoTracingIndex;
+  size_t index_ = InvalidIndex;
+
+  friend class AutoTracingDetails;
+  Functor* functor_ = nullptr;
+};
+
 }  // namespace JS
 
 namespace js {
@@ -96,6 +161,8 @@ class JS_PUBLIC_API JSTracer {
  public:
   // Return the runtime set on the tracer.
   JSRuntime* runtime() const { return runtime_; }
+
+  JS::TracingContext* maybeContext() { return maybeContext_; }
 
   JS::TracerKind kind() const { return kind_; }
   bool isMarkingTracer() const { return kind_ == JS::TracerKind::Marking; }
@@ -125,6 +192,8 @@ class JS_PUBLIC_API JSTracer {
                JS::WeakMapTraceAction::TraceValues)
       : runtime_(rt), kind_(kind), weakMapAction_(weakMapAction) {}
 
+  void setContext(JS::TracingContext* tcx) { maybeContext_ = tcx; }
+
   void setTraceWeakEdges(bool value) { traceWeakEdges_ = value; }
 
   // If this is set to false, then the tracer will skip some jsids
@@ -138,6 +207,7 @@ class JS_PUBLIC_API JSTracer {
 
  private:
   JSRuntime* const runtime_;
+  JS::TracingContext* maybeContext_ = nullptr;
   const JS::TracerKind kind_;
   const JS::WeakMapTraceAction weakMapAction_;
 
@@ -152,10 +222,6 @@ class JS_PUBLIC_API JSTracer {
 };
 
 namespace js {
-
-class AutoTracingName;
-class AutoTracingIndex;
-class AutoTracingCallback;
 
 class GenericTracer : public JSTracer {
  public:
@@ -212,78 +278,26 @@ class GenericTracer : public JSTracer {
 
 namespace JS {
 
-class AutoTracingName;
-class AutoTracingIndex;
-class AutoTracingCallback;
-
 class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
  public:
   CallbackTracer(
       JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
       WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues)
-      : GenericTracer(rt, kind, weakMapAction),
-        contextName_(nullptr),
-        contextIndex_(InvalidIndex),
-        contextFunctor_(nullptr) {
+      : GenericTracer(rt, kind, weakMapAction) {
     MOZ_ASSERT(isCallbackTracer());
+    setContext(&context_);
   }
   CallbackTracer(
       JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
       WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues);
+
+  TracingContext& context() { return context_; }
 
   // Override this method to receive notification when a node in the GC
   // heap graph is visited.
   // This method should return whether the edge still exists, i.e. return false
   // if 'thing' is cleared by the CallbackTracer, return true otherwise.
   virtual bool onChild(const JS::GCCellPtr& thing) = 0;
-
-  // Access to the tracing context:
-  // When tracing with a JS::CallbackTracer, we invoke the callback with the
-  // edge location and the type of target. This is useful for operating on
-  // the edge in the abstract or on the target thing, satisfying most common
-  // use cases.  However, some tracers need additional detail about the
-  // specific edge that is being traced in order to be useful. Unfortunately,
-  // the raw pointer to the edge that we provide is not enough information to
-  // infer much of anything useful about that edge.
-  //
-  // In order to better support use cases that care in particular about edges
-  // -- as opposed to the target thing -- tracing implementations are
-  // responsible for providing extra context information about each edge they
-  // trace, as it is traced. This contains, at a minimum, an edge name and,
-  // when tracing an array, the index. Further specialization can be achived
-  // (with some complexity), by associating a functor with the tracer so
-  // that, when requested, the user can generate totally custom edge
-  // descriptions.
-
-  // Returns the current edge's name. It is only valid to call this when
-  // inside the trace callback, however, the edge name will always be set.
-  const char* contextName() const {
-    MOZ_ASSERT(contextName_);
-    return contextName_;
-  }
-
-  // Returns the current edge's index, if marked as part of an array of edges.
-  // This must be called only inside the trace callback. When not tracing an
-  // array, the value will be InvalidIndex.
-  const static size_t InvalidIndex = size_t(-1);
-  size_t contextIndex() const { return contextIndex_; }
-
-  // Build a description of this edge in the heap graph. This call may invoke
-  // the context functor, if set, which may inspect arbitrary areas of the
-  // heap. On the other hand, the description provided by this method may be
-  // substantially more accurate and useful than those provided by only the
-  // contextName and contextIndex.
-  void getTracingEdgeName(char* buffer, size_t bufferSize);
-
-  // The trace implementation may associate a callback with one or more edges
-  // using AutoTracingDetails. This functor is called by getTracingEdgeName
-  // and is responsible for providing a textual representation of the
-  // currently being traced edge. The callback has access to the full heap,
-  // including the currently set tracing context.
-  class ContextFunctor {
-   public:
-    virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
-  };
 
  private:
   // This class implements the GenericTracer interface to dispatches to onChild.
@@ -321,61 +335,54 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
     return onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
   }
 
-  friend class AutoTracingName;
-  const char* contextName_;
-
-  friend class AutoTracingIndex;
-  size_t contextIndex_;
-
-  friend class AutoTracingDetails;
-  ContextFunctor* contextFunctor_;
+  TracingContext context_;
 };
 
 // Set the name portion of the tracer's context for the current edge.
 class MOZ_RAII AutoTracingName {
-  CallbackTracer* trc_;
-  const char* prior_;
+  TracingContext* tcx_ = nullptr;
+  const char* prior_ = nullptr;
 
  public:
-  AutoTracingName(JSTracer* trc, const char* name) : trc_(nullptr) {
+  AutoTracingName(JSTracer* trc, const char* name) {
     MOZ_ASSERT(name);
-    if (trc->isCallbackTracer()) {
-      trc_ = trc->asCallbackTracer();
-      prior_ = trc_->contextName_;
-      trc_->contextName_ = name;
+    if (TracingContext* tcx = trc->maybeContext()) {
+      tcx_ = tcx;
+      prior_ = tcx_->name_;
+      tcx_->name_ = name;
     }
   }
   ~AutoTracingName() {
-    if (trc_) {
-      MOZ_ASSERT(trc_->contextName_);
-      trc_->contextName_ = prior_;
+    if (tcx_) {
+      MOZ_ASSERT(tcx_->name_);
+      tcx_->name_ = prior_;
     }
   }
 };
 
 // Set the index portion of the tracer's context for the current range.
 class MOZ_RAII AutoTracingIndex {
-  CallbackTracer* trc_;
+  TracingContext* tcx_ = nullptr;
 
  public:
-  explicit AutoTracingIndex(JSTracer* trc, size_t initial = 0) : trc_(nullptr) {
-    if (trc->isCallbackTracer()) {
-      trc_ = trc->asCallbackTracer();
-      MOZ_ASSERT(trc_->contextIndex_ == CallbackTracer::InvalidIndex);
-      trc_->contextIndex_ = initial;
+  explicit AutoTracingIndex(JSTracer* trc, size_t initial = 0) {
+    if (TracingContext* tcx = trc->maybeContext()) {
+      tcx_ = tcx;
+      MOZ_ASSERT(tcx_->index_ == TracingContext::InvalidIndex);
+      tcx_->index_ = initial;
     }
   }
   ~AutoTracingIndex() {
-    if (trc_) {
-      MOZ_ASSERT(trc_->contextIndex_ != CallbackTracer::InvalidIndex);
-      trc_->contextIndex_ = CallbackTracer::InvalidIndex;
+    if (tcx_) {
+      MOZ_ASSERT(tcx_->index_ != TracingContext::InvalidIndex);
+      tcx_->index_ = TracingContext::InvalidIndex;
     }
   }
 
   void operator++() {
-    if (trc_) {
-      MOZ_ASSERT(trc_->contextIndex_ != CallbackTracer::InvalidIndex);
-      ++trc_->contextIndex_;
+    if (tcx_) {
+      MOZ_ASSERT(tcx_->index_ != TracingContext::InvalidIndex);
+      ++tcx_->index_;
     }
   }
 };
@@ -383,21 +390,20 @@ class MOZ_RAII AutoTracingIndex {
 // Set a context callback for the trace callback to use, if it needs a detailed
 // edge description.
 class MOZ_RAII AutoTracingDetails {
-  CallbackTracer* trc_;
+  TracingContext* tcx_ = nullptr;
 
  public:
-  AutoTracingDetails(JSTracer* trc, CallbackTracer::ContextFunctor& func)
-      : trc_(nullptr) {
-    if (trc->isCallbackTracer()) {
-      trc_ = trc->asCallbackTracer();
-      MOZ_ASSERT(trc_->contextFunctor_ == nullptr);
-      trc_->contextFunctor_ = &func;
+  AutoTracingDetails(JSTracer* trc, TracingContext::Functor& func) {
+    if (TracingContext* tcx = trc->maybeContext()) {
+      tcx_ = tcx;
+      MOZ_ASSERT(tcx_->functor_ == nullptr);
+      tcx_->functor_ = &func;
     }
   }
   ~AutoTracingDetails() {
-    if (trc_) {
-      MOZ_ASSERT(trc_->contextFunctor_);
-      trc_->contextFunctor_ = nullptr;
+    if (tcx_) {
+      MOZ_ASSERT(tcx_->functor_);
+      tcx_->functor_ = nullptr;
     }
   }
 };

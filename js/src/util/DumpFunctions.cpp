@@ -591,7 +591,7 @@ bool DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
   }
 
   char buffer[1024];
-  getTracingEdgeName(buffer, sizeof(buffer));
+  context().getEdgeName(buffer, sizeof(buffer));
   fprintf(output, "%s%p %c %s\n", prefix, thing.asCell(),
           MarkDescriptor(thing.asCell()), buffer);
   return true;
