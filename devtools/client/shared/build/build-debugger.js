@@ -54,7 +54,6 @@ function isRequire(t, node) {
 const VENDORS = [
   "classnames",
   "devtools-components",
-  "devtools-config",
   "devtools-environment",
   "devtools-splitter",
   "devtools-utils",
