@@ -258,8 +258,7 @@ class JitRuntime {
   void generateDoubleToInt32ValueStub(MacroAssembler& masm);
   void generateProfilerExitFrameTailStub(MacroAssembler& masm,
                                          Label* profilerExitTail);
-  void generateExceptionTailStub(MacroAssembler& masm, void* handler,
-                                 Label* profilerExitTail);
+  void generateExceptionTailStub(MacroAssembler& masm, Label* profilerExitTail);
   void generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail);
   void generateEnterJIT(JSContext* cx, MacroAssembler& masm);
   void generateArgumentsRectifier(MacroAssembler& masm,
