@@ -37,17 +37,25 @@ enum class TracerKind {
   // from the nursery to the tenured heap.
   Tenuring,
 
-  // Callback tracers: General-purpose tracers that invoke a virtual method for
-  // each edge.
+  // Generic tracers: Internal tracers that have a different virtual method
+  // called for each edge kind.
+  //
+  // Order is important. All generic kinds must follow this one.
+  Generic,
+
+  // Specific kinds of generic tracer.
+  Moving,
+  GrayBuffering,
+  ClearEdges,
+  Sweeping,
+
+  // Callback tracers: General-purpose tracers that have a single virtual
+  // method called on every edge.
   //
   // Order is important. All callback kinds must follow this one.
   Callback,
 
   // Specific kinds of callback tracer.
-  Moving,
-  GrayBuffering,
-  ClearEdges,
-  Sweeping,
   UnmarkGray,
   VerifyTraceProtoAndIface
 };
@@ -80,6 +88,10 @@ enum class WeakMapTraceAction {
 
 }  // namespace JS
 
+namespace js {
+class GenericTracer;
+}  // namespace js
+
 class JS_PUBLIC_API JSTracer {
  public:
   // Return the runtime set on the tracer.
@@ -88,11 +100,13 @@ class JS_PUBLIC_API JSTracer {
   JS::TracerKind kind() const { return kind_; }
   bool isMarkingTracer() const { return kind_ == JS::TracerKind::Marking; }
   bool isTenuringTracer() const { return kind_ == JS::TracerKind::Tenuring; }
+  bool isGenericTracer() const { return kind_ >= JS::TracerKind::Generic; }
   bool isCallbackTracer() const { return kind_ >= JS::TracerKind::Callback; }
 
   // Return the weak map tracing behavior currently set on this tracer.
   JS::WeakMapTraceAction weakMapAction() const { return weakMapAction_; }
 
+  inline js::GenericTracer* asGenericTracer();
   inline JS::CallbackTracer* asCallbackTracer();
 
   bool traceWeakEdges() const { return traceWeakEdges_; }
@@ -142,65 +156,85 @@ class JS_PUBLIC_API JSTracer {
   bool canSkipJsids_;
 };
 
+namespace js {
+
+class AutoTracingName;
+class AutoTracingIndex;
+class AutoTracingCallback;
+
+class GenericTracer : public JSTracer {
+ public:
+  GenericTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Generic,
+                JS::WeakMapTraceAction weakMapAction =
+                    JS::WeakMapTraceAction::TraceValues)
+      : JSTracer(rt, kind, weakMapAction) {
+    MOZ_ASSERT(isGenericTracer());
+  }
+
+  // Override these methods to receive notification when an edge is visited
+  // with the type contained in the callback.
+  virtual bool onObjectEdge(JSObject** objp) = 0;
+  virtual bool onStringEdge(JSString** strp) = 0;
+  virtual bool onSymbolEdge(JS::Symbol** symp) = 0;
+  virtual bool onBigIntEdge(JS::BigInt** bip) = 0;
+  virtual bool onScriptEdge(js::BaseScript** scriptp) = 0;
+  virtual bool onShapeEdge(js::Shape** shapep) = 0;
+  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) = 0;
+  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) = 0;
+  virtual bool onBaseShapeEdge(js::BaseShape** basep) = 0;
+  virtual bool onJitCodeEdge(js::jit::JitCode** codep) = 0;
+  virtual bool onScopeEdge(js::Scope** scopep) = 0;
+
+  // In C++, overriding a method hides all methods in the base class with that
+  // name, not just methods with that signature. Thus, the typed edge methods
+  // have to have distinct names to allow us to override them individually,
+  // which is freqently useful if, for example, we only want to process one type
+  // of edge.
+  bool dispatchToOnEdge(JSObject** objp) { return onObjectEdge(objp); }
+  bool dispatchToOnEdge(JSString** strp) { return onStringEdge(strp); }
+  bool dispatchToOnEdge(JS::Symbol** symp) { return onSymbolEdge(symp); }
+  bool dispatchToOnEdge(JS::BigInt** bip) { return onBigIntEdge(bip); }
+  bool dispatchToOnEdge(js::BaseScript** scriptp) {
+    return onScriptEdge(scriptp);
+  }
+  bool dispatchToOnEdge(js::Shape** shapep) { return onShapeEdge(shapep); }
+  bool dispatchToOnEdge(js::ObjectGroup** groupp) {
+    return onObjectGroupEdge(groupp);
+  }
+  bool dispatchToOnEdge(js::BaseShape** basep) {
+    return onBaseShapeEdge(basep);
+  }
+  bool dispatchToOnEdge(js::jit::JitCode** codep) {
+    return onJitCodeEdge(codep);
+  }
+  bool dispatchToOnEdge(js::Scope** scopep) { return onScopeEdge(scopep); }
+  bool dispatchToOnEdge(js::RegExpShared** sharedp) {
+    return onRegExpSharedEdge(sharedp);
+  }
+};
+
+}  // namespace js
+
 namespace JS {
 
 class AutoTracingName;
 class AutoTracingIndex;
 class AutoTracingCallback;
 
-class JS_PUBLIC_API CallbackTracer : public JSTracer {
+class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
  public:
-  CallbackTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
-                 JS::WeakMapTraceAction weakMapAction =
-                     JS::WeakMapTraceAction::TraceValues)
-      : JSTracer(rt, kind, weakMapAction),
+  CallbackTracer(
+      JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
+      WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues)
+      : GenericTracer(rt, kind, weakMapAction),
         contextName_(nullptr),
         contextIndex_(InvalidIndex),
         contextFunctor_(nullptr) {
     MOZ_ASSERT(isCallbackTracer());
   }
-  CallbackTracer(JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
-                 JS::WeakMapTraceAction weakMapAction =
-                     JS::WeakMapTraceAction::TraceValues);
-
-  // Override these methods to receive notification when an edge is visited
-  // with the type contained in the callback. The default implementation
-  // dispatches to the fully-generic onChild implementation, so for cases that
-  // do not care about boxing overhead and do not need the actual edges,
-  // just override the generic onChild.
-  virtual bool onObjectEdge(JSObject** objp) {
-    return onChild(JS::GCCellPtr(*objp));
-  }
-  virtual bool onStringEdge(JSString** strp) {
-    return onChild(JS::GCCellPtr(*strp));
-  }
-  virtual bool onSymbolEdge(JS::Symbol** symp) {
-    return onChild(JS::GCCellPtr(*symp));
-  }
-  virtual bool onBigIntEdge(JS::BigInt** bip) {
-    return onChild(JS::GCCellPtr(*bip));
-  }
-  virtual bool onScriptEdge(js::BaseScript** scriptp) {
-    return onChild(JS::GCCellPtr(*scriptp));
-  }
-  virtual bool onShapeEdge(js::Shape** shapep) {
-    return onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
-  }
-  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) {
-    return onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
-  }
-  virtual bool onBaseShapeEdge(js::BaseShape** basep) {
-    return onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
-  }
-  virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
-    return onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
-  }
-  virtual bool onScopeEdge(js::Scope** scopep) {
-    return onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
-  }
-  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) {
-    return onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
-  }
+  CallbackTracer(
+      JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
+      WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues);
 
   // Override this method to receive notification when a node in the GC
   // heap graph is visited.
@@ -256,39 +290,47 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
     virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
   };
 
-  // In C++, overriding a method hides all methods in the base class with
-  // that name, not just methods with that signature. Thus, the typed edge
-  // methods have to have distinct names to allow us to override them
-  // individually, which is freqently useful if, for example, we only want to
-  // process only one type of edge.
-  bool dispatchToOnEdge(JSObject** objp) { return onObjectEdge(objp); }
-  bool dispatchToOnEdge(JSString** strp) { return onStringEdge(strp); }
-  bool dispatchToOnEdge(JS::Symbol** symp) { return onSymbolEdge(symp); }
-  bool dispatchToOnEdge(JS::BigInt** bip) { return onBigIntEdge(bip); }
-  bool dispatchToOnEdge(js::BaseScript** scriptp) {
-    return onScriptEdge(scriptp);
-  }
-  bool dispatchToOnEdge(js::Shape** shapep) { return onShapeEdge(shapep); }
-  bool dispatchToOnEdge(js::ObjectGroup** groupp) {
-    return onObjectGroupEdge(groupp);
-  }
-  bool dispatchToOnEdge(js::BaseShape** basep) {
-    return onBaseShapeEdge(basep);
-  }
-  bool dispatchToOnEdge(js::jit::JitCode** codep) {
-    return onJitCodeEdge(codep);
-  }
-  bool dispatchToOnEdge(js::Scope** scopep) { return onScopeEdge(scopep); }
-  bool dispatchToOnEdge(js::RegExpShared** sharedp) {
-    return onRegExpSharedEdge(sharedp);
-  }
-
  protected:
   // If this is set to false, then the tracer will skip some jsids
   // to improve performance. This is needed for the cycle collector.
   void setCanSkipJsids(bool value) { canSkipJsids_ = value; }
 
  private:
+  // This class implements the GenericTracer interface to dispatches to onChild.
+  virtual bool onObjectEdge(JSObject** objp) {
+    return onChild(JS::GCCellPtr(*objp));
+  }
+  virtual bool onStringEdge(JSString** strp) {
+    return onChild(JS::GCCellPtr(*strp));
+  }
+  virtual bool onSymbolEdge(JS::Symbol** symp) {
+    return onChild(JS::GCCellPtr(*symp));
+  }
+  virtual bool onBigIntEdge(JS::BigInt** bip) {
+    return onChild(JS::GCCellPtr(*bip));
+  }
+  virtual bool onScriptEdge(js::BaseScript** scriptp) {
+    return onChild(JS::GCCellPtr(*scriptp));
+  }
+  virtual bool onShapeEdge(js::Shape** shapep) {
+    return onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
+  }
+  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) {
+    return onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
+  }
+  virtual bool onBaseShapeEdge(js::BaseShape** basep) {
+    return onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
+  }
+  virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
+    return onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
+  }
+  virtual bool onScopeEdge(js::Scope** scopep) {
+    return onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
+  }
+  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) {
+    return onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
+  }
+
   friend class AutoTracingName;
   const char* contextName_;
 
@@ -305,14 +347,19 @@ class MOZ_RAII AutoTracingName {
   const char* prior_;
 
  public:
-  AutoTracingName(CallbackTracer* trc, const char* name)
-      : trc_(trc), prior_(trc->contextName_) {
+  AutoTracingName(JSTracer* trc, const char* name) : trc_(nullptr) {
     MOZ_ASSERT(name);
-    trc->contextName_ = name;
+    if (trc->isCallbackTracer()) {
+      trc_ = trc->asCallbackTracer();
+      prior_ = trc_->contextName_;
+      trc_->contextName_ = name;
+    }
   }
   ~AutoTracingName() {
-    MOZ_ASSERT(trc_->contextName_);
-    trc_->contextName_ = prior_;
+    if (trc_) {
+      MOZ_ASSERT(trc_->contextName_);
+      trc_->contextName_ = prior_;
+    }
   }
 };
 
@@ -366,6 +413,11 @@ class MOZ_RAII AutoTracingDetails {
 };
 
 }  // namespace JS
+
+js::GenericTracer* JSTracer::asGenericTracer() {
+  MOZ_ASSERT(isGenericTracer());
+  return static_cast<js::GenericTracer*>(this);
+}
 
 JS::CallbackTracer* JSTracer::asCallbackTracer() {
   MOZ_ASSERT(isCallbackTracer());
