@@ -1576,13 +1576,10 @@ void Http3Session::Authenticated(int32_t aError) {
            static_cast<uint32_t>(mError), this));
     }
     mHttp3Connection->PeerAuthenticated(aError);
+  }
 
-    // Call OnQuicTimeoutExpired to properly process neqo events and outputs.
-    // We call OnQuicTimeoutExpired instead of ProcessOutputAndEvents, because
-    // HttpConnectionUDP must close this session in case of an error.
-    NS_DispatchToCurrentThread(NewRunnableMethod(
-        "net::HttpConnectionUDP::OnQuicTimeoutExpired", mSegmentReaderWriter,
-        &HttpConnectionUDP::OnQuicTimeoutExpired));
+  if (mConnection) {
+    Unused << mConnection->ResumeSend();
   }
 }
 
