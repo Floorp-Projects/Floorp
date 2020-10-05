@@ -431,12 +431,27 @@ var FullScreen = {
     // before the check is fine since we also check the activeness of
     // the requesting document in content-side handling code.
     if (this._isRemoteBrowser(aBrowser)) {
-      if (
-        !this._sendMessageToTheRightContent(aActor, "DOMFullscreen:Entered")
-      ) {
+      let [targetActor, inProcessBC] = this._getNextMsgRecipientActor(aActor);
+      if (!targetActor) {
+        // If there is no appropriate actor to send the message we have
+        // no way to complete the transition and should abort by exiting
+        // fullscreen.
+        this._abortEnterFullscreen();
+        return;
+      }
+      targetActor.sendAsyncMessage("DOMFullscreen:Entered", {
+        remoteFrameBC: inProcessBC,
+      });
+
+      // Record that the actor is waiting for its child to enter
+      // fullscreen so that if it dies we can abort.
+      targetActor.waitingForChildFullscreen = true;
+      if (inProcessBC) {
+        // We aren't messaging the request origin yet, skip this time.
         return;
       }
     }
+
     // If we've received a fullscreen notification, we have to ensure that the
     // element that's requesting fullscreen belongs to the browser that's currently
     // active. If not, we exit fullscreen since the "full-screen document" isn't
@@ -448,9 +463,7 @@ var FullScreen = {
       // full-screen was made. Cancel full-screen.
       Services.focus.activeWindow != window
     ) {
-      // This function is called synchronously in fullscreen change, so
-      // we have to avoid calling exitFullscreen synchronously here.
-      setTimeout(() => document.exitFullscreen(), 0);
+      this._abortEnterFullscreen();
       return;
     }
 
@@ -464,7 +477,6 @@ var FullScreen = {
         this._logWarningPermissionPromptFS("promptCanceled");
       }
     }
-
     document.documentElement.setAttribute("inDOMFullscreen", true);
 
     if (gFindBarInitialized) {
@@ -499,9 +511,25 @@ var FullScreen = {
     }
   },
 
+  /**
+   * Clean up full screen, starting from the request origin's first ancestor
+   * frame that is OOP.
+   *
+   * If there are OOP ancestor frames, we notify the first of those and then bail to
+   * be called again in that process when it has dealt with the change. This is
+   * repeated until all ancestor processes have been updated. Once that has happened
+   * we remove our handlers and attributes and notify the request origin to complete
+   * the cleanup.
+   */
   cleanupDomFullscreen(aActor) {
-    if (!this._sendMessageToTheRightContent(aActor, "DOMFullscreen:CleanUp")) {
-      return;
+    let [target, inProcessBC] = this._getNextMsgRecipientActor(aActor);
+    if (target) {
+      target.sendAsyncMessage("DOMFullscreen:CleanUp", {
+        remoteFrameBC: inProcessBC,
+      });
+      if (inProcessBC) {
+        return;
+      }
     }
 
     PopupNotifications.panel.removeEventListener(
@@ -519,40 +547,43 @@ var FullScreen = {
     document.documentElement.removeAttribute("inDOMFullscreen");
   },
 
+  _abortEnterFullscreen() {
+    // This function is called synchronously in fullscreen change, so
+    // we have to avoid calling exitFullscreen synchronously here.
+    setTimeout(() => document.exitFullscreen(), 0);
+    if (TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS")) {
+      // Cancel the stopwatch for any fullscreen change to avoid
+      // errors if it is started again.
+      TelemetryStopwatch.cancel("FULLSCREEN_CHANGE_MS");
+    }
+  },
+
   /**
    * Search for the first ancestor of aActor that lives in a different process.
-   * If found, that ancestor is sent the message and return false.
-   * Otherwise, the recipient should be the actor of the request origin and return true
-   * from this function.
-   *
-   * The method will be called again as a result of targeted child process doing
-   * "FullScreen.enterDomFullscreen()" or "FullScreen.cleanupDomFullscreen()".
-   * The return value is used to postpone entering or exiting Full Screen in the parent
-   * until there is no ancestor anymore.
+   * If found, that ancestor actor and the browsing context for its child which
+   * was in process are returned. Otherwise [request origin, null].
    *
    *
    * @param {JSWindowActorParent} aActor
    *        The actor that called this function.
-   * @param {String} message
-   *        Message to be sent.
    *
-   * @return {boolean}
-   *         The return value is used to postpone entering or exiting Full Screen in the
-   *         parent until there is no ancestor anymore.
-   *         Return false if the message is send to the first ancestor of aActor that
-   *         lives in a different process
-   *         Return true if the message is sent to the request source
-   *         or false otherwise.
+   * @return {[JSWindowActorParent, BrowsingContext]}
+   *         The parent actor which should be sent the next msg and the
+   *         in process browsing context which is its child. Will be
+   *         [null, null] if there is no OOP parent actor and request origin
+   *         is unset. [null, null] is also returned if the intended actor or
+   *         the calling actor has been destroyed.
    */
-  _sendMessageToTheRightContent(aActor, aMessage) {
+  _getNextMsgRecipientActor(aActor) {
     if (aActor.hasBeenDestroyed()) {
-      // Just restore the chrome UI when the actor is dead.
-      return true;
+      return [null, null];
     }
 
     let childBC = aActor.browsingContext;
     let parentBC = childBC.parent;
 
+    // Walk up the browsing context tree from aActor's browsing context
+    // to find the first ancestor browsing context that's in a different process.
     while (parentBC) {
       if (!childBC.currentWindowGlobal || !parentBC.currentWindowGlobal) {
         break;
@@ -568,24 +599,20 @@ var FullScreen = {
       }
     }
 
+    let target = null;
+    let inProcessBC = null;
+
     if (parentBC && parentBC.currentWindowGlobal) {
-      let parentActor = parentBC.currentWindowGlobal.getActor("DOMFullscreen");
-      parentActor.sendAsyncMessage(aMessage, {
-        remoteFrameBC: childBC,
-      });
-      return false;
+      target = parentBC.currentWindowGlobal.getActor("DOMFullscreen");
+      inProcessBC = childBC;
+    } else {
+      target = aActor.requestOrigin;
     }
 
-    // All content frames living outside the process where
-    // the element requesting fullscreen lives should
-    // have entered or exited fullscreen at this point.
-    // So let's notify the process where the original request
-    // comes from.
-    if (!aActor.requestOrigin.hasBeenDestroyed()) {
-      aActor.requestOrigin.sendAsyncMessage(aMessage, {});
-      aActor.requestOrigin = null;
+    if (!target || target.hasBeenDestroyed()) {
+      return [null, null];
     }
-    return true;
+    return [target, inProcessBC];
   },
 
   _isRemoteBrowser(aBrowser) {
