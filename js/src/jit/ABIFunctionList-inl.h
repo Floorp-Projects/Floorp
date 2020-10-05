@@ -58,10 +58,13 @@ namespace jit {
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
+  _(js::jit::AssumeUnreachable)                             \
   _(js::jit::Bailout)                                       \
   _(js::jit::FinishBailoutToBaseline)                       \
   _(js::jit::InitBaselineFrameForOsr)                       \
   _(js::jit::InvalidationBailout)                           \
+  _(js::jit::Printf0)                                       \
+  _(js::jit::Printf1)                                       \
   _(js::NumberMod)                                          \
   _(js::powi)                                               \
   _(js::RegExpInstanceOptimizableRaw)                       \

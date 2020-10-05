@@ -1180,6 +1180,11 @@ AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 
+// Functions used when JS_MASM_VERBOSE is enabled.
+void AssumeUnreachable(const char* output);
+void Printf0(const char* output);
+void Printf1(const char* output, uintptr_t value);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
