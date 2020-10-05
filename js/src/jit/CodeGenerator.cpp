@@ -3390,11 +3390,12 @@ void CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(
 
   saveVolatile(output);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * proto);
   masm.setupUnalignedABICall(output);
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
+  masm.callWithABI<Fn, RegExpPrototypeOptimizableRaw>();
   masm.storeCallBoolResult(output);
 
   restoreVolatile(output);
@@ -3441,12 +3442,13 @@ void CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(
 
   saveVolatile(output);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, JSObject * proto);
   masm.setupUnalignedABICall(output);
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
   masm.passABIArg(proto);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
+  masm.callWithABI<Fn, RegExpInstanceOptimizableRaw>();
   masm.storeCallBoolResult(output);
 
   restoreVolatile(output);
