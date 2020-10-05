@@ -558,6 +558,11 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
     return {0, 0};
   }
 
+  if (frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
+      StreamLength()) {
+    mEOS = true;
+  }
+
   MP3LOGV("FindNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " frameHeaderOffset=%" PRId64
           " mTotalFrameLen=%" PRIu64
@@ -619,6 +624,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
+  frame->mEOS = mEOS;
 
   MOZ_ASSERT(!frame->mTime.IsNegative());
   MOZ_ASSERT(frame->mDuration.IsPositive());
@@ -641,9 +647,10 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
-          " mSamplesPerFrame=%d mSamplesPerSecond=%d mChannels=%d",
+          " mSamplesPerFrame=%d mSamplesPerSecond=%d mChannels=%d, mEOS=%s",
           mOffset, mNumParsedFrames, mFrameIndex, mTotalFrameLen,
-          mSamplesPerFrame, mSamplesPerSecond, mChannels);
+          mSamplesPerFrame, mSamplesPerSecond, mChannels,
+          mEOS ? "true" : "false");
 
   return frame.forget();
 }
