@@ -27,7 +27,7 @@ class RotorRule : public PivotRule {
 /**
  * This rule matches all accessibles of a given role.
  */
-class RotorRoleRule final : public RotorRule {
+class RotorRoleRule : public RotorRule {
  public:
   explicit RotorRoleRule(role aRole, AccessibleOrProxy& aDirectDescendantsFrom);
   explicit RotorRoleRule(role aRole);
@@ -75,4 +75,16 @@ class RotorStaticTextRule : public RotorRule {
   explicit RotorStaticTextRule(AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
+
+class RotorHeadingLevelRule : public RotorRoleRule {
+ public:
+  explicit RotorHeadingLevelRule(int32_t aLevel);
+  explicit RotorHeadingLevelRule(int32_t aLevel,
+                                 AccessibleOrProxy& aDirectDescendantsFrom);
+
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+
+ private:
+  int32_t mLevel;
 };
