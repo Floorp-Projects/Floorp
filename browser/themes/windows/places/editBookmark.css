@@ -67,7 +67,7 @@
   border: 1px solid -moz-DialogText;
   min-width: 13px;
   min-height: 13px;
-  background: -moz-Field no-repeat 50% 50%;
+  background: Field no-repeat 50% 50%;
 }
 
 /* Bookmark panel dropdown icons */

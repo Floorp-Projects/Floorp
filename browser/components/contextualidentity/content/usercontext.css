@@ -43,8 +43,8 @@
 }
 
 .identity-color-toolbar {
-  --identity-tab-color: var(--lwt-toolbar-field-color, -moz-FieldText);
-  --identity-icon-color: var(--lwt-toolbar-field-color, -moz-FieldText);
+  --identity-tab-color: var(--lwt-toolbar-field-color, FieldText);
+  --identity-icon-color: var(--lwt-toolbar-field-color, FieldText);
 }
 
 .identity-icon-fence {

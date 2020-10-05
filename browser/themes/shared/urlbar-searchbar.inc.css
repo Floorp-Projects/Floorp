@@ -36,12 +36,12 @@
 #searchbar {
   min-height: 30px;
   text-shadow: none;
-  color: -moz-FieldText;
+  color: FieldText;
 }
 
 #urlbar-background,
 #searchbar {
-  background-color: -moz-Field;
+  background-color: Field;
   background-clip: padding-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);

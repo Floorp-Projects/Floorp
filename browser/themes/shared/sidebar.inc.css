@@ -5,8 +5,8 @@
 %endif
 
 #sidebar-box {
-  --sidebar-background-color: -moz-Field;
-  --sidebar-text-color: -moz-FieldText;
+  --sidebar-background-color: Field;
+  --sidebar-text-color: FieldText;
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
   text-shadow: none;

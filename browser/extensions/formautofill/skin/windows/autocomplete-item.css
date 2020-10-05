@@ -15,7 +15,7 @@
   }
 
   .autofill-item-box {
-    --label-text-color: -moz-FieldText;
+    --label-text-color: FieldText;
     --comment-text-color: GrayText;
   }
 }
