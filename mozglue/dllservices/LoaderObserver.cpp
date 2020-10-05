@@ -7,6 +7,7 @@
 #include "LoaderObserver.h"
 
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/glue/WindowsUnicode.h"
 #include "mozilla/StackWalk_windows.h"
 
@@ -16,9 +17,11 @@ struct LoadContext {
   LoadContext(mozilla::ProfilerLabel&& aLabel,
               mozilla::UniquePtr<char[]>&& aDynamicStringStorage)
       : mProfilerLabel(std::move(aLabel)),
-        mDynamicStringStorage(std::move(aDynamicStringStorage)) {}
+        mDynamicStringStorage(std::move(aDynamicStringStorage)),
+        mStartTime(mozilla::TimeStamp::Now()) {}
   mozilla::ProfilerLabel mProfilerLabel;
   mozilla::UniquePtr<char[]> mDynamicStringStorage;
+  mozilla::TimeStamp mStartTime;
 };
 
 }  // anonymous namespace
@@ -64,6 +67,11 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
   UniquePtr<LoadContext> loadContext(static_cast<LoadContext*>(aContext));
   if (loadContext && IsValidProfilerLabel(loadContext->mProfilerLabel)) {
     ProfilerLabelEnd(loadContext->mProfilerLabel);
+    BASE_PROFILER_MARKER_TEXT(
+        "DllLoad", OTHER,
+        MarkerTiming::IntervalUntilNowFrom(loadContext->mStartTime),
+        mozilla::ProfilerString8View::WrapNullTerminatedString(
+            loadContext->mDynamicStringStorage.get()));
   }
 
   if (!NT_SUCCESS(aNtStatus) || !aModuleLoadInfo.WasMapped()) {
