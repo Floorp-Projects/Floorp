@@ -4042,9 +4042,8 @@ struct AssertNonGrayTracer final : public JS::CallbackTracer {
   // context without making this more generic.
   explicit AssertNonGrayTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, JS::TracerKind::UnmarkGray) {}
-  bool onChild(const JS::GCCellPtr& thing) override {
+  void onChild(const JS::GCCellPtr& thing) override {
     MOZ_ASSERT(!thing.asCell()->isMarkedGray());
-    return true;
   }
 };
 #endif
@@ -4072,10 +4071,10 @@ class UnmarkGrayTracer final : public JS::CallbackTracer {
   // Stack of cells to traverse.
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy>& stack;
 
-  bool onChild(const JS::GCCellPtr& thing) override;
+  void onChild(const JS::GCCellPtr& thing) override;
 };
 
-bool UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
+void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   Cell* cell = thing.asCell();
 
   // Cells in the nursery cannot be gray, and nor can certain kinds of tenured
@@ -4087,7 +4086,7 @@ bool UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
     AssertNonGrayTracer nongray(runtime());
     TraceChildren(&nongray, cell, thing.kind());
 #endif
-    return true;
+    return;
   }
 
   TenuredCell& tenured = cell->asTenured();
@@ -4105,11 +4104,11 @@ bool UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
       MOZ_ASSERT(tmp == cell);
       unmarkedAny = true;
     }
-    return true;
+    return;
   }
 
   if (!tenured.isMarkedGray()) {
-    return true;
+    return;
   }
 
   tenured.markBlack();
@@ -4118,7 +4117,6 @@ bool UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   if (!stack.append(thing)) {
     oom = true;
   }
-  return true;
 }
 
 void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
