@@ -234,7 +234,8 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
-    if ([key isEqualToString:@"AXImageSearchKey"]) {
+    if ([key isEqualToString:@"AXImageSearchKey"] ||
+        [key isEqualToString:@"AXGraphicSearchKey"]) {
       RotorRoleRule rule = mImmediateDescendantsOnly
                                ? RotorRoleRule(roles::GRAPHIC, geckoRootAcc)
                                : RotorRoleRule(roles::GRAPHIC);
