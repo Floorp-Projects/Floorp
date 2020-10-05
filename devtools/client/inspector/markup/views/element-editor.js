@@ -365,7 +365,7 @@ ElementEditor.prototype = {
   _createScrollableBadge: function() {
     const isInteractive =
       this.isOverflowDebuggingEnabled &&
-      this.node.walkerFront.traits.supportsOverflowDebugging &&
+      this.node.walkerFront.traits.supportsOverflowDebugging2 &&
       // Document elements cannot have interative scrollable badges since retrieval of their
       // overflow causing elements is not supported.
       !this.node.isDocumentElement;
@@ -505,7 +505,7 @@ ElementEditor.prototype = {
   updateOverflowHighlight: async function() {
     if (
       !this.isOverflowDebuggingEnabled ||
-      !this.node.walkerFront.traits.supportsOverflowDebugging
+      !this.node.walkerFront.traits.supportsOverflowDebugging2
     ) {
       return;
     }
@@ -1023,17 +1023,16 @@ ElementEditor.prototype = {
       "active"
     );
 
-    const overflowCausingElements = await this.node.walkerFront.getOverflowCausingElements(
+    const { nodes } = await this.node.walkerFront.getOverflowCausingElements(
       this.node
     );
-    const overflowCausingElementsList = await overflowCausingElements.items();
 
-    for (const element of overflowCausingElementsList) {
+    for (const node of nodes) {
       if (this.highlightingOverflowCausingElements) {
-        await this.markup.showNode(element);
+        await this.markup.showNode(node);
       }
 
-      const markupContainer = this.markup.getContainer(element);
+      const markupContainer = this.markup.getContainer(node);
 
       if (markupContainer) {
         markupContainer.editor.setOverflowHighlight(
