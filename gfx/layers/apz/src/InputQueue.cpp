@@ -244,14 +244,15 @@ nsEventStatus InputQueue::ReceiveMouseInput(
     MOZ_ASSERT(newBlock);
     block = new DragBlockState(aTarget, aFlags, aEvent);
 
-    INPQ_LOG("started new drag block %p id %" PRIu64
-             " for %sconfirmed target %p and %s a scrollthumb\n",
-             block, block->GetBlockId(), aFlags.mTargetConfirmed ? "" : "un",
-             aTarget.get(), aFlags.mHitScrollThumb ? "hits" : "doesn't hit");
+    INPQ_LOG(
+        "started new drag block %p id %" PRIu64
+        "for %sconfirmed target %p; on scrollbar: %d; on scrollthumb: %d\n",
+        block, block->GetBlockId(), aFlags.mTargetConfirmed ? "" : "un",
+        aTarget.get(), aFlags.mHitScrollbar, aFlags.mHitScrollThumb);
 
     mActiveDragBlock = block;
 
-    if (aFlags.mHitScrollThumb) {
+    if (aFlags.mHitScrollThumb || !aFlags.mHitScrollbar) {
       CancelAnimationsForNewBlock(block);
     }
     MaybeRequestContentResponse(aTarget, block);
