@@ -596,11 +596,13 @@ pub fn update_primitive_visibility(
                     flags: vis_flags,
                 };
 
-                request_resources_for_prim(
+                // TODO(gw): This should probably be an instance method on PrimitiveInstance?
+                update_prim_post_visibility(
                     store,
                     prim_instance,
                     cluster.spatial_node_index,
                     world_culling_rect,
+                    &map_surface_to_world,
                     frame_context,
                     frame_state,
                 );
@@ -696,16 +698,30 @@ pub fn update_primitive_visibility(
 }
 
 
-fn request_resources_for_prim(
+fn update_prim_post_visibility(
     store: &mut PrimitiveStore,
     prim_instance: &mut PrimitiveInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     world_culling_rect: WorldRect,
+    map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
 ) {
-    profile_scope!("request_resources_for_prim");
+    profile_scope!("update_prim_post_visibility");
     match prim_instance.kind {
+        PrimitiveInstanceKind::Picture { pic_index, .. } => {
+            let pic = &mut store.pictures[pic_index.0];
+            // If this picture has a surface, determine the clipped bounding rect for it to
+            // minimize the size of the render target that is required.
+            if let Some(ref mut raster_config) = pic.raster_config {
+                raster_config.clipped_bounding_rect = map_surface_to_world
+                    .map(&prim_instance.vis.clip_chain.pic_clip_rect)
+                    .and_then(|rect| {
+                        rect.intersection(&world_culling_rect)
+                    })
+                    .unwrap_or(WorldRect::zero());
+            }
+        }
         PrimitiveInstanceKind::TextRun { .. } => {
             // Text runs can't request resources early here, as we don't
             // know until TileCache::post_update() whether we are drawing

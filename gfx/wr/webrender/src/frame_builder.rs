@@ -31,7 +31,7 @@ use crate::scene::{BuiltScene, SceneProperties};
 use crate::space::SpaceMapper;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
-use crate::util::{MaxRect, VecHelper, Recycler, Preallocator};
+use crate::util::{VecHelper, Recycler, Preallocator};
 use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
 use crate::visibility::{PrimitiveVisibilityMask};
 
@@ -412,7 +412,6 @@ impl FrameBuilder {
             .pictures[scene.root_pic_index.0]
             .take_context(
                 scene.root_pic_index,
-                WorldRect::max_rect(),
                 root_spatial_node_index,
                 root_spatial_node_index,
                 ROOT_SURFACE_INDEX,
