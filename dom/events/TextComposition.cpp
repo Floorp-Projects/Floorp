@@ -151,9 +151,7 @@ void TextComposition::DispatchEvent(
     const WidgetCompositionEvent* aOriginalEvent) {
   nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent, aDispatchEvent);
 
-  if (aDispatchEvent->mMessage == eCompositionChange &&
-      StaticPrefs::
-          dom_compositionevent_text_dispatch_only_system_group_in_content()) {
+  if (aDispatchEvent->mMessage == eCompositionChange) {
     aDispatchEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
   }
   EventDispatcher::Dispatch(mNode, mPresContext, aDispatchEvent, nullptr,

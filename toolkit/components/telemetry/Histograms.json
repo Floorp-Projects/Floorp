@@ -7898,16 +7898,6 @@
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
   },
-  "INNERWINDOWS_WITH_TEXT_EVENT_LISTENERS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["mnakano@mozilla.com"],
-    "bug_numbers": [1506434,1288640],
-    "expires_in_version": "67",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Deleted or to-be-reused innerwindow which has had text event listeners in the default group."
-  },
   "ENCODING_OVERRIDE_SITUATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
