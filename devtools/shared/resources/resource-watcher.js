@@ -254,7 +254,7 @@ class ResourceWatcher {
       // to a new process.
       // In order to keep working resources that are being watched via the
       // Watcher actor, we have to unregister and re-register the resource
-      // types. This will force calling `watchTargetResources` on the new top
+      // types. This will force calling `Resources.watchResources` on the new top
       // level target.
       for (const resourceType of this._listenerCount.keys()) {
         await this._stopListening(resourceType, { bypassListenerCount: true });

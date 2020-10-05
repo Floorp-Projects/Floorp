@@ -188,7 +188,7 @@ exports.hasResourceTypesForTargets = hasResourceTypesForTargets;
  * Stop watching for a list of resource types.
  *
  * @param Actor watcherOrTargetActor
- *        The related actor, already passed to watchTargetResources
+ *        The related actor, already passed to watchResources.
  * @param Array<String> resourceTypes
  *        List of all type of resource to stop listening to.
  */

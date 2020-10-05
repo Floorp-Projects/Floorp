@@ -329,15 +329,11 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
     switch (message.name) {
       case "DevToolsFrameParent:instantiate-already-available": {
-        const {
-          watcherActorID,
-          connectionPrefix,
-          watchedResources,
-        } = message.data;
+        const { watcherActorID, connectionPrefix, watchedData } = message.data;
         return this._createTargetActor(
           watcherActorID,
           connectionPrefix,
-          watchedResources
+          watchedData
         );
       }
       case "DevToolsFrameParent:destroy": {

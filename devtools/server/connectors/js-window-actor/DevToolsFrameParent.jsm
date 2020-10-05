@@ -58,13 +58,13 @@ class DevToolsFrameParent extends JSWindowActorParent {
     watcherActorID,
     connectionPrefix,
     browserId,
-    watchedResources,
+    watchedData,
   }) {
     return this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
       watcherActorID,
       connectionPrefix,
       browserId,
-      watchedResources,
+      watchedData,
     });
   }
 
