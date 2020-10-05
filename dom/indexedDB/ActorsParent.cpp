@@ -1235,7 +1235,7 @@ class DatabaseConnection final {
 
     ScopedLogExtraInfo mExtraInfo;
 #else
-    BorrowedStatement(NotNull<mozIStorageStatement*> aStatement)
+    MOZ_IMPLICIT BorrowedStatement(NotNull<mozIStorageStatement*> aStatement)
         : mozStorageStatementScoper(aStatement) {}
 #endif
   };
