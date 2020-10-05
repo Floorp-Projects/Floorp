@@ -3081,7 +3081,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
             // might still get squashed into a full transaction if something
             // happens to trigger one.
             MOZ_ASSERT(!mScrollUpdates.IsEmpty());
-            success = manager->SetPendingScrollUpdateForNextTransaction(
+            success = manager->AddPendingScrollUpdateForNextTransaction(
                 id, mScrollUpdates.LastElement());
             if (success) {
               schedulePaint = false;
