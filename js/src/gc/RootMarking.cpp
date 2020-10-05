@@ -491,7 +491,7 @@ void js::gc::GCRuntime::checkNoRuntimeRoots(AutoGCSession& session) {
 
 // Append traced things to a buffer on the zone for use later in the GC.
 // See the comment in GCRuntime.h above grayBufferState for details.
-class BufferGrayRootsTracer final : public JS::CallbackTracer {
+class BufferGrayRootsTracer final : public GenericTracer {
   // Set to false if we OOM while buffering gray roots.
   bool bufferingGrayRootsFailed;
 
@@ -507,17 +507,29 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer {
   }
   bool onBigIntEdge(JS::BigInt** bip) override { return bufferRoot(*bip); }
 
-  bool onChild(const JS::GCCellPtr& thing) override {
-    MOZ_CRASH("Unexpected gray root kind");
-    return true;
+  bool onShapeEdge(js::Shape** shapep) override { return unsupportedEdge(); }
+  bool onObjectGroupEdge(js::ObjectGroup** groupp) override {
+    return unsupportedEdge();
   }
+  bool onBaseShapeEdge(js::BaseShape** basep) override {
+    return unsupportedEdge();
+  }
+  bool onJitCodeEdge(js::jit::JitCode** codep) override {
+    return unsupportedEdge();
+  }
+  bool onScopeEdge(js::Scope** scopep) override { return unsupportedEdge(); }
+  bool onRegExpSharedEdge(js::RegExpShared** sharedp) override {
+    return unsupportedEdge();
+  }
+
+  bool unsupportedEdge() { MOZ_CRASH("Unsupported gray root edge kind"); }
 
   template <typename T>
   inline bool bufferRoot(T* thing);
 
  public:
   explicit BufferGrayRootsTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::GrayBuffering),
+      : GenericTracer(rt, JS::TracerKind::GrayBuffering),
         bufferingGrayRootsFailed(false) {}
 
   bool failed() const { return bufferingGrayRootsFailed; }

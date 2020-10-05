@@ -3754,9 +3754,9 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
                                            AbstractGeneratorObject* generator) {
   MOZ_ASSERT(generator->realm()->isDebuggee());
 
-  // Ignore callback tracers.
+  // Ignore generic tracers.
   //
-  // There are two kinds of callback tracers we need to bar: MovingTracers used
+  // There are two kinds of generic tracers we need to bar: MovingTracers used
   // by compacting GC; and CompartmentCheckTracers.
   //
   // MovingTracers are used by the compacting GC to update pointers to objects
@@ -3793,10 +3793,10 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
   // safely hide the edges from CompartmentCheckTracers.
   //
   // We can't quite recognize MovingTracers and CompartmentCheckTracers
-  // precisely, but they're both callback tracers, so we just show them all the
+  // precisely, but they're both generic tracers, so we just show them all the
   // door. This means the generator -> Debugger.Frame edge is going to be
   // invisible to some traversals. We'll cope with that when it's a problem.
-  if (tracer->isCallbackTracer()) {
+  if (tracer->isGenericTracer()) {
     return;
   }
 

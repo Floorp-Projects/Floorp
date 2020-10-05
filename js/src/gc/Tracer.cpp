@@ -38,19 +38,19 @@ void CheckTracedThing(JSTracer* trc, T thing);
 
 /*** Callback Tracer Dispatch ***********************************************/
 template <typename T>
-bool DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name) {
+bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   JS::AutoTracingName ctx(trc, name);
 
   return trc->dispatchToOnEdge(thingp);
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
-  template bool DoCallback<type>(JS::CallbackTracer*, type**, const char*);
+  template bool DoCallback<type>(GenericTracer*, type**, const char*);
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
 template <typename T>
-bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
+bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
   auto thing = MapGCThingTyped(*thingp, [trc, name, &ret](auto t) {
@@ -68,11 +68,10 @@ bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
   }
   return ret;
 }
-template bool DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*,
-                                    const char*);
-template bool DoCallback<JS::PropertyKey>(JS::CallbackTracer*, JS::PropertyKey*,
+template bool DoCallback<JS::Value>(GenericTracer*, JS::Value*, const char*);
+template bool DoCallback<JS::PropertyKey>(GenericTracer*, JS::PropertyKey*,
                                           const char*);
-template bool DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*,
+template bool DoCallback<TaggedProto>(GenericTracer*, TaggedProto*,
                                       const char*);
 
 void JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize) {

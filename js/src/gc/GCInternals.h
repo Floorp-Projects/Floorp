@@ -218,10 +218,10 @@ void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);
 #endif
 
-struct MovingTracer final : public JS::CallbackTracer {
+struct MovingTracer final : public GenericTracer {
   explicit MovingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, JS::TracerKind::Moving,
-                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
+      : GenericTracer(rt, JS::TracerKind::Moving,
+                      JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
@@ -232,20 +232,18 @@ struct MovingTracer final : public JS::CallbackTracer {
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
   bool onObjectGroupEdge(ObjectGroup** groupp) override;
-  bool onChild(const JS::GCCellPtr& thing) override {
-    MOZ_ASSERT(!thing.asCell()->isForwarded());
-    return true;
-  }
+  bool onSymbolEdge(JS::Symbol** symp) override;
+  bool onJitCodeEdge(jit::JitCode** jitp) override;
 
  private:
   template <typename T>
   bool updateEdge(T** thingp);
 };
 
-struct SweepingTracer final : public JS::CallbackTracer {
+struct SweepingTracer final : public GenericTracer {
   explicit SweepingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, JS::TracerKind::Sweeping,
-                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
+      : GenericTracer(rt, JS::TracerKind::Sweeping,
+                      JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
@@ -257,10 +255,7 @@ struct SweepingTracer final : public JS::CallbackTracer {
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
   bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
-  bool onChild(const JS::GCCellPtr& thing) override {
-    MOZ_CRASH("unexpected edge.");
-    return true;
-  }
+  bool onSymbolEdge(JS::Symbol** symp) override;
 
  private:
   template <typename T>

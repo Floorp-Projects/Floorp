@@ -393,9 +393,9 @@ void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
 /*** Tracing Interface ******************************************************/
 
 template <typename T>
-bool DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name);
+bool DoCallback(GenericTracer* trc, T** thingp, const char* name);
 template <typename T>
-bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
+bool DoCallback(GenericTracer* trc, T* thingp, const char* name);
 template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T>
@@ -678,16 +678,19 @@ bool js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");
 #undef IS_SAME_TYPE_OR
+
   if (trc->isMarkingTracer()) {
     DoMarking(GCMarker::fromTracer(trc), *thingp);
     return true;
   }
+
   if (trc->isTenuringTracer()) {
     static_cast<TenuringTracer*>(trc)->traverse(thingp);
     return true;
   }
-  MOZ_ASSERT(trc->isCallbackTracer());
-  return DoCallback(trc->asCallbackTracer(), thingp, name);
+
+  MOZ_ASSERT(trc->isGenericTracer());
+  return DoCallback(trc->asGenericTracer(), thingp, name);
 }
 
 template <typename T>
@@ -3953,6 +3956,7 @@ bool SweepingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
   return sweepEdge(groupp);
 }
 bool SweepingTracer::onBigIntEdge(BigInt** bip) { return sweepEdge(bip); }
+bool SweepingTracer::onSymbolEdge(JS::Symbol** symp) { return sweepEdge(symp); }
 
 namespace js {
 namespace gc {
