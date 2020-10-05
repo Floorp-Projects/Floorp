@@ -242,10 +242,9 @@ using namespace mozilla::a11y;
     }
 
     if ([key isEqualToString:@"AXCheckboxSearchKey"]) {
-      RotorRoleRule rule =
-          mImmediateDescendantsOnly
-              ? RotorRoleRule(roles::CHECKBUTTON, geckoRootAcc)
-              : RotorRoleRule(roles::CHECKBUTTON);
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::CHECKBUTTON, geckoRootAcc)
+                               : RotorRoleRule(roles::CHECKBUTTON);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
@@ -253,6 +252,13 @@ using namespace mozilla::a11y;
       RotorStaticTextRule rule = mImmediateDescendantsOnly
                                      ? RotorStaticTextRule(geckoRootAcc)
                                      : RotorStaticTextRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
+    if ([key isEqualToString:@"AXBlockquoteSearchKey"]) {
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::BLOCKQUOTE, geckoRootAcc)
+                               : RotorRoleRule(roles::BLOCKQUOTE);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
   }
