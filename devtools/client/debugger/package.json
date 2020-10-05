@@ -12,8 +12,6 @@
   "homepage": "https://github.com/firefox-devtools/debugger#readme",
   "engineStrict": true,
   "scripts": {
-    "start": "node bin/dev-server",
-    "start-app": "TARGET=application node bin/dev-server",
     "flow": "flow",
     "prettier": "node bin/prettier.js",
     "license-check": "devtools-license-check",
