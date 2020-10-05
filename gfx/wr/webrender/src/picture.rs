@@ -5074,7 +5074,7 @@ impl PicturePrimitive {
                         );
 
                         let readback_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_readback(clipped.to_i32())
+                            RenderTask::new_readback(clipped.size.to_i32())
                         );
 
                         frame_state.render_tasks.add_dependency(

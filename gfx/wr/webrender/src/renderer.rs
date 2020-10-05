@@ -3297,11 +3297,6 @@ impl Renderer {
         );
         debug_target.add(
             debug_server::BatchKind::Cache,
-            "Readbacks",
-            target.readbacks.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
             "Vertical Blur",
             target.vertical_blurs.len(),
         );
