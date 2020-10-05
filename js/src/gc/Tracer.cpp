@@ -74,17 +74,17 @@ template bool DoCallback<JS::PropertyKey>(GenericTracer*, JS::PropertyKey*,
 template bool DoCallback<TaggedProto>(GenericTracer*, TaggedProto*,
                                       const char*);
 
-void JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize) {
+void JS::TracingContext::getEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
-  if (contextFunctor_) {
-    (*contextFunctor_)(this, buffer, bufferSize);
+  if (functor_) {
+    (*functor_)(this, buffer, bufferSize);
     return;
   }
-  if (contextIndex_ != InvalidIndex) {
-    snprintf(buffer, bufferSize, "%s[%zu]", contextName_, contextIndex_);
+  if (index_ != InvalidIndex) {
+    snprintf(buffer, bufferSize, "%s[%zu]", name_, index_);
     return;
   }
-  snprintf(buffer, bufferSize, "%s", contextName_);
+  snprintf(buffer, bufferSize, "%s", name_);
 }
 
 /*** Public Tracing API *****************************************************/

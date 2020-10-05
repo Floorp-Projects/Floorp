@@ -214,7 +214,7 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
     if (wantNames) {
       // Ask the tracer to compute an edge name for us.
       char buffer[1024];
-      getTracingEdgeName(buffer, sizeof(buffer));
+      context().getEdgeName(buffer, sizeof(buffer));
       const char* name = buffer;
 
       // Convert the name to char16_t characters.

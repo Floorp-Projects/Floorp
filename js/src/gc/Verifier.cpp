@@ -144,7 +144,7 @@ bool VerifyPreTracer::onChild(const JS::GCCellPtr& thing) {
   uint32_t i = node->count;
 
   node->edges[i].thing = thing;
-  node->edges[i].label = contextName();
+  node->edges[i].label = context().name();
   node->count++;
   return true;
 }
@@ -834,7 +834,7 @@ bool HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing) {
     return true;
   }
 
-  WorkItem item(thing, contextName(), parentIndex);
+  WorkItem item(thing, context().name(), parentIndex);
   if (!stack.append(item)) {
     oom = true;
   }
@@ -879,7 +879,7 @@ void HeapCheckTracerBase::dumpCellInfo(Cell* cell) {
 }
 
 void HeapCheckTracerBase::dumpCellPath() {
-  const char* name = contextName();
+  const char* name = context().name();
   for (int index = parentIndex; index != -1; index = stack[index].parentIndex) {
     const WorkItem& parent = stack[index];
     Cell* cell = parent.thing.asCell();
