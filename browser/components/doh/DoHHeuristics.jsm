@@ -59,13 +59,19 @@ const Heuristics = {
   DISABLE_DOH: "disable_doh",
 
   async run() {
-    let safeSearchChecks = await safeSearch();
+    // Run all the heuristics at the same time.
+    let [safeSearchChecks, zscaler, canary] = await Promise.all([
+      safeSearch(),
+      zscalerCanary(),
+      globalCanary(),
+    ]);
+
     let platformChecks = await platform();
     let results = {
       google: safeSearchChecks.google,
       youtube: safeSearchChecks.youtube,
-      zscalerCanary: await zscalerCanary(),
-      canary: await globalCanary(),
+      zscalerCanary: zscaler,
+      canary,
       modifiedRoots: await modifiedRoots(),
       browserParent: await parentalControls(),
       thirdPartyRoots: await thirdPartyRoots(),
@@ -166,8 +172,10 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
 async function dnsListLookup(domainList) {
   let results = [];
 
-  for (let domain of domainList) {
-    let { addresses } = await dnsLookup(domain);
+  let resolutions = await Promise.all(
+    domainList.map(domain => dnsLookup(domain))
+  );
+  for (let { addresses } of resolutions) {
     results = results.concat(addresses);
   }
 
@@ -280,26 +288,37 @@ async function safeSearch() {
     },
   ];
 
-  // Compare strict domain lookups to non-strict domain lookups
-  let safeSearchChecks = {};
-  for (let provider of providerList) {
-    let providerName = provider.name;
-    safeSearchChecks[providerName] = "enable_doh";
-
-    let results = {};
-    results.unfilteredAnswers = await dnsListLookup(provider.unfiltered);
-    results.safeSearchAnswers = await dnsListLookup(provider.safeSearch);
+  async function checkProvider(provider) {
+    let [unfilteredAnswers, safeSearchAnswers] = await Promise.all([
+      dnsListLookup(provider.unfiltered),
+      dnsListLookup(provider.safeSearch),
+    ]);
 
     // Given a provider, check if the answer for any safe search domain
     // matches the answer for any default domain
-    for (let answer of results.safeSearchAnswers) {
-      if (answer && results.unfilteredAnswers.includes(answer)) {
-        safeSearchChecks[providerName] = "disable_doh";
+    for (let answer of safeSearchAnswers) {
+      if (answer && unfilteredAnswers.includes(answer)) {
+        return { name: provider.name, result: "disable_doh" };
       }
     }
+
+    return { name: provider.name, result: "enable_doh" };
   }
 
-  return safeSearchChecks;
+  // Compare strict domain lookups to non-strict domain lookups.
+  // Resolutions has a type of [{ name, result }]
+  let resolutions = await Promise.all(
+    providerList.map(provider => checkProvider(provider))
+  );
+
+  // Reduce that array entries into a single map
+  return resolutions.reduce(
+    (accumulator, check) => {
+      accumulator[check.name] = check.result;
+      return accumulator;
+    },
+    {} // accumulator
+  );
 }
 
 async function zscalerCanary() {
