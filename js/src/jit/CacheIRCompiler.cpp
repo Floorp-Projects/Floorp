@@ -2559,10 +2559,11 @@ bool CacheIRCompiler::emitDoublePowResult(NumberOperandId lhsId,
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ecmaPow), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, js::ecmaPow>(MoveOp::DOUBLE);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -4422,11 +4423,12 @@ bool CacheIRCompiler::emitMathHypot2NumberResult(NumberOperandId first,
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaHypot), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaHypot>(MoveOp::DOUBLE);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -4455,12 +4457,13 @@ bool CacheIRCompiler::emitMathHypot3NumberResult(NumberOperandId first,
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = double (*)(double x, double y, double z);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot3), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, hypot3>(MoveOp::DOUBLE);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -4492,13 +4495,14 @@ bool CacheIRCompiler::emitMathHypot4NumberResult(NumberOperandId first,
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = double (*)(double x, double y, double z, double w);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch3, MoveOp::DOUBLE);
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot4), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, hypot4>(MoveOp::DOUBLE);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -4524,10 +4528,11 @@ bool CacheIRCompiler::emitMathAtan2NumberResult(NumberOperandId yId,
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
   masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ecmaAtan2), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, js::ecmaAtan2>(MoveOp::DOUBLE);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
