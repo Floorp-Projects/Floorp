@@ -131,12 +131,12 @@ const VMFunctionData& GetVMFunction(TailCallVMFunctionId id) {
   return tailCallVMFunctions[size_t(id)];
 }
 
-static void* GetVMFunctionTarget(VMFunctionId id) {
-  return vmFunctionTargets[size_t(id)];
+static DynFn GetVMFunctionTarget(VMFunctionId id) {
+  return DynFn{vmFunctionTargets[size_t(id)]};
 }
 
-static void* GetVMFunctionTarget(TailCallVMFunctionId id) {
-  return tailCallVMFunctionTargets[size_t(id)];
+static DynFn GetVMFunctionTarget(TailCallVMFunctionId id) {
+  return DynFn{tailCallVMFunctionTargets[size_t(id)]};
 }
 
 template <typename IdT>
