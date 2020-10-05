@@ -382,14 +382,6 @@ void EventListenerManager::AddEventListenerInternal(
         doc->SetUseCounter(eUseCounter_custom_onfinish);
       }
     }
-  } else if (aTypeAtom == nsGkAtoms::ontext) {
-    // Ignore event listeners in the system group since editor needs to
-    // listen "text" events in the system group.
-    if (!aFlags.mInSystemGroup) {
-      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-        window->SetHasTextEventListenerInDefaultGroup();
-      }
-    }
   }
 
   if (IsApzAwareListener(listener)) {

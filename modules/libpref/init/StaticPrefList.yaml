@@ -1559,13 +1559,6 @@
   value: false
   mirror: always
 
-# Whether Mozilla specific "text" event should be dispatched only in the
-# system group or not in content.
-- name: dom.compositionevent.text.dispatch_only_system_group_in_content
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for CSSPseudoElement enabled?
 - name: dom.css_pseudo_element.enabled
   type: bool
