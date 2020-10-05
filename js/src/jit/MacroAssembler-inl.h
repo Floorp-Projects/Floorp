@@ -38,6 +38,12 @@
 namespace js {
 namespace jit {
 
+template <typename Sig>
+DynFn DynamicFunction(Sig fun) {
+  ABIFunctionSignature<Sig> sig;
+  return DynFn{sig.address(fun)};
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
@@ -99,6 +105,12 @@ void MacroAssembler::callWithABI(void* fun, MoveOp::Type result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result, check);
+}
+
+void MacroAssembler::callWithABI(DynFn fun, MoveOp::Type result,
+                                 CheckUnsafeCallWithABI check) {
+  AutoProfilerCallInstrumentation profiler(*this);
+  callWithABINoProfiler(fun.address, result, check);
 }
 
 template <typename Sig, Sig fun>
