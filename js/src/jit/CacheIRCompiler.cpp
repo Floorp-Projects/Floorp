@@ -2195,12 +2195,13 @@ bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(str);
     masm.passABIArg(output.payloadOrValueReg());
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberPure));
+    masm.callWithABI<Fn, js::StringToNumberPure>();
     masm.mov(ReturnReg, scratch);
 
     LiveRegisterSet ignore;
@@ -7295,11 +7296,12 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
   volatileRegs.takeUnchecked(result);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = JSLinearString* (*)(JSContext * cx, int32_t i);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(input);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::Int32ToStringHelperPure)));
+  masm.callWithABI<Fn, js::Int32ToStringHelperPure>();
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);
@@ -7331,11 +7333,12 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   volatileRegs.addUnchecked(floatScratch0);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = JSString* (*)(JSContext * cx, double d);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::NumberToStringHelperPure)));
+  masm.callWithABI<Fn, js::NumberToStringHelperPure>();
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);

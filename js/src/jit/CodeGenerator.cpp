@@ -4880,12 +4880,13 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
     volatileRegs.takeUnchecked(temp2);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
     masm.setupUnalignedABICall(temp2);
     masm.loadJSContext(temp2);
     masm.passABIArg(temp2);
     masm.passABIArg(str);
     masm.passABIArg(temp1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberPure));
+    masm.callWithABI<Fn, StringToNumberPure>();
     masm.mov(ReturnReg, temp1);
 
     masm.PopRegsInMask(volatileRegs);
