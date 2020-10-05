@@ -20,7 +20,6 @@ default_optimizations = (
     {'always': None},
     # optimize strategy aliases for build kind
     {'build': list(schedules.ALL_COMPONENTS)},
-    {'build-fuzzing': None},
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
     {'index-search': [text_type]},
