@@ -4821,9 +4821,10 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = int32_t (*)(JSString* str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+    masm.callWithABI<Fn, GetIndexFromString>();
     masm.storeCallInt32Result(output);
 
     masm.PopRegsInMask(volatileRegs);
