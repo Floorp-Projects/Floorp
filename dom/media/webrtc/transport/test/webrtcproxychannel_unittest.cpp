@@ -182,6 +182,10 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
+  NS_IMETHOD SetEchConfig(const nsACString& aEchConfig) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
   NS_IMETHOD ResolvedByTRR(bool* _retval) override {
     MOZ_ASSERT(false);
     return NS_OK;
