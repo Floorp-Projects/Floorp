@@ -82,6 +82,10 @@ class ResponsiveImageSelector {
   // return - true if the selected image result changed.
   bool SelectImage(bool aReselect = false);
 
+  Span<const ResponsiveImageCandidate> AllCandidates() const {
+    return mCandidates;
+  }
+
  protected:
   virtual ~ResponsiveImageSelector();
 
@@ -161,6 +165,9 @@ class ResponsiveImageCandidate {
   // If the width is already known. Useful when iterating over candidates to
   // avoid having each call re-compute the width.
   double Density(double aMatchingWidth) const;
+
+  // Append the descriptors for this candidate serialized as a string.
+  void AppendDescriptors(nsAString&) const;
 
   bool IsValid() const { return mType != CandidateType::Invalid; }
 
