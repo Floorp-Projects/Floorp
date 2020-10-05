@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::units::DeviceIntSize;
-use api::crossbeam_channel::{bounded, Sender, Receiver};
+use api::channel::{fast_channel, Sender, Receiver};
 use api::DebugFlags;
 use crate::render_api::{ApiMsg, DebugCommand};
 use crate::print_tree::PrintTreePrinter;
@@ -111,7 +111,7 @@ pub struct DebugServerImpl {
 
 impl DebugServerImpl {
     pub fn new(api_tx: Sender<ApiMsg>) -> DebugServerImpl {
-        let (debug_tx, debug_rx) = bounded(64);
+        let (debug_tx, debug_rx) = fast_channel(64);
 
         let socket = ws::Builder::new()
             .build(move |out| {
