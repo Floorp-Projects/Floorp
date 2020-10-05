@@ -7374,10 +7374,11 @@ void CodeGenerator::visitAtan2D(LAtan2D* lir) {
   FloatRegister y = ToFloatRegister(lir->y());
   FloatRegister x = ToFloatRegister(lir->x());
 
+  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(y, MoveOp::DOUBLE);
   masm.passABIArg(x, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaAtan2), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaAtan2>(MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
 }
@@ -7392,15 +7393,21 @@ void CodeGenerator::visitHypot(LHypot* lir) {
   }
 
   switch (numArgs) {
-    case 2:
-      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaHypot), MoveOp::DOUBLE);
+    case 2: {
+      using Fn = double (*)(double x, double y);
+      masm.callWithABI<Fn, ecmaHypot>(MoveOp::DOUBLE);
       break;
-    case 3:
-      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot3), MoveOp::DOUBLE);
+    }
+    case 3: {
+      using Fn = double (*)(double x, double y, double z);
+      masm.callWithABI<Fn, hypot3>(MoveOp::DOUBLE);
       break;
-    case 4:
-      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot4), MoveOp::DOUBLE);
+    }
+    case 4: {
+      using Fn = double (*)(double x, double y, double z, double w);
+      masm.callWithABI<Fn, hypot4>(MoveOp::DOUBLE);
       break;
+    }
     default:
       MOZ_CRASH("Unexpected number of arguments to hypot function.");
   }
@@ -8812,11 +8819,12 @@ void CodeGenerator::visitPowI(LPowI* ins) {
 
   MOZ_ASSERT(power != temp);
 
+  using Fn = double (*)(double x, int32_t y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power);
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::powi), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, js::powi>(MoveOp::DOUBLE);
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
@@ -8825,10 +8833,11 @@ void CodeGenerator::visitPowD(LPowD* ins) {
   FloatRegister power = ToFloatRegister(ins->power());
   Register temp = ToRegister(ins->temp());
 
+  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaPow), MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaPow>(MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
