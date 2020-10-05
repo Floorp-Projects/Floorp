@@ -626,8 +626,17 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.
     BufferReader reader(frame->Data(), frame->Size());
-    mParser.ParseVBRHeader(&reader);
     mFirstFrameOffset = frame->mOffset;
+
+    if (mParser.ParseVBRHeader(&reader)) {
+      // Parsing was successful
+      if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::XING) {
+        MP3LOGV("XING header present, skipping encoder delay (%u frames)",
+                mParser.VBRInfo().EncoderDelay());
+        mEncoderDelay = mParser.VBRInfo().EncoderDelay();
+        mEncoderPadding = mParser.VBRInfo().EncoderPadding();
+      }
+    }
   }
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
