@@ -339,6 +339,7 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
   clone->SetHasIPHintAddress(HasIPHintAddress());
+  clone->SetEchConfig(GetEchConfig());
   MOZ_ASSERT(clone->Equals(this));
 
   return clone.forget();
@@ -393,6 +394,10 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
     clone->SetHasIPHintAddress(hasIPHint);
   }
 
+  nsAutoCString echConfig;
+  Unused << aRecord->GetEchConfig(echConfig);
+  clone->SetEchConfig(echConfig);
+
   return clone.forget();
 }
 
@@ -421,6 +426,7 @@ void nsHttpConnectionInfo::SerializeHttpConnectionInfo(
   aArgs.topWindowOrigin() = aInfo->GetTopWindowOrigin();
   aArgs.isHttp3() = aInfo->IsHttp3();
   aArgs.hasIPHintAddress() = aInfo->HasIPHintAddress();
+  aArgs.echConfig() = aInfo->GetEchConfig();
 
   if (!aInfo->ProxyInfo()) {
     return;
@@ -465,6 +471,7 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
   cinfo->SetIPv4Disabled(aInfoArgs.isIPv4Disabled());
   cinfo->SetIPv6Disabled(aInfoArgs.isIPv6Disabled());
   cinfo->SetHasIPHintAddress(aInfoArgs.hasIPHintAddress());
+  cinfo->SetEchConfig(aInfoArgs.echConfig());
 
   return cinfo.forget();
 }
@@ -491,6 +498,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
   clone->SetHasIPHintAddress(HasIPHintAddress());
+  clone->SetEchConfig(GetEchConfig());
 
   clone.forget(outCI);
 }

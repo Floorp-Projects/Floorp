@@ -286,6 +286,17 @@ CommonSocketControl::SetEsniTxt(const nsACString& aEsniTxt) {
 }
 
 NS_IMETHODIMP
+CommonSocketControl::GetEchConfig(nsACString& aEchConfig) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CommonSocketControl::SetEchConfig(const nsACString& aEchConfig) {
+  // TODO: Implement this in bug 1654507.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CommonSocketControl::GetPeerId(nsACString& aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

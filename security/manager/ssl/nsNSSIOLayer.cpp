@@ -729,6 +729,40 @@ nsNSSSocketInfo::SetEsniTxt(const nsACString& aEsniTxt) {
 }
 
 NS_IMETHODIMP
+nsNSSSocketInfo::GetEchConfig(nsACString& aEchConfig) {
+  aEchConfig = mEchConfig;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetEchConfig(const nsACString& aEchConfig) {
+  mEchConfig = aEchConfig;
+
+#if 0
+  if (mEchConfig.Length()) {
+    nsAutoCString echBin;
+    if (NS_OK != Base64Decode(mEchConfig, echBin)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+              ("[%p] Invalid EchConfig record. Couldn't base64 decode\n",
+               (void*)mFd));
+      return NS_OK;
+    }
+
+    if (SECSuccess != SSL_SetClientEchConfigs(
+                          mFd, reinterpret_cast<const PRUint8*>(echBin.get()),
+                          echBin.Length())) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+              ("[%p] Invalid EchConfig record %s\n", (void*)mFd,
+               PR_ErrorToName(PR_GetError())));
+      return NS_OK;
+    }
+  }
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNSSSocketInfo::GetPeerId(nsACString& aResult) {
   if (!mPeerId.IsEmpty()) {
     aResult.Assign(mPeerId);
