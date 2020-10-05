@@ -2617,6 +2617,7 @@ class UrlbarInput {
 
     if (event.target == this._searchModeIndicatorClose && event.button != 2) {
       this.setSearchMode({});
+      this.view.oneOffSearchButtons.selectedButton = null;
       if (this.view.isOpen) {
         this.startQuery({
           event,

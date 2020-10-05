@@ -61,3 +61,65 @@ add_task(async function test() {
   });
   ok(!oneOffs.selectedButton, "There is no selected one-off button");
 });
+
+add_task(async function() {
+  info(
+    "Test the status of the selected one-off button when exiting search mode with backspace"
+  );
+
+  info("Open the result popup");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  info("Select one of one-off button");
+  const oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
+  await TestUtils.waitForCondition(
+    () => !oneOffs._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+  ok(oneOffs.selectedButton, "There is a selected one-off button");
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: oneOffs.selectedButton.engine.name,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "oneoff",
+    isPreview: true,
+  });
+
+  info("Exit from search mode");
+  await UrlbarTestUtils.exitSearchMode(window);
+  ok(!oneOffs.selectedButton, "There is no any selected one-off button");
+});
+
+add_task(async function() {
+  info(
+    "Test the status of the selected one-off button when exiting search mode with clicking close button"
+  );
+
+  info("Open the result popup");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  info("Select one of one-off button");
+  const oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
+  await TestUtils.waitForCondition(
+    () => !oneOffs._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+  ok(oneOffs.selectedButton, "There is a selected one-off button");
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: oneOffs.selectedButton.engine.name,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "oneoff",
+    isPreview: true,
+  });
+
+  info("Exit from search mode");
+  await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+  ok(!oneOffs.selectedButton, "There is no any selected one-off button");
+});

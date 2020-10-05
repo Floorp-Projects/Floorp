@@ -397,6 +397,7 @@ class UrlbarController {
           !event.shiftKey
         ) {
           this.input.setSearchMode({});
+          this.input.view.oneOffSearchButtons.selectedButton = null;
           this.input.startQuery({
             allowAutofill: false,
             event,
