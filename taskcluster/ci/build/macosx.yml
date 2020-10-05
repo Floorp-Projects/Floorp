@@ -111,7 +111,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-sccache
             - wasi-sysroot
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
@@ -140,7 +140,7 @@ macosx64-fuzzing/debug:
             - linux64-sccache
             - wasi-sysroot
     optimization:
-        build-fuzzing: null
+        skip-unless-expanded: null
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"
