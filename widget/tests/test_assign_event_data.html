@@ -326,18 +326,6 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "WidgetTextEvent (text)",
-    targetID: "input-text", eventType: "text",
-    dispatchEvent() {
-      document.getElementById(this.targetID).value = "";
-      document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositioncommit", data: "\u306D", key: { key: "," } });
-    },
-    canRun() {
-      return !SpecialPowers.getBoolPref("dom.compositionevent.text.dispatch_only_system_group_in_content");
-    },
-    todoMismatch: [ ],
-  },
   { description: "WidgetCompositionEvent (compositionupdate)",
     targetID: "input-text", eventType: "compositionupdate",
     dispatchEvent() {

@@ -224,15 +224,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
     mMayHavePointerEnterLeaveEventListener = true;
   }
 
-  /**
-   * Call this to indiate that some node (this window, its document,
-   * or content in that document) has a text event listener in the default
-   * group.
-   */
-  void SetHasTextEventListenerInDefaultGroup() {
-    mMayHaveTextEventListenerInDefaultGroup = true;
-  }
-
   // Sets the event for window.event. Does NOT take ownership, so
   // the caller is responsible for clearing the event before the
   // event gets deallocated. Pass nullptr to set window.event to
@@ -597,9 +588,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   bool mMayHaveSelectionChangeEventListener;
   bool mMayHaveMouseEnterLeaveEventListener;
   bool mMayHavePointerEnterLeaveEventListener;
-  // Only for telemetry probe so that you can remove this after the
-  // telemetry stops working.
-  bool mMayHaveTextEventListenerInDefaultGroup;
 
   // Our inner window's outer window.
   nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
