@@ -5,7 +5,7 @@
 // @flow
 
 import ReactDOM from "react-dom";
-import { onConnect } from "./client";
+import { onConnect, onDisconnect } from "./client";
 import { teardownWorkers } from "./utils/bootstrap";
 import sourceQueue from "./utils/source-queue";
 
@@ -33,6 +33,7 @@ module.exports = {
       panel
     ),
   destroy: () => {
+    onDisconnect();
     unmountRoot();
     sourceQueue.clear();
     teardownWorkers();
