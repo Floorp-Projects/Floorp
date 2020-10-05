@@ -519,7 +519,7 @@ struct DumpHeapTracer final : public JS::CallbackTracer, public WeakMapTracer {
             key.asCell(), kdelegate, value.asCell());
   }
 
-  bool onChild(const JS::GCCellPtr& thing) override;
+  void onChild(const JS::GCCellPtr& thing) override;
 };
 
 static char MarkDescriptor(js::gc::Cell* thing) {
@@ -585,16 +585,15 @@ static void DumpHeapVisitCell(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
   js::TraceChildren(dtrc, cellptr.asCell(), cellptr.kind());
 }
 
-bool DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
+void DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
   if (js::gc::IsInsideNursery(thing.asCell())) {
-    return true;
+    return;
   }
 
   char buffer[1024];
   context().getEdgeName(buffer, sizeof(buffer));
   fprintf(output, "%s%p %c %s\n", prefix, thing.asCell(),
           MarkDescriptor(thing.asCell()), buffer);
-  return true;
 }
 
 void js::DumpHeap(JSContext* cx, FILE* fp,
