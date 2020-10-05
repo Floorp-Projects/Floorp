@@ -544,5 +544,6 @@ class ImportHook(object):
         return module
 
 
-# Install our hook
-builtins.__import__ = ImportHook(builtins.__import__)
+# Install our hook. This can be deleted when the Python 3 migration is complete.
+if sys.version_info[0] < 3:
+    builtins.__import__ = ImportHook(builtins.__import__)

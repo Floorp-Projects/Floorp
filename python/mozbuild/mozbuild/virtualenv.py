@@ -442,10 +442,13 @@ class VirtualenvManager(VirtualenvHelper):
 
         finally:
             if do_close:
-                sitecustomize.write(
-                    '# Importing mach_bootstrap has the side effect of\n'
-                    '# installing an import hook\n'
-                    'import mach_bootstrap\n')
+                # This hack isn't necessary for Python 3, or for the
+                # out-of-objdir virtualenvs.
+                if self.populate_local_paths and PY2:
+                    sitecustomize.write(
+                        '# Importing mach_bootstrap has the side effect of\n'
+                        '# installing an import hook\n'
+                        'import mach_bootstrap\n')
                 sitecustomize.close()
 
             os.environ.pop('MACOSX_DEPLOYMENT_TARGET', None)
