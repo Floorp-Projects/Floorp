@@ -21,6 +21,44 @@
 
     <!-- Performance: we haven't validated that addressing these checks have a significant impact
          on performance but they're very quick to fix so we escalate them to error. -->
+    <!-- Performance: big wins from a theoretical perspective so we escalate to error. -->
+    <issue id="DrawAllocation" severity="error" />
+    <issue id="Wakelock" severity="error" />
+    <issue id="WakelockTimeout" severity="error" />
+    <issue id="Recycle" severity="error" />
+    <issue id="StaticFieldLeak" severity="error" />
+    <issue id="ViewTag" severity="error" />
+    <issue id="ViewHolder" severity="error" />
+    <issue id="HandlerLeak" severity="error" />
+    <issue id="NestedWeights" severity="error" />
+
+    <!-- Performance: quick-to-fix violations so we escalate to error.
+         We haven't validated that they have a significant impact though. -->
+    <issue id="ObsoleteLayoutParam" severity="error" />
+    <issue id="ObsoleteSdkInt" severity="error" />
+    <issue id="AnimatorKeep" severity="error" />
+    <issue id="DuplicateDivider" severity="error" />
+    <issue id="MergeRootFrame" severity="error" />
+    <issue id="UseOfBundledGooglePlayServices" severity="error" />
+    <issue id="UseValueOf" severity="error" />
     <issue id="InefficientWeight" severity="error" />
+    <issue id="DisableBaselineAlignment" severity="error" />
+    <issue id="UselessLeaf" severity="error" />
+    <issue id="UselessParent" severity="error" />
+    <issue id="UnusedNamespace" severity="error" />
+
+    <!-- Performance: checks we'd like to eventually set to error. -->
+    <issue id="UseCompoundDrawables" severity="warning" />
+    <issue id="Overdraw" severity="warning" />
+    <issue id="UnusedResources" severity="warning" />
+
+    <!-- Performance: checks that we're unsure of the value of that we might want to investigate. -->
+    <issue id="UnpackedNativeCode" severity="informational" />
+    <issue id="LogConditional" severity="informational" />
+    <issue id="VectorPath" severity="informational" />
+    <issue id="UseSparseArrays" severity="informational" /> <!-- hurts developer convenience of kotlin Map... -->
+    <issue id="TooDeepLayout" severity="warning" /> <!-- depth can be customized -->
+    <issue id="TooManyViews" severity="warning" /> <!-- view count can be customized -->
+
 </lint>
 
