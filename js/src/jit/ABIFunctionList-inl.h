@@ -28,6 +28,9 @@
 
 #include "js/Conversions.h"  // JS::ToInt32
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
+#include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
+                                 // js::TraceLogStartEvent,
+                                 // js::TraceLogStopEventPrivate
 
 #include "wasm/WasmBuiltins.h"  // js::wasm::*
 
@@ -71,6 +74,8 @@ namespace jit {
   _(js::powi)                                               \
   _(js::RegExpInstanceOptimizableRaw)                       \
   _(js::RegExpPrototypeOptimizableRaw)                      \
+  _(js::TraceLogStartEventPrivate)                          \
+  _(js::TraceLogStopEventPrivate)
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
@@ -79,6 +84,8 @@ namespace jit {
 // ABIFUNCTION_LIST instead. This list must be sorted with the name of the C++
 // function.
 #define ABIFUNCTION_AND_TYPE_LIST(_)                       \
+  _(js::TraceLogStartEvent,                                \
+    void (*)(TraceLoggerThread*, const TraceLoggerEvent&)) \
   _(JS::ToInt32, int32_t (*)(double))
 
 // List of all ABI function signature which are using a computed function
