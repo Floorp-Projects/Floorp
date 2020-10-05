@@ -4234,7 +4234,7 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
   bool resolved = false;
 
   aStartingAt->PreOrderWalk([&](dom::BrowsingContext* aBC) {
-    if (aBC->IsInProcess()) {
+    if (aBC->GetDocShell()) {
       nsCOMPtr<nsIContentViewer> contentViewer;
       aBC->GetDocShell()->GetContentViewer(getter_AddRefs(contentViewer));
       if (contentViewer &&
