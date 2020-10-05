@@ -146,6 +146,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
 
   void CheckBacktrackStackLimit();
 
+ public:
   static bool GrowBacktrackStack(RegExpStack* regexp_stack);
 
   static uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
@@ -155,6 +156,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
                                                 const char16_t* substring2,
                                                 size_t byteLength);
 
+ private:
   inline int char_size() { return static_cast<int>(mode_); }
   inline js::jit::Scale factor() {
     return mode_ == UC16 ? js::jit::TimesTwo : js::jit::TimesOne;
