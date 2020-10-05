@@ -6,6 +6,7 @@
 function changeDefaultToCustom(helper) {
   let marginSelect = helper.get("margins-picker");
   marginSelect.focus();
+  marginSelect.scrollIntoView({ block: "center" });
   EventUtils.sendKey("space", helper.win);
   EventUtils.sendKey("down", helper.win);
   EventUtils.sendKey("down", helper.win);
@@ -25,12 +26,18 @@ function changeCustomToDefault(helper) {
 
 function assertPendingMarginsUpdate(helper) {
   let marginsPicker = helper.get("margins-select");
-  ok(marginsPicker._updateMarginTask.isArmed, "The update task is armed");
+  ok(
+    marginsPicker._updateCustomMarginsTask.isArmed,
+    "The update task is armed"
+  );
 }
 
 function assertNoPendingMarginsUpdate(helper) {
   let marginsPicker = helper.get("margins-select");
-  ok(!marginsPicker._updateMarginTask.isArmed, "The update task isn't armed");
+  ok(
+    !marginsPicker._updateCustomMarginsTask.isArmed,
+    "The update task isn't armed"
+  );
 }
 
 add_task(async function testPresetMargins() {
@@ -287,5 +294,65 @@ add_task(async function testCustomMarginsPersist() {
       }
     );
     await helper.closeDialog();
+  });
+});
+
+add_task(async function testChangingBetweenMargins() {
+  await PrintHelper.withTestPage(async helper => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["print.printer_Mozilla_Save_to_PDF.print_margin_left", "1"]],
+    });
+
+    await helper.startPrint();
+    await helper.openMoreSettings();
+
+    let marginsPicker = helper.get("margins-picker");
+    is(marginsPicker.value, "custom", "First margin is custom");
+
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 1,
+      marginRight: 0.5,
+    });
+
+    info("Switch to Default margins");
+    await helper.assertSettingsChanged(
+      { marginLeft: 1 },
+      { marginLeft: 0.5 },
+      async () => {
+        let settingsChanged = helper.waitForSettingsEvent();
+        changeCustomToDefault(helper);
+        await settingsChanged;
+      }
+    );
+
+    is(marginsPicker.value, "default", "Default preset selected");
+
+    info("Switching back to Custom, should restore old margins");
+    await helper.assertSettingsChanged(
+      { marginLeft: 0.5 },
+      { marginLeft: 1 },
+      async () => {
+        let settingsChanged = helper.waitForSettingsEvent();
+        changeDefaultToCustom(helper);
+        await settingsChanged;
+      }
+    );
+
+    is(marginsPicker.value, "custom", "Custom is now selected");
+
+    info("Switching back to Default, should restore 0.5");
+    await helper.assertSettingsChanged(
+      { marginLeft: 1 },
+      { marginLeft: 0.5 },
+      async () => {
+        let settingsChanged = helper.waitForSettingsEvent();
+        changeCustomToDefault(helper);
+        await settingsChanged;
+      }
+    );
+
+    is(marginsPicker.value, "default", "Default preset is selected again");
   });
 });
