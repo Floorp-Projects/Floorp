@@ -1170,8 +1170,6 @@ bool SpdyConnectTransaction::MapStreamToHttpConnection(
     return false;
   }
 
-  mConnInfo = aConnInfo;
-
   mTunnelTransport = new SocketTransportShim(this, aTransport, mIsWebsocket);
   mTunnelStreamIn = new InputStreamShim(this, mIsWebsocket);
   mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
