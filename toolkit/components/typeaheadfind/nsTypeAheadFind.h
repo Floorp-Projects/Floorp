@@ -74,9 +74,8 @@ class nsTypeAheadFind : public nsITypeAheadFind,
                                mozilla::PresShell** aPresShell,
                                nsPresContext** aPresContext);
 
-  // Get the pres shell from mPresShell and return it only if it is still
-  // attached to the DOM window.
-  already_AddRefed<mozilla::PresShell> GetPresShell();
+  // Get the document we should search on.
+  already_AddRefed<mozilla::dom::Document> GetDocument();
 
   void ReleaseStrongMemberVariables();
 
@@ -136,9 +135,11 @@ class nsTypeAheadFind : public nsITypeAheadFind,
 
   nsCOMPtr<nsIWebBrowserFind> mWebBrowserFind;
 
-  // The focused content window that we're listening to and its cached objects
+  // The focused content window that we're listening to and its cached objects.
+  // This is always the root of the subtree we're finding.
   nsWeakPtr mDocShell;
-  nsWeakPtr mPresShell;
+  // The document where we're currently searching.
+  nsWeakPtr mDocument;
   nsWeakPtr mSelectionController;
   // Most recent match's controller
 };
