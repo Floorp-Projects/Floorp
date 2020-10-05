@@ -1276,6 +1276,9 @@ class WindowsDllDetourPatcher final
           } else {
             COPY_CODES(len + 1);
           }
+        } else if ((*origBytes & 0xf8) == 0xb8) {
+          // MOV r64, imm64
+          COPY_CODES(9);
         } else if (*origBytes == 0xc7) {
           // MOV r/m64, imm32
           if (origBytes[1] == 0x44) {
