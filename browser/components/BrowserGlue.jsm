@@ -528,6 +528,7 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource://pdf.js/PdfjsChild.jsm",
     },
+    enablePreference: PREF_PDFJS_ISDEFAULT_CACHE_STATE,
     allFrames: true,
   },
 
