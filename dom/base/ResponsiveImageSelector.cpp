@@ -107,9 +107,18 @@ ResponsiveImageSelector::ResponsiveImageSelector(dom::Document* aDocument)
 
 ResponsiveImageSelector::~ResponsiveImageSelector() = default;
 
-void ResponsiveImageSelector::ParseSourceSet(
-    const nsAString& aSrcSet,
-    FunctionRef<void(ResponsiveImageCandidate&&)> aCallback) {
+// http://www.whatwg.org/specs/web-apps/current-work/#processing-the-image-candidates
+bool ResponsiveImageSelector::SetCandidatesFromSourceSet(
+    const nsAString& aSrcSet, nsIPrincipal* aTriggeringPrincipal) {
+  ClearSelectedCandidate();
+
+  if (!mOwnerNode || !mOwnerNode->GetBaseURI()) {
+    MOZ_ASSERT(false, "Should not be parsing SourceSet without a document");
+    return false;
+  }
+
+  mCandidates.Clear();
+
   nsAString::const_iterator iter, end;
   aSrcSet.BeginReading(iter);
   aSrcSet.EndReading(end);
@@ -151,33 +160,14 @@ void ResponsiveImageSelector::ParseSourceSet(
     ResponsiveImageCandidate candidate;
     if (candidate.ConsumeDescriptors(iter, end)) {
       candidate.SetURLSpec(urlStr);
-      aCallback(std::move(candidate));
+      candidate.SetTriggeringPrincipal(
+          nsContentUtils::GetAttrTriggeringPrincipal(Content(), urlStr,
+                                                     aTriggeringPrincipal));
+      AppendCandidateIfUnique(candidate);
     }
   }
-}
 
-// http://www.whatwg.org/specs/web-apps/current-work/#processing-the-image-candidates
-bool ResponsiveImageSelector::SetCandidatesFromSourceSet(
-    const nsAString& aSrcSet, nsIPrincipal* aTriggeringPrincipal) {
-  ClearSelectedCandidate();
-
-  if (!mOwnerNode || !mOwnerNode->GetBaseURI()) {
-    MOZ_ASSERT(false, "Should not be parsing SourceSet without a document");
-    return false;
-  }
-
-  mCandidates.Clear();
-
-  auto eachCandidate = [&](ResponsiveImageCandidate&& aCandidate) {
-    aCandidate.SetTriggeringPrincipal(
-        nsContentUtils::GetAttrTriggeringPrincipal(
-            Content(), aCandidate.URLString(), aTriggeringPrincipal));
-    AppendCandidateIfUnique(std::move(aCandidate));
-  };
-
-  ParseSourceSet(aSrcSet, eachCandidate);
-
-  bool parsedCandidates = !mCandidates.IsEmpty();
+  bool parsedCandidates = mCandidates.Length() > 0;
 
   // Re-add default to end of list
   MaybeAppendDefaultCandidate();
@@ -234,7 +224,7 @@ bool ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString& aSizes) {
 }
 
 void ResponsiveImageSelector::AppendCandidateIfUnique(
-    ResponsiveImageCandidate&& aCandidate) {
+    const ResponsiveImageCandidate& aCandidate) {
   int numCandidates = mCandidates.Length();
 
   // With the exception of Default, which should not be added until we are done
@@ -250,7 +240,7 @@ void ResponsiveImageSelector::AppendCandidateIfUnique(
     }
   }
 
-  mCandidates.AppendElement(std::move(aCandidate));
+  mCandidates.AppendElement(aCandidate);
 }
 
 void ResponsiveImageSelector::MaybeAppendDefaultCandidate() {
@@ -280,7 +270,7 @@ void ResponsiveImageSelector::MaybeAppendDefaultCandidate() {
   defaultCandidate.SetTriggeringPrincipal(mDefaultSourceTriggeringPrincipal);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
-  mCandidates.AppendElement(std::move(defaultCandidate));
+  mCandidates.AppendElement(defaultCandidate);
 }
 
 already_AddRefed<nsIURI> ResponsiveImageSelector::GetSelectedImageURL() {
@@ -426,6 +416,14 @@ ResponsiveImageCandidate::ResponsiveImageCandidate() {
   mValue.mDensity = 1.0;
 }
 
+ResponsiveImageCandidate::ResponsiveImageCandidate(
+    const nsAString& aURLString, double aDensity,
+    nsIPrincipal* aTriggeringPrincipal)
+    : mURLString(aURLString), mTriggeringPrincipal(aTriggeringPrincipal) {
+  mType = CandidateType::Density;
+  mValue.mDensity = aDensity;
+}
+
 void ResponsiveImageCandidate::SetURLSpec(const nsAString& aURLString) {
   mURLString = aURLString;
 }
@@ -474,9 +472,6 @@ struct ResponsiveImageDescriptors {
   // We don't support "h" descriptors yet and they are not spec'd, but the
   // current spec does specify that they can be silently ignored (whereas
   // entirely unknown descriptors cause us to invalidate the candidate)
-  //
-  // If we ever start honoring them we should serialize them in
-  // AppendDescriptors.
   Maybe<int32_t> mFutureCompatHeight;
   // If this descriptor set is bogus, e.g. a value was added twice (and thus
   // dropped) or an unknown descriptor was added.
@@ -679,26 +674,6 @@ double ResponsiveImageCandidate::Density(
   MOZ_ASSERT(mType == CandidateType::Default || mType == CandidateType::Density,
              "unhandled candidate type");
   return Density(-1);
-}
-
-void ResponsiveImageCandidate::AppendDescriptors(
-    nsAString& aDescriptors) const {
-  MOZ_ASSERT(IsValid());
-  switch (mType) {
-    case CandidateType::Default:
-    case CandidateType::Invalid:
-      return;
-    case CandidateType::ComputedFromWidth:
-      aDescriptors.Append(' ');
-      aDescriptors.AppendInt(mValue.mWidth);
-      aDescriptors.Append('w');
-      return;
-    case CandidateType::Density:
-      aDescriptors.Append(' ');
-      aDescriptors.AppendFloat(mValue.mDensity);
-      aDescriptors.Append('x');
-      return;
-  }
 }
 
 double ResponsiveImageCandidate::Density(double aMatchingWidth) const {
