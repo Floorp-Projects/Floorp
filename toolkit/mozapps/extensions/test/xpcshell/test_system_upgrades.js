@@ -351,7 +351,7 @@ add_task(async function test_system_addon_precedence() {
   await AddonTestUtils.promiseShutdownManager();
   await AddonTestUtils.overrideBuiltIns(builtInOverride);
   await promiseInstallDefaultSystemAddon(ADDON_ID, "1.5");
-  await AddonTestUtils.promiseStartupManager(2);
+  await AddonTestUtils.promiseStartupManager("2");
   await checkAddon(
     "1.5",
     BOOTSTRAP_REASONS.ADDON_DOWNGRADE,
