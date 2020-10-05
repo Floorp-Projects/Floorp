@@ -295,44 +295,53 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
 
   // Override this method to receive notification when a node in the GC
   // heap graph is visited.
-  // This method should return whether the edge still exists, i.e. return false
-  // if 'thing' is cleared by the CallbackTracer, return true otherwise.
-  virtual bool onChild(const JS::GCCellPtr& thing) = 0;
+  virtual void onChild(const JS::GCCellPtr& thing) = 0;
 
  private:
   // This class implements the GenericTracer interface to dispatches to onChild.
   virtual bool onObjectEdge(JSObject** objp) {
-    return onChild(JS::GCCellPtr(*objp));
+    onChild(JS::GCCellPtr(*objp));
+    return true;
   }
   virtual bool onStringEdge(JSString** strp) {
-    return onChild(JS::GCCellPtr(*strp));
+    onChild(JS::GCCellPtr(*strp));
+    return true;
   }
   virtual bool onSymbolEdge(JS::Symbol** symp) {
-    return onChild(JS::GCCellPtr(*symp));
+    onChild(JS::GCCellPtr(*symp));
+    return true;
   }
   virtual bool onBigIntEdge(JS::BigInt** bip) {
-    return onChild(JS::GCCellPtr(*bip));
+    onChild(JS::GCCellPtr(*bip));
+    return true;
   }
   virtual bool onScriptEdge(js::BaseScript** scriptp) {
-    return onChild(JS::GCCellPtr(*scriptp));
+    onChild(JS::GCCellPtr(*scriptp));
+    return true;
   }
   virtual bool onShapeEdge(js::Shape** shapep) {
-    return onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
+    onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
+    return true;
   }
   virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) {
-    return onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
+    onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
+    return true;
   }
   virtual bool onBaseShapeEdge(js::BaseShape** basep) {
-    return onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
+    onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
+    return true;
   }
   virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
-    return onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
+    onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
+    return true;
   }
   virtual bool onScopeEdge(js::Scope** scopep) {
-    return onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
+    onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
+    return true;
   }
   virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) {
-    return onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
+    onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
+    return true;
   }
 
   TracingContext context_;
