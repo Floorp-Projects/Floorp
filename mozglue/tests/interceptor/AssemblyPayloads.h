@@ -106,6 +106,13 @@ __declspec(dllexport) __attribute__((naked)) void IndirectCall() {
       "nop;nop;nop;nop;nop;nop;nop;nop;"
       "ret;");
 }
+
+__declspec(dllexport) __attribute__((naked)) void MovImm64() {
+  asm volatile(
+      "mov $0x1234567812345678, %r10;"
+      "nop;nop;nop");
+}
+
 #  elif defined(_M_IX86)
 constexpr uintptr_t JumpDestination = 0x7fff0000;
 

@@ -732,6 +732,7 @@ struct TestCase {
     TestCase("NearJump", NoStubAddressCheck),
     TestCase("OpcodeFF", NoStubAddressCheck),
     TestCase("IndirectCall", NoStubAddressCheck),
+    TestCase("MovImm64", NoStubAddressCheck),
 #    elif defined(_M_IX86)
     // Skip the stub address check as we always generate a trampoline for x86.
     TestCase("PushRet", NoStubAddressCheck),
