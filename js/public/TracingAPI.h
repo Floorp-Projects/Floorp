@@ -26,33 +26,33 @@ JS_FRIEND_API const char* GCTraceKindToAscii(JS::TraceKind kind);
 /** Returns the base size in bytes of the GC thing of kind |kind|. */
 JS_FRIEND_API size_t GCTraceKindSize(JS::TraceKind kind);
 
-}  // namespace JS
-
-enum WeakMapTraceKind {
+enum class WeakMapTraceAction {
   /**
    * Do not trace into weak map keys or values during traversal. Users must
    * handle weak maps manually.
    */
-  DoNotTraceWeakMaps,
+  Skip,
 
   /**
    * Do true ephemeron marking with a weak key lookup marking phase. This is
    * the default for GCMarker.
    */
-  ExpandWeakMaps,
+  Expand,
 
   /**
    * Trace through to all values, irrespective of whether the keys are live
    * or not. Used for non-marking tracers.
    */
-  TraceWeakMapValues,
+  TraceValues,
 
   /**
    * Trace through to all keys and values, irrespective of whether the keys
    * are live or not. Used for non-marking tracers.
    */
-  TraceWeakMapKeysValues
+  TraceKeysAndValues
 };
+
+}  // namespace JS
 
 class JS_PUBLIC_API JSTracer {
  public:
@@ -60,7 +60,7 @@ class JS_PUBLIC_API JSTracer {
   JSRuntime* runtime() const { return runtime_; }
 
   // Return the weak map tracing behavior currently set on this tracer.
-  WeakMapTraceKind weakMapAction() const { return weakMapAction_; }
+  JS::WeakMapTraceAction weakMapAction() const { return weakMapAction_; }
 
   enum class TracerKindTag {
     // Marking path: a tracer used only for marking liveness of cells, not
@@ -92,9 +92,10 @@ class JS_PUBLIC_API JSTracer {
 
  protected:
   JSTracer(JSRuntime* rt, TracerKindTag tag,
-           WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
+           JS::WeakMapTraceAction weakMapAction =
+               JS::WeakMapTraceAction::TraceValues)
       : runtime_(rt),
-        weakMapAction_(weakTraceKind),
+        weakMapAction_(weakMapAction),
         tag_(tag),
         traceWeakEdges_(true),
 #ifdef DEBUG
@@ -112,7 +113,7 @@ class JS_PUBLIC_API JSTracer {
 
  private:
   JSRuntime* const runtime_;
-  const WeakMapTraceKind weakMapAction_;
+  const JS::WeakMapTraceAction weakMapAction_;
   const TracerKindTag tag_;
 
   // Whether the tracer should trace weak edges. GCMarker sets this to false.
@@ -134,14 +135,14 @@ class AutoTracingCallback;
 
 class JS_PUBLIC_API CallbackTracer : public JSTracer {
  public:
-  CallbackTracer(JSRuntime* rt,
-                 WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
-      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakTraceKind),
+  CallbackTracer(JSRuntime* rt, JS::WeakMapTraceAction weakMapAction =
+                                    JS::WeakMapTraceAction::TraceValues)
+      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakMapAction),
         contextName_(nullptr),
         contextIndex_(InvalidIndex),
         contextFunctor_(nullptr) {}
-  CallbackTracer(JSContext* cx,
-                 WeakMapTraceKind weakTraceKind = TraceWeakMapValues);
+  CallbackTracer(JSContext* cx, JS::WeakMapTraceAction weakMapAction =
+                                    JS::WeakMapTraceAction::TraceValues);
 
   // Override these methods to receive notification when an edge is visited
   // with the type contained in the callback. The default implementation

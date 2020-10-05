@@ -45,7 +45,7 @@ void WeakMapBase::unmarkZone(JS::Zone* zone) {
 }
 
 void WeakMapBase::traceZone(JS::Zone* zone, JSTracer* tracer) {
-  MOZ_ASSERT(tracer->weakMapAction() != DoNotTraceWeakMaps);
+  MOZ_ASSERT(tracer->weakMapAction() != JS::WeakMapTraceAction::Skip);
   for (WeakMapBase* m : zone->gcWeakMapList()) {
     m->trace(tracer);
     TraceNullableEdge(tracer, &m->memberOf, "memberOf");

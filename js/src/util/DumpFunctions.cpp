@@ -501,7 +501,7 @@ struct DumpHeapTracer final : public JS::CallbackTracer, public WeakMapTracer {
   mozilla::MallocSizeOf mallocSizeOf;
 
   DumpHeapTracer(FILE* fp, JSContext* cx, mozilla::MallocSizeOf mallocSizeOf)
-      : JS::CallbackTracer(cx, DoNotTraceWeakMaps),
+      : JS::CallbackTracer(cx, JS::WeakMapTraceAction::Skip),
         WeakMapTracer(cx->runtime()),
         prefix(""),
         output(fp),

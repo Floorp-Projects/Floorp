@@ -760,7 +760,8 @@ void GCRuntime::finishMarkingValidation() {
 
 class HeapCheckTracerBase : public JS::CallbackTracer {
  public:
-  explicit HeapCheckTracerBase(JSRuntime* rt, WeakMapTraceKind weakTraceKind);
+  explicit HeapCheckTracerBase(JSRuntime* rt,
+                               JS::WeakMapTraceAction weakMapAction);
   bool traceHeap(AutoTraceSession& session);
   virtual void checkCell(Cell* cell) = 0;
 
@@ -798,8 +799,8 @@ class HeapCheckTracerBase : public JS::CallbackTracer {
 };
 
 HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
-                                         WeakMapTraceKind weakTraceKind)
-    : CallbackTracer(rt, weakTraceKind),
+                                         JS::WeakMapTraceAction weakMapAction)
+    : CallbackTracer(rt, weakMapAction),
       failures(0),
       rt(rt),
       oom(false),
@@ -903,7 +904,8 @@ class CheckHeapTracer final : public HeapCheckTracerBase {
 };
 
 CheckHeapTracer::CheckHeapTracer(JSRuntime* rt, GCType type)
-    : HeapCheckTracerBase(rt, TraceWeakMapKeysValues), gcType(type) {}
+    : HeapCheckTracerBase(rt, JS::WeakMapTraceAction::TraceKeysAndValues),
+      gcType(type) {}
 
 inline static bool IsValidGCThingPointer(Cell* cell) {
   return (uintptr_t(cell) & CellAlignMask) == 0;
@@ -955,7 +957,7 @@ class CheckGrayMarkingTracer final : public HeapCheckTracerBase {
 };
 
 CheckGrayMarkingTracer::CheckGrayMarkingTracer(JSRuntime* rt)
-    : HeapCheckTracerBase(rt, DoNotTraceWeakMaps) {
+    : HeapCheckTracerBase(rt, JS::WeakMapTraceAction::Skip) {
   // Weak gray->black edges are allowed.
   setTraceWeakEdges(false);
 }

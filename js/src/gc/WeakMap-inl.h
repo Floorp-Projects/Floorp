@@ -208,7 +208,7 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &memberOf, "WeakMap owner");
 
   if (trc->isMarkingTracer()) {
-    MOZ_ASSERT(trc->weakMapAction() == ExpandWeakMaps);
+    MOZ_ASSERT(trc->weakMapAction() == JS::WeakMapTraceAction::Expand);
     auto marker = GCMarker::fromTracer(trc);
 
     // Don't downgrade the map color from black to gray. This can happen when a
@@ -221,20 +221,19 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
     return;
   }
 
-  if (trc->weakMapAction() == DoNotTraceWeakMaps) {
+  if (trc->weakMapAction() == JS::WeakMapTraceAction::Skip) {
     return;
   }
 
   // Trace keys only if weakMapAction() says to.
-  if (trc->weakMapAction() == TraceWeakMapKeysValues) {
+  if (trc->weakMapAction() == JS::WeakMapTraceAction::TraceKeysAndValues) {
     for (Enum e(*this); !e.empty(); e.popFront()) {
       TraceWeakMapKeyEdge(trc, zone(), &e.front().mutableKey(),
                           "WeakMap entry key");
     }
   }
 
-  // Always trace all values (unless weakMapAction() is
-  // DoNotTraceWeakMaps).
+  // Always trace all values (unless weakMapAction() is Skip).
   for (Range r = Base::all(); !r.empty(); r.popFront()) {
     TraceEdge(trc, &r.front().value(), "WeakMap entry value");
   }
@@ -305,7 +304,7 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
     // So we only need to populate the table if the key is less marked than the
     // map, to catch later updates in the key's mark color.
     if (keyColor < mapColor) {
-      MOZ_ASSERT(marker->weakMapAction() == ExpandWeakMaps);
+      MOZ_ASSERT(marker->weakMapAction() == JS::WeakMapTraceAction::Expand);
       // The final color of the key is not yet known. Record this weakmap and
       // the lookup key in the list of weak keys. If the key has a delegate,
       // then the lookup key is the delegate (because marking the key will end
