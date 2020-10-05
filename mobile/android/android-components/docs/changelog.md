@@ -21,6 +21,10 @@ permalink: /changelog/
   * Added `MediaSessionState` to `SessionState`.
   * Added `MediaSessionAction` to `BrowserAction`.
 
+* **feature-sitepermissions**
+  * ⚠️ **This is a breaking change**: The `SitePermissionsRules`'s constructor, now requires a new parameter `persistentStorage`.
+  * 🌟 Added support for the local storage site permission see [#3153](https://github.com/mozilla-mobile/android-components/issues/3153).
+
 # 62.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...v62.0.0)

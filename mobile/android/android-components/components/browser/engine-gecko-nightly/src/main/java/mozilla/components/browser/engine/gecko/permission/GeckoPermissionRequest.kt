@@ -21,6 +21,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
 
 /**
  * Gecko-based implementation of [PermissionRequest].
@@ -54,7 +55,8 @@ sealed class GeckoPermissionRequest constructor(
                 PERMISSION_DESKTOP_NOTIFICATION to Permission.ContentNotification(),
                 PERMISSION_GEOLOCATION to Permission.ContentGeoLocation(),
                 PERMISSION_AUTOPLAY_AUDIBLE to Permission.ContentAutoPlayAudible(),
-                PERMISSION_AUTOPLAY_INAUDIBLE to Permission.ContentAutoPlayInaudible()
+                PERMISSION_AUTOPLAY_INAUDIBLE to Permission.ContentAutoPlayInaudible(),
+                PERMISSION_PERSISTENT_STORAGE to Permission.ContentPersistentStorage()
             )
         }
     }

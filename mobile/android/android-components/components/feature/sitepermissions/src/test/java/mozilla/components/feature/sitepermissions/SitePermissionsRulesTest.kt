@@ -63,7 +63,8 @@ class SitePermissionsRulesTest {
             notification = ASK_TO_ALLOW,
             microphone = BLOCKED,
             autoplayAudible = ASK_TO_ALLOW,
-            autoplayInaudible = BLOCKED
+            autoplayInaudible = BLOCKED,
+            persistentStorage = BLOCKED
         )
 
         val mockRequest: PermissionRequest = mock()
@@ -95,6 +96,10 @@ class SitePermissionsRulesTest {
         doReturn(listOf(Generic("", ""))).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
         assertEquals(action, rules.camera)
+
+        doReturn(listOf(Permission.ContentPersistentStorage())).`when`(mockRequest).permissions
+        action = rules.getActionFrom(mockRequest)
+        assertEquals(action, rules.persistentStorage)
     }
 
     @Test
@@ -102,6 +107,7 @@ class SitePermissionsRulesTest {
         var rules = SitePermissionsRules(
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
+            persistentStorage = BLOCKED,
             notification = ASK_TO_ALLOW,
             microphone = BLOCKED,
             autoplayInaudible = ASK_TO_ALLOW,
@@ -120,7 +126,8 @@ class SitePermissionsRulesTest {
             notification = ASK_TO_ALLOW,
             microphone = ASK_TO_ALLOW,
             autoplayInaudible = BLOCKED,
-            autoplayAudible = BLOCKED
+            autoplayAudible = BLOCKED,
+            persistentStorage = BLOCKED
         )
 
         action = rules.getActionFrom(mockRequest)
@@ -133,6 +140,7 @@ class SitePermissionsRulesTest {
                 origin = "origin",
                 camera = Status.NO_DECISION,
                 location = Status.BLOCKED,
+                localStorage = Status.BLOCKED,
                 notification = Status.NO_DECISION,
                 microphone = Status.BLOCKED,
                 autoplayInaudible = Status.NO_DECISION,
@@ -146,7 +154,8 @@ class SitePermissionsRulesTest {
                 notification = ASK_TO_ALLOW,
                 microphone = BLOCKED,
                 autoplayInaudible = ASK_TO_ALLOW,
-                autoplayAudible = ASK_TO_ALLOW
+                autoplayAudible = ASK_TO_ALLOW,
+                persistentStorage = BLOCKED
         )
 
         val convertedSitePermissions = rules.toSitePermissions(origin = "origin", savedAt = 1L)
@@ -158,6 +167,7 @@ class SitePermissionsRulesTest {
         assertEquals(expectedSitePermission.microphone, convertedSitePermissions.microphone)
         assertEquals(expectedSitePermission.autoplayInaudible, convertedSitePermissions.autoplayInaudible)
         assertEquals(expectedSitePermission.autoplayAudible, convertedSitePermissions.autoplayAudible)
+        assertEquals(expectedSitePermission.localStorage, convertedSitePermissions.localStorage)
         assertEquals(expectedSitePermission.savedAt, convertedSitePermissions.savedAt)
     }
 }

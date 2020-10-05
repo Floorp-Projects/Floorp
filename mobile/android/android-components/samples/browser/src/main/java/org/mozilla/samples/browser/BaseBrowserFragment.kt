@@ -167,7 +167,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                     camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     location = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
-                    microphone = SitePermissionsRules.Action.ASK_TO_ALLOW
+                    microphone = SitePermissionsRules.Action.ASK_TO_ALLOW,
+                    persistentStorage = SitePermissionsRules.Action.ASK_TO_ALLOW
                 ),
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)

@@ -33,6 +33,7 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
+import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.AppLocationCoarse
 import mozilla.components.concept.engine.permission.Permission.AppLocationFine
 import mozilla.components.concept.engine.permission.Permission.AppAudio
@@ -331,6 +332,9 @@ class SitePermissionsFeature(
                 is ContentVideoCamera, is ContentVideoCapture -> {
                     permissionFromStore.camera.doNotAskAgain()
                 }
+                is ContentPersistentStorage -> {
+                    permissionFromStore.localStorage.doNotAskAgain()
+                }
                 else -> false
             }
         }
@@ -381,6 +385,9 @@ class SitePermissionsFeature(
             }
             is ContentAutoPlayInaudible -> {
                 sitePermissions.copy(autoplayInaudible = status)
+            }
+            is ContentPersistentStorage -> {
+                sitePermissions.copy(localStorage = status)
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -461,6 +468,17 @@ class SitePermissionsFeature(
                     showDoNotAskAgainCheckBox = true,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
+                )
+            }
+            is ContentPersistentStorage -> {
+                createSinglePermissionPrompt(
+                    context,
+                    sessionId,
+                    host,
+                    R.string.mozac_feature_sitepermissions_persistent_storage_title,
+                    R.drawable.mozac_ic_storage,
+                    showDoNotAskAgainCheckBox = false,
+                    shouldSelectRememberChoice = true
                 )
             }
             else ->
@@ -618,6 +636,9 @@ private fun isPermissionGranted(
         is ContentVideoCamera, is ContentVideoCapture -> {
             permissionFromStorage.camera.isAllowed()
         }
+        is ContentPersistentStorage -> {
+            permissionFromStorage.localStorage.isAllowed()
+        }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")
     }
@@ -627,6 +648,7 @@ private fun Permission.isSupported(): Boolean {
     return when (this) {
         is ContentGeoLocation,
         is ContentNotification,
+        is ContentPersistentStorage,
         is ContentAudioCapture, is ContentAudioMicrophone,
         is ContentVideoCamera, is ContentVideoCapture,
         is ContentAutoPlayAudible, is ContentAutoPlayInaudible -> true

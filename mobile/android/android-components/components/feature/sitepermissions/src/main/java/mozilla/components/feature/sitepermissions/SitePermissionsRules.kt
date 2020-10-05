@@ -18,7 +18,8 @@ data class SitePermissionsRules internal constructor(
     val notification: Action,
     val microphone: Action,
     val autoplayAudible: Action,
-    val autoplayInaudible: Action
+    val autoplayInaudible: Action,
+    val persistentStorage: Action
 ) {
 
     constructor(
@@ -27,14 +28,16 @@ data class SitePermissionsRules internal constructor(
         notification: Action,
         microphone: Action,
         autoplayAudible: AutoplayAction,
-        autoplayInaudible: AutoplayAction
+        autoplayInaudible: AutoplayAction,
+        persistentStorage: Action
     ) : this(
         camera = camera,
         location = location,
         notification = notification,
         microphone = microphone,
         autoplayAudible = autoplayAudible.toAction(),
-        autoplayInaudible = autoplayInaudible.toAction()
+        autoplayInaudible = autoplayInaudible.toAction(),
+        persistentStorage = persistentStorage
     )
 
     enum class Action {
@@ -75,6 +78,9 @@ data class SitePermissionsRules internal constructor(
             is Permission.ContentNotification -> {
                 notification
             }
+            is Permission.ContentPersistentStorage -> {
+                persistentStorage
+            }
             is Permission.ContentAudioCapture, is Permission.ContentAudioMicrophone -> {
                 microphone
             }
@@ -111,6 +117,7 @@ data class SitePermissionsRules internal constructor(
                 camera = camera.toStatus(),
                 autoplayAudible = autoplayAudible.toStatus(),
                 autoplayInaudible = autoplayInaudible.toStatus(),
+                localStorage = persistentStorage.toStatus(),
                 savedAt = savedAt
         )
     }

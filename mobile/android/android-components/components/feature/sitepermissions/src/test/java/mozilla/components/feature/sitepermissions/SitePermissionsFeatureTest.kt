@@ -23,6 +23,7 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
+import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
@@ -267,7 +268,8 @@ class SitePermissionsFeatureTest {
             ContentGeoLocation(),
             ContentNotification(),
             ContentAudioCapture(),
-            ContentAudioMicrophone()
+            ContentAudioMicrophone(),
+            ContentPersistentStorage()
         )
 
         val rules = SitePermissionsRules(
@@ -276,7 +278,8 @@ class SitePermissionsFeatureTest {
             notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
             microphone = SitePermissionsRules.Action.BLOCKED,
             autoplayAudible = SitePermissionsRules.Action.BLOCKED,
-            autoplayInaudible = SitePermissionsRules.Action.ASK_TO_ALLOW
+            autoplayInaudible = SitePermissionsRules.Action.ASK_TO_ALLOW,
+            persistentStorage = SitePermissionsRules.Action.BLOCKED
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -308,7 +311,8 @@ class SitePermissionsFeatureTest {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
 
                 when (permission) {
-                    is ContentGeoLocation, is ContentAudioCapture, is ContentAudioMicrophone -> {
+                    is ContentGeoLocation, is ContentAudioCapture, is ContentAudioMicrophone,
+                    is ContentPersistentStorage -> {
                         assertTrue(rejectWasCalled)
                         assertFalse(grantWasCalled)
                         assertNull(prompt)
@@ -335,6 +339,7 @@ class SitePermissionsFeatureTest {
             microphone = BLOCKED,
             autoplayAudible = BLOCKED,
             autoplayInaudible = BLOCKED,
+            localStorage = BLOCKED,
             origin = "any",
             savedAt = 1
         )
@@ -344,7 +349,8 @@ class SitePermissionsFeatureTest {
             notification = SitePermissionsRules.Action.ALLOWED,
             microphone = SitePermissionsRules.Action.ALLOWED,
             autoplayAudible = SitePermissionsRules.Action.ALLOWED,
-            autoplayInaudible = SitePermissionsRules.Action.ALLOWED
+            autoplayInaudible = SitePermissionsRules.Action.ALLOWED,
+            persistentStorage = SitePermissionsRules.Action.ALLOWED
         )
 
         doReturn(siteRules).`when`(mockStorage).findSitePermissionsBy(anyString())
@@ -972,7 +978,8 @@ class SitePermissionsFeatureTest {
                 notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 microphone = SitePermissionsRules.Action.BLOCKED,
                 autoplayAudible = SitePermissionsRules.Action.BLOCKED,
-                autoplayInaudible = SitePermissionsRules.Action.ALLOWED
+                autoplayInaudible = SitePermissionsRules.Action.ALLOWED,
+                persistentStorage = SitePermissionsRules.Action.BLOCKED
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -990,6 +997,7 @@ class SitePermissionsFeatureTest {
         assertEquals(BLOCKED, sitePermissions.microphone)
         assertEquals(BLOCKED, sitePermissions.autoplayAudible)
         assertEquals(ALLOWED, sitePermissions.autoplayInaudible)
+        assertEquals(BLOCKED, sitePermissions.localStorage)
     }
 
     @Test
