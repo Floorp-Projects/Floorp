@@ -677,21 +677,26 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
       cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
 
   uint32_t totalSubSamplesSize = 0;
+  for (auto& size : cryptoObj.mPlainSizes) {
+    totalSubSamplesSize += size;
+  }
   for (auto& size : cryptoObj.mEncryptedSizes) {
     totalSubSamplesSize += size;
   }
 
-  // mPlainSizes is uint16_t, need to transform to uint32_t first.
-  nsTArray<uint32_t> plainSizes;
-  for (auto& size : cryptoObj.mPlainSizes) {
-    totalSubSamplesSize += size;
-    plainSizes.AppendElement(size);
-  }
-
+  // Deep copy the plain sizes so we can modify them.
+  nsTArray<uint32_t> plainSizes = cryptoObj.mPlainSizes.Clone();
   uint32_t codecSpecificDataSize = aSample->Size() - totalSubSamplesSize;
   // Size of codec specific data("CSD") for Android java::sdk::MediaCodec usage
-  // should be included in the 1st plain size.
-  plainSizes[0] += codecSpecificDataSize;
+  // should be included in the 1st plain size if it exists.
+  if (!plainSizes.IsEmpty()) {
+    // This shouldn't overflow as the the plain size should be UINT16_MAX at
+    // most, and the CSD should never be that large. Checked int acts like a
+    // diagnostic assert here to help catch if we ever have insane inputs.
+    CheckedUint32 newLeadingPlainSize{plainSizes[0]};
+    newLeadingPlainSize += codecSpecificDataSize;
+    plainSizes[0] = newLeadingPlainSize.value();
+  }
 
   static const int kExpectedIVLength = 16;
   auto tempIV(cryptoObj.mIV);
@@ -703,11 +708,12 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
   }
 
   auto numBytesOfPlainData = mozilla::jni::IntArray::New(
-      reinterpret_cast<int32_t*>(&plainSizes[0]), plainSizes.Length());
+      reinterpret_cast<const int32_t*>(&plainSizes[0]), plainSizes.Length());
 
   auto numBytesOfEncryptedData = mozilla::jni::IntArray::New(
       reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
       cryptoObj.mEncryptedSizes.Length());
+
   auto iv = mozilla::jni::ByteArray::New(reinterpret_cast<int8_t*>(&tempIV[0]),
                                          tempIV.Length());
   auto keyId = mozilla::jni::ByteArray::New(

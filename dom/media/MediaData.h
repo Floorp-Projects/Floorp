@@ -550,7 +550,16 @@ class CryptoTrack {
 
 class CryptoSample : public CryptoTrack {
  public:
-  CopyableTArray<uint16_t> mPlainSizes;
+  // The num clear bytes in each subsample. The nth element in the array is the
+  // number of clear bytes at the start of the nth subsample.
+  // Clear sizes are stored as uint16_t in containers per ISO/IEC
+  // 23001-7, but we store them as uint32_t for 2 reasons
+  // - The Widevine CDM accepts clear sizes as uint32_t.
+  // - When converting samples to Annex B we modify the clear sizes and
+  //   clear sizes near UINT16_MAX can overflow if stored in a uint16_t.
+  CopyableTArray<uint32_t> mPlainSizes;
+  // The num encrypted bytes in each subsample. The nth element in the array is
+  // the number of encrypted bytes at the start of the nth subsample.
   CopyableTArray<uint32_t> mEncryptedSizes;
   CopyableTArray<uint8_t> mIV;
   CopyableTArray<CopyableTArray<uint8_t>> mInitDatas;

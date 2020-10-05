@@ -54,7 +54,7 @@ struct CDMInputBuffer {
   uint8_t[] mIV;
   int64_t mTimestamp;
   int64_t mDuration;
-  uint16_t[] mClearBytes;
+  uint32_t[] mClearBytes;
   uint32_t[] mCipherBytes;
   uint8_t mCryptByteBlock;
   uint8_t mSkipByteBlock;
