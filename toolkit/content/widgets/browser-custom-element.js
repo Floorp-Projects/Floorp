@@ -1758,7 +1758,12 @@
           }
         );
 
-        Services.tm.spinEventLoopUntilOrShutdown(() => success !== undefined);
+        // The permitUnload() promise will, alas, not call its resolution
+        // callbacks after the browser window the promise lives in has closed,
+        // so we have to check for that case explicitly.
+        Services.tm.spinEventLoopUntilOrShutdown(
+          () => window.closed || success !== undefined
+        );
         if (success) {
           return result;
         }
