@@ -15,6 +15,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/java/GeckoEditableChildWrappers.h"
 #include "mozilla/java/GeckoServiceChildProcessWrappers.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextComposition.h"
@@ -28,9 +29,10 @@
 #include <android/input.h>
 #include <android/log.h>
 
-#ifdef DEBUG_ANDROID_IME
-#  define ALOGIME(args...) \
-    __android_log_print(ANDROID_LOG_INFO, "GeckoEditableSupport", ##args)
+#ifdef NIGHTLY_BUILD
+static mozilla::LazyLogModule sGeckoEditableSupportLog("GeckoEditableSupport");
+#  define ALOGIME(...) \
+    MOZ_LOG(sGeckoEditableSupportLog, LogLevel::Debug, (__VA_ARGS__))
 #else
 #  define ALOGIME(args...) \
     do {                   \
@@ -887,7 +889,7 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     // the replaced text does not match our composition.
     textChanged |= RemoveComposition();
 
-#ifdef DEBUG_ANDROID_IME
+#ifdef NIGHTLY_BUILD
     {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
@@ -1119,12 +1121,9 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
     string = composition->String();
   }
 
-#ifdef DEBUG_ANDROID_IME
-  const NS_ConvertUTF16toUTF8 data(string);
-  const char* text = data.get();
-  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u", text,
-          string.Length(), mIMERanges->Length());
-#endif  // DEBUG_ANDROID_IME
+  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%zu",
+          NS_ConvertUTF16toUTF8(string).get(), string.Length(),
+          mIMERanges->Length());
 
   if (NS_WARN_IF(NS_FAILED(BeginInputTransaction(mDispatcher)))) {
     mIMERanges->Clear();
@@ -1403,11 +1402,10 @@ void GeckoEditableSupport::SetInputContext(const InputContext& aContext,
   MOZ_ASSERT(mEditable);
 
   ALOGIME(
-      "IME: SetInputContext: aContext.mIMEState={mEnabled=%s, mOpen=%s}, "
+      "IME: SetInputContext: aContext=%s, "
       "aAction={mCause=%s, mFocusChange=%s}",
-      ToString(aContext.mIMEState.mEnabled).c_str(),
-      ToString(aContext.mIMEState.mOpen).c_str(),
-      ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str());
+      ToString(aContext).c_str(), ToString(aAction.mCause).c_str(),
+      ToString(aAction.mFocusChange).c_str());
 
   mInputContext = aContext;
 
