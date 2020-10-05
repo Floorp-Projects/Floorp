@@ -428,29 +428,29 @@ static bool InstantiateScriptStencils(JSContext* cx,
 // includes standalone functions and functions being delazified.
 static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput) {
-  ScriptStencil& script =
+  ScriptStencil& scriptStencil =
       compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex];
   RootedFunction fun(cx);
-  if (script.isFunction()) {
+  if (scriptStencil.isFunction()) {
     fun = gcOutput.functions[CompilationInfo::TopLevelIndex];
   }
 
   // Top-level asm.js does not generate a JSScript.
-  if (script.functionFlags.isAsmJSNative()) {
+  if (scriptStencil.functionFlags.isAsmJSNative()) {
     return true;
   }
 
-  MOZ_ASSERT(script.sharedData);
+  MOZ_ASSERT(scriptStencil.sharedData);
 
   if (compilationInfo.input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(compilationInfo.input.lazy);
 
     if (!JSScript::fullyInitFromStencil(cx, compilationInfo, gcOutput,
-                                        gcOutput.script, script, fun)) {
+                                        gcOutput.script, scriptStencil, fun)) {
       return false;
     }
 
-    if (script.allowRelazify) {
+    if (scriptStencil.allowRelazify) {
       MOZ_ASSERT(gcOutput.script->isRelazifiable());
       gcOutput.script->setAllowRelazify();
     }
@@ -459,18 +459,18 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
   }
 
   gcOutput.script =
-      JSScript::fromStencil(cx, compilationInfo, gcOutput, script, fun);
+      JSScript::fromStencil(cx, compilationInfo, gcOutput, scriptStencil, fun);
   if (!gcOutput.script) {
     return false;
   }
 
-  if (script.allowRelazify) {
+  if (scriptStencil.allowRelazify) {
     MOZ_ASSERT(gcOutput.script->isRelazifiable());
     gcOutput.script->setAllowRelazify();
   }
 
   // Finish initializing the ModuleObject if needed.
-  if (script.isModule()) {
+  if (scriptStencil.isModule()) {
     gcOutput.module->initScriptSlots(gcOutput.script);
     gcOutput.module->initStatusSlot();
 
@@ -551,6 +551,54 @@ static void LinkEnclosingLazyScript(CompilationInfo& compilationInfo,
   }
 }
 
+#ifdef DEBUG
+// Some fields aren't used in delazification, given the target functions and
+// scripts are already instantiated, but they still should match.
+static void AssertDelazificationFieldsMatch(CompilationInfo& compilationInfo,
+                                            CompilationGCOutput& gcOutput) {
+  for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
+    auto& scriptStencil = item.script;
+    auto& fun = item.function;
+
+    BaseScript* script = fun->baseScript();
+
+    // TreatAsRunOnce is updated by UpdateEmittedInnerFunctions.
+    uint32_t acceptableDifferenceForScript =
+        uint32_t(ImmutableScriptFlagsEnum::TreatAsRunOnce);
+    MOZ_ASSERT(
+        (uint32_t(script->immutableFlags()) | acceptableDifferenceForScript) ==
+        (uint32_t(scriptStencil.immutableFlags) |
+         acceptableDifferenceForScript));
+
+    MOZ_ASSERT(script->extent().sourceStart ==
+               scriptStencil.extent.sourceStart);
+    MOZ_ASSERT(script->extent().sourceEnd == scriptStencil.extent.sourceEnd);
+    MOZ_ASSERT(script->extent().toStringStart ==
+               scriptStencil.extent.toStringStart);
+    MOZ_ASSERT(script->extent().toStringEnd ==
+               scriptStencil.extent.toStringEnd);
+    MOZ_ASSERT(script->extent().lineno == scriptStencil.extent.lineno);
+    MOZ_ASSERT(script->extent().column == scriptStencil.extent.column);
+
+    // Names are updated by SetTypeAndNameForExposedFunctions.
+    constexpr uint16_t HAS_INFERRED_NAME =
+        uint16_t(FunctionFlags::Flags::HAS_INFERRED_NAME);
+    constexpr uint16_t HAS_GUESSED_ATOM =
+        uint16_t(FunctionFlags::Flags::HAS_GUESSED_ATOM);
+    constexpr uint16_t acceptableDifferenceForFunction =
+        HAS_INFERRED_NAME | HAS_GUESSED_ATOM;
+    MOZ_ASSERT((fun->flags().toRaw() | acceptableDifferenceForFunction) ==
+               (scriptStencil.functionFlags.toRaw() |
+                acceptableDifferenceForFunction));
+
+    // FIXME: If this function is lazily parsed again, nargs isn't set to
+    //        correct value (bug 1666978).
+    MOZ_ASSERT_IF(scriptStencil.sharedData,
+                  fun->nargs() == scriptStencil.nargs);
+  }
+}
+#endif  // DEBUG
+
 // When delazifying, use the existing JSFunctions. The initial and delazifying
 // parse are required to generate the same sequence of functions for lazy
 // parsing to work at all.
@@ -586,6 +634,10 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
 
   if (input.lazy) {
     FunctionsFromExistingLazy(*this, gcOutput);
+
+#ifdef DEBUG
+    AssertDelazificationFieldsMatch(*this, gcOutput);
+#endif
   } else {
     if (!InstantiateScriptSourceObject(cx, *this, gcOutput)) {
       return false;
