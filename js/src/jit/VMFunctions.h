@@ -1110,7 +1110,18 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
 
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
+void* AllocateString(JSContext* cx);
+void* AllocateFatInlineString(JSContext* cx);
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
+void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
+                                     int32_t count);
+
+void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
+                                    size_t nDynamicSlots);
+#ifdef JS_GC_PROBES
+void TraceCreateObject(JSObject* obj);
+#endif
+
 bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res);
 
 #if JS_BITS_PER_WORD == 32
