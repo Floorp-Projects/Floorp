@@ -212,9 +212,8 @@ static const char* StringKindHeader(JSString* str) {
   return "linear: ";
 }
 
-JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
-                                        JSTracer* trc, void* thing,
-                                        JS::TraceKind kind, bool details) {
+void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
+                               JS::TraceKind kind, bool details) {
   const char* name = nullptr; /* silence uninitialized warning */
   size_t n;
 
