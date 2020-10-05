@@ -4257,9 +4257,10 @@ void MacroAssembler::packedArrayShift(Register array, ValueOperand output,
 
     PushRegsInMask(volatileRegs);
 
+    using Fn = void (*)(ArrayObject * arr);
     setupUnalignedABICall(temp1);
     passABIArg(array);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, ArrayShiftMoveElements));
+    callWithABI<Fn, ArrayShiftMoveElements>();
 
     PopRegsInMask(volatileRegs);
 
