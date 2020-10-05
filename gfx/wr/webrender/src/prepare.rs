@@ -160,7 +160,6 @@ fn prepare_prim_for_render(
 
                 match pic.take_context(
                     pic_index,
-                    prim_instance.vis.clipped_world_rect,
                     pic_context.surface_spatial_node_index,
                     pic_context.raster_spatial_node_index,
                     pic_context.surface_index,
