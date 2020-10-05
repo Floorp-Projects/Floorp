@@ -139,12 +139,16 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
 }
 
 void CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
+  jit::JitScript* jitScript = script->jitScript();
+  if (!jitScript) {
+    return;
+  }
+
   AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
   if (!spew) {
     return;
   }
 
-  jit::JitScript* jitScript = script->jitScript();
   jsbytecode* next = script->code();
   jsbytecode* end = script->codeEnd();
 
