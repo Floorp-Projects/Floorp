@@ -18,10 +18,8 @@ const Targets = require("devtools/server/actors/targets/index");
  *
  * @param WatcherActor watcher
  *        The Watcher Actor requesting to watch for new targets.
- * @param Array<String> watchedResources
- *        List of currently watched resource types by this watcher actor.
  */
-async function createTargets(watcher, watchedResources) {
+async function createTargets(watcher) {
   // Go over all existing BrowsingContext in order to:
   // - Force the instantiation of a DevToolsFrameChild
   // - Have the DevToolsFrameChild to spawn the BrowsingContextTargetActor
@@ -43,7 +41,7 @@ async function createTargets(watcher, watchedResources) {
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
         browserId: watcher.browserId,
-        watchedResources: watcher.watchedResources,
+        watchedData: watcher.watchedData,
       });
     promises.push(promise);
   }
