@@ -65,7 +65,20 @@ module.exports = async function({
   // Note that calling `sources()` will end up emitting `newSource` event for all existing sources.
   // But not in some cases, for example, when the thread is already paused.
   // (And yes, it means that already existing sources can be transfered twice over the wire)
-  let { sources } = await threadFront.sources();
+  //
+  // Also, browser_ext_devtools_inspectedWindow_targetSwitch.js creates many top level targets,
+  // for which the SourceMapURLService will fetch sources. But these targets are destroyed while
+  // the test is running and when they are, we purge all pending requests, including this one.
+  // So ignore any error if this request failed on destruction.
+  let sources;
+  try {
+    ({ sources } = await threadFront.sources());
+  } catch (e) {
+    if (threadFront.isDestroyed()) {
+      return;
+    }
+    throw e;
+  }
 
   // Note that `sources()` doesn't encapsulate SourceFront into a `source` attribute
   // while `newSource` event does.
