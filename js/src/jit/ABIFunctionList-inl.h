@@ -9,12 +9,26 @@
 
 #include "jit/ABIFunctions.h"
 
+#include "wasm/WasmBuiltins.h"  // js::wasm::*
+
 namespace js {
 namespace jit {
 
 // List of all ABI functions to be used with callWithABI. Each entry stores
 // the fully qualified name of the C++ function. This list must be sorted.
+#ifdef WASM_CODEGEN_DEBUG
+#  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_) \
+    _(js::wasm::PrintF32)                        \
+    _(js::wasm::PrintF64)                        \
+    _(js::wasm::PrintI32)                        \
+    _(js::wasm::PrintPtr)                        \
+    _(js::wasm::PrintText)
+#else
+#  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)
+#endif
+
 #define ABIFUNCTION_LIST(_)                                 \
+  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
