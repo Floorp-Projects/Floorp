@@ -96,6 +96,9 @@
 - (id)moxTextMarkerRangeForUIElement:(id)element;
 
 // override
+- (NSString*)moxMozDebugDescriptionForTextMarker:(id)textMarker;
+
+// override
 - (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange;
 
 @end
