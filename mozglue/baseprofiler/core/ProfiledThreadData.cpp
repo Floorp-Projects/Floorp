@@ -153,7 +153,9 @@ void StreamSamplesAndMarkers(
     {
       JSONSchemaWriter schema(aWriter);
       schema.WriteField("name");
-      schema.WriteField("time");
+      schema.WriteField("startTime");
+      schema.WriteField("endTime");
+      schema.WriteField("phase");
       schema.WriteField("category");
       schema.WriteField("data");
     }
