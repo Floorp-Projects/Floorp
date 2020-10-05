@@ -6734,10 +6734,11 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   masm.passABIArg(obj);
   if (maybeIndex != InvalidReg) {
     masm.passABIArg(maybeIndex);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(
-        void*, (PostWriteElementBarrier<IndexInBounds::Yes>)));
+    using Fn = void (*)(JSRuntime * rt, JSObject * obj, int32_t index);
+    masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Yes>>();
   } else {
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+    using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
+    masm.callWithABI<Fn, PostWriteBarrier>();
   }
   masm.PopRegsInMask(save);
 
@@ -6764,11 +6765,12 @@ bool CacheIRCompiler::emitWrapResult() {
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = JSObject* (*)(JSContext * cx, JSObject * obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, WrapObjectPure));
+  masm.callWithABI<Fn, WrapObjectPure>();
   masm.mov(ReturnReg, obj);
 
   LiveRegisterSet ignore;

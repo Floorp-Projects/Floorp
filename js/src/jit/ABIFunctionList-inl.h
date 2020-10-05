@@ -125,10 +125,15 @@ namespace jit {
   _(js::jit::InitBaselineFrameForOsr)                       \
   _(js::jit::InvalidationBailout)                           \
   _(js::jit::LazyLinkTopActivation)                         \
+  _(js::jit::PostGlobalWriteBarrier)                        \
+  _(js::jit::PostWriteBarrier)                              \
+  _(js::jit::PostWriteElementBarrier<IndexInBounds::Yes>)   \
+  _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>) \
   _(js::jit::Printf0)                                       \
   _(js::jit::Printf1)                                       \
   _(js::jit::SetNativeDataPropertyPure<false>)              \
   _(js::jit::SetNativeDataPropertyPure<true>)               \
+  _(js::jit::WrapObjectPure)                                \
   _(js::MapIteratorObject::next)                            \
   _(js::NativeObject::addDenseElementPure)                  \
   _(js::NativeObject::growSlotsPure)                        \
@@ -168,6 +173,7 @@ namespace jit {
   _(JSJitSetterOp)                                   \
   _(JSNative)                                        \
   _(js::UnaryMathFunctionType)                       \
+  _(void (*)(js::gc::StoreBuffer*, js::gc::Cell**))  \
   _(void (*)(JSRuntime * rt, JSObject * *objp))      \
   _(void (*)(JSRuntime * rt, JSString * *stringp))   \
   _(void (*)(JSRuntime * rt, ObjectGroup * *groupp)) \
