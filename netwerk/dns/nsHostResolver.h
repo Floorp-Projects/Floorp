@@ -580,6 +580,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   // Kick-off a name resolve operation, using native resolver and/or TRR
   nsresult NameLookup(nsHostRecord*);
   bool GetHostToLookup(AddrHostRecord** result);
+  void MaybeRenewHostRecordLocked(nsHostRecord* aRec);
 
   // Removes the first element from the list and returns it AddRef-ed in aResult
   // Should not be called for an empty linked list.
