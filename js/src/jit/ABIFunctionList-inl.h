@@ -10,6 +10,9 @@
 #include "jslibmath.h"  // js::NumberMod
 #include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
                         // js::ecmaAtan2, js::UnaryMathFunctionType, js::powi
+#include "jsnum.h"      // js::StringToNumberPure, js::Int32ToStringHelperPure,
+                        // js::NumberToStringHelperPure
+
 #include "builtin/Array.h"      // js::ArrayShiftMoveElements
 #include "builtin/MapObject.h"  // js::MapIteratorObject::next,
                                 // js::SetIteratorObject::next
@@ -63,6 +66,7 @@ namespace jit {
   _(js::ExecuteRegExpAtomRaw)                               \
   _(js::hypot3)                                             \
   _(js::hypot4)                                             \
+  _(js::Int32ToStringHelperPure)                            \
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
@@ -82,10 +86,12 @@ namespace jit {
   _(js::jit::Printf1)                                       \
   _(js::MapIteratorObject::next)                            \
   _(js::NumberMod)                                          \
+  _(js::NumberToStringHelperPure)                           \
   _(js::powi)                                               \
   _(js::RegExpInstanceOptimizableRaw)                       \
   _(js::RegExpPrototypeOptimizableRaw)                      \
   _(js::SetIteratorObject::next)                            \
+  _(js::StringToNumberPure)                                 \
   _(js::TraceLogStartEventPrivate)                          \
   _(js::TraceLogStopEventPrivate)
 
