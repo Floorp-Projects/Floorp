@@ -110,5 +110,12 @@ The settings file follows the ``ini`` format, e.g:
     [try]
     default = fuzzy
 
+Adding ``mach`` to your ``PATH``
+--------------------------------
+
+If you don't like having to type ``./mach``, you can add your source directory
+to your ``PATH``. DO NOT copy the script to a directory already in your
+``PATH``.
+
 
 .. _bash completion: https://searchfox.org/mozilla-central/source/python/mach/bash-completion.sh

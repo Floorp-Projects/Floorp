@@ -85,3 +85,4 @@ best fit for you.
    logging
    settings
    telemetry
+   faq
