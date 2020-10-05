@@ -4445,6 +4445,21 @@ widget:
     record_in_processes:
       - 'main'
 
+  gtk_theme_has_scrollbar_buttons:
+    bug_numbers:
+      - 1669135
+    description: >
+      Whether the active Gtk theme has scrollbar buttons.
+    kind: boolean
+    expires: "87"
+    notification_emails:
+      - layout-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains memory reporter counters.
 memoryreporter:
   max_ghost_windows:
