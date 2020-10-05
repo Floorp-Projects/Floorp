@@ -94,6 +94,16 @@ add_task(async function() {
   );
 
   checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 2, "scalar");
+
+  info("Double-click on the scrollable badge");
+  EventUtils.sendMouseEvent(
+    { type: "dblclick" },
+    container.editor._scrollableBadge
+  );
+  ok(
+    container.expanded,
+    "Double clicking on the badge did not collapse the container"
+  );
 });
 
 async function getContainerForSelector(selector, inspector) {
