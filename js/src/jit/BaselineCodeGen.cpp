@@ -522,11 +522,12 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 #endif
   masm.pushValue(R0);
 
+  using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
   masm.setupUnalignedABICall(scratch);
   masm.movePtr(ImmPtr(cx->runtime()), scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(objReg);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+  masm.callWithABI<Fn, PostWriteBarrier>();
 
   restoreInterpreterPCReg();
 
