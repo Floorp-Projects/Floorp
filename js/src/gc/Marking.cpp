@@ -2755,7 +2755,7 @@ void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   AutoSetMarkColor setColor(*this, color);
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
     if (cell->isMarked(color)) {
-      js::TraceChildren(this, cell, kind);
+      JS::TraceChildren(this, JS::GCCellPtr(cell, kind));
     }
   }
 }
@@ -4084,7 +4084,7 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
 #ifdef DEBUG
     MOZ_ASSERT(!cell->isMarkedGray());
     AssertNonGrayTracer nongray(runtime());
-    TraceChildren(&nongray, cell, thing.kind());
+    JS::TraceChildren(&nongray, thing);
 #endif
     return;
   }

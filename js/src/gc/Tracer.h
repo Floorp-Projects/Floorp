@@ -281,9 +281,6 @@ void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp,
 
 void TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp, const char* name);
 
-// Deprecated. Please use one of the strongly typed variants above.
-void TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind);
-
 namespace gc {
 
 // Trace through a shape or group iteratively during cycle collection to avoid
