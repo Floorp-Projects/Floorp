@@ -229,12 +229,7 @@ NS_EVENT_MESSAGE(ePageHide)
 
 // SVG events
 NS_EVENT_MESSAGE(eSVGLoad)
-NS_EVENT_MESSAGE(eSVGUnload)
-NS_EVENT_MESSAGE(eSVGResize)
 NS_EVENT_MESSAGE(eSVGScroll)
-
-// SVG Zoom events
-NS_EVENT_MESSAGE(eSVGZoom)
 
 // XUL command events
 NS_EVENT_MESSAGE(eXULCommand)
