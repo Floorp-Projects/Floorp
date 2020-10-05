@@ -15,6 +15,8 @@
 #include "gc/Zone.h"
 #include "vm/ProxyObject.h"
 
+#include "jit/ABIFunctionList-inl.h"
+
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86-inl.h"
 #elif defined(JS_CODEGEN_X64)
@@ -97,6 +99,14 @@ void MacroAssembler::callWithABI(void* fun, MoveOp::Type result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result, check);
+}
+
+template <typename Sig, Sig fun>
+void MacroAssembler::callWithABI(MoveOp::Type result,
+                                 CheckUnsafeCallWithABI check) {
+  ABIFunction<Sig, fun> abiFun;
+  AutoProfilerCallInstrumentation profiler(*this);
+  callWithABINoProfiler(abiFun.address(), result, check);
 }
 
 void MacroAssembler::callWithABI(Register fun, MoveOp::Type result) {
