@@ -12,6 +12,7 @@ import sourceQueue from "../utils/source-queue";
 
 let actions;
 let targetList;
+let resourceWatcher;
 
 export async function onConnect(
   connection: any,
@@ -21,10 +22,11 @@ export async function onConnect(
   const {
     devToolsClient,
     targetList: _targetList,
-    resourceWatcher,
+    resourceWatcher: _resourceWatcher,
   } = connection;
   actions = _actions;
   targetList = _targetList;
+  resourceWatcher = _resourceWatcher;
 
   setupCommands({ devToolsClient, targetList });
   setupEvents({ actions, devToolsClient, store, resourceWatcher });
@@ -53,6 +55,17 @@ export async function onConnect(
   // So flush the queue immediately after calling watchResources, which will
   // process all existing sources.
   await sourceQueue.flush();
+}
+
+export function onDisconnect() {
+  targetList.unwatchTargets(
+    targetList.ALL_TYPES,
+    onTargetAvailable,
+    onTargetDestroyed
+  );
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
+    onAvailable: onSourceAvailable,
+  });
 }
 
 async function onTargetAvailable({
