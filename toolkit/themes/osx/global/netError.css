@@ -18,7 +18,7 @@ html {
 body {
   margin: 0;
   padding: 0 1em;
-  color: -moz-FieldText;
+  color: FieldText;
   font: message-box;
 }
 
@@ -52,7 +52,7 @@ ul {
   border-radius: 10px;
   padding: 3em;
   padding-inline-start: 30px;
-  background: url("chrome://global/skin/icons/warning-large.png") left 0 no-repeat -moz-Field;
+  background: url("chrome://global/skin/icons/warning-large.png") left 0 no-repeat Field;
   background-origin: content-box;
 }
 

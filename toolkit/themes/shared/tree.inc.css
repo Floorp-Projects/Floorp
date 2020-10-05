@@ -13,8 +13,8 @@
 
 tree {
   margin: 0 4px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   appearance: auto;
   -moz-default-appearance: listbox;
 }

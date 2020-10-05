@@ -141,7 +141,7 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   max-width: none;
-  color: -moz-FieldText;
+  color: FieldText;
 }
 
 /* checked menuitems */

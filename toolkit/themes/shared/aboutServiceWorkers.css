@@ -21,7 +21,7 @@ body {
 }
 
 .warningMessage {
-  color: -moz-FieldText;
+  color: FieldText;
   position: relative;
   min-width: 330px;
   max-width: 50em;
@@ -30,7 +30,7 @@ body {
   border-radius: 10px;
   padding: 3em;
   padding-inline-start: 30px;
-  background: -moz-Field;
+  background: Field;
   margin-inline-start: auto;
   text-align: center;
 }
