@@ -7744,14 +7744,26 @@ var WebAuthnPromptHelper = {
     let mgr = aSubject.QueryInterface(Ci.nsIU2FTokenManager);
     let data = JSON.parse(aData);
 
+    // If we receive a cancel, it might be a WebAuthn prompt starting in another
+    // window, and the other window's browsing context will send out the
+    // cancellations, so any cancel action we get should prompt us to cancel.
+    if (data.action == "cancel") {
+      this.cancel(data);
+    }
+
+    if (
+      data.browsingContextId !== gBrowser.selectedBrowser.browsingContext.id
+    ) {
+      // Must belong to some other window.
+      return;
+    }
+
     if (data.action == "register") {
       this.register(mgr, data);
     } else if (data.action == "register-direct") {
       this.registerDirect(mgr, data);
     } else if (data.action == "sign") {
       this.sign(mgr, data);
-    } else if (data.action == "cancel") {
-      this.cancel(data);
     }
   },
 
@@ -7819,6 +7831,7 @@ var WebAuthnPromptHelper = {
 
     options.name = origin;
     options.hideClose = true;
+    options.persistent = true;
     options.eventCallback = event => {
       if (event == "removed") {
         this._current = null;

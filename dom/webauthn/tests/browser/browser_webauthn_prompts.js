@@ -19,6 +19,16 @@ function promiseNotification(id) {
   });
 }
 
+function triggerMainPopupCommand(popup) {
+  info("triggering main command");
+  let notifications = popup.childNodes;
+  ok(notifications.length > 0, "at least one notification displayed");
+  let notification = notifications[0];
+  info("triggering command: " + notification.getAttribute("buttonlabel"));
+
+  return EventUtils.synthesizeMouseAtCenter(notification.button, {});
+}
+
 let expectAbortError = expectError("Abort");
 
 function verifyAnonymizedCertificate(result) {
@@ -110,6 +120,103 @@ add_task(async function test_register_direct_cancel() {
   ok(active, "request should still be active");
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
   await promise;
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Add two tabs, open WebAuthn in the first, switch, assert the prompt is
+// not visible, switch back, assert the prompt is there and cancel it.
+add_task(async function test_tab_switching() {
+  // Open a new tab.
+  let tab_one = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Request a new credential and wait for the prompt.
+  let active = true;
+  let request = promiseWebAuthnMakeCredential(tab_one, "indirect", {})
+    .then(arrivingHereIsBad)
+    .catch(expectAbortError)
+    .then(() => (active = false));
+  await promiseNotification("webauthn-prompt-register");
+  is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
+
+  // Open and switch to a second tab.
+  let tab_two = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.org/"
+  );
+
+  await TestUtils.waitForCondition(
+    () => PopupNotifications.panel.state == "closed"
+  );
+  is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+
+  // Go back to the first tab
+  await BrowserTestUtils.removeTab(tab_two);
+
+  await promiseNotification("webauthn-prompt-register");
+
+  await TestUtils.waitForCondition(
+    () => PopupNotifications.panel.state == "open"
+  );
+  is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
+
+  // Cancel the request.
+  ok(active, "request should still be active");
+  await triggerMainPopupCommand(PopupNotifications.panel);
+  await request;
+  ok(!active, "request should be stopped");
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab_one);
+});
+
+// Add two tabs, open WebAuthn in the first, switch, assert the prompt is
+// not visible, switch back, assert the prompt is there and cancel it.
+add_task(async function test_window_switching() {
+  // Open a new tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Request a new credential and wait for the prompt.
+  let active = true;
+  let request = promiseWebAuthnMakeCredential(tab, "indirect", {})
+    .then(arrivingHereIsBad)
+    .catch(expectAbortError)
+    .then(() => (active = false));
+  await promiseNotification("webauthn-prompt-register");
+
+  await TestUtils.waitForCondition(
+    () => PopupNotifications.panel.state == "open"
+  );
+  is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
+
+  // Open and switch to a second window
+  let new_window = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(new_window);
+
+  await TestUtils.waitForCondition(
+    () => new_window.PopupNotifications.panel.state == "closed"
+  );
+  is(
+    new_window.PopupNotifications.panel.state,
+    "closed",
+    "Doorhanger is hidden"
+  );
+
+  // Go back to the first tab
+  await BrowserTestUtils.closeWindow(new_window);
+  await SimpleTest.promiseFocus(window);
+
+  await TestUtils.waitForCondition(
+    () => PopupNotifications.panel.state == "open"
+  );
+  is(PopupNotifications.panel.state, "open", "Doorhanger is still visible");
+
+  // Cancel the request.
+  ok(active, "request should still be active");
+  await triggerMainPopupCommand(PopupNotifications.panel);
+  await request;
+  ok(!active, "request should be stopped");
 
   // Close tab.
   await BrowserTestUtils.removeTab(tab);
