@@ -308,13 +308,6 @@ var PKT_SAVED_OVERLAY = function(options) {
           thePKT_SAVED.sendMessage("expandSavePanel");
         }
       },
-      onHideDropdown() {
-        if (!myself.ho2) {
-          thePKT_SAVED.sendMessage("collapseSavePanel");
-        } else if (myself.ho2 !== "show_prompt_preview") {
-          thePKT_SAVED.sendMessage("resizePanel", { width: 350, height: 200 });
-        }
-      },
     });
     $("body").on("keydown", function(e) {
       var key = e.keyCode || e.which;
