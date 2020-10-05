@@ -261,13 +261,14 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
                   Address(StackPointer, sizeof(uintptr_t)));  // BaselineFrame
     masm.storePtr(reg_code, Address(StackPointer, 0));        // jitcode
 
+    using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
+                        uint32_t numStackValues);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(BaselineFrameReg);  // BaselineFrame
     masm.passABIArg(OsrFrameReg);       // InterpreterFrame
     masm.passABIArg(numStackValues);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::InitBaselineFrameForOsr),
-                     MoveOp::GENERAL,
-                     CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+    masm.callWithABI<Fn, jit::InitBaselineFrameForOsr>(
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
     regs.add(OsrFrameReg);
     regs.take(JSReturnOperand);
