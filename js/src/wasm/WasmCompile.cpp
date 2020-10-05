@@ -576,13 +576,14 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
                                  JSTelemetrySender telemetrySender) {
   Decoder d(bytecode.bytes, 0, error, warnings);
 
-  CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
+  ModuleEnvironment moduleEnv(args.features);
   if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return nullptr;
   }
+  CompilerEnvironment compilerEnv(args);
+  compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, nullptr, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error);
   if (!mg.init(nullptr, telemetrySender)) {
     return nullptr;
   }
@@ -608,15 +609,15 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
                                           ? OptimizedBackend::Cranelift
                                           : OptimizedBackend::Ion;
 
-  CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
-                                  optimizedBackend, DebugEnabled::False);
-
-  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
+  ModuleEnvironment moduleEnv(args.features);
   if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return;
   }
+  CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
+                                  optimizedBackend, DebugEnabled::False);
+  compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, cancelled, &error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, &error);
   if (!mg.init(nullptr, telemetrySender)) {
     return;
   }
@@ -719,7 +720,7 @@ SharedModule wasm::CompileStreaming(
     const Atomic<bool>& cancelled, UniqueChars* error,
     UniqueCharsVector* warnings, JSTelemetrySender telemetrySender) {
   CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
+  ModuleEnvironment moduleEnv(args.features);
 
   {
     Decoder d(envBytes, 0, error, warnings);
@@ -727,6 +728,7 @@ SharedModule wasm::CompileStreaming(
     if (!DecodeModuleEnvironment(d, &moduleEnv)) {
       return nullptr;
     }
+    compilerEnv.computeParameters(d);
 
     if (!moduleEnv.codeSection) {
       d.fail("unknown section before code section");
@@ -737,7 +739,7 @@ SharedModule wasm::CompileStreaming(
     MOZ_RELEASE_ASSERT(d.done());
   }
 
-  ModuleGenerator mg(args, &moduleEnv, &cancelled, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error);
   if (!mg.init(nullptr, telemetrySender)) {
     return nullptr;
   }

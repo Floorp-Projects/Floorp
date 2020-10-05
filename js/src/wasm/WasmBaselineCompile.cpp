@@ -3221,6 +3221,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   };
 
   const ModuleEnvironment& moduleEnv_;
+  const CompilerEnvironment& compilerEnv_;
   BaseOpIter iter_;
   const FuncCompileInput& func_;
   size_t lastReadCallSite_;
@@ -3259,6 +3260,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
  public:
   BaseCompiler(const ModuleEnvironment& moduleEnv,
+               const CompilerEnvironment& compilerEnv,
                const FuncCompileInput& input, const ValTypeVector& locals,
                const MachineState& trapExitLayout,
                size_t trapExitLayoutNumWords, Decoder& decoder,
@@ -4169,7 +4171,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                                    const ExitStubMapVector& extras,
                                    uint32_t assemblerOffset) {
     auto debugFrame =
-        moduleEnv_.debugEnabled() ? HasDebugFrame::Yes : HasDebugFrame::No;
+        compilerEnv_.debugEnabled() ? HasDebugFrame::Yes : HasDebugFrame::No;
     return stackMapGenerator_.createStackMap(who, extras, assemblerOffset,
                                              debugFrame, stk_);
   }
@@ -5277,10 +5279,11 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
     }
 
-    GenerateFunctionPrologue(
-        masm, moduleEnv_.funcTypes[func_.index]->id,
-        moduleEnv_.mode() == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
-        &offsets_);
+    GenerateFunctionPrologue(masm, moduleEnv_.funcTypes[func_.index]->id,
+                             compilerEnv_.mode() == CompileMode::Tier1
+                                 ? Some(func_.index)
+                                 : Nothing(),
+                             &offsets_);
 
     // GenerateFunctionPrologue pushes exactly one wasm::Frame's worth of
     // stuff, and none of the values are GC pointers.  Hence:
@@ -5292,7 +5295,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     // Initialize DebugFrame fields before the stack overflow trap so that
     // we have the invariant that all observable Frames in a debugEnabled
     // Module have valid DebugFrames.
-    if (moduleEnv_.debugEnabled()) {
+    if (compilerEnv_.debugEnabled()) {
 #ifdef JS_CODEGEN_ARM64
       static_assert(DebugFrame::offsetOfFrame() % WasmStackAlignment == 0,
                     "aligned");
@@ -5359,7 +5362,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         }
         // If we're in a debug frame, copy the stack result pointer arg
         // to a well-known place.
-        if (moduleEnv_.debugEnabled()) {
+        if (compilerEnv_.debugEnabled()) {
           Register target = ABINonArgReturnReg0;
           fr.loadIncomingStackResultAreaPtr(RegPtr(target));
           size_t debugFrameOffset =
@@ -5410,7 +5413,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     fr.zeroLocals(&ra);
     fr.storeTlsPtr(WasmTlsReg);
 
-    if (moduleEnv_.debugEnabled()) {
+    if (compilerEnv_.debugEnabled()) {
       insertBreakablePoint(CallSiteDesc::EnterFrame);
       if (!createStackMap("debug: breakable point")) {
         return false;
@@ -5438,7 +5441,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void saveRegisterReturnValues(const ResultType& resultType) {
-    MOZ_ASSERT(moduleEnv_.debugEnabled());
+    MOZ_ASSERT(compilerEnv_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     size_t registerResultIdx = 0;
     for (ABIResultIter i(resultType); !i.done(); i.next()) {
@@ -5491,7 +5494,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void restoreRegisterReturnValues(const ResultType& resultType) {
-    MOZ_ASSERT(moduleEnv_.debugEnabled());
+    MOZ_ASSERT(compilerEnv_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     size_t registerResultIdx = 0;
     for (ABIResultIter i(resultType); !i.done(); i.next()) {
@@ -5557,7 +5560,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     popStackReturnValues(resultType);
 
-    if (moduleEnv_.debugEnabled()) {
+    if (compilerEnv_.debugEnabled()) {
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
       saveRegisterReturnValues(resultType);
@@ -10944,7 +10947,7 @@ bool BaseCompiler::emitSetGlobal() {
 //
 // Finally, when the debugger allows locals to be mutated we must disable BCE
 // for references via a local, by returning immediately from bceCheckLocal if
-// moduleEnv_.debugEnabled() is true.
+// compilerEnv_.debugEnabled() is true.
 //
 //
 // Alignment check elimination.
@@ -14043,12 +14046,12 @@ bool BaseCompiler::emitBody() {
     OpBytes op;
     CHECK(iter_.readOp(&op));
 
-    // When moduleEnv_.debugEnabled(), every operator has breakpoint site but
+    // When compilerEnv_.debugEnabled(), every operator has breakpoint site but
     // Op::End.
-    if (moduleEnv_.debugEnabled() && op.b0 != (uint16_t)Op::End) {
+    if (compilerEnv_.debugEnabled() && op.b0 != (uint16_t)Op::End) {
       // TODO sync only registers that can be clobbered by the exit
       // prologue/epilogue or disable these registers for use in
-      // baseline compiler when moduleEnv_.debugEnabled() is set.
+      // baseline compiler when compilerEnv_.debugEnabled() is set.
       sync();
 
       insertBreakablePoint(CallSiteDesc::Breakpoint);
@@ -15465,6 +15468,7 @@ bool BaseCompiler::emitFunction() {
 }
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
+                           const CompilerEnvironment& compilerEnv,
                            const FuncCompileInput& func,
                            const ValTypeVector& locals,
                            const MachineState& trapExitLayout,
@@ -15472,6 +15476,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
                            StkVector& stkSource, TempAllocator* alloc,
                            MacroAssembler* masm, StackMaps* stackMaps)
     : moduleEnv_(moduleEnv),
+      compilerEnv_(compilerEnv),
       iter_(moduleEnv, decoder),
       func_(func),
       lastReadCallSite_(0),
@@ -15520,7 +15525,8 @@ bool BaseCompiler::init() {
   }
 
   ArgTypeVector args(funcType());
-  if (!fr.setupLocals(locals_, args, moduleEnv_.debugEnabled(), &localInfo_)) {
+  if (!fr.setupLocals(locals_, args, compilerEnv_.debugEnabled(),
+                      &localInfo_)) {
     return false;
   }
 
@@ -15564,11 +15570,12 @@ bool js::wasm::BaselinePlatformSupport() {
 }
 
 bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
+                                        const CompilerEnvironment& compilerEnv,
                                         LifoAlloc& lifo,
                                         const FuncCompileInputVector& inputs,
                                         CompiledCode* code,
                                         UniqueChars* error) {
-  MOZ_ASSERT(moduleEnv.tier() == Tier::Baseline);
+  MOZ_ASSERT(compilerEnv.tier() == Tier::Baseline);
   MOZ_ASSERT(moduleEnv.kind == ModuleKind::Wasm);
 
   // The MacroAssembler will sometimes access the jitContext.
@@ -15612,7 +15619,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(moduleEnv, func, locals, trapExitLayout,
+    BaseCompiler f(moduleEnv, compilerEnv, func, locals, trapExitLayout,
                    trapExitLayoutNumWords, d, stk, &alloc, &masm,
                    &code->stackMaps);
     if (!f.init()) {

@@ -433,13 +433,15 @@ const GlobalDesc* env_global(const CraneliftModuleEnvironment* wrapper,
 }
 
 bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
+                                     const CompilerEnvironment& compilerEnv,
                                      LifoAlloc& lifo,
                                      const FuncCompileInputVector& inputs,
                                      CompiledCode* code, UniqueChars* error) {
   MOZ_RELEASE_ASSERT(CraneliftPlatformSupport());
 
-  MOZ_ASSERT(moduleEnv.tier() == Tier::Optimized);
-  MOZ_ASSERT(moduleEnv.optimizedBackend() == OptimizedBackend::Cranelift);
+  MOZ_ASSERT(compilerEnv.tier() == Tier::Optimized);
+  MOZ_ASSERT(compilerEnv.debug() == DebugEnabled::False);
+  MOZ_ASSERT(compilerEnv.optimizedBackend() == OptimizedBackend::Cranelift);
   MOZ_ASSERT(!moduleEnv.isAsmJS());
 
   TempAllocator alloc(&lifo);

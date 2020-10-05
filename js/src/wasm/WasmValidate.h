@@ -110,6 +110,7 @@ struct CompilerEnvironment {
     MOZ_ASSERT(isComputed());
     return debug_;
   }
+  bool debugEnabled() const { return debug() == DebugEnabled::True; }
 };
 
 // ModuleEnvironment contains all the state necessary to process or render
@@ -126,7 +127,6 @@ struct CompilerEnvironment {
 struct ModuleEnvironment {
   // Constant parameters for the entire compilation:
   const ModuleKind kind;
-  CompilerEnvironment* const compilerEnv;
   const FeatureArgs features;
 
   // Module fields decoded from the module environment (or initialized while
@@ -156,22 +156,14 @@ struct ModuleEnvironment {
   Maybe<Name> moduleName;
   NameVector funcNames;
 
-  explicit ModuleEnvironment(CompilerEnvironment* compilerEnv,
-                             FeatureArgs features,
+  explicit ModuleEnvironment(FeatureArgs features,
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
-        compilerEnv(compilerEnv),
         features(features),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0),
         numStructTypes(0) {}
 
-  Tier tier() const { return compilerEnv->tier(); }
-  OptimizedBackend optimizedBackend() const {
-    return compilerEnv->optimizedBackend();
-  }
-  CompileMode mode() const { return compilerEnv->mode(); }
-  DebugEnabled debug() const { return compilerEnv->debug(); }
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types.length(); }
   size_t numFuncs() const { return funcTypes.length(); }
@@ -189,9 +181,7 @@ struct ModuleEnvironment {
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
-  bool debugEnabled() const {
-    return compilerEnv->debug() == DebugEnabled::True;
-  }
+
   uint32_t funcMaxResults() const {
     return multiValueEnabled() ? MaxResults : 1;
   }
