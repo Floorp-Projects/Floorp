@@ -74,6 +74,7 @@
 #include "wasm/WasmStubs.h"
 
 #include "builtin/Boolean-inl.h"
+#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
@@ -8007,6 +8008,9 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     masm.moveStackPtrTo(temp);
     masm.addPtr(Imm32(masm.framePushed()), temp);
 
+    using Fn =
+        ArgumentsObject* (*)(JSContext * cx, jit::JitFrameLayout * frame,
+                             JSObject * scopeChain, ArgumentsObject * obj);
     masm.setupUnalignedABICall(cxTemp);
     masm.loadJSContext(cxTemp);
     masm.passABIArg(cxTemp);
@@ -8014,8 +8018,7 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     masm.passABIArg(callObj);
     masm.passABIArg(objTemp);
 
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, ArgumentsObject::finishForIonPure));
+    masm.callWithABI<Fn, ArgumentsObject::finishForIonPure>();
     masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &failure);
 
     // Discard saved callObj on the stack.
