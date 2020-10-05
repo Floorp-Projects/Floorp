@@ -6,6 +6,7 @@
 
 #include "jit/VMFunctions.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "builtin/String.h"
@@ -2020,6 +2021,16 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   return true;
 }
 
+void* AllocateString(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateString<JSString, NoGC>(cx, js::gc::TenuredHeap);
+}
+
+void* AllocateFatInlineString(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateString<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
+}
+
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -2029,6 +2040,49 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
 
   return js::AllocateBigInt<NoGC>(cx, gc::TenuredHeap);
 }
+
+void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
+                                     int32_t count) {
+  AutoUnsafeCallWithABI unsafe;
+  using mozilla::CheckedUint32;
+
+  obj->initPrivate(nullptr);
+
+  // Negative numbers or zero will bail out to the slow path, which in turn will
+  // raise an invalid argument exception or create a correct object with zero
+  // elements.
+  if (count <= 0 || uint32_t(count) >= INT32_MAX / obj->bytesPerElement()) {
+    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
+    return;
+  }
+
+  obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
+
+  size_t nbytes = count * obj->bytesPerElement();
+  MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
+             "RoundUp must not overflow");
+
+  nbytes = RoundUp(nbytes, sizeof(Value));
+  void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
+                                                 js::ArrayBufferContentsArena);
+  if (buf) {
+    InitObjectPrivate(obj, buf, nbytes, MemoryUse::TypedArrayElements);
+  }
+}
+
+void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
+                                    size_t nDynamicSlots) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateObject<NoGC>(cx, kind, nDynamicSlots, gc::DefaultHeap,
+                                  &ArrayObject::class_);
+}
+
+#ifdef JS_GC_PROBES
+void TraceCreateObject(JSObject* obj) {
+  AutoUnsafeCallWithABI unsafe;
+  js::gc::gcprobes::CreateObject(obj);
+}
+#endif
 
 #if JS_BITS_PER_WORD == 32
 BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high) {
