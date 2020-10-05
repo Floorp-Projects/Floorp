@@ -530,6 +530,11 @@ var PKT_SAVED_OVERLAY = function(options) {
         // Using array notation because there is a key titled `1` (`images` is an object)
         let rawSource = rec?.item?.top_image_url || rec?.item?.images["1"]?.src;
 
+        // Append UTM to rec URLs (leave existing query strings intact)
+        if (rec?.item?.resolved_url && !rec.item.resolved_url.match(/\?/)) {
+          rec.item.resolved_url = `${rec.item.resolved_url}?utm_source=pocket-ff-recs`;
+        }
+
         rec.item.encodedThumbURL = rawSource
           ? encodeURIComponent(rawSource)
           : null;
