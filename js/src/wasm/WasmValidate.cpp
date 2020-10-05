@@ -2770,7 +2770,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
-            if (!d.readRefType(env->types, env->features, &initType)) {
+            if (!d.readHeapType(env->types, env->features, true, &initType)) {
               return false;
             }
             needIndex = false;
