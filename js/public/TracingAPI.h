@@ -26,6 +26,32 @@ JS_FRIEND_API const char* GCTraceKindToAscii(JS::TraceKind kind);
 /** Returns the base size in bytes of the GC thing of kind |kind|. */
 JS_FRIEND_API size_t GCTraceKindSize(JS::TraceKind kind);
 
+// Kinds of JSTracer.
+enum class TracerKind {
+  // Marking path: a tracer used only for marking liveness of cells, not
+  // for moving them. The kind will transition to WeakMarking after
+  // everything reachable by regular edges has been marked.
+  Marking,
+
+  // A tracer that traverses the graph for the purposes of moving objects
+  // from the nursery to the tenured heap.
+  Tenuring,
+
+  // Callback tracers: General-purpose tracers that invoke a virtual method for
+  // each edge.
+  //
+  // Order is important. All callback kinds must follow this one.
+  Callback,
+
+  // Specific kinds of callback tracer.
+  Moving,
+  GrayBuffering,
+  ClearEdges,
+  Sweeping,
+  UnmarkGray,
+  VerifyTraceProtoAndIface
+};
+
 enum class WeakMapTraceAction {
   /**
    * Do not trace into weak map keys or values during traversal. Users must
@@ -59,27 +85,16 @@ class JS_PUBLIC_API JSTracer {
   // Return the runtime set on the tracer.
   JSRuntime* runtime() const { return runtime_; }
 
+  JS::TracerKind kind() const { return kind_; }
+  bool isMarkingTracer() const { return kind_ == JS::TracerKind::Marking; }
+  bool isTenuringTracer() const { return kind_ == JS::TracerKind::Tenuring; }
+  bool isCallbackTracer() const { return kind_ >= JS::TracerKind::Callback; }
+
   // Return the weak map tracing behavior currently set on this tracer.
   JS::WeakMapTraceAction weakMapAction() const { return weakMapAction_; }
 
-  enum class TracerKindTag {
-    // Marking path: a tracer used only for marking liveness of cells, not
-    // for moving them. The kind will transition to WeakMarking after
-    // everything reachable by regular edges has been marked.
-    Marking,
-
-    // A tracer that traverses the graph for the purposes of moving objects
-    // from the nursery to the tenured area.
-    Tenuring,
-
-    // General-purpose traversal that invokes a callback on each cell.
-    // Traversing children is the responsibility of the callback.
-    Callback
-  };
-  bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking; }
-  bool isTenuringTracer() const { return tag_ == TracerKindTag::Tenuring; }
-  bool isCallbackTracer() const { return tag_ == TracerKindTag::Callback; }
   inline JS::CallbackTracer* asCallbackTracer();
+
   bool traceWeakEdges() const { return traceWeakEdges_; }
   bool canSkipJsids() const { return canSkipJsids_; }
 #ifdef DEBUG
@@ -91,12 +106,12 @@ class JS_PUBLIC_API JSTracer {
   uint32_t gcNumberForMarking() const;
 
  protected:
-  JSTracer(JSRuntime* rt, TracerKindTag tag,
+  JSTracer(JSRuntime* rt, JS::TracerKind kind,
            JS::WeakMapTraceAction weakMapAction =
                JS::WeakMapTraceAction::TraceValues)
       : runtime_(rt),
+        kind_(kind),
         weakMapAction_(weakMapAction),
-        tag_(tag),
         traceWeakEdges_(true),
 #ifdef DEBUG
         checkEdges_(true),
@@ -113,8 +128,8 @@ class JS_PUBLIC_API JSTracer {
 
  private:
   JSRuntime* const runtime_;
+  const JS::TracerKind kind_;
   const JS::WeakMapTraceAction weakMapAction_;
-  const TracerKindTag tag_;
 
   // Whether the tracer should trace weak edges. GCMarker sets this to false.
   bool traceWeakEdges_;
@@ -135,14 +150,18 @@ class AutoTracingCallback;
 
 class JS_PUBLIC_API CallbackTracer : public JSTracer {
  public:
-  CallbackTracer(JSRuntime* rt, JS::WeakMapTraceAction weakMapAction =
-                                    JS::WeakMapTraceAction::TraceValues)
-      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakMapAction),
+  CallbackTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
+                 JS::WeakMapTraceAction weakMapAction =
+                     JS::WeakMapTraceAction::TraceValues)
+      : JSTracer(rt, kind, weakMapAction),
         contextName_(nullptr),
         contextIndex_(InvalidIndex),
-        contextFunctor_(nullptr) {}
-  CallbackTracer(JSContext* cx, JS::WeakMapTraceAction weakMapAction =
-                                    JS::WeakMapTraceAction::TraceValues);
+        contextFunctor_(nullptr) {
+    MOZ_ASSERT(isCallbackTracer());
+  }
+  CallbackTracer(JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
+                 JS::WeakMapTraceAction weakMapAction =
+                     JS::WeakMapTraceAction::TraceValues);
 
   // Override these methods to receive notification when an edge is visited
   // with the type contained in the callback. The default implementation
@@ -236,19 +255,6 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
    public:
     virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
   };
-
-#ifdef DEBUG
-  enum class TracerKind {
-    Unspecified,
-    Moving,
-    GrayBuffering,
-    VerifyTraceProtoAndIface,
-    ClearEdges,
-    UnmarkGray,
-    Sweeping
-  };
-  virtual TracerKind getTracerKind() const { return TracerKind::Unspecified; }
-#endif
 
   // In C++, overriding a method hides all methods in the base class with
   // that name, not just methods with that signature. Thus, the typed edge
@@ -453,6 +459,10 @@ extern JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
                                                bool includeDetails);
 
 namespace js {
+
+inline bool IsTracerKind(JSTracer* trc, JS::TracerKind kind) {
+  return trc->kind() == kind;
+}
 
 // Trace an edge that is not a GC root and is not wrapped in a barriered
 // wrapper for some reason.

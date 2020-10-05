@@ -800,7 +800,7 @@ class HeapCheckTracerBase : public JS::CallbackTracer {
 
 HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
                                          JS::WeakMapTraceAction weakMapAction)
-    : CallbackTracer(rt, weakMapAction),
+    : CallbackTracer(rt, JS::TracerKind::Callback, weakMapAction),
       failures(0),
       rt(rt),
       oom(false),
