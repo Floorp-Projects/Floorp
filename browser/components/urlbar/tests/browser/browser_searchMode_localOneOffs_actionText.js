@@ -45,7 +45,7 @@ add_task(async function localOneOff() {
   });
   Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
 
-  info("Alt UP to select the first local one-off.");
+  info("Alt UP to select the last local one-off.");
   EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
@@ -163,7 +163,7 @@ add_task(async function localOneOff_withVisit() {
   Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
   let oneOffButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
 
-  info("Alt UP to select the first local one-off.");
+  info("Alt UP to select the last local one-off.");
   EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
@@ -265,7 +265,7 @@ add_task(async function localOneOff_suggestion() {
     "Check the search suggestion action"
   );
 
-  info("Alt UP to select the first local one-off.");
+  info("Alt UP to select the last local one-off.");
   EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
   Assert.equal(
     await UrlbarTestUtils.getSelectedRowIndex(window),
@@ -321,4 +321,73 @@ add_task(async function localOneOff_suggestion() {
     "chrome://browser/skin/search-glass.svg",
     "Check the suggestion icon"
   );
+});
+
+add_task(async function localOneOff_shortcut() {
+  info("Select a search shortcution, then a local one-off");
+
+  await PlacesUtils.history.clear();
+  // Enough vists to get this site into Top Sites.
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits("http://example.com/");
+  }
+
+  await updateTopSites(
+    sites => sites && sites[0] && sites[0].searchTopSite,
+    true
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
+  let count = await UrlbarTestUtils.getResultCount(window);
+  let result = null;
+  let shortcutIndex = -1;
+  for (let i = 0; i < count; ++i) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    let index = await UrlbarTestUtils.getSelectedRowIndex(window);
+    result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.searchParams.keyword
+    ) {
+      shortcutIndex = i;
+      break;
+    }
+  }
+  Assert.ok(result.searchParams.keyword, "Should have selected a shortcut");
+  let shortcutEngine = result.searchParams.engine;
+
+  info("Alt UP to select the last local one-off.");
+  EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
+  Assert.equal(
+    await UrlbarTestUtils.getSelectedRowIndex(window),
+    shortcutIndex,
+    "the shortcut should still be selected"
+  );
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, shortcutIndex);
+  Assert.equal(
+    result.displayed.action,
+    "",
+    "Check the shortcut action is empty"
+  );
+  Assert.equal(
+    result.searchParams.engine,
+    shortcutEngine,
+    "Check the shortcut engine"
+  );
+  Assert.ok(
+    result.displayed.title.includes(shortcutEngine),
+    "Check the shortcut title"
+  );
+  Assert.notEqual(
+    result.image,
+    "chrome://browser/skin/search-glass.svg",
+    "Check the icon was not replaced"
+  );
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await PlacesUtils.history.clear();
 });
