@@ -11,6 +11,8 @@
 #include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
                         // js::ecmaAtan2, js::UnaryMathFunctionType, js::powi
 #include "builtin/Array.h"      // js::ArrayShiftMoveElements
+#include "builtin/MapObject.h"  // js::MapIteratorObject::next,
+                                // js::SetIteratorObject::next
 #include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
                                 // js::RegExpInstanceOptimizableRaw
 
@@ -78,10 +80,12 @@ namespace jit {
   _(js::jit::InvalidationBailout)                           \
   _(js::jit::Printf0)                                       \
   _(js::jit::Printf1)                                       \
+  _(js::MapIteratorObject::next)                            \
   _(js::NumberMod)                                          \
   _(js::powi)                                               \
   _(js::RegExpInstanceOptimizableRaw)                       \
   _(js::RegExpPrototypeOptimizableRaw)                      \
+  _(js::SetIteratorObject::next)                            \
   _(js::TraceLogStartEventPrivate)                          \
   _(js::TraceLogStopEventPrivate)
 

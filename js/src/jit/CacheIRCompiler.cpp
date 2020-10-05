@@ -4044,9 +4044,11 @@ bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
   masm.passABIArg(iter);
   masm.passABIArg(resultArr);
   if (isMap) {
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MapIteratorObject::next));
+    using Fn = bool (*)(MapIteratorObject * iter, ArrayObject * resultPairObj);
+    masm.callWithABI<Fn, MapIteratorObject::next>();
   } else {
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetIteratorObject::next));
+    using Fn = bool (*)(SetIteratorObject * iter, ArrayObject * resultObj);
+    masm.callWithABI<Fn, SetIteratorObject::next>();
   }
   masm.storeCallBoolResult(scratch);
 
