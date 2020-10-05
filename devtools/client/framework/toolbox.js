@@ -3586,11 +3586,6 @@ Toolbox.prototype = {
     this._lastFocusedElement = null;
     this._pausedThreads = null;
 
-    if (this._sourceMapURLService) {
-      this._sourceMapURLService.destroy();
-      this._sourceMapURLService = null;
-    }
-
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
@@ -3693,6 +3688,12 @@ Toolbox.prototype = {
             if (this._netMonitorAPI) {
               this._netMonitorAPI.destroy();
               this._netMonitorAPI = null;
+            }
+
+            if (this._sourceMapURLService) {
+              await this._sourceMapURLService.waitForSourcesLoading();
+              this._sourceMapURLService.destroy();
+              this._sourceMapURLService = null;
             }
 
             this._removeWindowListeners();
