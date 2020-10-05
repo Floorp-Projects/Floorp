@@ -36,7 +36,7 @@ class AccessibleWrap : public Accessible {
 
   virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
 
-  virtual void Pivot(int32_t aGranularity, bool aForward, bool aInclusive);
+  virtual void PivotTo(int32_t aGranularity, bool aForward, bool aInclusive);
 
   virtual void ExploreByTouch(float aX, float aY);
 

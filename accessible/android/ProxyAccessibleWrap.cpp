@@ -110,8 +110,8 @@ bool ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
 }
 
-void ProxyAccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
-                                bool aInclusive) {
+void ProxyAccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
+                                  bool aInclusive) {
   Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
       Proxy()->ID(), aGranularity, aForward, aInclusive);
 }

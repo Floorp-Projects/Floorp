@@ -128,7 +128,7 @@ void SessionAccessibility::Click(int32_t aID) {
 
 void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
                                  bool aForward, bool aInclusive) {
-  FORWARD_ACTION_TO_ACCESSIBLE(Pivot, aGranularity, aForward, aInclusive);
+  FORWARD_ACTION_TO_ACCESSIBLE(PivotTo, aGranularity, aForward, aInclusive);
 }
 
 void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
