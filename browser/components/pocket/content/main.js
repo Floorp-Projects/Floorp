@@ -678,18 +678,6 @@ var pktUI = (function() {
       data
     ) {});
 
-    pktUIMessaging.addMessageListener(iframe, "collapseSavePanel", function(
-      panelId,
-      data
-    ) {
-      if (!pktApi.isPremiumUser() && !isInOverflowMenu()) {
-        resizePanel({
-          width: savePanelWidth,
-          height: savePanelHeights.collapsed,
-        });
-      }
-    });
-
     pktUIMessaging.addMessageListener(iframe, "expandSavePanel", function(
       panelId,
       data
