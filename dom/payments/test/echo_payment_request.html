@@ -23,7 +23,7 @@
       }
     } else if (e.data === 'new PaymentRequest in a new iframe') {
       var ifrr = document.createElement('iframe');
-      ifrr.setAttribute('allowpaymentrequest', 'true');
+      ifrr.allow = "payment";
       ifrr.src = "https://example.com/tests/dom/payments/test/simple_payment_request.html";
       document.body.appendChild(ifrr);
     } else {
