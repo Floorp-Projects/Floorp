@@ -9,8 +9,8 @@
   -moz-window-dragging: drag;
   border-bottom: 1px solid ThreeDLightShadow;
   padding-inline-start: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
 }
 
 /* View buttons */
@@ -153,7 +153,7 @@ treechildren::-moz-tree-cell-text(broken) {
   overflow: auto;
   appearance: auto;
   -moz-default-appearance: listbox;
-  color: -moz-fieldtext;
+  color: FieldText;
 }
 
 .permission {

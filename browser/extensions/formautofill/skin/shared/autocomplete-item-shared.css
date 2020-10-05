@@ -28,7 +28,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --label-text-color: #262626;
   --comment-text-color: #646464;
   --warning-text-color: #646464;
-  --btn-text-color: -moz-FieldText;
+  --btn-text-color: FieldText;
 
   --default-font-size: 12;
   --label-affix-font-size: 10;
