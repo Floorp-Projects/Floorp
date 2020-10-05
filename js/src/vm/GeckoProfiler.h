@@ -202,39 +202,6 @@ class MOZ_RAII GeckoProfilerBaselineOSRMarker {
   mozilla::DebugOnly<uint32_t> spBefore_;
 };
 
-/*
- * This class manages the instrumentation portion of the profiling for JIT
- * code.
- *
- * The instrumentation tracks entry into functions, leaving those functions via
- * a function call, reentering the functions from a function call, and exiting
- * the functions from returning. This class also handles inline frames and
- * manages the instrumentation which needs to be attached to them as well.
- *
- * The basic methods which emit instrumentation are at the end of this class,
- * and the management functions are all described in the middle.
- */
-template <class Assembler, class Register>
-class GeckoProfilerInstrumentation {
-  GeckoProfilerRuntime* profiler_;  // Instrumentation location management
-
- public:
-  /*
-   * Creates instrumentation which writes information out the the specified
-   * profiler's stack and constituent fields.
-   */
-  explicit GeckoProfilerInstrumentation(GeckoProfilerRuntime* profiler)
-      : profiler_(profiler) {}
-
-  /* Small proxies around GeckoProfiler */
-  bool enabled() { return profiler_ && profiler_->enabled(); }
-  GeckoProfilerRuntime* profiler() {
-    MOZ_ASSERT(enabled());
-    return profiler_;
-  }
-  void disable() { profiler_ = nullptr; }
-};
-
 } /* namespace js */
 
 #endif /* vm_GeckoProfiler_h */
