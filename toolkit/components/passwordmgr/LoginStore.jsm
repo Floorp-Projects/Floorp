@@ -43,12 +43,20 @@ const EXPORTED_SYMBOLS = ["LoginStore"];
 // Globals
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
+  FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
+});
 
 /**
  * Current data version assigned by the code that last touched the data.
@@ -87,6 +95,54 @@ function LoginStore(aPath, aBackupPath = "") {
 
 LoginStore.prototype = Object.create(JSONFile.prototype);
 LoginStore.prototype.constructor = LoginStore;
+
+LoginStore.prototype._save = async function() {
+  await JSONFile.prototype._save.call(this);
+
+  if (this._options.backupTo) {
+    await this._backupHandler();
+  }
+};
+
+/**
+ * Delete logins backup file if the last saved login was removed using
+ * removeLogin() or if all logins were removed at once using removeAllLogins().
+ * Note that if the user has a fxa key stored as a login, we just update the
+ * backup to only store the key when the last saved user facing login is removed.
+ */
+LoginStore.prototype._backupHandler = async function() {
+  const logins = this._data.logins;
+  // Return early if more than one login is stored because the backup won't need
+  // updating in this case.
+  if (logins.length > 1) {
+    return;
+  }
+
+  // If one login is stored and it's a fxa sync key, we update the backup to store the
+  // key only.
+  if (
+    logins.length &&
+    logins[0].hostname == FXA_PWDMGR_HOST &&
+    logins[0].httpRealm == FXA_PWDMGR_REALM
+  ) {
+    try {
+      await OS.File.copy(this.path, this._options.backupTo);
+
+      // This notification is specifically sent out for a test.
+      Services.obs.notifyObservers(null, "logins-backup-updated");
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  } else if (!logins.length) {
+    // If no logins are stored anymore, delete backup.
+    await OS.File.remove(this._options.backupTo, {
+      ignoreAbsent: true,
+    });
+
+    // This notification is specifically sent out for a test.
+    Services.obs.notifyObservers(null, "logins-backup-updated");
+  }
+};
 
 /**
  * Synchronously work on the data just loaded into memory.
