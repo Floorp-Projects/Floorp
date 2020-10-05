@@ -7,6 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
+TEST_DIRS += [
+    'gtest',
+]
+
 EXPORTS += [
     'Adts.h',
     'AnnexB.h',
