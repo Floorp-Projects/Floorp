@@ -285,15 +285,15 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
 class CraneliftContext {
   CraneliftStaticEnvironment staticEnv_;
-  CraneliftModuleEnvironment env_;
+  CraneliftModuleEnvironment moduleEnv_;
   CraneliftCompiler* compiler_;
 
  public:
-  explicit CraneliftContext(const ModuleEnvironment& env)
-      : env_(env), compiler_(nullptr) {
-    staticEnv_.ref_types_enabled = env.refTypesEnabled();
+  explicit CraneliftContext(const ModuleEnvironment& moduleEnv)
+      : moduleEnv_(moduleEnv), compiler_(nullptr) {
+    staticEnv_.ref_types_enabled = moduleEnv.refTypesEnabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
-    if (env.hugeMemoryEnabled()) {
+    if (moduleEnv.hugeMemoryEnabled()) {
       // In the huge memory configuration, we always reserve the full 4 GB
       // index space for a heap.
       staticEnv_.static_memory_bound = HugeIndexRange;
@@ -306,7 +306,7 @@ class CraneliftContext {
     // of TlsData.
   }
   bool init() {
-    compiler_ = cranelift_compiler_create(&staticEnv_, &env_);
+    compiler_ = cranelift_compiler_create(&staticEnv_, &moduleEnv_);
     return !!compiler_;
   }
   ~CraneliftContext() {
@@ -432,15 +432,15 @@ const GlobalDesc* env_global(const CraneliftModuleEnvironment* wrapper,
   return &wrapper->env->globals[globalIndex];
 }
 
-bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
+bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
                                      LifoAlloc& lifo,
                                      const FuncCompileInputVector& inputs,
                                      CompiledCode* code, UniqueChars* error) {
   MOZ_RELEASE_ASSERT(CraneliftPlatformSupport());
 
-  MOZ_ASSERT(env.tier() == Tier::Optimized);
-  MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Cranelift);
-  MOZ_ASSERT(!env.isAsmJS());
+  MOZ_ASSERT(moduleEnv.tier() == Tier::Optimized);
+  MOZ_ASSERT(moduleEnv.optimizedBackend() == OptimizedBackend::Cranelift);
+  MOZ_ASSERT(!moduleEnv.isAsmJS());
 
   TempAllocator alloc(&lifo);
   JitContext jitContext(&alloc);
@@ -456,7 +456,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
   }
 
   if (!reusableContext) {
-    auto context = MakeUnique<CraneliftContext>(env);
+    auto context = MakeUnique<CraneliftContext>(moduleEnv);
     if (!context || !context->init()) {
       return false;
     }
@@ -482,7 +482,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
     size_t funcBytecodeSize = func.end - func.begin;
-    if (!ValidateFunctionBody(env, func.index, funcBytecodeSize, d)) {
+    if (!ValidateFunctionBody(moduleEnv, func.index, funcBytecodeSize, d)) {
       return false;
     }
 
@@ -499,7 +499,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     }
 
     uint32_t lineOrBytecode = func.lineOrBytecode;
-    const FuncTypeWithId& funcType = *env.funcTypes[clifInput.index];
+    const FuncTypeWithId& funcType = *moduleEnv.funcTypes[clifInput.index];
 
     FuncOffsets offsets;
     if (!GenerateCraneliftCode(

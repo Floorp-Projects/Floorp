@@ -30,7 +30,7 @@ namespace wasm {
 MOZ_MUST_USE bool BaselinePlatformSupport();
 
 // Generate adequate code quickly.
-MOZ_MUST_USE bool BaselineCompileFunctions(const ModuleEnvironment& env,
+MOZ_MUST_USE bool BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
                                            LifoAlloc& lifo,
                                            const FuncCompileInputVector& inputs,
                                            CompiledCode* code,

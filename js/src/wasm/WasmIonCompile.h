@@ -31,7 +31,7 @@ namespace wasm {
 MOZ_MUST_USE bool IonPlatformSupport();
 
 // Generates very fast code at the expense of compilation time.
-MOZ_MUST_USE bool IonCompileFunctions(const ModuleEnvironment& env,
+MOZ_MUST_USE bool IonCompileFunctions(const ModuleEnvironment& moduleEnv,
                                       LifoAlloc& lifo,
                                       const FuncCompileInputVector& inputs,
                                       CompiledCode* code, UniqueChars* error);
