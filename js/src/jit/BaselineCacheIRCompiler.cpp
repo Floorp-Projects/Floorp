@@ -414,12 +414,11 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
                                liveVolatileFloatRegs());
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSString * str1, JSString * str2);
   masm.setupUnalignedABICall(scratch);
   masm.loadPtr(atomAddr, scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(str);
-  masm.callWithABI<Fn, EqualStringsHelperPure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelperPure));
   masm.mov(ReturnReg, scratch);
 
   LiveRegisterSet ignore;
@@ -1009,14 +1008,13 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    using Fn = bool (*)(JSContext * cx, NativeObject * obj, uint32_t newCount);
     masm.setupUnalignedABICall(scratch1);
     masm.loadJSContext(scratch1);
     masm.passABIArg(scratch1);
     masm.passABIArg(obj);
     masm.load32(numNewSlotsAddr, scratch2);
     masm.passABIArg(scratch2);
-    masm.callWithABI<Fn, NativeObject::growSlotsPure>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsPure));
     masm.mov(ReturnReg, scratch1);
 
     LiveRegisterSet ignore;
@@ -1309,12 +1307,12 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     save.takeUnchecked(scratch);
     masm.PushRegsInMask(save);
 
-    using Fn = bool (*)(JSContext * cx, NativeObject * obj);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(obj);
-    masm.callWithABI<Fn, NativeObject::addDenseElementPure>();
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementPure));
     masm.mov(ReturnReg, scratch);
 
     masm.PopRegsInMask(save);
@@ -1446,12 +1444,12 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   save.takeUnchecked(scratch);
   masm.PushRegsInMask(save);
 
-  using Fn = bool (*)(JSContext * cx, NativeObject * obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
-  masm.callWithABI<Fn, NativeObject::addDenseElementPure>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementPure));
   masm.mov(ReturnReg, scratch);
 
   masm.PopRegsInMask(save);

@@ -74,7 +74,6 @@
 #include "wasm/WasmStubs.h"
 
 #include "builtin/Boolean-inl.h"
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
@@ -1270,10 +1269,9 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Label* ifDoesntEmulateUndefined,
                                       Register scratch) {
   saveVolatile(scratch);
-  using Fn = bool (*)(JSObject * obj);
   masm.setupUnalignedABICall(scratch);
   masm.passABIArg(objreg);
-  masm.callWithABI<Fn, js::EmulatesUndefined>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
   masm.storeCallBoolResult(scratch);
   restoreVolatile(scratch);
 
@@ -1922,12 +1920,11 @@ void CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull* lir) {
   masm.bind(ool->rejoin());
 }
 
-using StoreBufferMutationFn = void (*)(js::gc::StoreBuffer*, js::gc::Cell**);
-
 static void EmitStoreBufferMutation(MacroAssembler& masm, Register holder,
                                     size_t offset, Register buffer,
                                     LiveGeneralRegisterSet& liveVolatiles,
-                                    StoreBufferMutationFn fun) {
+                                    void (*fun)(js::gc::StoreBuffer*,
+                                                js::gc::Cell**)) {
   Label callVM;
   Label exit;
 
@@ -1953,7 +1950,7 @@ static void EmitStoreBufferMutation(MacroAssembler& masm, Register holder,
   }
   masm.passABIArg(buffer);
   masm.passABIArg(addrReg);
-  masm.callWithABI(DynamicFunction<StoreBufferMutationFn>(fun), MoveOp::GENERAL,
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckOther);
 
   if (needExtraReg) {
@@ -2266,15 +2263,12 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
     masm.computeEffectiveAddress(matchPairsAddress, temp3);
 
     masm.PushRegsInMask(regsToSave);
-    using Fn = RegExpRunStatus (*)(RegExpShared * re, JSLinearString * input,
-                                   size_t start, MatchPairs * matchPairs);
     masm.setupUnalignedABICall(temp2);
     masm.passABIArg(regexpReg);
     masm.passABIArg(input);
     masm.passABIArg(lastIndex);
     masm.passABIArg(temp3);
-    masm.callWithABI<Fn, js::ExecuteRegExpAtomRaw>();
-
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ExecuteRegExpAtomRaw));
     masm.storeCallInt32Result(temp1);
     masm.PopRegsInMask(regsToSave);
 
@@ -2603,16 +2597,25 @@ void CreateDependentString::generate(MacroAssembler& masm,
 
     masm.mov(ImmPtr(runtime), temp1_);
 
-    using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
     masm.setupUnalignedABICall(temp2_);
     masm.passABIArg(temp1_);
     masm.passABIArg(string_);
-    masm.callWithABI<Fn, PostWriteBarrier>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
 
     masm.PopRegsInMask(regsToSave);
   }
 
   masm.bind(&done);
+}
+
+static void* AllocateString(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateString<JSString, NoGC>(cx, js::gc::TenuredHeap);
+}
+
+static void* AllocateFatInlineString(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateString<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
 }
 
 void CreateDependentString::generateFallback(MacroAssembler& masm) {
@@ -2629,15 +2632,12 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
 
     masm.PushRegsInMask(regsToSave);
 
-    using Fn = void* (*)(JSContext * cx);
     masm.setupUnalignedABICall(string_);
     masm.loadJSContext(string_);
     masm.passABIArg(string_);
-    if (kind == FallbackKind::FatInlineString) {
-      masm.callWithABI<Fn, AllocateFatInlineString>();
-    } else {
-      masm.callWithABI<Fn, AllocateString>();
-    }
+    masm.callWithABI(kind == FallbackKind::FatInlineString
+                         ? JS_FUNC_TO_DATA_PTR(void*, AllocateFatInlineString)
+                         : JS_FUNC_TO_DATA_PTR(void*, AllocateString));
     masm.storeCallPointerResult(string_);
 
     masm.PopRegsInMask(regsToSave);
@@ -2646,6 +2646,13 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
 
     masm.jump(&joins_[kind]);
   }
+}
+
+static void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
+                                           size_t nDynamicSlots) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::AllocateObject<NoGC>(cx, kind, nDynamicSlots, gc::DefaultHeap,
+                                  &ArrayObject::class_);
 }
 
 static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
@@ -2663,8 +2670,6 @@ static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
 
   masm.PushRegsInMask(regsToSave);
 
-  using Fn =
-      void* (*)(JSContext * cx, gc::AllocKind kind, size_t nDynamicSlots);
   masm.setupUnalignedABICall(object);
 
   masm.loadJSContext(object);
@@ -2675,7 +2680,7 @@ static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
       Imm32(int32_t(templateObject.asNativeTemplateObject().numDynamicSlots())),
       temp2);
   masm.passABIArg(temp2);
-  masm.callWithABI<Fn, CreateMatchResultFallbackFunc>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, CreateMatchResultFallbackFunc));
   masm.storeCallPointerResult(object);
 
   masm.PopRegsInMask(regsToSave);
@@ -3384,12 +3389,11 @@ void CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(
 
   saveVolatile(output);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * proto);
   masm.setupUnalignedABICall(output);
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
-  masm.callWithABI<Fn, RegExpPrototypeOptimizableRaw>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
   masm.storeCallBoolResult(output);
 
   restoreVolatile(output);
@@ -3436,13 +3440,12 @@ void CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(
 
   saveVolatile(output);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, JSObject * proto);
   masm.setupUnalignedABICall(output);
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
   masm.passABIArg(proto);
-  masm.callWithABI<Fn, RegExpInstanceOptimizableRaw>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
   masm.storeCallBoolResult(output);
 
   restoreVolatile(output);
@@ -4600,8 +4603,6 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.pushValue(UndefinedValue());
   masm.moveStackPtrTo(temp3);
 
-  using Fn =
-      bool (*)(JSContext * cx, JSObject * obj, PropertyName * name, Value * vp);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
@@ -4610,7 +4611,8 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp2);
   masm.passABIArg(temp3);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyPure<true>>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<true>)));
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.popValue(output);
@@ -4640,13 +4642,13 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.pushValue(idVal);
   masm.moveStackPtrTo(temp1);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
   masm.passABIArg(obj);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<true>>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<true>)));
 
   MOZ_ASSERT(!idVal.aliases(temp1));
   masm.mov(ReturnReg, temp1);
@@ -4676,8 +4678,6 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.pushValue(rhs);
   masm.moveStackPtrTo(temp1);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyName * name,
-                      Value * val);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
@@ -4685,7 +4685,8 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.movePtr(ImmGCPtr(lir->mir()->name()), temp3);
   masm.passABIArg(temp3);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, SetNativeDataPropertyPure<false>>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
 
   MOZ_ASSERT(!rhs.aliases(temp1));
   masm.mov(ReturnReg, temp1);
@@ -4708,16 +4709,17 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   masm.pushValue(idVal);
   masm.moveStackPtrTo(temp1);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
   masm.passABIArg(obj);
   masm.passABIArg(temp1);
   if (lir->mir()->hasOwn()) {
-    masm.callWithABI<Fn, HasNativeDataPropertyPure<true>>();
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
   } else {
-    masm.callWithABI<Fn, HasNativeDataPropertyPure<false>>();
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
   }
 
   MOZ_ASSERT(!idVal.aliases(temp1));
@@ -4821,10 +4823,9 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = int32_t (*)(JSString* str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
-    masm.callWithABI<Fn, GetIndexFromString>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
     masm.storeCallInt32Result(output);
 
     masm.PopRegsInMask(volatileRegs);
@@ -4873,13 +4874,12 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
     volatileRegs.takeUnchecked(temp2);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
     masm.setupUnalignedABICall(temp2);
     masm.loadJSContext(temp2);
     masm.passABIArg(temp2);
     masm.passABIArg(str);
     masm.passABIArg(temp1);
-    masm.callWithABI<Fn, StringToNumberPure>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberPure));
     masm.mov(ReturnReg, temp1);
 
     masm.PopRegsInMask(volatileRegs);
@@ -5291,11 +5291,9 @@ static void EmitPostWriteBarrier(MacroAssembler& masm, CompileRuntime* runtime,
   masm.passABIArg(runtimereg);
   masm.passABIArg(objreg);
   if (isGlobal) {
-    using Fn = void (*)(JSRuntime * rt, GlobalObject * obj);
-    masm.callWithABI<Fn, PostGlobalWriteBarrier>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostGlobalWriteBarrier));
   } else {
-    using Fn = void (*)(JSRuntime * rt, js::gc::Cell * obj);
-    masm.callWithABI<Fn, PostWriteBarrier>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
   }
 
   masm.bind(&exit);
@@ -5487,13 +5485,13 @@ void CodeGenerator::visitOutOfLineCallPostWriteElementBarrier(
   }
 
   Register runtimereg = regs.takeAny();
-  using Fn = void (*)(JSRuntime * rt, JSObject * obj, int32_t index);
   masm.setupUnalignedABICall(runtimereg);
   masm.mov(ImmPtr(gen->runtime), runtimereg);
   masm.passABIArg(runtimereg);
   masm.passABIArg(objreg);
   masm.passABIArg(indexreg);
-  masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Maybe>>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(
+      void*, (PostWriteElementBarrier<IndexInBounds::Maybe>)));
 
   restoreLiveVolatile(ool->lir());
 
@@ -5600,7 +5598,7 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
       native = jitInfo->ignoresReturnValueMethod;
     }
   }
-  masm.callWithABI(DynamicFunction<JSNative>(native), MoveOp::GENERAL,
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, native), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   if (JS::TraceLoggerSupported()) {
@@ -5761,7 +5759,7 @@ void CodeGenerator::visitCallDOMNative(LCallDOMNative* call) {
   masm.passABIArg(argObj);
   masm.passABIArg(argPrivate);
   masm.passABIArg(argArgs);
-  masm.callWithABI(DynamicFunction<JSJitMethodOp>(target->jitInfo()->method),
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->jitInfo()->method),
                    MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
@@ -6597,14 +6595,12 @@ void CodeGenerator::visitGetDynamicName(LGetDynamicName* lir) {
   masm.adjustStack(-int32_t(sizeof(Value)));
   masm.moveStackPtrTo(temp2);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * scopeChain, JSString * str,
-                      Value * vp);
   masm.setupUnalignedABICall(temp1);
   masm.passABIArg(temp3);
   masm.passABIArg(envChain);
   masm.passABIArg(name);
   masm.passABIArg(temp2);
-  masm.callWithABI<Fn, GetDynamicNamePure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetDynamicNamePure));
 
   const ValueOperand out = ToOutValue(lir);
 
@@ -6996,36 +6992,28 @@ void CodeGenerator::emitAssertGCThingResult(Register input,
     masm.passABIArg(temp);
     masm.passABIArg(input);
 
+    void* callee;
     switch (type) {
-      case MIRType::Object: {
-        using Fn = void (*)(JSContext * cx, JSObject * obj);
-        masm.callWithABI<Fn, AssertValidObjectPtr>();
+      case MIRType::Object:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectPtr);
         break;
-      }
-      case MIRType::ObjectOrNull: {
-        using Fn = void (*)(JSContext * cx, JSObject * obj);
-        masm.callWithABI<Fn, AssertValidObjectOrNullPtr>();
+      case MIRType::ObjectOrNull:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectOrNullPtr);
         break;
-      }
-      case MIRType::String: {
-        using Fn = void (*)(JSContext * cx, JSString * str);
-        masm.callWithABI<Fn, AssertValidStringPtr>();
+      case MIRType::String:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidStringPtr);
         break;
-      }
-      case MIRType::Symbol: {
-        using Fn = void (*)(JSContext * cx, JS::Symbol * sym);
-        masm.callWithABI<Fn, AssertValidSymbolPtr>();
+      case MIRType::Symbol:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
         break;
-      }
-      case MIRType::BigInt: {
-        using Fn = void (*)(JSContext * cx, JS::BigInt * bi);
-        masm.callWithABI<Fn, AssertValidBigIntPtr>();
+      case MIRType::BigInt:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidBigIntPtr);
         break;
-      }
       default:
         MOZ_CRASH();
     }
 
+    masm.callWithABI(callee);
     restoreVolatile();
   }
 #  endif
@@ -7087,12 +7075,11 @@ void CodeGenerator::emitAssertResultV(const ValueOperand input,
     masm.pushValue(input);
     masm.moveStackPtrTo(temp1);
 
-    using Fn = void (*)(JSContext * cx, Value * v);
     masm.setupUnalignedABICall(temp2);
     masm.loadJSContext(temp2);
     masm.passABIArg(temp2);
     masm.passABIArg(temp1);
-    masm.callWithABI<Fn, AssertValidValue>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssertValidValue));
     masm.popValue(input);
     restoreVolatile();
   }
@@ -7386,11 +7373,10 @@ void CodeGenerator::visitAtan2D(LAtan2D* lir) {
   FloatRegister y = ToFloatRegister(lir->y());
   FloatRegister x = ToFloatRegister(lir->x());
 
-  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(y, MoveOp::DOUBLE);
   masm.passABIArg(x, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, ecmaAtan2>(MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaAtan2), MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
 }
@@ -7405,21 +7391,15 @@ void CodeGenerator::visitHypot(LHypot* lir) {
   }
 
   switch (numArgs) {
-    case 2: {
-      using Fn = double (*)(double x, double y);
-      masm.callWithABI<Fn, ecmaHypot>(MoveOp::DOUBLE);
+    case 2:
+      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaHypot), MoveOp::DOUBLE);
       break;
-    }
-    case 3: {
-      using Fn = double (*)(double x, double y, double z);
-      masm.callWithABI<Fn, hypot3>(MoveOp::DOUBLE);
+    case 3:
+      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot3), MoveOp::DOUBLE);
       break;
-    }
-    case 4: {
-      using Fn = double (*)(double x, double y, double z, double w);
-      masm.callWithABI<Fn, hypot4>(MoveOp::DOUBLE);
+    case 4:
+      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot4), MoveOp::DOUBLE);
       break;
-    }
     default:
       MOZ_CRASH("Unexpected number of arguments to hypot function.");
   }
@@ -8027,9 +8007,6 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     masm.moveStackPtrTo(temp);
     masm.addPtr(Imm32(masm.framePushed()), temp);
 
-    using Fn =
-        ArgumentsObject* (*)(JSContext * cx, jit::JitFrameLayout * frame,
-                             JSObject * scopeChain, ArgumentsObject * obj);
     masm.setupUnalignedABICall(cxTemp);
     masm.loadJSContext(cxTemp);
     masm.passABIArg(cxTemp);
@@ -8037,7 +8014,8 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     masm.passABIArg(callObj);
     masm.passABIArg(objTemp);
 
-    masm.callWithABI<Fn, ArgumentsObject::finishForIonPure>();
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, ArgumentsObject::finishForIonPure));
     masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &failure);
 
     // Discard saved callObj on the stack.
@@ -8831,12 +8809,11 @@ void CodeGenerator::visitPowI(LPowI* ins) {
 
   MOZ_ASSERT(power != temp);
 
-  using Fn = double (*)(double x, int32_t y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power);
 
-  masm.callWithABI<Fn, js::powi>(MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::powi), MoveOp::DOUBLE);
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
@@ -8845,11 +8822,10 @@ void CodeGenerator::visitPowD(LPowD* ins) {
   FloatRegister power = ToFloatRegister(ins->power());
   Register temp = ToRegister(ins->temp());
 
-  using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, ecmaPow>(MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaPow), MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
@@ -8932,8 +8908,7 @@ void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
   masm.setupUnalignedABICall(temp);
 
   masm.passABIArg(input, MoveOp::DOUBLE);
-  masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
-                   MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, funPtr), MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
@@ -8944,29 +8919,28 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(input, MoveOp::FLOAT32);
 
-  using Fn = float (*)(float x);
-  Fn funptr = nullptr;
+  void* funptr = nullptr;
   CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check;
   switch (ins->mir()->function()) {
     case UnaryMathFunction::Floor:
-      funptr = floorf;
+      funptr = JS_FUNC_TO_DATA_PTR(void*, floorf);
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     case UnaryMathFunction::Round:
-      funptr = math_roundf_impl;
+      funptr = JS_FUNC_TO_DATA_PTR(void*, math_roundf_impl);
       break;
     case UnaryMathFunction::Trunc:
-      funptr = math_truncf_impl;
+      funptr = JS_FUNC_TO_DATA_PTR(void*, math_truncf_impl);
       break;
     case UnaryMathFunction::Ceil:
-      funptr = ceilf;
+      funptr = JS_FUNC_TO_DATA_PTR(void*, ceilf);
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     default:
       MOZ_CRASH("Unknown or unsupported float32 math function");
   }
 
-  masm.callWithABI(DynamicFunction<Fn>(funptr), MoveOp::FLOAT32, check);
+  masm.callWithABI(funptr, MoveOp::FLOAT32, check);
 }
 
 void CodeGenerator::visitModD(LModD* ins) {
@@ -8978,11 +8952,10 @@ void CodeGenerator::visitModD(LModD* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
   MOZ_ASSERT(!ins->temp()->isBogusTemp());
 
-  using Fn = double (*)(double a, double b);
   masm.setupUnalignedABICall(ToRegister(ins->temp()));
   masm.passABIArg(lhs, MoveOp::DOUBLE);
   masm.passABIArg(rhs, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, NumberMod>(MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
@@ -9897,11 +9870,10 @@ void JitRuntime::generateFreeStub(MacroAssembler& masm) {
   const Register regTemp = regs.takeAnyGeneral();
   MOZ_ASSERT(regTemp != regSlots);
 
-  using Fn = void (*)(void* p);
   masm.setupUnalignedABICall(regTemp);
   masm.passABIArg(regSlots);
-  masm.callWithABI<Fn, js_free>(MoveOp::GENERAL,
-                                CheckUnsafeCallWithABI::DontCheckOther);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js_free), MoveOp::GENERAL,
+                   CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(save);
 
@@ -9924,12 +9896,12 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
   masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::LazyLink);
   masm.moveStackPtrTo(temp1);
 
-  using Fn = uint8_t* (*)(JSContext * cx, LazyLinkExitFrameLayout * frame);
   masm.setupUnalignedABICall(temp2);
   masm.passABIArg(temp0);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, LazyLinkTopActivation>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, LazyLinkTopActivation),
+                   MoveOp::GENERAL,
+                   CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.leaveExitFrame();
 
@@ -9957,12 +9929,12 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
   masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::InterpreterStub);
   masm.moveStackPtrTo(temp1);
 
-  using Fn = bool (*)(JSContext * cx, InterpreterStubExitFrameLayout * frame);
   masm.setupUnalignedABICall(temp2);
   masm.passABIArg(temp0);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, InvokeFromInterpreterStub>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, InvokeFromInterpreterStub),
+                   MoveOp::GENERAL,
+                   CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
   masm.leaveExitFrame();
@@ -10804,10 +10776,9 @@ void CodeGenerator::emitArrayPopShift(LInstruction* lir,
     temps.add(elementsTemp);
 
     saveVolatile(temps);
-    using Fn = void (*)(ArrayObject * arr);
     masm.setupUnalignedABICall(elementsTemp);
     masm.passABIArg(obj);
-    masm.callWithABI<Fn, js::ArrayShiftMoveElements>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ArrayShiftMoveElements));
     restoreVolatile(temps);
 
     // Reload elementsTemp as ArrayShiftMoveElements may have moved it.
@@ -12107,14 +12078,13 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.push(obj);
   masm.pushValue(value);
 
-  using Fn = bool (*)(JSContext * cx, NativeObject * obj, uint32_t newCount);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
   masm.move32(Imm32(ins->mir()->numNewSlots()), temp2);
   masm.passABIArg(temp2);
-  masm.callWithABI<Fn, NativeObject::growSlotsPure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsPure));
   masm.storeCallBoolResult(temp1);
 
   masm.popValue(value);
@@ -12623,12 +12593,11 @@ void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
   masm.bind(&slowCheck);
 
   saveVolatile(output);
-  using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(obj);
   masm.movePtr(ImmPtr(gen->runtime), output);
   masm.passABIArg(output);
-  masm.callWithABI<Fn, TypeOfObject>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::TypeOfObject));
   masm.storeCallPointerResult(output);
   restoreVolatile(output);
 
@@ -13834,7 +13803,7 @@ void CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins) {
   masm.passABIArg(ObjectReg);
   masm.passABIArg(PrivateReg);
   masm.passABIArg(ValueReg);
-  masm.callWithABI(DynamicFunction<JSJitGetterOp>(ins->mir()->fun()),
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ins->mir()->fun()),
                    MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
@@ -13954,7 +13923,7 @@ void CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins) {
   masm.passABIArg(ObjectReg);
   masm.passABIArg(PrivateReg);
   masm.passABIArg(ValueReg);
-  masm.callWithABI(DynamicFunction<JSJitSetterOp>(ins->mir()->fun()),
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ins->mir()->fun()),
                    MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
@@ -14023,10 +13992,9 @@ void CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool) {
   Register output = ool->output();
 
   saveVolatile(output);
-  using Fn = bool (*)(JSObject * obj);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(object);
-  masm.callWithABI<Fn, ObjectIsCallable>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsCallable));
   masm.storeCallBoolResult(output);
   restoreVolatile(output);
   masm.jump(ool->rejoin());
@@ -14062,10 +14030,9 @@ void CodeGenerator::visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool) {
   Register output = ToRegister(ins->output());
 
   saveVolatile(output);
-  using Fn = bool (*)(JSObject * obj);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(object);
-  masm.callWithABI<Fn, ObjectIsConstructor>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsConstructor));
   masm.storeCallBoolResult(output);
   restoreVolatile(output);
   masm.jump(ool->rejoin());
@@ -14671,10 +14638,10 @@ void CodeGenerator::visitDebugger(LDebugger* ins) {
   Register temp = ToRegister(ins->getTemp(1));
 
   masm.loadJSContext(cx);
-  using Fn = bool (*)(JSContext * cx);
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(cx);
-  masm.callWithABI<Fn, GlobalHasLiveOnDebuggerStatement>();
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, GlobalHasLiveOnDebuggerStatement));
 
   Label bail;
   masm.branchIfTrueBool(ReturnReg, &bail);
@@ -15203,13 +15170,12 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
 
   masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp2);
 
-  using Fn = bool (*)(JSContext* cx, JSObject* obj, Shape* propShape);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(object);
   masm.passABIArg(temp2);
-  masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
 
   bailoutIfFalseBool(ReturnReg, lir->snapshot());
 }
