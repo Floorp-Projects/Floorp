@@ -160,6 +160,11 @@ const threadColumns = [
       id: "dns-resolver",
       title: "DNS resolution happens on this thread",
     },
+    {
+      name: "JS Helper",
+      id: "js-helper",
+      title: "JS engine background work such as off-main-thread compiles",
+    },
   ],
 ];
 
