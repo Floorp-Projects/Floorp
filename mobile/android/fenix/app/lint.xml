@@ -10,13 +10,19 @@
         <!-- Temporary until https://github.com/Kotlin/kotlinx.coroutines/issues/2004 is resolved. -->
         <ignore path="**/kotlinx-coroutines-core-*.jar"/>
     </issue>
+
     <!-- Lints that don't apply to our translation process -->
     <issue id="MissingTranslation" severity="ignore" />
     <issue id="PluralsCandidate" severity="ignore" />
     <issue id="StringFormatCount" severity="ignore" />
     <issue id="TypographyEllipsis" severity="ignore" />
     <issue id="ExtraTranslation" severity="warning" />
+
     <!-- Lints that are disabled by default -->
     <issue id="ConvertToWebp" severity="warning" />
+
+    <!-- Performance: we haven't validated that addressing these checks have a significant impact
+         on performance but they're very quick to fix so we escalate them to error. -->
+    <issue id="InefficientWeight" severity="error" />
 </lint>
 
