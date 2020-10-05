@@ -14,6 +14,7 @@
 #include "VPXDecoder.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
 
 extern "C" {
@@ -73,7 +74,8 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
 
 bool AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return aMimeType.EqualsLiteral("audio/mpeg") ||
+  return (aMimeType.EqualsLiteral("audio/mpeg") &&
+          !StaticPrefs::media_ffvpx_mp3_enabled()) ||
          aMimeType.EqualsLiteral("audio/mp4a-latm") ||
          MP4Decoder::IsH264(aMimeType) || VPXDecoder::IsVP9(aMimeType);
 }
