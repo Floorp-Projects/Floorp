@@ -8922,7 +8922,8 @@ void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
   masm.setupUnalignedABICall(temp);
 
   masm.passABIArg(input, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, funPtr), MoveOp::DOUBLE);
+  masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
+                   MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
@@ -8933,28 +8934,29 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
   masm.setupUnalignedABICall(temp);
   masm.passABIArg(input, MoveOp::FLOAT32);
 
-  void* funptr = nullptr;
+  using Fn = float (*)(float x);
+  Fn funptr = nullptr;
   CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check;
   switch (ins->mir()->function()) {
     case UnaryMathFunction::Floor:
-      funptr = JS_FUNC_TO_DATA_PTR(void*, floorf);
+      funptr = floorf;
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     case UnaryMathFunction::Round:
-      funptr = JS_FUNC_TO_DATA_PTR(void*, math_roundf_impl);
+      funptr = math_roundf_impl;
       break;
     case UnaryMathFunction::Trunc:
-      funptr = JS_FUNC_TO_DATA_PTR(void*, math_truncf_impl);
+      funptr = math_truncf_impl;
       break;
     case UnaryMathFunction::Ceil:
-      funptr = JS_FUNC_TO_DATA_PTR(void*, ceilf);
+      funptr = ceilf;
       check = CheckUnsafeCallWithABI::DontCheckOther;
       break;
     default:
       MOZ_CRASH("Unknown or unsupported float32 math function");
   }
 
-  masm.callWithABI(funptr, MoveOp::FLOAT32, check);
+  masm.callWithABI(DynamicFunction<Fn>(funptr), MoveOp::FLOAT32, check);
 }
 
 void CodeGenerator::visitModD(LModD* ins) {

@@ -4692,7 +4692,8 @@ bool CacheIRCompiler::emitMathFunctionNumberResultShared(
 
   masm.setupUnalignedABICall(output.scratchReg());
   masm.passABIArg(inputScratch, MoveOp::DOUBLE);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, funPtr), MoveOp::DOUBLE);
+  masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
+                   MoveOp::DOUBLE);
   masm.storeCallFloatResult(inputScratch);
 
   masm.PopRegsInMask(save);
