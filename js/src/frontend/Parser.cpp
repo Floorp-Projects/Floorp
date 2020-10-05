@@ -3231,10 +3231,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     return null();
   }
 
-  if (fun->isClassConstructor()) {
-    funbox->setCtorToStringEnd(fun->baseScript()->extent().toStringEnd);
-  }
-
   if (!CheckParseTree(cx_, alloc_, funNode)) {
     return null();
   }
