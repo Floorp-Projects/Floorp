@@ -7,9 +7,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/Preferences.h"
+
 #import "MOXTextMarkerDelegate.h"
 
 using namespace mozilla::a11y;
+
+#define PREF_ACCESSIBILITY_MAC_DEBUG "accessibility.mac.debug"
 
 static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
@@ -310,6 +314,38 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
   GeckoTextMarkerRange range([element geckoAccessible]);
   return range.CreateAXTextMarkerRange();
+}
+
+- (NSString*)moxMozDebugDescriptionForTextMarker:(id)textMarker {
+  if (!Preferences::GetBool(PREF_ACCESSIBILITY_MAC_DEBUG)) {
+    return nil;
+  }
+
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return @"<GeckoTextMarker 0x0 [0]>";
+  }
+
+  return [NSString stringWithFormat:@"<GeckoTextMarker 0x%lx [%d]>",
+                                    geckoTextMarker.mContainer.Bits(),
+                                    geckoTextMarker.mOffset];
+}
+
+- (NSString*)moxMozDebugDescriptionForTextMarkerRange:(id)textMarkerRange {
+  if (!Preferences::GetBool(PREF_ACCESSIBILITY_MAC_DEBUG)) {
+    return nil;
+  }
+
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible,
+                                            textMarkerRange);
+  if (!range.IsValid()) {
+    return @"<GeckoTextMarkerRange 0x0 [0] - 0x0 [0]>";
+  }
+
+  return [NSString
+      stringWithFormat:@"<GeckoTextMarkerRange 0x%lx [%d] - 0x%lx [%d]>",
+                       range.mStart.mContainer.Bits(), range.mStart.mOffset,
+                       range.mEnd.mContainer.Bits(), range.mEnd.mOffset];
 }
 
 - (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange {

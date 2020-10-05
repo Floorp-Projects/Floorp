@@ -427,6 +427,14 @@
 // AXStyleTextMarkerRangeForTextMarker
 - (id _Nullable)moxStyleTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
 
+// AXMozDebugDescriptionForTextMarker
+- (NSString* _Nullable)moxMozDebugDescriptionForTextMarker:
+    (id _Nonnull)textMarker;
+
+// AXMozDebugDescriptionForTextMarkerRange
+- (NSString* _Nullable)moxMozDebugDescriptionForTextMarkerRange:
+    (id _Nonnull)textMarkerRange;
+
 #pragma mark - TextAttributeSetters
 
 // AXSelectedTextMarkerRange
