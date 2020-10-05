@@ -12,8 +12,8 @@
   cursor: text;
   margin: 4px; /* matches <input> global.css margin */
   padding: 1px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
 }
 
 html|input {

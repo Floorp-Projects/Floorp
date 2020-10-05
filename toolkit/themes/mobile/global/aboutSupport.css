@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   font: message-box;
 }
 

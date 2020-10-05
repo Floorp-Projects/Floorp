@@ -16,8 +16,8 @@
 
 :root {
   /* ::::: Variables ::::: */
-  --default-arrowpanel-background: -moz-field;
-  --default-arrowpanel-color: -moz-fieldText;
+  --default-arrowpanel-background: Field;
+  --default-arrowpanel-color: FieldText;
   --default-arrowpanel-border-color: ThreeDShadow;
   --arrowpanel-background: var(--default-arrowpanel-background);
   --arrowpanel-color: var(--default-arrowpanel-color);

@@ -14,8 +14,8 @@ tabmodalprompt {
 
 .paymentDialogContainerFrame,
 .tabmodalprompt-mainContainer {
-  color: -moz-fieldText;
-  background-color: -moz-field;
+  color: FieldText;
+  background-color: Field;
   border-radius: 2px;
   border: 1px solid threeDDarkShadow;
 }

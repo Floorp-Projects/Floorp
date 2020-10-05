@@ -8,8 +8,8 @@ richlistbox {
   appearance: auto;
   -moz-default-appearance: listbox;
   margin: 2px 4px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Field;
+  color: FieldText;
   overflow: auto;
 }
 
