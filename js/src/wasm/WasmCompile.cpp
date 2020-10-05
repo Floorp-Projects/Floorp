@@ -577,21 +577,21 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment env(&compilerEnv, args.features);
-  if (!DecodeModuleEnvironment(d, &env)) {
+  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
+  if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return nullptr;
   }
 
-  ModuleGenerator mg(args, &env, nullptr, error);
+  ModuleGenerator mg(args, &moduleEnv, nullptr, error);
   if (!mg.init(nullptr, telemetrySender)) {
     return nullptr;
   }
 
-  if (!DecodeCodeSection(env, d, mg)) {
+  if (!DecodeCodeSection(moduleEnv, d, mg)) {
     return nullptr;
   }
 
-  if (!DecodeModuleTail(d, &env)) {
+  if (!DecodeModuleTail(d, &moduleEnv)) {
     return nullptr;
   }
 
@@ -611,21 +611,21 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False);
 
-  ModuleEnvironment env(&compilerEnv, args.features);
-  if (!DecodeModuleEnvironment(d, &env)) {
+  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
+  if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return;
   }
 
-  ModuleGenerator mg(args, &env, cancelled, &error);
+  ModuleGenerator mg(args, &moduleEnv, cancelled, &error);
   if (!mg.init(nullptr, telemetrySender)) {
     return;
   }
 
-  if (!DecodeCodeSection(env, d, mg)) {
+  if (!DecodeCodeSection(moduleEnv, d, mg)) {
     return;
   }
 
-  if (!DecodeModuleTail(d, &env)) {
+  if (!DecodeModuleTail(d, &moduleEnv)) {
     return;
   }
 
@@ -719,34 +719,34 @@ SharedModule wasm::CompileStreaming(
     const Atomic<bool>& cancelled, UniqueChars* error,
     UniqueCharsVector* warnings, JSTelemetrySender telemetrySender) {
   CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment env(&compilerEnv, args.features);
+  ModuleEnvironment moduleEnv(&compilerEnv, args.features);
 
   {
     Decoder d(envBytes, 0, error, warnings);
 
-    if (!DecodeModuleEnvironment(d, &env)) {
+    if (!DecodeModuleEnvironment(d, &moduleEnv)) {
       return nullptr;
     }
 
-    if (!env.codeSection) {
+    if (!moduleEnv.codeSection) {
       d.fail("unknown section before code section");
       return nullptr;
     }
 
-    MOZ_RELEASE_ASSERT(env.codeSection->size == codeBytes.length());
+    MOZ_RELEASE_ASSERT(moduleEnv.codeSection->size == codeBytes.length());
     MOZ_RELEASE_ASSERT(d.done());
   }
 
-  ModuleGenerator mg(args, &env, &cancelled, error);
+  ModuleGenerator mg(args, &moduleEnv, &cancelled, error);
   if (!mg.init(nullptr, telemetrySender)) {
     return nullptr;
   }
 
   {
-    StreamingDecoder d(env, codeBytes, codeBytesEnd, cancelled, error,
+    StreamingDecoder d(moduleEnv, codeBytes, codeBytesEnd, cancelled, error,
                        warnings);
 
-    if (!DecodeCodeSection(env, d, mg)) {
+    if (!DecodeCodeSection(moduleEnv, d, mg)) {
       return nullptr;
     }
 
@@ -767,9 +767,9 @@ SharedModule wasm::CompileStreaming(
   const Bytes& tailBytes = *streamEnd.tailBytes;
 
   {
-    Decoder d(tailBytes, env.codeSection->end(), error, warnings);
+    Decoder d(tailBytes, moduleEnv.codeSection->end(), error, warnings);
 
-    if (!DecodeModuleTail(d, &env)) {
+    if (!DecodeModuleTail(d, &moduleEnv)) {
       return nullptr;
     }
 
