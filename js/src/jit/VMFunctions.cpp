@@ -1315,6 +1315,21 @@ void AutoDetectInvalidation::setReturnOverride() {
   cx_->setIonReturnOverride(rval_.get());
 }
 
+void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
+  AutoUnsafeCallWithABI unsafe;
+  // FIXME: check runtime?
+  MOZ_ASSERT(cx->zone() == bi->zone());
+  MOZ_ASSERT(bi->isAligned());
+  MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
+}
+
+void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj) {
+  AutoUnsafeCallWithABI unsafe;
+  if (obj) {
+    AssertValidObjectPtr(cx, obj);
+  }
+}
+
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
 #ifdef DEBUG
@@ -1333,13 +1348,6 @@ void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
     MOZ_ASSERT(gc::IsObjectAllocKind(kind));
   }
 #endif
-}
-
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj) {
-  AutoUnsafeCallWithABI unsafe;
-  if (obj) {
-    AssertValidObjectPtr(cx, obj);
-  }
 }
 
 void AssertValidStringPtr(JSContext* cx, JSString* str) {
@@ -1393,14 +1401,6 @@ void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym) {
   }
 
   MOZ_ASSERT(sym->getAllocKind() == gc::AllocKind::SYMBOL);
-}
-
-void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
-  AutoUnsafeCallWithABI unsafe;
-  // FIXME: check runtime?
-  MOZ_ASSERT(cx->zone() == bi->zone());
-  MOZ_ASSERT(bi->isAligned());
-  MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
 }
 
 void AssertValidValue(JSContext* cx, Value* v) {

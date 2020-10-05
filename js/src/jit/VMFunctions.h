@@ -1030,11 +1030,11 @@ MOZ_MUST_USE bool SetDenseElement(JSContext* cx, HandleNativeObject obj,
                                   int32_t index, HandleValue value,
                                   bool strict);
 
-void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
+void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
 void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
+void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
 void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);
-void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
 void AssertValidValue(JSContext* cx, Value* v);
 
 void MarkValueFromJit(JSRuntime* rt, Value* vp);

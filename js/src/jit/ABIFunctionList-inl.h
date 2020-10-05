@@ -62,6 +62,12 @@ namespace jit {
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
+  _(js::jit::AssertValidBigIntPtr)                          \
+  _(js::jit::AssertValidObjectOrNullPtr)                    \
+  _(js::jit::AssertValidObjectPtr)                          \
+  _(js::jit::AssertValidStringPtr)                          \
+  _(js::jit::AssertValidSymbolPtr)                          \
+  _(js::jit::AssertValidValue)                              \
   _(js::jit::AssumeUnreachable)                             \
   _(js::jit::Bailout)                                       \
   _(js::jit::FinishBailoutToBaseline)                       \
