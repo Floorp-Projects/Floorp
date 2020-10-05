@@ -3598,7 +3598,6 @@ arena_t::~arena_t() {
 
 arena_t* ArenaCollection::CreateArena(bool aIsPrivate,
                                       arena_params_t* aParams) {
-  fallible_t fallible;
   arena_t* ret = new (fallible) arena_t(aParams);
   if (!ret) {
     // Only reached if there is an OOM error.
