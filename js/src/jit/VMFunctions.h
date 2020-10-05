@@ -1043,24 +1043,6 @@ void MarkObjectFromJit(JSRuntime* rt, JSObject** objp);
 void MarkShapeFromJit(JSRuntime* rt, Shape** shapep);
 void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp);
 
-// Helper for generatePreBarrier.
-inline void* JitMarkFunction(MIRType type) {
-  switch (type) {
-    case MIRType::Value:
-      return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromJit);
-    case MIRType::String:
-      return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromJit);
-    case MIRType::Object:
-      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromJit);
-    case MIRType::Shape:
-      return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromJit);
-    case MIRType::ObjectGroup:
-      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromJit);
-    default:
-      MOZ_CRASH();
-  }
-}
-
 bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);
 
