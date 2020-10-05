@@ -10791,9 +10791,10 @@ void CodeGenerator::emitArrayPopShift(LInstruction* lir,
     temps.add(elementsTemp);
 
     saveVolatile(temps);
+    using Fn = void (*)(ArrayObject * arr);
     masm.setupUnalignedABICall(elementsTemp);
     masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ArrayShiftMoveElements));
+    masm.callWithABI<Fn, js::ArrayShiftMoveElements>();
     restoreVolatile(temps);
 
     // Reload elementsTemp as ArrayShiftMoveElements may have moved it.
