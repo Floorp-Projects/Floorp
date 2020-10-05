@@ -258,8 +258,12 @@ class nsXULPopupHidingEvent : public mozilla::Runnable {
 // this class is used for dispatching popuppositioned events asynchronously.
 class nsXULPopupPositionedEvent : public mozilla::Runnable {
  public:
-  explicit nsXULPopupPositionedEvent(nsIContent* aPopup)
-      : mozilla::Runnable("nsXULPopupPositionedEvent"), mPopup(aPopup) {
+  explicit nsXULPopupPositionedEvent(nsIContent* aPopup, bool aIsContextMenu,
+                                     bool aSelectFirstItem)
+      : mozilla::Runnable("nsXULPopupPositionedEvent"),
+        mPopup(aPopup),
+        mIsContextMenu(aIsContextMenu),
+        mSelectFirstItem(aSelectFirstItem) {
     NS_ASSERTION(aPopup,
                  "null popup supplied to nsXULPopupShowingEvent constructor");
   }
@@ -268,10 +272,13 @@ class nsXULPopupPositionedEvent : public mozilla::Runnable {
 
   // Asynchronously dispatch a popuppositioned event at aPopup if this is a
   // panel that should receieve such events. Return true if the event was sent.
-  static bool DispatchIfNeeded(nsIContent* aPopup);
+  static bool DispatchIfNeeded(nsIContent* aPopup, bool aIsContextMenu,
+                               bool aSelectFirstItem);
 
  private:
   nsCOMPtr<nsIContent> mPopup;
+  bool mIsContextMenu;
+  bool mSelectFirstItem;
 };
 
 // this class is used for dispatching menu command events asynchronously.
