@@ -295,7 +295,6 @@ pub struct ColorRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
-    pub readbacks: Vec<DeviceIntRect>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
     pub blits: Vec<BlitJob>,
@@ -316,7 +315,6 @@ impl RenderTarget for ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
-            readbacks: Vec::new(),
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
             blits: Vec::new(),
@@ -494,9 +492,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
-            RenderTaskKind::Readback(device_rect) => {
-                self.readbacks.push(device_rect);
-            }
+            RenderTaskKind::Readback => {}
             RenderTaskKind::Scaling(ref info) => {
                 add_scaling_instances(
                     info,
@@ -637,7 +633,7 @@ impl RenderTarget for AlphaRenderTarget {
         }
 
         match task.kind {
-            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Readback |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -855,7 +851,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Readback |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
