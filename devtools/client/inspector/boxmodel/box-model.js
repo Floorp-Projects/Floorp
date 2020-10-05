@@ -233,6 +233,11 @@ BoxModel.prototype = {
    * Hides the box-model highlighter on the currently selected element.
    */
   onHideBoxModelHighlighter() {
+    // As React components aren't destroyed when the panel closes,
+    // this function may still be called and throw because of destroyed fronts.
+    if (!this.inspector) {
+      return;
+    }
     this.inspector.highlighters.hideHighlighterType(
       this.inspector.highlighters.TYPES.BOXMODEL
     );
