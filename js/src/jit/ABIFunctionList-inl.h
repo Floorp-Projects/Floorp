@@ -8,6 +8,8 @@
 #define jit_ABIFunctionList_inl_h
 
 #include "jslibmath.h"  // js::NumberMod
+#include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
+                        // js::ecmaAtan2, js::powi
 #include "irregexp/RegExpAPI.h"
 // js::irregexp::CaseInsensitiveCompareNonUnicode,
 // js::irregexp::CaseInsensitiveCompareUnicode,
@@ -38,10 +40,16 @@ namespace jit {
 #define ABIFUNCTION_LIST(_)                                 \
   ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
   _(js::ArgumentsObject::finishForIonPure)                  \
+  _(js::ecmaAtan2)                                          \
+  _(js::ecmaHypot)                                          \
+  _(js::ecmaPow)                                            \
+  _(js::hypot3)                                             \
+  _(js::hypot4)                                             \
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
   _(js::NumberMod)                                          \
+  _(js::powi)                                               \
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
