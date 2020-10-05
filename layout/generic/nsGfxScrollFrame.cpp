@@ -5371,6 +5371,12 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
       mScrollCornerContent->SetProperty(
           nsGkAtoms::docLevelNativeAnonymousContent,
           reinterpret_cast<void*>(true));
+      mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::root_,
+                                    u"true"_ns, false);
+
+      // Don't bother making style caching take [root="true"] styles into
+      // account.
+      key = AnonymousContentKey::None;
     }
     aElements.AppendElement(ContentInfo(mScrollCornerContent, key));
   }
