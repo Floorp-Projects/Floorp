@@ -270,7 +270,6 @@ addAccessibleTask(
   }
 );
 
-
 /*
  * Test rotor with graphics
  */
