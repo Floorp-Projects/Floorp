@@ -294,7 +294,7 @@ add_task(async function test_theme_update() {
   let addon = await AddonManager.getAddonByID(DEFAULT_THEME);
   ok(!addon.userDisabled, "default theme is enabled");
 
-  await AddonTestUtils.promiseRestartManager(2);
+  await AddonTestUtils.promiseRestartManager("2");
 
   addon = await AddonManager.getAddonByID(DEFAULT_THEME);
   ok(!addon.userDisabled, "default theme is enabled after upgrade");
