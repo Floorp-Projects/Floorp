@@ -1276,21 +1276,6 @@ bool IonCacheIRCompiler::emitCompareStringResult(JSOp op, StringOperandId lhsId,
   return true;
 }
 
-static bool GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v) {
-  AutoUnsafeCallWithABI unsafe;
-  if (group->unknownPropertiesDontCheckGeneration()) {
-    return true;
-  }
-  HeapTypeSet* propTypes = group->maybeGetPropertyDontCheckGeneration(*id);
-  if (!propTypes) {
-    return true;
-  }
-  if (!propTypes->nonConstantProperty()) {
-    return false;
-  }
-  return propTypes->hasType(TypeSet::GetValueType(*v));
-}
-
 static void EmitCheckPropertyTypes(MacroAssembler& masm,
                                    const PropertyTypeCheckInfo* typeCheckInfo,
                                    Register obj, const ConstantOrRegister& val,
@@ -1404,12 +1389,13 @@ static void EmitCheckPropertyTypes(MacroAssembler& masm,
     masm.Push(id, scratch3);
     masm.moveStackPtrTo(scratch3);
 
+    using Fn = bool (*)(ObjectGroup * group, jsid * id, Value * v);
     masm.setupUnalignedABICall(scratch1);
     masm.movePtr(ImmGCPtr(group), scratch1);
     masm.passABIArg(scratch1);
     masm.passABIArg(scratch3);
     masm.passABIArg(scratch2);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GroupHasPropertyTypes));
+    masm.callWithABI<Fn, GroupHasPropertyTypes>();
     masm.mov(ReturnReg, scratch1);
 
     masm.adjustStack(sizeof(Value) + sizeof(jsid));
