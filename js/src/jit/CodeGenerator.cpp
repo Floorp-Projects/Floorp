@@ -9957,12 +9957,12 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
   masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::InterpreterStub);
   masm.moveStackPtrTo(temp1);
 
+  using Fn = bool (*)(JSContext * cx, InterpreterStubExitFrameLayout * frame);
   masm.setupUnalignedABICall(temp2);
   masm.passABIArg(temp0);
   masm.passABIArg(temp1);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, InvokeFromInterpreterStub),
-                   MoveOp::GENERAL,
-                   CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  masm.callWithABI<Fn, InvokeFromInterpreterStub>(
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
   masm.leaveExitFrame();
