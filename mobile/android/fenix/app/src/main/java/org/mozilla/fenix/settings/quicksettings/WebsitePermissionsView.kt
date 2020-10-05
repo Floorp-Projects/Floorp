@@ -56,7 +56,8 @@ class WebsitePermissionsView(
         PhoneFeature.CAMERA to PermissionViewHolder(view.cameraLabel, view.cameraStatus),
         PhoneFeature.LOCATION to PermissionViewHolder(view.locationLabel, view.locationStatus),
         PhoneFeature.MICROPHONE to PermissionViewHolder(view.microphoneLabel, view.microphoneStatus),
-        PhoneFeature.NOTIFICATION to PermissionViewHolder(view.notificationLabel, view.notificationStatus)
+        PhoneFeature.NOTIFICATION to PermissionViewHolder(view.notificationLabel, view.notificationStatus),
+        PhoneFeature.PERSISTENT_STORAGE to PermissionViewHolder(view.persistentStorageLabel, view.persistentStorageStatus)
     ))
 
     /**

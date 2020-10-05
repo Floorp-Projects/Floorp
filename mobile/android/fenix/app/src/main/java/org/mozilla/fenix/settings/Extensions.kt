@@ -25,6 +25,7 @@ fun SitePermissions.get(field: PhoneFeature) = when (field) {
     PhoneFeature.NOTIFICATION -> notification
     PhoneFeature.AUTOPLAY_AUDIBLE -> autoplayAudible
     PhoneFeature.AUTOPLAY_INAUDIBLE -> autoplayInaudible
+    PhoneFeature.PERSISTENT_STORAGE -> localStorage
 }
 
 fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) = when (field) {
@@ -34,6 +35,7 @@ fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) =
     PhoneFeature.NOTIFICATION -> copy(notification = value)
     PhoneFeature.AUTOPLAY_AUDIBLE -> copy(autoplayAudible = value)
     PhoneFeature.AUTOPLAY_INAUDIBLE -> copy(autoplayInaudible = value)
+    PhoneFeature.PERSISTENT_STORAGE -> copy(localStorage = value)
 }
 
 /**

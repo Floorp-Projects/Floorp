@@ -21,10 +21,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.settings.PhoneFeature.CAMERA
-import org.mozilla.fenix.settings.PhoneFeature.LOCATION
-import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
-import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
+import org.mozilla.fenix.settings.PhoneFeature.*
 import org.mozilla.fenix.settings.requirePreference
 
 class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
@@ -57,6 +54,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         initPhoneFeature(LOCATION)
         initPhoneFeature(MICROPHONE)
         initPhoneFeature(NOTIFICATION)
+        initPhoneFeature(PERSISTENT_STORAGE)
         bindClearPermissionsButton()
     }
 

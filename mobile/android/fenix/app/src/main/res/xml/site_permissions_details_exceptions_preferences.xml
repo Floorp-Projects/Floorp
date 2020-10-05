@@ -29,6 +29,12 @@
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 
     <androidx.preference.Preference
+        android:icon="@drawable/ic_storage"
+        android:key="@string/pref_key_browser_feature_persistent_storage"
+        android:title="@string/preference_phone_feature_persistent_storage"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
             android:key="@string/pref_key_exceptions_clear_site_permissions"
             android:layout="@layout/layout_clear_permission_button"/>
 

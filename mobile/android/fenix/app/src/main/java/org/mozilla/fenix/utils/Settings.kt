@@ -774,7 +774,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             location = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION),
             camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
             autoplayAudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_AUDIBLE),
-            autoplayInaudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_INAUDIBLE)
+            autoplayInaudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_INAUDIBLE),
+            persistentStorage = getSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE)
         )
     }
 

@@ -110,6 +110,7 @@
     <string name="pref_key_custom_settings" translatable="false">pref_key_custom_settings</string>
     <string name="pref_key_browser_feature_autoplay_audible" translatable="false">pref_key_browser_feature_autoplay</string>
     <string name="pref_key_browser_feature_autoplay_inaudible" translatable="false">pref_key_browser_feature_autoplay_inaudible</string>
+    <string name="pref_key_browser_feature_persistent_storage" translatable="false">pref_key_browser_feature_persistent_storage</string>
     <string name="pref_key_phone_feature_camera" translatable="false">pref_key_phone_feature_camera</string>
     <string name="pref_key_phone_feature_location" translatable="false">pref_key_phone_feature_location</string>
     <string name="pref_key_phone_feature_microphone" translatable="false">pref_key_phone_feature_microphone</string>
