@@ -443,7 +443,7 @@ struct CompilationInfoVector {
                                         CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
                                         const JS::TranscodeRange& range,
-                                        bool* succeededOut = nullptr);
+                                        bool* succeededOut);
 
   void trace(JSTracer* trc);
 };
