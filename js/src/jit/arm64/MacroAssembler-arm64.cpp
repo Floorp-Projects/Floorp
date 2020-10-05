@@ -143,7 +143,7 @@ void MacroAssemblerCompat::loadPrivate(const Address& src, Register dest) {
 }
 
 void MacroAssemblerCompat::handleFailureWithHandlerTail(
-    Label* profilerExitTail) {
+    void* handler, Label* profilerExitTail) {
   // Reserve space for exception information.
   int64_t size = (sizeof(ResumeFromException) + 7) & ~7;
   Sub(GetStackPointer64(), GetStackPointer64(), Operand(size));
@@ -154,11 +154,10 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   Mov(x0, GetStackPointer64());
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
   asMasm().setupUnalignedABICall(r1);
   asMasm().passABIArg(r0);
-  asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+  asMasm().callWithABI(handler, MoveOp::GENERAL,
+                       CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;

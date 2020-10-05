@@ -13,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "frontend/TokenStream.h"
-#include "irregexp/RegExpTypes.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
 
@@ -46,15 +45,6 @@ RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
                                   JS::RegExpFlags flags, size_t startIndex,
                                   VectorMatchPairs* matches,
                                   RegExpShared::CodeKind codeKind);
-
-bool GrowBacktrackStack(v8::internal::RegExpStack* regexp_stack);
-
-uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
-                                          const char16_t* substring2,
-                                          size_t byteLength);
-uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
-                                       const char16_t* substring2,
-                                       size_t byteLength);
 
 }  // namespace irregexp
 }  // namespace js

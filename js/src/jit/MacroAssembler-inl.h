@@ -15,8 +15,6 @@
 #include "gc/Zone.h"
 #include "vm/ProxyObject.h"
 
-#include "jit/ABIFunctionList-inl.h"
-
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86-inl.h"
 #elif defined(JS_CODEGEN_X64)
@@ -37,40 +35,6 @@
 
 namespace js {
 namespace jit {
-
-template <typename Sig>
-DynFn DynamicFunction(Sig fun) {
-  ABIFunctionSignature<Sig> sig;
-  return DynFn{sig.address(fun)};
-}
-
-// Helper for generatePreBarrier.
-inline DynFn JitMarkFunction(MIRType type) {
-  switch (type) {
-    case MIRType::Value: {
-      using Fn = void (*)(JSRuntime * rt, Value * vp);
-      return DynamicFunction<Fn>(MarkValueFromJit);
-    }
-    case MIRType::String: {
-      using Fn = void (*)(JSRuntime * rt, JSString * *stringp);
-      return DynamicFunction<Fn>(MarkStringFromJit);
-    }
-    case MIRType::Object: {
-      using Fn = void (*)(JSRuntime * rt, JSObject * *objp);
-      return DynamicFunction<Fn>(MarkObjectFromJit);
-    }
-    case MIRType::Shape: {
-      using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
-      return DynamicFunction<Fn>(MarkShapeFromJit);
-    }
-    case MIRType::ObjectGroup: {
-      using Fn = void (*)(JSRuntime * rt, ObjectGroup * *groupp);
-      return DynamicFunction<Fn>(MarkObjectGroupFromJit);
-    }
-    default:
-      MOZ_CRASH();
-  }
-}
 
 //{{{ check_macroassembler_style
 // ===============================================================
@@ -133,20 +97,6 @@ void MacroAssembler::callWithABI(void* fun, MoveOp::Type result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result, check);
-}
-
-void MacroAssembler::callWithABI(DynFn fun, MoveOp::Type result,
-                                 CheckUnsafeCallWithABI check) {
-  AutoProfilerCallInstrumentation profiler(*this);
-  callWithABINoProfiler(fun.address, result, check);
-}
-
-template <typename Sig, Sig fun>
-void MacroAssembler::callWithABI(MoveOp::Type result,
-                                 CheckUnsafeCallWithABI check) {
-  ABIFunction<Sig, fun> abiFun;
-  AutoProfilerCallInstrumentation profiler(*this);
-  callWithABINoProfiler(abiFun.address(), result, check);
 }
 
 void MacroAssembler::callWithABI(Register fun, MoveOp::Type result) {

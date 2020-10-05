@@ -1030,11 +1030,11 @@ MOZ_MUST_USE bool SetDenseElement(JSContext* cx, HandleNativeObject obj,
                                   int32_t index, HandleValue value,
                                   bool strict);
 
-void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
+void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
 void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);
+void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
 void AssertValidValue(JSContext* cx, Value* v);
 
 void MarkValueFromJit(JSRuntime* rt, Value* vp);
@@ -1042,6 +1042,24 @@ void MarkStringFromJit(JSRuntime* rt, JSString** stringp);
 void MarkObjectFromJit(JSRuntime* rt, JSObject** objp);
 void MarkShapeFromJit(JSRuntime* rt, Shape** shapep);
 void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp);
+
+// Helper for generatePreBarrier.
+inline void* JitMarkFunction(MIRType type) {
+  switch (type) {
+    case MIRType::Value:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromJit);
+    case MIRType::String:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromJit);
+    case MIRType::Object:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromJit);
+    case MIRType::Shape:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromJit);
+    case MIRType::ObjectGroup:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromJit);
+    default:
+      MOZ_CRASH();
+  }
+}
 
 bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);
@@ -1110,18 +1128,7 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
 
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
-void* AllocateString(JSContext* cx);
-void* AllocateFatInlineString(JSContext* cx);
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
-void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
-                                     int32_t count);
-
-void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
-                                    size_t nDynamicSlots);
-#ifdef JS_GC_PROBES
-void TraceCreateObject(JSObject* obj);
-#endif
-
 bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res);
 
 #if JS_BITS_PER_WORD == 32
@@ -1172,13 +1179,6 @@ AtomicsReadWriteModifyFn AtomicsSub(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
-
-bool GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v);
-
-// Functions used when JS_MASM_VERBOSE is enabled.
-void AssumeUnreachable(const char* output);
-void Printf0(const char* output);
-void Printf1(const char* output, uintptr_t value);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;

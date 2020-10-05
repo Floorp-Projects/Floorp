@@ -591,12 +591,11 @@ void CodeGenerator::visitSoftDivI(LSoftDivI* ins) {
     masm.callWithABI(mir->bytecodeOffset(),
                      wasm::SymbolicAddress::aeabi_idivmod, mozilla::Nothing());
   } else {
-    using Fn = int64_t (*)(int, int);
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI<Fn, __aeabi_idivmod>(
-        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   // idivmod returns the quotient in r0, and the remainder in r1.
@@ -781,12 +780,11 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
     masm.callWithABI(mir->bytecodeOffset(),
                      wasm::SymbolicAddress::aeabi_idivmod, mozilla::Nothing());
   } else {
-    using Fn = int64_t (*)(int, int);
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI<Fn, __aeabi_idivmod>(
-        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   MOZ_ASSERT(r1 != output);
@@ -2266,12 +2264,11 @@ void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod* ins) {
     masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::aeabi_uidivmod,
                      mozilla::Nothing());
   } else {
-    using Fn = int64_t (*)(int, int);
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI<Fn, __aeabi_uidivmod>(
-        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   if (mod) {
