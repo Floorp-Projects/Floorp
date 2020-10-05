@@ -13,6 +13,24 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeGTK() = default;
 
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                  StyleAppearance aAppearance,
+                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  bool* aIsOverridable) override;
+
+  nsITheme::Transparency GetWidgetTransparency(
+      nsIFrame* aFrame, StyleAppearance aAppearance) override;
+  void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget, const Rect& aRect,
+                                     const EventStates& aState) override;
+  void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget, const Rect& aRect,
+                                   const EventStates& aState) override;
+  void PaintScrollbarHorizontal(DrawTarget* aDrawTarget, const Rect& aRect,
+                                bool aIsRoot) override;
+  void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
+                                       const Rect& aRect,
+                                       uint32_t aDpiRatio,
+                                       bool aIsRoot) override;
+
  protected:
   virtual ~nsNativeBasicThemeGTK() = default;
 };

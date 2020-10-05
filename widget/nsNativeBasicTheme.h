@@ -118,7 +118,8 @@ static const CSSCoord kMeterHeight = 12.0f;
 }  // namespace widget
 }  // namespace mozilla
 
-class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
+class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
+ protected:
   using sRGBColor = mozilla::gfx::sRGBColor;
   using CSSCoord = mozilla::CSSCoord;
   using CSSIntCoord = mozilla::CSSIntCoord;
@@ -181,6 +182,7 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
   static bool IsDateTimeResetButton(nsIFrame* aFrame);
   static bool IsDateTimeTextField(nsIFrame* aFrame);
   static bool IsColorPickerButton(nsIFrame* aFrame);
+  static bool IsRootScrollbar(nsIFrame* aFrame);
   static std::pair<sRGBColor, sRGBColor> ComputeCheckColors(
       const EventStates& aState);
   static Rect FixAspectRatio(const Rect& aRect);
@@ -300,10 +302,11 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
                                            const Rect& aRect,
                                            const EventStates& aState);
   virtual void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
-                                        const Rect& aRect);
+                                        const Rect& aRect, bool aIsRoot);
   virtual void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
                                                const Rect& aRect,
-                                               uint32_t aDpiRatio);
+                                               uint32_t aDpiRatio,
+                                               bool aIsRoot);
   virtual void PaintScrollbarbutton(DrawTarget* aDrawTarget,
                                     StyleAppearance aAppearance,
                                     const Rect& aRect,
