@@ -7,20 +7,27 @@
 import { setupCommands, clientCommands } from "./firefox/commands";
 import { setupEvents, clientEvents } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
+import { prepareSourcePayload } from "./firefox/create";
+import sourceQueue from "../utils/source-queue";
 
 let actions;
 let targetList;
 
 export async function onConnect(
   connection: any,
-  _actions: Object
+  _actions: Object,
+  store: any
 ): Promise<void> {
-  const { devToolsClient, targetList: _targetList } = connection;
+  const {
+    devToolsClient,
+    targetList: _targetList,
+    resourceWatcher,
+  } = connection;
   actions = _actions;
   targetList = _targetList;
 
   setupCommands({ devToolsClient, targetList });
-  setupEvents({ actions, devToolsClient });
+  setupEvents({ actions, devToolsClient, store, resourceWatcher });
   const { targetFront } = targetList;
   if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
     targetList.listenForWorkers = true;
@@ -36,6 +43,16 @@ export async function onConnect(
     onTargetAvailable,
     onTargetDestroyed
   );
+
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
+    onAvailable: onSourceAvailable,
+  });
+
+  // Tests like browser_webconsole_eval_sources.js using viewSourceInDebugger
+  // are expecting to find sources in the debugger store immediately for existing sources.
+  // So flush the queue immediately after calling watchResources, which will
+  // process all existing sources.
+  await sourceQueue.flush();
 }
 
 async function onTargetAvailable({
@@ -110,6 +127,25 @@ function onTargetDestroyed({ targetFront }): void {
     targetFront.off("navigate", actions.navigated);
   }
   actions.removeTarget(targetFront);
+}
+
+async function onSourceAvailable(sources) {
+  for (const source of sources) {
+    const threadFront = await source.targetFront.getFront("thread");
+    const frontendSource = prepareSourcePayload(threadFront, source);
+
+    // Use SourceQueue, which will throttle all incoming sources and only display merged set of
+    // action every 100ms. Unless SourceQueue.flush is manually called when:
+    // - the thread is paused and we have to retrieve the source immediately
+    // - after fetching all existing sources (tests expect sources to be in redux store immediately)
+    //
+    // This throttling code could probably be migrated in the ResourceWatcher API
+    // so that we use a generic throttling algorithm for all resources.
+    sourceQueue.queue({
+      type: "generated",
+      data: frontendSource,
+    });
+  }
 }
 
 export { clientCommands, clientEvents };
