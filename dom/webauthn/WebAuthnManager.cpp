@@ -416,9 +416,9 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     return promise.forget();
   }
 
-  WebAuthnMakeCredentialInfo info(origin, NS_ConvertUTF8toUTF16(rpId),
-                                  challenge, clientDataJSON, adjustedTimeout,
-                                  excludeList, Some(extra), context->Id());
+  WebAuthnMakeCredentialInfo info(
+      origin, NS_ConvertUTF8toUTF16(rpId), challenge, clientDataJSON,
+      adjustedTimeout, excludeList, Some(extra), context->Top()->Id());
 
 #ifdef OS_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
@@ -624,7 +624,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   WebAuthnGetAssertionInfo info(origin, NS_ConvertUTF8toUTF16(rpId), challenge,
                                 clientDataJSON, adjustedTimeout, allowList,
-                                Some(extra), context->Id());
+                                Some(extra), context->Top()->Id());
 
 #ifdef OS_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
