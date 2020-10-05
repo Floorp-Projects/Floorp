@@ -23,6 +23,7 @@
 #include "irregexp/imported/regexp-parser.h"
 #include "irregexp/imported/regexp-stack.h"
 #include "irregexp/imported/regexp.h"
+#include "irregexp/RegExpNativeMacroAssembler.h"
 #include "irregexp/RegExpShim.h"
 #include "jit/JitCommon.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -736,6 +737,24 @@ RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
     return RegExpRunStatus_Error;
   }
   return RegExpShared::execute(cx, &re, input, startIndex, matches);
+}
+
+bool GrowBacktrackStack(RegExpStack* regexp_stack) {
+  return SMRegExpMacroAssembler::GrowBacktrackStack(regexp_stack);
+}
+
+uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
+                                          const char16_t* substring2,
+                                          size_t byteLength) {
+  return SMRegExpMacroAssembler::CaseInsensitiveCompareNonUnicode(
+      substring1, substring2, byteLength);
+}
+
+uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
+                                       const char16_t* substring2,
+                                       size_t byteLength) {
+  return SMRegExpMacroAssembler::CaseInsensitiveCompareUnicode(
+      substring1, substring2, byteLength);
 }
 
 }  // namespace irregexp

@@ -14,6 +14,7 @@
 #include "jit/Linker.h"
 #include "vm/MatchPairs.h"
 
+#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 
 namespace v8 {
@@ -304,19 +305,16 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
       masm_.subPtr(temp0_, current_position_);
     }
 
+    using Fn = uint32_t (*)(const char16_t*, const char16_t*, size_t);
     masm_.setupUnalignedABICall(temp1_);
     masm_.passABIArg(current_character_);
     masm_.passABIArg(current_position_);
     masm_.passABIArg(temp0_);
 
     if (unicode) {
-      uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
-          CaseInsensitiveCompareUnicode;
-      masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+      masm_.callWithABI<Fn, ::js::irregexp::CaseInsensitiveCompareUnicode>();
     } else {
-      uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
-          CaseInsensitiveCompareNonUnicode;
-      masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+      masm_.callWithABI<Fn, ::js::irregexp::CaseInsensitiveCompareNonUnicode>();
     }
     masm_.storeCallInt32Result(temp1_);
     masm_.PopRegsInMask(volatileRegs);
@@ -1127,9 +1125,10 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
   volatileRegs.takeUnchecked(temp1_);
   masm_.PushRegsInMask(volatileRegs);
 
+  using Fn = bool (*)(RegExpStack * regexp_stack);
   masm_.setupUnalignedABICall(temp0_);
   masm_.passABIArg(temp1_);
-  masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GrowBacktrackStack));
+  masm_.callWithABI<Fn, ::js::irregexp::GrowBacktrackStack>();
   masm_.storeCallBoolResult(temp0_);
 
   masm_.PopRegsInMask(volatileRegs);
