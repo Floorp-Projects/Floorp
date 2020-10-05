@@ -1900,7 +1900,7 @@ static bool HasChild(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   HasChildTracer trc(cx, child);
-  TraceChildren(&trc, parent.toGCThing(), parent.traceKind());
+  TraceChildren(&trc, JS::GCCellPtr(parent.toGCThing(), parent.traceKind()));
   args.rval().setBoolean(trc.found());
   return true;
 }
