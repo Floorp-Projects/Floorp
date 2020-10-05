@@ -6995,28 +6995,36 @@ void CodeGenerator::emitAssertGCThingResult(Register input,
     masm.passABIArg(temp);
     masm.passABIArg(input);
 
-    void* callee;
     switch (type) {
-      case MIRType::Object:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectPtr);
+      case MIRType::Object: {
+        using Fn = void (*)(JSContext * cx, JSObject * obj);
+        masm.callWithABI<Fn, AssertValidObjectPtr>();
         break;
-      case MIRType::ObjectOrNull:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectOrNullPtr);
+      }
+      case MIRType::ObjectOrNull: {
+        using Fn = void (*)(JSContext * cx, JSObject * obj);
+        masm.callWithABI<Fn, AssertValidObjectOrNullPtr>();
         break;
-      case MIRType::String:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidStringPtr);
+      }
+      case MIRType::String: {
+        using Fn = void (*)(JSContext * cx, JSString * str);
+        masm.callWithABI<Fn, AssertValidStringPtr>();
         break;
-      case MIRType::Symbol:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
+      }
+      case MIRType::Symbol: {
+        using Fn = void (*)(JSContext * cx, JS::Symbol * sym);
+        masm.callWithABI<Fn, AssertValidSymbolPtr>();
         break;
-      case MIRType::BigInt:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidBigIntPtr);
+      }
+      case MIRType::BigInt: {
+        using Fn = void (*)(JSContext * cx, JS::BigInt * bi);
+        masm.callWithABI<Fn, AssertValidBigIntPtr>();
         break;
+      }
       default:
         MOZ_CRASH();
     }
 
-    masm.callWithABI(callee);
     restoreVolatile();
   }
 #  endif
@@ -7078,11 +7086,12 @@ void CodeGenerator::emitAssertResultV(const ValueOperand input,
     masm.pushValue(input);
     masm.moveStackPtrTo(temp1);
 
+    using Fn = void (*)(JSContext * cx, Value * v);
     masm.setupUnalignedABICall(temp2);
     masm.loadJSContext(temp2);
     masm.passABIArg(temp2);
     masm.passABIArg(temp1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssertValidValue));
+    masm.callWithABI<Fn, AssertValidValue>();
     masm.popValue(input);
     restoreVolatile();
   }
