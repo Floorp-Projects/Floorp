@@ -180,6 +180,17 @@ class MarionetteFrameParent extends JSWindowActorParent {
     });
   }
 
+  async performActions(actions, capabilities) {
+    return this.sendQuery("MarionetteFrameParent:performActions", {
+      actions,
+      capabilities,
+    });
+  }
+
+  async releaseActions() {
+    return this.sendQuery("MarionetteFrameParent:releaseActions");
+  }
+
   async switchToFrame(id) {
     const {
       browsingContextId,
