@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 3.6.0" client="gradle" variant="debug" version="3.6.0">
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation.xml"
+            line="134"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation_name_collection.xml"
+            line="104"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation_select_collection.xml"
+            line="108"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tabstray.xml"
+            line="28"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tabstray.xml"
+            line="52"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tracking_protection_panel.xml"
+            line="15"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tracking_protection_panel.xml"
+            line="178"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="        &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_add_on_details.xml"
+            line="150"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="        &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_search.xml"
+            line="43"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="            &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_search.xml"
+            line="82"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_search_dialog.xml"
+            line="77"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_share.xml"
+            line="30"
+            column="6"/>
+    </issue>
+
+</issues>
