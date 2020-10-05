@@ -467,7 +467,7 @@ UniquePtr<EdgeRange> Concrete<RootList>::edges(JSContext* cx,
 bool SimpleEdgeRange::addTracerEdges(JSRuntime* rt, void* thing,
                                      JS::TraceKind kind, bool wantNames) {
   EdgeVectorTracer tracer(rt, &edges, wantNames);
-  js::TraceChildren(&tracer, thing, kind);
+  JS::TraceChildren(&tracer, JS::GCCellPtr(thing, kind));
   settle();
   return tracer.okay;
 }

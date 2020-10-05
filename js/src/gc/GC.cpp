@@ -3917,7 +3917,7 @@ void GCRuntime::checkForCompartmentMismatches() {
         trc.srcKind = MapAllocToTraceKind(thingKind);
         trc.compartment = MapGCThingTyped(
             trc.src, trc.srcKind, [](auto t) { return t->maybeCompartment(); });
-        js::TraceChildren(&trc, trc.src, trc.srcKind);
+        JS::TraceChildren(&trc, JS::GCCellPtr(trc.src, trc.srcKind));
       }
     }
   }

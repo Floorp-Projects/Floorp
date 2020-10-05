@@ -582,7 +582,7 @@ static void DumpHeapVisitCell(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
     fprintf(dtrc->output, "\n");
   }
 
-  js::TraceChildren(dtrc, cellptr.asCell(), cellptr.kind());
+  JS::TraceChildren(dtrc, cellptr);
 }
 
 void DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
