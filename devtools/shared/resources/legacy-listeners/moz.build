@@ -17,6 +17,7 @@ DevToolsModules(
     'platform-messages.js',
     'root-node.js',
     'session-storage.js',
+    'source.js',
     'storage-utils.js',
     'stylesheet.js',
     'websocket.js',
