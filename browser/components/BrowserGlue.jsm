@@ -1875,6 +1875,8 @@ BrowserGlue.prototype = {
 
     PageActions.init();
 
+    DoHController.init();
+
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
 
@@ -2385,7 +2387,6 @@ BrowserGlue.prototype = {
       this._showNewInstallModal();
     }
 
-    DoHController.init();
     FirefoxMonitor.init();
   },
 
