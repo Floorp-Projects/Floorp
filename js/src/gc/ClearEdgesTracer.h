@@ -16,10 +16,6 @@ struct ClearEdgesTracer final : public JS::CallbackTracer {
   explicit ClearEdgesTracer(JSRuntime* rt);
   ClearEdgesTracer();
 
-#ifdef DEBUG
-  TracerKind getTracerKind() const override { return TracerKind::ClearEdges; }
-#endif
-
   template <typename T>
   inline bool clearEdge(T** thingp);
 

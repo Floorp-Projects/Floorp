@@ -220,7 +220,8 @@ void CheckHeapAfterGC(JSRuntime* rt);
 
 struct MovingTracer final : public JS::CallbackTracer {
   explicit MovingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
+      : CallbackTracer(rt, JS::TracerKind::Moving,
+                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
@@ -236,10 +237,6 @@ struct MovingTracer final : public JS::CallbackTracer {
     return true;
   }
 
-#ifdef DEBUG
-  TracerKind getTracerKind() const override { return TracerKind::Moving; }
-#endif
-
  private:
   template <typename T>
   bool updateEdge(T** thingp);
@@ -247,7 +244,8 @@ struct MovingTracer final : public JS::CallbackTracer {
 
 struct SweepingTracer final : public JS::CallbackTracer {
   explicit SweepingTracer(JSRuntime* rt)
-      : CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
+      : CallbackTracer(rt, JS::TracerKind::Sweeping,
+                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
@@ -263,10 +261,6 @@ struct SweepingTracer final : public JS::CallbackTracer {
     MOZ_CRASH("unexpected edge.");
     return true;
   }
-
-#ifdef DEBUG
-  TracerKind getTracerKind() const override { return TracerKind::Sweeping; }
-#endif
 
  private:
   template <typename T>

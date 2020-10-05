@@ -390,7 +390,9 @@ JSZoneParticipant::TraverseNative(void* aPtr,
 
 struct TraversalTracer : public JS::CallbackTracer {
   TraversalTracer(JSRuntime* aRt, nsCycleCollectionTraversalCallback& aCb)
-      : JS::CallbackTracer(aRt, JS::WeakMapTraceAction::Skip), mCb(aCb) {
+      : JS::CallbackTracer(aRt, JS::TracerKind::Callback,
+                           JS::WeakMapTraceAction::Skip),
+        mCb(aCb) {
     setCanSkipJsids(true);
   }
   bool onChild(const JS::GCCellPtr& aThing) override;
@@ -713,7 +715,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
 class JSLeakTracer : public JS::CallbackTracer {
  public:
   explicit JSLeakTracer(JSRuntime* aRuntime)
-      : JS::CallbackTracer(aRuntime,
+      : JS::CallbackTracer(aRuntime, JS::TracerKind::Callback,
                            JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
  private:

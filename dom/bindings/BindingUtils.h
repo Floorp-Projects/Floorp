@@ -609,16 +609,13 @@ struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer {
   bool ok;
 
   explicit VerifyTraceProtoAndIfaceCacheCalledTracer(JSContext* cx)
-      : JS::CallbackTracer(cx), ok(false) {}
+      : JS::CallbackTracer(cx, JS::TracerKind::VerifyTraceProtoAndIface),
+        ok(false) {}
 
   bool onChild(const JS::GCCellPtr&) override {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
     return true;
-  }
-
-  TracerKind getTracerKind() const override {
-    return TracerKind::VerifyTraceProtoAndIface;
   }
 };
 #endif
@@ -627,9 +624,7 @@ inline void TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj) {
   MOZ_ASSERT(JS::GetClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
 #ifdef DEBUG
-  if (trc->isCallbackTracer() &&
-      (trc->asCallbackTracer()->getTracerKind() ==
-       JS::CallbackTracer::TracerKind::VerifyTraceProtoAndIface)) {
+  if (trc->kind() == JS::TracerKind::VerifyTraceProtoAndIface) {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
     static_cast<VerifyTraceProtoAndIfaceCacheCalledTracer*>(trc)->ok = true;
