@@ -40,6 +40,7 @@
 #include "proxy/Proxy.h"  // js::ProxyGetProperty
 
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
+#include "vm/NativeObject.h"     // js::NativeObject
 #include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
 #include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
                                  // js::TraceLogStartEvent,
@@ -118,6 +119,8 @@ namespace jit {
   _(js::jit::SetNativeDataPropertyPure<false>)              \
   _(js::jit::SetNativeDataPropertyPure<true>)               \
   _(js::MapIteratorObject::next)                            \
+  _(js::NativeObject::addDenseElementPure)                  \
+  _(js::NativeObject::growSlotsPure)                        \
   _(js::NumberMod)                                          \
   _(js::NumberToStringHelperPure)                           \
   _(js::powi)                                               \
