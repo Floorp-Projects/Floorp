@@ -374,7 +374,7 @@ ElementEditor.prototype = {
     this._scrollableBadge.className = `inspector-badge scrollable-badge ${
       isInteractive ? "interactive" : ""
     }`;
-
+    this._scrollableBadge.dataset.scrollable = "true";
     this._scrollableBadge.textContent = INSPECTOR_L10N.getStr(
       "markupView.scrollableBadge.label"
     );
