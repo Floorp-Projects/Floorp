@@ -218,3 +218,35 @@ uint16_t RotorStaticTextRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 
   return result;
 }
+
+// Rotor Heading Level Rule
+
+RotorHeadingLevelRule::RotorHeadingLevelRule(
+    int32_t aLevel, AccessibleOrProxy& aDirectDescendantsFrom)
+    : RotorRoleRule(roles::HEADING, aDirectDescendantsFrom), mLevel(aLevel){};
+
+RotorHeadingLevelRule::RotorHeadingLevelRule(int32_t aLevel)
+    : RotorRoleRule(roles::HEADING), mLevel(aLevel){};
+
+uint16_t RotorHeadingLevelRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = RotorRoleRule::Match(aAccOrProxy);
+
+  // if a match was found in the base-class's Match function,
+  // it is valid to consider that match again here. if it is
+  // not of the desired heading level, we flip the match bit to
+  // "unmatch" otherwise, the match persists.
+  if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
+    int32_t currLevel = 0;
+    if (Accessible* acc = aAccOrProxy.AsAccessible()) {
+      currLevel = acc->GroupPosition().level;
+    } else if (ProxyAccessible* proxy = aAccOrProxy.AsProxy()) {
+      currLevel = proxy->GroupPosition().level;
+    }
+
+    if (currLevel != mLevel) {
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+
+  return result;
+}
