@@ -24,7 +24,7 @@
  *
  *     foo = new ((mozilla::fallible_t())) Foo();
  *
- *     const mozilla::fallible_t fallible = mozilla::fallible_t();
+ *     const mozilla::fallible_t f = mozilla::fallible_t();
  *     bar = new (f) Bar();
  *
  * It is also possible to declare method overloads with fallible allocation
