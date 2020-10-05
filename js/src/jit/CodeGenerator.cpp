@@ -4597,6 +4597,8 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.pushValue(UndefinedValue());
   masm.moveStackPtrTo(temp3);
 
+  using Fn =
+      bool (*)(JSContext * cx, JSObject * obj, PropertyName * name, Value * vp);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
@@ -4605,8 +4607,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp2);
   masm.passABIArg(temp3);
 
-  masm.callWithABI(
-      JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<true>)));
+  masm.callWithABI<Fn, GetNativeDataPropertyPure<true>>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.popValue(output);
@@ -4636,13 +4637,13 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.pushValue(idVal);
   masm.moveStackPtrTo(temp1);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
   masm.passABIArg(obj);
   masm.passABIArg(temp1);
-  masm.callWithABI(
-      JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<true>)));
+  masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<true>>();
 
   MOZ_ASSERT(!idVal.aliases(temp1));
   masm.mov(ReturnReg, temp1);
@@ -4672,6 +4673,8 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.pushValue(rhs);
   masm.moveStackPtrTo(temp1);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyName * name,
+                      Value * val);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
@@ -4679,8 +4682,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.movePtr(ImmGCPtr(lir->mir()->name()), temp3);
   masm.passABIArg(temp3);
   masm.passABIArg(temp1);
-  masm.callWithABI(
-      JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
+  masm.callWithABI<Fn, SetNativeDataPropertyPure<false>>();
 
   MOZ_ASSERT(!rhs.aliases(temp1));
   masm.mov(ReturnReg, temp1);
@@ -4703,17 +4705,16 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   masm.pushValue(idVal);
   masm.moveStackPtrTo(temp1);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(temp2);
   masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
   masm.passABIArg(obj);
   masm.passABIArg(temp1);
   if (lir->mir()->hasOwn()) {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
+    masm.callWithABI<Fn, HasNativeDataPropertyPure<true>>();
   } else {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
+    masm.callWithABI<Fn, HasNativeDataPropertyPure<false>>();
   }
 
   MOZ_ASSERT(!idVal.aliases(temp1));
@@ -6590,12 +6591,14 @@ void CodeGenerator::visitGetDynamicName(LGetDynamicName* lir) {
   masm.adjustStack(-int32_t(sizeof(Value)));
   masm.moveStackPtrTo(temp2);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * scopeChain, JSString * str,
+                      Value * vp);
   masm.setupUnalignedABICall(temp1);
   masm.passABIArg(temp3);
   masm.passABIArg(envChain);
   masm.passABIArg(name);
   masm.passABIArg(temp2);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetDynamicNamePure));
+  masm.callWithABI<Fn, GetDynamicNamePure>();
 
   const ValueOperand out = ToOutValue(lir);
 
