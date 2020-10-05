@@ -15,7 +15,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_ID
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_URL
-import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_MESSAGING_ID
+import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_CONTENT_PORT
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.webextensions.WebExtensionController
@@ -31,7 +31,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     internal var extensionController = WebExtensionController(
         READER_VIEW_EXTENSION_ID,
         READER_VIEW_EXTENSION_URL,
-        READER_VIEW_MESSAGING_ID
+        READER_VIEW_CONTENT_PORT
     )
 
     override fun invoke(
@@ -48,7 +48,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     /**
      * Processes the action before it is dispatched to the store.
      *
-     * @param store a reference to the [MiddlewareStore].
+     * @param context a reference to the [MiddlewareContext].
      * @param action the action to process.
      * @return true if the original action should be processed, otherwise false.
      */

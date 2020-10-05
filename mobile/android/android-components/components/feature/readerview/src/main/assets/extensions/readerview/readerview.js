@@ -346,7 +346,7 @@ function connectNativePort() {
   let id = url.searchParams.get("id");
   let baseUrl = browser.runtime.getURL("/");
 
-  let port = browser.runtime.connectNative("mozacReaderview");
+  let port = browser.runtime.connectNative("mozacReaderviewActive");
   port.onMessage.addListener((message) => {
     switch (message.action) {
       case 'show':

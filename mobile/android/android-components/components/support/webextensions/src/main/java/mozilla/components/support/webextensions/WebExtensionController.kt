@@ -19,13 +19,15 @@ import java.util.concurrent.ConcurrentHashMap
  * @property extensionId the unique ID of the web extension e.g. mozacReaderview.
  * @property extensionUrl the url pointing to a resources path for locating the
  * extension within the APK file e.g. resource://android/assets/extensions/my_web_ext.
- * @property messagingId the unique ID used to exchange messages between extension
- * scripts and the application.
+ * @property defaultPort the name of the default port used to exchange messages
+ * between extension scripts and the application. Extensions can open multiple ports
+ * so [sendContentMessage] and [sendBackgroundMessage] allow specifying an
+ * alternative port, if needed.
  */
 class WebExtensionController(
     private val extensionId: String,
     private val extensionUrl: String,
-    private val messagingId: String
+    private val defaultPort: String
 ) {
     private val logger = Logger("mozac-webextensions")
     private var registerContentMessageHandler: (WebExtension) -> Unit? = { }
@@ -38,8 +40,8 @@ class WebExtensionController(
      * will happen upon successful installation.
      *
      * @param runtime the [WebExtensionRuntime] the web extension should be installed in.
-     * @param onSuccess (optional) callback invoked if the extension was installed successfully,
-     * providing access to the [WebExtension] object.
+     * @param onSuccess (optional) callback invoked if the extension was installed successfully
+     * or is already installed.
      * @param onError (optional) callback invoked if there was an error installing the extension.
      */
     fun install(
@@ -47,7 +49,8 @@ class WebExtensionController(
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { _ -> }
     ) {
-        if (!installedExtensions.containsKey(extensionId)) {
+        val installedExtension = installedExtensions[extensionId]
+        if (installedExtension == null) {
             runtime.installWebExtension(extensionId, extensionUrl,
                 onSuccess = {
                     logger.debug("Installed extension: ${it.id}")
@@ -63,6 +66,8 @@ class WebExtensionController(
                     onError(throwable)
                 }
             )
+        } else {
+            onSuccess(installedExtension)
         }
     }
 
@@ -73,12 +78,12 @@ class WebExtensionController(
      *
      * @param engineSession the session the content message handler should be registered with.
      * @param messageHandler the message handler to register.
-     * @param name (optional) name of the port, defaults to the provided messagingId.
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      */
     fun registerContentMessageHandler(
         engineSession: EngineSession,
         messageHandler: MessageHandler,
-        name: String = messagingId
+        name: String = defaultPort
     ) {
         synchronized(this) {
             registerContentMessageHandler = {
@@ -94,11 +99,11 @@ class WebExtensionController(
      * will be replaced and there is no need to unregister.
      *
      * @param messageHandler the message handler to register.
-     * @param name (optional) name of the port, defaults to the provided messagingId.
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      * */
     fun registerBackgroundMessageHandler(
         messageHandler: MessageHandler,
-        name: String = messagingId
+        name: String = defaultPort
     ) {
         synchronized(this) {
             registerBackgroundMessageHandler = {
@@ -114,9 +119,9 @@ class WebExtensionController(
      *
      * @param msg the message to send
      * @param engineSession the session to send the content message to.
-     * @param name (optional) name of the port, defaults to the provided [messagingId].
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      */
-    fun sendContentMessage(msg: JSONObject, engineSession: EngineSession?, name: String = messagingId) {
+    fun sendContentMessage(msg: JSONObject, engineSession: EngineSession?, name: String = defaultPort) {
         engineSession?.let { session ->
             installedExtensions[extensionId]?.let { ext ->
                 val port = ext.getConnectedPort(name, session)
@@ -130,11 +135,11 @@ class WebExtensionController(
      * Sends a background message to the provided extension.
      *
      * @param msg the message to send
-     * @param name (optional) name of the port, defaults to the provided [messagingId].
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      */
     fun sendBackgroundMessage(
         msg: JSONObject,
-        name: String = messagingId
+        name: String = defaultPort
     ) {
         installedExtensions[extensionId]?.let { ext ->
             val port = ext.getConnectedPort(name)
@@ -147,9 +152,9 @@ class WebExtensionController(
      * Checks whether or not a port is connected for the provided session.
      *
      * @param engineSession the session the port should be connected to or null for a port to a background script.
-     * @param name (optional) name of the port, defaults to the provided [messagingId].
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      */
-    fun portConnected(engineSession: EngineSession?, name: String = messagingId): Boolean {
+    fun portConnected(engineSession: EngineSession?, name: String = defaultPort): Boolean {
         return installedExtensions[extensionId]?.let { ext ->
             ext.getConnectedPort(name, engineSession) != null
         } ?: false
@@ -159,9 +164,9 @@ class WebExtensionController(
      * Disconnects the port of the provided session.
      *
      * @param engineSession the session the port is connected to or null for a port to a background script.
-     * @param name (optional) name of the port, defaults to the provided [messagingId].
+     * @param name (optional) name of the port, if not specified [defaultPort] will be used.
      */
-    fun disconnectPort(engineSession: EngineSession?, name: String = messagingId) {
+    fun disconnectPort(engineSession: EngineSession?, name: String = defaultPort) {
         installedExtensions[extensionId]?.disconnectPort(name, engineSession)
     }
 

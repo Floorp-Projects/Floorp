@@ -62,13 +62,13 @@ class ReaderViewFeature(
     internal var extensionController = WebExtensionController(
         READER_VIEW_EXTENSION_ID,
         READER_VIEW_EXTENSION_URL,
-        READER_VIEW_MESSAGING_ID
+        READER_VIEW_CONTENT_PORT
     )
 
     @VisibleForTesting
     internal val config = ReaderViewConfig(context) { message ->
         val engineSession = store.state.selectedTab?.engineState?.engineSession
-        extensionController.sendContentMessage(message, engineSession)
+        extensionController.sendContentMessage(message, engineSession, READER_VIEW_ACTIVE_CONTENT_PORT)
     }
 
     private val controlsPresenter = ReaderViewControlsPresenter(controlsView, config)
@@ -79,7 +79,6 @@ class ReaderViewFeature(
 
     override fun start() {
         ensureExtensionInstalled()
-        connectReaderViewContentScript()
 
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.tabs }
@@ -93,7 +92,6 @@ class ReaderViewFeature(
                     if (tab.readerState.checkRequired) {
                         checkReaderState(tab)
                     }
-
                     if (tab.id == store.state.selectedTabId) {
                         maybeNotifyReaderStatusChange(tab.readerState.readerable, tab.readerState.active)
                     }
@@ -128,7 +126,11 @@ class ReaderViewFeature(
     fun showReaderView(session: TabSessionState? = store.state.selectedTab) {
         session?.let { it ->
             if (!it.readerState.active) {
-                extensionController.sendContentMessage(createShowReaderMessage(config), it.engineState.engineSession)
+                extensionController.sendContentMessage(
+                    createShowReaderMessage(config),
+                    it.engineState.engineSession,
+                    READER_VIEW_CONTENT_PORT
+                )
                 store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, true))
             }
         }
@@ -146,7 +148,11 @@ class ReaderViewFeature(
                 if (it.content.canGoBack) {
                     it.engineState.engineSession?.goBack()
                 } else {
-                    extensionController.sendContentMessage(createHideReaderMessage(), it.engineState.engineSession)
+                    extensionController.sendContentMessage(
+                        createHideReaderMessage(),
+                        it.engineState.engineSession,
+                        READER_VIEW_ACTIVE_CONTENT_PORT
+                    )
                 }
             }
         }
@@ -169,8 +175,12 @@ class ReaderViewFeature(
     @VisibleForTesting
     internal fun checkReaderState(session: TabSessionState? = store.state.selectedTab) {
         session?.engineState?.engineSession?.let { engineSession ->
-            if (extensionController.portConnected(engineSession)) {
-                extensionController.sendContentMessage(createCheckReaderStateMessage(), engineSession)
+            val message = createCheckReaderStateMessage()
+            if (extensionController.portConnected(engineSession, READER_VIEW_CONTENT_PORT)) {
+                extensionController.sendContentMessage(message, engineSession, READER_VIEW_CONTENT_PORT)
+            }
+            if (extensionController.portConnected(engineSession, READER_VIEW_ACTIVE_CONTENT_PORT)) {
+                extensionController.sendContentMessage(message, engineSession, READER_VIEW_ACTIVE_CONTENT_PORT)
             }
             store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(session.id, false))
         }
@@ -179,8 +189,16 @@ class ReaderViewFeature(
     @VisibleForTesting
     internal fun connectReaderViewContentScript(session: TabSessionState? = store.state.selectedTab) {
         session?.engineState?.engineSession?.let { engineSession ->
-            val messageHandler = ReaderViewContentMessageHandler(store, session.id, WeakReference(config))
-            extensionController.registerContentMessageHandler(engineSession, messageHandler)
+            extensionController.registerContentMessageHandler(
+                engineSession,
+                ActiveReaderViewContentMessageHandler(store, session.id, WeakReference(config)),
+                READER_VIEW_ACTIVE_CONTENT_PORT
+            )
+            extensionController.registerContentMessageHandler(
+                engineSession,
+                ReaderViewContentMessageHandler(store, session.id),
+                READER_VIEW_CONTENT_PORT
+            )
             store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(session.id, false))
         }
     }
@@ -197,26 +215,18 @@ class ReaderViewFeature(
     }
 
     private fun ensureExtensionInstalled() {
+        val feature = WeakReference(this)
         extensionController.install(engine, onSuccess = {
-            // In case the extension was installed while an extension page was
-            // displayed (if on startup we opened directly into a
-            // restored reader view page), we have to reload the extension page,
-            // as we may have missed to connect the port.
-            val selectedTab = store.state.selectedTab
-            if (selectedTab?.readerState?.active == true) {
-                selectedTab.engineState.engineSession?.reload()
-            }
+            feature.get()?.connectReaderViewContentScript()
         })
     }
 
-    private class ReaderViewContentMessageHandler(
-        private val store: BrowserStore,
-        private val sessionId: String,
-        // This needs to be a weak reference because the engine session this message handler will be
-        // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
-        // but we don't want to prevent the feature (and therefore its context/fragment) from
-        // being garbage collected. The config has references to both the context and feature.
-        private val config: WeakReference<ReaderViewConfig>
+    /**
+     * Handles content messages from regular pages.
+     */
+    private open class ReaderViewContentMessageHandler(
+        protected val store: BrowserStore,
+        protected val sessionId: String
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             port.postMessage(createCheckReaderStateMessage())
@@ -224,19 +234,37 @@ class ReaderViewFeature(
 
         override fun onPortMessage(message: Any, port: Port) {
             if (message is JSONObject) {
+                val readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
+                store.dispatch(ReaderAction.UpdateReaderableAction(sessionId, readerable))
+            }
+        }
+    }
+
+    /**
+     * Handles content messages from active reader pages.
+     */
+    private class ActiveReaderViewContentMessageHandler(
+        store: BrowserStore,
+        sessionId: String,
+        // This needs to be a weak reference because the engine session this message handler will be
+        // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
+        // but we don't want to prevent the feature (and therefore its context/fragment) from
+        // being garbage collected. The config has references to both the context and feature.
+        private val config: WeakReference<ReaderViewConfig>
+    ) : ReaderViewContentMessageHandler(store, sessionId) {
+
+        override fun onPortMessage(message: Any, port: Port) {
+            super.onPortMessage(message, port)
+
+            if (message is JSONObject) {
                 val baseUrl = message.getString(BASE_URL_RESPONSE_MESSAGE_KEY)
                 store.dispatch(ReaderAction.UpdateReaderBaseUrlAction(sessionId, baseUrl))
 
-                val readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
-                store.dispatch(ReaderAction.UpdateReaderableAction(sessionId, readerable))
-
-                if (message.has(ACTIVE_URL_RESPONSE_MESSAGE_KEY)) {
-                    config.get()?.let { config ->
-                        port.postMessage(createShowReaderMessage(config))
-                    }
-                    val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
-                    store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
+                config.get()?.let { config ->
+                    port.postMessage(createShowReaderMessage(config))
                 }
+                val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
+                store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
             }
         }
     }
@@ -244,7 +272,12 @@ class ReaderViewFeature(
     @VisibleForTesting
     companion object {
         internal const val READER_VIEW_EXTENSION_ID = "readerview@mozac.org"
-        internal const val READER_VIEW_MESSAGING_ID = "mozacReaderview"
+        // Name of the port connected to all pages for checking whether or not
+        // a page is readerable (see readerview_content.js).
+        internal const val READER_VIEW_CONTENT_PORT = "mozacReaderview"
+        // Name of the port connected to active reader pages for updating
+        // appearance configuration (see readerview.js).
+        internal const val READER_VIEW_ACTIVE_CONTENT_PORT = "mozacReaderviewActive"
         internal const val READER_VIEW_EXTENSION_URL = "resource://android/assets/extensions/readerview/"
 
         // Constants for building messages sent to the web extension:

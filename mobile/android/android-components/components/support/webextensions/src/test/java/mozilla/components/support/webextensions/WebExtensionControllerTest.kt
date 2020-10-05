@@ -25,7 +25,7 @@ import org.mockito.Mockito.verify
 
 class WebExtensionControllerTest {
     private val extensionId = "test-id"
-    private val messagingId = "test-messaging-id"
+    private val defaultPort = "test-messaging-id"
     private val extensionUrl = "test-url"
 
     @Before
@@ -34,9 +34,9 @@ class WebExtensionControllerTest {
     }
 
     @Test
-    fun `install webextension`() {
+    fun `install webextension - installs and invokes success and error callbacks`() {
         val engine: Engine = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
 
         var onSuccessInvoked = false
         var onErrorInvoked = false
@@ -70,21 +70,43 @@ class WebExtensionControllerTest {
     }
 
     @Test
+    fun `install webextension - invokes success callback if extension already installed`() {
+        val engine: Engine = mock()
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
+
+        var onSuccessInvoked = false
+        var onErrorInvoked = false
+        WebExtensionController.installedExtensions[extensionId] = mock()
+        controller.install(engine, onSuccess = { onSuccessInvoked = true }, onError = { onErrorInvoked = true })
+
+        val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
+        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
+        verify(engine, never()).installWebExtension(
+            eq(extensionId),
+            eq(extensionUrl),
+            onSuccess.capture(),
+            onError.capture()
+        )
+        assertTrue(onSuccessInvoked)
+        assertFalse(onErrorInvoked)
+    }
+
+    @Test
     fun `register content message handler if extension installed`() {
         val extension: WebExtension = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
         WebExtensionController.installedExtensions[extensionId] = extension
 
         val session: EngineSession = mock()
         val messageHandler: MessageHandler = mock()
         controller.registerContentMessageHandler(session, messageHandler)
-        verify(extension).registerContentMessageHandler(session, messagingId, messageHandler)
+        verify(extension).registerContentMessageHandler(session, defaultPort, messageHandler)
     }
 
     @Test
     fun `register content message handler before extension is installed`() {
         val engine: Engine = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
         controller.install(engine)
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
@@ -102,18 +124,18 @@ class WebExtensionControllerTest {
 
         val extension: WebExtension = mock()
         onSuccess.value.invoke(extension)
-        verify(extension).registerContentMessageHandler(session, messagingId, messageHandler)
+        verify(extension).registerContentMessageHandler(session, defaultPort, messageHandler)
     }
 
     @Test
     fun `send content message`() {
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
 
         val message: JSONObject = mock()
         val extension: WebExtension = mock()
         val session: EngineSession = mock()
         val port: Port = mock()
-        whenever(extension.getConnectedPort(messagingId, session)).thenReturn(port)
+        whenever(extension.getConnectedPort(defaultPort, session)).thenReturn(port)
 
         controller.sendContentMessage(message, null)
         verify(port, never()).postMessage(message)
@@ -130,18 +152,18 @@ class WebExtensionControllerTest {
     @Test
     fun `register background message handler if extension installed`() {
         val extension: WebExtension = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
         WebExtensionController.installedExtensions[extensionId] = extension
 
         val messageHandler: MessageHandler = mock()
         controller.registerBackgroundMessageHandler(messageHandler)
-        verify(extension).registerBackgroundMessageHandler(messagingId, messageHandler)
+        verify(extension).registerBackgroundMessageHandler(defaultPort, messageHandler)
     }
 
     @Test
     fun `register background message handler before extension is installed`() {
         val engine: Engine = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
         controller.install(engine)
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
@@ -158,17 +180,17 @@ class WebExtensionControllerTest {
 
         val extension: WebExtension = mock()
         onSuccess.value.invoke(extension)
-        verify(extension).registerBackgroundMessageHandler(messagingId, messageHandler)
+        verify(extension).registerBackgroundMessageHandler(defaultPort, messageHandler)
     }
 
     @Test
     fun `send background message`() {
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
 
         val message: JSONObject = mock()
         val extension: WebExtension = mock()
         val port: Port = mock()
-        whenever(extension.getConnectedPort(messagingId)).thenReturn(port)
+        whenever(extension.getConnectedPort(defaultPort)).thenReturn(port)
 
         controller.sendBackgroundMessage(message)
         verify(port, never()).postMessage(message)
@@ -181,11 +203,11 @@ class WebExtensionControllerTest {
 
     @Test
     fun `check if port connected`() {
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
 
         val extension: WebExtension = mock()
         val session: EngineSession = mock()
-        whenever(extension.getConnectedPort(messagingId, session)).thenReturn(mock())
+        whenever(extension.getConnectedPort(defaultPort, session)).thenReturn(mock())
 
         assertFalse(controller.portConnected(null))
         assertFalse(controller.portConnected(mock()))
@@ -200,17 +222,17 @@ class WebExtensionControllerTest {
     @Test
     fun `disconnect port`() {
         val extension: WebExtension = mock()
-        val controller = WebExtensionController(extensionId, extensionUrl, messagingId)
+        val controller = WebExtensionController(extensionId, extensionUrl, defaultPort)
 
         controller.disconnectPort(null)
-        verify(extension, never()).disconnectPort(eq(messagingId), any())
+        verify(extension, never()).disconnectPort(eq(defaultPort), any())
 
         val session: EngineSession = mock()
         controller.disconnectPort(session)
-        verify(extension, never()).disconnectPort(eq(messagingId), eq(session))
+        verify(extension, never()).disconnectPort(eq(defaultPort), eq(session))
 
         WebExtensionController.installedExtensions[extensionId] = extension
         controller.disconnectPort(session)
-        verify(extension, times(1)).disconnectPort(eq(messagingId), eq(session))
+        verify(extension, times(1)).disconnectPort(eq(defaultPort), eq(session))
     }
 }
