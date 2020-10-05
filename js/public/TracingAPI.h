@@ -123,17 +123,13 @@ class JS_PUBLIC_API JSTracer {
   JSTracer(JSRuntime* rt, JS::TracerKind kind,
            JS::WeakMapTraceAction weakMapAction =
                JS::WeakMapTraceAction::TraceValues)
-      : runtime_(rt),
-        kind_(kind),
-        weakMapAction_(weakMapAction),
-        traceWeakEdges_(true),
-#ifdef DEBUG
-        checkEdges_(true),
-#endif
-        canSkipJsids_(false) {
-  }
+      : runtime_(rt), kind_(kind), weakMapAction_(weakMapAction) {}
 
   void setTraceWeakEdges(bool value) { traceWeakEdges_ = value; }
+
+  // If this is set to false, then the tracer will skip some jsids
+  // to improve performance. This is needed for the cycle collector.
+  void setCanSkipJsids(bool value) { canSkipJsids_ = value; }
 
 #ifdef DEBUG
   // Set whether to check edges are valid in debug builds.
@@ -146,14 +142,13 @@ class JS_PUBLIC_API JSTracer {
   const JS::WeakMapTraceAction weakMapAction_;
 
   // Whether the tracer should trace weak edges. GCMarker sets this to false.
-  bool traceWeakEdges_;
+  bool traceWeakEdges_ = true;
+
+  bool canSkipJsids_ = false;
 
 #ifdef DEBUG
-  bool checkEdges_;
+  bool checkEdges_ = true;
 #endif
-
- protected:
-  bool canSkipJsids_;
 };
 
 namespace js {
@@ -289,11 +284,6 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
    public:
     virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
   };
-
- protected:
-  // If this is set to false, then the tracer will skip some jsids
-  // to improve performance. This is needed for the cycle collector.
-  void setCanSkipJsids(bool value) { canSkipJsids_ = value; }
 
  private:
   // This class implements the GenericTracer interface to dispatches to onChild.
