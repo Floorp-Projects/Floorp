@@ -15,6 +15,7 @@
 #include "prmem.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemUtils.h"
+#include "mozilla/BaseProfilerMarkers.h"
 
 #if defined(XP_MACOSX)
 #  include <fcntl.h>
@@ -360,6 +361,37 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
   if (!aFilePath) {
     return;
   }
+
+#ifdef MOZ_GECKO_PROFILER
+#  ifdef XP_WIN
+  auto WideToUTF8 = [](const wchar_t* aStr) -> std::string {
+    std::string s;
+    // Determine the number of output bytes (including null terminator).
+    const int numConv = ::WideCharToMultiByte(CP_UTF8, 0, aStr, -1, nullptr, 0,
+                                              nullptr, nullptr);
+    if (numConv == 0) {
+      return s;
+    }
+    s.resize(numConv);
+    const int numConvd = ::WideCharToMultiByte(CP_UTF8, 0, aStr, -1, s.data(),
+                                               numConv, nullptr, nullptr);
+    if (numConvd != numConv) {
+      // Error during conversion, remove any temporary data.
+      s.clear();
+    }
+    return s;
+  };
+#  endif
+
+  AUTO_BASE_PROFILER_MARKER_TEXT("ReadAheadLib", OTHER, {},
+#  ifdef XP_WIN
+                                 WideToUTF8(aFilePath)
+#  else
+                                 aFilePath
+#  endif
+  );
+#endif
+
 #if defined(XP_WIN)
   if (!CanPrefetchMemory()) {
     ReadAheadFile(aFilePath);
