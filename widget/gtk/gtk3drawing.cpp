@@ -18,6 +18,7 @@
 #include "WidgetStyleCache.h"
 #include "nsString.h"
 #include "nsDebug.h"
+#include "mozilla/Telemetry.h"
 
 #include <math.h>
 #include <dlfcn.h>
@@ -2793,6 +2794,9 @@ static void InitScrollbarMetrics(ScrollbarGTKMetrics* aMetrics,
       "has-secondary-forward-stepper", &secondary_forward, nullptr);
   bool hasButtons =
       backward || forward || secondary_backward || secondary_forward;
+  mozilla::Telemetry::ScalarSet(
+      mozilla::Telemetry::ScalarID::WIDGET_GTK_THEME_HAS_SCROLLBAR_BUTTONS,
+      hasButtons);
 
   if (gtk_get_minor_version() < 20) {
     gint slider_width, trough_border, stepper_size, min_slider_size;
