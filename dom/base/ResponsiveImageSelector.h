@@ -9,6 +9,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/FunctionRef.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsString.h"
@@ -31,6 +32,10 @@ class ResponsiveImageSelector {
 
   explicit ResponsiveImageSelector(nsIContent* aContent);
   explicit ResponsiveImageSelector(dom::Document* aDocument);
+
+  // Parses the raw candidates and calls into the callback for each one of them.
+  static void ParseSourceSet(const nsAString& aSrcSet,
+                             FunctionRef<void(ResponsiveImageCandidate&&)>);
 
   // NOTE ABOUT CURRENT SELECTION
   //
@@ -82,17 +87,13 @@ class ResponsiveImageSelector {
   // return - true if the selected image result changed.
   bool SelectImage(bool aReselect = false);
 
-  Span<const ResponsiveImageCandidate> AllCandidates() const {
-    return mCandidates;
-  }
-
  protected:
   virtual ~ResponsiveImageSelector();
 
  private:
   // Append a candidate unless its selector is duplicated by a higher priority
   // candidate
-  void AppendCandidateIfUnique(const ResponsiveImageCandidate& aCandidate);
+  void AppendCandidateIfUnique(ResponsiveImageCandidate&& aCandidate);
 
   // Append a default candidate with this URL if necessary. Does not check if
   // the array already contains one, use SetDefaultSource instead.
@@ -131,8 +132,8 @@ class ResponsiveImageSelector {
 class ResponsiveImageCandidate {
  public:
   ResponsiveImageCandidate();
-  ResponsiveImageCandidate(const nsAString& aURLString, double aDensity,
-                           nsIPrincipal* aTriggeringPrincipal = nullptr);
+  ResponsiveImageCandidate(const ResponsiveImageCandidate&) = delete;
+  ResponsiveImageCandidate(ResponsiveImageCandidate&&) = default;
 
   void SetURLSpec(const nsAString& aURLString);
   void SetTriggeringPrincipal(nsIPrincipal* aPrincipal);
