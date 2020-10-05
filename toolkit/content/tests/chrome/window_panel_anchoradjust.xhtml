@@ -37,7 +37,9 @@ SimpleTest.waitForExplicitFinish();
 
 function next()
 {
-  return new Promise(r => SimpleTest.executeSoon(r));
+  return new Promise(r => {
+    requestAnimationFrame(() => requestAnimationFrame(r));
+  })
 }
 
 function waitForPanel(panel, event)  
@@ -52,116 +54,119 @@ function isWithinHalfPixel(a, b)
   return Math.abs(a - b) <= 0.5;
 }
 
-function runTests() {
-  (async function() {
-    let panel = document.getElementById("panel");
-    let anchor = document.getElementById("anchor");
+async function runTests() {
+  let panel = document.getElementById("panel");
+  let anchor = document.getElementById("anchor");
 
-    let popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(anchor, "after_start");
-    await popupshown;
+  let popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor, "after_start");
+  info("popupshown");
+  await popupshown;
 
-    let anchorrect = anchor.getBoundingClientRect();
-    let panelrect = panel.getBoundingClientRect();
-    let xarrowdiff = panelrect.left - anchorrect.left;
+  let anchorrect = anchor.getBoundingClientRect();
+  let panelrect = panel.getBoundingClientRect();
+  let xarrowdiff = panelrect.left - anchorrect.left;
 
-    // When the anchor is moved in some manner, the panel should be adjusted
-    let popuppositioned = waitForPanel(panel, "popuppositioned");
-    document.getElementById("anchor").style.marginLeft = "50px"
-    await popuppositioned;
+  // When the anchor is moved in some manner, the panel should be adjusted
+  let popuppositioned = waitForPanel(panel, "popuppositioned");
+  document.getElementById("anchor").style.marginLeft = "50px"
+  info("before popuppositioned");
+  await popuppositioned;
+  info("after popuppositioned");
 
-    anchorrect = anchor.getBoundingClientRect();
-    panelrect = panel.getBoundingClientRect();
-    ok(isWithinHalfPixel(anchorrect.left, panelrect.left - xarrowdiff), "anchor moved x");
-    ok(isWithinHalfPixel(anchorrect.bottom, panelrect.top), "anchor moved y");
+  anchorrect = anchor.getBoundingClientRect();
+  panelrect = panel.getBoundingClientRect();
+  ok(isWithinHalfPixel(anchorrect.left, panelrect.left - xarrowdiff), "anchor moved x");
+  ok(isWithinHalfPixel(anchorrect.bottom, panelrect.top), "anchor moved y");
 
-    // moveToAnchor is used to change the anchor
-    let anchor2 = document.getElementById("anchor2");
-    popuppositioned = waitForPanel(panel, "popuppositioned");
-    panel.moveToAnchor(anchor2, "after_end");
-    await popuppositioned;
+  // moveToAnchor is used to change the anchor
+  let anchor2 = document.getElementById("anchor2");
+  popuppositioned = waitForPanel(panel, "popuppositioned");
+  panel.moveToAnchor(anchor2, "after_end");
+  info("before popuppositioned 2");
+  await popuppositioned;
+  info("after popuppositioned 2");
 
-    let anchor2rect = anchor2.getBoundingClientRect();
-    panelrect = panel.getBoundingClientRect();
-    ok(isWithinHalfPixel(anchor2rect.right, panelrect.right + xarrowdiff), "new anchor x");
-    ok(isWithinHalfPixel(anchor2rect.bottom, panelrect.top), "new anchor y");
+  let anchor2rect = anchor2.getBoundingClientRect();
+  panelrect = panel.getBoundingClientRect();
+  ok(isWithinHalfPixel(anchor2rect.right, panelrect.right + xarrowdiff), "new anchor x");
+  ok(isWithinHalfPixel(anchor2rect.bottom, panelrect.top), "new anchor y");
 
-    // moveToAnchor is used to change the anchor with an x and y offset
-    popuppositioned = waitForPanel(panel, "popuppositioned");
-    panel.moveToAnchor(anchor2, "after_end", 7, 9);
-    await popuppositioned;
+  // moveToAnchor is used to change the anchor with an x and y offset
+  popuppositioned = waitForPanel(panel, "popuppositioned");
+  panel.moveToAnchor(anchor2, "after_end", 7, 9);
+  await popuppositioned;
 
-    anchor2rect = anchor2.getBoundingClientRect();
-    panelrect = panel.getBoundingClientRect();
-    ok(isWithinHalfPixel(anchor2rect.right + 7, panelrect.right + xarrowdiff), "new anchor with offset x");
-    ok(isWithinHalfPixel(anchor2rect.bottom + 9, panelrect.top), "new anchor with offset y");
+  anchor2rect = anchor2.getBoundingClientRect();
+  panelrect = panel.getBoundingClientRect();
+  ok(isWithinHalfPixel(anchor2rect.right + 7, panelrect.right + xarrowdiff), "new anchor with offset x");
+  ok(isWithinHalfPixel(anchor2rect.bottom + 9, panelrect.top), "new anchor with offset y");
 
-    // When the container of the anchor is collapsed, the panel should be hidden.
-    let popuphidden = waitForPanel(panel, "popuphidden");
-    anchor2.parentNode.collapsed = true;
-    await popuphidden;
+  // When the container of the anchor is collapsed, the panel should be hidden.
+  let popuphidden = waitForPanel(panel, "popuphidden");
+  anchor2.parentNode.collapsed = true;
+  await popuphidden;
 
-    popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(anchor, "after_start");
-    await popupshown;
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor, "after_start");
+  await popupshown;
 
-    // When the deck containing the anchor changes to a different page, the panel should be hidden.
-    popuphidden = waitForPanel(panel, "popuphidden");
-    document.getElementById("deck").selectedIndex = 1;
-    await popuphidden;
+  // When the deck containing the anchor changes to a different page, the panel should be hidden.
+  popuphidden = waitForPanel(panel, "popuphidden");
+  document.getElementById("deck").selectedIndex = 1;
+  await popuphidden;
 
-    let anchor3 = document.getElementById("anchor3");
-    popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(anchor3, "after_start");
-    await popupshown;
+  let anchor3 = document.getElementById("anchor3");
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor3, "after_start");
+  await popupshown;
 
-    // When the anchor is hidden; the panel should be hidden.
-    popuphidden = waitForPanel(panel, "popuphidden");
-    anchor3.parentNode.hidden = true;
-    await popuphidden;
+  // When the anchor is hidden; the panel should be hidden.
+  popuphidden = waitForPanel(panel, "popuphidden");
+  anchor3.parentNode.hidden = true;
+  await popuphidden;
 
-    // When the panel is anchored to an element in a popup, the panel should
-    // also be hidden when that popup is hidden.
-    let menupopup = document.getElementById("menupopup");
-    popupshown = waitForPanel(menupopup, "popupshown");
-    menupopup.openPopupAtScreen(200, 200);
-    await popupshown;
+  // When the panel is anchored to an element in a popup, the panel should
+  // also be hidden when that popup is hidden.
+  let menupopup = document.getElementById("menupopup");
+  popupshown = waitForPanel(menupopup, "popupshown");
+  menupopup.openPopupAtScreen(200, 200);
+  await popupshown;
 
-    popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(document.getElementById("menuanchor"), "after_start");
-    await popupshown;
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(document.getElementById("menuanchor"), "after_start");
+  await popupshown;
 
-    popuphidden = waitForPanel(panel, "popuphidden");
-    let menupopuphidden = waitForPanel(menupopup, "popuphidden");
-    menupopup.hidePopup();
-    await popuphidden;
-    await menupopuphidden;
+  popuphidden = waitForPanel(panel, "popuphidden");
+  let menupopuphidden = waitForPanel(menupopup, "popuphidden");
+  menupopup.hidePopup();
+  await popuphidden;
+  await menupopuphidden;
 
-    // The panel should no longer follow anchors.
-    panel.setAttribute("followanchor", "false");
+  // The panel should no longer follow anchors.
+  panel.setAttribute("followanchor", "false");
 
-    let anchor4 = document.getElementById("anchor4");
-    popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(anchor4, "after_start");
-    await popupshown;
+  let anchor4 = document.getElementById("anchor4");
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor4, "after_start");
+  await popupshown;
 
-    let anchor4rect = anchor4.getBoundingClientRect();
-    panelrect = panel.getBoundingClientRect();
+  let anchor4rect = anchor4.getBoundingClientRect();
+  panelrect = panel.getBoundingClientRect();
 
-    document.getElementById("anchor4").style.marginLeft = "50px"
-    await next();
+  anchor4.style.marginLeft = "50px"
+  await next();
 
-    panelrect = panel.getBoundingClientRect();
-    ok(isWithinHalfPixel(anchor4rect.left, panelrect.left - xarrowdiff), "no follow anchor x");
-    ok(isWithinHalfPixel(anchor4rect.bottom, panelrect.top), "no follow anchor y");
+  panelrect = panel.getBoundingClientRect();
+  ok(isWithinHalfPixel(anchor4rect.left, panelrect.left - xarrowdiff), "no follow anchor x");
+  ok(isWithinHalfPixel(anchor4rect.bottom, panelrect.top), "no follow anchor y");
 
-    popuphidden = waitForPanel(panel, "popuphidden");
-    panel.hidePopup();
-    await popuphidden;
+  popuphidden = waitForPanel(panel, "popuphidden");
+  panel.hidePopup();
+  await popuphidden;
 
-    window.close();
-    window.arguments[0].SimpleTest.finish();
-  })();
+  window.close();
+  window.arguments[0].SimpleTest.finish();
 }
 
 function ok(condition, message) {
