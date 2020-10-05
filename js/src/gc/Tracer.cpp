@@ -365,9 +365,11 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
   buf[bufsize - 1] = '\0';
 }
 
-JS::CallbackTracer::CallbackTracer(JSContext* cx,
+JS::CallbackTracer::CallbackTracer(JSContext* cx, JS::TracerKind kind,
                                    WeakMapTraceAction weakMapAction)
-    : CallbackTracer(cx->runtime(), weakMapAction) {}
+    : CallbackTracer(cx->runtime(), kind, weakMapAction) {
+  MOZ_ASSERT(isCallbackTracer());
+}
 
 uint32_t JSTracer::gcNumberForMarking() const {
   MOZ_ASSERT(isMarkingTracer());

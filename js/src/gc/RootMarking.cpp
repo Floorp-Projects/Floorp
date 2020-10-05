@@ -448,7 +448,8 @@ class AssertNoRootsTracer final : public JS::CallbackTracer {
 
  public:
   explicit AssertNoRootsTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::WeakMapTraceAction::TraceKeysAndValues) {}
+      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
+                           JS::WeakMapTraceAction::TraceKeysAndValues) {}
 };
 #endif  // DEBUG
 
@@ -516,16 +517,11 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer {
 
  public:
   explicit BufferGrayRootsTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt), bufferingGrayRootsFailed(false) {}
+      : JS::CallbackTracer(rt, JS::TracerKind::GrayBuffering),
+        bufferingGrayRootsFailed(false) {}
 
   bool failed() const { return bufferingGrayRootsFailed; }
   void setFailed() { bufferingGrayRootsFailed = true; }
-
-#ifdef DEBUG
-  TracerKind getTracerKind() const override {
-    return TracerKind::GrayBuffering;
-  }
-#endif
 };
 
 void js::gc::GCRuntime::bufferGrayRoots() {

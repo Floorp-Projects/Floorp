@@ -32,10 +32,6 @@ namespace jit {
 class JitCode;
 }  // namespace jit
 
-#ifdef DEBUG
-bool IsTracerKind(JSTracer* trc, JS::CallbackTracer::TracerKind kind);
-#endif
-
 namespace gc {
 
 struct Cell;
