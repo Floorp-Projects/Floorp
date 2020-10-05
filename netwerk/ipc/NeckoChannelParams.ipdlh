@@ -367,6 +367,7 @@ struct HttpConnectionInfoCloneArgs
   nsCString topWindowOrigin;
   bool isHttp3;
   bool hasIPHintAddress;
+  nsCString echConfig;
   ProxyInfoCloneArgs[] proxyInfo;
 };
 

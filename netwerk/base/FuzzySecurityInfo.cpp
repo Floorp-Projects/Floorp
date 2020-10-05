@@ -319,6 +319,15 @@ FuzzySecurityInfo::SetEsniTxt(const nsACString& aEsniTxt) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::GetEchConfig(nsACString& aEchConfig) { return NS_OK; }
+
+NS_IMETHODIMP
+FuzzySecurityInfo::SetEchConfig(const nsACString& aEchConfig) {
+  MOZ_CRASH("Unused");
+  return NS_OK;
+}
+
 void FuzzySecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   MOZ_CRASH("Unused");
 }

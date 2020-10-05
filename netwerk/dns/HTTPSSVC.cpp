@@ -214,6 +214,11 @@ Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
 Maybe<nsCString> SVCBRecord::GetAlpn() { return mAlpn; }
 
+NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
+  aEchConfig = mData.mEchConfig;
+  return NS_OK;
+}
+
 NS_IMETHODIMP SVCBRecord::GetValues(nsTArray<RefPtr<nsISVCParam>>& aValues) {
   for (const auto& v : mData.mSvcFieldValue) {
     RefPtr<nsISVCParam> param = new SvcParam(v.mValue);
