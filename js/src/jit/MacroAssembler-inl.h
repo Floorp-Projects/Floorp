@@ -44,6 +44,34 @@ DynFn DynamicFunction(Sig fun) {
   return DynFn{sig.address(fun)};
 }
 
+// Helper for generatePreBarrier.
+inline DynFn JitMarkFunction(MIRType type) {
+  switch (type) {
+    case MIRType::Value: {
+      using Fn = void (*)(JSRuntime * rt, Value * vp);
+      return DynamicFunction<Fn>(MarkValueFromJit);
+    }
+    case MIRType::String: {
+      using Fn = void (*)(JSRuntime * rt, JSString * *stringp);
+      return DynamicFunction<Fn>(MarkStringFromJit);
+    }
+    case MIRType::Object: {
+      using Fn = void (*)(JSRuntime * rt, JSObject * *objp);
+      return DynamicFunction<Fn>(MarkObjectFromJit);
+    }
+    case MIRType::Shape: {
+      using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
+      return DynamicFunction<Fn>(MarkShapeFromJit);
+    }
+    case MIRType::ObjectGroup: {
+      using Fn = void (*)(JSRuntime * rt, ObjectGroup * *groupp);
+      return DynamicFunction<Fn>(MarkObjectGroupFromJit);
+    }
+    default:
+      MOZ_CRASH();
+  }
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
