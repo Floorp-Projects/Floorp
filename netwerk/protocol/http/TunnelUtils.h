@@ -271,7 +271,6 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
 
   bool mForcePlainText;
   TimeStamp mTimestampSyn;
-  RefPtr<nsHttpConnectionInfo> mConnInfo;
 
   // mTunneledConn, mTunnelTransport, mTunnelStreamIn, mTunnelStreamOut
   // are the connectors to the "real" http connection. They are created
