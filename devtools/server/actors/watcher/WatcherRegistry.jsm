@@ -63,45 +63,6 @@ const SUPPORTED_DATA = {
 };
 
 /**
- * Retrieve the data saved into `sharedData` that is used to know
- * about which type of targets and resources we care listening about.
- * `watchedDataByWatcherActor` is saved into `sharedData` after each mutation,
- * but `watchedDataByWatcherActor` is the source of truth.
- *
- * @param WatcherActor watcher
- *               The related WatcherActor which starts/stops observing.
- * @param object options (optional)
- *               A dictionary object with `createData` boolean attribute.
- *               If this attribute is set to true, we create the data structure in the Map
- *               if none exists for this prefix.
- */
-function getWatchedData(watcher, { createData = false } = {}) {
-  // Use WatcherActor ID as a key as we may have multiple clients willing to watch for targets.
-  // For example, a Browser Toolbox debugging everything and a Content Toolbox debugging
-  // just one tab. We might also have multiple watchers, on the same connection when using about:debugging.
-  const watcherActorID = watcher.actorID;
-  let watchedData = watchedDataByWatcherActor.get(watcherActorID);
-  if (!watchedData && createData) {
-    watchedData = {
-      // The Browser ID will be helpful to identify which BrowsingContext should be considered
-      // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
-      // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
-      // we are currently inspecting.
-      browserId: watcher.browserId,
-      // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
-      connectionPrefix: watcher.conn.prefix,
-    };
-    // Define empty default array for all data
-    for (const name of Object.values(SUPPORTED_DATA)) {
-      watchedData[name] = [];
-    }
-    watchedDataByWatcherActor.set(watcherActorID, watchedData);
-    watcherActors.set(watcherActorID, watcher);
-  }
-  return watchedData;
-}
-
-/**
  * Use `sharedData` to allow processes, early during their creation,
  * to know which resources should be listened to. This will be read
  * from the Target actor, when it gets created early during process start,
@@ -127,22 +88,47 @@ const WatcherRegistry = {
    *         Returns true if already watching.
    */
   isWatchingTargets(watcher, targetType) {
-    const watchedData = getWatchedData(watcher);
+    const watchedData = this.getWatchedData(watcher);
     return watchedData && watchedData.targets.includes(targetType);
   },
 
   /**
-   * Get currently watched resources for a given watcher.
+   * Retrieve the data saved into `sharedData` that is used to know
+   * about which type of targets and resources we care listening about.
+   * `watchedDataByWatcherActor` is saved into `sharedData` after each mutation,
+   * but `watchedDataByWatcherActor` is the source of truth.
    *
-   * @return Array<String>
-   *         Returns the list of currently watched resource types.
+   * @param WatcherActor watcher
+   *               The related WatcherActor which starts/stops observing.
+   * @param object options (optional)
+   *               A dictionary object with `createData` boolean attribute.
+   *               If this attribute is set to true, we create the data structure in the Map
+   *               if none exists for this prefix.
    */
-  getWatchedResources(watcher) {
-    const watchedData = getWatchedData(watcher);
-    if (watchedData) {
-      return watchedData.resources;
+  getWatchedData(watcher, { createData = false } = {}) {
+    // Use WatcherActor ID as a key as we may have multiple clients willing to watch for targets.
+    // For example, a Browser Toolbox debugging everything and a Content Toolbox debugging
+    // just one tab. We might also have multiple watchers, on the same connection when using about:debugging.
+    const watcherActorID = watcher.actorID;
+    let watchedData = watchedDataByWatcherActor.get(watcherActorID);
+    if (!watchedData && createData) {
+      watchedData = {
+        // The Browser ID will be helpful to identify which BrowsingContext should be considered
+        // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
+        // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
+        // we are currently inspecting.
+        browserId: watcher.browserId,
+        // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
+        connectionPrefix: watcher.conn.prefix,
+      };
+      // Define empty default array for all data
+      for (const name of Object.values(SUPPORTED_DATA)) {
+        watchedData[name] = [];
+      }
+      watchedDataByWatcherActor.set(watcherActorID, watchedData);
+      watcherActors.set(watcherActorID, watcher);
     }
-    return [];
+    return watchedData;
   },
 
   /**
@@ -168,7 +154,7 @@ const WatcherRegistry = {
    *               The values to be added to this type of data
    */
   addWatcherDataEntry(watcher, type, entries) {
-    const watchedData = getWatchedData(watcher, {
+    const watchedData = this.getWatchedData(watcher, {
       createData: true,
     });
 
@@ -203,7 +189,7 @@ const WatcherRegistry = {
    *         True if we such entry was already registered, for this watcher actor.
    */
   removeWatcherDataEntry(watcher, type, entries) {
-    const watchedData = getWatchedData(watcher);
+    const watchedData = this.getWatchedData(watcher);
     if (!watchedData) {
       return false;
     }
