@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "jit/ABIFunctions.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonIC.h"
@@ -23,6 +24,7 @@
 #include "proxy/Proxy.h"
 #include "util/Memory.h"
 
+#include "jit/ABIFunctionList-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/VMFunctionList-inl.h"
@@ -1009,8 +1011,7 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   masm.passABIArg(argJSContext);
   masm.passABIArg(argUintN);
   masm.passABIArg(argVp);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()),
-                   MoveOp::GENERAL,
+  masm.callWithABI(DynamicFunction<JSNative>(target->native()), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Test for failure.
@@ -2006,8 +2007,7 @@ bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId receiverId,
   masm.passABIArg(argJSContext);
   masm.passABIArg(argUintN);
   masm.passABIArg(argVp);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()),
-                   MoveOp::GENERAL,
+  masm.callWithABI(DynamicFunction<JSNative>(target->native()), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Test for failure.

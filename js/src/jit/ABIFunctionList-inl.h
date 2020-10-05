@@ -31,7 +31,10 @@
 #include "jit/JitFrames.h"    // HandleException
 #include "jit/VMFunctions.h"  // Rest of js::jit::* functions.
 
+#include "js/CallArgs.h"     // JSNative
 #include "js/Conversions.h"  // JS::ToInt32
+#include "js/experimental/JitInfo.h"
+                             // JSJitGetterOp, JSJitSetterOp, JSJitMethodOp
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
 #include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
 #include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
@@ -110,6 +113,10 @@ namespace jit {
 // pointer instead of a statically known function pointer.
 #define ABIFUNCTIONSIG_LIST(_)                       \
   _(float (*)(float))                                \
+  _(JSJitGetterOp)                                   \
+  _(JSJitMethodOp)                                   \
+  _(JSJitSetterOp)                                   \
+  _(JSNative)                                        \
   _(js::UnaryMathFunctionType)                       \
   _(void (*)(JSRuntime * rt, JSObject * *objp))      \
   _(void (*)(JSRuntime * rt, JSString * *stringp))   \
