@@ -3633,7 +3633,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   framework_start_error:
     send_in_pings:
       - startup-timeline
@@ -3651,7 +3651,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   framework_start_read_error:
     send_in_pings:
       - startup-timeline
@@ -3669,7 +3669,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   clock_ticks_per_second:
     send_in_pings:
       - startup-timeline
@@ -3687,7 +3687,7 @@ startup.timeline:
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 perf.awesomebar:
   history_suggestions:
