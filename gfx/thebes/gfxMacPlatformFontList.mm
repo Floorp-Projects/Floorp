@@ -266,12 +266,6 @@ nsresult MacOSFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   return rv;
 }
 
-bool MacOSFontEntry::CheckForColorGlyphs() {
-  return HasFontTable(TRUETYPE_TAG('S', 'V', 'G', ' ')) ||
-         HasFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R')) ||
-         HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
-}
-
 gfxFont* MacOSFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
   RefPtr<UnscaledFontMac> unscaledFont(mUnscaledFont);
   if (!unscaledFont) {
@@ -279,7 +273,7 @@ gfxFont* MacOSFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
     if (!baseFont) {
       return nullptr;
     }
-    unscaledFont = new UnscaledFontMac(baseFont, mIsDataUserFont, CheckForColorGlyphs());
+    unscaledFont = new UnscaledFontMac(baseFont, mIsDataUserFont);
     mUnscaledFont = unscaledFont;
   }
 
