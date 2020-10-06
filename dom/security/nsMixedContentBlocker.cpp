@@ -898,7 +898,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
   // Notify the top WindowContext of the flags we've computed, and it
   // will handle updating any relevant security UI.
-  topWC->AddMixedContentSecurityState(newState);
+  topWC->AddSecurityState(newState);
   return NS_OK;
 }
 
