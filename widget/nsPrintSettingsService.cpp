@@ -8,12 +8,14 @@
 #include "mozilla/embedding/PPrinting.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
+#include "nsCoord.h"
 #include "nsIPrinterList.h"
 #include "nsPrintingProxy.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 #include "nsIPrintSession.h"
 #include "nsServiceManagerUtils.h"
+#include "nsSize.h"
 
 #include "nsArray.h"
 #include "nsXPCOM.h"
@@ -300,47 +302,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
                                            uint32_t aFlags) {
   NS_ENSURE_ARG_POINTER(aPS);
 
-  if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-    int32_t halfInch = NS_INCHES_TO_INT_TWIPS(0.5);
-    nsIntMargin margin(halfInch, halfInch, halfInch, halfInch);
-    ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrinterName), margin.top,
-                          kMarginTop);
-    ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrinterName), margin.left,
-                          kMarginLeft);
-    ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrinterName),
-                          margin.bottom, kMarginBottom);
-    ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrinterName), margin.right,
-                          kMarginRight);
-    aPS->SetMarginInTwips(margin);
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveEdges) {
-    nsIntMargin margin(0, 0, 0, 0);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeTop, aPrinterName), margin.top,
-                             kEdgeTop);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeLeft, aPrinterName), margin.left,
-                             kEdgeLeft);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
-                             margin.bottom, kEdgeBottom);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
-                             margin.right, kEdgeRight);
-    aPS->SetEdgeInTwips(margin);
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
-    nsIntMargin margin;
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
-                             margin.top, kUnwriteableMarginTop);
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginLeft, aPrinterName),
-                             margin.left, kUnwriteableMarginLeft);
-    ReadInchesIntToTwipsPref(
-        GetPrefName(kUnwriteableMarginBottom, aPrinterName), margin.bottom,
-        kUnwriteableMarginBottom);
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginRight, aPrinterName),
-                             margin.right, kUnwriteableMarginRight);
-    aPS->SetUnwriteableMarginInTwips(margin);
-  }
-
   bool b;
   nsAutoString str;
   int32_t iVal;
@@ -361,29 +322,117 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
 #define GETDBLPREF(_prefname, _retval) \
   NS_SUCCEEDED(ReadPrefDouble(GetPrefName(_prefname, aPrinterName), _retval))
 
+  bool gotPaperSizeFromPrefs = false;
+  int16_t paperSizeUnit;
+  double paperWidth, paperHeight;
+
   // Paper size prefs are read as a group
   if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
-    int32_t sizeUnit;
-    double width, height;
+    gotPaperSizeFromPrefs = GETINTPREF(kPrintPaperSizeUnit, &iVal) &&
+                            GETDBLPREF(kPrintPaperWidth, paperWidth) &&
+                            GETDBLPREF(kPrintPaperHeight, paperHeight) &&
+                            GETSTRPREF(kPrintPaperId, str);
+    paperSizeUnit = (int16_t)iVal;
 
-    bool success = GETINTPREF(kPrintPaperSizeUnit, &sizeUnit) &&
-                   GETDBLPREF(kPrintPaperWidth, width) &&
-                   GETDBLPREF(kPrintPaperHeight, height) &&
-                   GETSTRPREF(kPrintPaperId, str);
-
-    // Bug 315687: Sanity check paper size to avoid paper size values in
-    // mm when the size unit flag is inches. The value 100 is arbitrary
-    // and can be changed.
-    if (success) {
-      success = (sizeUnit != nsIPrintSettings::kPaperSizeInches) ||
-                (width < 100.0) || (height < 100.0);
+    if (gotPaperSizeFromPrefs &&
+        paperSizeUnit != nsIPrintSettings::kPaperSizeInches &&
+        paperSizeUnit != nsIPrintSettings::kPaperSizeMillimeters) {
+      gotPaperSizeFromPrefs = false;
     }
 
-    if (success) {
-      aPS->SetPaperSizeUnit(sizeUnit);
-      aPS->SetPaperWidth(width);
-      aPS->SetPaperHeight(height);
+    if (gotPaperSizeFromPrefs) {
+      // Impose some limits to purge at least some corrupt pref values to try to
+      // avoid bugs like bug 315687.  Sizes based on telemetry max/mins.
+      constexpr double minInMM = 10.0;
+      constexpr double maxInMM = 4500.0;
+      constexpr double minInIn = minInMM / 25.4;
+      constexpr double maxInIn = 100.0;  // (~2.4m) used since bug 315687
+
+      if ((paperSizeUnit == nsIPrintSettings::kPaperSizeMillimeters &&
+           (paperWidth < minInMM || paperWidth > maxInMM ||
+            paperHeight < minInMM || paperHeight > maxInMM)) ||
+          (paperWidth < minInIn || paperWidth > maxInIn ||
+           paperHeight < minInIn || paperHeight > maxInIn)) {
+        gotPaperSizeFromPrefs = false;
+      }
+    }
+
+    if (gotPaperSizeFromPrefs) {
+      aPS->SetPaperSizeUnit(paperSizeUnit);
+      aPS->SetPaperWidth(paperWidth);
+      aPS->SetPaperHeight(paperHeight);
       aPS->SetPaperId(str);
+    }
+  }
+
+  nsIntSize pageSizeInTwips;  // to sanity check margins
+  if (!gotPaperSizeFromPrefs) {
+    aPS->GetPaperSizeUnit(&paperSizeUnit);
+    aPS->GetPaperWidth(&paperWidth);
+    aPS->GetPaperHeight(&paperHeight);
+  }
+  if (paperSizeUnit == nsIPrintSettings::kPaperSizeMillimeters) {
+    pageSizeInTwips = nsIntSize((int)NS_MILLIMETERS_TO_TWIPS(paperWidth),
+                                (int)NS_MILLIMETERS_TO_TWIPS(paperHeight));
+  } else {
+    pageSizeInTwips = nsIntSize((int)NS_INCHES_TO_TWIPS(paperWidth),
+                                (int)NS_INCHES_TO_TWIPS(paperHeight));
+  }
+
+  auto MarginIsOK = [&pageSizeInTwips](const nsIntMargin& aMargin) {
+    return aMargin.top >= 0 && aMargin.right >= 0 && aMargin.bottom >= 0 &&
+           aMargin.left >= 0 && aMargin.LeftRight() < pageSizeInTwips.width &&
+           aMargin.TopBottom() < pageSizeInTwips.height;
+  };
+
+  if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
+    nsIntMargin margin;
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
+                             margin.top, kUnwriteableMarginTop);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginLeft, aPrinterName),
+                             margin.left, kUnwriteableMarginLeft);
+    ReadInchesIntToTwipsPref(
+        GetPrefName(kUnwriteableMarginBottom, aPrinterName), margin.bottom,
+        kUnwriteableMarginBottom);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginRight, aPrinterName),
+                             margin.right, kUnwriteableMarginRight);
+    // SetUnwriteableMarginInTwips does its own validation and drops negative
+    // values individually.  We still want to block overly large values though,
+    // so we do that part of MarginIsOK manually.
+    if (margin.LeftRight() < pageSizeInTwips.width &&
+        margin.TopBottom() < pageSizeInTwips.height) {
+      aPS->SetUnwriteableMarginInTwips(margin);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveMargins) {
+    int32_t halfInch = NS_INCHES_TO_INT_TWIPS(0.5);
+    nsIntMargin margin(halfInch, halfInch, halfInch, halfInch);
+    ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrinterName), margin.top,
+                          kMarginTop);
+    ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrinterName), margin.left,
+                          kMarginLeft);
+    ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrinterName),
+                          margin.bottom, kMarginBottom);
+    ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrinterName), margin.right,
+                          kMarginRight);
+    if (MarginIsOK(margin)) {
+      aPS->SetMarginInTwips(margin);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveEdges) {
+    nsIntMargin margin(0, 0, 0, 0);
+    ReadInchesIntToTwipsPref(GetPrefName(kEdgeTop, aPrinterName), margin.top,
+                             kEdgeTop);
+    ReadInchesIntToTwipsPref(GetPrefName(kEdgeLeft, aPrinterName), margin.left,
+                             kEdgeLeft);
+    ReadInchesIntToTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
+                             margin.bottom, kEdgeBottom);
+    ReadInchesIntToTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
+                             margin.right, kEdgeRight);
+    if (MarginIsOK(margin)) {
+      aPS->SetEdgeInTwips(margin);
     }
   }
 
@@ -457,7 +506,9 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
-    if (GETINTPREF(kPrintOrientation, &iVal)) {
+    if (GETINTPREF(kPrintOrientation, &iVal) &&
+        (iVal == nsIPrintSettings::kPortraitOrientation ||
+         iVal == nsIPrintSettings::kLandscapeOrientation)) {
       aPS->SetOrientation(iVal);
     }
   }
@@ -483,7 +534,8 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
   }
 
   if (aFlags & nsIPrintSettings::kInitSavePageDelay) {
-    if (GETINTPREF(kPrintPageDelay, &iVal)) {
+    // milliseconds
+    if (GETINTPREF(kPrintPageDelay, &iVal) && iVal >= 0 && iVal <= 1000) {
       aPS->SetPrintPageDelay(iVal);
     }
   }
@@ -495,13 +547,19 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveScaling) {
-    if (GETDBLPREF(kPrintScaling, dbl)) {
+    // The limits imposed here are fairly arbitrary and mainly intended to
+    // purge bad values which tend to be negative and/or very large.  If we
+    // get complaints from users that settings outside these values "aren't
+    // saved" then we can consider increasing them.
+    if (GETDBLPREF(kPrintScaling, dbl) && dbl >= 0.05 && dbl <= 20) {
       aPS->SetScaling(dbl);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveResolution) {
-    if (GETINTPREF(kPrintResolution, &iVal)) {
+    // DPI. Again, an arbitrary range mainly to purge bad values that have made
+    // their way into user prefs.
+    if (GETINTPREF(kPrintResolution, &iVal) && iVal >= 50 && iVal <= 12000) {
       aPS->SetResolution(iVal);
     }
   }
