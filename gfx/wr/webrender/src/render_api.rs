@@ -1473,7 +1473,6 @@ pub struct MemoryReport {
     pub render_tasks: usize,
     pub hit_testers: usize,
     pub fonts: usize,
-    pub weak_fonts: usize,
     pub images: usize,
     pub rasterized_blobs: usize,
     pub shader_cache: usize,
