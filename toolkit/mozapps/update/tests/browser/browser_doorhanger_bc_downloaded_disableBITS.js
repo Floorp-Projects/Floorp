@@ -20,9 +20,10 @@ add_task(async function doorhanger_bc_downloaded_disableBITS() {
     },
   ]);
 
-  let patch = getPatchOfType("partial").QueryInterface(
-    Ci.nsIWritablePropertyBag
-  );
+  let patch = getPatchOfType(
+    "partial",
+    gUpdateManager.readyUpdate
+  ).QueryInterface(Ci.nsIWritablePropertyBag);
   ok(
     !patch.getProperty("bitsId"),
     "The selected patch should not have a bitsId property"

@@ -17,12 +17,13 @@ async function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile("99.9");
 
-  // Check that there is no activeUpdate first so the updates directory is
+  // Check that there are no active updates first so the updates directory is
   // cleaned up by the UpdateManager before the remaining tests.
   Assert.ok(
-    !gUpdateManager.activeUpdate,
-    "there should not be an active update"
+    !gUpdateManager.downloadingUpdate,
+    "there should not be a downloading update"
   );
+  Assert.ok(!gUpdateManager.readyUpdate, "there should not be a ready update");
   Assert.equal(
     gUpdateManager.getUpdateCount(),
     1,
