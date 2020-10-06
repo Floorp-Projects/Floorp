@@ -802,11 +802,7 @@ HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
       failures(0),
       rt(rt),
       oom(false),
-      parentIndex(-1) {
-#  ifdef DEBUG
-  setCheckEdges(false);
-#  endif
-}
+      parentIndex(-1) {}
 
 void HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing) {
   Cell* cell = thing.asCell();
