@@ -5,6 +5,9 @@
 
 load(libdir + "jitopts.js");
 
+// GCs can invalidate JIT code and cause this test to fail.
+gczeal(0);
+
 if (!jitTogglesMatch(Opts_Ion2NoOffthreadCompilation))
   quit(0);
 
