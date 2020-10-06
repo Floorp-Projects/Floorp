@@ -1307,14 +1307,14 @@ IPCResult BrowserParent::RecvIndexedDBPermissionRequest(
       new indexedDB::PermissionRequestHelper(mFrameElement, principal,
                                              aResolve);
 
-  indexedDB::PermissionRequestBase::PermissionValue permission;
-  nsresult rv = actor->PromptIfNeeded(&permission);
-  if (NS_FAILED(rv)) {
+  mozilla::Result permissionOrErr = actor->PromptIfNeeded();
+  if (permissionOrErr.isErr()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (permission != indexedDB::PermissionRequestBase::kPermissionPrompt) {
-    aResolve(permission);
+  if (permissionOrErr.inspect() !=
+      indexedDB::PermissionRequestBase::kPermissionPrompt) {
+    aResolve(permissionOrErr.inspect());
   }
 
   return IPC_OK();
