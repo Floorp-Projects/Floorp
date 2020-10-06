@@ -4754,7 +4754,7 @@ void HTMLMediaElement::ReportTelemetry() {
     }
   }
 
-  if (mMediaInfo.HasVideo() && mMediaInfo.mVideo.mImage.height > 0) {
+  if (mHadNonEmptyVideo) {
     // We have a valid video.
     double playTime = mPlayTime.Total();
     double hiddenPlayTime = mHiddenPlayTime.Total();
@@ -7288,6 +7288,9 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
+  if (mMediaInfo.HasVideo() && mMediaInfo.mVideo.mImage.height > 0) {
+    mHadNonEmptyVideo = true;
+  }
 }
 
 void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
