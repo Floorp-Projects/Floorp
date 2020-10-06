@@ -11,7 +11,6 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
-#include "MainThreadQueue.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventQueue.h"
@@ -377,8 +376,18 @@ nsresult nsThreadManager::Init() {
 
   nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
 
+  UniquePtr<PrioritizedEventQueue> queue =
+      MakeUnique<PrioritizedEventQueue>(do_AddRef(idlePeriod));
+
+  PrioritizedEventQueue* prioritized = queue.get();
+
+  RefPtr<ThreadEventQueue<PrioritizedEventQueue>> synchronizedQueue =
+      new ThreadEventQueue<PrioritizedEventQueue>(std::move(queue), true);
+
+  prioritized->SetMutexRef(synchronizedQueue->MutexRef());
+
   mMainThread =
-      CreateMainThread<ThreadEventQueue<PrioritizedEventQueue>>(idlePeriod);
+      new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
