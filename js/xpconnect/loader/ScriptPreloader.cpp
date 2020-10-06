@@ -23,6 +23,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
 #include "nsDirectoryServiceUtils.h"
@@ -850,12 +851,14 @@ void ScriptPreloader::NoteScript(const nsCString& url,
   script->mProcessTypes += processType;
 }
 
-JSScript* ScriptPreloader::GetCachedScript(JSContext* cx,
-                                           const nsCString& path) {
+JSScript* ScriptPreloader::GetCachedScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    const nsCString& path) {
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
-    RootedScript script(cx, mChildCache->GetCachedScriptInternal(cx, path));
+    RootedScript script(
+        cx, mChildCache->GetCachedScriptInternal(cx, options, path));
     if (script) {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::HitChild);
@@ -863,25 +866,27 @@ JSScript* ScriptPreloader::GetCachedScript(JSContext* cx,
     }
   }
 
-  RootedScript script(cx, GetCachedScriptInternal(cx, path));
+  RootedScript script(cx, GetCachedScriptInternal(cx, options, path));
   Telemetry::AccumulateCategorical(
       script ? Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Hit
              : Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Miss);
   return script;
 }
 
-JSScript* ScriptPreloader::GetCachedScriptInternal(JSContext* cx,
-                                                   const nsCString& path) {
+JSScript* ScriptPreloader::GetCachedScriptInternal(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    const nsCString& path) {
   auto script = mScripts.Get(path);
   if (script) {
-    return WaitForCachedScript(cx, script);
+    return WaitForCachedScript(cx, options, script);
   }
 
   return nullptr;
 }
 
-JSScript* ScriptPreloader::WaitForCachedScript(JSContext* cx,
-                                               CachedScript* script) {
+JSScript* ScriptPreloader::WaitForCachedScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    CachedScript* script) {
   // Check for finished operations before locking so that we can move onto
   // decoding the next batch as soon as possible after the pending batch is
   // ready. If we wait until we hit an unfinished script, we wind up having at
@@ -922,7 +927,7 @@ JSScript* ScriptPreloader::WaitForCachedScript(JSContext* cx,
     LOG(Debug, "Waited %fms\n", waitedMS);
   }
 
-  return script->GetJSScript(cx);
+  return script->GetJSScript(cx, options);
 }
 
 /* static */
@@ -1116,7 +1121,8 @@ bool ScriptPreloader::CachedScript::XDREncode(JSContext* cx) {
   return false;
 }
 
-JSScript* ScriptPreloader::CachedScript::GetJSScript(JSContext* cx) {
+JSScript* ScriptPreloader::CachedScript::GetJSScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(mReadyToExecute);
   if (mScript) {
     return mScript;
@@ -1137,8 +1143,6 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(JSContext* cx) {
 
   auto start = TimeStamp::Now();
   LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
-
-  JS::CompileOptions options(cx);  // FIXME: receive from caller.
 
   JS::RootedScript script(cx);
   if (JS::DecodeScript(cx, options, Range(), &script)) {
