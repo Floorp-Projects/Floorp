@@ -46,7 +46,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
  public:
   static const bool SupportsPrioritization = true;
 
-  explicit PrioritizedEventQueue(already_AddRefed<nsIIdlePeriod>&& aIdlePeriod);
+  explicit PrioritizedEventQueue();
 
   virtual ~PrioritizedEventQueue();
 
