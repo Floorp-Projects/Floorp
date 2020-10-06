@@ -73,8 +73,7 @@ interface nsIWebSocketConnectionListener : nsISupports
                         in unsigned long dataLength);
 
     /**
-     * Called to inform the listener that the outgoing data is written
-     * to socket.
+     * Called to inform the listener that the outgoing data is ready to write.
      */
-    void onDataSent();
+    void onReadyToSendData();
 };
