@@ -65,8 +65,7 @@ browsertime-tp6:
         - paypal
         - pinterest
         - reddit
-        # Bug 1665925 - Permafailing
-        # - tumblr
+        - tumblr
         - twitch
         - twitter
         - wikipedia
