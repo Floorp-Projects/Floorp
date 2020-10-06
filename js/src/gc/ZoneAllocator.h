@@ -84,7 +84,7 @@ class ZoneAllocator : public JS::shadow::Zone,
     mallocTracker.trackGCMemory(cell, nbytes, use);
 #endif
 
-    maybeMallocTriggerZoneGC();
+    maybeTriggerGCOnMalloc();
   }
 
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use,
@@ -130,7 +130,7 @@ class ZoneAllocator : public JS::shadow::Zone,
     mallocTracker.incNonGCMemory(mem, nbytes, use);
 #endif
 
-    maybeMallocTriggerZoneGC();
+    maybeTriggerGCOnMalloc();
   }
   void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use, bool wasSwept) {
     MOZ_ASSERT(nbytes);
@@ -159,7 +159,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   }
 
   // Check malloc allocation threshold and trigger a zone GC if necessary.
-  void maybeMallocTriggerZoneGC() {
+  void maybeTriggerGCOnMalloc() {
     maybeTriggerZoneGC(mallocHeapSize, mallocHeapThreshold,
                        JS::GCReason::TOO_MUCH_MALLOC);
   }
