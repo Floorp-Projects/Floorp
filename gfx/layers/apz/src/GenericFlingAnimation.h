@@ -65,7 +65,6 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
         mOverscrollHandoffChain(aOverscrollHandoffChain),
         mScrolledApzc(aScrolledApzc) {
     MOZ_ASSERT(mOverscrollHandoffChain);
-    SampleTime now = aApzc.GetFrameTime();
 
     // Drop any velocity on axes where we don't have room to scroll anyways
     // (in this APZC, or an APZC further in the handoff chain).
@@ -82,42 +81,17 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
       mApzc.mY.SetVelocity(0);
     }
 
-    ParentLayerPoint velocity = mApzc.GetVelocityVector();
-
-    // If the last fling was very recent and in the same direction as this one,
-    // boost the velocity to be the sum of the two. Check separate axes
-    // separately because we could have two vertical flings with small
-    // horizontal components on the opposite side of zero, and we still want the
-    // y-fling to get accelerated. Note that the acceleration code is only
-    // applied on the APZC that initiates the fling; the accelerated velocities
-    // are then handed off using the normal DispatchFling codepath. Acceleration
-    // is only applied in the APZC that originated the fling, not in APZCs
-    // further down the handoff chain during handoff.
-    bool applyAcceleration = !aFlingIsHandedOff;
-    if (applyAcceleration && !mApzc.mLastFlingTime.IsNull() &&
-        (now - mApzc.mLastFlingTime).ToMilliseconds() <
-            StaticPrefs::apz_fling_accel_interval_ms() &&
-        velocity.Length() >= StaticPrefs::apz_fling_accel_min_velocity()) {
-      if (velocity.x != 0 &&
-          SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
-        velocity.x = Accelerate(velocity.x, mApzc.mLastFlingVelocity.x);
-        FLING_LOG("%p Applying fling x-acceleration from %f to %f (delta %f)\n",
-                  &mApzc, mApzc.mX.GetVelocity(), velocity.x,
-                  mApzc.mLastFlingVelocity.x);
-        mApzc.mX.SetVelocity(velocity.x);
-      }
-      if (velocity.y != 0 &&
-          SameDirection(velocity.y, mApzc.mLastFlingVelocity.y)) {
-        velocity.y = Accelerate(velocity.y, mApzc.mLastFlingVelocity.y);
-        FLING_LOG("%p Applying fling y-acceleration from %f to %f (delta %f)\n",
-                  &mApzc, mApzc.mY.GetVelocity(), velocity.y,
-                  mApzc.mLastFlingVelocity.y);
-        mApzc.mY.SetVelocity(velocity.y);
-      }
+    if (aFlingIsHandedOff) {
+      // Only apply acceleration in the APZC that originated the fling, not in
+      // APZCs further down the handoff chain during handoff.
+      mApzc.mFlingAccelerator.Reset();
     }
 
-    mApzc.mLastFlingTime = now;
-    mApzc.mLastFlingVelocity = velocity;
+    ParentLayerPoint velocity =
+        mApzc.mFlingAccelerator.GetFlingStartingVelocity(
+            aApzc.GetFrameTime(), mApzc.GetVelocityVector());
+
+    mApzc.SetVelocityVector(velocity);
 
     FlingPhysics::Init(mApzc.GetVelocityVector(), aPLPPI);
   }
@@ -216,16 +190,6 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
   }
 
  private:
-  static bool SameDirection(float aVelocity1, float aVelocity2) {
-    return (aVelocity1 == 0.0f) || (aVelocity2 == 0.0f) ||
-           (IsNegative(aVelocity1) == IsNegative(aVelocity2));
-  }
-
-  static float Accelerate(float aBase, float aSupplemental) {
-    return (aBase * StaticPrefs::apz_fling_accel_base_mult()) +
-           (aSupplemental * StaticPrefs::apz_fling_accel_supplemental_mult());
-  }
-
   AsyncPanZoomController& mApzc;
   RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   RefPtr<const AsyncPanZoomController> mScrolledApzc;
