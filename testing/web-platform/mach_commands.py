@@ -41,13 +41,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         """Setup kwargs relevant for all browser products"""
 
         tests_src_path = os.path.join(self._here, "tests")
-
-        if (kwargs["product"] in {"firefox", "firefox_android"} and
-            kwargs["specialpowers_path"] is None):
-            kwargs["specialpowers_path"] = os.path.join(self.distdir,
-                                                        "xpi-stage",
-                                                        "specialpowers@mozilla.org.xpi")
-
         if kwargs["product"] == "firefox_android":
             # package_name may be different in the future
             package_name = kwargs["package_name"]
@@ -94,9 +87,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
     def kwargs_firefox(self, kwargs):
         """Setup kwargs specific to running Firefox and other gecko browsers"""
+
         import mozinfo
         from wptrunner import wptcommandline
-
         kwargs = self.kwargs_common(kwargs)
 
         if kwargs["binary"] is None:
@@ -132,6 +125,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
     def kwargs_wptrun(self, kwargs):
         """Setup kwargs for wpt-run which is only used for non-gecko browser products"""
+
         from tools.wpt import run
 
         kwargs = self.kwargs_common(kwargs)
@@ -351,11 +345,9 @@ class MachCommands(MachCommandBase):
              parser=create_parser_wpt)
     def run_web_platform_tests(self, **params):
         self.setup()
-        if params["product"] is None:
-            if conditions.is_android(self):
+        if conditions.is_android(self) and params["product"] != "firefox_android":
+            if params["product"] is None:
                 params["product"] = "firefox_android"
-            else:
-                params["product"] = "firefox"
         if "test_objects" in params:
             include = []
             test_types = set()
