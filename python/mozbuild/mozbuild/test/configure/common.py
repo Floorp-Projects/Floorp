@@ -15,7 +15,10 @@ import unittest
 from six import StringIO
 
 from mozbuild.configure import ConfigureSandbox
-from mozbuild.util import ReadOnlyNamespace
+from mozbuild.util import (
+    memoized_property,
+    ReadOnlyNamespace,
+)
 from mozpack import path as mozpath
 from six import string_types
 
@@ -42,10 +45,13 @@ class ConfigureTestVFS(object):
     def __init__(self, paths):
         self._paths = set(mozpath.abspath(p) for p in paths)
 
+    def _real_file(self, path):
+        return mozpath.basedir(path, [topsrcdir, topobjdir, tempfile.tempdir])
+
     def exists(self, path):
         if path in self._paths:
             return True
-        if mozpath.basedir(path, [topsrcdir, topobjdir]):
+        if self._real_file(path):
             return os.path.exists(path)
         return False
 
@@ -53,9 +59,26 @@ class ConfigureTestVFS(object):
         path = mozpath.abspath(path)
         if path in self._paths:
             return True
-        if mozpath.basedir(path, [topsrcdir, topobjdir]):
+        if self._real_file(path):
             return os.path.isfile(path)
         return False
+
+    def expanduser(self, path):
+        return os.path.expanduser(path)
+
+    def isdir(self, path):
+        path = mozpath.abspath(path)
+        if any(mozpath.basedir(mozpath.dirname(p), [path])
+               for p in self._paths):
+            return True
+        if self._real_file(path):
+            return os.path.isdir(path)
+        return False
+
+    def getsize(self, path):
+        if not self._real_file(path):
+            raise FileNotFoundError(path)
+        return os.path.getsize(path)
 
 
 class ConfigureTestSandbox(ConfigureSandbox):
@@ -99,80 +122,65 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         os_path.update(self.OS.path.__dict__)
 
-        self.imported_os = ReadOnlyNamespace(path=ReadOnlyNamespace(**os_path))
-
-        self.modules = kwargs.pop('modules', {}) or {}
+        os_contents = {}
+        exec('from os import *', {}, os_contents)
+        os_contents['path'] = ReadOnlyNamespace(**os_path)
+        os_contents['environ'] = dict(environ)
+        self.imported_os = ReadOnlyNamespace(**os_contents)
 
         super(ConfigureTestSandbox, self).__init__(config, environ, *args,
                                                    **kwargs)
 
-    def _get_one_import(self, what):
-        if what in self.modules:
-            return self.modules[what]
+    @memoized_property
+    def _wrapped_mozfile(self):
+        return ReadOnlyNamespace(which=self.which)
 
-        if what == 'mozfile.which':
-            return self.which
+    @memoized_property
+    def _wrapped_os(self):
+        return self.imported_os
 
-        if what == 'mozfile':
-            return ReadOnlyNamespace(
-                which=self.which,
-            )
+    @memoized_property
+    def _wrapped_subprocess(self):
+        return ReadOnlyNamespace(
+            CalledProcessError=subprocess.CalledProcessError,
+            check_output=self.check_output,
+            PIPE=subprocess.PIPE,
+            STDOUT=subprocess.STDOUT,
+            Popen=self.Popen,
+        )
 
-        if what == 'subprocess.Popen':
-            return self.Popen
+    @memoized_property
+    def _wrapped_ctypes(self):
+        class CTypesFunc(object):
+            def __init__(self, func):
+                self._func = func
 
-        if what == 'subprocess':
-            return ReadOnlyNamespace(
-                CalledProcessError=subprocess.CalledProcessError,
-                check_output=self.check_output,
-                PIPE=subprocess.PIPE,
-                STDOUT=subprocess.STDOUT,
-                Popen=self.Popen,
-            )
+            def __call__(self, *args, **kwargs):
+                return self._func(*args, **kwargs)
 
-        if what == 'os.path':
-            return self.imported_os.path
-
-        if what == 'os.path.exists':
-            return self.imported_os.path.exists
-
-        if what == 'os.path.isfile':
-            return self.imported_os.path.isfile
-
-        if what == 'ctypes.wintypes':
-            return ReadOnlyNamespace(
+        return ReadOnlyNamespace(
+            create_unicode_buffer=self.create_unicode_buffer,
+            windll=ReadOnlyNamespace(
+                kernel32=ReadOnlyNamespace(
+                    GetShortPathNameW=CTypesFunc(self.GetShortPathNameW),
+                )
+            ),
+            wintypes=ReadOnlyNamespace(
                 LPCWSTR=0,
                 LPWSTR=1,
                 DWORD=2,
-            )
+            ),
+        )
 
-        if what == 'ctypes':
-            class CTypesFunc(object):
-                def __init__(self, func):
-                    self._func = func
+    @memoized_property
+    def _wrapped__winreg(self):
+        def OpenKey(*args, **kwargs):
+            raise WindowsError()
 
-                def __call__(self, *args, **kwargs):
-                    return self._func(*args, **kwargs)
-
-            return ReadOnlyNamespace(
-                create_unicode_buffer=self.create_unicode_buffer,
-                windll=ReadOnlyNamespace(
-                    kernel32=ReadOnlyNamespace(
-                        GetShortPathNameW=CTypesFunc(self.GetShortPathNameW),
-                    )
-                ),
-            )
-
-        if what == '_winreg':
-            def OpenKey(*args, **kwargs):
-                raise WindowsError()
-
-            return ReadOnlyNamespace(
-                HKEY_LOCAL_MACHINE=0,
-                OpenKey=OpenKey,
-            )
-
-        return super(ConfigureTestSandbox, self)._get_one_import(what)
+        return ReadOnlyNamespace(
+            HKEY_LOCAL_MACHINE=0,
+            OpenKey=OpenKey,
+        )
 
     def create_unicode_buffer(self, *args, **kwargs):
         class Buffer(object):
@@ -257,7 +265,7 @@ class BaseConfigureTest(unittest.TestCase):
         return 0, args[0], ''
 
     def get_sandbox(self, paths, config, args=[], environ={}, mozconfig='',
-                    out=None, logger=None, modules=None):
+                    out=None, logger=None, cls=ConfigureTestSandbox):
         kwargs = {}
         if logger:
             kwargs['logger'] = logger
@@ -293,9 +301,8 @@ class BaseConfigureTest(unittest.TestCase):
                                'config.guess')] = self.config_guess
             paths[mozpath.join(autoconf_dir, 'config.sub')] = self.config_sub
 
-            sandbox = ConfigureTestSandbox(paths, config, environ,
-                                           ['configure'] + target + args,
-                                           modules=modules, **kwargs)
+            sandbox = cls(paths, config, environ, ['configure'] + target + args,
+                          **kwargs)
             sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
 
             return sandbox
