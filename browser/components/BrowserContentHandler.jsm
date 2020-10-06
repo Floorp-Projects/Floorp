@@ -676,7 +676,7 @@ nsBrowserContentHandler.prototype = {
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
             );
-            let update = UpdateManager.activeUpdate;
+            let update = UpdateManager.readyUpdate;
             if (
               update &&
               Services.vc.compare(update.appVersion, old_mstone) > 0
@@ -689,7 +689,7 @@ nsBrowserContentHandler.prototype = {
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
           case OVERRIDE_NEW_BUILD_ID:
-            if (UpdateManager.activeUpdate) {
+            if (UpdateManager.readyUpdate) {
               // Send the update ping to signal that the update was successful.
               UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
             }
