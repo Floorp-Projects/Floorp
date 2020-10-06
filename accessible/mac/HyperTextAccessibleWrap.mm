@@ -171,6 +171,13 @@ int32_t HyperTextIterator::NextLinkOffset() {
 }
 
 bool HyperTextIterator::Next() {
+  if (!mCurrentContainer->Document()->HasLoadState(
+          DocAccessible::eTreeConstructed)) {
+    // If the accessible tree is still being constructed the text tree
+    // is not in a traversable state yet.
+    return false;
+  }
+
   if (mCurrentContainer == mEndContainer &&
       (mCurrentEndOffset == -1 || mEndOffset <= mCurrentEndOffset)) {
     return false;
