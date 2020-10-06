@@ -415,8 +415,6 @@ NON_IDL_EVENT(command, eXULCommand, EventNameType_XUL, eInputEventClass)
 NON_IDL_EVENT(popupshowing, eXULPopupShowing, EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popupshown, eXULPopupShown, EventNameType_XUL, eBasicEventClass)
-NON_IDL_EVENT(popuppositioned, eXULPopupPositioned, EventNameType_XUL,
-              eBasicEventClass)
 NON_IDL_EVENT(popuphiding, eXULPopupHiding, EventNameType_XUL, eBasicEventClass)
 NON_IDL_EVENT(popuphidden, eXULPopupHidden, EventNameType_XUL, eBasicEventClass)
 NON_IDL_EVENT(broadcast, eXULBroadcast, EventNameType_XUL, eBasicEventClass)

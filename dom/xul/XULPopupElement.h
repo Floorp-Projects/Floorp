@@ -85,10 +85,6 @@ class XULPopupElement : public nsXULElement {
 
   void SizeTo(int32_t aWidth, int32_t aHeight);
 
-  void GetAlignmentPosition(nsString& positionStr);
-
-  int32_t AlignmentOffset();
-
   void SetConstraintRect(DOMRectReadOnly& aRect);
 
  protected:

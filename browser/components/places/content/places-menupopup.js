@@ -573,6 +573,7 @@
 
       const event_names = [
         "popupshowing",
+        "popuppositioned",
         "popupshown",
         "transitionend",
         "popuphiding",
@@ -634,7 +635,7 @@
       return this.shadowRoot.querySelector(".panel-arrow");
     }
 
-    adjustArrowPosition() {
+    adjustArrowPosition(event) {
       let arrow = this.arrow;
 
       let anchor = this.anchorNode;
@@ -646,8 +647,8 @@
       let container = this.container;
       let arrowbox = this.arrowbox;
 
-      var position = this.alignmentPosition;
-      var offset = this.alignmentOffset;
+      var position = event.alignmentPosition;
+      var offset = event.alignmentOffset;
 
       this.setAttribute("arrowposition", position);
 
@@ -700,8 +701,13 @@
 
     on_popupshowing(event) {
       if (event.target == this) {
-        this.adjustArrowPosition();
         this.setAttribute("animate", "open");
+      }
+    }
+
+    on_popuppositioned(event) {
+      if (event.target == this) {
+        this.adjustArrowPosition(event);
       }
     }
 

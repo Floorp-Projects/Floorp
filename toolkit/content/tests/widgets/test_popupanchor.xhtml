@@ -88,12 +88,31 @@ function openPopup(position, callback) {
   _openPopup(position, callback);
 }
 
-function waitForPopupPositioned(actionFn, callback)
+async function waitForPopupPositioned(actionFn, callback)
 {
-  panel.addEventListener("popuppositioned", function listener() {
-    SimpleTest.executeSoon(callback);
-  }, {once: true});
+  info("waitForPopupPositioned");
+  let a = new Promise(resolve => {
+    panel.addEventListener("popuppositioned", () => resolve(true), { once: true });
+  });
+
   actionFn();
+
+  // Ensure we get at least one event, but we might get more than one, so wait for them as needed.
+  //
+  // The double-raf ensures layout runs once. setTimeout is needed because that's how popuppositioned is scheduled.
+  let b = new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      setTimeout(() => resolve(false), 0);
+    }));
+  });
+
+  let gotEvent = await Promise.race([a, b]);
+  info("got event: " + gotEvent);
+  if (gotEvent) {
+    waitForPopupPositioned(() => {}, callback);
+  } else {
+    SimpleTest.executeSoon(callback);
+  }
 }
 
 function _openPopup(position, callback) {

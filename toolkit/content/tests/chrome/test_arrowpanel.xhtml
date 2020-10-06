@@ -45,7 +45,7 @@ SimpleTest.waitForExplicitFinish();
 const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
 
 var expectedAnchor = null;
-var expectedSide = "", expectedAnchorEdge = "", expectedPack = "", expectedAlignment = "";
+var expectedSide = "", expectedAnchorEdge = "", expectedPack = "";
 var zoomFactor = 1;
 var animatedPopupShown = false;
 var animatedPopupHidden = false;
@@ -67,7 +67,6 @@ function* nextTest()
     expectedSide = expected;
     expectedAnchorEdge = anchorEdge;
     expectedPack = pack;
-    expectedAlignment = alignment == undefined ? position : alignment;
 
     panel.removeAttribute("side");
     panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
@@ -298,7 +297,6 @@ function checkPanelPosition(panel)
   is(panel.getAttribute("side"), expectedSide, "panel arrow side");
   is(arrow.hidden, false, "panel hidden");
   is(arrow.parentNode.getAttribute("pack"), expectedPack, "panel arrow pack");
-  is(panel.alignmentPosition, expectedAlignment, "panel alignmentPosition");
 
   panel.hidePopup();
 }
