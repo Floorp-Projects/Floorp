@@ -592,6 +592,9 @@ class GCRuntime {
   TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
                                    const HeapThreshold& heapThreshold);
 
+  void updateGCThresholdsAfterCollection(const AutoLockGC& lock);
+  void updateAllGCStartThresholds(const AutoLockGC& lock);
+
   // Delete an empty zone after its contents have been merged.
   void deleteEmptyZone(Zone* zone);
 
@@ -843,7 +846,7 @@ class GCRuntime {
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
 
-  /* Track heap size for this runtime. */
+  /* Track total GC heap size for this runtime. */
   HeapSize heapSize;
 
   /* GC scheduling state and parameters. */
