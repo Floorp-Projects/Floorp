@@ -1009,7 +1009,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   tracking_protection:
     type: string_list
     description: >
@@ -1026,7 +1026,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   search_bookmarks:
     type: string_list
     description: >
@@ -1122,7 +1122,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   sync_items:
     type: string_list
     description: >
@@ -1140,7 +1140,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   show_voice_search:
     type: string_list
     description: >
@@ -1189,7 +1189,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   accessibility_services:
     type: string_list
     description: >
@@ -1238,7 +1238,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 search.default_engine:
   code:
@@ -1261,7 +1261,7 @@ search.default_engine:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   name:
     type: string
     lifetime: application
@@ -1282,7 +1282,7 @@ search.default_engine:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   submission_url:
     type: string
     lifetime: application
@@ -1304,7 +1304,7 @@ search.default_engine:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 bookmarks_management:
   open_in_new_tab:
