@@ -6355,11 +6355,7 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(aLocalizedKey);
   MOZ_ASSERT(!aLocale.IsEmpty());
 
-  IDB_TRY_UNWRAP(*aLocalizedKey,
-                 aBaseKey.ToLocaleAwareKey(aLocale).mapErr([](auto&& err) {
-                   return err.ExtractNSResult(
-                       InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
-                 }));
+  IDB_TRY_UNWRAP(*aLocalizedKey, aBaseKey.ToLocaleAwareKey(aLocale));
 
   return NS_OK;
 }
@@ -17313,14 +17309,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
         IDB_TRY(oldKey.SetFromStatement(&readStmt, 0));
         IDB_TRY(oldKey.BindToStatement(writeStmt, kStmtParamNameValue));
 
-        auto result = oldKey.ToLocaleAwareKey(aLocale);
-        if (result.isErr()) {
-          return Err(
-              NS_WARN_IF(result.inspectErr().Is(SpecialValues::Exception))
-                  ? result.unwrapErr().AsException().StealNSResult()
-                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-        }
-        const auto newSortKey = result.unwrap();
+        IDB_TRY_INSPECT(const auto& newSortKey,
+                        oldKey.ToLocaleAwareKey(aLocale));
 
         IDB_TRY(
             newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale));
@@ -22016,16 +22006,9 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         (range.isOnly() || lowerBound) ? range.lower() : range.upper();
     if constexpr (IsIndexCursor) {
       if (this->IsLocaleAware()) {
-        auto res = bound.ToLocaleAwareKey(this->mLocale);
-
-        // XXX Explain why an error or Invalid result is ignored here (If it's
-        // impossible, then
-        //     we should change this to an assertion.)
-        if (res.isErr() && res.inspectErr().Is(SpecialValues::Exception)) {
-          res.unwrapErr().AsException().SuppressException();
-        }
-
-        localeAwareRangeBound = res.unwrap();
+        // XXX Don't we need to propagate the error?
+        IDB_TRY_UNWRAP(localeAwareRangeBound,
+                       bound.ToLocaleAwareKey(this->mLocale), QM_VOID);
       } else {
         localeAwareRangeBound = bound;
       }
