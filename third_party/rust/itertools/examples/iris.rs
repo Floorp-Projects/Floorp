@@ -3,10 +3,6 @@
 /// and does some simple manipulations.
 ///
 /// Iterators and itertools functionality are used throughout.
-///
-///
-
-extern crate itertools;
 
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -44,7 +40,7 @@ impl FromStr for Iris {
 
         // using Iterator::by_ref()
         for (index, part) in parts.by_ref().take(4).enumerate() {
-            iris.data[index] = try!(part.parse::<f32>());
+            iris.data[index] = part.parse::<f32>()?;
         }
         if let Some(name) = parts.next() {
             iris.name = name.into();

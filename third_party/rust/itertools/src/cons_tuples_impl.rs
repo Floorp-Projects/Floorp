@@ -52,11 +52,7 @@ pub struct ConsTuples<I, J>
 impl<I, J> Clone for ConsTuples<I, J>
     where I: Clone + Iterator<Item=J>,
 {
-    fn clone(&self) -> Self {
-        ConsTuples {
-            iter: self.iter.clone(),
-        }
-    }
+    clone_fields!(iter);
 }
 
 /// Create an iterator that maps for example iterators of

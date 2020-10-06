@@ -1,8 +1,7 @@
-
 use std::iter::Peekable;
-use PutBack;
+use crate::PutBack;
 #[cfg(feature = "use_std")]
-use PutBackN;
+use crate::PutBackN;
 
 /// An iterator that allows peeking at an element before deciding to accept it.
 ///
@@ -89,8 +88,8 @@ pub fn peeking_take_while<I, F>(iter: &mut I, f: F) -> PeekingTakeWhile<I, F>
     where I: Iterator,
 {
     PeekingTakeWhile {
-        iter: iter,
-        f: f,
+        iter,
+        f,
     }
 }
 

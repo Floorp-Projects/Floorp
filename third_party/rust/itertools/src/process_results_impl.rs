@@ -75,7 +75,7 @@ pub fn process_results<I, F, T, E, R>(iterable: I, processor: F) -> Result<R, E>
     let iter = iterable.into_iter();
     let mut error = Ok(());
 
-    let result = processor(ProcessResults { error: &mut error, iter: iter });
+    let result = processor(ProcessResults { error: &mut error, iter });
 
     error.map(|_| result)
 }

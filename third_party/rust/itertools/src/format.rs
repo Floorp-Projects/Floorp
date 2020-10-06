@@ -7,6 +7,7 @@ use std::cell::RefCell;
 /// exhausted.
 ///
 /// See [`.format_with()`](../trait.Itertools.html#method.format_with) for more information.
+#[derive(Clone)]
 pub struct FormatWith<'a, I, F> {
     sep: &'a str,
     /// FormatWith uses interior mutability because Display::fmt takes &self.
@@ -29,7 +30,7 @@ pub struct Format<'a, I> {
 
 pub fn new_format<'a, I, F>(iter: I, separator: &'a str, f: F) -> FormatWith<'a, I, F>
     where I: Iterator,
-          F: FnMut(I::Item, &mut FnMut(&fmt::Display) -> fmt::Result) -> fmt::Result
+          F: FnMut(I::Item, &mut dyn FnMut(&dyn fmt::Display) -> fmt::Result) -> fmt::Result
 {
     FormatWith {
         sep: separator,
@@ -48,7 +49,7 @@ pub fn new_format_default<'a, I>(iter: I, separator: &'a str) -> Format<'a, I>
 
 impl<'a, I, F> fmt::Display for FormatWith<'a, I, F>
     where I: Iterator,
-          F: FnMut(I::Item, &mut FnMut(&fmt::Display) -> fmt::Result) -> fmt::Result
+          F: FnMut(I::Item, &mut dyn  FnMut(&dyn fmt::Display) -> fmt::Result) -> fmt::Result
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (mut iter, mut format) = match self.inner.borrow_mut().take() {
@@ -57,13 +58,13 @@ impl<'a, I, F> fmt::Display for FormatWith<'a, I, F>
         };
 
         if let Some(fst) = iter.next() {
-            try!(format(fst, &mut |disp: &fmt::Display| disp.fmt(f)));
+            format(fst, &mut |disp: &dyn fmt::Display| disp.fmt(f))?;
             for elt in iter {
                 if self.sep.len() > 0 {
 
-                    try!(f.write_str(self.sep));
+                    f.write_str(self.sep)?;
                 }
-                try!(format(elt, &mut |disp: &fmt::Display| disp.fmt(f)));
+                format(elt, &mut |disp: &dyn fmt::Display| disp.fmt(f))?;
             }
         }
         Ok(())
@@ -82,12 +83,12 @@ impl<'a, I> Format<'a, I>
         };
 
         if let Some(fst) = iter.next() {
-            try!(cb(&fst, f));
+            cb(&fst, f)?;
             for elt in iter {
                 if self.sep.len() > 0 {
-                    try!(f.write_str(self.sep));
+                    f.write_str(self.sep)?;
                 }
-                try!(cb(&elt, f));
+                cb(&elt, f)?;
             }
         }
         Ok(())

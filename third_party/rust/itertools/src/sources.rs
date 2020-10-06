@@ -6,6 +6,7 @@ use std::fmt;
 use std::mem;
 
 /// See [`repeat_call`](../fn.repeat_call.html) for more information.
+#[derive(Clone)]
 #[deprecated(note="Use std repeat_with() instead", since="0.8")]
 pub struct RepeatCall<F> {
     f: F,
@@ -101,7 +102,7 @@ pub fn unfold<A, St, F>(initial_state: St, f: F) -> Unfold<St, F>
     where F: FnMut(&mut St) -> Option<A>
 {
     Unfold {
-        f: f,
+        f,
         state: initial_state,
     }
 }
@@ -185,6 +186,6 @@ pub fn iterate<St, F>(initial_value: St, f: F) -> Iterate<St, F>
 {
     Iterate {
         state: initial_value,
-        f: f,
+        f,
     }
 }
