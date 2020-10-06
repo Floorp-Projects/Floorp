@@ -393,6 +393,11 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool HasListenersFor(nsAtom* aEventNameWithOn) const;
 
   /**
+   * Similar to HasListenersFor, but ignores system group listeners.
+   */
+  bool HasNonSystemGroupListenersFor(nsAtom* aEventNameWithOn) const;
+
+  /**
    * Returns true if there is at least one event listener.
    */
   bool HasListeners() const;
@@ -529,6 +534,9 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool IsDeviceType(EventMessage aEventMessage);
   void EnableDevice(EventMessage aEventMessage);
   void DisableDevice(EventMessage aEventMessage);
+
+  bool HasListenersForInternal(nsAtom* aEventNameWithOn,
+                               bool aIgnoreSystemGroup) const;
 
  public:
   /**

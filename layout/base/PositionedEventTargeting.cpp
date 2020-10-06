@@ -161,8 +161,8 @@ static bool HasTouchListener(nsIContent* aContent) {
     return false;
   }
 
-  return elm->HasListenersFor(nsGkAtoms::ontouchstart) ||
-         elm->HasListenersFor(nsGkAtoms::ontouchend);
+  return elm->HasNonSystemGroupListenersFor(nsGkAtoms::ontouchstart) ||
+         elm->HasNonSystemGroupListenersFor(nsGkAtoms::ontouchend);
 }
 
 static bool HasPointerListener(nsIContent* aContent) {
