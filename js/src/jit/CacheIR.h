@@ -228,7 +228,7 @@ class StubField {
  public:
   enum class Type : uint8_t {
     // These fields take up a single word.
-    RawWord,
+    RawInt32,
     RawPointer,
     Shape,
     ObjectGroup,
@@ -622,8 +622,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(script);
     addStubField(uintptr_t(script), StubField::Type::BaseScript);
   }
-  void writeRawWordField(uintptr_t word) {
-    addStubField(word, StubField::Type::RawWord);
+  void writeRawInt32Field(uint32_t val) {
+    addStubField(val, StubField::Type::RawInt32);
   }
   void writeRawPointerField(const void* ptr) {
     addStubField(uintptr_t(ptr), StubField::Type::RawPointer);
@@ -1208,7 +1208,7 @@ class MOZ_RAII CacheIRCloner {
   PropertyName* getPropertyNameField(uint32_t stubOffset);
   JS::Symbol* getSymbolField(uint32_t stubOffset);
   BaseScript* getBaseScriptField(uint32_t stubOffset);
-  uintptr_t getRawWordField(uint32_t stubOffset);
+  uint32_t getRawInt32Field(uint32_t stubOffset);
   const void* getRawPointerField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);
   const Value getValueField(uint32_t stubOffset);

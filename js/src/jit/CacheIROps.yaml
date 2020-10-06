@@ -437,7 +437,7 @@
   args:
     fun: ObjId
     expected: ObjectField
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: GuardFunctionScript
   shared: false
@@ -447,7 +447,7 @@
   args:
     obj: ObjId
     expected: BaseScriptField
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: GuardSpecificAtom
   shared: false
@@ -605,7 +605,7 @@
   args:
     obj: ObjId
     expected: ObjId
-    slot: RawWordField
+    slot: RawInt32Field
 
 - name: GuardNoAllocationMetadataBuilder
   shared: true
@@ -825,7 +825,7 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
 
 - name: StoreDynamicSlot
@@ -834,7 +834,7 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
 
 - name: AddAndStoreFixedSlot
@@ -843,7 +843,7 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
@@ -855,7 +855,7 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
@@ -867,12 +867,12 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
     changeGroup: BoolImm
     newGroup: GroupField
     newShape: ShapeField
-    numNewSlots: RawWordField
+    numNewSlots: RawInt32Field
 
 - name: StoreTypedObjectReferenceProperty
   shared: false
@@ -880,7 +880,7 @@
   cost_estimate: 6
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     layout: TypedThingLayoutImm
     type: ReferenceTypeImm
     rhs: ValId
@@ -891,7 +891,7 @@
   cost_estimate: 2
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     layout: TypedThingLayoutImm
     type: ScalarTypeImm
     rhs: RawId
@@ -967,7 +967,7 @@
   transpile: true
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     rhs: ValId
 
 - name: IsObjectResult
@@ -1461,7 +1461,7 @@
     setter: ObjectField
     rhs: ValId
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallScriptedSetter
   shared: false
@@ -1473,7 +1473,7 @@
     setter: ObjectField
     rhs: ValId
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallInlinedSetter
   shared: false
@@ -1486,7 +1486,7 @@
     rhs: ValId
     icScript: RawPointerField
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallDOMSetter
   shared: false
@@ -1625,7 +1625,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
 
 - name: LoadFixedSlotTypedResult
   shared: false
@@ -1633,7 +1633,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
     type: ValueTypeImm
 
 - name: LoadDynamicSlotResult
@@ -1642,7 +1642,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
 
 - name: LoadTypedObjectResult
   shared: true
@@ -1652,7 +1652,7 @@
     obj: ObjId
     layout: TypedThingLayoutImm
     typeDescr: ByteImm
-    offset: RawWordField
+    offset: RawInt32Field
 
 - name: LoadDenseElementResult
   shared: true
@@ -1860,7 +1860,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
 
 - name: LoadEnvironmentDynamicSlotResult
   shared: false
@@ -1868,7 +1868,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    offset: RawWordField
+    offset: RawInt32Field
 
 - name: LoadObjectResult
   shared: true
@@ -1921,7 +1921,7 @@
     receiver: ValId
     getter: ObjectField
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallInlinedGetterResult
   shared: false
@@ -1933,7 +1933,7 @@
     getter: ObjectField
     icScript: RawPointerField
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallNativeGetterResult
   shared: false
@@ -1944,7 +1944,7 @@
     receiver: ValId
     getter: ObjectField
     sameRealm: BoolImm
-    nargsAndFlags: RawWordField
+    nargsAndFlags: RawInt32Field
 
 - name: CallDOMGetterResult
   shared: false
@@ -2022,7 +2022,7 @@
   transpile: true
   cost_estimate: 1
   args:
-    val: RawWordField
+    val: RawInt32Field
     result: Int32Id
 
 - name: LoadBooleanConstant
