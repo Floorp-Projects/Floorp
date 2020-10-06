@@ -522,8 +522,7 @@ template <template <typename> class Each, typename ResultType, size_t Shift,
 struct BitMask<Each, ResultType, Shift, HeadType, TailTypes...> {
   static_assert(ResultType(Each<HeadType>::result) < (1 << Shift),
                 "not enough bits reserved by the shift for individual results");
-  static_assert(LastArg<TailTypes...>::nbArgs <
-                    (8 * sizeof(ResultType) / Shift),
+  static_assert(sizeof...(TailTypes) < (8 * sizeof(ResultType) / Shift),
                 "not enough bits in the result type to store all bit masks");
 
   static constexpr ResultType result =
@@ -547,7 +546,7 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
   static constexpr RootType outParamRootType() {
     return OutParamToRootType<typename LastArg<Args...>::Type>::result;
   }
-  static constexpr size_t NbArgs() { return LastArg<Args...>::nbArgs; }
+  static constexpr size_t NbArgs() { return sizeof...(Args); }
   static constexpr size_t explicitArgs() {
     return NbArgs() - (outParam() != Type_Void ? 1 : 0);
   }
