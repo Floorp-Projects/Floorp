@@ -25,7 +25,11 @@ from mozbuild.configure import (
     ConfigureError,
     ConfigureSandbox,
 )
-from mozbuild.util import exec_
+from mozbuild.util import (
+    exec_,
+    memoized_property,
+    ReadOnlyNamespace
+)
 
 import mozpack.path as mozpath
 
@@ -386,6 +390,52 @@ class TestConfigure(unittest.TestCase):
               )
 
         self.assertEquals(len(imports), 1)
+
+    def test_import_wrapping(self):
+        bar = object()
+        foo = ReadOnlyNamespace(bar=bar)
+
+        class BasicWrappingSandbox(ConfigureSandbox):
+            @memoized_property
+            def _wrapped_foo(self):
+                return foo
+
+        config = {}
+        out = StringIO()
+        sandbox = BasicWrappingSandbox(config, {}, ['configure'], out, out)
+
+        exec_(textwrap.dedent('''
+            @template
+            @imports('foo')
+            def toplevel():
+                return foo
+            @template
+            @imports('foo.bar')
+            def bar():
+                return foo.bar
+            @template
+            @imports('foo.bar')
+            def bar_upper():
+                return foo
+            @template
+            @imports(_from='foo', _import='bar')
+            def from_import():
+                return bar
+            @template
+            @imports(_from='foo', _import='bar', _as='custom_name')
+            def from_import_as():
+                return custom_name
+            @template
+            @imports(_import='foo', _as='custom_name')
+            def import_as():
+                return custom_name
+            '''), sandbox)
+        self.assertIs(sandbox['toplevel'](), foo)
+        self.assertIs(sandbox['bar'](), bar)
+        self.assertIs(sandbox['bar_upper'](), foo)
+        self.assertIs(sandbox['from_import'](), bar)
+        self.assertIs(sandbox['from_import_as'](), bar)
+        self.assertIs(sandbox['import_as'](), foo)
 
     def test_os_path(self):
         config = self.get_config(['--with-imports=%s' % __file__])

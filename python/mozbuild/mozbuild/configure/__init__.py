@@ -877,17 +877,56 @@ class ConfigureSandbox(dict):
 
     def _apply_imports(self, func, glob):
         for _from, _import, _as in self._imports.pop(func, ()):
-            _from = '%s.' % _from if _from else ''
-            if _as:
-                glob[_as] = self._get_one_import('%s%s' % (_from, _import))
+            self._get_one_import(_from, _import, _as, glob)
+
+    def _handle_wrapped_import(self, _from, _import, _as, glob):
+        """Given the name of a module, "import" a mocked package into the glob
+        iff the module is one that we wrap (either for the sandbox or for the
+        purpose of testing). Applies if the wrapped module is exposed by an
+        attribute of `self`.
+
+        For example, if the import statement is `from os import environ`, then
+        this function will set
+        glob['environ'] = self._wrapped_os.environ.
+
+        Iff this function handles the given import, return True.
+        """
+        module = (_from or _import).split('.')[0]
+        attr = '_wrapped_' + module
+        wrapped = getattr(self, attr, None)
+        if wrapped:
+            if _as or _from:
+                obj = self._recursively_get_property(
+                    module, (_from + '.' if _from else '') + _import, wrapped)
+                glob[_as or _import] = obj
             else:
-                what = _import.split('.')[0]
-                glob[what] = self._get_one_import('%s%s' % (_from, what))
+                glob[module] = wrapped
+            return True
+        else:
+            return False
+
+    def _recursively_get_property(self, module, what, wrapped):
+        """Traverse the wrapper object `wrapped` (which represents the module
+        `module`) and return the property represented by `what`, which may be a
+        series of nested attributes.
+
+        For example, if `module` is 'os' and `what` is 'os.path.join',
+        return `wrapped.path.join`.
+        """
+        if what == module:
+            return wrapped
+        assert what.startswith(module + '.')
+        attrs = what[len(module + '.'):].split('.')
+        for attr in attrs:
+            wrapped = getattr(wrapped, attr)
+        return wrapped
 
     @memoized_property
     def _wrapped_os(self):
         wrapped_os = {}
         exec_('from os import *', {}, wrapped_os)
+        # Special case os and os.environ so that os.environ is our copy of
+        # the environment.
         wrapped_os['environ'] = self._environ
         return ReadOnlyNamespace(**wrapped_os)
 
@@ -913,57 +952,62 @@ class ConfigureSandbox(dict):
 
         return ReadOnlyNamespace(**wrapped_subprocess)
 
-    def _get_one_import(self, what):
-        # The special `__sandbox__` module gives access to the sandbox
-        # instance.
-        if what == '__sandbox__':
-            return self
+    @memoized_property
+    def _wrapped_six(self):
+        if six.PY3:
+            return six
+        wrapped_six = {}
+        exec_('from six import *', {}, wrapped_six)
+        wrapped_six_moves = {}
+        exec_('from six.moves import *', {}, wrapped_six_moves)
+        wrapped_six_moves_builtins = {}
+        exec_('from six.moves.builtins import *', {},
+              wrapped_six_moves_builtins)
+
         # Special case for the open() builtin, because otherwise, using it
         # fails with "IOError: file() constructor not accessible in
         # restricted mode". We also make open() look more like python 3's,
         # decoding to unicode strings unless the mode says otherwise.
-        if what == '__builtin__.open' or what == 'builtins.open':
-            if six.PY3:
-                return open
+        def wrapped_open(name, mode=None, buffering=None):
+            args = (name,)
+            kwargs = {}
+            if buffering is not None:
+                kwargs['buffering'] = buffering
+            if mode is not None:
+                args += (mode,)
+                if 'b' in mode:
+                    return open(*args, **kwargs)
+            kwargs['encoding'] = system_encoding
+            return codecs.open(*args, **kwargs)
 
-            def wrapped_open(name, mode=None, buffering=None):
-                args = (name,)
-                kwargs = {}
-                if buffering is not None:
-                    kwargs['buffering'] = buffering
-                if mode is not None:
-                    args += (mode,)
-                    if 'b' in mode:
-                        return open(*args, **kwargs)
-                kwargs['encoding'] = system_encoding
-                return codecs.open(*args, **kwargs)
-            return wrapped_open
-        # Special case os and os.environ so that os.environ is our copy of
-        # the environment.
-        if what == 'os.environ':
-            return self._environ
-        if what == 'os':
-            return self._wrapped_os
-        # And subprocess, so that its functions use our os.environ
-        if what == 'subprocess':
-            return self._wrapped_subprocess
-        if what in ('subprocess.call', 'subprocess.check_call',
-                    'subprocess.check_output', 'subprocess.Popen'):
-            return getattr(self._wrapped_subprocess, what[len('subprocess.'):])
+        wrapped_six_moves_builtins['open'] = wrapped_open
+        wrapped_six_moves['builtins'] = ReadOnlyNamespace(
+            **wrapped_six_moves_builtins)
+        wrapped_six['moves'] = ReadOnlyNamespace(**wrapped_six_moves)
+
+        return ReadOnlyNamespace(**wrapped_six)
+
+    def _get_one_import(self, _from, _import, _as, glob):
+        """Perform the given import, placing the result into the dict glob."""
+        if not _from and _import == '__builtin__':
+            glob[_as or '__builtin__'] = __builtin__
+            return
+        if _from == '__builtin__':
+            _from = 'six.moves.builtins'
+        # The special `__sandbox__` module gives access to the sandbox
+        # instance.
+        if not _from and _import == '__sandbox__':
+            glob[_as or _import] = self
+            return
+        if self._handle_wrapped_import(_from, _import, _as, glob):
+            return
+        # If we've gotten this far, we should just do a normal import.
         # Until this proves to be a performance problem, just construct an
         # import statement and execute it.
-        import_line = ''
-        if '.' in what:
-            _from, what = what.rsplit('.', 1)
-            if _from == '__builtin__' or _from.startswith('__builtin__.'):
-                _from = _from.replace('__builtin__', 'six.moves.builtins')
-            import_line += 'from %s ' % _from
-        if what == '__builtin__':
-            what = 'six.moves.builtins'
-        import_line += 'import %s as imported' % what
-        glob = {}
+        import_line = '%simport %s%s' % (
+            ('from %s ' % _from) if _from else '', _import,
+            (' as %s' % _as) if _as else '')
         exec_(import_line, {}, glob)
-        return glob['imported']
 
     def _resolve_and_set(self, data, name, value, when=None):
         # Don't set anything when --help was on the command line
