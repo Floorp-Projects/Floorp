@@ -6357,12 +6357,12 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(!aLocale.IsEmpty());
 
   auto result = aBaseKey.ToLocaleAwareKey(aLocale);
-  if (!result.Is(Ok)) {
-    return NS_WARN_IF(result.Is(SpecialValues::Exception))
-               ? result.AsException().StealNSResult()
+  if (result.isErr()) {
+    return NS_WARN_IF(result.inspectErr().Is(SpecialValues::Exception))
+               ? result.unwrapErr().AsException().StealNSResult()
                : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
-  *aLocalizedKey = result.Unwrap();
+  *aLocalizedKey = result.unwrap();
 
   return NS_OK;
 }
@@ -17320,12 +17320,13 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
         IDB_TRY(oldKey.BindToStatement(writeStmt, kStmtParamNameValue));
 
         auto result = oldKey.ToLocaleAwareKey(aLocale);
-        if (!result.Is(Ok)) {
-          return Err(NS_WARN_IF(result.Is(SpecialValues::Exception))
-                         ? result.AsException().StealNSResult()
-                         : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        if (result.isErr()) {
+          return Err(
+              NS_WARN_IF(result.inspectErr().Is(SpecialValues::Exception))
+                  ? result.unwrapErr().AsException().StealNSResult()
+                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
         }
-        const auto newSortKey = result.Unwrap();
+        const auto newSortKey = result.unwrap();
 
         IDB_TRY(
             newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale));
@@ -22030,11 +22031,11 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         // XXX Explain why an error or Invalid result is ignored here (If it's
         // impossible, then
         //     we should change this to an assertion.)
-        if (res.Is(SpecialValues::Exception)) {
-          res.AsException().SuppressException();
+        if (res.isErr() && res.inspectErr().Is(SpecialValues::Exception)) {
+          res.unwrapErr().AsException().SuppressException();
         }
 
-        localeAwareRangeBound = res.Unwrap();
+        localeAwareRangeBound = res.unwrap();
       } else {
         localeAwareRangeBound = bound;
       }
