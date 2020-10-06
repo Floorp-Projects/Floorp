@@ -461,6 +461,12 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0102);
       APPEND_DEVICE(0x0106);
       APPEND_DEVICE(0x010a);
+
+      // cherryview
+      APPEND_DEVICE(0x22b0);
+      APPEND_DEVICE(0x22b1);
+      APPEND_DEVICE(0x22b2);
+      APPEND_DEVICE(0x22b3);
 #endif
 
       [[fallthrough]];
