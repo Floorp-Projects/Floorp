@@ -688,7 +688,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   has_top_sites:
     type: boolean
     lifetime: application
@@ -704,7 +704,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   recently_used_pwa_count:
     type: counter
     lifetime: application
@@ -728,7 +728,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-12-01"
+    expires: "2021-08-01"
   has_recent_pwas:
     type: boolean
     lifetime: application
@@ -745,7 +745,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-12-01"
+    expires: "2021-08-01"
   search_count:
     type: labeled_counter
     description: |
@@ -941,7 +941,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   has_open_tabs:
     type: boolean
     lifetime: application
@@ -957,7 +957,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 preferences:
   show_search_suggestions:
