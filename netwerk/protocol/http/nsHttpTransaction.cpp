@@ -2342,6 +2342,23 @@ void nsHttpTransaction::DisableSpdy() {
   }
 }
 
+void nsHttpTransaction::DisableHttp3() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
+  // mOrigConnInfo is an indicator that HTTPS RR is used, so don't mess up the
+  // connection info.
+  // When HTTPS RR is used, PrepareConnInfoForRetry() will make sure we'll retry
+  // with a non-http3 connection info.
+  if (mConnInfo && !mOrigConnInfo) {
+    // After CloneAsDirectRoute(), http3 will be disabled.
+    RefPtr<nsHttpConnectionInfo> connInfo;
+    mConnInfo->CloneAsDirectRoute(getter_AddRefs(connInfo));
+    MOZ_ASSERT(!connInfo->IsHttp3());
+    mConnInfo.swap(connInfo);
+  }
+}
+
 void nsHttpTransaction::CheckForStickyAuthScheme() {
   LOG(("nsHttpTransaction::CheckForStickyAuthScheme this=%p", this));
 
