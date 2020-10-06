@@ -137,8 +137,7 @@ class Key {
     return res;
   }
 
-  IDBResult<Ok, IDBSpecialValue::Invalid> SetFromString(
-      const nsAString& aString);
+  Result<Ok, nsresult> SetFromString(const nsAString& aString);
 
   void SetFromInteger(int64_t aInt) {
     mBuffer.Truncate();
@@ -160,8 +159,7 @@ class Key {
   IDBResult<Ok, IDBSpecialValue::Invalid> AppendItem(
       JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal);
 
-  IDBResult<Key, IDBSpecialValue::Invalid> ToLocaleAwareKey(
-      const nsCString& aLocale) const;
+  Result<Key, nsresult> ToLocaleAwareKey(const nsCString& aLocale) const;
 
   void FinishArray() { TrimBuffer(); }
 
@@ -217,25 +215,23 @@ class Key {
   IDBResult<Ok, IDBSpecialValue::Invalid> EncodeJSVal(
       JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset);
 
-  IDBResult<Ok, IDBSpecialValue::Invalid> EncodeString(const nsAString& aString,
-                                                       uint8_t aTypeOffset);
+  Result<Ok, nsresult> EncodeString(const nsAString& aString,
+                                    uint8_t aTypeOffset);
 
   template <typename T>
-  IDBResult<Ok, IDBSpecialValue::Invalid> EncodeString(Span<const T> aInput,
-                                                       uint8_t aTypeOffset);
+  Result<Ok, nsresult> EncodeString(Span<const T> aInput, uint8_t aTypeOffset);
 
   template <typename T>
-  IDBResult<Ok, IDBSpecialValue::Invalid> EncodeAsString(Span<const T> aInput,
-                                                         uint8_t aType);
+  Result<Ok, nsresult> EncodeAsString(Span<const T> aInput, uint8_t aType);
 
-  IDBResult<Ok, IDBSpecialValue::Invalid> EncodeLocaleString(
-      const nsAString& aString, uint8_t aTypeOffset, const nsCString& aLocale);
+  Result<Ok, nsresult> EncodeLocaleString(const nsAString& aString,
+                                          uint8_t aTypeOffset,
+                                          const nsCString& aLocale);
 
   void EncodeNumber(double aFloat, uint8_t aType);
 
-  IDBResult<Ok, IDBSpecialValue::Invalid> EncodeBinary(JSObject* aObject,
-                                                       bool aIsViewObject,
-                                                       uint8_t aTypeOffset);
+  Result<Ok, nsresult> EncodeBinary(JSObject* aObject, bool aIsViewObject,
+                                    uint8_t aTypeOffset);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
   // past the consumed value. (Note: this may be beyond aEnd).

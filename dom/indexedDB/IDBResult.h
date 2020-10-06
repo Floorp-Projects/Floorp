@@ -71,6 +71,8 @@ class IDBError {
   friend class IDBError;
 
  public:
+  MOZ_IMPLICIT IDBError(nsresult aRv) : mVariant(ErrorResult{aRv}) {}
+
   IDBError(ExceptionType, ErrorResult&& aErrorResult)
       : mVariant(std::move(aErrorResult)) {}
 
@@ -99,7 +101,8 @@ class IDBError {
 
   template <typename... SpecialValueMappers>
   ErrorResult ExtractErrorResult(SpecialValueMappers... aSpecialValueMappers) {
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)
+#if (defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)) && \
+    !defined(XGILL_PLUGIN)
     return mVariant.match(
         [](ErrorResult& aException) { return std::move(aException); },
         [aSpecialValueMappers...](const SpecialConstant<S>& aSpecialValue) {
