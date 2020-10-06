@@ -482,7 +482,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
           cx, compileOptions, cachePath);
     }
     if (!script && cache) {
-      rv = ReadCachedScript(cache, cachePath, cx, &script);
+      rv = ReadCachedScript(cache, cachePath, cx, compileOptions, &script);
     }
     if (NS_FAILED(rv) || !script) {
       // ReadCachedScript may have set a pending exception.
