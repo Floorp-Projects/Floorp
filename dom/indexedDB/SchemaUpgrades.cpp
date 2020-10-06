@@ -1044,10 +1044,10 @@ class EncodeKeysFunction final : public mozIStorageFunction {
       nsString stringKey;
       aArguments->GetString(0, stringKey);
       auto result = key.SetFromString(stringKey);
-      if (!result.Is(Ok)) {
-        return result.Is(SpecialValues::Invalid)
+      if (result.isErr()) {
+        return result.inspectErr().Is(SpecialValues::Invalid)
                    ? NS_ERROR_DOM_INDEXEDDB_DATA_ERR
-                   : result.AsException().StealNSResult();
+                   : result.unwrapErr().AsException().StealNSResult();
       }
     } else {
       NS_WARNING("Don't call me with the wrong type of arguments!");
