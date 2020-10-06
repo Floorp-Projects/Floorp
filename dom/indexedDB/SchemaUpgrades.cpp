@@ -1052,10 +1052,7 @@ class EncodeKeysFunction final : public mozIStorageFunction {
               aArguments->GetString(0, stringKey);
 
               Key key;
-              IDB_TRY(key.SetFromString(stringKey).mapErr([](auto&& err) {
-                return err.ExtractNSResult(
-                    InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
-              }));
+              IDB_TRY(key.SetFromString(stringKey));
 
               return key;
             }
