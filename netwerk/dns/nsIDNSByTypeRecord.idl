@@ -7,7 +7,6 @@
 %{ C++
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsStringFwd.h"
 
@@ -29,7 +28,7 @@ namespace net {
 native TypeResult(mozilla::net::TypeRecordResultType);
 
 native MaybePort(mozilla::Maybe<uint16_t>);
-native MaybeAlpnTuple(mozilla::Maybe<mozilla::Tuple<nsCString, bool>>);
+native MaybeAlpn(mozilla::Maybe<nsCString>);
 
 [scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
 interface nsIDNSByTypeRecord : nsIDNSRecord
@@ -92,7 +91,7 @@ interface nsISVCBRecord : nsISupports {
   readonly attribute uint16_t priority;
   readonly attribute ACString name;
   [noscript, nostdcall, notxpcom] readonly attribute MaybePort port;
-  [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpnTuple alpn;
+  [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpn alpn;
   readonly attribute ACString echConfig;
   readonly attribute bool hasIPHintAddress;
   readonly attribute Array<nsISVCParam> values;
@@ -112,8 +111,4 @@ interface nsIDNSHTTPSSVCRecord : nsISupports
    * Returns true when all names of SVCB records are in exclusion list.
    */
   readonly attribute boolean allRecordsExcluded;
-
-  Array<nsISVCBRecord> GetAllRecordsWithEchConfig(in boolean aNoHttp2,
-                                                  in boolean aNoHttp3,
-                                                  out boolean aAllRecordsHaveEchConfig);
 };

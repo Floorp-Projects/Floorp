@@ -397,14 +397,6 @@ nsDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 }
 
 NS_IMETHODIMP
-nsDNSByTypeRecord::GetAllRecordsWithEchConfig(
-    bool aNoHttp2, bool aNoHttp3, bool* aAllRecordsHaveEchConfig,
-    nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
-  return mHostRecord->GetAllRecordsWithEchConfig(
-      aNoHttp2, aNoHttp3, aAllRecordsHaveEchConfig, aResult);
-}
-
-NS_IMETHODIMP
 nsDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
   return mHostRecord->GetHasIPAddresses(aResult);
 }
@@ -1447,12 +1439,5 @@ nsDNSService::IsSVCDomainNameFailed(const nsACString& aOwnerName,
   }
 
   *aResult = failedList->Contains(aSVCDomainName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
-  MutexAutoLock lock(mLock);
-  mFailedSVCDomainNames.Remove(aOwnerName);
   return NS_OK;
 }

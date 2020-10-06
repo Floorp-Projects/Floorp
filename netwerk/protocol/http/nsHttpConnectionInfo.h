@@ -36,7 +36,6 @@ namespace net {
 
 extern LazyLogModule gHttpLog;
 class HttpConnectionInfoCloneArgs;
-class nsHttpTransaction;
 
 class nsHttpConnectionInfo final : public ARefBase {
  public:

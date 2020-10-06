@@ -1001,8 +1001,8 @@ nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
   return rv;
 }
 
-Tuple<nsCString, bool> SelectAlpnFromAlpnList(const nsACString& aAlpnList,
-                                              bool aNoHttp2, bool aNoHttp3) {
+nsCString SelectAlpnFromAlpnList(const nsACString& aAlpnList, bool aNoHttp2,
+                                 bool aNoHttp3) {
   nsCString h3Value;
   nsCString h2Value;
   nsCString h1Value;
@@ -1029,19 +1029,19 @@ Tuple<nsCString, bool> SelectAlpnFromAlpnList(const nsACString& aAlpnList,
   }
 
   if (!h3Value.IsEmpty() && gHttpHandler->IsHttp3Enabled() && !aNoHttp3) {
-    return MakeTuple(h3Value, true);
+    return h3Value;
   }
 
   if (!h2Value.IsEmpty() && gHttpHandler->IsSpdyEnabled() && !aNoHttp2) {
-    return MakeTuple(h2Value, false);
+    return h2Value;
   }
 
   if (!h1Value.IsEmpty()) {
-    return MakeTuple(h1Value, false);
+    return h1Value;
   }
 
   // If we are here, there is no supported alpn can be used.
-  return MakeTuple(EmptyCString(), false);
+  return {};
 }
 
 }  // namespace net
