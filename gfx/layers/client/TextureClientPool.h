@@ -10,7 +10,6 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/layers/KnowsCompositor.h"
 #include "TextureClient.h"
 #include "nsITimer.h"
 #include <stack>
@@ -45,11 +44,12 @@ class TextureClientPool final : public TextureClientAllocator {
   virtual ~TextureClientPool();
 
  public:
-  TextureClientPool(KnowsCompositor* aKnowsCompositor,
-                    gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
-                    TextureFlags aFlags, uint32_t aShrinkTimeoutMsec,
-                    uint32_t aClearTimeoutMsec, uint32_t aInitialPoolSize,
-                    uint32_t aPoolUnusedSize, TextureForwarder* aAllocator);
+  TextureClientPool(LayersBackend aBackend, bool aSupportsTextureDirectMapping,
+                    int32_t aMaxTextureSize, gfx::SurfaceFormat aFormat,
+                    gfx::IntSize aSize, TextureFlags aFlags,
+                    uint32_t aShrinkTimeoutMsec, uint32_t aClearTimeoutMsec,
+                    uint32_t aInitialPoolSize, uint32_t aPoolUnusedSize,
+                    TextureForwarder* aAllocator);
 
   /**
    * Gets an allocated TextureClient of size and format that are determined
@@ -98,12 +98,8 @@ class TextureClientPool final : public TextureClientAllocator {
    */
   void Clear();
 
-  LayersBackend GetBackend() const {
-    return mKnowsCompositor->GetCompositorBackendType();
-  }
-  int32_t GetMaxTextureSize() const {
-    return mKnowsCompositor->GetMaxTextureSize();
-  }
+  LayersBackend GetBackend() const { return mBackend; }
+  int32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   gfx::SurfaceFormat GetFormat() { return mFormat; }
   TextureFlags GetFlags() const { return mFlags; }
 
@@ -122,8 +118,11 @@ class TextureClientPool final : public TextureClientAllocator {
   /// Reset and/or initialise timers for shrinking/clearing the pool.
   void ResetTimers();
 
-  /// KnowsCompositor passed to the TextureClient for buffer creation.
-  RefPtr<KnowsCompositor> mKnowsCompositor;
+  /// Backend passed to the TextureClient for buffer creation.
+  LayersBackend mBackend;
+
+  // Max texture size passed to the TextureClient for buffer creation.
+  int32_t mMaxTextureSize;
 
   /// Format is passed to the TextureClient for buffer creation.
   gfx::SurfaceFormat mFormat;
@@ -167,6 +166,8 @@ class TextureClientPool final : public TextureClientAllocator {
   // we won't accept returns of TextureClients anymore, and the refcounting
   // should take care of their destruction.
   bool mDestroyed;
+
+  bool mSupportsTextureDirectMapping;
 };
 
 }  // namespace layers
