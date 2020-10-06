@@ -23,7 +23,9 @@ class gfxVarReceiver;
 // Generator for graphics vars.
 #define GFX_VARS_LIST(_)                                           \
   /* C++ Name,                  Data Type,        Default Value */ \
+  _(AllowEglRbab, bool, true)                                      \
   _(AllowWebgl2, bool, true)                                       \
+  _(AllowWebglAccelAngle, bool, true)                              \
   _(AllowWebglOop, bool, true)                                     \
   _(BrowserTabsRemoteAutostart, bool, false)                       \
   _(ContentBackend, BackendType, BackendType::NONE)                \
