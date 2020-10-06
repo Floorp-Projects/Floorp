@@ -20,6 +20,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithStackPointer
 #include "util/Memory.h"

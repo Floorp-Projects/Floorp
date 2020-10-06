@@ -7,6 +7,7 @@
 #include "jit/Bailouts.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif

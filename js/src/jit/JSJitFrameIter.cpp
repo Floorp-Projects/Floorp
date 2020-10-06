@@ -11,6 +11,7 @@
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "jit/Safepoints.h"
 #include "jit/VMFunctions.h"
