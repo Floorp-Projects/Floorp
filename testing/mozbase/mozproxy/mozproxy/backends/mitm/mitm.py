@@ -307,7 +307,7 @@ class Mitmproxy(Playback):
         # cannot continue as we won't be able to playback the pages
         LOG.error("Aborting: Mitmproxy process did not startup")
         self.stop_mitmproxy_playback()
-        sys.exit()  # XXX why do we need to do that? a raise is not enough?
+        sys.exit(1)  # XXX why do we need to do that? a raise is not enough?
 
     def stop_mitmproxy_playback(self):
         """Stop the mitproxy server playback"""
