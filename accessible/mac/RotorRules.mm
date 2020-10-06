@@ -61,6 +61,38 @@ uint16_t RotorRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   return result;
 }
 
+// Rotor Mac Role Rule
+
+RotorMacRoleRule::RotorMacRoleRule(NSString* aMacRole,
+                                   AccessibleOrProxy& aDirectDescendantsFrom)
+    : RotorRule(aDirectDescendantsFrom), mMacRole(aMacRole) {
+  [mMacRole retain];
+};
+
+RotorMacRoleRule::RotorMacRoleRule(NSString* aMacRole)
+    : RotorRule(), mMacRole(aMacRole) {
+  [mMacRole retain];
+};
+
+RotorMacRoleRule::~RotorMacRoleRule() { [mMacRole release]; }
+
+uint16_t RotorMacRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = RotorRule::Match(aAccOrProxy);
+
+  // if a match was found in the base-class's Match function,
+  // it is valid to consider that match again here. if it is
+  // not of the desired role, we flip the match bit to "unmatch"
+  // otherwise, the match persists.
+  if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
+    mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy);
+    if (![[nativeMatch moxRole] isEqualToString:mMacRole]) {
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+
+  return result;
+}
+
 // Rotor Control Rule
 
 RotorControlRule::RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom)

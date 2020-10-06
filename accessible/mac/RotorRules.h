@@ -37,6 +37,18 @@ class RotorRoleRule : public RotorRule {
   role mRole;
 };
 
+class RotorMacRoleRule : public RotorRule {
+ public:
+  explicit RotorMacRoleRule(NSString* aRole);
+  explicit RotorMacRoleRule(NSString* aRole,
+                            AccessibleOrProxy& aDirectDescendantsFrom);
+  ~RotorMacRoleRule();
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+
+ private:
+  NSString* mMacRole;
+};
+
 class RotorControlRule final : public RotorRule {
  public:
   explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
