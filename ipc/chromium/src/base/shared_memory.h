@@ -60,7 +60,7 @@ class SharedMemory {
   static bool IsHandleValid(const SharedMemoryHandle& handle);
 
   // IsHandleValid applied to this object's handle.
-  bool IsValid() const;
+  bool IsValid() const { return static_cast<bool>(mapped_file_); }
 
   // Return invalid handle (see comment above for exact definition).
   static SharedMemoryHandle NULLHandle();
@@ -102,15 +102,20 @@ class SharedMemory {
 
   // Extracts the underlying file handle; similar to
   // GiveToProcess(GetCurrentProcId(), ...) but returns a RAII type.
-  // Like GiveToProcess, this unmaps the memory as a side-effect.
-  mozilla::UniqueFileHandle TakeHandle();
+  // Like GiveToProcess, this unmaps the memory as a side-effect (and
+  // cleans up any OS-specific resources).
+  mozilla::UniqueFileHandle TakeHandle() {
+    mozilla::UniqueFileHandle handle = std::move(mapped_file_);
+    Close();
+    return handle;
+  }
 
 #ifdef OS_WIN
   // Used only in gfx/ipc/SharedDIBWin.cpp; should be removable once
   // NPAPI goes away.
   HANDLE GetHandle() {
     freezeable_ = false;
-    return mapped_file_;
+    return mapped_file_.get();
   }
 #endif
 
@@ -191,20 +196,19 @@ class SharedMemory {
 
   bool CreateInternal(size_t size, bool freezeable);
 
+  void* memory_;
+  size_t max_size_;
+  mozilla::UniqueFileHandle mapped_file_;
 #if defined(OS_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
   bool external_section_;
-  HANDLE mapped_file_;
 #elif defined(OS_POSIX)
-  int mapped_file_;
-  int frozen_file_;
+  mozilla::UniqueFileHandle frozen_file_;
   size_t mapped_size_;
 #endif
-  void* memory_;
   bool read_only_;
   bool freezeable_;
-  size_t max_size_;
 
   DISALLOW_EVIL_CONSTRUCTORS(SharedMemory);
 };

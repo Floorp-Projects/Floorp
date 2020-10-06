@@ -59,26 +59,21 @@ bool IsSectionSafeToMap(HANDLE handle) {
 namespace base {
 
 SharedMemory::SharedMemory()
-    : external_section_(false),
-      mapped_file_(NULL),
-      memory_(NULL),
+    : memory_(nullptr),
+      max_size_(0),
+      mapped_file_(nullptr),
+      external_section_(false),
       read_only_(false),
-      freezeable_(false),
-      max_size_(0) {}
+      freezeable_(false) {}
 
 SharedMemory::SharedMemory(SharedMemory&& other) {
-  if (this == &other) {
-    return;
-  }
-
-  mapped_file_ = other.mapped_file_;
   memory_ = other.memory_;
-  read_only_ = other.read_only_;
   max_size_ = other.max_size_;
-  freezeable_ = other.freezeable_;
+  mapped_file_ = std::move(other.mapped_file_);
   external_section_ = other.external_section_;
+  read_only_ = other.read_only_;
+  freezeable_ = other.freezeable_;
 
-  other.mapped_file_ = nullptr;
   other.memory_ = nullptr;
 }
 
@@ -88,27 +83,25 @@ SharedMemory::~SharedMemory() {
 }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
-  DCHECK(mapped_file_ == NULL);
+  DCHECK(!mapped_file_);
 
   external_section_ = true;
   freezeable_ = false;  // just in case
-  mapped_file_ = handle;
+  mapped_file_.reset(handle);
   read_only_ = read_only;
   return true;
 }
 
 // static
 bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
-  return handle != NULL;
+  return handle != nullptr;
 }
 
-bool SharedMemory::IsValid() const { return mapped_file_ != NULL; }
-
 // static
-SharedMemoryHandle SharedMemory::NULLHandle() { return NULL; }
+SharedMemoryHandle SharedMemory::NULLHandle() { return nullptr; }
 
 bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
-  DCHECK(mapped_file_ == NULL);
+  DCHECK(!mapped_file_);
   read_only_ = false;
 
   // If the shared memory object has no DACL, any process can
@@ -147,9 +140,9 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
     }
   }
 
-  mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, psa, PAGE_READWRITE, 0,
-                                   static_cast<DWORD>(size),
-                                   name.IsEmpty() ? nullptr : name.get());
+  mapped_file_.reset(CreateFileMapping(
+      INVALID_HANDLE_VALUE, psa, PAGE_READWRITE, 0, static_cast<DWORD>(size),
+      name.IsEmpty() ? nullptr : name.get()));
   if (!mapped_file_) return false;
 
   max_size_ = size;
@@ -166,19 +159,18 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
   }
 
   HANDLE ro_handle;
-  if (!::DuplicateHandle(GetCurrentProcess(), mapped_file_, GetCurrentProcess(),
-                         &ro_handle, GENERIC_READ | FILE_MAP_READ, false,
+  if (!::DuplicateHandle(GetCurrentProcess(), mapped_file_.release(),
+                         GetCurrentProcess(), &ro_handle,
+                         GENERIC_READ | FILE_MAP_READ, false,
                          DUPLICATE_CLOSE_SOURCE)) {
     // DUPLICATE_CLOSE_SOURCE applies even if there is an error.
-    mapped_file_ = nullptr;
     return false;
   }
 
-  mapped_file_ = nullptr;
   freezeable_ = false;
 
   ro_out->Close();
-  ro_out->mapped_file_ = ro_handle;
+  ro_out->mapped_file_.reset(ro_handle);
   ro_out->max_size_ = max_size_;
   ro_out->read_only_ = true;
   ro_out->freezeable_ = false;
@@ -188,15 +180,18 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
 }
 
 bool SharedMemory::Map(size_t bytes, void* fixed_address) {
-  if (mapped_file_ == NULL) return false;
+  if (!mapped_file_) {
+    return false;
+  }
 
-  if (external_section_ && !IsSectionSafeToMap(mapped_file_)) {
+  if (external_section_ && !IsSectionSafeToMap(mapped_file_.get())) {
     return false;
   }
 
   memory_ = MapViewOfFileEx(
-      mapped_file_, read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE,
-      0, 0, bytes, fixed_address);
+      mapped_file_.get(),
+      read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, bytes,
+      fixed_address);
   if (memory_ != NULL) {
     MOZ_ASSERT(!fixed_address || memory_ == fixed_address,
                "MapViewOfFileEx returned an expected address");
@@ -228,14 +223,18 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
   *new_handle = 0;
   DWORD access = FILE_MAP_READ | SECTION_QUERY;
   DWORD options = 0;
-  HANDLE mapped_file = mapped_file_;
+  HANDLE mapped_file;
   HANDLE result;
-  if (!read_only_) access |= FILE_MAP_WRITE;
+  if (!read_only_) {
+    access |= FILE_MAP_WRITE;
+  }
   if (close_self) {
     // DUPLICATE_CLOSE_SOURCE causes DuplicateHandle to close mapped_file.
+    mapped_file = mapped_file_.release();
     options = DUPLICATE_CLOSE_SOURCE;
-    mapped_file_ = NULL;
     Unmap();
+  } else {
+    mapped_file = mapped_file_.get();
   }
 
   if (processId == GetCurrentProcId() && close_self) {
@@ -257,17 +256,7 @@ void SharedMemory::Close(bool unmap_view) {
     Unmap();
   }
 
-  if (mapped_file_ != NULL) {
-    CloseHandle(mapped_file_);
-    mapped_file_ = NULL;
-  }
-}
-
-mozilla::UniqueFileHandle SharedMemory::TakeHandle() {
-  mozilla::UniqueFileHandle fh(mapped_file_);
-  mapped_file_ = NULL;
-  Unmap();
-  return fh;
+  mapped_file_ = nullptr;
 }
 
 }  // namespace base
