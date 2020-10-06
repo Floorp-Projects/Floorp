@@ -668,6 +668,7 @@ TEST_F(GfxConfigManager, WebRenderHighRefreshRateNightly) {
 TEST_F(GfxConfigManager, WebRenderHighRefreshRateNotNightly) {
   mIsNightly = false;
   mMockGfxInfo->mMaxRefreshRate = 120;
+  mMockGfxInfo->mVendorId = "0x8086";
   ConfigureWebRender();
 
   EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
@@ -684,6 +685,7 @@ TEST_F(GfxConfigManager, WebRenderHighRefreshRateNotNightly) {
 TEST_F(GfxConfigManager, WebRenderAtRefreshRateThreshold) {
   mIsNightly = false;
   mMockGfxInfo->mMaxRefreshRate = 60;
+  mMockGfxInfo->mVendorId = "0x8086";
   ConfigureWebRender();
 
   EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
