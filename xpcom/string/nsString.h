@@ -15,7 +15,6 @@
 
 #include "nsAString.h"
 #include "nsDependentSubstring.h"
-#include "nsReadableUtils.h"
 
 // enable support for the obsolete string API if not explicitly disabled
 #ifndef MOZ_STRING_WITH_OBSOLETE_API
@@ -23,6 +22,8 @@
 #endif
 
 #include "nsTString.h"
+
+#include "nsReadableUtils.h"
 
 static_assert(sizeof(char16_t) == 2, "size of char16_t must be 2");
 static_assert(sizeof(nsString::char_type) == 2,
