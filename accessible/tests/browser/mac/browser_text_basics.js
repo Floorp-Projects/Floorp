@@ -216,3 +216,25 @@ addAccessibleTask("mac/doc_textmarker_test.html", async (browser, accDoc) => {
 
   testMarkerIntegrity(accDoc, expectedMarkerValues);
 });
+
+// Test text marker lesser-than operator
+addAccessibleTask(
+  `<p id="p">hello <a id="a" href="#">goodbye</a> world</p>`,
+  async (browser, accDoc) => {
+    let macDoc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    let start = macDoc.getParameterizedAttributeValue(
+      "AXTextMarkerForIndex",
+      1
+    );
+    let end = macDoc.getParameterizedAttributeValue("AXTextMarkerForIndex", 10);
+
+    let range = macDoc.getParameterizedAttributeValue(
+      "AXTextMarkerRangeForUnorderedTextMarkers",
+      [end, start]
+    );
+    is(stringForRange(macDoc, range), "ello good");
+  }
+);

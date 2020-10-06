@@ -133,6 +133,33 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     }
   }
 
+  if (pos1 != 0) {
+    // If parents1 is a superset of parents2 then mContainer is a
+    // descendant of aPoint.mContainer. The next element down in parents1
+    // is mContainer's ancestor that is the child of aPoint.mContainer.
+    // We compare its end offset in aPoint.mContainer with aPoint.mOffset.
+    AccessibleOrProxy child = parents1.ElementAt(pos1 - 1);
+    MOZ_ASSERT(child.Parent() == aPoint.mContainer);
+    bool unused;
+    uint32_t endOffset = child.IsProxy() ? child.AsProxy()->EndOffset(&unused)
+                                         : child.AsAccessible()->EndOffset();
+    return endOffset < static_cast<uint32_t>(aPoint.mOffset);
+  }
+
+  if (pos2 != 0) {
+    // If parents2 is a superset of parents1 then aPoint.mContainer is a
+    // descendant of mContainer. The next element down in parents2
+    // is aPoint.mContainer's ancestor that is the child of mContainer.
+    // We compare its start offset in mContainer with mOffset.
+    AccessibleOrProxy child = parents2.ElementAt(pos2 - 1);
+    MOZ_ASSERT(child.Parent() == mContainer);
+    bool unused;
+    uint32_t startOffset = child.IsProxy()
+                               ? child.AsProxy()->StartOffset(&unused)
+                               : child.AsAccessible()->StartOffset();
+    return static_cast<uint32_t>(mOffset) < startOffset;
+  }
+
   MOZ_ASSERT_UNREACHABLE("Broken tree?!");
   return false;
 }
