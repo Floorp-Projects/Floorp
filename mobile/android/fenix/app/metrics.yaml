@@ -3393,7 +3393,7 @@ first_session:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   network:
     type: string
     send_in_pings:
@@ -3409,7 +3409,7 @@ first_session:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   adgroup:
     type: string
     send_in_pings:
@@ -3425,7 +3425,7 @@ first_session:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   creative:
     send_in_pings:
       - first-session
@@ -3441,7 +3441,7 @@ first_session:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   timestamp:
     send_in_pings:
       - first-session
@@ -3459,7 +3459,7 @@ first_session:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 browser.search:
   with_ads:
