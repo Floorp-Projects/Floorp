@@ -773,7 +773,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   mozilla_products:
     type: string_list
     lifetime: application
@@ -905,7 +905,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   search_widget_installed:
     type: boolean
     lifetime: application
@@ -921,7 +921,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   tabs_open_count:
     type: counter
     lifetime: application
