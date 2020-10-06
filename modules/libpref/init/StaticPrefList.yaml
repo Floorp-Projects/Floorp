@@ -8570,6 +8570,15 @@
   value: false
   mirror: always
 
+# This pref needs to be worked together with network.dns.echconfig.enabled
+# being true and there is no record without ECHConfig.
+# When we try all records with ECHConfig in HTTPS RRs and still can't connect,
+# this pref indicate whether we can fallback to the origin server.
+- name: network.dns.echconfig.fallback_to_origin_when_all_failed
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
