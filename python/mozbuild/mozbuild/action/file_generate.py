@@ -9,7 +9,7 @@
 from __future__ import absolute_import, print_function
 
 import argparse
-import imp
+import importlib.util
 import os
 import six
 import sys
@@ -57,9 +57,9 @@ def main(argv):
     # Since we're invoking the script in a roundabout way, we provide this
     # bit of convenience.
     sys.path.append(os.path.dirname(script))
-    with open(script, 'r') as fh:
-        module = imp.load_module('script', fh, script,
-                                 ('.py', 'r', imp.PY_SOURCE))
+    spec = importlib.util.spec_from_file_location('script', script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
     method = args.method_name
     if not hasattr(module, method):
         print('Error: script "{0}" is missing a {1} method'.format(script, method),
