@@ -17,7 +17,7 @@ import mozilla.components.service.location.LocationService
 // location before we update the home region.
 // Currently set to 2 weeks.
 // https://searchfox.org/mozilla-central/rev/89d33e1c3b0a57a9377b4815c2f4b58d933b7c32/toolkit/modules/Region.jsm#82-85
-private const val UPDATE_INTERVAL_MS = 60 * 60 * 24 * 14 * 1000
+private const val UPDATE_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000
 
 // The maximum number of times we retry fetching the region from
 // the location service until we give up. We will try again on

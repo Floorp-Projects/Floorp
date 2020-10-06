@@ -39,9 +39,11 @@ import java.io.InputStream
  *
  * Using the fake is faster than launching all Robolectric bells and whistles.
  *
- * The current implementation just throws for every access.
+ * The current implementation just throws for most access.
  */
-class FakeContext : Context() {
+class FakeContext(
+    private val sharedPreferences: SharedPreferences = FakeSharedPreferences()
+) : Context() {
     override fun getAssets(): AssetManager = throw NotImplementedError()
     override fun getResources(): Resources = throw NotImplementedError()
     override fun getPackageManager(): PackageManager = throw NotImplementedError()
@@ -55,7 +57,9 @@ class FakeContext : Context() {
     override fun getApplicationInfo(): ApplicationInfo = throw NotImplementedError()
     override fun getPackageResourcePath(): String = throw NotImplementedError()
     override fun getPackageCodePath(): String = throw NotImplementedError()
-    override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences = throw NotImplementedError()
+    override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {
+        return sharedPreferences
+    }
     override fun moveSharedPreferencesFrom(sourceContext: Context?, name: String?): Boolean = throw NotImplementedError()
     override fun deleteSharedPreferences(name: String?): Boolean = throw NotImplementedError()
     override fun openFileInput(name: String?): FileInputStream = throw NotImplementedError()
