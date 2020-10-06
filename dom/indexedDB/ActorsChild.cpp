@@ -1349,12 +1349,14 @@ bool BackgroundFactoryRequestChild::HandleResponse(
       static_cast<BackgroundDatabaseChild*>(aResponse.databaseChild());
   MOZ_ASSERT(databaseActor);
 
-  NotNull<IDBDatabase*> database = [this, databaseActor] {
+  IDBDatabase* const database = [this, databaseActor]() -> IDBDatabase* {
     IDBDatabase* database = databaseActor->GetDOMObject();
     if (!database) {
       Unused << this;
 
-      databaseActor->EnsureDOMObject();
+      if (!databaseActor->EnsureDOMObject()) {
+        MOZ_CRASH("Expected a valid database DOM object");
+      }
       MOZ_ASSERT(mDatabaseActor);
 
       database = databaseActor->GetDOMObject();
@@ -1363,7 +1365,7 @@ bool BackgroundFactoryRequestChild::HandleResponse(
       MOZ_ASSERT(!database->IsClosed());
     }
 
-    return WrapNotNullUnchecked(database);
+    return database;
   }();
 
   MOZ_ASSERT(mDatabaseActor == databaseActor);
@@ -1590,14 +1592,14 @@ void BackgroundDatabaseChild::SendDeleteMeInternal() {
   }
 }
 
-void BackgroundDatabaseChild::EnsureDOMObject() {
+bool BackgroundDatabaseChild::EnsureDOMObject() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mOpenRequestActor);
 
   if (mTemporaryStrongDatabase) {
     MOZ_ASSERT(!mSpec);
     MOZ_ASSERT(mDatabase == mTemporaryStrongDatabase);
-    return;
+    return true;
   }
 
   MOZ_ASSERT(mSpec);
@@ -1606,6 +1608,11 @@ void BackgroundDatabaseChild::EnsureDOMObject() {
 
   auto& factory =
       static_cast<BackgroundFactoryChild*>(Manager())->GetDOMObject();
+
+  if (!factory.GetParentObject()) {
+    // Already disconnected from global.
+    return false;
+  }
 
   // TODO: This AcquireStrongRefFromRawPtr looks suspicious. This should be
   // changed or at least well explained, see also comment on
@@ -1620,6 +1627,8 @@ void BackgroundDatabaseChild::EnsureDOMObject() {
   mDatabase = mTemporaryStrongDatabase;
 
   mOpenRequestActor->SetDatabaseActor(this);
+
+  return true;
 }
 
 void BackgroundDatabaseChild::ReleaseDOMObject() {
@@ -1709,9 +1718,28 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
   MaybeCollectGarbageOnIPCMessage();
 
-  EnsureDOMObject();
+  auto* const actor =
+      static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
 
-  auto* actor = static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
+  if (!EnsureDOMObject()) {
+    NS_WARNING("Factory is already disconnected from global");
+
+    actor->SendDeleteMeInternal(true);
+
+    // XXX This is a hack to ensure that transaction/request serial numbers stay
+    // in sync between parent and child. Actually, it might be better to create
+    // an IDBTransaction in the child and abort that.
+    Unused
+        << mozilla::ipc::BackgroundChildImpl::GetThreadLocalForCurrentThread()
+               ->mIndexedDBThreadLocal->NextTransactionSN(
+                   IDBTransaction::Mode::VersionChange);
+    Unused << IDBRequest::NextSerialNumber();
+
+    // If we return IPC_FAIL_NO_REASON(this) here, we crash...
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(!mDatabase->IsInvalidated());
 
   // XXX NotNull might encapsulate this
   const auto request =
