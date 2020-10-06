@@ -4,16 +4,17 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
-import android.graphics.Outline
-import android.view.View
-import android.view.ViewOutlineProvider
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.appcompat.content.res.AppCompatResources
-import kotlinx.android.synthetic.main.list_element.*
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
@@ -21,9 +22,10 @@ import org.mozilla.fenix.utils.view.ViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 class TabInCollectionViewHolder(
-    view: View,
+    private val view: WidgetSiteItemView,
     val interactor: CollectionInteractor,
-    private val differentLastItem: Boolean = false
+    private val icons: BrowserIcons = view.context.components.core.icons,
+    private val publicSuffixList: PublicSuffixList = view.context.components.publicSuffixList
 ) : ViewHolder(view) {
 
     lateinit var collection: TabCollection
@@ -31,27 +33,24 @@ class TabInCollectionViewHolder(
     lateinit var tab: ComponentTab
         private set
     var isLastItem = false
+        private set
 
     init {
-        list_item_favicon.clipToOutline = true
-        list_item_favicon.outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: View, outline: Outline?) {
-                outline?.setRoundRect(
-                    0,
-                    0,
-                    view.width,
-                    view.height,
-                    view.resources.getDimension(R.dimen.tab_tray_favicon_border_radius)
-                )
-            }
+        if (SDK_INT >= Build.VERSION_CODES.M) {
+            view.foreground = AppCompatResources.getDrawable(
+                view.context,
+                view.context.theme.resolveAttribute(R.attr.selectableItemBackground)
+            )
         }
 
-        itemView.setOnClickListener {
+        view.setOnClickListener {
             interactor.onCollectionOpenTabClicked(tab)
         }
 
-        list_item_action_button.increaseTapArea(buttonIncreaseDps)
-        list_item_action_button.setOnClickListener {
+        view.setSecondaryButton(
+            icon = R.drawable.ic_close,
+            contentDescription = R.string.remove_tab_from_collection
+        ) {
             interactor.onCollectionRemoveTab(collection, tab, wasSwiped = false)
         }
     }
@@ -64,23 +63,23 @@ class TabInCollectionViewHolder(
     }
 
     private fun updateTabUI() {
-        val context = itemView.context
-        list_item_url.text = tab.url.toShortUrl(context.components.publicSuffixList)
+        view.setText(
+            label = tab.title,
+            caption = tab.url.toShortUrl(publicSuffixList)
+        )
 
-        list_element_title.text = tab.title
-        list_item_favicon.context.components.core.icons.loadIntoView(list_item_favicon, tab.url)
+        icons.loadIntoView(view.iconView, tab.url)
 
         // If last item and we want to change UI for it
-        if (isLastItem && differentLastItem) {
-            itemView.background = AppCompatResources.getDrawable(context, R.drawable.rounded_bottom_corners)
+        val context = view.context
+        if (isLastItem) {
+            view.background = AppCompatResources.getDrawable(context, R.drawable.rounded_bottom_corners)
         } else {
-            itemView.setBackgroundColor(context.getColorFromAttr(R.attr.above))
+            view.setBackgroundColor(context.getColorFromAttr(R.attr.above))
         }
     }
 
     companion object {
-        const val buttonIncreaseDps = 12
-        const val LAYOUT_ID = R.layout.list_element
-        const val FAV_ICON_BORDER_RADIUS_IN_DP = 4
+        const val LAYOUT_ID = R.layout.site_list_item
     }
 }
