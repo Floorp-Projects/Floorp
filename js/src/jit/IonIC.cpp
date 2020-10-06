@@ -8,7 +8,6 @@
 
 #include "jit/AutoDetectInvalidation.h"
 #include "jit/CacheIRCompiler.h"
-#include "jit/Linker.h"
 #include "jit/VMFunctions.h"
 #include "util/DiagnosticAssertions.h"
 
