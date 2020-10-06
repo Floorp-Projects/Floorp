@@ -1686,6 +1686,7 @@ class GeckoEngineTest {
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SHIMMED))
 
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
@@ -1863,6 +1864,7 @@ class GeckoEngineTest {
         val blockedFingerprintingContent = createBlockingData(Event.BLOCKED_FINGERPRINTING_CONTENT)
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
+        val shimmedContent = createBlockingData(Event.REPLACED_UNSAFE_CONTENT)
 
         val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
         val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
@@ -1882,7 +1884,8 @@ class GeckoEngineTest {
             blockedSocialContent,
             loadedSocialContent,
             loadedCookieSocialTracker,
-            blockedCookieSocialTracker
+            blockedCookieSocialTracker,
+            shimmedContent
         )
 
         val addLogSecondEntry = object : ContentBlockingController.LogEntry() {}

@@ -13,6 +13,7 @@ permalink: /changelog/
 
 * **concept-engine**
   * Added `MediaSession` for the media session API.
+  * 🌟 Added a new `TrackingCategory`.`SHIMMED` to indicate that content that would have been blocked has instead been replaced with a shimmed file. See more on [Fenix #14071](https://github.com/mozilla-mobile/fenix/issues/14071)
 
 * **browser-engine-gecko(-nightly)**
   * Added `GeckoMediaSessionController` and `GeckoMediaSessionDelegate` for the media session API.

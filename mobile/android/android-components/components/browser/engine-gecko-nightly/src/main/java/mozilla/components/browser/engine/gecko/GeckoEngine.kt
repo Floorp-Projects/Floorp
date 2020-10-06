@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
@@ -684,12 +685,17 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
         category == Event.COOKIES_BLOCKED_SOCIALTRACKER
 }
 
+// There is going to be a patch from GV for adding [REPLACED_UNSAFE_CONTENT] as
+// a valid option for [BlockingData.category]
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1669577
+@SuppressLint("SwitchIntDef")
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
         Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
         Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
         Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+        Event.REPLACED_UNSAFE_CONTENT -> TrackingCategory.SHIMMED
         else -> TrackingCategory.NONE
     }
 }
