@@ -114,6 +114,7 @@ mozilla-detekt-rules:
     bannedProperties: "BuildConfig.DEBUG"
   MozillaStrictModeSuppression:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
   MozillaCorrectUnitTestRunner:
     active: true
 
