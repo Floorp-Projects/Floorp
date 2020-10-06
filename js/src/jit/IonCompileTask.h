@@ -22,6 +22,7 @@ namespace jit {
 
 class CodeGenerator;
 class MRootList;
+class WarpSnapshot;
 
 // IonCompileTask represents a single off-thread Ion compilation task.
 class IonCompileTask final : public HelperThreadTask,
