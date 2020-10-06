@@ -714,60 +714,6 @@ class JitRealm {
 void InvalidateAll(JSFreeOp* fop, JS::Zone* zone);
 void FinishInvalidation(JSFreeOp* fop, JSScript* script);
 
-// This class ensures JIT code is executable on its destruction. Creators
-// must call makeWritable(), and not attempt to write to the buffer if it fails.
-//
-// AutoWritableJitCodeFallible may only fail to make code writable; it cannot
-// fail to make JIT code executable (because the creating code has no chance to
-// recover from a failed destructor).
-class MOZ_RAII AutoWritableJitCodeFallible {
-  JSRuntime* rt_;
-  void* addr_;
-  size_t size_;
-
- public:
-  AutoWritableJitCodeFallible(JSRuntime* rt, void* addr, size_t size)
-      : rt_(rt), addr_(addr), size_(size) {
-    rt_->toggleAutoWritableJitCodeActive(true);
-  }
-
-  AutoWritableJitCodeFallible(void* addr, size_t size)
-      : AutoWritableJitCodeFallible(TlsContext.get()->runtime(), addr, size) {}
-
-  explicit AutoWritableJitCodeFallible(JitCode* code)
-      : AutoWritableJitCodeFallible(code->runtimeFromMainThread(), code->raw(),
-                                    code->bufferSize()) {}
-
-  MOZ_MUST_USE bool makeWritable() {
-    return ExecutableAllocator::makeWritable(addr_, size_);
-  }
-
-  ~AutoWritableJitCodeFallible() {
-    if (!ExecutableAllocator::makeExecutableAndFlushICache(
-            FlushICacheSpec::LocalThreadOnly, addr_, size_)) {
-      MOZ_CRASH();
-    }
-    rt_->toggleAutoWritableJitCodeActive(false);
-  }
-};
-
-// Infallible variant of AutoWritableJitCodeFallible, ensures writable during
-// construction
-class MOZ_RAII AutoWritableJitCode : private AutoWritableJitCodeFallible {
- public:
-  AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
-      : AutoWritableJitCodeFallible(rt, addr, size) {
-    MOZ_RELEASE_ASSERT(makeWritable());
-  }
-
-  AutoWritableJitCode(void* addr, size_t size)
-      : AutoWritableJitCode(TlsContext.get()->runtime(), addr, size) {}
-
-  explicit AutoWritableJitCode(JitCode* code)
-      : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(),
-                            code->bufferSize()) {}
-};
-
 }  // namespace jit
 }  // namespace js
 

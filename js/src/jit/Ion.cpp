@@ -18,6 +18,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AlignmentMaskAnalysis.h"
+#include "jit/AutoWritableJitCode.h"
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
