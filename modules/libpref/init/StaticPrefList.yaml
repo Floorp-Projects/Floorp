@@ -8585,6 +8585,14 @@
   value: true
   mirror: always
 
+# If the http3 connection cannot be ready after the timeout value here, the
+# transaction will start another non-http3 conneciton.
+# Setting this value to 0 indicates this feature is disabled.
+- name: network.dns.httpssvc.http3_fast_fallback_timeout
+  type: RelaxedAtomicUint32
+  value: 50
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
