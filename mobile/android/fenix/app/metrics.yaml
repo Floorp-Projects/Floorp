@@ -975,7 +975,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   remote_debugging:
     type: string_list
     description: >
@@ -991,7 +991,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   telemetry:
     type: string_list
     description: >
@@ -1042,7 +1042,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   search_browsing_history:
     type: string_list
     description: >
@@ -1058,7 +1058,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   show_clipboard_suggestions:
     type: string_list
     description: >
@@ -1074,7 +1074,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   show_search_shortcuts:
     type: string_list
     description: >
@@ -1090,7 +1090,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   open_links_in_a_private_tab:
     type: string_list
     description: >
@@ -1106,7 +1106,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   sync:
     type: string_list
     description: >
@@ -1156,7 +1156,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   search_suggestions_private:
     type: string_list
     description: >
@@ -1173,7 +1173,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   toolbar_position:
     type: string_list
     description: >
@@ -1206,7 +1206,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   open_links_in_app:
     type: string_list
     description: >
@@ -1222,7 +1222,7 @@ preferences:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   theme:
     type: string_list
     description: >
