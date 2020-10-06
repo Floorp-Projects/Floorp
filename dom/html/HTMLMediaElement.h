@@ -1742,6 +1742,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // https://html.spec.whatwg.org/multipage/media.html#pending-text-track-change-notification-flag
   bool mPendingTextTrackChanged = false;
 
+  // True if we've ever had a MediaInfo set that contains a video track with
+  // a height greater than 0.
+  bool mHadNonEmptyVideo = false;
+
  public:
   // This function will be called whenever a text track that is in a media
   // element's list of text tracks has its text track mode change value
