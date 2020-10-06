@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use uuid::Uuid;
 use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand};
-use webdriver::error::{WebDriverResult};
+use webdriver::error::WebDriverResult;
 use webdriver::httpapi::WebDriverExtensionRoute;
 use webdriver::Parameters;
 
