@@ -6,6 +6,9 @@
 
 #include "frontend/StencilXdr.h"  // StencilXDR
 
+#include "vm/JSScript.h"      // js::CheckCompileOptionsMatch
+#include "vm/StencilEnums.h"  // js::ImmutableScriptFlagsEnum
+
 using namespace js;
 using namespace js::frontend;
 
@@ -189,6 +192,17 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
   MOZ_TRY(xdr->codeUint16(&stencil.nargs));
 
   if (mode == XDR_DECODE) {
+    MOZ_ASSERT(xdr->hasOptions());
+
+    if (!(immutableFlags & uint32_t(ImmutableScriptFlagsEnum::IsFunction))) {
+      MOZ_ASSERT(!xdr->isMultiDecode());
+      if (!js::CheckCompileOptionsMatch(xdr->options(),
+                                        ImmutableScriptFlags(immutableFlags),
+                                        xdr->isMultiDecode())) {
+        return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
+      }
+    }
+
     stencil.immutableFlags = immutableFlags;
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasMemberInitializers))) {

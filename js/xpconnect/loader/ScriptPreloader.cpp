@@ -854,6 +854,7 @@ void ScriptPreloader::NoteScript(const nsCString& url,
 /* static */
 void ScriptPreloader::FillCompileOptionsForCachedScript(
     JS::CompileOptions& options) {
+  // See IsMultiDecodeCompileOptionsMatching in js/src/vm/JSScript.cpp.
   options.setNoScriptRval(true);
   MOZ_ASSERT(!options.selfHostingMode);
   MOZ_ASSERT(!options.isRunOnce);
