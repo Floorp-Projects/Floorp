@@ -852,11 +852,11 @@ class MOZ_RAII CacheIRCompiler {
   }
   int32_t int32StubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
-    return readStubWord(offset, StubField::Type::RawWord);
+    return readStubWord(offset, StubField::Type::RawInt32);
   }
   uint32_t uint32StubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
-    return readStubWord(offset, StubField::Type::RawWord);
+    return readStubWord(offset, StubField::Type::RawInt32);
   }
   Shape* shapeStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

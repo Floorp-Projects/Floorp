@@ -1043,7 +1043,7 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
   while (true) {
     StubField::Type fieldType = stubInfo->fieldType(field);
     switch (fieldType) {
-      case StubField::Type::RawWord:
+      case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
       case StubField::Type::DOMExpandoGeneration:
