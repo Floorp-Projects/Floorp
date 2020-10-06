@@ -189,6 +189,8 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     def shouldUpdateGenerationID = {
         if (mozconfig.substs.MOZILLA_OFFICIAL) {
             return false
+        } else if (mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+            return false
         } else if (ext.getNDKDirectory() == null) {
             logger.warn("Could not determine Android NDK directory.")
             logger.warn("Set `ndk.dir` in `${project.topsrcdir}/local.properties` to avoid startup crashes when using `substitute-local-geckoview.gradle`.")
