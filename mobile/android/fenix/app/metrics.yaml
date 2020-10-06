@@ -624,7 +624,7 @@ find_in_page:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   closed:
     type: event
     description: |
@@ -637,7 +637,7 @@ find_in_page:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   searched_page:
     type: event
     description: |
@@ -650,7 +650,7 @@ find_in_page:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 metrics:
   default_browser:
@@ -1887,7 +1887,7 @@ history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   removed:
     type: event
     description: |
@@ -1900,7 +1900,7 @@ history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   removed_all:
     type: event
     description: |
@@ -1913,7 +1913,7 @@ history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   shared:
     type: event
     description: |
@@ -1926,7 +1926,7 @@ history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   opened_item:
     type: event
     description: |
@@ -1939,7 +1939,7 @@ history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 tip:
   displayed:
@@ -1957,7 +1957,7 @@ tip:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   pressed:
     type: event
     description: |
@@ -1973,7 +1973,7 @@ tip:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   closed:
     type: event
     description: |
@@ -1989,7 +1989,7 @@ tip:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 reader_mode:
   available:
@@ -2004,7 +2004,7 @@ reader_mode:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   opened:
     type: event
     description: |
@@ -2017,7 +2017,7 @@ reader_mode:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   closed:
     type: event
     description: |
@@ -2030,7 +2030,7 @@ reader_mode:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   appearance:
     type: event
     description: |
@@ -2043,7 +2043,7 @@ reader_mode:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 tabs_tray:
   opened:
