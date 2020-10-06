@@ -92,7 +92,7 @@ open class FenixSearchEngineProvider(
         CustomSearchEngineProvider().loadSearchEngines(context)
     }
 
-    private var loadedSearchEngines = refreshAsync()
+    private var loadedSearchEngines = refreshAsync(baseSearchEngines)
 
     // https://github.com/mozilla-mobile/fenix/issues/9935
     // Create new getter that will return the fallback SearchEngineList if
@@ -102,7 +102,7 @@ open class FenixSearchEngineProvider(
             if (isRegionCachedByLocationService) {
                 loadedSearchEngines
             } else {
-                fallbackEngines
+                refreshAsync(fallbackEngines)
             }
 
     fun getDefaultEngine(context: Context): SearchEngine {
@@ -176,7 +176,7 @@ open class FenixSearchEngineProvider(
     fun reload() {
         launch {
             customSearchEngines = async { CustomSearchEngineProvider().loadSearchEngines(context) }
-            loadedSearchEngines = refreshAsync()
+            loadedSearchEngines = refreshAsync(baseSearchEngines)
         }
     }
 
@@ -188,8 +188,8 @@ open class FenixSearchEngineProvider(
         }
     }
 
-    private fun refreshAsync() = async {
-        val engineList = baseSearchEngines.await()
+    private fun refreshAsync(baseList: Deferred<SearchEngineList>) = async {
+        val engineList = baseList.await()
         val bundledList = bundledSearchEngines.await().list
         val customList = customSearchEngines.await().list
 
