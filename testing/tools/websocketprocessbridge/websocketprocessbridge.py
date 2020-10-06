@@ -9,6 +9,7 @@ import txws
 import psutil
 
 import argparse
+import six
 import sys
 import os
 
@@ -58,6 +59,7 @@ class SocketSide(protocol.Protocol):
             self.processSide = ProcessSide(self)
             # We deliberately crash if |data| isn't on the "menu",
             # or there is some problem spawning.
+            data = six.ensure_str(data)
             reactor.spawnProcess(self.processSide,
                                  commands[data][0],
                                  commands[data],
