@@ -5,6 +5,8 @@
 from __future__ import absolute_import
 
 import os
+import sys
+from unittest import skipIf
 
 from marionette_driver.addons import Addons, AddonInstallException
 from marionette_harness import MarionetteTestCase
@@ -106,3 +108,16 @@ class TestAddons(MarionetteTestCase):
     def test_install_with_relative_path(self):
         with self.assertRaises(AddonInstallException):
             self.addons.install('webextension.xpi')
+
+    @skipIf(sys.platform != "win32", "Only makes sense on Windows")
+    def test_install_mixed_separator_windows(self):
+        # Ensure the base path has only \
+        addon_path = here.replace("/", "\\")
+        addon_path += "/webextension-signed.xpi"
+
+        addon_id = self.addons.install(addon_path, temp=True)
+        self.assertIn(addon_id, self.all_addon_ids)
+        self.assertEqual(addon_id, "{d3e7c1f1-2e35-4a49-89fe-9f46eb8abf0a}")
+
+        self.addons.uninstall(addon_id)
+        self.assertNotIn(addon_id, self.all_addon_ids)
