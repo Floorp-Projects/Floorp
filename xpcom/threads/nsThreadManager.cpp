@@ -20,7 +20,6 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadLocal.h"
-#include "PrioritizedEventQueue.h"
 #include "TaskController.h"
 #ifdef MOZ_CANARY
 #  include <fcntl.h>
