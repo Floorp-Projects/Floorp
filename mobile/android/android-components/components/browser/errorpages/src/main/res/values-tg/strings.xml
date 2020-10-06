@@ -99,6 +99,15 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Саҳифа ба таври дуруст равона карда намешавад</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p> Браузер кӯшиши ҷустуҷӯи маводи дархостшударо қатъ кард. Сомона дархостро тавре равон мекунад, ки ҳеҷ гоҳ ба анҷом нарасад. </p>
+      <ul>
+        <li> Оё шумо кукиҳоеро, ки ин сомона талаб мекунад, ғайрифаъол кардед ё бастед? </li>
+        <li> Агар қабули кукиҳои сомона мушкилиро ҳал накунад, ин эҳтимолан мушкилии танзимоти сервер мебошад, на дастгоҳи шумо. </li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Реҷаи офлайн</string>
 
@@ -213,8 +222,24 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Протоколи номаълум</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Нишонӣ протоколеро нишон медиҳад, ки браузер эътироф намекунад (масалан, <q> wxyz: // </q>). Аз ин рӯ браузер ба сомона дуруст пайваст шуда наметавонад. </p>
+      <ul>
+        <li> Оё шумо кӯшиши дастрас кардани мултимедия ё дигар хидматҳои ғайриматни доред? Талаботи иловагиро аз сомона санҷед. </li>
+        <li> Баъзеи протоколҳо метавонанд нармафзор ё плагинҳои тарафи сеюмро пеш аз шинохтани браузер талаб кунанд. </li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Файл ёфт нашуд</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li> Эҳтимол аст, ки номи мавод иваз карда шуд, ё ин ки мавод тоза карда шуд, ё ба ҷойи дигар гузошта шуд? </li>
+        <li> Оё дар нишонӣ хатои имлоӣ, ҳуруфчинӣ ё дигар хатои типографӣ вуҷуд дорад? </li>
+        <li> Оё шумо ба маводи дархостшуда иҷозати дастрасии кофӣ доред? </li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Дастрасӣ ба файл манъ карда шуд</string>

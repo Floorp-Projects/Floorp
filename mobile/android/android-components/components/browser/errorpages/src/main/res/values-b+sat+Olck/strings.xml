@@ -53,17 +53,59 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ᱡᱚᱯᱚᱲᱟᱣ ᱚᱠᱛᱚ ᱪᱟᱵᱟ ᱮᱱᱟ</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱚ ᱡᱩᱲᱟᱹᱣ ᱵᱟᱭ ᱟᱸᱡᱚᱢ ᱮᱫᱟᱭ ᱟᱨ ᱵᱷᱮᱡᱟ ᱨᱩᱟᱹᱲ ᱮ ᱵᱚᱸᱫᱚ ᱠᱮᱜᱼᱟᱭ ᱾</p>
+      <ul>
+        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱯᱚᱨᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱟᱢ ᱪᱮᱫ ᱚᱞᱜᱟ ᱥᱟᱭᱤ ᱵᱟᱧ ᱵᱟᱨᱩᱡ ᱫᱟᱲᱟᱭᱟᱜ ᱠᱟᱱᱟᱢ? ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
+        <li>ᱪᱮᱫ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱫᱚ ᱯᱷᱟᱭᱟᱨᱣᱟᱞᱞ ᱟᱨ ᱵᱟᱝ ᱯᱨᱳᱠᱥᱭ ᱱᱮᱣᱴᱣᱟᱨᱠ ᱯᱨᱚᱴᱮᱠᱴᱮᱰ ᱜᱮᱭᱟ? ᱵᱷᱩᱞ ᱥᱟᱡᱟᱣ ᱠᱚ ᱠᱟᱹᱜᱤᱫ ᱣᱮᱵ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱵᱟᱫᱷᱟ ᱮᱢ ᱫᱟᱲᱮᱜᱼᱟᱭ ᱾</li>
+        <li>ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱥᱸᱝᱠᱚᱴ ᱨᱮ?ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱤᱡ ᱱᱮᱴᱣᱟᱨᱠ ᱟᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱡᱩᱜᱟᱡᱩᱜ ᱢᱮ</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">ᱵᱟᱝ ᱡᱩᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>ᱥᱟᱭᱤᱴ ᱵᱮᱛᱷᱟᱱᱤᱠ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱨ ᱵᱟᱝ ᱡᱟᱹᱛᱤ ᱵᱤᱡᱭ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱾ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱟᱢ ᱡᱚᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱥᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">ᱥᱟᱹᱨᱣᱟᱨ ᱠᱷᱚᱱ ᱵᱟᱝ ᱟᱸᱥ ᱨᱚᱲ ᱨᱩᱣᱟᱹᱲ</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ᱥᱟᱭᱤᱴ ᱫᱚ ᱱᱮᱴᱣᱟᱨᱠ ᱱᱮᱦᱚᱨ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱟᱸᱡᱚᱢ ᱞᱮᱫᱟᱭ ᱟᱨ ᱵᱨᱟᱣᱡᱚᱨ ᱵᱟᱝ ᱞᱟᱦᱟ ᱫᱟᱲᱮᱟᱜᱼᱟᱭ ᱾</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ᱥᱟᱦᱴᱟ ᱵᱮᱥ ᱞᱮᱠᱟᱛᱮ ᱵᱟᱭ ᱪᱟᱞᱟᱣ ᱨᱩᱣᱟᱹᱲ ᱠᱟᱱᱟ</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ᱵᱨᱟᱩᱡᱟᱹᱨ ᱫᱚ ᱱᱮᱦᱚᱨ ᱨᱤᱴᱨᱭᱤᱵᱷ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱥᱴᱟ ᱵᱚᱸᱫᱚᱭ ᱠᱮᱜᱼᱟᱭ ᱾ ᱥᱟᱭᱴ ᱱᱚᱣᱟ ᱦᱤᱥᱟᱵ ᱨᱮ ᱨᱤᱰᱟᱭᱨᱮᱠᱼᱴ ᱮᱜᱼᱟᱭ ᱡᱮ ᱱᱮᱦᱚᱨ ᱛᱤᱥᱚᱜ ᱵᱟᱭ ᱯᱩᱨᱟᱹᱣᱜᱼᱟ ᱾</p>
+      <ul>
+        <li>ᱟᱢ ᱪᱮᱫ ᱠᱩᱩᱠᱤᱡ ᱠᱚ ᱮᱢᱟᱱ ᱵᱚᱸᱫᱚ ᱟᱠᱟᱫᱼᱟᱢ ᱟᱨ ᱵᱟᱝ ᱵᱞᱚᱠ ᱟᱠᱟᱫᱼᱟᱢ ᱚᱠᱟ ᱫᱚ ᱥᱟᱭᱤᱴ ᱛᱟᱭ ᱫᱚᱨᱠᱟᱨ?</li>
+        <li>ᱡᱚᱫᱤ ᱠᱩᱩᱠᱤᱡ ᱤᱫᱤ ᱠᱟᱛᱮᱫ ᱦᱚᱸ ᱫᱤᱜᱫᱷᱟᱹ ᱵᱟᱝ ᱴᱷᱤᱠ ᱚᱜᱼᱟ, ᱮᱱᱰᱮᱠᱷᱟᱱ ᱱᱚᱣᱟ ᱫᱚ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱠᱚᱱᱯᱷᱤᱜᱭᱩᱨᱮᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱫᱚ ᱵᱟᱝᱟ᱾</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ᱚᱯᱷᱞᱟᱭᱤᱱ ᱢᱳᱰ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>ᱵᱨᱟᱣᱡᱚᱨ ᱫᱚ ᱚᱯᱷᱞᱟᱭᱤᱱ ᱢᱳᱰ ᱨᱮ ᱠᱷᱩᱞᱟᱹᱜ ᱠᱟᱱᱟ ᱟᱨ ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱡᱤᱱᱤᱥ ᱥᱟᱞᱟᱜ ᱵᱟᱝ ᱡᱩᱰᱟᱹᱣᱼᱜ ᱠᱟᱱᱟ ᱾</p>
+      <ul>
+        <li>ᱪᱮᱫ ᱱᱚᱶᱟ ᱥᱟᱫᱷᱱ ᱫᱚ ᱮᱠᱴᱤᱵᱷ ᱱᱮᱴᱣᱟᱨᱠ ᱥᱟᱞᱟᱜ ᱡᱩᱲᱟᱹᱣ ᱠᱟᱱᱟ ?</li>
+        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱚᱱᱞᱟᱭᱤᱱ ᱢᱳᱰ ᱟᱨ ᱥᱟᱦᱴᱟ ᱨᱤᱞᱚᱰ ᱞᱟᱹᱜᱤᱫ "ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟ " ᱛᱮ ᱴᱤᱯᱟᱹᱣ ᱯᱮ ᱾</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">ᱡᱟᱹᱯᱛᱤ ᱠᱟᱨᱚᱬ ᱞᱟᱹᱜᱤᱛ ᱟᱠᱚᱴ ᱛᱤᱸᱜᱩ ᱴᱷᱟᱸᱣ</string>
@@ -110,9 +152,15 @@
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[¶•<ul>¶•<li>ᱪᱮᱫ ᱟᱭᱴᱚᱢ ᱫᱚᱦᱲᱟ ᱛᱮ ᱧᱩᱛᱩᱢ ᱟᱹᱛᱩ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱚᱪᱚᱫ, ᱥᱮ ᱫᱚᱦᱲᱟ ᱛᱷᱟᱯᱚᱱᱚᱜ-ᱟ?</li>¶•<li>ᱪᱮᱫ ᱮᱰᱨᱮᱥ ᱨᱮ ᱟᱹᱲ ᱠᱮᱯᱤᱴᱭᱞᱤᱡᱮᱥᱚᱱ, ᱥᱮ ᱮᱴᱟᱜ ᱴᱟᱭᱯᱳᱜᱽᱨᱟᱯᱷᱤᱠᱟᱞ ᱨᱮ ᱦᱩᱲᱟᱹᱜ ᱢᱮᱱᱟᱜ-ᱟ?</li>¶•<li> ᱪᱮᱫ ᱟᱢ ᱴᱷᱮᱱ ᱫᱟᱣ ᱮᱢ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱳᱷᱤᱥᱤᱭᱚᱱᱴ ᱯᱚᱨᱢᱤᱥᱚᱱ ᱢᱮᱱᱟᱜ-ᱟ? </li>¶•</ul>¶•]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ᱨᱮᱫ ᱨᱮ ᱫᱚᱠᱷᱚᱞ ᱵᱟᱹᱰ</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">ᱮᱲᱮ ᱥᱟᱹᱨᱚᱣᱟᱹᱨ ᱡᱚᱱᱟᱲᱟᱣ ᱵᱟᱭ ᱦᱮᱸ ᱞᱮᱫᱟ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ᱮᱲᱮ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">ᱵᱚᱛᱚᱨ ᱥᱟᱭᱤᱴ ᱤᱢ ᱪᱟᱞ</string>
 
     </resources>

@@ -28,6 +28,8 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">ᱞᱤᱸᱠ ᱨᱮᱴᱚᱵᱼᱵᱚᱰ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">ᱵᱚᱫᱚᱞ ᱢᱮ</string>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">ᱞᱤᱸᱠ ᱵᱟᱦᱨᱮ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">ᱤᱼᱢᱮᱞ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
