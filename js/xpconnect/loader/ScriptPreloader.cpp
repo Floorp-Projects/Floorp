@@ -1138,8 +1138,10 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(JSContext* cx) {
   auto start = TimeStamp::Now();
   LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
 
+  JS::CompileOptions options(cx);  // FIXME: receive from caller.
+
   JS::RootedScript script(cx);
-  if (JS::DecodeScript(cx, Range(), &script)) {
+  if (JS::DecodeScript(cx, options, Range(), &script)) {
     mScript = script;
 
     if (mCache.mSaveComplete) {

@@ -2252,6 +2252,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     loadCacheKind = CacheEntry_getKind(cx, cacheEntry);
   }
 
+  if (envChain.length() != 0) {
+    options.setNonSyntacticScope(true);
+  }
+
   {
     JSAutoRealm ar(cx, global);
     RootedScript script(cx);
@@ -2291,7 +2295,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
         } else if (loadCacheKind == BytecodeCacheKind::Script) {
-          rv = JS::DecodeScript(cx, loadBuffer, &script);
+          rv = JS::DecodeScript(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
@@ -2309,10 +2313,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
                          JS::SourceOwnership::Borrowed)) {
           return false;
-        }
-
-        if (envChain.length() != 0) {
-          options.setNonSyntacticScope(true);
         }
 
         if (saveIncrementalBytecode) {

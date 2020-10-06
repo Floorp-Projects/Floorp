@@ -991,7 +991,8 @@ nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
   {
     TranscodeResult code;
     Rooted<JSScript*> script(cx);
-    code = DecodeScript(cx, buffer, &script);
+    JS::CompileOptions options(cx);  // FIXME: receive from caller.
+    code = DecodeScript(cx, options, buffer, &script);
     if (code == TranscodeResult_Ok) {
       *scriptp = script.get();
     }
