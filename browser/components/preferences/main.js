@@ -1834,7 +1834,7 @@ var gMainPane = {
     let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    if (!um.activeUpdate) {
+    if (!um.readyUpdate && !um.downloadingUpdate) {
       return;
     }
 
@@ -1874,7 +1874,8 @@ var gMainPane = {
         Ci.nsIApplicationUpdateService
       );
       aus.stopDownload();
-      um.cleanupActiveUpdate();
+      um.cleanupReadyUpdate();
+      um.cleanupDownloadingUpdate();
     }
   },
 
