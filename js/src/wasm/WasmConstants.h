@@ -424,11 +424,6 @@ enum class GcOp {
 // Opcodes with suffix 'Experimental' are proposed but not standardized, and are
 // compatible with those same opcodes in V8.  No opcode labeled 'Experimental'
 // will ship in a Release build where SIMD is enabled by default.
-//
-// Once SIMD ships default-on in release builds, the following flag must be set
-// to false for RELEASE_OR_BETA.
-
-static constexpr bool SimdExperimentalEnabled = true;
 
 enum class SimdOp {
   V128Load = 0x00,

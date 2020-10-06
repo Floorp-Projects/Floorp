@@ -483,10 +483,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   if (!(c)) return false; \
   break
 
-#define CHECK_EXPERIMENTAL_SIMD()        \
-  if (!SimdExperimentalEnabled) {        \
-    return iter.unrecognizedOpcode(&op); \
-  }
+#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
+#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
+#else
+#  define CHECK_SIMD_EXPERIMENTAL() return iter.unrecognizedOpcode(&op)
+#endif
 
   while (true) {
     OpBytes op;
@@ -1058,7 +1059,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2PMaxExperimental):
           case uint32_t(SimdOp::F64x2PMinExperimental):
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
 
           case uint32_t(SimdOp::I8x16Neg):
@@ -1097,7 +1098,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2FloorExperimental):
           case uint32_t(SimdOp::F64x2TruncExperimental):
           case uint32_t(SimdOp::F64x2NearestExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(iter.readUnary(ValType::V128, &nothing));
 
           case uint32_t(SimdOp::I8x16Shl):
@@ -1177,13 +1178,13 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 
           case uint32_t(SimdOp::V128Load32ZeroExperimental): {
             LinearMemoryAddress<Nothing> addr;
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(iter.readLoadSplat(4, &addr));
           }
 
           case uint32_t(SimdOp::V128Load64ZeroExperimental): {
             LinearMemoryAddress<Nothing> addr;
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(iter.readLoadSplat(8, &addr));
           }
 
@@ -1507,7 +1508,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   MOZ_CRASH("unreachable");
 
 #undef CHECK
-#undef CHECK_EXPERIMENTAL_SIMD
+#undef CHECK_SIMD_EXPERIMENTAL
 }
 
 bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,

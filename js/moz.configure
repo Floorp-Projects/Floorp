@@ -681,6 +681,29 @@ def wasm_simd(value, jit_enabled, simulator, target):
 set_config('ENABLE_WASM_SIMD', wasm_simd)
 set_define('ENABLE_WASM_SIMD', wasm_simd)
 
+# Experimental SIMD opcodes are Nightly-only by default
+
+@depends(milestone.is_nightly, '--enable-wasm-simd')
+def default_wasm_simd_experimental(is_nightly, wasm_simd):
+    if is_nightly and wasm_simd:
+        return True
+
+js_option('--enable-wasm-simd-experimental',
+          default=default_wasm_simd_experimental,
+          help='{Enable|Disable} WebAssembly SIMD experimental opcodes')
+
+@depends('--enable-wasm-simd-experimental', '--enable-wasm-simd')
+def wasm_simd_experimental(value, wasm_simd):
+    if not value:
+        return
+
+    if wasm_simd:
+        return True
+
+    die('--enable-wasm-simd-experimental only possible with --enable-wasm-simd')
+
+set_config('ENABLE_WASM_SIMD_EXPERIMENTAL', wasm_simd_experimental)
+set_define('ENABLE_WASM_SIMD_EXPERIMENTAL', wasm_simd_experimental)
 
 # Options for generating the shell as a script
 # ============================================

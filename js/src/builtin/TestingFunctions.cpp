@@ -874,6 +874,17 @@ static bool WasmSimdEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmSimdExperimentalEnabled(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
+  args.rval().setBoolean(wasm::SimdAvailable(cx));
+#else
+  args.rval().setBoolean(false);
+#endif
+  return true;
+}
+
 static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4988,7 +4999,6 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-
   /* Instantiate the stencil. */
   frontend::CompilationGCOutput output(cx);
   if (!compilationInfos.get().instantiateStencils(cx, output)) {
@@ -6791,6 +6801,11 @@ gc::ZealModeHelpText),
 "wasmSimdEnabled()",
 "  Returns a boolean indicating whether WebAssembly SIMD is supported by the\n"
 "  compilers and runtime."),
+
+    JS_FN_HELP("wasmSimdExperimentalEnabled", WasmSimdExperimentalEnabled, 0, 0,
+"wasmSimdExperimentalEnabled()",
+"  Returns a boolean indicating whether WebAssembly SIMD experimental instructions\n"
+"  are supported by the compilers and runtime."),
 
     JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
 "wasmReftypesEnabled()",

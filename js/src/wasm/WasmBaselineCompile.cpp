@@ -13996,10 +13996,11 @@ bool BaseCompiler::emitBody() {
     } while (0)
 #endif
 
-#define CHECK_EXPERIMENTAL_SIMD() \
-  if (!SimdExperimentalEnabled) { \
-    break;                        \
-  }
+#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
+#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
+#else
+#  define CHECK_SIMD_EXPERIMENTAL() break
+#endif
 
 #define CHECK(E) \
   if (!(E)) return false
@@ -14962,19 +14963,19 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::V8x16Swizzle):
             CHECK_NEXT(dispatchVectorBinary(Swizzle));
           case uint32_t(SimdOp::F32x4PMaxExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorBinary(PMaxF32x4));
           case uint32_t(SimdOp::F32x4PMinExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorBinary(PMinF32x4));
           case uint32_t(SimdOp::F64x2PMaxExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorBinary(PMaxF64x2));
           case uint32_t(SimdOp::F64x2PMinExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorBinary(DotI16x8));
           case uint32_t(SimdOp::I8x16Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI8x16));
@@ -15029,28 +15030,28 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I32x4Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsI32x4));
           case uint32_t(SimdOp::F32x4CeilExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(CeilF32x4));
           case uint32_t(SimdOp::F32x4FloorExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(FloorF32x4));
           case uint32_t(SimdOp::F32x4TruncExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(TruncF32x4));
           case uint32_t(SimdOp::F32x4NearestExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(NearestF32x4));
           case uint32_t(SimdOp::F64x2CeilExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(CeilF64x2));
           case uint32_t(SimdOp::F64x2FloorExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(FloorF64x2));
           case uint32_t(SimdOp::F64x2TruncExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(TruncF64x2));
           case uint32_t(SimdOp::F64x2NearestExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(dispatchVectorUnary(NearestF64x2));
           case uint32_t(SimdOp::I8x16Shl):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI8x16));
@@ -15111,10 +15112,10 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint32));
           case uint32_t(SimdOp::V128Load32ZeroExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(emitLoadZero(Scalar::Float32));
           case uint32_t(SimdOp::V128Load64ZeroExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK_NEXT(emitLoadZero(Scalar::Float64));
           case uint32_t(SimdOp::V128Store):
             CHECK_NEXT(emitStore(ValType::V128, Scalar::Simd128));
@@ -15420,7 +15421,7 @@ bool BaseCompiler::emitBody() {
 #undef NEXT
 #undef CHECK_NEXT
 #undef CHECK_POINTER_COUNT
-#undef CHECK_EXPERIMENTAL_SIMD
+#undef CHECK_SIMD_EXPERIMENTAL
 #undef dispatchBinary
 #undef dispatchUnary
 #undef dispatchComparison
