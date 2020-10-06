@@ -876,3 +876,63 @@ add_task(async function testFastfallbackToH2() {
 
   await trrServer.stop();
 });
+
+// Test when we fail to establish H3 connection.
+add_task(async function testFailedH3Connection() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  await trrServer.registerDoHAnswers("test.h3.org", "HTTPS", [
+    {
+      name: "test.h3.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "www.h3.org",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "test.h3.org",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  let chan = makeChan(`https://test.h3.org`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+
+  await trrServer.stop();
+});
