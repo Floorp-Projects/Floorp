@@ -336,6 +336,7 @@ dependencies {
     implementation Deps.leanplum_core
     implementation Deps.leanplum_fcm
 
+    implementation Deps.mozilla_concept_base
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_menu
     implementation Deps.mozilla_concept_push

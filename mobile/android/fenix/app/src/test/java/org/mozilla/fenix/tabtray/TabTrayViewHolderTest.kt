@@ -19,8 +19,8 @@ import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
-import mozilla.components.support.images.ImageLoadRequest
-import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before

@@ -16,7 +16,7 @@ import androidx.core.view.updateLayoutParams
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import kotlinx.android.synthetic.main.tab_preview.view.*
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
