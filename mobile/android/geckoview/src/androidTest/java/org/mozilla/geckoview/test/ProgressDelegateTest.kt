@@ -293,11 +293,13 @@ class ProgressDelegateTest : BaseSessionTest() {
         waitForScroll(offset, timeout, "pageTop")
     }
 
-    fun collectState(uri: String) : GeckoSession.SessionState {
+    fun collectState(vararg uris: String) : GeckoSession.SessionState {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
 
-        mainSession.loadUri(uri)
-        sessionRule.waitForPageStop()
+        for (uri in uris) {
+            mainSession.loadUri(uri)
+            sessionRule.waitForPageStop()
+        }
 
         mainSession.evaluateJS("document.querySelector('#name').value = 'the name';")
         mainSession.evaluateJS("document.querySelector('#name').dispatchEvent(new Event('input'));")
@@ -323,8 +325,10 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreStateNewSession() {
+        val helloUri = createTestUrl(HELLO_HTML_PATH)
         val startUri = createTestUrl(SAVE_STATE_PATH)
-        val savedState = collectState(startUri);
+
+        val savedState = collectState(helloUri, startUri);
 
         val session = sessionRule.createOpenSession()
         session.addDisplay(400, 400)
@@ -348,6 +352,14 @@ class ProgressDelegateTest : BaseSessionTest() {
         assertThat("Scroll position should match",
                 session.evaluateJS("window.visualViewport.pageTop") as Double,
                 closeTo(100.0, .5))
+
+        session.goBack()
+
+        session.waitUntilCalled(object: Callbacks.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("History should be preserved", url, equalTo(helloUri))
+            }
+        })
     }
 
     @WithDisplay(width = 400, height = 400)
