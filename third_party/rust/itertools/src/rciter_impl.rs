@@ -52,9 +52,7 @@ pub fn rciter<I>(iterable: I) -> RcIter<I::IntoIter>
 
 impl<I> Clone for RcIter<I> {
     #[inline]
-    fn clone(&self) -> RcIter<I> {
-        RcIter { rciter: self.rciter.clone() }
-    }
+    clone_fields!(rciter);
 }
 
 impl<A, I> Iterator for RcIter<I>

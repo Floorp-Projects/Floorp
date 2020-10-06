@@ -12,3 +12,13 @@ macro_rules! debug_fmt_fields {
         }
     }
 }
+
+macro_rules! clone_fields {
+    ($($field:ident),*) => {
+        fn clone(&self) -> Self {
+            Self {
+                $($field: self.$field.clone(),)*
+            }
+        }
+    }
+}

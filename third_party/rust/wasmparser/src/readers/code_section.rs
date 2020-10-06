@@ -18,7 +18,7 @@ use super::{
     SectionReader, SectionWithLimitedItems, Type,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionBody<'a> {
     offset: usize,
     data: &'a [u8],
@@ -170,7 +170,7 @@ impl<'a> CodeSectionReader<'a> {
     /// for _ in 0..code_reader.get_count() {
     ///     let body = code_reader.read().expect("function body");
     ///     let mut binary_reader = body.get_binary_reader();
-    ///     assert!(binary_reader.read_local_count().expect("local count") == 0);
+    ///     assert!(binary_reader.read_var_u32().expect("local count") == 0);
     ///     let op = binary_reader.read_operator().expect("first operator");
     ///     println!("First operator: {:?}", op);
     /// }
@@ -227,7 +227,7 @@ impl<'a> IntoIterator for CodeSectionReader<'a> {
     /// let mut code_reader = CodeSectionReader::new(data, 0).unwrap();
     /// for body in code_reader {
     ///     let mut binary_reader = body.expect("b").get_binary_reader();
-    ///     assert!(binary_reader.read_local_count().expect("local count") == 0);
+    ///     assert!(binary_reader.read_var_u32().expect("local count") == 0);
     ///     let op = binary_reader.read_operator().expect("first operator");
     ///     println!("First operator: {:?}", op);
     /// }

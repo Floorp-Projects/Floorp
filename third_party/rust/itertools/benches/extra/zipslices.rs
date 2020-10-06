@@ -186,4 +186,3 @@ fn zipslices() {
     }
     ::itertools::assert_equal(&xs, &ys);
 }
-
