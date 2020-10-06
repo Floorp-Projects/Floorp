@@ -106,7 +106,8 @@ class js::VerifyPreTracer final : public JS::CallbackTracer {
   NodeMap nodemap;
 
   explicit VerifyPreTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt),
+      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
+                           JS::WeakEdgeTraceAction::Skip),
         noggc(rt->mainContextFromOwnThread()),
         number(rt->gc.gcNumber()),
         count(0),
@@ -116,7 +117,6 @@ class js::VerifyPreTracer final : public JS::CallbackTracer {
         term(nullptr) {
     // We don't care about weak edges here. Since they are not marked they
     // cannot cause the problem that the pre-write barrier protects against.
-    setTraceWeakEdges(false);
   }
 
   ~VerifyPreTracer() { js_free(root); }
@@ -758,8 +758,7 @@ void GCRuntime::finishMarkingValidation() {
 
 class HeapCheckTracerBase : public JS::CallbackTracer {
  public:
-  explicit HeapCheckTracerBase(JSRuntime* rt,
-                               JS::WeakMapTraceAction weakMapAction);
+  explicit HeapCheckTracerBase(JSRuntime* rt, JS::TraceOptions options);
   bool traceHeap(AutoTraceSession& session);
   virtual void checkCell(Cell* cell) = 0;
 
@@ -797,8 +796,8 @@ class HeapCheckTracerBase : public JS::CallbackTracer {
 };
 
 HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
-                                         JS::WeakMapTraceAction weakMapAction)
-    : CallbackTracer(rt, JS::TracerKind::Callback, weakMapAction),
+                                         JS::TraceOptions options)
+    : CallbackTracer(rt, JS::TracerKind::Callback, options),
       failures(0),
       rt(rt),
       oom(false),
@@ -949,9 +948,9 @@ class CheckGrayMarkingTracer final : public HeapCheckTracerBase {
 };
 
 CheckGrayMarkingTracer::CheckGrayMarkingTracer(JSRuntime* rt)
-    : HeapCheckTracerBase(rt, JS::WeakMapTraceAction::Skip) {
+    : HeapCheckTracerBase(rt, JS::TraceOptions(JS::WeakMapTraceAction::Skip,
+                                               JS::WeakEdgeTraceAction::Skip)) {
   // Weak gray->black edges are allowed.
-  setTraceWeakEdges(false);
 }
 
 void CheckGrayMarkingTracer::checkCell(Cell* cell) {

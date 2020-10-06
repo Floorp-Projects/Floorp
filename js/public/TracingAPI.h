@@ -86,6 +86,32 @@ enum class WeakMapTraceAction {
   TraceKeysAndValues
 };
 
+// Whether a tracer should trace weak edges. GCMarker sets this to Skip.
+enum class WeakEdgeTraceAction { Skip, Trace };
+
+// Whether a tracer can skip tracing JS::Ids. This is needed by the cycle
+// collector to skip some Ids for performance reasons. Not all Ids are skipped.
+enum class IdTraceAction { CanSkip, Trace };
+
+struct TraceOptions {
+  JS::WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues;
+  JS::WeakEdgeTraceAction weakEdgeAction = WeakEdgeTraceAction::Trace;
+  JS::IdTraceAction idAction = IdTraceAction::Trace;
+
+  TraceOptions() = default;
+  TraceOptions(JS::WeakMapTraceAction weakMapAction,
+               JS::WeakEdgeTraceAction weakEdgeAction,
+               JS::IdTraceAction idAction = IdTraceAction::Trace)
+      : weakMapAction(weakMapAction),
+        weakEdgeAction(weakEdgeAction),
+        idAction(idAction) {}
+  MOZ_IMPLICIT TraceOptions(JS::WeakMapTraceAction weakMapAction)
+      : weakMapAction(weakMapAction) {}
+  MOZ_IMPLICIT TraceOptions(JS::WeakEdgeTraceAction weakEdgeAction)
+      : weakEdgeAction(weakEdgeAction) {}
+  MOZ_IMPLICIT TraceOptions(JS::IdTraceAction idAction) : idAction(idAction) {}
+};
+
 class AutoTracingName;
 class AutoTracingIndex;
 class AutoTracingCallback;
@@ -170,14 +196,18 @@ class JS_PUBLIC_API JSTracer {
   bool isGenericTracer() const { return kind_ >= JS::TracerKind::Generic; }
   bool isCallbackTracer() const { return kind_ >= JS::TracerKind::Callback; }
 
-  // Return the weak map tracing behavior currently set on this tracer.
-  JS::WeakMapTraceAction weakMapAction() const { return weakMapAction_; }
-
   inline js::GenericTracer* asGenericTracer();
   inline JS::CallbackTracer* asCallbackTracer();
 
-  bool traceWeakEdges() const { return traceWeakEdges_; }
-  bool canSkipJsids() const { return canSkipJsids_; }
+  JS::WeakMapTraceAction weakMapAction() const {
+    return options_.weakMapAction;
+  }
+  bool traceWeakEdges() const {
+    return options_.weakEdgeAction == JS::WeakEdgeTraceAction::Trace;
+  }
+  bool canSkipJsids() const {
+    return options_.idAction == JS::IdTraceAction::CanSkip;
+  }
 
   // Get the current GC number. Only call this method if |isMarkingTracer()|
   // is true.
@@ -185,28 +215,16 @@ class JS_PUBLIC_API JSTracer {
 
  protected:
   JSTracer(JSRuntime* rt, JS::TracerKind kind,
-           JS::WeakMapTraceAction weakMapAction =
-               JS::WeakMapTraceAction::TraceValues)
-      : runtime_(rt), kind_(kind), weakMapAction_(weakMapAction) {}
+           JS::TraceOptions options = JS::TraceOptions())
+      : runtime_(rt), kind_(kind), options_(options) {}
 
   void setContext(JS::TracingContext* tcx) { maybeContext_ = tcx; }
-
-  void setTraceWeakEdges(bool value) { traceWeakEdges_ = value; }
-
-  // If this is set to false, then the tracer will skip some jsids
-  // to improve performance. This is needed for the cycle collector.
-  void setCanSkipJsids(bool value) { canSkipJsids_ = value; }
 
  private:
   JSRuntime* const runtime_;
   JS::TracingContext* maybeContext_ = nullptr;
   const JS::TracerKind kind_;
-  const JS::WeakMapTraceAction weakMapAction_;
-
-  // Whether the tracer should trace weak edges. GCMarker sets this to false.
-  bool traceWeakEdges_ = true;
-
-  bool canSkipJsids_ = false;
+  const JS::TraceOptions options_;
 };
 
 namespace js {
@@ -214,9 +232,8 @@ namespace js {
 class GenericTracer : public JSTracer {
  public:
   GenericTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Generic,
-                JS::WeakMapTraceAction weakMapAction =
-                    JS::WeakMapTraceAction::TraceValues)
-      : JSTracer(rt, kind, weakMapAction) {
+                JS::TraceOptions options = JS::TraceOptions())
+      : JSTracer(rt, kind, options) {
     MOZ_ASSERT(isGenericTracer());
   }
 
@@ -268,16 +285,14 @@ namespace JS {
 
 class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
  public:
-  CallbackTracer(
-      JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
-      WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues)
-      : GenericTracer(rt, kind, weakMapAction) {
+  CallbackTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
+                 JS::TraceOptions options = JS::TraceOptions())
+      : GenericTracer(rt, kind, options) {
     MOZ_ASSERT(isCallbackTracer());
     setContext(&context_);
   }
-  CallbackTracer(
-      JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
-      WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues);
+  CallbackTracer(JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
+                 JS::TraceOptions options = JS::TraceOptions());
 
   TracingContext& context() { return context_; }
 
