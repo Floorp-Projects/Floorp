@@ -113,8 +113,45 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&list);
 }
 
+static bool BackdropListIsOpaque(ViewportFrame* aFrame,
+                                 nsDisplayListBuilder* aBuilder,
+                                 nsDisplayList* aList) {
+  // The common case for ::backdrop elements on the top layer is a single
+  // fixed position container, holding an opaque background color covering
+  // the whole viewport.
+  if (aList->Count() != 1 ||
+      aList->GetTop()->GetType() != DisplayItemType::TYPE_FIXED_POSITION) {
+    return false;
+  }
+
+  // Make sure the fixed position container isn't clipped or scrollable.
+  nsDisplayFixedPosition* fixed =
+      static_cast<nsDisplayFixedPosition*>(aList->GetTop());
+  if (fixed->GetActiveScrolledRoot() || fixed->GetClipChain()) {
+    return false;
+  }
+
+  nsDisplayList* children = fixed->GetChildren();
+  if (children->GetTop()->GetType() != DisplayItemType::TYPE_BACKGROUND_COLOR) {
+    return false;
+  }
+
+  nsDisplayBackgroundColor* child =
+      static_cast<nsDisplayBackgroundColor*>(children->GetTop());
+  if (child->GetActiveScrolledRoot() || child->GetClipChain()) {
+    return false;
+  }
+
+  // Check that the background color is both opaque, and covering the
+  // whole viewport.
+  bool dummy;
+  nsRegion opaque = child->GetOpaqueRegion(aBuilder, &dummy);
+  return opaque.Contains(aFrame->GetRect());
+}
+
 void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
-                                                nsDisplayList* aList) {
+                                                nsDisplayList* aList,
+                                                bool* aIsOpaque) {
   nsTArray<dom::Element*> topLayer = PresContext()->Document()->GetTopLayer();
   for (dom::Element* elem : topLayer) {
     if (nsIFrame* frame = elem->GetPrimaryFrame()) {
@@ -152,6 +189,10 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
             static_cast<nsPlaceholderFrame*>(backdropPh)->GetOutOfFlowFrame();
         MOZ_ASSERT(backdropFrame);
         BuildDisplayListForTopLayerFrame(aBuilder, backdropFrame, aList);
+
+        if (aIsOpaque) {
+          *aIsOpaque = BackdropListIsOpaque(this, aBuilder, aList);
+        }
       }
       BuildDisplayListForTopLayerFrame(aBuilder, frame, aList);
     }
