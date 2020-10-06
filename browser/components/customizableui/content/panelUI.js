@@ -1118,11 +1118,10 @@ const PanelUI = {
     }
   },
   _ensureShortcutsShown(view = this.mainView) {
-    // The print button shorcut visibility can change depending on the pref value,
-    // so we need to check this each time, even if we've already added shortcuts.
-    this._formatPrintButtonShortcuts();
-
     if (view.hasAttribute("added-shortcuts")) {
+      // The print button shorcut visibility can change depending on the pref value,
+      // so we need to check this each time, even if we've already added shortcuts.
+      this._formatPrintButtonShortcuts();
       return;
     }
     view.setAttribute("added-shortcuts", "true");
@@ -1134,6 +1133,7 @@ const PanelUI = {
       }
       button.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(key));
     }
+    this._formatPrintButtonShortcuts();
   },
 };
 
