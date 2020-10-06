@@ -798,10 +798,8 @@ class WorkerPermissionChallenge final : public Runnable {
       RefPtr<WorkerPermissionRequest> helper =
           new WorkerPermissionRequest(ownerElement, principal, this);
 
-      PermissionRequestBase::PermissionValue permission;
-      if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {
-        return true;
-      }
+      IDB_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
+                      helper->PromptIfNeeded(), true);
 
       MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
                  permission == PermissionRequestBase::kPermissionDenied ||
@@ -1491,10 +1489,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
         new PermissionRequestMainProcessHelper(this, mFactory.clonePtr(),
                                                ownerElement, principal);
 
-    PermissionRequestBase::PermissionValue permission;
-    if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {
-      return IPC_FAIL_NO_REASON(this);
-    }
+    IDB_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
+                    helper->PromptIfNeeded(), IPC_FAIL_NO_REASON(this));
 
     MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
                permission == PermissionRequestBase::kPermissionDenied ||
