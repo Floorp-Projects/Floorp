@@ -4017,13 +4017,13 @@ bool ContentParent::DeallocPParentToChildStreamParent(
   return true;
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvAddMixedContentSecurityState(
+mozilla::ipc::IPCResult ContentParent::RecvAddSecurityState(
     const MaybeDiscarded<WindowContext>& aContext, uint32_t aStateFlags) {
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
 
-  aContext.get()->AddMixedContentSecurityState(aStateFlags);
+  aContext.get()->AddSecurityState(aStateFlags);
   return IPC_OK();
 }
 

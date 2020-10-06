@@ -2688,7 +2688,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
   // the current window global, but that happens before this and we have a lot
   // of tests that depend on the specific ordering of messages.
   if (!(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
-    GetBrowsingContext()->UpdateSecurityStateForLocationOrMixedContentChange();
+    GetBrowsingContext()->UpdateSecurityState();
   }
   return IPC_OK();
 }
