@@ -54,6 +54,11 @@
             android:title="@string/preferences_search" />
 
         <androidx.preference.Preference
+            android:icon="@drawable/ic_multiple_tabs"
+            android:key="@string/pref_key_tabs"
+            android:title="@string/preferences_tabs" />
+
+        <androidx.preference.Preference
             android:icon="@drawable/ic_customize"
             android:key="@string/pref_key_customize"
             android:title="@string/preferences_customize" />
@@ -77,11 +82,6 @@
             android:icon="@drawable/ic_internet"
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />
-
-        <androidx.preference.Preference
-            android:icon="@drawable/ic_multiple_tabs"
-            android:key="@string/pref_key_close_tabs"
-            android:title="@string/preferences_close_tabs" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

@@ -92,7 +92,7 @@ class DefaultTabTrayController(
     }
 
     override fun handleTabSettingsClicked() {
-        navController.navigate(TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment())
+        navController.navigate(TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment())
     }
 
     override fun onTabTrayDismissed() {
@@ -187,7 +187,7 @@ class DefaultTabTrayController(
     }
 
     override fun handleSetUpAutoCloseTabsClicked() {
-        val directions = TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment()
+        val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
         navController.navigate(directions)
     }
 }

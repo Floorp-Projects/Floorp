@@ -129,8 +129,6 @@
 
     <!-- Customization Settings -->
     <string name="pref_home_category" translatable="false">pref_home_category</string>
-
-    <!-- Customization Settings -->
     <string name="pref_key_website_pull_to_refresh" translatable="false">pref_key_website_pull_to_refresh</string>
     <string name="pref_key_dynamic_toolbar" translatable="false">pref_key_dynamic_toolbar</string>
     <string name="pref_key_swipe_toolbar_switch_tabs" translatable="false">pref_key_swipe_toolbar_switch_tabs</string>
@@ -225,7 +223,10 @@
 
     <string name="pref_key_show_collections_placeholder_home" translatable="false">pref_key_show_collections_home</string>
 
-    <string name="pref_key_close_tabs" translatable="false">pref_key_close_tabs</string>
+    <!-- Tabs Settings -->
+    <string name="pref_key_tab_view_list" translatable="false">pref_key_tab_view_list</string>
+    <string name="pref_key_tab_view_grid" translatable="false">pref_key_tab_view_grid</string>
+    <string name="pref_key_tabs" translatable="false">pref_key_tabs</string>
     <string name="pref_key_close_tabs_manually" translatable="false">pref_key_close_tabs_manually</string>
     <string name="pref_key_close_tabs_after_one_day" translatable="false">pref_key_close_tabs_after_one_day</string>
     <string name="pref_key_close_tabs_after_one_week" translatable="false">pref_key_close_tabs_after_one_week</string>

@@ -24,7 +24,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.amo_collection_override_dialog.view.*
-import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -187,7 +186,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         val tabSettingsPreference =
-            requirePreference<Preference>(R.string.pref_key_close_tabs)
+            requirePreference<Preference>(R.string.pref_key_tabs)
         tabSettingsPreference.summary = context?.settings()?.getTabTimeoutString()
 
         setupPreferences()
@@ -212,8 +211,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_sign_in) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
             }
-            resources.getString(R.string.pref_key_close_tabs) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToCloseTabsSettingsFragment()
+            resources.getString(R.string.pref_key_tabs) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToTabsSettingsFragment()
             }
             resources.getString(R.string.pref_key_search_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()

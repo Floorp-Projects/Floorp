@@ -345,6 +345,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    var listTabView by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tab_view_list),
+        default = true
+    )
+
+    var gridTabView by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tab_view_grid),
+        default = false
+    )
+
     var manuallyCloseTabs by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_close_tabs_manually),
         default = true

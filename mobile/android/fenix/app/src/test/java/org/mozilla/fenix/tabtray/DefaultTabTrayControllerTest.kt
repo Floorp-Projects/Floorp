@@ -106,7 +106,7 @@ class DefaultTabTrayControllerTest {
 
         verify {
             navController.navigate(
-                TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment()
+                TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
             )
         }
     }
@@ -252,7 +252,7 @@ class DefaultTabTrayControllerTest {
     @Test
     fun handleSetUpAutoCloseTabsClicked() {
         controller.handleSetUpAutoCloseTabsClicked()
-        val directions = TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment()
+        val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
 
         verify {
             navController.navigate(directions)
