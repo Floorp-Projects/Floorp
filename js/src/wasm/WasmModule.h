@@ -23,7 +23,10 @@
 #include "js/BuildId.h"
 
 #include "wasm/WasmCode.h"
+#include "wasm/WasmJS.h"
 #include "wasm/WasmTable.h"
+
+struct JSTelemetrySender;
 
 namespace js {
 namespace wasm {

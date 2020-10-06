@@ -14,6 +14,7 @@
 
 #include "jsfriendapi.h"
 
+#include "builtin/TypedObject.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonOptimizationLevels.h"

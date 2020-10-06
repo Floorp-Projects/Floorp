@@ -23,6 +23,7 @@
 #include "builtin/ModuleObject.h"
 #include "jit/AtomicOp.h"
 #include "jit/BaselineIC.h"
+#include "jit/CompileInfo.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
 #include "jit/JitAllocPolicy.h"

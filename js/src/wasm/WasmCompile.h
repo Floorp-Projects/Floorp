@@ -19,6 +19,7 @@
 #ifndef wasm_compile_h
 #define wasm_compile_h
 
+#include "vm/Runtime.h"
 #include "wasm/WasmModule.h"
 
 namespace js {
