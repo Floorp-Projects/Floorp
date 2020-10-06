@@ -699,12 +699,13 @@ static SkFontStyle fontstyle_from_descriptor(CTFontDescriptorRef desc, bool from
 class SkTypeface_Mac : public SkTypeface {
 public:
     SkTypeface_Mac(SkUniqueCFRef<CTFontRef> fontRef, SkUniqueCFRef<CFTypeRef> resourceRef,
-                   const SkFontStyle& fs, bool isFixedPitch, bool hasColorGlyphs,
+                   const SkFontStyle& fs, bool isFixedPitch,
                    std::unique_ptr<SkStreamAsset> providedData)
         : SkTypeface(fs, isFixedPitch)
         , fFontRef(std::move(fontRef))
         , fOriginatingCFTypeRef(std::move(resourceRef))
-        , fHasColorGlyphs(hasColorGlyphs)
+        , fHasColorGlyphs(
+                SkToBool(CTFontGetSymbolicTraits(fFontRef.get()) & kCTFontColorGlyphsTrait))
         , fStream(std::move(providedData))
         , fIsFromStream(fStream)
     {
@@ -765,9 +766,7 @@ static bool find_by_CTFontRef(SkTypeface* cached, void* context) {
 /** Creates a typeface, searching the cache if isLocalStream is false. */
 static sk_sp<SkTypeface> create_from_CTFontRef(SkUniqueCFRef<CTFontRef> font,
                                                SkUniqueCFRef<CFTypeRef> resource,
-                                               std::unique_ptr<SkStreamAsset> providedData,
-                                               const SkFontStyle* providedStyle = nullptr,
-                                               const CTFontSymbolicTraits* providedTraits = nullptr) {
+                                               std::unique_ptr<SkStreamAsset> providedData) {
     SkASSERT(font);
     const bool isFromStream(providedData);
 
@@ -779,26 +778,13 @@ static sk_sp<SkTypeface> create_from_CTFontRef(SkUniqueCFRef<CTFontRef> font,
         }
     }
 
-    SkFontStyle style;
-    if (providedStyle) {
-        style = *providedStyle;
-    } else {
-        SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(font.get()));
-        style = fontstyle_from_descriptor(desc.get(), isFromStream);
-    }
-
-    CTFontSymbolicTraits traits;
-    if (providedTraits) {
-        traits = *providedTraits;
-    } else {
-        traits = CTFontGetSymbolicTraits(font.get());
-    }
+    SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(font.get()));
+    SkFontStyle style = fontstyle_from_descriptor(desc.get(), isFromStream);
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(font.get());
     bool isFixedPitch = SkToBool(traits & kCTFontMonoSpaceTrait);
-    bool hasColorGlyphs = SkToBool(traits & kCTFontColorGlyphsTrait);
 
     sk_sp<SkTypeface> face(new SkTypeface_Mac(std::move(font), std::move(resource),
-                                              style, isFixedPitch, hasColorGlyphs,
-                                              std::move(providedData)));
+                                              style, isFixedPitch, std::move(providedData)));
     if (!isFromStream) {
         SkTypefaceCache::Add(face);
     }
@@ -914,16 +900,14 @@ static sk_sp<SkTypeface> create_from_name(const char familyName[], const SkFontS
 /*  This function is visible on the outside. It first searches the cache, and if
  *  not found, returns a new entry (after adding it to the cache).
  */
-SkTypeface* SkCreateTypefaceFromCTFont(CTFontRef font, CFTypeRef resource,
-                                       const SkFontStyle* style,
-                                       const CTFontSymbolicTraits* traits) {
+SkTypeface* SkCreateTypefaceFromCTFont(CTFontRef font, CFTypeRef resource) {
     CFRetain(font);
     if (resource) {
         CFRetain(resource);
     }
     return create_from_CTFontRef(SkUniqueCFRef<CTFontRef>(font),
                                  SkUniqueCFRef<CFTypeRef>(resource),
-                                 nullptr, style, traits).release();
+                                 nullptr).release();
 }
 
 static const char* map_css_names(const char* name) {
