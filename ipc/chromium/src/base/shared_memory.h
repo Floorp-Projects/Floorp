@@ -36,7 +36,7 @@ typedef FileDescriptor SharedMemoryHandle;
 class SharedMemory {
  public:
   // Create a new SharedMemory object.
-  SharedMemory();
+  SharedMemory() = default;
 
   // Create a new SharedMemory object from an existing, open
   // shared memory file.
@@ -46,7 +46,7 @@ class SharedMemory {
   }
 
   // Move constructor; transfers ownership.
-  SharedMemory(SharedMemory&& other);
+  SharedMemory(SharedMemory&& other) = default;
 
   // Destructor.  Will close any open files.
   ~SharedMemory();
@@ -85,9 +85,7 @@ class SharedMemory {
   bool Map(size_t bytes, void* fixed_address = nullptr);
 
   // Unmaps the shared memory from the caller's address space.
-  // Returns true if successful; returns false on error or if the
-  // memory is not mapped.
-  bool Unmap();
+  void Unmap() { memory_ = nullptr; }
 
   // Get the size of the opened shared memory backing file.
   // Note:  This size is only available to the creator of the
@@ -98,7 +96,7 @@ class SharedMemory {
 
   // Gets a pointer to the opened memory space if it has been
   // Mapped via Map().  Returns NULL if it is not mapped.
-  void* memory() const { return memory_; }
+  void* memory() const { return memory_.get(); }
 
   // Extracts the underlying file handle; similar to
   // GiveToProcess(GetCurrentProcId(), ...) but returns a RAII type.
@@ -196,19 +194,33 @@ class SharedMemory {
 
   bool CreateInternal(size_t size, bool freezeable);
 
-  void* memory_;
-  size_t max_size_;
+  // Unmapping shared memory requires the mapped size on Unix but not
+  // Windows; this encapsulates that difference.
+  struct MappingDeleter {
+#ifdef OS_POSIX
+    // A default-constructed deleter must be used only with nullptr
+    // (to allow default-constructing UniqueMapping).  A deleter with
+    // a size must be used at most once.
+    size_t mapped_size_ = 0;
+    explicit MappingDeleter(size_t size) : mapped_size_(size) {}
+#endif
+    MappingDeleter() = default;
+    void operator()(void* ptr);
+  };
+  using UniqueMapping = mozilla::UniquePtr<void, MappingDeleter>;
+
+  UniqueMapping memory_;
+  size_t max_size_ = 0;
   mozilla::UniqueFileHandle mapped_file_;
 #if defined(OS_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
-  bool external_section_;
+  bool external_section_ = false;
 #elif defined(OS_POSIX)
   mozilla::UniqueFileHandle frozen_file_;
-  size_t mapped_size_;
 #endif
-  bool read_only_;
-  bool freezeable_;
+  bool read_only_ = false;
+  bool freezeable_ = false;
 
   DISALLOW_EVIL_CONSTRUCTORS(SharedMemory);
 };

@@ -58,29 +58,11 @@ bool IsSectionSafeToMap(HANDLE handle) {
 
 namespace base {
 
-SharedMemory::SharedMemory()
-    : memory_(nullptr),
-      max_size_(0),
-      mapped_file_(nullptr),
-      external_section_(false),
-      read_only_(false),
-      freezeable_(false) {}
-
-SharedMemory::SharedMemory(SharedMemory&& other) {
-  memory_ = other.memory_;
-  max_size_ = other.max_size_;
-  mapped_file_ = std::move(other.mapped_file_);
-  external_section_ = other.external_section_;
-  read_only_ = other.read_only_;
-  freezeable_ = other.freezeable_;
-
-  other.memory_ = nullptr;
+void SharedMemory::MappingDeleter::operator()(void* ptr) {
+  UnmapViewOfFile(ptr);
 }
 
-SharedMemory::~SharedMemory() {
-  external_section_ = true;
-  Close();
-}
+SharedMemory::~SharedMemory() = default;
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(!mapped_file_);
@@ -188,24 +170,17 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
     return false;
   }
 
-  memory_ = MapViewOfFileEx(
+  void* mem = MapViewOfFileEx(
       mapped_file_.get(),
       read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, bytes,
       fixed_address);
-  if (memory_ != NULL) {
-    MOZ_ASSERT(!fixed_address || memory_ == fixed_address,
+  if (mem) {
+    MOZ_ASSERT(!fixed_address || mem == fixed_address,
                "MapViewOfFileEx returned an expected address");
+    memory_.reset(mem);
     return true;
   }
   return false;
-}
-
-bool SharedMemory::Unmap() {
-  if (memory_ == NULL) return false;
-
-  UnmapViewOfFile(memory_);
-  memory_ = NULL;
-  return true;
 }
 
 void* SharedMemory::FindFreeAddressSpace(size_t size) {
