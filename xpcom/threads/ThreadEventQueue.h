@@ -91,6 +91,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   bool mEventsAreDoomed = false;
   nsCOMPtr<nsIThreadObserver> mObserver;
+  bool mIsMainThread;
 };
 
 extern template class ThreadEventQueue<EventQueue>;
