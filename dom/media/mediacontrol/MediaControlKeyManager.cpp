@@ -86,9 +86,20 @@ bool MediaControlKeyManager::StartMonitoringControlKeys() {
 }
 
 void MediaControlKeyManager::StopMonitoringControlKeys() {
-  if (mEventSource && mEventSource->IsOpened()) {
-    LOG_INFO("StopMonitoringControlKeys");
-    mEventSource->Close();
+  if (!mEventSource || !mEventSource->IsOpened()) {
+    return;
+  }
+
+  LOG_INFO("StopMonitoringControlKeys");
+  mEventSource->Close();
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    // Close the source would reset the displayed playback state and metadata.
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-displayed-playback-changed",
+                           nullptr);
+      obs->NotifyObservers(nullptr, "media-displayed-metadata-changed",
+                           nullptr);
+    }
   }
 }
 
