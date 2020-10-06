@@ -36,7 +36,6 @@
 #include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
-#include "jit/Linker.h"
 #include "jit/LIR.h"
 #include "jit/Lowering.h"
 #include "jit/PerfSpewer.h"
