@@ -122,6 +122,9 @@ class StrictModeManager(
             // quintillion times in a build config where StrictMode is enabled so we don't handle it
             // because it'd increase complexity.
             suppressionCount += 1
+
+            // We log so that devs are more likely to notice that we're suppressing StrictMode violations.
+            // We add profiler markers so that the perf team can easily identify IO locations in profiles.
             logger.warn("StrictMode violation suppressed: #$suppressionCount")
             if (Thread.currentThread() == mainLooper.thread) { // markers only supported on main thread.
                 components.core.engine.profiler?.addMarker("StrictMode.suppression", "Count: $suppressionCount")

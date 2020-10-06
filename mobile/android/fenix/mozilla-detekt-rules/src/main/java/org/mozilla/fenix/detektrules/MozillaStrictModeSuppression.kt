@@ -52,6 +52,8 @@ class MozillaStrictModeSuppression(config: Config) : Rule(config) {
         val receiver = expression.parent?.firstChild?.node?.chars
         val calledMethod = expression.calleeExpression?.firstChild?.node?.chars
 
+        // This won't catch if setVmPolicy is imported directly. However, this is unlikely so let's
+        // not handle it now. Maybe we can add it when we add tests for this file.
         if (receiver == "StrictMode") {
             val violationMsg = when (calledMethod) {
                 "setThreadPolicy" -> VIOLATION_MSG
