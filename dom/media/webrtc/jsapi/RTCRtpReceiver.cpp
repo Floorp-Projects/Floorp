@@ -170,6 +170,14 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   nsString idstr = kind + u"_"_ns;
   idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
 
+  // Add bandwidth estimation stats
+  aPipeline->Conduit()->GetBandwidthEstimation().apply([&](auto& bw) {
+    bw.mTrackIdentifier = aRecvTrackId;
+    if (!report->mBandwidthEstimations.AppendElement(bw, fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  });
+
   Maybe<uint32_t> ssrc;
   unsigned int ssrcval;
   if (aPipeline->Conduit()->GetRemoteSSRC(&ssrcval)) {

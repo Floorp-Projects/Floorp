@@ -305,6 +305,9 @@ class MediaPipelineTransmit : public MediaPipeline {
   // Replace a track with a different one.
   nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
 
+  // Used to correlate stats
+  RefPtr<dom::MediaStreamTrack> GetTrack() const;
+
   // Set the track whose data we will transmit. For internal and test use.
   void SetSendTrack(RefPtr<ProcessedMediaTrack> aSendTrack);
 

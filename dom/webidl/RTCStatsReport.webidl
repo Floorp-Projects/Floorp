@@ -173,6 +173,16 @@ dictionary RTCVideoFrameHistoryInternal {
   sequence<RTCVideoFrameHistoryEntryInternal> entries = [];
 };
 
+// Collection over the libwebrtc bandwidth estimation stats
+dictionary RTCBandwidthEstimationInternal {
+  required DOMString  trackIdentifier;
+  long                sendBandwidthBps;    // Estimated available send bandwidth
+  long                maxPaddingBps;       // Cumulative configured max padding
+  long                receiveBandwidthBps; // Estimated available receive bandwidth
+  long                pacerDelayMs;
+  long                rttMs;
+};
+
 // This is used by about:webrtc to report SDP parsing errors
 dictionary RTCSdpParsingErrorInternal {
   required unsigned long lineNumber;
@@ -204,6 +214,7 @@ dictionary RTCStatsCollection {
   sequence<DOMString>                       rawRemoteCandidates = [];
   sequence<RTCDataChannelStats>             dataChannelStats = [];
   sequence<RTCVideoFrameHistoryInternal>    videoFrameHistories = [];
+  sequence<RTCBandwidthEstimationInternal>  bandwidthEstimations = [];
 };
 
 // Details that about:webrtc can display about configured ICE servers

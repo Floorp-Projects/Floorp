@@ -284,6 +284,9 @@ class WebrtcVideoConduit
   bool GetRTCPSenderReport(unsigned int* packetsSent, uint64_t* bytesSent,
                            DOMHighResTimeStamp* aRemoteTimestamp) override;
 
+  Maybe<mozilla::dom::RTCBandwidthEstimationInternal> GetBandwidthEstimation()
+      override;
+
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
   bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
                            outHistories) const override;
@@ -331,12 +334,14 @@ class WebrtcVideoConduit
     explicit CallStatistics(nsCOMPtr<nsISerialEventTarget> aStatsThread)
         : mStatsThread(aStatsThread) {}
     void Update(const webrtc::Call::Stats& aStats);
+    Maybe<mozilla::dom::RTCBandwidthEstimationInternal> Stats() const;
     Maybe<DOMHighResTimeStamp> RttSec() const;
 
    protected:
     const nsCOMPtr<nsISerialEventTarget> mStatsThread;
 
    private:
+    Maybe<webrtc::Call::Stats> mStats = Nothing();
     Maybe<DOMHighResTimeStamp> mRttSec = Nothing();
   };
 

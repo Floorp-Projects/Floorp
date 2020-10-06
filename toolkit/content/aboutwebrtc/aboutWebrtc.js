@@ -297,6 +297,7 @@ class ShowTab extends Control {
         };
         replace("ice-stats", renderICEStats);
         replace("rtp-stats", renderRTPStats);
+        replace("bandwidth-stats", renderBandwidthStats);
         replace("frame-stats", renderFrameRateStats);
       });
     },
@@ -332,6 +333,7 @@ function renderPeerConnection(report) {
       renderConfiguration(configuration),
       renderICEStats(report),
       renderSDPStats(report),
+      renderBandwidthStats(report),
       renderFrameRateStats(report),
       renderRTPStats(report)
     );
@@ -414,6 +416,33 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
   }
   section.append(localDiv, remoteDiv);
   statsDiv.append(section);
+  return statsDiv;
+}
+
+function renderBandwidthStats(report) {
+  const statsDiv = renderElement("div", {
+    id: "bandwidth-stats: " + report.pcid,
+  });
+  const table = renderSimpleTable(
+    "",
+    [
+      "track_identifier",
+      "send_bandwidth_bytes_sec",
+      "receive_bandwidth_bytes_sec",
+      "max_padding_bytes_sec",
+      "pacer_delay_ms",
+      "round_trip_time_ms",
+    ].map(columnName => string(columnName)),
+    report.bandwidthEstimations.map(stat => [
+      stat.trackIdentifier,
+      stat.sendBandwidthBps,
+      stat.receiveBandwidthBps,
+      stat.maxPaddingBps,
+      stat.receiveBandwidthBps,
+      stat.rttMs,
+    ])
+  );
+  statsDiv.append(renderText("h4", string("bandwidth_stats_heading")), table);
   return statsDiv;
 }
 
