@@ -2648,7 +2648,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   panel_settings:
     type: event
     description: |
@@ -2661,7 +2661,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   etp_shield:
     type: event
     description: |
@@ -2674,7 +2674,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   etp_tracker_list:
     type: event
     description: |
@@ -2688,7 +2688,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   etp_settings:
     type: event
     description: |
@@ -2701,7 +2701,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   etp_setting_changed:
     type: event
     description: |
@@ -2720,7 +2720,7 @@ tracking_protection:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 private_browsing_shortcut:
   create_shortcut:
@@ -3194,7 +3194,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   open_frecency:
     type: event
     description: |
@@ -3207,7 +3207,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-15"
+    expires: "2021-08-01"
   open_pinned:
     type: event
     description: |
@@ -3220,7 +3220,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-15"
+    expires: "2021-08-01"
   swipe_carousel:
     type: event
     description: |
@@ -3237,7 +3237,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-15"
+    expires: "2021-08-01"
   long_press:
     type: event
     description: |
@@ -3254,7 +3254,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-15"
+    expires: "2021-08-01"
   open_in_new_tab:
     type: event
     description: |
@@ -3267,7 +3267,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   open_in_private_tab:
     type: event
     description: |
@@ -3280,7 +3280,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   remove:
     type: event
     description: |
@@ -3293,7 +3293,7 @@ top_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 about_page:
   support_tapped:
