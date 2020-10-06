@@ -161,20 +161,8 @@ StackScrollerFlingAnimation::StackScrollerFlingAnimation(
   int32_t originY =
       ClampStart(mStartOffset.y, scrollRangeStartY, scrollRangeEndY);
   if (!state->mLastFling.IsNull()) {
-    // If it's been too long since the previous fling, or if the new fling's
-    // velocity is too low, don't allow flywheel to kick in. If we do allow
-    // flywheel to kick in, then we need to update the timestamp on the
-    // StackScroller because otherwise it might use a stale velocity.
-    TimeDuration flingDuration = TimeStamp::Now() - state->mLastFling;
-    if (flingDuration.ToMilliseconds() <
-            StaticPrefs::apz_fling_accel_interval_ms() &&
-        velocity.Length() >= StaticPrefs::apz_fling_accel_interval_ms()) {
-      bool unused = false;
-      mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(),
-                                         &unused);
-    } else {
-      mOverScroller->ForceFinished(true);
-    }
+    // Don't allow flywheel to kick in.
+    mOverScroller->ForceFinished(true);
   }
   mOverScroller->Fling(
       originX, originY,
