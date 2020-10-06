@@ -319,19 +319,16 @@ struct LastArg;
 template <>
 struct LastArg<> {
   using Type = void;
-  static constexpr size_t nbArgs = 0;
 };
 
 template <typename HeadType>
 struct LastArg<HeadType> {
   using Type = HeadType;
-  static constexpr size_t nbArgs = 1;
 };
 
 template <typename HeadType, typename... TailTypes>
 struct LastArg<HeadType, TailTypes...> {
   using Type = typename LastArg<TailTypes...>::Type;
-  static constexpr size_t nbArgs = LastArg<TailTypes...>::nbArgs + 1;
 };
 
 class AutoDetectInvalidation {
