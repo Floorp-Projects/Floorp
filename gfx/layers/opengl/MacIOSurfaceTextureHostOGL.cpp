@@ -233,13 +233,11 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
-      // We disable external compositing for RGB surfaces for now until
-      // we've tested support more thoroughly. Bug 1667917.
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                          aPreferCompositorSurface,
-                         /* aSupportsExternalCompositing */ false);
+                         /* aSupportsExternalCompositing */ true);
       break;
     }
     case gfx::SurfaceFormat::YUV422: {

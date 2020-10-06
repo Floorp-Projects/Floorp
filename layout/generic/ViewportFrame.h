@@ -52,8 +52,7 @@ class ViewportFrame : public nsContainerFrame {
                                 const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
-                                   nsDisplayList* aList,
-                                   bool* aIsOpaque = nullptr);
+                                   nsDisplayList* aList);
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
