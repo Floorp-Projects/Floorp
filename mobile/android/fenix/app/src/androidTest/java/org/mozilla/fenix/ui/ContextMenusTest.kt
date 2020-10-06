@@ -129,6 +129,27 @@ class ContextMenusTest {
     }
 
     @Test
+    fun verifyContextCopyLinkNotDisplayedAfterApplied() {
+        val pageLinks = TestAssetHelper.getGenericAsset(mockWebServer, 4)
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(pageLinks.url) {
+            mDevice.waitForIdle()
+            longClickMatchingText("Link 3")
+            verifyLinkContextMenuItems(genericURL.url)
+            clickContextCopyLink()
+            verifySnackBarText("Link copied to clipboard")
+        }.openNavigationToolbar {
+        }.visitLinkFromClipboard {
+            verifyUrl(genericURL.url.toString())
+        }.openTabDrawer {
+        }.openNewTab {
+            verifyFillLinkButton()
+        }
+    }
+
+    @Test
     fun verifyContextShareLink() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)

@@ -389,6 +389,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         from = BrowserDirection.FromSearchDialog,
                     )
             }
+            requireContext().components.clipboardHandler.text = null
         }
 
         val stubListener = ViewStub.OnInflateListener { _, inflated ->
