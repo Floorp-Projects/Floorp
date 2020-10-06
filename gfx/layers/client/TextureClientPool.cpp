@@ -34,11 +34,13 @@ static void ClearCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 TextureClientPool::TextureClientPool(
-    KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aFormat,
-    gfx::IntSize aSize, TextureFlags aFlags, uint32_t aShrinkTimeoutMsec,
+    LayersBackend aLayersBackend, bool aSupportsTextureDirectMapping,
+    int32_t aMaxTextureSize, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
+    TextureFlags aFlags, uint32_t aShrinkTimeoutMsec,
     uint32_t aClearTimeoutMsec, uint32_t aInitialPoolSize,
     uint32_t aPoolUnusedSize, TextureForwarder* aAllocator)
-    : mKnowsCompositor(aKnowsCompositor),
+    : mBackend(aLayersBackend),
+      mMaxTextureSize(aMaxTextureSize),
       mFormat(aFormat),
       mSize(aSize),
       mFlags(aFlags),
@@ -48,7 +50,8 @@ TextureClientPool::TextureClientPool(
       mPoolUnusedSize(aPoolUnusedSize),
       mOutstandingClients(0),
       mSurfaceAllocator(aAllocator),
-      mDestroyed(false) {
+      mDestroyed(false),
+      mSupportsTextureDirectMapping(aSupportsTextureDirectMapping) {
   TCP_LOG("TexturePool %p created with maximum unused texture clients %u\n",
           this, mInitialPoolSize);
   mShrinkTimer = NS_NewTimer();
@@ -131,8 +134,8 @@ void TextureClientPool::AllocateTextureClient() {
 
   TextureAllocationFlags allocFlags = ALLOC_DEFAULT;
 
-  if (mKnowsCompositor->SupportsTextureDirectMapping() &&
-      std::max(mSize.width, mSize.height) <= GetMaxTextureSize()) {
+  if (mSupportsTextureDirectMapping &&
+      std::max(mSize.width, mSize.height) <= mMaxTextureSize) {
     allocFlags =
         TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
   }
@@ -141,11 +144,11 @@ void TextureClientPool::AllocateTextureClient() {
   if (StaticPrefs::layers_force_shmem_tiles_AtStartup()) {
     // gfx::BackendType::NONE means use the content backend
     newClient = TextureClient::CreateForRawBufferAccess(
-        mSurfaceAllocator, mFormat, mSize, gfx::BackendType::NONE, GetBackend(),
+        mSurfaceAllocator, mFormat, mSize, gfx::BackendType::NONE, mBackend,
         mFlags, allocFlags);
   } else {
     newClient = TextureClient::CreateForDrawing(
-        mSurfaceAllocator, mFormat, mSize, mKnowsCompositor,
+        mSurfaceAllocator, mFormat, mSize, mBackend, mMaxTextureSize,
         BackendSelector::Content, mFlags, allocFlags);
   }
 
