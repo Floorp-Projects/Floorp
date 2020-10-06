@@ -14,6 +14,7 @@
 
 #include "gc/Zone.h"
 #include "jit/CompileWrappers.h"
+#include "jit/JitFrames.h"
 #include "vm/ProxyObject.h"
 
 #if defined(JS_CODEGEN_X86)

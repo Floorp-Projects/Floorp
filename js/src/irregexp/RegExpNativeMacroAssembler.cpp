@@ -13,6 +13,7 @@
 #include "irregexp/imported/special-case.h"
 #include "jit/Linker.h"
 #include "vm/MatchPairs.h"
+#include "vm/Realm.h"
 
 #include "jit/MacroAssembler-inl.h"
 

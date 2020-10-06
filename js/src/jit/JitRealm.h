@@ -7,27 +7,28 @@
 #ifndef jit_JitRealm_h
 #define jit_JitRealm_h
 
-#include "mozilla/Array.h"
-#include "mozilla/DebugOnly.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/MemoryReporting.h"
 
-#include <utility>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "builtin/TypedObject.h"
-#include "jit/BaselineICList.h"
-#include "jit/BaselineJIT.h"
-#include "jit/CompileInfo.h"
-#include "jit/ICStubSpace.h"
-#include "jit/JitCode.h"
-#include "jit/JitFrames.h"
-#include "jit/shared/Assembler-shared.h"
+#include "gc/Barrier.h"
+#include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
-#include "js/Value.h"
-#include "vm/Stack.h"
+#include "js/RootingAPI.h"
+#include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 
 namespace js {
+
+MOZ_COLD void ReportOutOfMemory(JSContext* cx);
+
 namespace jit {
+
+class JitCode;
 
 struct IcStubCodeMapGCPolicy {
   static bool traceWeak(JSTracer* trc, uint32_t*, WeakHeapPtrJitCode* value) {

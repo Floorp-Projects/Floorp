@@ -14,6 +14,8 @@
 namespace js {
 namespace jit {
 
+class CompactBufferReader;
+
 static constexpr Register StackPointer{Registers::invalid_reg};
 static constexpr Register FramePointer{Registers::invalid_reg};
 static constexpr Register ReturnReg{Registers::invalid_reg2};

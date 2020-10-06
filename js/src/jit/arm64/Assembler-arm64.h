@@ -9,6 +9,7 @@
 
 #include "jit/arm64/vixl/Assembler-vixl.h"
 
+#include "jit/CompactBuffer.h"
 #include "jit/JitRealm.h"
 #include "jit/shared/Disassembler-shared.h"
 
