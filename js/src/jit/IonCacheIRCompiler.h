@@ -53,7 +53,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   bool savedLiveRegs_;
 
   template <typename T>
-  T rawWordStubField(uint32_t offset);
+  T rawPointerStubField(uint32_t offset);
 
   template <typename T>
   T rawInt64StubField(uint32_t offset);

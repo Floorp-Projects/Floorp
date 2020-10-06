@@ -1108,6 +1108,7 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
   for (const StubField& field : stubFields_) {
     switch (field.type()) {
       case StubField::Type::RawWord:
+      case StubField::Type::RawPointer:
         *destWords = field.asWord();
         break;
       case StubField::Type::Shape:
@@ -1155,6 +1156,7 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
     StubField::Type fieldType = stubInfo->fieldType(field);
     switch (fieldType) {
       case StubField::Type::RawWord:
+      case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
       case StubField::Type::DOMExpandoGeneration:
         break;
@@ -6963,6 +6965,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::JSObject:
       masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
       break;
+    case StubField::Type::RawPointer:
+      masm.movePtr(ImmPtr(pointerStubField(val.getOffset())), dest);
+      break;
     case StubField::Type::RawWord:
       masm.move32(Imm32(int32StubField(val.getOffset())), dest);
       break;
@@ -6987,6 +6992,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     Address load(ICStubReg, stubDataOffset_ + val.getOffset());
 
     switch (val.getStubFieldType()) {
+      case StubField::Type::RawPointer:
       case StubField::Type::Shape:
       case StubField::Type::ObjectGroup:
       case StubField::Type::JSObject:

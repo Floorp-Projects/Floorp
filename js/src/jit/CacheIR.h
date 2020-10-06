@@ -229,6 +229,7 @@ class StubField {
   enum class Type : uint8_t {
     // These fields take up a single word.
     RawWord,
+    RawPointer,
     Shape,
     ObjectGroup,
     JSObject,
@@ -625,7 +626,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(word, StubField::Type::RawWord);
   }
   void writeRawPointerField(const void* ptr) {
-    addStubField(uintptr_t(ptr), StubField::Type::RawWord);
+    addStubField(uintptr_t(ptr), StubField::Type::RawPointer);
   }
   void writeIdField(jsid id) {
     addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
