@@ -82,9 +82,4 @@ sealed class Permission {
     data class AppLocationFine(override val id: String? = "", override val desc: String? = "") : Permission()
 
     data class Generic(override val id: String?, override val desc: String? = "") : Permission()
-
-    // Removed in GeckoView 68.0: //TO REMOVE
-    data class ContentVideoApplication(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoBrowser(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoWindow(override val id: String? = "", override val desc: String? = "") : Permission()
 }

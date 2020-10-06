@@ -51,18 +51,12 @@ class PermissionRequestTest {
         assertNotEquals(Permission.ContentNotification(), Permission.ContentNotification("id"))
         assertNotEquals(Permission.ContentNotification("id"), Permission.ContentNotification("id", "desc"))
 
-        assertNotEquals(Permission.ContentVideoApplication(), Permission.ContentVideoApplication("id"))
-        assertNotEquals(Permission.ContentVideoApplication("id"), Permission.ContentVideoApplication("id", "desc"))
-        assertNotEquals(Permission.ContentVideoBrowser(), Permission.ContentVideoBrowser("id"))
-        assertNotEquals(Permission.ContentVideoBrowser("id"), Permission.ContentVideoBrowser("id", "desc"))
         assertNotEquals(Permission.ContentVideoCamera(), Permission.ContentVideoCamera("id"))
         assertNotEquals(Permission.ContentVideoCamera("id"), Permission.ContentVideoCamera("id", "desc"))
         assertNotEquals(Permission.ContentVideoCapture(), Permission.ContentVideoCapture("id"))
         assertNotEquals(Permission.ContentVideoCapture("id"), Permission.ContentVideoCapture("id", "desc"))
         assertNotEquals(Permission.ContentVideoScreen(), Permission.ContentVideoScreen("id"))
         assertNotEquals(Permission.ContentVideoScreen("id"), Permission.ContentVideoScreen("id", "desc"))
-        assertNotEquals(Permission.ContentVideoWindow(), Permission.ContentVideoWindow("id"))
-        assertNotEquals(Permission.ContentVideoWindow("id"), Permission.ContentVideoWindow("id", "desc"))
         assertNotEquals(Permission.ContentVideoOther(), Permission.ContentVideoOther("id"))
         assertNotEquals(Permission.ContentVideoOther("id"), Permission.ContentVideoOther("id", "desc"))
 
