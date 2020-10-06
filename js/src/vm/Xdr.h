@@ -478,20 +478,30 @@ using XDRDecoderBase = XDRState<XDR_DECODE>;
 
 class XDRDecoder : public XDRDecoderBase {
  public:
-  XDRDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : XDRDecoderBase(cx, buffer, cursor), atomTable_(cx) {}
+  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
+             JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : XDRDecoderBase(cx, buffer, cursor), options_(options), atomTable_(cx) {
+    MOZ_ASSERT(options);
+  }
 
   template <typename RangeType>
-  XDRDecoder(JSContext* cx, const RangeType& range)
-      : XDRDecoderBase(cx, range), atomTable_(cx) {}
+  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
+             const RangeType& range)
+      : XDRDecoderBase(cx, range), options_(options), atomTable_(cx) {
+    MOZ_ASSERT(options);
+  }
 
   bool hasAtomTable() const override { return hasFinishedAtomTable_; }
   XDRAtomTable& atomTable() override { return atomTable_; }
   void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
+  bool hasOptions() const override { return true; }
+  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
+
   void trace(JSTracer* trc);
 
  private:
+  const JS::ReadOnlyCompileOptions* options_;
   XDRAtomTable atomTable_;
   bool hasFinishedAtomTable_ = false;
 };
@@ -548,7 +558,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
 };
 
 class XDROffThreadDecoder : public XDRDecoder {
-  const JS::ReadOnlyCompileOptions* options_;
   ScriptSourceObject** sourceObjectOut_;
 
  public:
@@ -563,16 +572,11 @@ class XDROffThreadDecoder : public XDRDecoder {
   XDROffThreadDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
                       ScriptSourceObject** sourceObjectOut,
                       const JS::TranscodeRange& range)
-      : XDRDecoder(cx, range),
-        options_(options),
-        sourceObjectOut_(sourceObjectOut) {
-    MOZ_ASSERT(options);
+      : XDRDecoder(cx, options, range), sourceObjectOut_(sourceObjectOut) {
     MOZ_ASSERT(sourceObjectOut);
     MOZ_ASSERT(*sourceObjectOut == nullptr);
   }
 
-  bool hasOptions() const override { return true; }
-  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
   bool hasScriptSourceObjectOut() const override { return true; }
   ScriptSourceObject** scriptSourceObjectOut() override {
     return sourceObjectOut_;

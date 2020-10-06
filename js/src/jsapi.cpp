@@ -5717,7 +5717,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
   Rooted<UniquePtr<XDRDecoder>> decoder(
-      cx, js::MakeUnique<XDRDecoder>(cx, buffer, cursorIndex));
+      cx, js::MakeUnique<XDRDecoder>(cx, &options, buffer, cursorIndex));
   if (!decoder) {
     ReportOutOfMemory(cx);
     return JS::TranscodeResult_Throw;
@@ -5784,8 +5784,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const TranscodeRange& range, JS::MutableHandleScript scriptp) {
-  Rooted<UniquePtr<XDRDecoder>> decoder(cx,
-                                        js::MakeUnique<XDRDecoder>(cx, range));
+  Rooted<UniquePtr<XDRDecoder>> decoder(
+      cx, js::MakeUnique<XDRDecoder>(cx, &options, range));
   if (!decoder) {
     ReportOutOfMemory(cx);
     return JS::TranscodeResult_Throw;
