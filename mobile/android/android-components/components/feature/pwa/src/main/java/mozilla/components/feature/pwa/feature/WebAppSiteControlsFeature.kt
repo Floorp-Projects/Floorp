@@ -143,7 +143,7 @@ class WebAppSiteControlsFeature(
         } else {
             @Suppress("Deprecation")
             Notification.Builder(applicationContext).apply {
-                setPriority(Notification.PRIORITY_MIN)
+                setPriority(NotificationCompat.PRIORITY_MIN)
             }
         }
         if (icon != null && SDK_INT >= Build.VERSION_CODES.M) {

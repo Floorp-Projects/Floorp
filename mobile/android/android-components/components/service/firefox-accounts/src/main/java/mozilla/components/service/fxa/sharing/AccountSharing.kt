@@ -4,7 +4,6 @@
 
 package mozilla.components.service.fxa.sharing
 
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.pm.PackageManager
@@ -173,7 +172,6 @@ object AccountSharing {
      * but not signature rotation.
      * @return A certificate SHA256 fingerprint, if one could be reliably obtained.
      */
-    @SuppressLint("PackageManagerGetSignatures")
     fun getSignaturePreAPI28(packageManager: PackageManager, packageName: String): String? {
         // For older APIs, we use the deprecated `signatures` field, which isn't aware of certificate rotation.
         val packageInfo = try {

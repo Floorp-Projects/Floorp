@@ -220,7 +220,8 @@ internal class RustPushConnection(
         // Query for the scope so that we can notify observers who the decrypted message is for.
         val scope = pushApi.dispatchInfoForChid(channelId)?.scope
 
-        if (scope != null) {
+        scope?.let {
+
             if (body == null) {
                 return DecryptedMessage(scope, null)
             }
@@ -234,8 +235,6 @@ internal class RustPushConnection(
             )
 
             return DecryptedMessage(scope, data)
-        } else {
-            return null
         }
     }
 

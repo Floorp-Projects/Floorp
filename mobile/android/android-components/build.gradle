@@ -204,8 +204,6 @@ subprojects {
 
                 packagingOptions {
                     exclude 'META-INF/atomicfu.kotlin_module'
-                    exclude 'META-INF/AL2.0'
-                    exclude 'META-INF/LGPL2.1'
                 }
 
                 aaptOptions {
@@ -222,32 +220,6 @@ subprojects {
                         jvmTarget = "1.8"
                     }
                 }
-            }
-
-            configurations {
-                // There's an interaction between Gradle's resolution of dependencies with different types
-                // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
-                // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
-                // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
-                // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
-                // what's happening is that @aar type in `implementation` resolves to the @jar type in
-                // `testImplementation`, and that it wins the dependency resolution battle.
-                //
-                // A workaround is to add a new configuration which depends on the @jar type and to reference
-                // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
-                // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
-                // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
-                // Success!
-                jnaForTest
-                // Robolectric, through `com.google.android.apps.common.testing.accessibility.framework`
-                // depends on an old version of protobuf that conflict with the Application Services one.
-                // See: https://github.com/mozilla/application-services/issues/2952
-                all*.exclude group: 'com.google.protobuf', module: 'protobuf-java'
-            }
-
-            dependencies {
-                jnaForTest Dependencies.thirdparty_jna
-                testImplementation files(configurations.jnaForTest.copyRecursive().files)
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {
@@ -269,11 +241,11 @@ subprojects {
                     def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
                     def mainSrc = "$project.projectDir/src/main/java"
 
-                    sourceDirectories.setFrom(files([mainSrc]))
-                    classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
-                    executionData.setFrom(fileTree(dir: project.buildDir, includes: [
+                    sourceDirectories = files([mainSrc])
+                    classDirectories = files([kotlinDebugTree, javaDebugTree])
+                    executionData = fileTree(dir: project.buildDir, includes: [
                             'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-                    ]))
+                    ])
                 }
 
                 android {

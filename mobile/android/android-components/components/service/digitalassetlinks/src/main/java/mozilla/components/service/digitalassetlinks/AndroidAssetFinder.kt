@@ -4,7 +4,6 @@
 
 package mozilla.components.service.digitalassetlinks
 
-import android.annotation.SuppressLint
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.Signature
@@ -85,7 +84,6 @@ class AndroidAssetFinder {
         }
     }
 
-    @SuppressLint("PackageManagerGetSignatures")
     private fun PackageManager.getPackageSignatureInfo(packageName: String): PackageInfo? {
         return try {
             if (SDK_INT >= Build.VERSION_CODES.P) {

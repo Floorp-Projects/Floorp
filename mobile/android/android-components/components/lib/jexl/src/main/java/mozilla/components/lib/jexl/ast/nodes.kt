@@ -177,7 +177,7 @@ private fun buildNodeDescription(
     append(" ( $name )")
 
     withinHeader()
-    appendLine()
+    appendln()
 
     block()
 }

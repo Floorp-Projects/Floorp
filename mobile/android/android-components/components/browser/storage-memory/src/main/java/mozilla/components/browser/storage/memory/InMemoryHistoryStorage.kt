@@ -117,7 +117,7 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
         // Calculate maxScore so that we can invert our scoring.
         // Lower Levenshtein distance should produce a higher score.
-        val maxScore = urlMatches.maxByOrNull { it.score }?.score ?: return@synchronized listOf()
+        val maxScore = urlMatches.maxBy { it.score }?.score ?: return@synchronized listOf()
 
         // TODO exclude non-matching results entirely? Score that implies complete mismatch.
         matchedUrls.asSequence().sortedBy { it.value }.map {
@@ -126,8 +126,8 @@ class InMemoryHistoryStorage : HistoryStorage {
     }
 
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? = synchronized(pages) {
-        return segmentAwareDomainMatch(query, pages.keys)?.let { urlMatch ->
-            HistoryAutocompleteResult(
+        segmentAwareDomainMatch(query, pages.keys)?.let { urlMatch ->
+            return HistoryAutocompleteResult(
                 query, urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size)
         }
     }

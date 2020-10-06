@@ -60,7 +60,7 @@ private fun IconRequest.Resource.Type.rank(): Int {
 }
 
 private val IconRequest.Resource.maxSize: Int
-    get() = sizes.asSequence().map { size -> size.minLength }.maxOrNull() ?: 0
+    get() = sizes.asSequence().map { size -> size.minLength }.max() ?: 0
 
 private val IconRequest.Resource.isContainerType: Boolean
     get() = mimeType != null && containerTypes.contains(mimeType)

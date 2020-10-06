@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
@@ -45,7 +46,7 @@ class SampleApplication : Application() {
             return
         }
 
-        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
         val config = Configuration(httpClient = httpClient)
         // IMPORTANT: the following lines initialize the Glean SDK but disable upload
         // of pings. If, for testing purposes, upload is required to be on, change the

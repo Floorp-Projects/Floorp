@@ -154,7 +154,7 @@ class BookmarksStorageSuggestionProviderTest {
                 }
                 // Calculate maxScore so that we can invert our scoring.
                 // Lower Levenshtein distance should produce a higher score.
-                urlMatches.maxByOrNull { it.score }?.score
+                urlMatches.maxBy { it.score }?.score
                     ?: return@synchronized listOf()
 
                 // TODO exclude non-matching results entirely? Score that implies complete mismatch.

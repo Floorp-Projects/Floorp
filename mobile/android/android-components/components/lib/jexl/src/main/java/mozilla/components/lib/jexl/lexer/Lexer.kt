@@ -100,7 +100,7 @@ internal class Lexer(private val grammar: Grammar) {
 
     @Suppress("ReturnCount")
     private fun isElement(input: LexerInput, elements: Map<String, GrammarElement>): Boolean {
-        val max = elements.keys.map { it.length }.maxOrNull() ?: return false
+        val max = elements.keys.map { it.length }.max() ?: return false
 
         for (steps in max downTo 1) {
             val candidate = input.peekRange(steps)

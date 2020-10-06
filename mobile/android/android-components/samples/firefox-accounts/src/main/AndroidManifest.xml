@@ -34,5 +34,6 @@
                     android:scheme="fxaclient" />
             </intent-filter>
         </activity>
+        <activity android:name=".ScanActivity"></activity>
     </application>
 </manifest>
