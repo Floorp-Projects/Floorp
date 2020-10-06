@@ -26,6 +26,7 @@
 #include "nsITimer.h"
 
 #include "jsapi.h"
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/GCAnnotations.h"
 
 #include <prio.h>
@@ -79,7 +80,9 @@ class ScriptPreloader : public nsIObserver,
 
   // Retrieves the script with the given cache key from the script cache.
   // Returns null if the script is not cached.
-  JSScript* GetCachedScript(JSContext* cx, const nsCString& name);
+  JSScript* GetCachedScript(JSContext* cx,
+                            const JS::ReadOnlyCompileOptions& options,
+                            const nsCString& path);
 
   // Notes the execution of a script with the given URL and cache key.
   // Depending on the stage of startup, the script may be serialized and
@@ -105,7 +108,9 @@ class ScriptPreloader : public nsIObserver,
 
  private:
   Result<Ok, nsresult> InitCacheInternal(JS::HandleObject scope = nullptr);
-  JSScript* GetCachedScriptInternal(JSContext* cx, const nsCString& name);
+  JSScript* GetCachedScriptInternal(JSContext* cx,
+                                    const JS::ReadOnlyCompileOptions& options,
+                                    const nsCString& path);
 
  public:
   void Trace(JSTracer* trc);
@@ -267,7 +272,8 @@ class ScriptPreloader : public nsIObserver,
 
     bool HasArray() { return mXDRData.constructed<nsTArray<uint8_t>>(); }
 
-    JSScript* GetJSScript(JSContext* cx);
+    JSScript* GetJSScript(JSContext* cx,
+                          const JS::ReadOnlyCompileOptions& options);
 
     size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
       auto size = mallocSizeOf(this);
@@ -411,7 +417,9 @@ class ScriptPreloader : public nsIObserver,
 
   // Waits for the given cached script to finish compiling off-thread, or
   // decodes it synchronously on the main thread, as appropriate.
-  JSScript* WaitForCachedScript(JSContext* cx, CachedScript* script);
+  JSScript* WaitForCachedScript(JSContext* cx,
+                                const JS::ReadOnlyCompileOptions& options,
+                                CachedScript* script);
 
   void DecodeNextBatch(size_t chunkSize, JS::HandleObject scope = nullptr);
 
