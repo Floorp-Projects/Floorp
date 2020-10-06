@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash.ui
 
+import android.database.sqlite.SQLiteBlobTooBigException
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -41,13 +42,18 @@ internal class CrashListFragment : Fragment(R.layout.mozac_lib_crash_crashlist) 
         )
         listView.addItemDecoration(dividerItemDecoration)
 
-        database.crashDao().getCrashesWithReports().observe(viewLifecycleOwner, Observer { list ->
-            if (list.isEmpty()) {
-                emptyView.visibility = View.VISIBLE
-            } else {
-                adapter.updateList(list)
-            }
-        })
+        try {
+            database.crashDao().getCrashesWithReports().observe(viewLifecycleOwner, Observer { list ->
+                if (list.isEmpty()) {
+                    emptyView.visibility = View.VISIBLE
+                } else {
+                    adapter.updateList(list)
+                }
+            })
+        } catch (e: SQLiteBlobTooBigException) {
+            /* recover by deleting all entries */
+            database.crashDao().deleteAll()
+        }
     }
 
     private fun onSelection(url: String) {

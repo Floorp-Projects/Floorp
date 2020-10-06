@@ -36,6 +36,13 @@ internal interface CrashDao {
     @Transaction
     @Query("SELECT * FROM crashes ORDER BY created_at DESC")
     fun getCrashesWithReports(): LiveData<List<CrashWithReports>>
+
+    /**
+     * Delete table.
+     */
+    @Transaction
+    @Query("DELETE FROM crashes")
+    fun deleteAll()
 }
 
 /**
