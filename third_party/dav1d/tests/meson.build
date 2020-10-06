@@ -31,8 +31,6 @@ if not get_option('enable_tests')
     subdir_done()
 endif
 
-libdav1d_nasm_objs_if_needed = []
-
 if is_asm_enabled
     checkasm_sources = files(
         'checkasm/checkasm.c',
@@ -62,25 +60,27 @@ if is_asm_enabled
         checkasm_bitdepth_objs += checkasm_bitdepth_lib.extract_all_objects()
     endforeach
 
-    checkasm_nasm_objs = []
+    checkasm_asm_objs = []
+    checkasm_asm_sources = []
     if host_machine.cpu_family() == 'aarch64' or host_machine.cpu() == 'arm64'
-        checkasm_sources += files('checkasm/arm/checkasm_64.S')
+        checkasm_asm_sources += files('checkasm/arm/checkasm_64.S')
     elif host_machine.cpu_family().startswith('arm')
-        checkasm_sources += files('checkasm/arm/checkasm_32.S')
+        checkasm_asm_sources += files('checkasm/arm/checkasm_32.S')
     elif host_machine.cpu_family().startswith('x86')
-        checkasm_nasm_objs = nasm_gen.process(files('checkasm/x86/checkasm.asm'))
+        checkasm_asm_objs += nasm_gen.process(files('checkasm/x86/checkasm.asm'))
+    endif
+
+    if use_gaspp
+        checkasm_asm_objs += gaspp_gen.process(checkasm_asm_sources)
+    else
+        checkasm_sources += checkasm_asm_sources
     endif
 
     m_lib = cc.find_library('m', required: false)
 
-    if meson.version().version_compare('< 0.48.999')
-        libdav1d_nasm_objs_if_needed = libdav1d_nasm_objs
-    endif
-
     checkasm = executable('checkasm',
         checkasm_sources,
-        checkasm_nasm_objs,
-        libdav1d_nasm_objs_if_needed,
+        checkasm_asm_objs,
 
         objects: [
             checkasm_bitdepth_objs,
@@ -101,10 +101,30 @@ if is_asm_enabled
     test('checkasm', checkasm, is_parallel: false)
 endif
 
+c99_extension_flag = cc.first_supported_argument(
+    '-Werror=c11-extensions',
+    '-Werror=c99-c11-compat',
+    '-Wc11-extensions',
+    '-Wc99-c11-compat',
+)
+
+# dav1d_api_headers
+foreach header : dav1d_api_headers
+    target = header + '_test'
+
+    header_test_exe = executable(target,
+        'header_test.c',
+        include_directories: dav1d_inc_dirs,
+        c_args: ['-DDAV1D_TEST_HEADER="@0@"'.format(header), c99_extension_flag],
+        build_by_default: true
+    )
+
+    test(target, header_test_exe)
+endforeach
+
+
 # fuzzing binaries
-if meson.version().version_compare('>=0.49')
-    subdir('libfuzzer')
-endif
+subdir('libfuzzer')
 
 # Include dav1d test data repository with additional tests
 if get_option('testdata_tests')

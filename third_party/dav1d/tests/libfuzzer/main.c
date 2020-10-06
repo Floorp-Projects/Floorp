@@ -40,13 +40,17 @@
 
 // expects ivf input
 
-int main(const int argc, char *const *const argv) {
+int main(int argc, char *argv[]) {
     int ret = -1;
     FILE *f = NULL;
     int64_t fsize;
     const char *filename = NULL;
     uint8_t *data = NULL;
     size_t size = 0;
+
+    if (LLVMFuzzerInitialize(&argc, &argv)) {
+        return 1;
+    }
 
     if (argc != 2) {
         fprintf(stdout, "Usage:\n%s fuzzing_testcase.ivf\n", argv[0]);

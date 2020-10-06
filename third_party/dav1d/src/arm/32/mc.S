@@ -1403,12 +1403,12 @@ L(\type\()_8tap_h_tbl):
         vld1.8          {d24}, [\sr2], \s_strd
         vmovl.u8        q8,  d16
         vmovl.u8        q12, d24
-        vext.8          q9,  q8,  q8,  #2
-        vext.8          q10, q8,  q8,  #4
-        vext.8          q11, q8,  q8,  #6
-        vext.8          q13, q12, q12, #2
-        vext.8          q14, q12, q12, #4
-        vext.8          q15, q12, q12, #6
+        vext.8          d18, d16, d17, #2
+        vext.8          d20, d16, d17, #4
+        vext.8          d22, d16, d17, #6
+        vext.8          d26, d24, d25, #2
+        vext.8          d28, d24, d25, #4
+        vext.8          d30, d24, d25, #6
         subs            \h,  \h,  #2
         vmul.s16        d4,  d16, d0[0]
         vmla.s16        d4,  d18, d0[1]
@@ -1431,7 +1431,7 @@ L(\type\()_8tap_h_tbl):
         pop             {r4-r11,pc}
 
 80:     // 8xN h
-        vld1.8          {d0}, [\mx]
+        vld1.8          {d0}, [\mx, :64]
         sub             \src,  \src,  #3
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -1482,7 +1482,7 @@ L(\type\()_8tap_h_tbl):
         // one temporary for vext in the loop. That's slower on A7 and A53,
         // (but surprisingly, marginally faster on A8 and A73).
         vpush           {q4-q6}
-        vld1.8          {d0}, [\mx]
+        vld1.8          {d0}, [\mx, :64]
         sub             \src,  \src,  #3
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -1629,7 +1629,7 @@ L(\type\()_8tap_v_tbl):
 
 28:     // 2x8, 2x16 v
         vpush           {q4-q7}
-        vld1.8          {d0}, [\my]
+        vld1.8          {d0}, [\my, :64]
         sub             \sr2,  \src,  \s_strd, lsl #1
         add             \ds2,  \dst,  \d_strd
         sub             \src,  \sr2,  \s_strd
@@ -1709,7 +1709,7 @@ L(\type\()_8tap_v_tbl):
 
 480:    // 4x8, 4x16 v
         vpush           {q4}
-        vld1.8          {d0}, [\my]
+        vld1.8          {d0}, [\my, :64]
         sub             \sr2, \src, \s_strd, lsl #1
         add             \ds2, \dst, \d_strd
         sub             \src, \sr2, \s_strd
@@ -1782,7 +1782,7 @@ L(\type\()_8tap_v_tbl):
 640:
 1280:
         vpush           {q4}
-        vld1.8          {d0}, [\my]
+        vld1.8          {d0}, [\my, :64]
         sub             \src, \src, \s_strd
         sub             \src, \src, \s_strd, lsl #1
         vmovl.s8        q0,  d0
@@ -1951,11 +1951,10 @@ L(\type\()_8tap_hv_tbl):
         bl              L(\type\()_8tap_filter_2)
 
         vext.8          d18, d17, d26, #4
-        vmov            d19, d26
         vmull.s16       q2,  d16, d2[0]
         vmlal.s16       q2,  d17, d2[1]
         vmlal.s16       q2,  d18, d2[2]
-        vmlal.s16       q2,  d19, d2[3]
+        vmlal.s16       q2,  d26, d2[3]
 
         vqrshrn.s32     d4,  q2,  #\shift_hv
         vqmovun.s16     d4,  q2
@@ -1964,11 +1963,11 @@ L(\type\()_8tap_hv_tbl):
         vst1.16         {d4[1]}, [\ds2, :16], \d_strd
         ble             0f
         vmov            d16, d18
-        vmov            d17, d19
+        vmov            d17, d26
         b               2b
 
 280:    // 2x8, 2x16, 2x32 hv
-        vld1.8          {d2},  [\my]
+        vld1.8          {d2},  [\my, :64]
         sub             \src, \src, #1
         sub             \sr2, \src, \s_strd, lsl #1
         sub             \src, \sr2, \s_strd
@@ -2001,7 +2000,6 @@ L(\type\()_8tap_hv_tbl):
 28:
         bl              L(\type\()_8tap_filter_2)
         vext.8          d22, d21, d26, #4
-        vmov            d23, d26
         vmull.s16       q2,  d16, d2[0]
         vmlal.s16       q2,  d17, d2[1]
         vmlal.s16       q2,  d18, d2[2]
@@ -2009,7 +2007,7 @@ L(\type\()_8tap_hv_tbl):
         vmlal.s16       q2,  d20, d3[0]
         vmlal.s16       q2,  d21, d3[1]
         vmlal.s16       q2,  d22, d3[2]
-        vmlal.s16       q2,  d23, d3[3]
+        vmlal.s16       q2,  d26, d3[3]
 
         vqrshrn.s32     d4,  q2,  #\shift_hv
         vqmovun.s16     d4,  q2
@@ -2022,7 +2020,7 @@ L(\type\()_8tap_hv_tbl):
         vmov            d18, d20
         vmov            d19, d21
         vmov            d20, d22
-        vmov            d21, d23
+        vmov            d21, d26
         b               28b
 
 0:
@@ -2108,7 +2106,7 @@ L(\type\()_8tap_filter_2):
         b               4b
 
 480:    // 4x8, 4x16, 4x32 hv
-        vld1.8          {d2},  [\my]
+        vld1.8          {d2},  [\my, :64]
         sub             \src, \src, #1
         sub             \sr2, \src, \s_strd, lsl #1
         sub             \src, \sr2, \s_strd
@@ -2211,7 +2209,7 @@ L(\type\()_8tap_filter_4):
         bgt             880f
         vpush           {q4-q7}
         add             \my,  \my,  #2
-        vld1.8          {d0},  [\mx]
+        vld1.8          {d0},  [\mx, :64]
         vld1.32         {d2[]},  [\my]
         sub             \src,  \src,  #3
         sub             \src,  \src,  \s_strd
@@ -2301,8 +2299,8 @@ L(\type\()_8tap_filter_4):
 640:
 1280:
         vpush           {q4-q7}
-        vld1.8          {d0},  [\mx]
-        vld1.8          {d2},  [\my]
+        vld1.8          {d0},  [\mx, :64]
+        vld1.8          {d2},  [\my, :64]
         sub             \src,  \src,  #3
         sub             \src,  \src,  \s_strd
         sub             \src,  \src,  \s_strd, lsl #1

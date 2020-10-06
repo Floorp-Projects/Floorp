@@ -40,8 +40,8 @@ function wiener_filter_h_8bpc_neon, export=1
         mov             r8,  r5
         vld1.16         {q0},  [r4]
         movw            r9,  #(1 << 14) - (1 << 2)
-        vdup.16         q14,  r9
-        vmov.s16        q15,  #2048
+        vdup.16         q14, r9
+        vmov.s16        q15, #2048
         // Calculate mid_stride
         add             r10, r5,  #7
         bic             r10, r10, #7
@@ -108,8 +108,8 @@ function wiener_filter_h_8bpc_neon, export=1
 0:
         // !LR_HAVE_LEFT, fill q1 with the leftmost byte
         // and shift q2 to have 3x the first byte at the front.
-        vdup.8          q1, d4[0]
-        vdup.8          q8, d18[0]
+        vdup.8          q1,  d4[0]
+        vdup.8          q8,  d18[0]
         // Move r2 back to account for the last 3 bytes we loaded before,
         // which we shifted out.
         sub             r2,  r2,  #3
@@ -127,7 +127,7 @@ function wiener_filter_h_8bpc_neon, export=1
         bne             4f
         // If we'll need to pad the right edge, load that byte to pad with
         // here since we can find it pretty easily from here.
-        sub             r9,  r5, #14
+        sub             r9,  r5,  #14
         ldrb            r11, [r2, r9]
         ldrb            r9,  [lr, r9]
         // Fill q12/q13 with the right padding pixel
@@ -144,7 +144,6 @@ function wiener_filter_h_8bpc_neon, export=1
         b               6f
 
 4:      // Loop horizontally
-.macro filter_8
         // This is tuned as some sort of compromise between Cortex A7, A8,
         // A9 and A53.
         vmul.s16        q3,  q1,  d0[0]
@@ -187,8 +186,6 @@ function wiener_filter_h_8bpc_neon, export=1
         vshr.s16        q10, q10, #3
         vadd.s16        q3,  q3,  q15
         vadd.s16        q10, q10, q15
-.endm
-        filter_8
         vst1.16         {q3},  [r0,  :128]!
         vst1.16         {q10}, [r12, :128]!
 
@@ -206,50 +203,43 @@ function wiener_filter_h_8bpc_neon, export=1
 
 5:      // Filter 4 pixels, 7 <= w < 11
 .macro filter_4
+        vext.8          d20, d2,  d3,  #2
+        vext.8          d21, d2,  d3,  #4
+        vext.8          d22, d2,  d3,  #6
+        vext.8          d23, d3,  d4,  #2
+        vext.8          d8,  d3,  d4,  #4
         vmul.s16        d6,  d2,  d0[0]
-        vext.8          q10, q1,  q2,  #2
-        vext.8          q11, q1,  q2,  #4
         vmla.s16        d6,  d20, d0[1]
-        vmla.s16        d6,  d22, d0[2]
-        vext.8          q10, q1,  q2,  #6
-        vext.8          q11, q1,  q2,  #8
-        vmla.s16        d6,  d20, d0[3]
-        vmla.s16        d6,  d22, d1[0]
-        vext.8          q10, q1,  q2,  #10
-        vext.8          q11, q1,  q2,  #12
-        vmla.s16        d6,  d20, d1[1]
-        vmla.s16        d6,  d22, d1[2]
+        vmla.s16        d6,  d21, d0[2]
+        vmla.s16        d6,  d22, d0[3]
+        vmla.s16        d6,  d3,  d1[0]
+        vmla.s16        d6,  d23, d1[1]
+        vmla.s16        d6,  d8,  d1[2]
 
-        vmul.s16        d20, d16, d0[0]
-        vext.8          q11, q8,  q9,  #2
-        vext.8          q4,  q8,  q9,  #4
-        vmla.s16        d20, d22, d0[1]
-        vmla.s16        d20, d8,  d0[2]
-        vext.8          q11, q8,  q9,  #6
-        vext.8          q4,  q8,  q9,  #8
-        vmla.s16        d20, d22, d0[3]
-        vmla.s16        d20, d8,  d1[0]
-        vext.8          q11, q8,  q9,  #10
-        vext.8          q4,  q8,  q9,  #12
-        vmla.s16        d20, d22, d1[1]
-        vmla.s16        d20, d8,  d1[2]
+        vext.8          d20, d16, d17, #2
+        vext.8          d21, d16, d17, #4
+        vext.8          d22, d16, d17, #6
+        vext.8          d23, d17, d18, #2
+        vext.8          d8,  d17, d18, #4
+        vmul.s16        d7,  d16, d0[0]
+        vmla.s16        d7,  d20, d0[1]
+        vmla.s16        d7,  d21, d0[2]
+        vmla.s16        d7,  d22, d0[3]
+        vmla.s16        d7,  d17, d1[0]
+        vmla.s16        d7,  d23, d1[1]
+        vmla.s16        d7,  d8,  d1[2]
 
-        vext.8          q11, q1,  q2,  #6
-        vshl.s16        d22, d22, #7
-        vsub.s16        d22, d22, d28
-        vqadd.s16       d6,  d6,  d22
-        vext.8          q11, q8,  q9,  #6
-        vshl.s16        d22, d22, #7
-        vsub.s16        d22, d22, d28
-        vqadd.s16       d20, d20, d22
-        vshr.s16        d6,  d6,  #3
-        vshr.s16        d20, d20, #3
-        vadd.s16        d6,  d6,  d30
-        vadd.s16        d20, d20, d30
+        vext.8          d22, d2,  d3,  #6
+        vext.8          d23, d16, d17, #6
+        vshl.s16        q11, q11, #7
+        vsub.s16        q11, q11, q14
+        vqadd.s16       q3,  q3,  q11
+        vshr.s16        q3,  q3,  #3
+        vadd.s16        q3,  q3,  q15
 .endm
         filter_4
         vst1.16         {d6},  [r0,  :64]!
-        vst1.16         {d20}, [r12, :64]!
+        vst1.16         {d7},  [r12, :64]!
 
         subs            r5,  r5,  #4 // 3 <= w < 7
         vext.8          q1,  q1,  q2,  #8
@@ -323,7 +313,7 @@ L(variable_shift_tbl):
         // w >= 4, filter 4 pixels
         filter_4
         vst1.16         {d6},  [r0,  :64]!
-        vst1.16         {d20}, [r12, :64]!
+        vst1.16         {d7},  [r12, :64]!
         subs            r5,  r5,  #4 // 0 <= w < 4
         vext.8          q1,  q1,  q2,  #8
         vext.8          q8,  q8,  q9,  #8
@@ -338,11 +328,11 @@ L(variable_shift_tbl):
         vdup.16         d25, d16[3]
         vpadd.s16       d6,  d6,  d6
         vtrn.16         d24, d25
-        vshl.s16        d24, d24,  #7
-        vsub.s16        d24, d24,  d28
-        vqadd.s16       d6,  d6,   d24
-        vshr.s16        d6,  d6,   #3
-        vadd.s16        d6,  d6,   d30
+        vshl.s16        d24, d24, #7
+        vsub.s16        d24, d24, d28
+        vqadd.s16       d6,  d6,  d24
+        vshr.s16        d6,  d6,  #3
+        vadd.s16        d6,  d6,  d30
         vst1.s16        {d6[0]}, [r0,  :16]!
         vst1.s16        {d6[1]}, [r12, :16]!
         subs            r5,  r5,  #1
@@ -363,7 +353,6 @@ L(variable_shift_tbl):
 0:
         vpop            {q4}
         pop             {r4-r11,pc}
-.purgem filter_8
 .purgem filter_4
 endfunc
 
@@ -422,22 +411,22 @@ function wiener_filter_v_8bpc_neon, export=1
         // Interleaving the mul/mla chains actually hurts performance
         // significantly on Cortex A53, thus keeping mul/mla tightly
         // chained like this.
-        vmull.s16       q2,  d16,  d0[0]
-        vmlal.s16       q2,  d18,  d0[1]
-        vmlal.s16       q2,  d20,  d0[2]
-        vmlal.s16       q2,  d22,  d0[3]
-        vmlal.s16       q2,  d24,  d1[0]
-        vmlal.s16       q2,  d26,  d1[1]
-        vmlal.s16       q2,  d28,  d1[2]
-        vmull.s16       q3,  d17,  d0[0]
-        vmlal.s16       q3,  d19,  d0[1]
-        vmlal.s16       q3,  d21,  d0[2]
-        vmlal.s16       q3,  d23,  d0[3]
-        vmlal.s16       q3,  d25,  d1[0]
-        vmlal.s16       q3,  d27,  d1[1]
-        vmlal.s16       q3,  d29,  d1[2]
-        vqrshrun.s32    d4,  q2,   #11
-        vqrshrun.s32    d5,  q3,   #11
+        vmull.s16       q2,  d16, d0[0]
+        vmlal.s16       q2,  d18, d0[1]
+        vmlal.s16       q2,  d20, d0[2]
+        vmlal.s16       q2,  d22, d0[3]
+        vmlal.s16       q2,  d24, d1[0]
+        vmlal.s16       q2,  d26, d1[1]
+        vmlal.s16       q2,  d28, d1[2]
+        vmull.s16       q3,  d17, d0[0]
+        vmlal.s16       q3,  d19, d0[1]
+        vmlal.s16       q3,  d21, d0[2]
+        vmlal.s16       q3,  d23, d0[3]
+        vmlal.s16       q3,  d25, d1[0]
+        vmlal.s16       q3,  d27, d1[1]
+        vmlal.s16       q3,  d29, d1[2]
+        vqrshrun.s32    d4,  q2,  #11
+        vqrshrun.s32    d5,  q3,  #11
         vqmovun.s16     d4,  q2
         vst1.8          {d4}, [r0], r1
 .if \compare
@@ -473,7 +462,7 @@ function wiener_filter_v_8bpc_neon, export=1
 52:     // 2 rows in total, q11 already loaded, load q12 with content data
         // and 2 rows of edge.
         vld1.16         {q14}, [r2, :128], r7
-        vmov            q15,  q14
+        vmov            q15, q14
         b               8f
 53:
         // 3 rows in total, q11 already loaded, load q12 and q13 with content
@@ -615,8 +604,8 @@ L(copy_narrow_tbl):
         asr             r1,  r1,  #1
 22:
         subs            r4,  r4,  #1
-        vld1.16         {d0[]},  [r2]!
-        vst1.16         {d0[0]}, [r0], r1
+        vld1.16         {d0[]},  [r2, :16]!
+        vst1.16         {d0[0]}, [r0, :16], r1
         bgt             22b
 0:
         pop             {r4,pc}
@@ -644,8 +633,8 @@ L(copy_narrow_tbl):
         ble             0f
         b               42b
 41:
-        vld1.32         {d0[]},  [r2]
-        vst1.32         {d0[0]}, [r0]
+        vld1.32         {d0[]},  [r2, :32]
+        vst1.32         {d0[0]}, [r0, :32]
 0:
         pop             {r4,pc}
 
@@ -785,7 +774,7 @@ function sgr_box3_h_8bpc_neon, export=1
         bne             4f
         // If we'll need to pad the right edge, load that byte to pad with
         // here since we can find it pretty easily from here.
-        sub             lr,  r5, #(2 + 16 - 2 + 1)
+        sub             lr,  r5,  #(2 + 16 - 2 + 1)
         ldrb            r11, [r3,  lr]
         ldrb            lr,  [r12, lr]
         // Fill q14/q15 with the right padding pixel
@@ -1058,7 +1047,7 @@ function sgr_box5_h_8bpc_neon, export=1
         bne             4f
         // If we'll need to pad the right edge, load that byte to pad with
         // here since we can find it pretty easily from here.
-        sub             lr,  r5, #(2 + 16 - 3 + 1)
+        sub             lr,  r5,  #(2 + 16 - 3 + 1)
         ldrb            r11, [r3,  lr]
         ldrb            lr,  [r12, lr]
         // Fill q14/q15 with the right padding pixel
@@ -1100,7 +1089,7 @@ function sgr_box5_h_8bpc_neon, export=1
         vaddl_u16_n     q12, q13, d2,  d3,  d16, d17, \w
         vaddl_u16_n     q8,  q9,  d18, d19, d20, d21, \w
         vaddw_u16_n     q12, q13, d22, d23, \w
-        vadd_i32_n      q12, q13, q8,  q9, \w
+        vadd_i32_n      q12, q13, q8,  q9,  \w
         vext.8          q8,  q5,  q6,  #2
         vext.8          q9,  q5,  q6,  #4
         vext.8          q10, q5,  q6,  #6
@@ -1152,7 +1141,7 @@ function sgr_box5_h_8bpc_neon, export=1
 
 6:      // Pad the right edge and produce the last few pixels.
         // w < 7, w+1 pixels valid in q0/q4
-        sub             lr,   r5,  #1
+        sub             lr,  r5,  #1
         // lr = pixels valid - 2
         adr             r11, L(box5_variable_shift_tbl)
         ldr             lr,  [r11, lr, lsl #2]

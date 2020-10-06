@@ -112,6 +112,8 @@ static int parse_seq_hdr(Dav1dContext *const c, GetBits *const gb,
             struct Dav1dSequenceHeaderOperatingPoint *const op =
                 &hdr->operating_points[i];
             op->idc = dav1d_get_bits(gb, 12);
+            if (op->idc && (!(op->idc & 0xff) || !(op->idc & 0xf00)))
+                goto error;
             op->major_level = 2 + dav1d_get_bits(gb, 3);
             op->minor_level = dav1d_get_bits(gb, 2);
             op->tier = op->major_level > 3 ? dav1d_get_bits(gb, 1) : 0;

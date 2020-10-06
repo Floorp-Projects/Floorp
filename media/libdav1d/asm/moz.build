@@ -186,7 +186,9 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/itx.S',
             '../../../third_party/dav1d/src/arm/32/loopfilter.S',
             '../../../third_party/dav1d/src/arm/32/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/32/looprestoration16.S',
             '../../../third_party/dav1d/src/arm/32/mc.S',
+            '../../../third_party/dav1d/src/arm/32/mc16.S',
             '../../../third_party/dav1d/src/arm/32/msac.S',
         ]
 

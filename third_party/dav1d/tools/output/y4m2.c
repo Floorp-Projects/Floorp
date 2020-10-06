@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,8 +78,17 @@ static int write_header(Y4m2OutputContext *const c, const Dav1dPicture *const p)
         chr_names_8bpc_i420[p->seq_hdr->chr > 2 ? DAV1D_CHR_UNKNOWN : p->seq_hdr->chr] :
         ss_names[p->p.layout][p->seq_hdr->hbd];
 
-    fprintf(c->f, "YUV4MPEG2 W%d H%d F%d:%d Ip C%s\n",
-            p->p.w, p->p.h, c->fps[0], c->fps[1], ss_name);
+    const unsigned fw = p->p.w;
+    const unsigned fh = p->p.h;
+    uint64_t aw = (uint64_t)fh * p->frame_hdr->render_width;
+    uint64_t ah = (uint64_t)fw * p->frame_hdr->render_height;
+    uint64_t gcd = ah;
+    for (uint64_t a = aw, b; (b = a % gcd); a = gcd, gcd = b);
+    aw /= gcd;
+    ah /= gcd;
+
+    fprintf(c->f, "YUV4MPEG2 W%u H%u F%u:%u Ip A%"PRIu64":%"PRIu64" C%s\n",
+            fw, fh, c->fps[0], c->fps[1], aw, ah, ss_name);
 
     return 0;
 }

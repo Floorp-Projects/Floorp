@@ -12,7 +12,7 @@ The todo list can be found [on the wiki](https://code.videolan.org/videolan/dav1
 The codebase is developed with the following assumptions:
 
 For the library:
-- C language with C99 version, without the VLA or the Complex (*\_\_STDC_NO_COMPLEX__*) features, and without compiler extension,
+- C language with C99 version, without the VLA or the Complex (*\_\_STDC_NO_COMPLEX__*) features, and without compiler extensions. Anonymous structures and unions are the only allowed compiler extensions for internal code.
 - x86 asm in .asm files, using the NASM syntax,
 - arm/arm64 in .S files, using the GAS syntax limited to subset llvm 5.0's internal assembler supports,
 - no C++ is allowed, whatever the version.

@@ -773,10 +773,10 @@ static int decode_b(Dav1dTileContext *const t,
                                signabs(t->warpmv.matrix[3]),
                                signabs(t->warpmv.matrix[4]),
                                signabs(t->warpmv.matrix[5]),
-                               signabs(t->warpmv.alpha),
-                               signabs(t->warpmv.beta),
-                               signabs(t->warpmv.gamma),
-                               signabs(t->warpmv.delta),
+                               signabs(t->warpmv.u.p.alpha),
+                               signabs(t->warpmv.u.p.beta),
+                               signabs(t->warpmv.u.p.gamma),
+                               signabs(t->warpmv.u.p.delta),
                                b->mv2d.y, b->mv2d.x);
 #undef signabs
                 }
@@ -1843,10 +1843,10 @@ static int decode_b(Dav1dTileContext *const t,
                                signabs(t->warpmv.matrix[3]),
                                signabs(t->warpmv.matrix[4]),
                                signabs(t->warpmv.matrix[5]),
-                               signabs(t->warpmv.alpha),
-                               signabs(t->warpmv.beta),
-                               signabs(t->warpmv.gamma),
-                               signabs(t->warpmv.delta),
+                               signabs(t->warpmv.u.p.alpha),
+                               signabs(t->warpmv.u.p.beta),
+                               signabs(t->warpmv.u.p.gamma),
+                               signabs(t->warpmv.u.p.delta),
                                b->mv[0].y, b->mv[0].x);
 #undef signabs
                     if (f->frame_thread.pass) {

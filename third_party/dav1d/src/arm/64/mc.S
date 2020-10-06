@@ -1906,11 +1906,10 @@ L(\type\()_8tap_hv):
         bl              L(\type\()_8tap_filter_2)
 
         ext             v18.8b, v17.8b, v28.8b, #4
-        mov             v19.8b, v28.8b
         smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
-        smlal           v2.4s,  v19.4h, v1.h[3]
+        smlal           v2.4s,  v28.4h, v1.h[3]
 
         sqrshrn         v2.4h,  v2.4s,  #\shift_hv
         sqxtun          v2.8b,  v2.8h
@@ -1919,7 +1918,7 @@ L(\type\()_8tap_hv):
         st1             {v2.h}[1], [\ds2], \d_strd
         b.le            0f
         mov             v16.8b, v18.8b
-        mov             v17.8b, v19.8b
+        mov             v17.8b, v28.8b
         b               2b
 
 280:    // 2x8, 2x16, 2x32 hv
@@ -1956,7 +1955,6 @@ L(\type\()_8tap_hv):
 28:
         bl              L(\type\()_8tap_filter_2)
         ext             v22.8b, v21.8b, v28.8b, #4
-        mov             v23.8b, v28.8b
         smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
@@ -1964,7 +1962,7 @@ L(\type\()_8tap_hv):
         smlal           v2.4s,  v20.4h, v1.h[4]
         smlal           v2.4s,  v21.4h, v1.h[5]
         smlal           v2.4s,  v22.4h, v1.h[6]
-        smlal           v2.4s,  v23.4h, v1.h[7]
+        smlal           v2.4s,  v28.4h, v1.h[7]
 
         sqrshrn         v2.4h,  v2.4s,  #\shift_hv
         sqxtun          v2.8b,  v2.8h
@@ -1977,7 +1975,7 @@ L(\type\()_8tap_hv):
         mov             v18.8b, v20.8b
         mov             v19.8b, v21.8b
         mov             v20.8b, v22.8b
-        mov             v21.8b, v23.8b
+        mov             v21.8b, v28.8b
         b               28b
 
 0:
