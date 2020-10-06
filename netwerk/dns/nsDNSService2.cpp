@@ -397,6 +397,14 @@ nsDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 }
 
 NS_IMETHODIMP
+nsDNSByTypeRecord::GetAllRecordsWithEchConfig(
+    bool aNoHttp2, bool aNoHttp3, bool* aAllRecordsHaveEchConfig,
+    nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
+  return mHostRecord->GetAllRecordsWithEchConfig(
+      aNoHttp2, aNoHttp3, aAllRecordsHaveEchConfig, aResult);
+}
+
+NS_IMETHODIMP
 nsDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
   return mHostRecord->GetHasIPAddresses(aResult);
 }

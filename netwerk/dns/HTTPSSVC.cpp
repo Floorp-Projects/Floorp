@@ -241,6 +241,7 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   uint32_t recordExcludedCount = 0;
   aRecordsAllExcluded = false;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  bool RRSetHasEchConfig = false;
   for (const SVCB& record : aRecords) {
     if (record.mSvcFieldPriority == 0) {
       // In ServiceMode, the SvcPriority should never be 0.
@@ -250,6 +251,8 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     if (record.NoDefaultAlpn()) {
       ++recordHasNoDefaultAlpnCount;
     }
+
+    RRSetHasEchConfig |= record.mHasEchConfig;
 
     bool excluded = false;
     if (NS_SUCCEEDED(dns->IsSVCDomainNameFailed(mHost, record.mSvcDomainName,
@@ -272,6 +275,12 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
       continue;
     }
 
+    if (gHttpHandler->EchConfigEnabled() && RRSetHasEchConfig &&
+        !record.mHasEchConfig) {
+      // Don't use this record if this record has no echConfig, but others have.
+      continue;
+    }
+
     if (!selectedRecord) {
       selectedRecord = new SVCBRecord(record, std::move(port), std::move(alpn));
     }
@@ -287,6 +296,54 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   }
 
   return selectedRecord.forget();
+}
+
+void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
+    bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,
+    bool* aAllRecordsHaveEchConfig, nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
+  if (aRecords.IsEmpty()) {
+    return;
+  }
+
+  *aAllRecordsHaveEchConfig = aRecords[0].mHasEchConfig;
+  // The first record should have echConfig.
+  if (!(*aAllRecordsHaveEchConfig)) {
+    return;
+  }
+
+  for (const SVCB& record : aRecords) {
+    if (record.mSvcFieldPriority == 0) {
+      // This should not happen, since GetAllRecordsWithEchConfigInternal()
+      // should be called only if GetServiceModeRecordInternal() returns a
+      // non-null record.
+      MOZ_ASSERT(false);
+      return;
+    }
+
+    // Records with echConfig are in front of records without echConfig, so we
+    // don't have to continue.
+    *aAllRecordsHaveEchConfig &= record.mHasEchConfig;
+    if (!(*aAllRecordsHaveEchConfig)) {
+      aResult.Clear();
+      return;
+    }
+
+    Maybe<uint16_t> port = record.GetPort();
+    if (port && *port == 0) {
+      // Found an unsafe port, skip this record.
+      continue;
+    }
+
+    Maybe<nsCString> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && alpn->IsEmpty()) {
+      // Can't find any supported protocols, skip.
+      continue;
+    }
+
+    RefPtr<nsISVCBRecord> svcbRecord =
+        new SVCBRecord(record, std::move(port), std::move(alpn));
+    aResult.AppendElement(svcbRecord);
+  }
 }
 
 bool DNSHTTPSSVCRecordBase::HasIPAddressesInternal(

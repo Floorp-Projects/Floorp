@@ -111,4 +111,8 @@ interface nsIDNSHTTPSSVCRecord : nsISupports
    * Returns true when all names of SVCB records are in exclusion list.
    */
   readonly attribute boolean allRecordsExcluded;
+
+  Array<nsISVCBRecord> GetAllRecordsWithEchConfig(in boolean aNoHttp2,
+                                                  in boolean aNoHttp3,
+                                                  out boolean aAllRecordsHaveEchConfig);
 };
