@@ -335,6 +335,8 @@ class TabTrayView(
         updateUINormalMode(view.context.components.core.store.state)
         scrollToTab(view.context.components.core.store.state.selectedTabId)
 
+        view.tabsTray.invalidateItemDecorations()
+
         if (isPrivateModeSelected) {
             components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
         } else {
@@ -373,6 +375,7 @@ class TabTrayView(
             }
 
             layoutManager = gridLayoutManager
+            addItemDecoration(TabTrayGridItemDecorator(container.context))
         }
     }
 
