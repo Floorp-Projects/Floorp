@@ -495,7 +495,7 @@ toolbar_settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 crash_reporter:
   opened:
@@ -2058,7 +2058,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   closed:
     type: event
     description: |
@@ -2071,7 +2071,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   opened_existing_tab:
     type: event
     description: |
@@ -2084,7 +2084,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   closed_existing_tab:
     type: event
     description: |
@@ -2097,7 +2097,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   private_mode_tapped:
     type: event
     description: |
@@ -2110,7 +2110,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   normal_mode_tapped:
     type: event
     description: |
@@ -2123,7 +2123,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   new_tab_tapped:
     type: event
     description: |
@@ -2136,7 +2136,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   new_private_tab_tapped:
     type: event
     description: |
@@ -2149,7 +2149,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   menu_opened:
     type: event
     description: |
@@ -2162,7 +2162,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   save_to_collection:
     type: event
     description: |
@@ -2176,7 +2176,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   share_all_tabs:
     type: event
     description: |
@@ -2190,7 +2190,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   close_all_tabs:
     type: event
     description: |
@@ -2204,7 +2204,7 @@ tabs_tray:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 collections:
   renamed:
@@ -2820,7 +2820,7 @@ tab:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
   media_pause:
@@ -2835,7 +2835,7 @@ tab:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 media_notification:
   play:
