@@ -162,6 +162,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         if (newConfig.orientation != currentOrientation) {
             tabTrayView.dismissMenu()
             tabTrayView.expand()
+
+            if (requireContext().settings().gridTabView) {
+                // Update the number of columns to use in the grid view when the screen
+                // orientation changes.
+                tabTrayView.updateTabsTrayLayout()
+            }
+
             currentOrientation = newConfig.orientation
         }
     }

@@ -34,6 +34,7 @@ import org.mozilla.fenix.ext.getMediaStateForSession
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.utils.Do
@@ -161,6 +162,11 @@ class TabTrayViewHolder(
 
     @VisibleForTesting
     internal fun updateBackgroundColor(isSelected: Boolean) {
+        if (itemView.context.settings().gridTabView) {
+            // No need to set a background color in the item view for grid tabs.
+            return
+        }
+
         val color = if (isSelected) {
             R.color.tab_tray_item_selected_background_normal_theme
         } else {
@@ -180,10 +186,17 @@ class TabTrayViewHolder(
     }
 
     private fun loadIntoThumbnailView(thumbnailView: ImageView, id: String) {
-        val thumbnailSize = max(
-            itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_thumbnail_height),
-            itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_thumbnail_width)
-        )
+        val thumbnailSize = if (itemView.context.settings().gridTabView) {
+            max(
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_height),
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width)
+            )
+        } else {
+            max(
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width)
+            )
+        }
         imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
     }
 
