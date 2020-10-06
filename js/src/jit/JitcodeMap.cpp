@@ -16,6 +16,7 @@
 #include "gc/Statistics.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "js/Vector.h"
 #include "vm/BytecodeLocation.h"  // for BytecodeLocation

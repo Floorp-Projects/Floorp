@@ -33,6 +33,7 @@
 #include "jit/AutoJitContextAlloc.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/VMFunctions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"

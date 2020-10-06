@@ -23,6 +23,7 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
 #include "jit/IonIC.h"
+#include "jit/JitRuntime.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/TemplateObject.h"

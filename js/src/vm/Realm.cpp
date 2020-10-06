@@ -19,6 +19,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/JitOptions.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"

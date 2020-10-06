@@ -9,6 +9,7 @@
 #include "jit/Bailouts.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/mips-shared/SharedICHelpers-mips-shared.h"
 #include "jit/mips64/Bailouts-mips64.h"
