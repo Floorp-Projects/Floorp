@@ -180,11 +180,5 @@ interface XULPopupElement : XULElement
    */
   void sizeTo(long width, long height);
 
-  /** Returns the alignment position where the popup has appeared relative to its
-   *  anchor node or point, accounting for any flipping that occurred.
-   */
-  readonly attribute DOMString alignmentPosition;
-  readonly attribute long alignmentOffset;
-
   void setConstraintRect(DOMRectReadOnly rect);
 };

@@ -95,7 +95,7 @@
       return this.getAttribute("type") == "arrow";
     }
 
-    adjustArrowPosition() {
+    adjustArrowPosition(event) {
       if (!this.isArrowPanel || !this.isAnchored) {
         return;
       }
@@ -103,8 +103,8 @@
       var container = this.shadowRoot.querySelector(".panel-arrowcontainer");
       var arrowbox = this.shadowRoot.querySelector(".panel-arrowbox");
 
-      var position = this.alignmentPosition;
-      var offset = this.alignmentOffset;
+      var position = event.alignmentPosition;
+      var offset = event.alignmentOffset;
 
       this.setAttribute("arrowposition", position);
 
@@ -296,7 +296,7 @@
 
     on_popuppositioned(event) {
       if (event.target == this) {
-        this.adjustArrowPosition();
+        this.adjustArrowPosition(event);
       }
     }
   }

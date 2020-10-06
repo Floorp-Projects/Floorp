@@ -25,15 +25,6 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
   {
     stack: [
-      "adjustArrowPosition@chrome://global/content/elements/panel.js",
-      "on_popuppositioned@chrome://global/content/elements/panel.js",
-    ],
-
-    maxCount: 22, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
       "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
       "handleEvent@resource:///modules/PanelMultiView.jsm",
     ],
@@ -71,7 +62,7 @@ add_task(async function() {
       ),
     exceptions: [
       {
-        name: "the urlbar placeolder moves up and down by a few pixels",
+        name: "the urlbar placeholder moves up and down by a few pixels",
         condition: r =>
           r.x1 >= textBoxRect.left &&
           r.x2 <= textBoxRect.right &&

@@ -1096,6 +1096,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PluginCrashedEvent.webidl',
     'PopStateEvent.webidl',
     'PopupBlockedEvent.webidl',
+    'PopupPositionedEvent.webidl',
     'PositionStateEvent.webidl',
     'PresentationConnectionAvailableEvent.webidl',
     'PresentationConnectionCloseEvent.webidl',
