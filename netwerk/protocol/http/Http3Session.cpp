@@ -513,6 +513,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
       default:
         break;
     }
+    // Delete previous content of data
+    data.TruncateLength(0);
     rv = mHttp3Connection->GetEvent(&event, data);
     if (NS_FAILED(rv)) {
       LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
