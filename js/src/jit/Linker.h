@@ -13,6 +13,7 @@
 
 #include "jstypes.h"
 
+#include "jit/AutoWritableJitCode.h"
 #include "jit/MacroAssembler.h"
 #include "vm/Runtime.h"
 
