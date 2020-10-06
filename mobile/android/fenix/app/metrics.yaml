@@ -219,7 +219,7 @@ events:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   preference_toggled:
     type: event
     description: |
@@ -832,7 +832,7 @@ metrics:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   adjust_ad_group:
     type: string
     lifetime: application
@@ -851,7 +851,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   adjust_creative:
     type: string
     lifetime: application
@@ -870,7 +870,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   adjust_network:
     type: string
     lifetime: application
@@ -889,7 +889,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   toolbar_position:
     type: string
     lifetime: application
@@ -3477,7 +3477,7 @@ browser.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   ad_clicks:
     type: labeled_counter
     description: |
@@ -3493,7 +3493,7 @@ browser.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   in_content:
     type: labeled_counter
     description: |
@@ -3508,7 +3508,7 @@ browser.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 addons:
   open_addons_in_settings:
