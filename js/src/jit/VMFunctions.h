@@ -361,9 +361,6 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 
 MOZ_MUST_USE bool MutatePrototype(JSContext* cx, HandlePlainObject obj,
                                   HandleValue value);
-MOZ_MUST_USE bool InitProp(JSContext* cx, HandleObject obj,
-                           HandlePropertyName name, HandleValue value,
-                           jsbytecode* pc);
 
 enum class EqualityKind : bool { NotEqual, Equal };
 
