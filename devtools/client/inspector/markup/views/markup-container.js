@@ -547,17 +547,10 @@ MarkupContainer.prototype = {
 
     // target is the MarkupContainer itself.
     this.hovered = false;
-    // Flag is true if the container was marked as selected, false if already selected.
-    const didNavigate = this.markup.navigate(this);
+    this.markup.navigate(this);
     // Make container tabbable descendants tabbable and focus in.
     this.canFocus = true;
-    // Avoid moving focus if the container was already selected.
-    // This prevents shifting horizontal scroll on repeated clicks
-    // on the container on narrow viewports. Bug 1657567
-    if (didNavigate) {
-      this.focus();
-    }
-
+    this.focus();
     event.stopPropagation();
 
     // Preventing the default behavior will avoid the body to gain focus on
