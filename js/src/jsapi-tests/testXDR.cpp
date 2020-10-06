@@ -11,6 +11,7 @@
 
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
+#include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
@@ -23,7 +24,8 @@ static bool GetBuildId(JS::BuildIdCharVector* buildId) {
   return buildId->append(buildid, sizeof(buildid));
 }
 
-static JSScript* FreezeThaw(JSContext* cx, JS::HandleScript script) {
+static JSScript* FreezeThaw(JSContext* cx, JS::CompileOptions& options,
+                            JS::HandleScript script) {
   JS::SetProcessBuildIdOp(::GetBuildId);
 
   // freeze
@@ -35,7 +37,7 @@ static JSScript* FreezeThaw(JSContext* cx, JS::HandleScript script) {
 
   // thaw
   JS::RootedScript script2(cx);
-  rs = JS::DecodeScript(cx, buffer, &script2);
+  rs = JS::DecodeScript(cx, options, buffer, &script2);
   if (rs != JS::TranscodeResult_Ok) {
     return nullptr;
   }
@@ -71,7 +73,7 @@ BEGIN_TEST(testXDR_bug506491) {
   JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);
 
-  script = FreezeThaw(cx, script);
+  script = FreezeThaw(cx, options, script);
   CHECK(script);
 
   // execute
@@ -100,7 +102,7 @@ BEGIN_TEST(testXDR_bug516827) {
   JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);
 
-  script = FreezeThaw(cx, script);
+  script = FreezeThaw(cx, options, script);
   CHECK(script);
 
   // execute with null result meaning no result wanted
@@ -132,7 +134,7 @@ BEGIN_TEST(testXDR_source) {
     JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
     CHECK(script);
 
-    script = FreezeThaw(cx, script);
+    script = FreezeThaw(cx, options, script);
     CHECK(script);
 
     JSString* out = JS_DecompileScript(cx, script);
@@ -167,7 +169,7 @@ BEGIN_TEST(testXDR_sourceMap) {
 
     // The script source takes responsibility of free'ing |expected|.
     CHECK(script->scriptSource()->setSourceMapURL(cx, expected));
-    script = FreezeThaw(cx, script);
+    script = FreezeThaw(cx, options, script);
     CHECK(script);
     CHECK(script->scriptSource());
     CHECK(script->scriptSource()->hasSourceMapURL());
