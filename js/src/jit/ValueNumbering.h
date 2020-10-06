@@ -9,6 +9,7 @@
 
 #include "jit/JitAllocPolicy.h"
 #include "js/HashTable.h"
+#include "js/Vector.h"
 
 namespace js {
 namespace jit {

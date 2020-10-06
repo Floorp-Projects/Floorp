@@ -2517,16 +2517,16 @@ class SimulatorProcess
   };
   using ICacheFlushes = mozilla::Vector<ICacheFlush, 2>;
   struct SimFlushes {
-    Simulator* thread;
+    vixl::Simulator* thread;
     ICacheFlushes records;
   };
   mozilla::Vector<SimFlushes, 1> pendingFlushes_;
 
   static void recordICacheFlush(void* start, size_t length);
   static void membarrier();
-  static ICacheFlushes& getICacheFlushes(Simulator* sim);
-  static MOZ_MUST_USE bool registerSimulator(Simulator* sim);
-  static void unregisterSimulator(Simulator* sim);
+  static ICacheFlushes& getICacheFlushes(vixl::Simulator* sim);
+  static MOZ_MUST_USE bool registerSimulator(vixl::Simulator* sim);
+  static void unregisterSimulator(vixl::Simulator* sim);
 #endif
 
   static void setRedirection(vixl::Redirection* redirection) {

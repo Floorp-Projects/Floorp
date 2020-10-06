@@ -13,6 +13,7 @@
 
 #include "jit/AtomicOp.h"
 #include "jit/JitAllocPolicy.h"
+#include "jit/JitContext.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
@@ -37,6 +38,8 @@ using mozilla::CheckedInt;
 
 namespace js {
 namespace jit {
+
+enum class FrameType;
 
 namespace Disassembler {
 class HeapAccess;
