@@ -888,6 +888,39 @@ function String_toLocaleUpperCase() {
 }
 #endif  // JS_HAS_INTL_API
 
+// https://github.com/tc39/proposal-item-method
+// String.prototype.item ( index )
+function String_item(index) {
+    // Step 1.
+    if (this === undefined || this === null)
+        ThrowIncompatibleMethod("item", this);
+
+    // Step 2.
+    var str = ToString(this);
+
+    // Step 3.
+    var len = str.length;
+
+    // Step 4.
+    var relativeIndex = ToInteger(index);
+
+    // Steps 5-6.
+    var k;
+    if (relativeIndex >= 0) {
+        k = relativeIndex;
+    } else {
+        k = len + relativeIndex;
+    }
+
+    // Step 7.
+    if (k < 0 || k >= len) {
+        return undefined;
+    }
+
+    // Step 8.
+    return str[k];
+}
+
 // ES2018 draft rev 8fadde42cf6a9879b4ab0cb6142b31c4ee501667
 // 21.1.2.4 String.raw ( template, ...substitutions )
 function String_static_raw(callSite/*, ...substitutions*/) {
