@@ -238,6 +238,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                              Maybe<double>* aOutRttSec) override;
   bool GetRTCPSenderReport(unsigned int* packetsSent, uint64_t* bytesSent,
                            DOMHighResTimeStamp* aRemoteTimestamp) override;
+  Maybe<mozilla::dom::RTCBandwidthEstimationInternal> GetBandwidthEstimation()
+      override;
 
   bool SetDtmfPayloadType(unsigned char type, int freq) override;
 

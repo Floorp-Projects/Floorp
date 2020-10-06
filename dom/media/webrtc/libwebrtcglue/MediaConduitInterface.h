@@ -248,6 +248,9 @@ class MediaSessionConduit {
                                    uint64_t* bytesSent,
                                    DOMHighResTimeStamp* aRemoteTimestamp) = 0;
 
+  virtual Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
+  GetBandwidthEstimation() = 0;
+
   virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 
   virtual uint64_t CodecPluginID() = 0;

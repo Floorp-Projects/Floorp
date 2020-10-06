@@ -251,6 +251,21 @@ bool WebrtcAudioConduit::GetRTCPSenderReport(
   return *packetsSent > 0 && *bytesSent > 0;
 }
 
+Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
+WebrtcAudioConduit::GetBandwidthEstimation() {
+  ASSERT_ON_THREAD(mStsThread);
+
+  const auto& stats = mCall->Call()->GetStats();
+  dom::RTCBandwidthEstimationInternal bw;
+  bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
+  bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
+  bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
+  bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
+  if (stats.rtt_ms >= 0) {
+    bw.mRttMs.Construct(stats.rtt_ms);
+  }
+  return Some(std::move(bw));
+}
 bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
   CSFLogInfo(LOGTAG, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
   MOZ_ASSERT(NS_IsMainThread());

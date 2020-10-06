@@ -2549,8 +2549,18 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
 
 // TODO(bug 1616937): Move this to RTCRtpSender.
 static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
-    const RefPtr<MediaPipelineTransmit>& aPipeline) {
+    const RefPtr<MediaPipelineTransmit>& aPipeline,
+    const nsAutoString& aTrackName) {
   UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
+
+  // Add bandwidth estimation stats
+  aPipeline->Conduit()->GetBandwidthEstimation().apply([&](auto& bw) {
+    bw.mTrackIdentifier = aTrackName;
+    if (!report->mBandwidthEstimations.AppendElement(bw, fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  });
+
   auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
 
   nsString kind = asVideo.isNothing() ? u"audio"_ns : u"video"_ns;
@@ -2625,7 +2635,8 @@ static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
     }
   }
 
-  // Lastly, fill in video encoder stats if this is video
+  // Lastly, fill in video encoder stats, and bandwidth estimation if this is
+  // video
   asVideo.apply([&s](auto conduit) {
     double framerateMean;
     double framerateStdDev;
@@ -2654,9 +2665,14 @@ static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
 
 RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetSenderStats(
     const RefPtr<MediaPipelineTransmit>& aPipeline) {
-  return InvokeAsync(mSTSThread, __func__, [aPipeline]() {
-    return dom::RTCStatsPromise::CreateAndResolve(GetSenderStats_s(aPipeline),
-                                                  __func__);
+  nsAutoString trackName;
+  auto track = aPipeline->GetTrack();
+  if (track) {
+    track->GetId(trackName);
+  }
+  return InvokeAsync(mSTSThread, __func__, [aPipeline, trackName]() {
+    return dom::RTCStatsPromise::CreateAndResolve(
+        GetSenderStats_s(aPipeline, trackName), __func__);
   });
 }
 
@@ -2890,7 +2906,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
                   !report->mRawRemoteCandidates.AppendElements(
                       stats->mRawRemoteCandidates, fallible) ||
                   !report->mVideoFrameHistories.AppendElements(
-                      stats->mVideoFrameHistories, fallible)) {
+                      stats->mVideoFrameHistories, fallible) ||
+                  !report->mBandwidthEstimations.AppendElements(
+                      stats->mBandwidthEstimations, fallible)) {
                 // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which
                 // might involve multiple reallocations) and potentially
                 // crashing here, SetCapacity could be called outside the loop

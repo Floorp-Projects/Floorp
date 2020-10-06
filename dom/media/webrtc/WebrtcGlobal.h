@@ -115,7 +115,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mRemoteInboundRtpStreamStats, mRemoteOutboundRtpStreamStats,
     mRtpContributingSourceStats, mTrickledIceCandidateStats,
     mRawLocalCandidates, mRawRemoteCandidates, mDataChannelStats,
-    mVideoFrameHistories);
+    mVideoFrameHistories, mBandwidthEstimations);
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCStatsReportInternal, mozilla::dom::RTCStatsCollection,
@@ -415,6 +415,11 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCVideoFrameHistoryInternal,
                                   mTrackIdentifier, mEntries);
+
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCBandwidthEstimationInternal,
+                                  mTrackIdentifier, mSendBandwidthBps,
+                                  mMaxPaddingBps, mReceiveBandwidthBps,
+                                  mPacerDelayMs, mRttMs);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCDataChannelStats, mId,
                                   mTimestamp, mType, mLabel, mProtocol,
