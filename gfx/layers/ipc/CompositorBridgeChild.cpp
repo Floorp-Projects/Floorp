@@ -928,8 +928,10 @@ TextureClientPool* CompositorBridgeChild::GetTexturePool(
   }
 
   mTexturePools.AppendElement(new TextureClientPool(
-      aAllocator, aFormat, gfx::gfxVars::TileSize(), aFlags,
-      StaticPrefs::layers_tile_pool_shrink_timeout_AtStartup(),
+      aAllocator->GetCompositorBackendType(),
+      aAllocator->SupportsTextureDirectMapping(),
+      aAllocator->GetMaxTextureSize(), aFormat, gfx::gfxVars::TileSize(),
+      aFlags, StaticPrefs::layers_tile_pool_shrink_timeout_AtStartup(),
       StaticPrefs::layers_tile_pool_clear_timeout_AtStartup(),
       StaticPrefs::layers_tile_initial_pool_size_AtStartup(),
       StaticPrefs::layers_tile_pool_unused_size_AtStartup(), this));
