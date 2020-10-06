@@ -851,6 +851,14 @@ void ScriptPreloader::NoteScript(const nsCString& url,
   script->mProcessTypes += processType;
 }
 
+/* static */
+void ScriptPreloader::FillCompileOptionsForCachedScript(
+    JS::CompileOptions& options) {
+  options.setNoScriptRval(true);
+  MOZ_ASSERT(!options.selfHostingMode);
+  MOZ_ASSERT(!options.isRunOnce);
+}
+
 JSScript* ScriptPreloader::GetCachedScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const nsCString& path) {
@@ -1062,7 +1070,8 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   JSAutoRealm ar(cx, scope ? scope : xpc::CompilationScope());
 
   JS::CompileOptions options(cx);
-  options.setNoScriptRval(true).setSourceIsLazy(true);
+  FillCompileOptionsForCachedScript(options);
+  options.setSourceIsLazy(true);
 
   if (!JS::CanCompileOffThread(cx, options, size) ||
       !JS::DecodeMultiOffThreadScripts(cx, options, mParsingSources,
