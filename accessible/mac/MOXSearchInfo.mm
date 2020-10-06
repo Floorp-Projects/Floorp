@@ -304,6 +304,14 @@ using namespace mozilla::a11y;
                                : RotorRoleRule(roles::BLOCKQUOTE);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXTextFieldSearchKey"]) {
+      RotorMacRoleRule rule =
+          mImmediateDescendantsOnly
+              ? RotorMacRoleRule(@"AXTextField", geckoRootAcc)
+              : RotorMacRoleRule(@"AXTextField");
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
