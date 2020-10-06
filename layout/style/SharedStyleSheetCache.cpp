@@ -431,7 +431,7 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
         MOZ_DIAGNOSTIC_ASSERT(entry.GetData().mSheet != sheet,
                               "Same sheet, different keys?");
       } else {
-        MOZ_DIAGNOSTIC_ASSERT(
+        MOZ_ASSERT(
             entry.GetData().Expired() || aData.mLoader->ShouldBypassCache(),
             "Overriding existing complete entry?");
       }
