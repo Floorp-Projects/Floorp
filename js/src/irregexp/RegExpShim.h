@@ -32,6 +32,7 @@
 #include "js/RegExpFlags.h"
 #include "js/Value.h"
 #include "threading/ExclusiveData.h"
+#include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/NativeObject.h"
 #include "vm/RegExpShared.h"
@@ -1091,7 +1092,7 @@ class StackLimitCheck {
 
   // Use this to check for stack-overflows in C++ code.
   bool HasOverflowed() {
-    bool overflowed = !CheckRecursionLimitDontReport(cx_);
+    bool overflowed = !js::CheckRecursionLimitDontReport(cx_);
 #ifdef JS_MORE_DETERMINISTIC
     if (overflowed) {
       // We don't report overrecursion here, but we throw an exception later
@@ -1110,7 +1111,7 @@ class StackLimitCheck {
 
   // Use this to check for stack-overflow when entering runtime from JS code.
   bool JsHasOverflowed() {
-    return !CheckRecursionLimitConservativeDontReport(cx_);
+    return !js::CheckRecursionLimitConservativeDontReport(cx_);
   }
 
  private:

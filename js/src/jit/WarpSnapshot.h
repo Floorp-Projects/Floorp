@@ -19,6 +19,9 @@
 
 namespace js {
 
+class ArgumentsObject;
+class CallObject;
+class LexicalEnvironmentObject;
 class ModuleEnvironmentObject;
 
 namespace jit {

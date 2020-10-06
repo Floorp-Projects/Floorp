@@ -14,6 +14,7 @@
 #include "ds/LifoAlloc.h"
 #include "jit/Bailouts.h"
 #include "jit/JitCode.h"
+#include "jit/JitContext.h"
 #include "jit/shared/Assembler-shared.h"
 #include "util/TrailingArray.h"
 #include "vm/JSContext.h"
