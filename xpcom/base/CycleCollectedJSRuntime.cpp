@@ -148,14 +148,13 @@ class IncrementalFinalizeRunnable : public CancelableRunnable {
 struct NoteWeakMapChildrenTracer : public JS::CallbackTracer {
   NoteWeakMapChildrenTracer(JSRuntime* aRt,
                             nsCycleCollectionNoteRootCallback& aCb)
-      : JS::CallbackTracer(aRt),
+      : JS::CallbackTracer(aRt, JS::TracerKind::Callback,
+                           JS::IdTraceAction::CanSkip),
         mCb(aCb),
         mTracedAny(false),
         mMap(nullptr),
         mKey(nullptr),
-        mKeyDelegate(nullptr) {
-    setCanSkipJsids(true);
-  }
+        mKeyDelegate(nullptr) {}
   void onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
@@ -390,10 +389,10 @@ JSZoneParticipant::TraverseNative(void* aPtr,
 struct TraversalTracer : public JS::CallbackTracer {
   TraversalTracer(JSRuntime* aRt, nsCycleCollectionTraversalCallback& aCb)
       : JS::CallbackTracer(aRt, JS::TracerKind::Callback,
-                           JS::WeakMapTraceAction::Skip),
-        mCb(aCb) {
-    setCanSkipJsids(true);
-  }
+                           JS::TraceOptions(JS::WeakMapTraceAction::Skip,
+                                            JS::WeakEdgeTraceAction::Trace,
+                                            JS::IdTraceAction::CanSkip)),
+        mCb(aCb) {}
   void onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionTraversalCallback& mCb;
 };
