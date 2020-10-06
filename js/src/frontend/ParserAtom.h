@@ -496,6 +496,9 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> internLatin1(
       JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
 
+  JS::Result<const ParserAtom*, OOM> internLatin1ForXDR(
+      JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
+
   JS::Result<const ParserAtom*, OOM> internUtf8(
       JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
 
