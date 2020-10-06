@@ -737,8 +737,8 @@ class MOZ_MUST_USE_TYPE Result final {
    *     MOZ_ASSERT(res.unwrapErr() == res2.unwrapErr());
    */
   template <typename F, typename = std::enable_if_t<detail::IsResult<
-                            decltype((*((F*)nullptr))(*((V*)nullptr)))>::value>>
-  auto andThen(F f) -> decltype(f(*((V*)nullptr))) {
+                            std::invoke_result_t<F, V&&>>::value>>
+  auto andThen(F f) -> std::invoke_result_t<F, V&&> {
     return MOZ_LIKELY(isOk()) ? f(unwrap()) : propagateErr();
   }
 };
