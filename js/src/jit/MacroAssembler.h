@@ -33,7 +33,6 @@
 #include "jit/AutoJitContextAlloc.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
-#include "jit/JitRuntime.h"
 #include "jit/VMFunctions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
@@ -213,6 +212,7 @@ namespace jit {
 enum class ExitFrameType : uint8_t;
 
 class AutoSaveLiveRegisters;
+class CompileZone;
 class NativeTemplateObject;
 class TemplateObject;
 
@@ -3611,6 +3611,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void storeCallResultValue(TypedOrValueRegister dest);
 
  private:
+  TrampolinePtr preBarrierTrampoline(MIRType type);
+
   template <typename T>
   void unguardedCallPreBarrier(const T& address, MIRType type) {
     Label done;
@@ -3623,8 +3625,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
     Push(PreBarrierReg);
     computeEffectiveAddress(address, PreBarrierReg);
 
-    const JitRuntime* rt = GetJitContext()->runtime->jitRuntime();
-    TrampolinePtr preBarrier = rt->preBarrier(type);
+    TrampolinePtr preBarrier = preBarrierTrampoline(type);
 
     call(preBarrier);
     Pop(PreBarrierReg);
