@@ -2627,6 +2627,10 @@ JSScript* CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
 JSScript* CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
                             HandleScript src);
 
+bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
+                              js::ImmutableScriptFlags flags,
+                              bool isMultiDecode);
+
 } /* namespace js */
 
 namespace JS {
