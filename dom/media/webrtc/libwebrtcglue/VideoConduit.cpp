@@ -189,6 +189,7 @@ void WebrtcVideoConduit::CallStatistics::Update(
     const webrtc::Call::Stats& aStats) {
   ASSERT_ON_THREAD(mStatsThread);
 
+  mStats = Some(aStats);
   const auto rtt = aStats.rtt_ms;
   if (rtt > static_cast<decltype(aStats.rtt_ms)>(INT32_MAX)) {
     // If we get a bogus RTT we will keep using the previous RTT
@@ -217,6 +218,24 @@ Maybe<DOMHighResTimeStamp> WebrtcVideoConduit::CallStatistics::RttSec() const {
   ASSERT_ON_THREAD(mStatsThread);
 
   return mRttSec;
+}
+
+Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
+WebrtcVideoConduit::CallStatistics::Stats() const {
+  ASSERT_ON_THREAD(mStatsThread);
+  if (mStats.isNothing()) {
+    return Nothing();
+  }
+  const auto& stats = mStats.value();
+  dom::RTCBandwidthEstimationInternal bw;
+  bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
+  bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
+  bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
+  bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
+  if (stats.rtt_ms >= 0) {
+    bw.mRttMs.Construct(stats.rtt_ms);
+  }
+  return Some(std::move(bw));
 }
 
 void WebrtcVideoConduit::StreamStatistics::Update(
@@ -1291,6 +1310,12 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(
   *bytesSent = mRecvStreamStats.BytesSent();
   *aRemoteTimestamp = mRecvStreamStats.RemoteTimestamp();
   return true;
+}
+
+Maybe<mozilla::dom::RTCBandwidthEstimationInternal>
+WebrtcVideoConduit::GetBandwidthEstimation() {
+  ASSERT_ON_THREAD(mStsThread);
+  return mCallStats.Stats();
 }
 
 void WebrtcVideoConduit::GetRtpSources(

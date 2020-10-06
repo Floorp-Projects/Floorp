@@ -1048,6 +1048,11 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   return NS_OK;
 }
 
+RefPtr<dom::MediaStreamTrack> MediaPipelineTransmit::GetTrack() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mDomTrack;
+}
+
 void MediaPipelineTransmit::SetSendTrack(
     RefPtr<ProcessedMediaTrack> aSendTrack) {
   MOZ_ASSERT(NS_IsMainThread());
