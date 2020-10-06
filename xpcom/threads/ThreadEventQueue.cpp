@@ -53,7 +53,7 @@ ThreadEventQueue<InnerQueueT>::ThreadEventQueue(UniquePtr<InnerQueueT> aQueue,
     : mBaseQueue(std::move(aQueue)),
       mLock("ThreadEventQueue"),
       mEventsAvailable(mLock, "EventsAvail") {
-  if (UseTaskController() && aIsMainThread) {
+  if (aIsMainThread) {
     TaskController::Get()->SetConditionVariable(&mEventsAvailable);
   }
   static_assert(std::is_base_of<AbstractEventQueue, InnerQueueT>::value,
@@ -378,7 +378,7 @@ template <class InnerQueueT>
 void ThreadEventQueue<InnerQueueT>::SetObserver(nsIThreadObserver* aObserver) {
   MutexAutoLock lock(mLock);
   mObserver = aObserver;
-  if (UseTaskController() && NS_IsMainThread()) {
+  if (NS_IsMainThread()) {
     TaskController::Get()->SetThreadObserver(aObserver);
   }
 }

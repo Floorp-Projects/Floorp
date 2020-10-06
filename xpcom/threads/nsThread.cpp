@@ -598,7 +598,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
       mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
-  if (UseTaskController() && mIsMainThread) {
+  if (mIsMainThread) {
     mozilla::TaskController::Get()->SetPerformanceCounterState(
         &mPerformanceCounterState);
   }
@@ -909,7 +909,7 @@ nsThread::HasPendingEvents(bool* aResult) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  if (mIsMainThread && UseTaskController() && !mIsInLocalExecutionMode) {
+  if (mIsMainThread && !mIsInLocalExecutionMode) {
     *aResult = TaskController::Get()->HasMainThreadPendingTasks();
   } else {
     *aResult = mEvents->HasPendingEvent();
@@ -1143,7 +1143,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // default.
     EventQueuePriority priority = EventQueuePriority::Normal;
     nsCOMPtr<nsIRunnable> event;
-    bool usingTaskController = mIsMainThread && UseTaskController();
+    bool usingTaskController = mIsMainThread;
     if (usingTaskController) {
       event = TaskController::Get()->GetRunnableForMTTask(reallyWait);
     } else {
