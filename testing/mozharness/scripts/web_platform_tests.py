@@ -174,8 +174,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         dirs['abs_test_bin_dir'] = os.path.join(dirs['abs_test_install_dir'], 'bin')
         dirs["abs_wpttest_dir"] = os.path.join(dirs['abs_test_install_dir'], "web-platform")
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
-        dirs['abs_test_extensions_dir'] = os.path.join(dirs['abs_test_install_dir'],
-                                                       'extensions')
         if self.is_android:
             dirs['abs_xre_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'hostutils')
         if self.is_emulator:
@@ -251,10 +249,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
                 "--no-pause-after-test",
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                                         "wpt_instruments.txt"),
-                "--specialpowers-path=%s" % os.path.join(dirs['abs_test_extensions_dir'],
-                                                         "specialpowers@mozilla.org.xpi"),
-                ]
+                                                         "wpt_instruments.txt")]
 
         is_windows_7 = mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1"
 
@@ -367,7 +362,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             extract_dirs=["mach",
                           "bin/*",
                           "config/*",
-                          "extensions/*",
                           "mozbase/*",
                           "marionette/*",
                           "tools/*",
