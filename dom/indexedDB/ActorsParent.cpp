@@ -1342,7 +1342,7 @@ class DatabaseConnection final {
                                      bool aNeedsCheckpoint,
                                      bool* aFreedSomePages);
 
-  nsresult GetFileSize(const nsAString& aPath, int64_t* aResult);
+  Result<int64_t, nsresult> GetFileSize(const nsAString& aPath);
 };
 
 class MOZ_STACK_CLASS DatabaseConnection::AutoSavepoint final {
@@ -7624,17 +7624,10 @@ void DatabaseConnection::EnableQuotaChecks() {
   quotaObject->EnableQuotaCheck();
   journalQuotaObject->EnableQuotaCheck();
 
-  int64_t fileSize;
-  nsresult rv = GetFileSize(quotaObject->Path(), &fileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  int64_t journalFileSize;
-  rv = GetFileSize(journalQuotaObject->Path(), &journalFileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY_INSPECT(const int64_t& fileSize, GetFileSize(quotaObject->Path()),
+                  QM_VOID);
+  IDB_TRY_INSPECT(const int64_t& journalFileSize,
+                  GetFileSize(journalQuotaObject->Path()), QM_VOID);
 
   DebugOnly<bool> result = journalQuotaObject->MaybeUpdateSize(
       journalFileSize, /* aTruncate */ true);
@@ -7644,32 +7637,18 @@ void DatabaseConnection::EnableQuotaChecks() {
   MOZ_ASSERT(result);
 }
 
-nsresult DatabaseConnection::GetFileSize(const nsAString& aPath,
-                                         int64_t* aResult) {
+Result<int64_t, nsresult> DatabaseConnection::GetFileSize(
+    const nsAString& aPath) {
   MOZ_ASSERT(!aPath.IsEmpty());
-  MOZ_ASSERT(aResult);
 
-  IDB_TRY_UNWRAP(auto file, QM_NewLocalFile(aPath));
-
-  int64_t fileSize;
-
-  bool exists;
-  nsresult rv = file->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const auto& file, QM_NewLocalFile(aPath));
+  IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(file, Exists));
 
   if (exists) {
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    fileSize = 0;
+    IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(file, GetFileSize));
   }
 
-  *aResult = fileSize;
-  return NS_OK;
+  return 0;
 }
 
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
