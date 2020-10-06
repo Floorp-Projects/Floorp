@@ -9,9 +9,9 @@
 
 #include "mozilla/Assertions.h"
 
+#include "ds/LifoAlloc.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
-#include "vm/JSContext.h"
 
 namespace js::jit {
 
@@ -21,10 +21,8 @@ class AutoJitContextAlloc {
   TempAllocator* prevAlloc_;
 
  public:
-  explicit AutoJitContextAlloc(JSContext* cx)
-      : tempAlloc_(&cx->tempLifoAlloc()),
-        jcx_(GetJitContext()),
-        prevAlloc_(jcx_->temp) {
+  explicit AutoJitContextAlloc(LifoAlloc* lifoAlloc)
+      : tempAlloc_(lifoAlloc), jcx_(GetJitContext()), prevAlloc_(jcx_->temp) {
     jcx_->temp = &tempAlloc_;
   }
 
