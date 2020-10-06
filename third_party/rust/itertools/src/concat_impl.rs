@@ -1,4 +1,4 @@
-use crate::Itertools;
+use Itertools;
 
 /// Combine all an iterator's elements into one element by using `Extend`.
 ///

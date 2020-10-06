@@ -1,3 +1,5 @@
+extern crate itertools;
+
 use itertools::EitherOrBoth;
 use itertools::free::merge_join_by;
 
