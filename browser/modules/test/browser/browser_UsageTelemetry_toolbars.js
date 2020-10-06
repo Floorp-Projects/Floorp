@@ -178,8 +178,6 @@ add_task(async function widgetPositions() {
 
     "forward-button_pinned_nav-bar-start",
     "back-button_pinned_nav-bar-start",
-
-    "managed-bookmarks_pinned_bookmarks-bar",
   ]);
 
   organizeToolbars({
@@ -230,8 +228,6 @@ add_task(async function widgetPositions() {
     "fxa-toolbar-menu-button_pinned_bookmarks-bar",
     "new-tab-button_pinned_bookmarks-bar",
     "developer-button_pinned_bookmarks-bar",
-
-    "managed-bookmarks_pinned_bookmarks-bar",
   ]);
 
   CustomizableUI.reset();
@@ -273,8 +269,6 @@ add_task(async function customizeMode() {
     "library-button_pinned_nav-bar-end",
 
     "personal-bookmarks_pinned_bookmarks-bar",
-
-    "managed-bookmarks_pinned_bookmarks-bar",
   ]);
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
@@ -365,8 +359,6 @@ add_task(async function contextMenus() {
     "library-button_pinned_nav-bar-end",
 
     "personal-bookmarks_pinned_bookmarks-bar",
-
-    "managed-bookmarks_pinned_bookmarks-bar",
   ]);
 
   let menu = document.getElementById("toolbar-context-menu");
@@ -450,8 +442,6 @@ add_task(async function pageActions() {
       "pinTab_pinned_pageaction-urlbar",
 
       "personal-bookmarks_pinned_bookmarks-bar",
-
-      "managed-bookmarks_pinned_bookmarks-bar",
     ]);
 
     let panel = document.getElementById("pageActionPanel");
@@ -554,8 +544,6 @@ add_task(async function extensions() {
       "random-addon-example-com_pinned_nav-bar-end",
 
       "random-addon-example-com_pinned_pageaction-urlbar",
-
-      "managed-bookmarks_pinned_bookmarks-bar",
     ]);
 
     let addon = await AddonManager.getAddonByID(extension.id);
@@ -579,8 +567,6 @@ add_task(async function extensions() {
 
       "forward-button_pinned_nav-bar-start",
       "back-button_pinned_nav-bar-start",
-
-      "managed-bookmarks_pinned_bookmarks-bar",
     ]);
 
     await addon.enable();
@@ -607,8 +593,6 @@ add_task(async function extensions() {
       "random-addon-example-com_pinned_nav-bar-end",
 
       "random-addon-example-com_pinned_pageaction-urlbar",
-
-      "managed-bookmarks_pinned_bookmarks-bar",
     ]);
 
     await addon.reload();
@@ -653,8 +637,6 @@ add_task(async function extensions() {
 
       "forward-button_pinned_nav-bar-start",
       "back-button_pinned_nav-bar-start",
-
-      "managed-bookmarks_pinned_bookmarks-bar",
     ]);
   });
 });
