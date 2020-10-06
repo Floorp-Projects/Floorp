@@ -24,7 +24,7 @@ class EventQueueInternal : public AbstractEventQueue {
  public:
   static const bool SupportsPrioritization = false;
 
-  EventQueueInternal() {}
+  explicit EventQueueInternal(bool aForwardToTC) : mForwardToTC(aForwardToTC) {}
   explicit EventQueueInternal(EventQueuePriority aPriority);
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
@@ -91,13 +91,17 @@ class EventQueueInternal : public AbstractEventQueue {
   mozilla::Queue<mozilla::TimeStamp, ItemsPerPage> mDispatchTimes;
   TimeDuration mLastEventDelay;
 #endif
+  // This indicates PutEvent forwards runnables to the TaskController. This
+  // should be true for the top level event queue on the main thread.
+  bool mForwardToTC;
 };
 
 }  // namespace detail
 
 class EventQueue final : public mozilla::detail::EventQueueInternal<16> {
  public:
-  EventQueue() : mozilla::detail::EventQueueInternal<16>() {}
+  explicit EventQueue(bool aForwardToTC = false)
+      : mozilla::detail::EventQueueInternal<16>(aForwardToTC) {}
   explicit EventQueue(EventQueuePriority aPriority)
       : mozilla::detail::EventQueueInternal<16>(aPriority){};
 };
@@ -106,7 +110,8 @@ template <size_t ItemsPerPage = 16>
 class EventQueueSized final
     : public mozilla::detail::EventQueueInternal<ItemsPerPage> {
  public:
-  EventQueueSized() : mozilla::detail::EventQueueInternal<ItemsPerPage>() {}
+  explicit EventQueueSized(bool aForwardToTC = false)
+      : mozilla::detail::EventQueueInternal<ItemsPerPage>(aForwardToTC) {}
   explicit EventQueueSized(EventQueuePriority aPriority)
       : mozilla::detail::EventQueueInternal<ItemsPerPage>(aPriority){};
 };

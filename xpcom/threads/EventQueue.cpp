@@ -7,7 +7,9 @@
 #include "mozilla/EventQueue.h"
 
 #include "GeckoProfiler.h"
+#include "InputTaskManager.h"
 #include "nsIRunnable.h"
+#include "TaskController.h"
 
 using namespace mozilla;
 using namespace mozilla::detail;
@@ -20,6 +22,29 @@ template <size_t ItemsPerPage>
 void EventQueueInternal<ItemsPerPage>::PutEvent(
     already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
     const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aDelay) {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+
+  if (mForwardToTC) {
+    TaskController* tc = TaskController::Get();
+
+    TaskManager* manager = nullptr;
+    if (aPriority == EventQueuePriority::InputHigh) {
+      if (InputTaskManager::Get()->State() ==
+          InputTaskManager::STATE_DISABLED) {
+        aPriority = EventQueuePriority::Normal;
+      } else {
+        manager = InputTaskManager::Get();
+      }
+    } else if (aPriority == EventQueuePriority::DeferredTimers ||
+               aPriority == EventQueuePriority::Idle) {
+      manager = TaskController::Get()->GetIdleTaskManager();
+    }
+
+    tc->DispatchRunnable(event.forget(), static_cast<uint32_t>(aPriority),
+                         manager);
+    return;
+  }
+
 #ifdef MOZ_GECKO_PROFILER
   // Sigh, this doesn't check if this thread is being profiled
   if (profiler_is_active()) {
@@ -31,7 +56,6 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
   }
 #endif
 
-  nsCOMPtr<nsIRunnable> event(aEvent);
   mQueue.Push(std::move(event));
 }
 
