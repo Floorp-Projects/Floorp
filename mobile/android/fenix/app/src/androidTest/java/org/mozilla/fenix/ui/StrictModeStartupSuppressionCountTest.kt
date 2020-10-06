@@ -13,17 +13,18 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 
 // PLEASE CONSULT WITH PERF TEAM BEFORE CHANGING THIS VALUE.
-private const val EXPECTED_SUPPRESSION_COUNT = 12
+private const val EXPECTED_SUPPRESSION_COUNT = 11
 
 private const val FAILURE_MSG = """StrictMode startup suppression count does not match expected count.
+    
+    If this PR removed code that suppressed StrictMode, great! Please decrement the suppression count.
+    
     Did this PR add or call code that suppresses a StrictMode violation?
     Did you know that suppressing a StrictMode violation can introduce performance regressions?
 
     If so, please do your best to implement a solution without suppressing StrictMode.
     Please consult the perf team if you have questions or believe suppressing StrictMode
     is the optimal solution.
-
-    If this PR removed code that suppressed StrictMode, great! Please decrement the suppression count.
 
 """
 
