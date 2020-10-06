@@ -3538,7 +3538,7 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
       result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
-   case StyleAppearance::Menuarrow:
+    case StyleAppearance::Menuarrow:
       if (nsCocoaFeatures::OnBigSurOrLater()) {
         result.SizeTo(0, 0, 0, 28);
       }

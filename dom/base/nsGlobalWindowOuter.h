@@ -1053,9 +1053,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     return mDelayedPrintUntilAfterLoad;
   }
 
-  bool DelayedCloseForPrinting() const {
-    return mDelayedCloseForPrinting;
-  }
+  bool DelayedCloseForPrinting() const { return mDelayedCloseForPrinting; }
 
   void StopDelayingPrintingUntilAfterLoad() {
     mShouldDelayPrintUntilAfterLoad = false;

@@ -145,8 +145,7 @@ class WindowGlobalParent final : public WindowContext,
   bool IsInitialDocument() { return mIsInitialDocument; }
 
   already_AddRefed<mozilla::dom::Promise> PermitUnload(
-      PermitUnloadAction aAction, uint32_t aTimeout,
-      mozilla::ErrorResult& aRv);
+      PermitUnloadAction aAction, uint32_t aTimeout, mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,

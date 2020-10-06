@@ -26,4 +26,4 @@ Label::~Label() {
 }
 #endif
 
-}  // js::jit
+}  // namespace js::jit
