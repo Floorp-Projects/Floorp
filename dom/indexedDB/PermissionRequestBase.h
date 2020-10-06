@@ -48,7 +48,7 @@ class PermissionRequestBase : public nsIObserver,
       uint32_t aIntPermission);
 
   // This function will prompt if needed. It may only be called once.
-  nsresult PromptIfNeeded(PermissionValue* aCurrentValue);
+  Result<PermissionValue, nsresult> PromptIfNeeded();
 
  protected:
   PermissionRequestBase(Element* aOwnerElement, nsIPrincipal* aPrincipal);
