@@ -361,9 +361,7 @@ pub extern "C" fn neqo_http3conn_fetch(
             *stream_id = id;
             NS_OK
         }
-        Err(Http3Error::StreamLimitError) => {
-            NS_BASE_STREAM_WOULD_BLOCK
-        }
+        Err(Http3Error::StreamLimitError) => NS_BASE_STREAM_WOULD_BLOCK,
         Err(_) => NS_ERROR_UNEXPECTED,
     }
 }
@@ -588,7 +586,7 @@ pub extern "C" fn neqo_http3conn_event(
                     let e = (token.expiration_time() - Instant::now()).as_micros();
                     if let Ok(expire_in) = u64::try_from(e) {
                         data.extend_from_slice(token.as_ref());
-                        Http3Event::ResumptionToken{ expire_in }
+                        Http3Event::ResumptionToken { expire_in }
                     } else {
                         Http3Event::NoEvent
                     }
