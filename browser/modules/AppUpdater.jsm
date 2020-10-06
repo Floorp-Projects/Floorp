@@ -108,10 +108,10 @@ class AppUpdater {
       );
     }
     return (
-      this.um.activeUpdate &&
-      (this.um.activeUpdate.state == "pending" ||
-        this.um.activeUpdate.state == "pending-service" ||
-        this.um.activeUpdate.state == "pending-elevate")
+      this.um.readyUpdate &&
+      (this.um.readyUpdate.state == "pending" ||
+        this.um.readyUpdate.state == "pending-service" ||
+        this.um.readyUpdate.state == "pending-elevate")
     );
   }
 
@@ -123,9 +123,9 @@ class AppUpdater {
       );
     }
     return (
-      this.um.activeUpdate &&
-      (this.um.activeUpdate.state == "applied" ||
-        this.um.activeUpdate.state == "applied-service")
+      this.um.readyUpdate &&
+      (this.um.readyUpdate.state == "applied" ||
+        this.um.readyUpdate.state == "applied-service")
     );
   }
 
@@ -136,8 +136,8 @@ class AppUpdater {
     let errorCode;
     if (this.update) {
       errorCode = this.update.errorCode;
-    } else if (this.um.activeUpdate) {
-      errorCode = this.um.activeUpdate.errorCode;
+    } else if (this.um.readyUpdate) {
+      errorCode = this.um.readyUpdate.errorCode;
     }
     // If the state is pending and the error code is not 0, staging must have
     // failed.
@@ -150,8 +150,8 @@ class AppUpdater {
       let errorCode;
       if (this.update) {
         errorCode = this.update.errorCode;
-      } else if (this.um.activeUpdate) {
-        errorCode = this.um.activeUpdate.errorCode;
+      } else if (this.um.readyUpdate) {
+        errorCode = this.um.readyUpdate.errorCode;
       }
       // If the state is pending and the error code is not 0, staging must have
       // failed and Firefox should be restarted to try to apply the update
@@ -166,7 +166,10 @@ class AppUpdater {
     if (this.update) {
       return this.update.state == "downloading";
     }
-    return this.um.activeUpdate && this.um.activeUpdate.state == "downloading";
+    return (
+      this.um.downloadingUpdate &&
+      this.um.downloadingUpdate.state == "downloading"
+    );
   }
 
   // true when updating has been disabled by enterprise policy
@@ -262,7 +265,7 @@ class AppUpdater {
    */
   _waitForUpdateToStage() {
     if (!this.update) {
-      this.update = this.um.activeUpdate;
+      this.update = this.um.readyUpdate;
     }
     this.update.QueryInterface(Ci.nsIWritablePropertyBag);
     this.update.setProperty("foregroundDownload", "true");
@@ -275,7 +278,7 @@ class AppUpdater {
    */
   startDownload() {
     if (!this.update) {
-      this.update = this.um.activeUpdate;
+      this.update = this.um.downloadingUpdate;
     }
     this.update.QueryInterface(Ci.nsIWritablePropertyBag);
     this.update.setProperty("foregroundDownload", "true");

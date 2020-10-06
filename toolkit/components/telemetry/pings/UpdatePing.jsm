@@ -60,11 +60,11 @@ var UpdatePing = {
     let updateManager = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    if (!updateManager || !updateManager.activeUpdate) {
+    if (!updateManager || !updateManager.readyUpdate) {
       return null;
     }
 
-    return updateManager.activeUpdate;
+    return updateManager.readyUpdate;
   },
 
   /**

@@ -446,9 +446,25 @@ interface nsIUpdateManager : nsISupports
   long getUpdateCount();
 
   /**
-   * The active (current) update. The active update is not in the history list.
+   * The update that has been downloaded, or null if there isn't one.
    */
-  attribute nsIUpdate activeUpdate;
+  attribute nsIUpdate readyUpdate;
+
+  /**
+   * The update that is currently downloading, or null if there isn't one.
+   * An update is considered to be downloading until after onStopRequest is
+   * called. This means that download listeners' onStopRequest handlers should
+   * use downloadingUpdate, but observers of the "update-downloaded" topic
+   * should use readyUpdate.
+   */
+  attribute nsIUpdate downloadingUpdate;
+
+  /**
+   * Adds the specified update to the update history. The update history is
+   * limited to 10 items, so this may also remove the last item from the
+   * history.
+   */
+  void addUpdateToHistory(in nsIUpdate update);
 
   /**
    * Saves all updates to disk.
@@ -467,7 +483,11 @@ interface nsIUpdateManager : nsISupports
   void elevationOptedIn();
 
   /**
-   * Clean up and remove the active update without applying it.
+   * These functions both clean up and remove an active update without applying
+   * it. The first function does this for the update that is currently being
+   * downloaded. The second function does this for the update that has already
+   * been downloaded.
    */
-  void cleanupActiveUpdate();
+  void cleanupDownloadingUpdate();
+  void cleanupReadyUpdate();
 };
