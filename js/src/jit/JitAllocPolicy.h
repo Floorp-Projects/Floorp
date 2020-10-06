@@ -21,9 +21,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
-#include "jit/JitContext.h"
 #include "js/Utility.h"
-#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {
@@ -125,25 +123,6 @@ class JitAllocPolicy {
   void reportAllocOverflow() const {}
   MOZ_MUST_USE bool checkSimulatedOOM() const {
     return !js::oom::ShouldFailWithOOM();
-  }
-};
-
-class AutoJitContextAlloc {
-  TempAllocator tempAlloc_;
-  JitContext* jcx_;
-  TempAllocator* prevAlloc_;
-
- public:
-  explicit AutoJitContextAlloc(JSContext* cx)
-      : tempAlloc_(&cx->tempLifoAlloc()),
-        jcx_(GetJitContext()),
-        prevAlloc_(jcx_->temp) {
-    jcx_->temp = &tempAlloc_;
-  }
-
-  ~AutoJitContextAlloc() {
-    MOZ_ASSERT(jcx_->temp == &tempAlloc_);
-    jcx_->temp = prevAlloc_;
   }
 };
 

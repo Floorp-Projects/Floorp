@@ -30,6 +30,7 @@
 #  error "Unknown architecture!"
 #endif
 #include "jit/AtomicOp.h"
+#include "jit/AutoJitContextAlloc.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
 #include "jit/TemplateObject.h"
