@@ -41,12 +41,39 @@ namespace mozilla {
 namespace a11y {
 
 struct OpaqueGeckoTextMarker {
-  OpaqueGeckoTextMarker(uintptr_t aID, int32_t aOffset)
-      : mID(aID), mOffset(aOffset) {}
+  OpaqueGeckoTextMarker(uintptr_t aDoc, uintptr_t aID, int32_t aOffset)
+      : mDoc(aDoc), mID(aID), mOffset(aOffset) {}
   OpaqueGeckoTextMarker() {}
+  uintptr_t mDoc;
   uintptr_t mID;
   int32_t mOffset;
 };
+
+static bool DocumentExists(AccessibleOrProxy aDoc, uintptr_t aDocPtr) {
+  if (aDoc.Bits() == aDocPtr) {
+    return true;
+  }
+
+  if (aDoc.IsAccessible()) {
+    DocAccessible* docAcc = aDoc.AsAccessible()->AsDoc();
+    uint32_t docCount = docAcc->ChildDocumentCount();
+    for (uint32_t i = 0; i < docCount; i++) {
+      if (DocumentExists(docAcc->GetChildDocumentAt(i), aDocPtr)) {
+        return true;
+      }
+    }
+  } else {
+    DocAccessibleParent* docProxy = aDoc.AsProxy()->AsDoc();
+    size_t docCount = docProxy->ChildDocCount();
+    for (uint32_t i = 0; i < docCount; i++) {
+      if (DocumentExists(docProxy->ChildDocAt(i), aDocPtr)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 // GeckoTextMarker
 
@@ -57,11 +84,15 @@ GeckoTextMarker::GeckoTextMarker(AccessibleOrProxy aDoc,
   if (AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueGeckoTextMarker)) {
     memcpy(&opaqueMarker, AXTextMarkerGetBytePtr(aTextMarker),
            sizeof(OpaqueGeckoTextMarker));
-    if (aDoc.IsProxy()) {
-      mContainer = aDoc.AsProxy()->AsDoc()->GetAccessible(opaqueMarker.mID);
-    } else {
-      mContainer = aDoc.AsAccessible()->AsDoc()->GetAccessibleByUniqueID(
-          reinterpret_cast<void*>(opaqueMarker.mID));
+    if (DocumentExists(aDoc, opaqueMarker.mDoc)) {
+      AccessibleOrProxy doc;
+      doc.SetBits(opaqueMarker.mDoc);
+      if (doc.IsProxy()) {
+        mContainer = doc.AsProxy()->AsDoc()->GetAccessible(opaqueMarker.mID);
+      } else {
+        mContainer = doc.AsAccessible()->AsDoc()->GetAccessibleByUniqueID(
+            reinterpret_cast<void*>(opaqueMarker.mID));
+      }
     }
 
     mOffset = opaqueMarker.mOffset;
@@ -90,11 +121,19 @@ GeckoTextMarker GeckoTextMarker::MarkerFromIndex(const AccessibleOrProxy& aRoot,
 }
 
 id GeckoTextMarker::CreateAXTextMarker() {
+  AccessibleOrProxy doc;
+  if (mContainer.IsProxy()) {
+    doc = mContainer.AsProxy()->Document();
+  } else {
+    doc = mContainer.AsAccessible()->Document();
+  }
+
   uintptr_t identifier =
       mContainer.IsProxy()
           ? mContainer.AsProxy()->ID()
           : reinterpret_cast<uintptr_t>(mContainer.AsAccessible()->UniqueID());
-  OpaqueGeckoTextMarker opaqueMarker(identifier, mOffset);
+
+  OpaqueGeckoTextMarker opaqueMarker(doc.Bits(), identifier, mOffset);
   AXTextMarkerRef cf_text_marker = AXTextMarkerCreate(
       kCFAllocatorDefault, reinterpret_cast<const UInt8*>(&opaqueMarker),
       sizeof(OpaqueGeckoTextMarker));
