@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTTPSOnlyUtils.h"
 #include "NSSErrorsService.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozpkix/pkixnss.h"
 #include "nsCOMPtr.h"
 #include "nsHTTPSOnlyStreamListener.h"
+#include "nsHTTPSOnlyUtils.h"
 #include "nsIChannel.h"
 #include "nsIRequest.h"
 #include "nsITransportSecurityInfo.h"
@@ -23,8 +24,18 @@ NS_IMPL_ISUPPORTS(nsHTTPSOnlyStreamListener, nsIStreamListener,
                   nsIRequestObserver)
 
 nsHTTPSOnlyStreamListener::nsHTTPSOnlyStreamListener(
-    nsIStreamListener* aListener)
-    : mListener(aListener), mCreationStart(mozilla::TimeStamp::Now()) {}
+    nsIStreamListener* aListener, nsILoadInfo* aLoadInfo)
+    : mListener(aListener), mCreationStart(mozilla::TimeStamp::Now()) {
+  RefPtr<mozilla::dom::WindowGlobalParent> wgp =
+      mozilla::dom::WindowGlobalParent::GetByInnerWindowId(
+          aLoadInfo->GetInnerWindowID());
+  // For Top-level document loads (which don't have a requesting window-context)
+  // we compute these flags once we create the Document in nsSecureBrowserUI.
+  if (wgp) {
+    wgp->TopWindowContext()->AddSecurityState(
+        nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED);
+  }
+}
 
 NS_IMETHODIMP
 nsHTTPSOnlyStreamListener::OnDataAvailable(nsIRequest* aRequest,
@@ -42,9 +53,28 @@ NS_IMETHODIMP
 nsHTTPSOnlyStreamListener::OnStopRequest(nsIRequest* request,
                                          nsresult aStatus) {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+
+  // Note: CouldBeHttpsOnlyError also returns true if there was no error
   if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(channel, aStatus)) {
     RecordUpgradeTelemetry(request, aStatus);
     LogUpgradeFailure(request, aStatus);
+
+    // If the request failed and there is a requesting window-context, set
+    // HTTPS-Only state flag to indicate a failed upgrade.
+    // For Top-level document loads (which don't have a requesting
+    // window-context) we simply check in the UI code whether we landed on the
+    // HTTPS-Only error page.
+    if (NS_FAILED(aStatus)) {
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      RefPtr<mozilla::dom::WindowGlobalParent> wgp =
+          mozilla::dom::WindowGlobalParent::GetByInnerWindowId(
+              loadInfo->GetInnerWindowID());
+
+      if (wgp) {
+        wgp->TopWindowContext()->AddSecurityState(
+            nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED);
+      }
+    }
   }
 
   return mListener->OnStopRequest(request, aStatus);
