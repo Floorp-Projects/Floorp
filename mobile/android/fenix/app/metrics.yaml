@@ -3132,7 +3132,7 @@ user_specified_search_engines:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
   custom_engine_deleted:
@@ -3148,7 +3148,7 @@ user_specified_search_engines:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 search_suggestions:
   enable_in_private:
@@ -3179,7 +3179,7 @@ voice_search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 top_sites:
   open_default:
