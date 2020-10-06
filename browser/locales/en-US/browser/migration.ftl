@@ -59,6 +59,11 @@ import-items-page-title = Items to Import
 
 import-items-description = Select which items to import:
 
+import-permissions-page-title = Please give { -brand-short-name } permissions
+
+# Do not translate "Bookmarks.plist"; the file name is the same everywhere.
+import-permissions-description = macOS requires you to explicitly allow { -brand-short-name } to access Safari’s bookmarks. Click “Continue” and select the “Bookmarks.plist” file in the File Open panel that appears.
+
 import-migrating-page-title = Importing…
 
 import-migrating-description = The following items are currently being imported…

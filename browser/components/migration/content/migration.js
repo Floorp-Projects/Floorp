@@ -8,6 +8,9 @@ const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
@@ -37,6 +40,7 @@ var MigrationWizard = {
   _wiz: null,
   _migrator: null,
   _autoMigrate: null,
+  _receivedPermissions: new Set(),
 
   init() {
     let os = Services.obs;
@@ -137,6 +141,11 @@ var MigrationWizard = {
       .getElementById("importItems")
       .addEventListener("pageadvanced", function() {
         MigrationWizard.onImportItemsPageAdvanced();
+      });
+    document
+      .getElementById("importPermissions")
+      .addEventListener("pageadvanced", function(e) {
+        MigrationWizard.onImportPermissionsPageAdvanced(e);
       });
     document
       .getElementById("importSource")
@@ -286,12 +295,12 @@ var MigrationWizard = {
     // check for more than one source profile
     var sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
     if (this._skipImportSourcePage) {
-      this._wiz.currentPage.next = "migrating";
+      this._updateNextPageForPermissions();
     } else if (sourceProfiles && sourceProfiles.length > 1) {
       this._wiz.currentPage.next = "selectProfile";
     } else {
       if (this._autoMigrate) {
-        this._wiz.currentPage.next = "migrating";
+        this._updateNextPageForPermissions();
       } else {
         this._wiz.currentPage.next = "importItems";
       }
@@ -351,7 +360,7 @@ var MigrationWizard = {
 
     // If we're automigrating or just doing bookmarks don't show the item selection page
     if (this._autoMigrate) {
-      this._wiz.currentPage.next = "migrating";
+      this._updateNextPageForPermissions();
     }
   },
 
@@ -398,6 +407,8 @@ var MigrationWizard = {
         this._itemsFlags |= parseInt(checkbox.id);
       }
     }
+
+    this._updateNextPageForPermissions();
   },
 
   onImportItemCommand() {
@@ -413,6 +424,56 @@ var MigrationWizard = {
     }
 
     this._wiz.canAdvance = oneChecked;
+
+    this._updateNextPageForPermissions();
+  },
+
+  _updateNextPageForPermissions() {
+    // We would like to just go straight to work:
+    this._wiz.currentPage.next = "migrating";
+    // If we already have permissions, this is easy:
+    if (this._receivedPermissions.has(this._source)) {
+      return;
+    }
+
+    // Otherwise, if we're on mojave or later and importing from
+    // Safari, prompt for the bookmarks file.
+    // We may add other browser/OS combos here in future.
+    if (
+      this._source == "safari" &&
+      AppConstants.isPlatformAndVersionAtLeast("macosx", "18") &&
+      this._itemsFlags & MigrationUtils.resourceTypes.BOOKMARKS
+    ) {
+      let migrator = this._migrator.wrappedJSObject;
+      let havePermissions = this.spinResolve(migrator.hasPermissions());
+
+      if (!havePermissions) {
+        this._wiz.currentPage.next = "importPermissions";
+      }
+    }
+  },
+
+  // 3b: permissions. This gets invoked when the user clicks "Next"
+  async onImportPermissionsPageAdvanced(event) {
+    // We're done if we have permission:
+    if (this._receivedPermissions.has(this._source)) {
+      return;
+    }
+    // The wizard helper is sync, and we need to check some stuff, so just stop
+    // advancing for now and prompt the user, then advance the wizard if everything
+    // worked.
+    event.preventDefault();
+
+    let migrator = this._migrator.wrappedJSObject;
+    await migrator.getPermissions(window);
+    if (await migrator.hasPermissions()) {
+      this._receivedPermissions.add(this._source);
+      // Re-enter (we'll then allow the advancement through the early return above)
+      this._wiz.advance();
+    }
+    // if we didn't have permissions after the `getPermissions` call, the user
+    // cancelled the dialog. Just no-op out now; the user can re-try by clicking
+    // the 'Continue' button again, or go back and pick a different browser.
   },
 
   // 4 - Migrating

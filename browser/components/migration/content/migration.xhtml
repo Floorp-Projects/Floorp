@@ -15,6 +15,7 @@
         style="width: 40em;"
         buttons="accept,cancel">
 <linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
   <html:link rel="localization" href="toolkit/global/wizard.ftl"/>
   <html:link rel="localization" href="browser/migration.ftl"/>
 </linkset>
@@ -76,6 +77,12 @@
     <description control="dataSources" data-l10n-id="import-items-description"></description>
 
     <vbox id="dataSources" style="overflow: auto; appearance: auto; -moz-default-appearance: listbox" align="start" flex="1" role="group"/>
+  </wizardpage>
+
+  <wizardpage id="importPermissions" pageid="importPermissions"
+              data-header-label-id="import-permissions-page-title"
+              next="migrating">
+    <description data-l10n-id="import-permissions-description"></description>
   </wizardpage>
 
   <wizardpage id="migrating" pageid="migrating"
