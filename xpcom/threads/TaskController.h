@@ -267,6 +267,7 @@ class TaskController {
   void SetIdleTaskManager(IdleTaskManager* aIdleTaskManager) {
     mIdleTaskManager = aIdleTaskManager;
   }
+  IdleTaskManager* GetIdleTaskManager() { return mIdleTaskManager.get(); }
 
   // Initialization and shutdown code.
   bool InitializeInternal();
