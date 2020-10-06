@@ -45,6 +45,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
   mozilla::ipc::IPCResult RecvOnTCPClosed();
   mozilla::ipc::IPCResult RecvOnDataReceived(nsTArray<uint8_t>&& aData);
   mozilla::ipc::IPCResult RecvOnUpgradeFailed(const nsresult& aReason);
+  mozilla::ipc::IPCResult RecvOnDataSent();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
