@@ -50,6 +50,8 @@ class TabTrayViewHolder(
     private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
 
+    private val faviconView: ImageView? =
+        itemView.findViewById(R.id.mozac_browser_tabstray_favicon_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton =
         itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -73,12 +75,10 @@ class TabTrayViewHolder(
     ) {
         this.tab = tab
 
-        // Basic text
         updateTitle(tab)
         updateUrl(tab)
+        updateFavicon(tab)
         updateCloseButtonDescription(tab.title)
-
-        // Drawables and theme
         updateBackgroundColor(isSelected)
 
         if (tab.thumbnail != null) {
@@ -137,6 +137,15 @@ class TabTrayViewHolder(
 
         closeView.setOnClickListener {
             observable.notifyObservers { onTabClosed(tab) }
+        }
+    }
+
+    private fun updateFavicon(tab: Tab) {
+        if (tab.icon != null) {
+            faviconView?.visibility = View.VISIBLE
+            faviconView?.setImageBitmap(tab.icon)
+        } else {
+            faviconView?.visibility = View.GONE
         }
     }
 
