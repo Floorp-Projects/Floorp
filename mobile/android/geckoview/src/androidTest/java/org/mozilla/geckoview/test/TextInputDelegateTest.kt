@@ -171,17 +171,6 @@ class TextInputDelegateTest : BaseSessionTest() {
         promise.value
     }
 
-    private fun pressKey(keyCode: Int) {
-        // Create a Promise to listen to the key event, and wait on it below.
-        val promise = mainSession.evaluatePromiseJS(
-                "new Promise(r => window.addEventListener('keyup', r, { once: true }))")
-        val time = SystemClock.uptimeMillis()
-        val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
-        mainSession.textInput.onKeyDown(keyCode, keyEvent)
-        mainSession.textInput.onKeyUp(keyCode, KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP))
-        promise.value
-    }
-
     private fun pressKey(ic: InputConnection, keyCode: Int) {
         val promise = mainSession.evaluatePromiseJS(
                 when (id) {
@@ -248,7 +237,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.evaluateJS("document.querySelector('$id').focus(); document.querySelector('$id').blur()")
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
-        pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
+        mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
         mainSession.evaluateJS("document.querySelector('$id').focus()")
 
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
@@ -278,7 +267,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
-        pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
+        mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
         mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class,
                                     "restartInput", "showSoftInput")
@@ -313,7 +302,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
-        pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
+        mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
 
         mainSession.evaluateJS("document.querySelector('$id').focus()")
         mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
