@@ -287,10 +287,8 @@ nsresult txCopy::execute(txExecutionState& aEs) {
   switch (txXPathNodeUtils::getNodeType(node)) {
     case txXPathNodeType::DOCUMENT_NODE:
     case txXPathNodeType::DOCUMENT_FRAGMENT_NODE: {
-      const nsString& empty = u""_ns;
-
       // "close" current element to ensure that no attributes are added
-      rv = aEs.mResultHandler->characters(empty, false);
+      rv = aEs.mResultHandler->characters(u""_ns, false);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aEs.pushBool(false);
