@@ -359,7 +359,7 @@ void GMPParent::DeleteProcess() {
         "GMPParent::DeleteProcess",
         [selector =
              java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
-          java::GeckoProcessManager::MarkAsDead(selector);
+          java::GeckoProcessManager::ShutdownProcess(selector);
         }));
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)

@@ -1797,7 +1797,7 @@ void ContentParent::MarkAsDead() {
         "ContentParent::MarkAsDead",
         [selector =
              java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
-          java::GeckoProcessManager::MarkAsDead(selector);
+          java::GeckoProcessManager::ShutdownProcess(selector);
         }));
   }
 #endif
