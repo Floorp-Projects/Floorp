@@ -56,10 +56,6 @@ function testValueChangedEventData(
     "AXLeftWordTextMarkerRangeForTextMarker",
     textMarker
   );
-  if (!range) {
-    todo(!!range, "Bug 1669596");
-    return;
-  }
   let str = macIface.getParameterizedAttributeValue(
     "AXStringForTextMarkerRange",
     range,
@@ -117,6 +113,15 @@ async function synthKeyAndTestSelectionChanged(
     webareaEvent.macIface.getAttributeValue("AXDOMIdentifier"),
     "body",
     "Input event target is top-level WebArea"
+  );
+  rangeString = webareaEvent.macIface.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    inputEvent.data.AXSelectedTextMarkerRange
+  );
+  is(
+    rangeString,
+    expectedSelectionString,
+    `selection has correct value (${expectedSelectionString}) via top document`
   );
 }
 
