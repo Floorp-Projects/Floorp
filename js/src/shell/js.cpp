@@ -5182,7 +5182,11 @@ static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  XDRDecoder xdrDecoder_(cx, *args[0].toObject().as<XDRBufferObject>().data());
+  JS::CompileOptions options(cx);
+  options.setModule();
+
+  XDRDecoder xdrDecoder_(cx, &options,
+                         *args[0].toObject().as<XDRBufferObject>().data());
   RootedModuleObject modObject(cx, nullptr);
   XDRResult res = xdrDecoder_.codeModuleObject(&modObject);
   if (res.isErr()) {
