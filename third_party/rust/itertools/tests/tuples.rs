@@ -1,3 +1,5 @@
+extern crate itertools;
+
 use itertools::Itertools;
 
 #[test]

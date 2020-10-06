@@ -5,8 +5,8 @@
 //! describes the difference between two non-`Clone` iterators `I` and `J` after breaking ASAP from
 //! a lock-step comparison.
 
-use crate::free::put_back;
-use crate::structs::PutBack;
+use free::put_back;
+use structs::PutBack;
 
 /// A type returned by the [`diff_with`](./fn.diff_with.html) function.
 ///
