@@ -16,8 +16,7 @@
 
 using namespace mozilla;
 
-PrioritizedEventQueue::PrioritizedEventQueue(
-    already_AddRefed<nsIIdlePeriod>&& aIdlePeriod)
+PrioritizedEventQueue::PrioritizedEventQueue()
     : mHighQueue(MakeUnique<EventQueue>(EventQueuePriority::High)),
       mInputQueue(
           MakeUnique<EventQueueSized<32>>(EventQueuePriority::InputHigh)),
@@ -27,8 +26,7 @@ PrioritizedEventQueue::PrioritizedEventQueue(
           MakeUnique<EventQueue>(EventQueuePriority::DeferredTimers)),
       mIdleQueue(MakeUnique<EventQueue>(EventQueuePriority::Idle)) {
   mInputTaskManager = InputTaskManager::Get();
-  mIdleTaskManager = new IdleTaskManager(std::move(aIdlePeriod));
-  TaskController::Get()->SetIdleTaskManager(mIdleTaskManager);
+  mIdleTaskManager = TaskController::Get()->GetIdleTaskManager();
 }
 
 PrioritizedEventQueue::~PrioritizedEventQueue() = default;
