@@ -6,6 +6,12 @@
  * This file contains utilities that can be shared between xpcshell tests and mochitests.
  */
 
+// The marker phases.
+const INSTANT = 0;
+const INTERVAL = 1;
+const INTERVAL_START = 2;
+const INTERVAL_END = 3;
+
 // This Services declaration may shadow another from head.js, so define it as
 // a var rather than a const.
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -18,6 +24,11 @@ const defaultSettings = {
 };
 
 function startProfiler(callersSettings) {
+  if (Services.profiler.IsActive()) {
+    throw new Error(
+      "The profiler must not be active before starting it in a test."
+    );
+  }
   const settings = Object.assign({}, defaultSettings, callersSettings);
   Services.profiler.StartProfiler(
     settings.entries,
@@ -87,6 +98,27 @@ function getPayloadsOfType(thread, type) {
     }
   }
   return results;
+}
+
+/**
+ * Applies the marker schema to create individual objects for each marker
+ *
+ * @param {Object} thread The thread from a profile.
+ * @return {Array} The markers.
+ */
+function getInflatedMarkerData(thread) {
+  const { markers, stringTable } = thread;
+  return markers.data.map(markerTuple => {
+    const marker = {};
+    for (const [key, tupleIndex] of Object.entries(markers.schema)) {
+      marker[key] = markerTuple[tupleIndex];
+      if (key === "name") {
+        // Use the string from the string table.
+        marker[key] = stringTable[marker[key]];
+      }
+    }
+    return marker;
+  });
 }
 
 /**
