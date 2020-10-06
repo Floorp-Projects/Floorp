@@ -144,12 +144,6 @@ class nsCaret final : public nsISelectionListener {
    */
   nsIFrame* GetPaintGeometry(nsRect* aRect);
   /**
-   * Same as the overload above, but returns the caret and hook rects
-   * separately, and also computes the color if requested.
-   */
-  nsIFrame* GetPaintGeometry(nsRect* aCaretRect, nsRect* aHookRect,
-                             nscolor* aCaretColor = nullptr);
-  /**
    * A simple wrapper around GetGeometry. Does not take any caret state into
    * account other than the current selection.
    */
@@ -200,6 +194,10 @@ class nsCaret final : public nsISelectionListener {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  nsIFrame* GetFrame(int32_t* aContentOffset);
+  void ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
+                         nsRect* aCaretRect, nsRect* aHookRect);
+
  protected:
   static void CaretBlinkCallback(nsITimer* aTimer, void* aClosure);
 
@@ -214,8 +212,6 @@ class nsCaret final : public nsISelectionListener {
   };
   static Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
                                 nscoord aCaretHeight);
-  void ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
-                         nsRect* aCaretRect, nsRect* aHookRect);
 
   // Returns true if we should not draw the caret because of XUL menu popups.
   // The caret should be hidden if:
