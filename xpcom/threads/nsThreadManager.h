@@ -8,6 +8,7 @@
 #define nsThreadManager_h__
 
 #include "mozilla/Mutex.h"
+#include "mozilla/TaskController.h"
 #include "nsIThreadManager.h"
 #include "nsThread.h"
 
