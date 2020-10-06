@@ -33,7 +33,6 @@
 #include "jit/AutoJitContextAlloc.h"
 #include "jit/IonTypes.h"
 #include "jit/JitRealm.h"
-#include "jit/TemplateObject.h"
 #include "jit/VMFunctions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
@@ -213,6 +212,8 @@ namespace jit {
 enum class ExitFrameType : uint8_t;
 
 class AutoSaveLiveRegisters;
+class NativeTemplateObject;
+class TemplateObject;
 
 enum class CheckUnsafeCallWithABI {
   // Require the callee to use AutoUnsafeCallWithABI.
