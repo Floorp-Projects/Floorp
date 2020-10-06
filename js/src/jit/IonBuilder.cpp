@@ -3960,7 +3960,7 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   }
 
   // Capture formals in the outer resume point.
-  if (!callInfo.pushCallStack(&mirGen_, current)) {
+  if (!callInfo.pushCallStack(current)) {
     return abort(AbortReason::Alloc);
   }
 
@@ -4793,7 +4793,7 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
 
   MBasicBlock* dispatchBlock = current;
   callInfo.setImplicitlyUsedUnchecked();
-  if (!callInfo.pushCallStack(&mirGen_, dispatchBlock)) {
+  if (!callInfo.pushCallStack(dispatchBlock)) {
     return abort(AbortReason::Alloc);
   }
 
@@ -5442,7 +5442,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funcall(uint32_t argc) {
   // Save prior call stack in case we need to resolve during bailout
   // recovery of inner inlined function. This includes the JSFunction and the
   // 'call' native function.
-  if (!callInfo.savePriorCallStack(&mirGen_, current, argc + 2)) {
+  if (!callInfo.savePriorCallStack(current, argc + 2)) {
     return abort(AbortReason::Alloc);
   }
 
@@ -5790,8 +5790,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarray(uint32_t argc) {
   return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
 }
 
-bool CallInfo::savePriorCallStack(MIRGenerator* mir, MBasicBlock* current,
-                                  size_t peekDepth) {
+bool CallInfo::savePriorCallStack(MBasicBlock* current, size_t peekDepth) {
   MOZ_ASSERT(priorArgs_.empty());
   if (!priorArgs_.reserve(peekDepth)) {
     return false;
@@ -5866,7 +5865,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarguments(uint32_t argc) {
 
   CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                     /* ignoresReturnValue = */ BytecodeIsPopped(pc));
-  if (!callInfo.savePriorCallStack(&mirGen_, current, 4)) {
+  if (!callInfo.savePriorCallStack(current, 4)) {
     return abort(AbortReason::Alloc);
   }
 

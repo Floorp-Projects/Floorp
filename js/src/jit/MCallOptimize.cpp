@@ -944,7 +944,7 @@ IonBuilder::InliningResult IonBuilder::inlineArrayPush(CallInfo& callInfo) {
 
     // Restore the stack, such that resume points are created with the stack
     // as it was before the call.
-    if (!callInfo.pushPriorCallStack(&mirGen_, current)) {
+    if (!callInfo.pushPriorCallStack(current)) {
       return abort(AbortReason::Alloc);
     }
   }
