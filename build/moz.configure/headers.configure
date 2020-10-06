@@ -65,6 +65,14 @@ check_headers(
     'byteswap.h',
 )
 
+# memfd_create(2) -- Note that older versions of the Linux man-pages
+# project incorrectly cite <sys/memfd.h>, which doesn't exist; this
+# was fixed in the man-pages-5.00 release.
+set_define('HAVE_MEMFD_CREATE',
+           try_compile(includes=['sys/mman.h'],
+                       body='memfd_create("", 0);',
+                       check_msg='for memfd_create in sys/mman.h'))
+
 # TODO: Move these checks to file specific to --enable-project=js.
 have_perf_event_h = check_header('linux/perf_event.h',
                                  when=building_linux)
