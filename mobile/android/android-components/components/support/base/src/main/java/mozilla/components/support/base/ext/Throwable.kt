@@ -8,14 +8,15 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 private const val STACK_TRACE_INITIAL_BUFFER_SIZE = 256
+private const val STACK_TRACE_MAX_LENGTH = 100000
 
 /**
  * Returns a formatted string of the [Throwable.stackTrace].
  */
-fun Throwable.getStacktraceAsString(): String {
+fun Throwable.getStacktraceAsString(stackTraceMaxLength: Int = STACK_TRACE_MAX_LENGTH): String {
     val sw = StringWriter(STACK_TRACE_INITIAL_BUFFER_SIZE)
     val pw = PrintWriter(sw, false)
     printStackTrace(pw)
     pw.flush()
-    return sw.toString()
+    return sw.toString().take(stackTraceMaxLength)
 }

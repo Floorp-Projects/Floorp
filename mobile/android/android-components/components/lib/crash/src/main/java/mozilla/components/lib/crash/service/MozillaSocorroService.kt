@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.pm.PackageInfoCompat
 import mozilla.components.lib.crash.Crash
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.support.base.ext.getStacktraceAsString
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
@@ -26,8 +27,6 @@ import java.io.FileReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.channels.Channels
@@ -488,14 +487,9 @@ class MozillaSocorroService(
     }
 
     private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
-        val stringWriter = StringWriter()
-        val printWriter = PrintWriter(stringWriter)
-        throwable.printStackTrace(printWriter)
-        printWriter.flush()
-
         return when (isCaughtException) {
-            true -> "$INFO_PREFIX $stringWriter"
-            false -> stringWriter.toString()
+            true -> "$INFO_PREFIX ${throwable.getStacktraceAsString()}"
+            false -> throwable.getStacktraceAsString()
         }
     }
 }
