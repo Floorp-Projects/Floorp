@@ -85,6 +85,7 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
 
   mAlpnToken = aAlpnToken;
   mSocketTransport = aSocketTransport;
+  mSegmentReaderWriter = readerWriter;
 
   nsCOMPtr<nsISupports> info;
   Unused << mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
@@ -175,11 +176,6 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
                            "NS_DispatchToCurrentThread failed");
     }
   }
-
-  // After this line, Http3Session and HttpConnectionUDP become a cycle. We put
-  // this line in the end of Http3Session::Init to make sure Http3Session can be
-  // released when Http3Session::Init early returned.
-  mSegmentReaderWriter = readerWriter;
   return NS_OK;
 }
 

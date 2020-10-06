@@ -435,11 +435,6 @@ ChildDNSService::IsSVCDomainNameFailed(const nsACString& aOwnerName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-ChildDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //-----------------------------------------------------------------------------
 // ChildDNSService::nsIObserver
 //-----------------------------------------------------------------------------
