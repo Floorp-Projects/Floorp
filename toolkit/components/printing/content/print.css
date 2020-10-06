@@ -175,6 +175,10 @@ input[type="text"] {
   outline: none !important;
 }
 
+.cols-2 > input {
+  flex: none;
+}
+
 .toggle-group-label {
   padding: 4px 8px;
 }
