@@ -4935,18 +4935,20 @@ bool nsDisplayCaret::CreateWebRenderCommands(
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   using namespace mozilla::layers;
-  nsRect caretRect;
-  nsRect hookRect;
-  nscolor caretColor;
-  nsIFrame* frame =
-      mCaret->GetPaintGeometry(&caretRect, &hookRect, &caretColor);
-  MOZ_ASSERT(frame == mFrame, "We're referring different frame");
+  int32_t contentOffset;
+  nsIFrame* frame = mCaret->GetFrame(&contentOffset);
   if (!frame) {
     return true;
   }
+  NS_ASSERTION(frame == mFrame, "We're referring different frame");
 
   int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-  gfx::DeviceColor color = ToDeviceColor(caretColor);
+
+  nsRect caretRect;
+  nsRect hookRect;
+  mCaret->ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
+
+  gfx::DeviceColor color = ToDeviceColor(frame->GetCaretColorAt(contentOffset));
   LayoutDeviceRect devCaretRect = LayoutDeviceRect::FromAppUnits(
       caretRect + ToReferenceFrame(), appUnitsPerDevPixel);
   LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
