@@ -7,9 +7,22 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozunit import main
 from mozbuild.util import (
     exec_,
+    memoized_property,
     ReadOnlyNamespace,
 )
-from common import BaseConfigureTest
+from common import BaseConfigureTest, ConfigureTestSandbox
+
+
+def sandbox_class(platform):
+    class ConfigureTestSandboxOverridingPlatform(ConfigureTestSandbox):
+        @memoized_property
+        def _wrapped_sys(self):
+            sys = {}
+            exec_('from sys import *', sys)
+            sys['platform'] = platform
+            return ReadOnlyNamespace(**sys)
+
+    return ConfigureTestSandboxOverridingPlatform
 
 
 class TargetTest(BaseConfigureTest):
@@ -22,13 +35,7 @@ class TargetTest(BaseConfigureTest):
             platform = 'openbsd6'
         else:
             raise Exception('Missing platform for HOST {}'.format(self.HOST))
-        wrapped_sys = {}
-        exec_('from sys import *', wrapped_sys)
-        wrapped_sys['platform'] = platform
-        modules = {
-            'sys': ReadOnlyNamespace(**wrapped_sys),
-        }
-        sandbox = self.get_sandbox({}, {}, args, env, modules=modules)
+        sandbox = self.get_sandbox({}, {}, args, env, cls=sandbox_class(platform))
         return sandbox._value_for(sandbox['target']).alias
 
 
