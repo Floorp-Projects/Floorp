@@ -1004,9 +1004,13 @@
     <string name="preferences_delete_browsing_data_on_quit">Выдаляць звесткі аглядання пры выхадзе</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце &quot;Выйсці&quot; ў галоўным меню</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце \&quot;Выйсці\&quot; ў галоўным меню</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйсці</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Гэта выдаліць усе дадзеныя вашага аглядання.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Адмена</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -1236,6 +1240,8 @@
     <string name="etp_fingerprinters_description">Спыняе збор унікальнай ідэнтыфікацыйнай інфармацыі пра вашу прыладу, якая можа быць выкарыстана для сачэння.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Змест з элементамі сачэння</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Фіялетавы колер шчыта азначае, што %s перапыніў асочвальнікаў на сайце. Націсніце, каб даведацца больш.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ахова ўключана на гэтым сайце</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

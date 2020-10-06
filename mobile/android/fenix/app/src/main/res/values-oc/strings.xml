@@ -267,6 +267,8 @@
     <string name="preferences_open_links_in_a_private_tab">Dobrir los ligams en navigacion privada</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permetre las capturas d’ecran en navegacion privada</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Se permés, los onglets privats seràn tanben visibles quand mantunas aplicacions son dubèrtas</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ajustar un acorchi per la navegacion privada</string>
     <!-- Preference for accessibility -->
