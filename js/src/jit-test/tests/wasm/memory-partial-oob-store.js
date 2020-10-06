@@ -6,6 +6,7 @@
 // when the bug is fixed in the code generator they must remain excluded here.
 var conf = getBuildConfiguration();
 var excluded = conf.arm64 || conf["arm64-simulator"] || conf.arm || conf["arm-simulator"];
+var thirtytwobit = conf["pointer-byte-size"] == 4;
 
 const RuntimeError = WebAssembly.RuntimeError;
 
@@ -123,4 +124,6 @@ for (let align of [0,1,2,4]) {
 // presumed-aligned 32-bit stores.  This tests that we don't store the low
 // word before the high word if the low word is in-bounds but the high word
 // is not.
-testStoreOOB('i64', '', 0x10000 - 4, 0, 0, '0x0123456789abcdef');
+if (thirtytwobit) {
+    testStoreOOB('i64', '', 0x10000 - 4, 0, 0, '0x0123456789abcdef');
+}
