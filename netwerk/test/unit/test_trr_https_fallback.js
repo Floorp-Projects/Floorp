@@ -88,6 +88,8 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   prefs.clearUserPref("network.dns.echconfig.enabled");
   prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
+  trrServer.stop();
 });
 
 class DNSListener {
@@ -583,6 +585,107 @@ add_task(async function testFallbackToTheOrigin3() {
   );
 
   let chan = makeChan(`https://vulnerable.com:${h2Port}/server-timing`);
+  await channelOpenPromise(chan);
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+
+  await trrServer.stop();
+});
+
+add_task(async function testResetExclusionList() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref(
+    "network.dns.httpssvc.reset_exclustion_list",
+    false
+  );
+
+  await trrServer.registerDoHAnswers("test.reset.com", "HTTPS", [
+    {
+      name: "test.reset.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "test.reset1.com",
+        values: [
+          { key: "alpn", value: "h2,h3" },
+          { key: "port", value: h2Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+    {
+      name: "test.reset.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 2,
+        name: "test.reset2.com",
+        values: [
+          { key: "alpn", value: "h2,h3" },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "test.reset.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  // After this request, test.reset1.com and test.reset2.com should be both in
+  // the exclusion list.
+  let chan = makeChan(`https://test.reset.com:${h2Port}/server-timing`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  // This request should be also failed, because all records are excluded.
+  chan = makeChan(`https://test.reset.com:${h2Port}/server-timing`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  await trrServer.registerDoHAnswers("test.reset1.com", "A", [
+    {
+      name: "test.reset1.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  Services.prefs.setBoolPref(
+    "network.dns.httpssvc.reset_exclustion_list",
+    true
+  );
+
+  // After enable network.dns.httpssvc.reset_exclustion_list and register
+  // A record for test.reset1.com, this request should be succeeded.
+  chan = makeChan(`https://test.reset.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(

@@ -16,6 +16,7 @@
 #include "TunnelUtils.h"
 #include "base/basictypes.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsCRT.h"
 #include "nsComponentManagerUtils.h"  // do_CreateInstance
 #include "nsHttpBasicAuth.h"
@@ -2911,6 +2912,7 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
       Some(hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_1
                         : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1);
 
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
   nsCOMPtr<nsISVCBRecord> svcbRecord;
   if (NS_FAILED(record->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
                                              mCaps & NS_HTTP_DISALLOW_HTTP3,
@@ -2922,7 +2924,17 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
                           allRecordsExcluded
                               ? HTTPSSVC_CONNECTION_ALL_RECORDS_EXCLUDED
                               : HTTPSSVC_CONNECTION_NO_USABLE_RECORD);
-    return NS_ERROR_FAILURE;
+    if (allRecordsExcluded &&
+        StaticPrefs::network_dns_httpssvc_reset_exclustion_list() && dns) {
+      Unused << dns->ResetExcludedSVCDomainName(mConnInfo->GetOrigin());
+      if (NS_FAILED(record->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
+                                                 mCaps & NS_HTTP_DISALLOW_HTTP3,
+                                                 getter_AddRefs(svcbRecord)))) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // Remember this RR set. In the case that the connection establishment failed,
@@ -2941,7 +2953,6 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
   }
 
   // Prefetch the A/AAAA records of the target name.
-  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
   if (dns) {
     uint32_t flags =
         nsIDNSService::GetFlagsFromTRRMode(mConnInfo->GetTRRMode());
