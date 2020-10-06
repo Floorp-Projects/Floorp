@@ -3710,7 +3710,7 @@ class CreateFileOp final : public DatabaseOp {
  private:
   ~CreateFileOp() override = default;
 
-  nsresult CreateMutableFile(RefPtr<MutableFile>* aMutableFile);
+  mozilla::Result<RefPtr<MutableFile>, nsresult> CreateMutableFile();
 
   nsresult DoDatabaseWork() override;
 
@@ -18900,31 +18900,25 @@ CreateFileOp::CreateFileOp(SafeRefPtr<Database> aDatabase,
   MOZ_ASSERT(aParams.type() == DatabaseRequestParams::TCreateFileParams);
 }
 
-nsresult CreateFileOp::CreateMutableFile(RefPtr<MutableFile>* aMutableFile) {
-  nsCOMPtr<nsIFile> file = (*mFileInfo)->GetFileForFileInfo();
-  if (NS_WARN_IF(!file)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+Result<RefPtr<MutableFile>, nsresult> CreateFileOp::CreateMutableFile() {
+  const nsCOMPtr<nsIFile> file = (*mFileInfo)->GetFileForFileInfo();
+  IDB_TRY(OkIf(file), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-  RefPtr<MutableFile> mutableFile =
+  const RefPtr<MutableFile> mutableFile =
       MutableFile::Create(file, mDatabase.clonePtr(), mFileInfo->clonePtr());
-  if (NS_WARN_IF(!mutableFile)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  IDB_TRY(OkIf(mutableFile), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   // Transfer ownership to IPDL.
   mutableFile->SetActorAlive();
 
-  if (!mDatabase->SendPBackgroundMutableFileConstructor(
-          mutableFile, mParams.name(), mParams.type())) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  IDB_TRY(OkIf(mDatabase->SendPBackgroundMutableFileConstructor(
+              mutableFile, mParams.name(), mParams.type())),
+          Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-  *aMutableFile = std::move(mutableFile);
-  return NS_OK;
+  return mutableFile;
 }
 
 nsresult CreateFileOp::DoDatabaseWork() {
@@ -18999,26 +18993,29 @@ void CreateFileOp::SendResults() {
   MOZ_ASSERT(mState == State::SendingResults);
 
   if (!IsActorDestroyed() && !mDatabase->IsInvalidated()) {
-    DatabaseRequestResponse response;
-
-    if (!HasFailed()) {
-      RefPtr<MutableFile> mutableFile;
-      nsresult rv = CreateMutableFile(&mutableFile);
-      if (NS_SUCCEEDED(rv)) {
-        // We successfully created a mutable file so use its actor as the
-        // success result for this request.
-        CreateFileRequestResponse createResponse;
-        createResponse.mutableFileParent() = mutableFile;
-        response = createResponse;
-      } else {
-        response = ClampResultCode(rv);
-#ifdef DEBUG
-        SetFailureCode(response.get_nsresult());
-#endif
+    const auto response = [this]() -> DatabaseRequestResponse {
+      if (HasFailed()) {
+        return ClampResultCode(ResultCode());
       }
-    } else {
-      response = ClampResultCode(ResultCode());
-    }
+
+      auto res = [this]() -> DatabaseRequestResponse {
+        IDB_TRY_RETURN(
+            CreateMutableFile().andThen(
+                [](const auto& mutableFile)
+                    -> mozilla::Result<CreateFileRequestResponse, nsresult> {
+                  // We successfully created a mutable file so use its actor
+                  // as the success result for this request.
+                  return CreateFileRequestResponse{mutableFile, nullptr};
+                }),
+            ClampResultCode(tryTempError));
+      }();
+#ifdef DEBUG
+      if (res.type() == DatabaseRequestResponse::Tnsresult) {
+        SetFailureCode(res.get_nsresult());
+      }
+#endif
+      return res;
+    }();
 
     Unused << PBackgroundIDBDatabaseRequestParent::Send__delete__(this,
                                                                   response);
