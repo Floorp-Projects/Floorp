@@ -17,6 +17,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
+#include "jit/JitZone.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
 
