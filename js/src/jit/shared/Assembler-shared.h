@@ -530,19 +530,6 @@ class MemoryAccessDesc {
   void setOffset(uint32_t offset) { offset_ = offset; }
 };
 
-// Summarizes a global access for a mutable (in asm.js) or immutable value (in
-// asm.js or the wasm MVP) that needs to get patched later.
-
-struct GlobalAccess {
-  GlobalAccess(jit::CodeOffset patchAt, unsigned globalDataOffset)
-      : patchAt(patchAt), globalDataOffset(globalDataOffset) {}
-
-  jit::CodeOffset patchAt;
-  unsigned globalDataOffset;
-};
-
-typedef Vector<GlobalAccess, 0, SystemAllocPolicy> GlobalAccessVector;
-
 }  // namespace wasm
 
 namespace jit {
