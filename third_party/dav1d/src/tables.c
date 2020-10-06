@@ -391,10 +391,10 @@ const Dav1dWarpedMotionParams dav1d_default_wm_params = {
         0, 0, 1 << 16,
         0, 0, 1 << 16,
     },
-    .alpha = 0,
-    .beta = 0,
-    .gamma = 0,
-    .delta = 0,
+    .u.p.alpha = 0,
+    .u.p.beta = 0,
+    .u.p.gamma = 0,
+    .u.p.delta = 0,
 };
 
 const int8_t dav1d_cdef_directions[2 + 8 + 2 /* dir */][2 /* pass */] = {

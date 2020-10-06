@@ -82,7 +82,7 @@ libdav1d_entrypoints_sources = files(
 )
 
 # ASM specific sources
-libdav1d_nasm_objs = []
+libdav1d_asm_objs = []
 # Arch-specific flags
 arch_flags = []
 if is_asm_enabled
@@ -102,7 +102,7 @@ if is_asm_enabled
         )
         if (host_machine.cpu_family() == 'aarch64' or
             host_machine.cpu() == 'arm64')
-            libdav1d_sources += files(
+            libdav1d_sources_asm = files(
                 # itx.S is used for both 8 and 16 bpc.
                 'arm/64/itx.S',
                 'arm/64/looprestoration_common.S',
@@ -110,7 +110,7 @@ if is_asm_enabled
             )
 
             if dav1d_bitdepths.contains('8')
-                libdav1d_sources += files(
+                libdav1d_sources_asm += files(
                     'arm/64/cdef.S',
                     'arm/64/ipred.S',
                     'arm/64/loopfilter.S',
@@ -120,7 +120,7 @@ if is_asm_enabled
             endif
 
             if dav1d_bitdepths.contains('16')
-                libdav1d_sources += files(
+                libdav1d_sources_asm += files(
                     'arm/64/cdef16.S',
                     'arm/64/ipred16.S',
                     'arm/64/itx16.S',
@@ -130,12 +130,12 @@ if is_asm_enabled
                 )
             endif
         elif host_machine.cpu_family().startswith('arm')
-            libdav1d_sources += files(
+            libdav1d_sources_asm = files(
                 'arm/32/msac.S',
             )
 
             if dav1d_bitdepths.contains('8')
-                libdav1d_sources += files(
+                libdav1d_sources_asm += files(
                     'arm/32/cdef.S',
                     'arm/32/ipred.S',
                     'arm/32/itx.S',
@@ -146,9 +146,17 @@ if is_asm_enabled
             endif
 
             if dav1d_bitdepths.contains('16')
-                libdav1d_sources += files(
+                libdav1d_sources_asm += files(
+                    'arm/32/looprestoration16.S',
+                    'arm/32/mc16.S',
                 )
             endif
+        endif
+
+        if use_gaspp
+            libdav1d_asm_objs = gaspp_gen.process(libdav1d_sources_asm)
+        else
+            libdav1d_sources += libdav1d_sources_asm
         endif
     elif host_machine.cpu_family().startswith('x86')
 
@@ -200,7 +208,7 @@ if is_asm_enabled
         endif
 
         # Compile the ASM sources with NASM
-        libdav1d_nasm_objs = nasm_gen.process(libdav1d_sources_asm)
+        libdav1d_asm_objs = nasm_gen.process(libdav1d_sources_asm)
     elif host_machine.cpu() == 'ppc64le'
         arch_flags = ['-maltivec', '-mvsx']
         libdav1d_sources += files(
@@ -222,17 +230,6 @@ api_export_flags = []
 #
 
 if host_machine.system() == 'windows' and get_option('default_library') != 'static'
-    rc_version_array = meson.project_version().split('.')
-    winmod = import('windows')
-    rc_data = configuration_data()
-    rc_data.set('PROJECT_VERSION_MAJOR', rc_version_array[0])
-    rc_data.set('PROJECT_VERSION_MINOR', rc_version_array[1])
-    rc_data.set('PROJECT_VERSION_REVISION', rc_version_array[2])
-    rc_data.set('API_VERSION_MAJOR', dav1d_api_version_major)
-    rc_data.set('API_VERSION_MINOR', dav1d_api_version_minor)
-    rc_data.set('API_VERSION_REVISION', dav1d_api_version_revision)
-    rc_data.set('COPYRIGHT_YEARS', '2019')
-
     rc_file = configure_file(
         input : 'dav1d.rc.in',
         output : 'dav1d.rc',
@@ -301,7 +298,7 @@ endif
 
 libdav1d = library('dav1d',
     libdav1d_sources,
-    libdav1d_nasm_objs,
+    libdav1d_asm_objs,
     libdav1d_rc_obj,
 
     objects : [

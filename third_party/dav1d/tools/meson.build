@@ -77,8 +77,24 @@ dav1d_sources = files(
     'dav1d_cli_parse.c',
 )
 
+if host_machine.system() == 'windows'
+    rc_file = configure_file(
+        input : 'dav1d.rc.in',
+        output : 'dav1d.rc',
+        configuration : rc_data
+    )
+
+    dav1d_rc_obj = winmod.compile_resources(rc_file,
+       depend_files : files('dav1d.manifest'),
+       include_directories : include_directories('.')
+    )
+else
+    dav1d_rc_obj = []
+endif
+
 dav1d = executable('dav1d',
     dav1d_sources,
+    dav1d_rc_obj,
     rev_target, cli_config_h_target,
 
     link_with : [libdav1d, dav1d_input_objs, dav1d_output_objs],
