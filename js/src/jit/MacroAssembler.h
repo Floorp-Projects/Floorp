@@ -3490,10 +3490,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void switchToWasmTlsRealm(Register scratch1, Register scratch2);
   void debugAssertContextRealm(const void* realm, Register scratch);
 
-  void loadJitActivation(Register dest) {
-    loadJSContext(dest);
-    loadPtr(Address(dest, offsetof(JSContext, activation_)), dest);
-  }
+  void loadJitActivation(Register dest);
 
   void guardGroupHasUnanalyzedNewScript(Register group, Register scratch,
                                         Label* fail);
@@ -4013,10 +4010,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void printf(const char* output, Register value);
 
 #ifdef JS_TRACE_LOGGING
-  void loadTraceLogger(Register logger) {
-    loadJSContext(logger);
-    loadPtr(Address(logger, offsetof(JSContext, traceLogger)), logger);
-  }
+  void loadTraceLogger(Register logger);
   void tracelogStartId(Register logger, uint32_t textId, bool force = false);
   void tracelogStartId(Register logger, Register textId);
   void tracelogStartEvent(Register logger, Register event);
