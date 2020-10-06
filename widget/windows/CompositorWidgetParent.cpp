@@ -36,7 +36,6 @@ CompositorWidgetParent::CompositorWidgetParent(
           aInitData.get_WinCompositorWidgetInitData().hWnd())),
       mTransparencyMode(
           aInitData.get_WinCompositorWidgetInitData().transparencyMode()),
-      mLockedBackBufferData(nullptr),
       mRemoteBackbufferClient() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
@@ -79,14 +78,17 @@ already_AddRefed<gfx::DrawTarget>
 CompositorWidgetParent::StartRemoteDrawingInRegion(
     LayoutDeviceIntRegion& aInvalidRegion, layers::BufferMode* aBufferMode) {
   MOZ_ASSERT(mRemoteBackbufferClient);
+  MOZ_ASSERT(aBufferMode);
+
+  // Because we use remote backbuffering, there is no need to use a local
+  // backbuffer too.
+  (*aBufferMode) = layers::BufferMode::BUFFER_NONE;
 
   return mRemoteBackbufferClient->BorrowDrawTarget();
 }
 
 void CompositorWidgetParent::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  MOZ_ASSERT(!mLockedBackBufferData);
-
   Unused << mRemoteBackbufferClient->PresentDrawTarget(
       aInvalidRegion.ToUnknownRegion());
 }
@@ -97,40 +99,16 @@ already_AddRefed<gfx::DrawTarget>
 CompositorWidgetParent::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
                                                 const gfx::IntRect& aRect,
                                                 bool* aOutIsCleared) {
-  MOZ_ASSERT(!mLockedBackBufferData);
-
-  RefPtr<gfx::DrawTarget> target = CompositorWidget::GetBackBufferDrawTarget(
-      aScreenTarget, aRect, aOutIsCleared);
-  if (!target) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(target->GetBackendType() == BackendType::CAIRO);
-
-  uint8_t* destData;
-  IntSize destSize;
-  int32_t destStride;
-  SurfaceFormat destFormat;
-  if (!target->LockBits(&destData, &destSize, &destStride, &destFormat)) {
-    // LockBits is not supported. Use original DrawTarget.
-    return target.forget();
-  }
-
-  RefPtr<gfx::DrawTarget> dataTarget = Factory::CreateDrawTargetForData(
-      BackendType::CAIRO, destData, destSize, destStride, destFormat);
-  mLockedBackBufferData = destData;
-
-  return dataTarget.forget();
+  MOZ_CRASH(
+      "Unexpected call to GetBackBufferDrawTarget() with remote "
+      "backbuffering in use");
 }
 
 already_AddRefed<gfx::SourceSurface>
 CompositorWidgetParent::EndBackBufferDrawing() {
-  if (mLockedBackBufferData) {
-    MOZ_ASSERT(mLastBackBuffer);
-    mLastBackBuffer->ReleaseBits(mLockedBackBufferData);
-    mLockedBackBufferData = nullptr;
-  }
-  return CompositorWidget::EndBackBufferDrawing();
+  MOZ_CRASH(
+      "Unexpected call to EndBackBufferDrawing() with remote "
+      "backbuffering in use");
 }
 
 bool CompositorWidgetParent::InitCompositor(layers::Compositor* aCompositor) {
