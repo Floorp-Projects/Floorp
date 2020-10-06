@@ -19,9 +19,6 @@ function makeTagRecord(id, uri) {
 }
 
 add_bookmark_test(async function run_test(engine) {
-  if (!isBufferedBookmarksEngine(engine)) {
-    return;
-  }
   let store = engine._store;
 
   let toolbar = new BookmarkFolder("bookmarks", "toolbar");
@@ -35,9 +32,7 @@ add_bookmark_test(async function run_test(engine) {
   _("Folder name: " + tagRecord.folderName);
   await store.applyIncoming(toolbar);
   await store.applyIncoming(tagRecord);
-  if (isBufferedBookmarksEngine(engine)) {
-    await engine._apply();
-  }
+  await engine._apply();
 
   let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");
   Assert.equal(insertedRecord.bmkUri, "place:tag=bar");
@@ -49,11 +44,9 @@ add_bookmark_test(async function run_test(engine) {
   toolbar.children = ["fedcbafedcba"];
   await store.applyIncoming(toolbar);
   let expected = wrongTypeURI;
-  if (isBufferedBookmarksEngine(engine)) {
-    await engine._apply();
-    // the mirror appends a special param to these.
-    expected += "&excludeItems=1";
-  }
+  await engine._apply();
+  // the mirror appends a special param to these.
+  expected += "&excludeItems=1";
 
   insertedRecord = await store.createRecord("fedcbafedcba", "bookmarks");
   Assert.equal(insertedRecord.bmkUri, expected);
