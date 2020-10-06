@@ -379,15 +379,12 @@ nsresult nsThreadManager::Init() {
   TaskController::Get()->SetIdleTaskManager(
       new IdleTaskManager(idlePeriod.forget()));
 
-  // Create main thread queue and construct main thread.
-  UniquePtr<PrioritizedEventQueue> queue = MakeUnique<PrioritizedEventQueue>();
+  // Create main thread queue that forwards events to TaskController and
+  // construct main thread.
+  UniquePtr<EventQueue> queue = MakeUnique<EventQueue>(true);
 
-  PrioritizedEventQueue* prioritized = queue.get();
-
-  RefPtr<ThreadEventQueue<PrioritizedEventQueue>> synchronizedQueue =
-      new ThreadEventQueue<PrioritizedEventQueue>(std::move(queue), true);
-
-  prioritized->SetMutexRef(synchronizedQueue->MutexRef());
+  RefPtr<ThreadEventQueue<EventQueue>> synchronizedQueue =
+      new ThreadEventQueue<EventQueue>(std::move(queue), true);
 
   mMainThread =
       new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
