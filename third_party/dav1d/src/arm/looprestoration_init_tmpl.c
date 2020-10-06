@@ -29,7 +29,6 @@
 #include "src/looprestoration.h"
 #include "src/tables.h"
 
-#if BITDEPTH == 8 || ARCH_AARCH64
 // The 8bpc version calculates things slightly differently than the reference
 // C version. That version calculates roughly this:
 // int16_t sum = 0;
@@ -105,6 +104,7 @@ static void wiener_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
     }
 }
 
+#if BITDEPTH == 8 || ARCH_AARCH64
 void BF(dav1d_sgr_box3_h, neon)(int32_t *sumsq, int16_t *sum,
                                 const pixel (*left)[4],
                                 const pixel *src, const ptrdiff_t stride,
@@ -290,8 +290,8 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPCont
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 || ARCH_AARCH64
     c->wiener = wiener_filter_neon;
+#if BITDEPTH == 8 || ARCH_AARCH64
     if (bpc <= 10)
         c->selfguided = sgr_filter_neon;
 #endif

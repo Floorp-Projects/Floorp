@@ -1082,11 +1082,11 @@ static int warp_affine(Dav1dTileContext *const t,
             const int64_t mvy = ((int64_t) mat[4] * src_x + mat5_y) >> ss_ver;
 
             const int dx = (int) (mvx >> 16) - 4;
-            const int mx = (((int) mvx & 0xffff) - wmp->alpha * 4 -
-                                                   wmp->beta  * 7) & ~0x3f;
+            const int mx = (((int) mvx & 0xffff) - wmp->u.p.alpha * 4 -
+                                                   wmp->u.p.beta  * 7) & ~0x3f;
             const int dy = (int) (mvy >> 16) - 4;
-            const int my = (((int) mvy & 0xffff) - wmp->gamma * 4 -
-                                                   wmp->delta * 4) & ~0x3f;
+            const int my = (((int) mvy & 0xffff) - wmp->u.p.gamma * 4 -
+                                                   wmp->u.p.delta * 4) & ~0x3f;
 
             const pixel *ref_ptr;
             ptrdiff_t ref_stride = refp->p.stride[!!pl];
@@ -1108,10 +1108,10 @@ static int warp_affine(Dav1dTileContext *const t,
             }
             if (dst16 != NULL)
                 dsp->mc.warp8x8t(&dst16[x], dstride, ref_ptr, ref_stride,
-                                 wmp->abcd, mx, my HIGHBD_CALL_SUFFIX);
+                                 wmp->u.abcd, mx, my HIGHBD_CALL_SUFFIX);
             else
                 dsp->mc.warp8x8(&dst8[x], dstride, ref_ptr, ref_stride,
-                                wmp->abcd, mx, my HIGHBD_CALL_SUFFIX);
+                                wmp->u.abcd, mx, my HIGHBD_CALL_SUFFIX);
         }
         if (dst8) dst8  += 8 * PXSTRIDE(dstride);
         else      dst16 += 8 * dstride;

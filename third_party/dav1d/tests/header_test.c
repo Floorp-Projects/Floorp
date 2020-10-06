@@ -1,6 +1,6 @@
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Janne Grunau
+ * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,13 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_TESTS_LIBFUZZER_DAV1D_FUZZER_H
-#define DAV1D_TESTS_LIBFUZZER_DAV1D_FUZZER_H
+#include DAV1D_TEST_HEADER
 
-#include <stddef.h>
-#include <stdint.h>
-
-int LLVMFuzzerInitialize(int *argc, char ***argv);
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
-
-#endif /* DAV1D_TESTS_LIBFUZZER_DAV1D_FUZZER_H */
+int main()
+{
+    return 0;
+}

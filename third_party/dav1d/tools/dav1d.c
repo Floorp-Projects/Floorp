@@ -124,11 +124,15 @@ static void print_stats(const int istty, const unsigned n, const unsigned num,
     else
         b += snprintf(b, end - b, "Decoded %u/%u frames (%.1lf%%)",
                       n, num, 100.0 * n / num);
-    if (i_fps && b < end) {
+    if (b < end) {
         const double d_fps = 1e9 * n / elapsed;
-        const double speed = d_fps / i_fps;
-        b += snprintf(b, end - b, " - %.2lf/%.2lf fps (%.2lfx)",
-                      d_fps, i_fps, speed);
+        if (i_fps) {
+            const double speed = d_fps / i_fps;
+            b += snprintf(b, end - b, " - %.2lf/%.2lf fps (%.2lfx)",
+                          d_fps, i_fps, speed);
+        } else {
+            b += snprintf(b, end - b, " - %.2lf fps", d_fps);
+        }
     }
     if (!istty)
         strcpy(b > end - 2 ? end - 2 : b, "\n");

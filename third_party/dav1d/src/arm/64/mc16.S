@@ -1004,11 +1004,11 @@ function put_neon
         b.gt            2b
         ret
 4:
-        ld1             {v0.8b}, [x2], x3
-        ld1             {v1.8b}, [x2], x3
+        ld1             {v0.4h}, [x2], x3
+        ld1             {v1.4h}, [x2], x3
         subs            w5,  w5,  #2
-        st1             {v0.8b}, [x0], x1
-        st1             {v1.8b}, [x0], x1
+        st1             {v0.4h}, [x0], x1
+        st1             {v1.4h}, [x0], x1
         b.gt            4b
         ret
 80:
@@ -1017,11 +1017,11 @@ function put_neon
         add             x9,  x2,  x3
         lsl             x3,  x3,  #1
 8:
-        ld1             {v0.16b}, [x2], x3
-        ld1             {v1.16b}, [x9], x3
+        ld1             {v0.8h}, [x2], x3
+        ld1             {v1.8h}, [x9], x3
         subs            w5,  w5,  #2
-        st1             {v0.16b}, [x0], x1
-        st1             {v1.16b}, [x8], x1
+        st1             {v0.8h}, [x0], x1
+        st1             {v1.8h}, [x8], x1
         b.gt            8b
         ret
 16:
@@ -2039,7 +2039,6 @@ L(\type\()_8tap_hv):
         sxtl            v0.8h,   v0.8b
         sxtl            v1.8h,   v1.8b
         mov             x15, x30
-        sxtl            v1.4s,   v1.4h
 
         ld1             {v27.8h}, [\src], \s_strd
         ext             v28.16b, v27.16b, v27.16b, #2
@@ -2049,19 +2048,23 @@ L(\type\()_8tap_hv):
         addp            v16.4s,  v27.4s,  v27.4s
         srshl           v16.2s,  v16.2s,  v30.2s // -(6-intermediate_bits)
         bl              L(\type\()_8tap_filter_2)
+        // The intermediates from the horizontal pass fit in 16 bit without
+        // any bias; we could just as well keep them as .4s, but narrowing
+        // them to .4h gives a significant speedup on out of order cores
+        // (at the cost of a smaller slowdown on in-order cores such as A53).
+        xtn             v16.4h,  v16.4s
 
-        trn1            v16.2d,  v16.2d,  v24.2d
-        mov             v17.16b, v24.16b
+        trn1            v16.2s,  v16.2s,  v24.2s
+        mov             v17.8b,  v24.8b
 
 2:
         bl              L(\type\()_8tap_filter_2)
 
-        ext             v18.16b, v17.16b, v24.16b, #8
-        mov             v19.16b, v24.16b
-        mul             v2.4s,   v16.4s,  v1.s[0]
-        mla             v2.4s,   v17.4s,  v1.s[1]
-        mla             v2.4s,   v18.4s,  v1.s[2]
-        mla             v2.4s,   v19.4s,  v1.s[3]
+        ext             v18.8b,  v17.8b,  v24.8b,  #4
+        smull           v2.4s,   v16.4h,  v1.h[0]
+        smlal           v2.4s,   v17.4h,  v1.h[1]
+        smlal           v2.4s,   v18.4h,  v1.h[2]
+        smlal           v2.4s,   v24.4h,  v1.h[3]
 
         srshl           v2.4s,   v2.4s,   v29.4s // -(6+intermediate_bits)
         sqxtun          v2.4h,   v2.4s
@@ -2070,8 +2073,8 @@ L(\type\()_8tap_hv):
         st1             {v2.s}[0], [\dst], \d_strd
         st1             {v2.s}[1], [\ds2], \d_strd
         b.le            0f
-        mov             v16.16b, v18.16b
-        mov             v17.16b, v19.16b
+        mov             v16.8b,  v18.8b
+        mov             v17.8b,  v24.8b
         b               2b
 
 280:    // 2x8, 2x16, 2x32 hv
@@ -2085,8 +2088,6 @@ L(\type\()_8tap_hv):
         sxtl            v0.8h,   v0.8b
         sxtl            v1.8h,   v1.8b
         mov             x15, x30
-        sxtl2           v2.4s,   v1.8h
-        sxtl            v1.4s,   v1.4h
 
         ld1             {v27.8h}, [\src], \s_strd
         ext             v28.16b, v27.16b, v27.16b, #2
@@ -2095,29 +2096,33 @@ L(\type\()_8tap_hv):
         addp            v27.4s,  v27.4s,  v28.4s
         addp            v16.4s,  v27.4s,  v27.4s
         srshl           v16.2s,  v16.2s,  v30.2s // -(6-intermediate_bits)
+        // The intermediates from the horizontal pass fit in 16 bit without
+        // any bias; we could just as well keep them as .4s, but narrowing
+        // them to .4h gives a significant speedup on out of order cores
+        // (at the cost of a smaller slowdown on in-order cores such as A53).
 
         bl              L(\type\()_8tap_filter_2)
-        trn1            v16.2d,  v16.2d,  v24.2d
-        mov             v17.16b, v24.16b
+        xtn             v16.4h,  v16.4s
+        trn1            v16.2s,  v16.2s,  v24.2s
+        mov             v17.8b,  v24.8b
         bl              L(\type\()_8tap_filter_2)
-        ext             v18.16b, v17.16b, v24.16b, #8
-        mov             v19.16b, v24.16b
+        ext             v18.8b,  v17.8b,  v24.8b,  #4
+        mov             v19.8b,  v24.8b
         bl              L(\type\()_8tap_filter_2)
-        ext             v20.16b, v19.16b, v24.16b, #8
-        mov             v21.16b, v24.16b
+        ext             v20.8b,  v19.8b,  v24.8b,  #4
+        mov             v21.8b,  v24.8b
 
 28:
         bl              L(\type\()_8tap_filter_2)
-        ext             v22.16b, v21.16b, v24.16b, #8
-        mov             v23.16b, v24.16b
-        mul             v3.4s,   v16.4s,  v1.s[0]
-        mla             v3.4s,   v17.4s,  v1.s[1]
-        mla             v3.4s,   v18.4s,  v1.s[2]
-        mla             v3.4s,   v19.4s,  v1.s[3]
-        mla             v3.4s,   v20.4s,  v2.s[0]
-        mla             v3.4s,   v21.4s,  v2.s[1]
-        mla             v3.4s,   v22.4s,  v2.s[2]
-        mla             v3.4s,   v23.4s,  v2.s[3]
+        ext             v22.8b,  v21.8b,  v24.8b,  #4
+        smull           v3.4s,   v16.4h,  v1.h[0]
+        smlal           v3.4s,   v17.4h,  v1.h[1]
+        smlal           v3.4s,   v18.4h,  v1.h[2]
+        smlal           v3.4s,   v19.4h,  v1.h[3]
+        smlal           v3.4s,   v20.4h,  v1.h[4]
+        smlal           v3.4s,   v21.4h,  v1.h[5]
+        smlal           v3.4s,   v22.4h,  v1.h[6]
+        smlal           v3.4s,   v24.4h,  v1.h[7]
 
         srshl           v3.4s,   v3.4s,   v29.4s // -(6+intermediate_bits)
         sqxtun          v3.4h,   v3.4s
@@ -2126,12 +2131,12 @@ L(\type\()_8tap_hv):
         st1             {v3.s}[0], [\dst], \d_strd
         st1             {v3.s}[1], [\ds2], \d_strd
         b.le            0f
-        mov             v16.16b, v18.16b
-        mov             v17.16b, v19.16b
-        mov             v18.16b, v20.16b
-        mov             v19.16b, v21.16b
-        mov             v20.16b, v22.16b
-        mov             v21.16b, v23.16b
+        mov             v16.8b,  v18.8b
+        mov             v17.8b,  v19.8b
+        mov             v18.8b,  v20.8b
+        mov             v19.8b,  v21.8b
+        mov             v20.8b,  v22.8b
+        mov             v21.8b,  v24.8b
         b               28b
 
 0:
@@ -2151,6 +2156,7 @@ L(\type\()_8tap_filter_2):
         smlal           v24.4s,  v27.4h,  v0.h[2]
         smlal           v24.4s,  v28.4h,  v0.h[3]
         srshl           v24.4s,  v24.4s,  v30.4s // -(6-intermediate_bits)
+        xtn             v24.4h,  v24.4s
         ret
 .endif
 
