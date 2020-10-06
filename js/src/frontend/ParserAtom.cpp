@@ -345,6 +345,22 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
   return internLatin1Seq(cx, addPtr, lookup.hash(), latin1Ptr, length);
 }
 
+// For XDR we should only need to intern user strings so skip checks for tiny
+// and well-known atoms.
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1ForXDR(
+    JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
+  InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
+  SpecificParserAtomLookup<Latin1Char> lookup(seq);
+
+  auto addPtr = entrySet_.lookupForAdd(lookup);
+
+  MOZ_ASSERT(wellKnownTable_.lookupTiny(latin1Ptr, length) == nullptr);
+  MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
+  MOZ_ASSERT(!addPtr);
+
+  return internLatin1Seq(cx, addPtr, lookup.hash(), latin1Ptr, length);
+}
+
 // For XDR
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16LE(
     JSContext* cx, LittleEndianChars twoByteLE, uint32_t length) {
@@ -792,7 +808,7 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
       MOZ_TRY(xdr->peekData(&ptr, length * sizeof(Latin1Char)));
       chars = reinterpret_cast<const Latin1Char*>(ptr);
     }
-    mbAtom = xdr->frontendAtoms().internLatin1(cx, chars, length);
+    mbAtom = xdr->frontendAtoms().internLatin1ForXDR(cx, chars, length);
   } else {
     const uint8_t* twoByteCharsLE = nullptr;
     if (length) {
