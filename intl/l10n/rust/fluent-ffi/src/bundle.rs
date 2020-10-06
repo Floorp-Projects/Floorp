@@ -218,7 +218,8 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
     };
 
     let mut errors = vec![];
-    bundle.write_pattern(ret_val, pattern, args.as_ref(), &mut errors)
+    bundle
+        .write_pattern(ret_val, pattern, args.as_ref(), &mut errors)
         .expect("Failed to write to a nsCString.");
     append_fluent_errors_to_ret_errors(ret_errors, &errors);
     true
@@ -241,7 +242,10 @@ pub unsafe extern "C" fn fluent_bundle_add_resource(
     }
 }
 
-fn convert_args<'a>(arg_ids: &'a [nsCString], arg_vals: &'a [FluentArgument]) -> Option<FluentArgs<'a>> {
+fn convert_args<'a>(
+    arg_ids: &'a [nsCString],
+    arg_vals: &'a [FluentArgument],
+) -> Option<FluentArgs<'a>> {
     debug_assert_eq!(arg_ids.len(), arg_vals.len());
 
     if arg_ids.is_empty() {
