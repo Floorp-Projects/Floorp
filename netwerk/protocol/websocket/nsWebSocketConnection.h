@@ -60,6 +60,7 @@ class nsWebSocketConnection : public nsIWebSocketConnection,
   size_t mWriteOffset;
   std::list<OutputData> mOutputQueue;
   bool mStartReadingCalled;
+  bool mOutputStreamBlocked;
 };
 
 }  // namespace net
