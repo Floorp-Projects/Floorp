@@ -174,8 +174,6 @@ async function resolveConflict(
 }
 
 async function get_engine() {
-  // we aren't really switching, just re-fetching a new initialized engine
-  await Service.engineManager.switchAlternatives();
   return Service.engineManager.get("bookmarks");
 }
 

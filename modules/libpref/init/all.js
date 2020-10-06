@@ -4508,7 +4508,6 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   pref("services.sync.engine.addons", true);
   pref("services.sync.engine.addresses", false);
   pref("services.sync.engine.bookmarks", true);
-  pref("services.sync.engine.bookmarks.buffer", true);
   pref("services.sync.engine.creditcards", false);
   pref("services.sync.engine.history", true);
   pref("services.sync.engine.passwords", true);

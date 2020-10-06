@@ -12,17 +12,12 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const BookmarksToolbarTitle = "toolbar";
 
-// apply some test records without going via a test server. It's a bit different
-// depending on which engine is in use.
+// apply some test records without going via a test server.
 async function apply_records(engine, records) {
   for (record of records) {
     await engine._store.applyIncoming(record);
   }
-  if (isBufferedBookmarksEngine(engine)) {
-    await engine._apply();
-  } else {
-    await engine._store.deletePending();
-  }
+  await engine._apply();
 }
 
 add_bookmark_test(async function test_ignore_specials(engine) {
@@ -45,30 +40,12 @@ add_bookmark_test(async function test_ignore_specials(engine) {
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
 
-  if (!isBufferedBookmarksEngine(engine)) {
-    // This will fail to build the local tree if the deletion worked.
-    await engine._buildGUIDMap();
-  }
-
-  // Braces...
-  if (isBufferedBookmarksEngine(engine)) {
-    await apply_records(engine, [record]);
-  } else {
-    // This test explicly called .remove() - for now assume the fact it didn't
-    // just apply them like every other test and as happens above is
-    // for a good reason.
-    await store.remove(record);
-    await store.deletePending();
-  }
+  await apply_records(engine, [record]);
 
   Assert.notEqual(
     null,
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
-  if (!isBufferedBookmarksEngine(engine)) {
-    await engine._buildGUIDMap();
-  }
-
   await store.wipe();
 });
 
@@ -283,7 +260,7 @@ add_bookmark_test(async function test_deleted(engine) {
       url: "http://getfirefox.com/",
       title: "Get Firefox!",
     });
-    // The buffered engine needs to think we've previously synced it.
+    // The engine needs to think we've previously synced it.
     await PlacesTestUtils.markBookmarksAsSynced();
 
     _("Delete the bookmark through the store.");
@@ -387,12 +364,6 @@ add_bookmark_test(async function test_move_order(engine) {
       await store.createRecord(bmk1.guid),
       await store.createRecord(bmk2.guid),
     ]);
-    if (!isBufferedBookmarksEngine(engine)) {
-      // Bookmarks engine does this at the end of _processIncoming
-      tracker.ignoreAll = true;
-      await store._orderChildren();
-      tracker.ignoreAll = false;
-    }
     delete store._childrenToOrder;
 
     _("Verify new order.");
@@ -402,49 +373,6 @@ add_bookmark_test(async function test_move_order(engine) {
     Assert.deepEqual(newChildIds, [bmk2.guid, bmk1.guid]);
   } finally {
     await tracker.stop();
-    _("Clean up.");
-    await store.wipe();
-  }
-});
-
-// Note that dogear has subtly different semantics here, and neither it or the
-// legacy engine can lay claim to being "more correct". So this test should
-// be removed with the legacy engine as part of bug 1449730.
-add_task(async function test_orphan() {
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-
-  try {
-    _("Add a new bookmark locally.");
-    let bmk1 = await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      url: "http://getfirefox.com/",
-      title: "Get Firefox!",
-    });
-    let bmk1_id = await PlacesUtils.promiseItemId(bmk1.guid);
-    do_check_throws(function() {
-      PlacesUtils.annotations.getItemAnnotation(
-        bmk1_id,
-        PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
-      );
-    }, Cr.NS_ERROR_NOT_AVAILABLE);
-
-    _(
-      "Apply a server record that is the same but refers to non-existent folder."
-    );
-    let record = await store.createRecord(bmk1.guid);
-    record.parentid = "non-existent";
-    await store.applyIncoming(record);
-
-    _("Verify that bookmark has been flagged as orphan, has not moved.");
-    let item = await PlacesUtils.bookmarks.fetch(bmk1.guid);
-    Assert.equal(item.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
-    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(
-      bmk1_id,
-      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
-    );
-    Assert.equal(orphanAnno, "non-existent");
-  } finally {
     _("Clean up.");
     await store.wipe();
   }
@@ -510,103 +438,6 @@ async function assertDeleted(guid) {
   let item = await PlacesUtils.bookmarks.fetch(guid);
   ok(!item);
 }
-
-// This test is very specific to the "old" store, so no `add_bookmark_test()`
-add_task(async function test_delete_buffering() {
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-
-  await store.wipe();
-  await PlacesTestUtils.markBookmarksAsSynced();
-
-  try {
-    _("Create a folder with two bookmarks.");
-    let folder = new BookmarkFolder("bookmarks", "testfolder-1");
-    folder.parentName = BookmarksToolbarTitle;
-    folder.parentid = "toolbar";
-    folder.title = "Test Folder";
-    await store.applyIncoming(folder);
-
-    let fxRecord = new Bookmark("bookmarks", "get-firefox1");
-    fxRecord.bmkUri = "http://getfirefox.com/";
-    fxRecord.title = "Get Firefox!";
-    fxRecord.parentName = "Test Folder";
-    fxRecord.parentid = "testfolder-1";
-
-    let tbRecord = new Bookmark("bookmarks", "get-tndrbrd1");
-    tbRecord.bmkUri = "http://getthunderbird.com";
-    tbRecord.title = "Get Thunderbird!";
-    tbRecord.parentName = "Test Folder";
-    tbRecord.parentid = "testfolder-1";
-
-    await store.applyIncoming(fxRecord);
-    await store.applyIncoming(tbRecord);
-
-    _("Check everything was created correctly.");
-
-    let folderItem = await PlacesUtils.bookmarks.fetch(folder.id);
-    let fxItem = await PlacesUtils.bookmarks.fetch(fxRecord.id);
-    let tbItem = await PlacesUtils.bookmarks.fetch(tbRecord.id);
-
-    equal(fxItem.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    equal(tbItem.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    equal(folderItem.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-
-    equal(fxItem.parentGuid, folderItem.guid);
-    equal(tbItem.parentGuid, folderItem.guid);
-    equal(folderItem.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
-
-    _("Delete the folder and one bookmark.");
-
-    let deleteFolder = new PlacesItem("bookmarks", "testfolder-1");
-    deleteFolder.deleted = true;
-
-    let deleteFxRecord = new PlacesItem("bookmarks", "get-firefox1");
-    deleteFxRecord.deleted = true;
-
-    await store.applyIncoming(deleteFolder);
-    await store.applyIncoming(deleteFxRecord);
-
-    _(
-      "Check that we haven't deleted them yet, but that the deletions are queued"
-    );
-    // these will return `null` if we've deleted them
-    fxItem = await PlacesUtils.bookmarks.fetch(fxRecord.id);
-    ok(fxItem);
-
-    folderItem = await PlacesUtils.bookmarks.fetch(folder.id);
-    ok(folderItem);
-
-    equal(fxItem.parentGuid, folderItem.guid);
-
-    ok(store._itemsToDelete.has(folder.id));
-    ok(store._itemsToDelete.has(fxRecord.id));
-    ok(!store._itemsToDelete.has(tbRecord.id));
-
-    _(
-      "Process pending deletions and ensure that the right things are deleted."
-    );
-    let newChangeRecords = await store.deletePending();
-
-    deepEqual(Object.keys(newChangeRecords).sort(), [
-      "get-tndrbrd1",
-      "toolbar",
-    ]);
-
-    await assertDeleted(fxItem.guid);
-    await assertDeleted(folderItem.guid);
-
-    ok(!store._itemsToDelete.has(folder.id));
-    ok(!store._itemsToDelete.has(fxRecord.id));
-
-    tbItem = await PlacesUtils.bookmarks.fetch(tbRecord.id);
-    equal(tbItem.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
-  } finally {
-    _("Clean up.");
-    await store.wipe();
-    await engine.finalize();
-  }
-});
 
 add_bookmark_test(async function test_calculateIndex_for_invalid_url(engine) {
   let store = engine._store;

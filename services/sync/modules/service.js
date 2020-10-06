@@ -83,6 +83,7 @@ const { fxAccounts } = ChromeUtils.import(
 function getEngineModules() {
   let result = {
     Addons: { module: "addons.js", symbol: "AddonsEngine" },
+    Bookmarks: { module: "bookmarks.js", symbol: "BookmarksEngine" },
     Form: { module: "forms.js", symbol: "FormEngine" },
     History: { module: "history.js", symbol: "HistoryEngine" },
     Password: { module: "passwords.js", symbol: "PasswordEngine" },
@@ -101,12 +102,6 @@ function getEngineModules() {
       symbol: "CreditCardsEngine",
     };
   }
-  result.Bookmarks = {
-    module: "bookmarks.js",
-    controllingPref: "services.sync.engine.bookmarks.buffer",
-    whenFalse: "BookmarksEngine",
-    whenTrue: "BufferedBookmarksEngine",
-  };
   result["Extension-Storage"] = {
     module: "extension-storage.js",
     controllingPref: "webextensions.storage.sync.kinto",
