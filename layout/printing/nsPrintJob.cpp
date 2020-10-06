@@ -619,17 +619,21 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  bool printSilently = false;
+  printData->mPrintSettings->GetPrintSilent(&printSilently);
+  if (StaticPrefs::print_always_print_silent()) {
+    printSilently = true;
+  }
+
+  if (mIsDoingPrinting && printSilently) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_SILENT_PRINT, 1);
+  }
+
   // If printing via parent we still call ShowPrintDialog even for print preview
   // because we use that to retrieve the print settings from the printer.
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
   if (!mIsCreatingPrintPreview || printingViaParent) {
-    bool printSilently = false;
-    printData->mPrintSettings->GetPrintSilent(&printSilently);
-    if (StaticPrefs::print_always_print_silent()) {
-      printSilently = true;
-    }
-
     // The new print UI does not need to enter ShowPrintDialog below to spin
     // the event loop and fetch real printer settings from the parent process,
     // since it always passes complete print settings. (In fact, trying to
@@ -660,9 +664,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
           domWin = aDoc->GetOriginalDocument()->GetWindow();
           NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
 
-          if (printSilently) {
-            Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_SILENT_PRINT, 1);
-          } else {
+          if (!printSilently) {
             if (mCreatedForPrintPreview) {
               Telemetry::ScalarAdd(
                   Telemetry::ScalarID::PRINTING_DIALOG_OPENED_VIA_PREVIEW, 1);
