@@ -2285,8 +2285,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             }
           }
 
-          rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, loadBuffer,
-                                                           options, &script);
+          rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, options,
+                                                           loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
@@ -2298,7 +2298,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         } else {
           MOZ_ASSERT(loadCacheKind == BytecodeCacheKind::Stencil);
           MOZ_ASSERT(!js::UseOffThreadParseGlobal());
-          rv = JS::DecodeScriptMaybeStencil(cx, loadBuffer, options, &script);
+          rv = JS::DecodeScriptMaybeStencil(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }

@@ -79,8 +79,8 @@ DecodeScript(JSContext* cx, const TranscodeRange& range,
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
 // If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
@@ -96,8 +96,8 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
 // Finish incremental encoding started by one of:

@@ -5749,8 +5749,8 @@ static JS::TranscodeResult DecodeStencil(
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, JS::MutableHandleScript scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
   MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
   if (js::UseOffThreadParseGlobal()) {
@@ -5798,8 +5798,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, JS::MutableHandleScript scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
   MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
   if (js::UseOffThreadParseGlobal()) {
