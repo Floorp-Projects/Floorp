@@ -1333,8 +1333,8 @@ class DatabaseConnection final {
 
   nsresult CheckpointInternal(CheckpointMode aMode);
 
-  nsresult GetFreelistCount(CachedStatement& aCachedStatement,
-                            uint32_t* aFreelistCount);
+  Result<uint32_t, nsresult> GetFreelistCount(
+      CachedStatement& aCachedStatement);
 
   nsresult ReclaimFreePagesWhileIdle(CachedStatement& aFreelistStatement,
                                      CachedStatement& aRollbackStatement,
@@ -7385,11 +7385,9 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
   AUTO_PROFILER_LABEL("DatabaseConnection::DoIdleProcessing", DOM);
 
   DatabaseConnection::CachedStatement freelistStmt;
-  uint32_t freelistCount;
-  nsresult rv = GetFreelistCount(freelistStmt, &freelistCount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    freelistCount = 0;
-  }
+  const uint32_t freelistCount = [this, &freelistStmt] {
+    IDB_TRY_RETURN(GetFreelistCount(freelistStmt), 0u);
+  }();
 
   CachedStatement rollbackStmt;
   CachedStatement beginStmt;
@@ -7407,8 +7405,9 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
   bool freedSomePages = false;
 
   if (freelistCount) {
-    rv = ReclaimFreePagesWhileIdle(freelistStmt, rollbackStmt, freelistCount,
-                                   aNeedsCheckpoint, &freedSomePages);
+    nsresult rv =
+        ReclaimFreePagesWhileIdle(freelistStmt, rollbackStmt, freelistCount,
+                                  aNeedsCheckpoint, &freedSomePages);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_ASSERT(!freedSomePages);
     }
@@ -7420,13 +7419,13 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   // Truncate the WAL if we were asked to or if we managed to free some space.
   if (aNeedsCheckpoint || freedSomePages) {
-    rv = CheckpointInternal(CheckpointMode::Truncate);
+    nsresult rv = CheckpointInternal(CheckpointMode::Truncate);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   // Finally try to restart the read transaction if we rolled it back earlier.
   if (beginStmt) {
-    rv = beginStmt.Borrow()->Execute();
+    nsresult rv = beginStmt.Borrow()->Execute();
     if (NS_SUCCEEDED(rv)) {
       mInReadTransaction = true;
     } else {
@@ -7505,7 +7504,8 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
 
                 freedSomePages = true;
 
-                IDB_TRY(GetFreelistCount(aFreelistStatement, &aFreelistCount));
+                IDB_TRY_UNWRAP(aFreelistCount,
+                               GetFreelistCount(aFreelistStatement));
 
                 return Ok{};
               })
@@ -7534,14 +7534,11 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
   return NS_OK;
 }
 
-nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
-                                              uint32_t* aFreelistCount) {
+Result<uint32_t, nsresult> DatabaseConnection::GetFreelistCount(
+    CachedStatement& aCachedStatement) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aFreelistCount);
 
   AUTO_PROFILER_LABEL("DatabaseConnection::GetFreelistCount", DOM);
-
-  nsresult rv;
 
   if (!aCachedStatement) {
     IDB_TRY_UNWRAP(aCachedStatement,
@@ -7555,16 +7552,12 @@ nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
 
   MOZ_ASSERT(hasResult);
 
-  int32_t freelistCount;
-  rv = borrowedStatement->GetInt32(0, &freelistCount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const int32_t& freelistCount,
+                  MOZ_TO_RESULT_INVOKE(*borrowedStatement, GetInt32, 0));
 
   MOZ_ASSERT(freelistCount >= 0);
 
-  *aFreelistCount = uint32_t(freelistCount);
-  return NS_OK;
+  return uint32_t(freelistCount);
 }
 
 void DatabaseConnection::Close() {
