@@ -328,6 +328,9 @@ FuzzySecurityInfo::SetEchConfig(const nsACString& aEchConfig) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::GetRetryEchConfig(nsACString& aEchConfig) { return NS_OK; }
+
 void FuzzySecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   MOZ_CRASH("Unused");
 }

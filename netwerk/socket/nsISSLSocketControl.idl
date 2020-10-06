@@ -161,5 +161,10 @@ interface nsISSLSocketControl : nsISupports {
      * The id used to uniquely identify the connection to the peer.
      */
     readonly attribute ACString peerId;
+
+    /**
+     * The echConfig that should be used to retry for the connection setup.
+     */
+    readonly attribute ACString retryEchConfig;
 };
 

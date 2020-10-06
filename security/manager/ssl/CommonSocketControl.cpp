@@ -300,3 +300,8 @@ NS_IMETHODIMP
 CommonSocketControl::GetPeerId(nsACString& aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+CommonSocketControl::GetRetryEchConfig(nsACString& aEchConfig) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
