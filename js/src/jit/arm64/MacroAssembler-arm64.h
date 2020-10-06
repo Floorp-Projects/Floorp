@@ -2006,9 +2006,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void profilerEnterFrame(Register framePtr, Register scratch);
   void profilerEnterFrame(RegisterOrSP framePtr, Register scratch);
-  void profilerExitFrame() {
-    jump(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
-  }
+  void profilerExitFrame();
   Address ToPayload(Address value) { return value; }
   Address ToType(Address value) { return value; }
 
