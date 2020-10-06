@@ -11,7 +11,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JSJitFrameIter.h"
-#include "jit/Linker.h"
 #include "jit/PerfSpewer.h"
 
 #include "jit/JitFrames-inl.h"

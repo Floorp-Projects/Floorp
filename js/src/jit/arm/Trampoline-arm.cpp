@@ -9,7 +9,6 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
-#include "jit/Linker.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif
