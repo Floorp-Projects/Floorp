@@ -45,12 +45,6 @@ class nsThreadEnumerator;
 // See https://www.w3.org/TR/longtasks
 #define LONGTASK_BUSY_WINDOW_MS 50
 
-static inline bool UseTaskController() {
-  static const bool kUseTaskController =
-      !PR_GetEnv("MOZ_DISABLE_TASKCONTROLLER");
-  return kUseTaskController;
-}
-
 // A class for managing performance counter state.
 namespace mozilla {
 class PerformanceCounterState {

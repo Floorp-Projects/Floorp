@@ -39,79 +39,22 @@ void PrioritizedEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                                      mozilla::TimeDuration* aDelay) {
   RefPtr<nsIRunnable> event(aEvent);
 
-  if (UseTaskController()) {
-    TaskController* tc = TaskController::Get();
+  TaskController* tc = TaskController::Get();
 
-    TaskManager* manager = nullptr;
-    if (aPriority == EventQueuePriority::InputHigh) {
-      if (mInputTaskManager->State() == InputTaskManager::STATE_DISABLED) {
-        aPriority = EventQueuePriority::Normal;
-      } else {
-        manager = mInputTaskManager;
-      }
-    } else if (aPriority == EventQueuePriority::DeferredTimers ||
-               aPriority == EventQueuePriority::Idle) {
-      manager = mIdleTaskManager;
+  TaskManager* manager = nullptr;
+  if (aPriority == EventQueuePriority::InputHigh) {
+    if (mInputTaskManager->State() == InputTaskManager::STATE_DISABLED) {
+      aPriority = EventQueuePriority::Normal;
+    } else {
+      manager = mInputTaskManager;
     }
-
-    tc->DispatchRunnable(event.forget(), static_cast<uint32_t>(aPriority),
-                         manager);
-    return;
+  } else if (aPriority == EventQueuePriority::DeferredTimers ||
+             aPriority == EventQueuePriority::Idle) {
+    manager = mIdleTaskManager;
   }
 
-  // Double check the priority with a QI.
-  EventQueuePriority priority = aPriority;
-
-  if (priority == EventQueuePriority::InputHigh &&
-      mInputTaskManager->State() == InputTaskManager::STATE_DISABLED) {
-    priority = EventQueuePriority::Normal;
-  } else if (priority == EventQueuePriority::MediumHigh &&
-             !StaticPrefs::threads_medium_high_event_queue_enabled()) {
-    priority = EventQueuePriority::Normal;
-  }
-
-  switch (priority) {
-    case EventQueuePriority::High:
-      mHighQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
-      break;
-    case EventQueuePriority::InputHigh:
-      mInputQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
-      break;
-    case EventQueuePriority::MediumHigh:
-      mMediumHighQueue->PutEvent(event.forget(), priority, aProofOfLock,
-                                 aDelay);
-      break;
-    case EventQueuePriority::Normal:
-      mNormalQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
-      break;
-    case EventQueuePriority::InputLow:
-      MOZ_ASSERT(false, "InputLow is a TaskController's internal priority!");
-      break;
-    case EventQueuePriority::DeferredTimers: {
-      if (NS_IsMainThread()) {
-        mDeferredTimersQueue->PutEvent(event.forget(), priority, aProofOfLock,
-                                       aDelay);
-      } else {
-        // We don't want to touch our idle queues from off the main
-        // thread.  Queue it indirectly.
-        IndirectlyQueueRunnable(event.forget(), priority, aProofOfLock, aDelay);
-      }
-      break;
-    }
-    case EventQueuePriority::Idle: {
-      if (NS_IsMainThread()) {
-        mIdleQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
-      } else {
-        // We don't want to touch our idle queues from off the main
-        // thread.  Queue it indirectly.
-        IndirectlyQueueRunnable(event.forget(), priority, aProofOfLock, aDelay);
-      }
-      break;
-    }
-    case EventQueuePriority::Count:
-      MOZ_CRASH("EventQueuePriority::Count isn't a valid priority");
-      break;
-  }
+  tc->DispatchRunnable(event.forget(), static_cast<uint32_t>(aPriority),
+                       manager);
 }
 
 EventQueuePriority PrioritizedEventQueue::SelectQueue(
