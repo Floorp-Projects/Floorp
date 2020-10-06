@@ -6,7 +6,6 @@
 
 #include "jit/MIRGraph.h"
 
-#include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
