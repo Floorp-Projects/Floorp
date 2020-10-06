@@ -466,11 +466,6 @@ static void GetPrintCanvasElementsInFrame(
 void nsPageSequenceFrame::DetermineWhetherToPrintPage() {
   // See whether we should print this page
   mPrintThisPage = true;
-  bool printEvenPages, printOddPages;
-  mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintEvenPages,
-                                             &printEvenPages);
-  mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages,
-                                             &printOddPages);
 
   // If printing a range of pages check whether the page number is in the
   // range of pages to print
@@ -497,17 +492,6 @@ void nsPageSequenceFrame::DetermineWhetherToPrintPage() {
           }
         }
       }
-    }
-  }
-
-  // Check for printing of odd and even pages
-  if (mPageNum & 0x1) {
-    if (!printOddPages) {
-      mPrintThisPage = false;  // don't print odd numbered page
-    }
-  } else {
-    if (!printEvenPages) {
-      mPrintThisPage = false;  // don't print even numbered page
     }
   }
 }
