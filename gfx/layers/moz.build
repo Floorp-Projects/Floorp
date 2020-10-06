@@ -365,6 +365,7 @@ UNIFIED_SOURCES += [
     'apz/src/CheckerboardEvent.cpp',
     'apz/src/DragTracker.cpp',
     'apz/src/ExpectedGeckoMetrics.cpp',
+    'apz/src/FlingAccelerator.cpp',
     'apz/src/FocusState.cpp',
     'apz/src/FocusTarget.cpp',
     'apz/src/GenericScrollAnimation.cpp',
