@@ -215,6 +215,7 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1785
       - https://github.com/mozilla-mobile/fenix/pull/8314
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -327,6 +328,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -341,6 +343,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -355,6 +358,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -369,6 +373,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -388,6 +393,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -407,6 +413,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -421,6 +428,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -440,6 +448,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -454,6 +463,7 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -474,6 +484,7 @@ search_shortcuts:
       - https://github.com/mozilla-mobile/fenix/issues/793
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
@@ -491,6 +502,7 @@ toolbar_settings:
       - https://github.com/mozilla-mobile/fenix/issues/6054
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6608
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -620,6 +632,7 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -633,6 +646,7 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -646,6 +660,7 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -664,6 +679,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/960
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -684,6 +700,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9556
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -700,6 +717,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9556
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -724,6 +742,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11909
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -741,6 +760,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11909
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -768,6 +788,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/pull/1677
       - https://github.com/mozilla-mobile/fenix/pull/5216
       - https://github.com/mozilla-mobile/fenix/pull/7310
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -789,6 +810,7 @@ metrics:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1953/
       - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -808,6 +830,7 @@ metrics:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1953/
       - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -828,6 +851,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5579
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
     notification_emails:
@@ -847,6 +871,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -866,6 +891,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -885,6 +911,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -901,6 +928,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/6054
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6608
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -917,6 +945,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -937,6 +966,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11479
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12024
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -953,6 +983,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11479
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12024
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -971,6 +1002,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -987,6 +1019,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1005,6 +1038,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1022,6 +1056,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1038,6 +1073,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1054,6 +1090,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1070,6 +1107,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1086,6 +1124,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1102,6 +1141,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1118,6 +1158,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1136,6 +1177,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1152,6 +1194,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1169,6 +1212,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1185,6 +1229,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1202,6 +1247,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1218,6 +1264,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11446
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1234,6 +1281,7 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11446
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1256,6 +1304,7 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1277,6 +1326,7 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1299,6 +1349,7 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1570,6 +1621,7 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1584,6 +1636,7 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1598,6 +1651,7 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1612,6 +1666,7 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1646,6 +1701,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1659,6 +1715,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1673,6 +1730,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/9834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1686,6 +1744,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/9834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1700,6 +1759,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1714,6 +1774,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1727,6 +1788,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1742,6 +1804,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1757,6 +1820,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1772,6 +1836,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1787,6 +1852,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -1801,6 +1867,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1816,6 +1883,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1829,6 +1897,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1842,6 +1911,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1855,6 +1925,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/4908
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5106
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1868,6 +1939,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/4908
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5106
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1883,6 +1955,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1896,6 +1969,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1909,6 +1983,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1922,6 +1997,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1935,6 +2011,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1953,6 +2030,7 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1969,6 +2047,7 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1985,6 +2064,7 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2000,6 +2080,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2013,6 +2094,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2026,6 +2108,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4328
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2039,6 +2122,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2054,6 +2138,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2067,6 +2152,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2080,6 +2166,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2093,6 +2180,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2106,6 +2194,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2119,6 +2208,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2132,6 +2222,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2145,6 +2236,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2158,6 +2250,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2172,6 +2265,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2186,6 +2280,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2200,6 +2295,7 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2427,6 +2523,7 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4714
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2440,6 +2537,7 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4714
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2455,6 +2553,7 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2468,6 +2567,7 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2481,6 +2581,7 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2495,6 +2596,7 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2511,6 +2613,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2525,6 +2628,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2538,6 +2642,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2551,6 +2656,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2565,6 +2671,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2644,6 +2751,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2657,6 +2765,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2670,6 +2779,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2684,6 +2794,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2697,6 +2808,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2716,6 +2828,7 @@ tracking_protection:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
       - https://github.com/mozilla-mobile/fenix/pull/11383
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2731,6 +2844,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2745,6 +2859,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2759,6 +2874,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2773,6 +2889,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2787,6 +2904,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2801,6 +2919,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2816,6 +2935,7 @@ tab:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5266
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2831,6 +2951,7 @@ tab:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5266
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2846,6 +2967,7 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5520
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2859,6 +2981,7 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5520
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2874,6 +2997,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2887,6 +3011,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2900,6 +3025,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2915,6 +3041,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2928,6 +3055,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2941,6 +3069,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2954,6 +3083,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2972,6 +3102,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7767
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2985,6 +3116,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2998,6 +3130,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3011,6 +3144,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3128,6 +3262,7 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/issues/5884
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6918
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3144,6 +3279,7 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/issues/7881
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6918
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3159,6 +3295,7 @@ search_suggestions:
       - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6746
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3175,6 +3312,7 @@ voice_search:
       - https://github.com/mozilla-mobile/fenix/issues/10465
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10785
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3190,6 +3328,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10752
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3203,6 +3342,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/14565
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/15136
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3216,6 +3356,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/14565
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/15136
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3233,6 +3374,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/14565
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/15136
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3250,6 +3392,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/14565
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/15136
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3263,6 +3406,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3276,6 +3420,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3289,6 +3434,7 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3355,6 +3501,7 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/8126
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8098
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3371,6 +3518,7 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/8126
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8098
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3388,6 +3536,7 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3404,6 +3553,7 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3420,6 +3570,7 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3436,6 +3587,7 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3454,6 +3606,7 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
       - interaction
@@ -3473,6 +3626,7 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3489,6 +3643,7 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3504,6 +3659,7 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6557
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10167
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - interaction
     notification_emails:
@@ -3628,6 +3784,7 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
     notification_emails:
@@ -3646,6 +3803,7 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
     notification_emails:
@@ -3664,6 +3822,7 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/10434
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10481
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
     notification_emails:
@@ -3682,6 +3841,7 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
     data_sensitivity:
       - technical
     notification_emails:
