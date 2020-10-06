@@ -113,12 +113,9 @@ ID3D11Device* RenderCompositorANGLE::GetDeviceOfEGLDisplay(nsACString& aError) {
 
 bool RenderCompositorANGLE::ShutdownEGLLibraryIfNecessary(nsACString& aError) {
   const auto& displayDevice = GetDeviceOfEGLDisplay(aError);
-  if (!displayDevice) {
-    return false;
-  }
-
   RefPtr<ID3D11Device> device =
       gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+
   // When DeviceReset is handled by GPUProcessManager/GPUParent,
   // CompositorDevice is updated to a new device. EGLDisplay also needs to be
   // updated, since EGLDisplay uses DeviceManagerDx::mCompositorDevice on ANGLE
@@ -126,7 +123,8 @@ bool RenderCompositorANGLE::ShutdownEGLLibraryIfNecessary(nsACString& aError) {
   // 0. It is ensured by GPUProcessManager during handling DeviceReset.
   // GPUChild::RecvNotifyDeviceReset() destroys all CompositorSessions before
   // re-creating them.
-  if (device.get() != displayDevice &&
+
+  if ((!displayDevice || device.get() != displayDevice) &&
       RenderThread::Get()->RendererCount() == 0) {
     // Shutdown GLLibraryEGL for updating EGLDisplay.
     RenderThread::Get()->ClearSharedGL();
