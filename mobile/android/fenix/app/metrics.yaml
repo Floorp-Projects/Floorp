@@ -332,7 +332,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   fxa_manual_signin:
     type: event
     description:
@@ -346,7 +346,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   privacy_notice:
     type: event
     description:
@@ -360,7 +360,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   pref_toggled_private_browsing:
     type: event
     description:
@@ -374,7 +374,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   pref_toggled_toolbar_position:
     type: event
     description:
@@ -393,7 +393,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   pref_toggled_tracking_prot:
     type: event
     description:
@@ -412,7 +412,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   whats_new:
     type: event
     description:
@@ -426,7 +426,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   pref_toggled_theme_picker:
     type: event
     description:
@@ -445,7 +445,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   finish:
     type: event
     description:
@@ -459,7 +459,7 @@ onboarding:
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 search_shortcuts:
   selected:
@@ -3359,7 +3359,7 @@ pocket:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
 
@@ -3375,7 +3375,7 @@ pocket:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 first_session:
   campaign:
