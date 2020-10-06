@@ -400,9 +400,17 @@ const observer = {
           (aEvent.keyCode == aEvent.DOM_VK_TAB ||
             aEvent.keyCode == aEvent.DOM_VK_RETURN)
         ) {
-          LoginManagerChild.forWindow(window).onUsernameAutocompleted(
-            aEvent.composedTarget
-          );
+          const autofillForm =
+            LoginHelper.autofillForms &&
+            !PrivateBrowsingUtils.isContentWindowPrivate(
+              ownerDocument.defaultView
+            );
+
+          if (autofillForm) {
+            LoginManagerChild.forWindow(window).onUsernameAutocompleted(
+              aEvent.composedTarget
+            );
+          }
         }
         break;
       }
