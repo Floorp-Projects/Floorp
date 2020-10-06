@@ -1349,5 +1349,10 @@ if CONFIG['OS_TARGET'] == 'Linux' and CONFIG['CPU_ARCH'].startswith('mips'):
         'sys/cachectl.h',
     ]
 
+if CONFIG['OS_TARGET'] == 'FreeBSD':
+    system_headers += [
+        'sys/capsicum.h',
+    ]
+
 if CONFIG['MOZ_APP_SYSTEM_HEADERS']:
     include("../" + CONFIG['MOZ_BUILD_APP'] + "/app-system-headers.mozbuild")
