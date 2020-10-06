@@ -13,8 +13,10 @@ import random
 import operator
 import os
 import platform
+import six
 import string
 import time
+from functools import reduce
 from string import Template
 from twisted.internet import reactor, protocol
 from twisted.internet.task import LoopingCall
@@ -322,7 +324,7 @@ class StunMessage(object):
         digest_buf = self.build(MESSAGE_INTEGRITY)
         # Trim off the MESSAGE-INTEGRITY attr
         digest_buf = digest_buf[:len(digest_buf) - 24]
-        password = passlib.utils.saslprep(unicode(password))
+        password = passlib.utils.saslprep(six.text_type(password))
         key_string = "{}:{}:{}".format(username, realm, password)
         md5 = hashlib.md5()
         md5.update(key_string)
@@ -755,7 +757,7 @@ def create_self_signed_cert(name):
 if __name__ == "__main__":
     random.seed()
 
-    if platform.system() is "Windows":
+    if platform.system() == "Windows":
       # Windows is finicky about allowing real interfaces to talk to loopback.
       interface_4 = v4_address
       interface_6 = v6_address
