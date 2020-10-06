@@ -20,6 +20,7 @@ using mozilla::UniquePtr;
 // principals to the system principals.
 nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
                           MutableHandleScript scriptp) {
+  JS::CompileOptions options(cx);  // FIXME: receive from caller.
   const char* buf;
   uint32_t len;
   nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
@@ -33,7 +34,7 @@ nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
   memcpy(copy, buf, len);
   JS::TranscodeBuffer buffer;
   buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(copy), len);
-  JS::TranscodeResult code = JS::DecodeScript(cx, buffer, scriptp);
+  JS::TranscodeResult code = JS::DecodeScript(cx, options, buffer, scriptp);
   if (code == JS::TranscodeResult_Ok) {
     return NS_OK;
   }

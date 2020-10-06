@@ -5713,7 +5713,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
-    JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
   Rooted<UniquePtr<XDRDecoder>> decoder(
       cx, js::MakeUnique<XDRDecoder>(cx, buffer, cursorIndex));
@@ -5755,7 +5756,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
   MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
   if (js::UseOffThreadParseGlobal()) {
     // The buffer contains JSScript.
-    return JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+    return JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
   }
 
   // The buffer contains stencil.
@@ -5781,8 +5782,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
-    JSContext* cx, const TranscodeRange& range,
-    JS::MutableHandleScript scriptp) {
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    const TranscodeRange& range, JS::MutableHandleScript scriptp) {
   Rooted<UniquePtr<XDRDecoder>> decoder(cx,
                                         js::MakeUnique<XDRDecoder>(cx, range));
   if (!decoder) {
@@ -5804,7 +5805,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
   if (js::UseOffThreadParseGlobal()) {
     JS::TranscodeResult res =
-        JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+        JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
     if (res != JS::TranscodeResult_Ok) {
       return res;
     }
