@@ -9988,7 +9988,11 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
+#if defined(XP_MACOSX)
+  value: @IS_NIGHTLY_OR_DEV_EDITION@
+#else
   value: false
+#endif
   mirror: always
 
 - name: webgl.out-of-process.force
