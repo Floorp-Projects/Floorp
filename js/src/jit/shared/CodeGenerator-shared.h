@@ -19,7 +19,6 @@
 #include "jit/MIRGraph.h"
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
-#include "jit/VMFunctions.h"
 
 namespace js {
 namespace jit {

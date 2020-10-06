@@ -20,6 +20,7 @@
 #include "builtin/Symbol.h"
 #include "gc/GC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/IonScript.h"
 #include "jit/JitScript.h"
 #include "js/HeapAPI.h"
 #include "util/DiagnosticAssertions.h"
