@@ -2390,6 +2390,16 @@ nsNativeThemeCocoa::ScrollbarParams nsNativeThemeCocoa::ComputeScrollbarParams(n
       params.faceColor = colors.thumb.CalcColor(*style);
     }
   }
+
+  // With APZ zooming, we need to be able to draw scrollbars manually because
+  // the native CG drawing doesn't apply our desired scale. The easiest way to
+  // do this is set the custom flag with the default scrollbar colors.
+  if (!params.custom) {
+    params.custom = true;
+    params.trackColor = NS_RGBA(250, 250, 250, 255);
+    params.faceColor = NS_RGBA(194, 194, 194, 255);
+  }
+
   return params;
 }
 
