@@ -4,9 +4,6 @@
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
 const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { BookmarksEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
-);
 const { RotaryEngine } = ChromeUtils.import(
   "resource://testing-common/services/sync/rotaryengine.js"
 );
@@ -148,7 +145,7 @@ add_task(async function test_basic() {
 });
 
 add_task(async function test_processIncoming_error() {
-  let engine = new BookmarksEngine(Service);
+  let engine = Service.engineManager.get("bookmarks");
   await engine.initialize();
   let store = engine._store;
   let server = await serverForFoo(engine);
@@ -191,10 +188,7 @@ add_task(async function test_processIncoming_error() {
 
     equal(pingPayload.engines.length, 1);
 
-    let engineName = bufferedBookmarksEnabled()
-      ? "bookmarks-buffered"
-      : "bookmarks";
-    equal(pingPayload.engines[0].name, engineName);
+    equal(pingPayload.engines[0].name, "bookmarks-buffered");
     deepEqual(pingPayload.engines[0].failureReason, {
       name: "httperror",
       code: 500,
@@ -206,7 +200,7 @@ add_task(async function test_processIncoming_error() {
 });
 
 add_task(async function test_uploading() {
-  let engine = new BookmarksEngine(Service);
+  let engine = Service.engineManager.get("bookmarks");
   await engine.initialize();
   let store = engine._store;
   let server = await serverForFoo(engine);
@@ -219,14 +213,10 @@ add_task(async function test_uploading() {
   });
 
   try {
-    let engineName = bufferedBookmarksEnabled()
-      ? "bookmarks-buffered"
-      : "bookmarks";
-
     let ping = await sync_engine_and_validate_telem(engine, false);
     ok(!!ping);
     equal(ping.engines.length, 1);
-    equal(ping.engines[0].name, engineName);
+    equal(ping.engines[0].name, "bookmarks-buffered");
     ok(!!ping.engines[0].outgoing);
     greater(ping.engines[0].outgoing[0].sent, 0);
     ok(!ping.engines[0].incoming);
@@ -238,10 +228,13 @@ add_task(async function test_uploading() {
 
     await store.wipe();
     await engine.resetClient();
+    // We don't sync via the service, so don't re-hit info/collections, so
+    // lastModified remaning at zero breaks things subtly...
+    engine.lastModified = null;
 
     ping = await sync_engine_and_validate_telem(engine, false);
     equal(ping.engines.length, 1);
-    equal(ping.engines[0].name, engineName);
+    equal(ping.engines[0].name, "bookmarks-buffered");
     equal(ping.engines[0].outgoing.length, 1);
     ok(!!ping.engines[0].incoming);
   } finally {
@@ -614,12 +607,7 @@ add_task(async function test_initial_sync_engines() {
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   // These are the only ones who actually have things to sync at startup.
-  let telemetryEngineNames = ["clients", "prefs", "tabs"];
-  if (bufferedBookmarksEnabled()) {
-    telemetryEngineNames.push("bookmarks-buffered");
-  } else {
-    telemetryEngineNames.push("bookmarks");
-  }
+  let telemetryEngineNames = ["clients", "prefs", "tabs", "bookmarks-buffered"];
   let server = await serverForEnginesWithKeys(
     { foo: "password" },
     ["bookmarks", "prefs", "tabs"].map(name => Service.engineManager.get(name))
