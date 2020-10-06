@@ -85,7 +85,7 @@ struct SVCB {
   bool operator<(const SVCB& aOther) const;
   Maybe<uint16_t> GetPort() const;
   bool NoDefaultAlpn() const;
-  Maybe<nsCString> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
+  Maybe<Tuple<nsCString, bool>> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
   void GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
@@ -102,14 +102,14 @@ class SVCBRecord : public nsISVCBRecord {
   explicit SVCBRecord(const SVCB& data)
       : mData(data), mPort(Nothing()), mAlpn(Nothing()) {}
   explicit SVCBRecord(const SVCB& data, Maybe<uint16_t>&& aPort,
-                      Maybe<nsCString>&& aAlpn)
+                      Maybe<Tuple<nsCString, bool>>&& aAlpn)
       : mData(data), mPort(std::move(aPort)), mAlpn(std::move(aAlpn)) {}
 
  private:
   virtual ~SVCBRecord() = default;
   SVCB mData;
   Maybe<uint16_t> mPort;
-  Maybe<nsCString> mAlpn;
+  Maybe<Tuple<nsCString, bool>> mAlpn;
 };
 
 class DNSHTTPSSVCRecordBase {

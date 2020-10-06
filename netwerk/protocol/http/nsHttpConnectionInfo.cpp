@@ -22,6 +22,7 @@
 #include "nsICryptoHash.h"
 #include "nsIDNSByTypeRecord.h"
 #include "nsIProtocolProxyService.h"
+#include "nsHttpHandler.h"
 #include "nsNetCID.h"
 #include "nsProxyInfo.h"
 #include "prnetdb.h"
@@ -358,22 +359,26 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   // Try to get the port and Alpn. If this record has SvcParamKeyPort defined,
   // the new port will be used as mRoutedPort.
   Maybe<uint16_t> port = aRecord->GetPort();
-  Maybe<nsCString> alpn = aRecord->GetAlpn();
+  Maybe<Tuple<nsCString, bool>> alpn = aRecord->GetAlpn();
+
+  // Let the new conn info learn h3 will be used.
+  bool isHttp3 = alpn ? Get<1>(*alpn) : false;
 
   LOG(("HTTPSSVC: use new routed host (%s) and new npnToken (%s)", name.get(),
-       alpn ? alpn->get() : "None"));
+       alpn ? Get<0>(*alpn).get() : "None"));
 
   RefPtr<nsHttpConnectionInfo> clone;
   if (name.IsEmpty()) {
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? *alpn : ""_ns, mUsername, mTopWindowOrigin,
-        mProxyInfo, mOriginAttributes, mEndToEndSSL, mIsolated, mIsHttp3);
+        mOrigin, mOriginPort, alpn ? Get<0>(*alpn) : EmptyCString(), mUsername,
+        mTopWindowOrigin, mProxyInfo, mOriginAttributes, mEndToEndSSL,
+        mIsolated, isHttp3);
   } else {
     MOZ_ASSERT(mEndToEndSSL);
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? *alpn : ""_ns, mUsername, mTopWindowOrigin,
-        mProxyInfo, mOriginAttributes, name, port ? *port : mRoutedPort,
-        mIsolated, mIsHttp3);
+        mOrigin, mOriginPort, alpn ? Get<0>(*alpn) : EmptyCString(), mUsername,
+        mTopWindowOrigin, mProxyInfo, mOriginAttributes, name,
+        port ? *port : mRoutedPort, mIsolated, isHttp3);
   }
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred

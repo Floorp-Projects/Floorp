@@ -169,15 +169,16 @@ bool SVCB::NoDefaultAlpn() const {
   return false;
 }
 
-Maybe<nsCString> SVCB::GetAlpn(bool aNoHttp2, bool aNoHttp3) const {
-  Maybe<nsCString> alpn;
+Maybe<Tuple<nsCString, bool>> SVCB::GetAlpn(bool aNoHttp2,
+                                            bool aNoHttp3) const {
+  Maybe<Tuple<nsCString, bool>> alpn;
   nsAutoCString alpnValue;
   for (const auto& value : mSvcFieldValue) {
     if (value.mValue.is<SvcParamAlpn>()) {
       alpn.emplace();
       alpnValue = value.mValue.as<SvcParamAlpn>().mValue;
       if (!alpnValue.IsEmpty()) {
-        alpn->Assign(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
+        alpn = Some(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
       }
       return alpn;
     }
@@ -212,7 +213,7 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
 
 Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
-Maybe<nsCString> SVCBRecord::GetAlpn() { return mAlpn; }
+Maybe<Tuple<nsCString, bool>> SVCBRecord::GetAlpn() { return mAlpn; }
 
 NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
   aEchConfig = mData.mEchConfig;
@@ -269,8 +270,8 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
       continue;
     }
 
-    Maybe<nsCString> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
-    if (alpn && alpn->IsEmpty()) {
+    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && Get<0>(*alpn).IsEmpty()) {
       // Can't find any supported protocols, skip.
       continue;
     }
@@ -334,8 +335,8 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
       continue;
     }
 
-    Maybe<nsCString> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
-    if (alpn && alpn->IsEmpty()) {
+    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && Get<0>(*alpn).IsEmpty()) {
       // Can't find any supported protocols, skip.
       continue;
     }

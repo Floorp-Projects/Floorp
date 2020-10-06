@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let prefs;
 let h2Port;
+let h3Port;
 let listen;
 let trrServer;
 
@@ -31,6 +32,10 @@ function setup() {
   h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
+
+  h3Port = env.get("MOZHTTP3_PORT");
+  Assert.notEqual(h3Port, null);
+  Assert.notEqual(h3Port, "");
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
@@ -89,6 +94,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.dns.echconfig.enabled");
   prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
+  prefs.clearUserPref("network.http.http3.enabled");
   trrServer.stop();
 });
 
@@ -694,3 +700,76 @@ add_task(async function testResetExclusionList() {
 
   await trrServer.stop();
 });
+
+// Simply test if we can connect to H3 server.
+add_task(async function testH3Connection() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  await trrServer.registerDoHAnswers("test.h3.com", "HTTPS", [
+    {
+      name: "test.h3.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "www.h3.com",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+  ]);
+
+  await trrServer.registerDoHAnswers("www.h3.com", "A", [
+    {
+      name: "www.h3.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "test.h3.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  let chan = makeChan(`https://test.h3.com`);
+  let [req, resp] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
+  Assert.equal(req.protocolVersion, "h3");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h3Port);
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+
+  await trrServer.stop();
+});
+
