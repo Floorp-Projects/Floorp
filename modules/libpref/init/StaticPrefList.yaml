@@ -8579,6 +8579,12 @@
   value: true
   mirror: always
 
+# When true, reset the exclusion list when all records are excluded.
+- name: network.dns.httpssvc.reset_exclustion_list
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
