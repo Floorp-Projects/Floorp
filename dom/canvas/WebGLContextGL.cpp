@@ -1077,7 +1077,17 @@ static bool ValidateReadPixelsFormatAndType(
 
   ////
 
-  webgl->ErrorInvalidOperation("Incompatible format or type.");
+  // clang-format off
+  webgl->ErrorInvalidOperation(
+      "Format and type %s/%s incompatible with this %s attachment."
+      " This framebuffer requires either %s/%s or"
+      " getParameter(IMPLEMENTATION_COLOR_READ_FORMAT/_TYPE) %s/%s.",
+      EnumString(pi.format).c_str(), EnumString(pi.type).c_str(),
+      srcUsage->format->name,
+      EnumString(defaultPI.format).c_str(), EnumString(defaultPI.type).c_str(),
+      EnumString(implPI.format).c_str(), EnumString(implPI.type).c_str());
+  // clang-format on
+
   return false;
 }
 
