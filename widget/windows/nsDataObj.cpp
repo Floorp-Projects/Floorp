@@ -430,7 +430,7 @@ STDMETHODIMP nsDataObj::CMemStream::Stat(STATSTG* statstg, DWORD dwFlags) {
   memset((void*)statstg, 0, sizeof(STATSTG));
 
   if (dwFlags != STATFLAG_NONAME) {
-    const nsString& wideFileName = u""_ns;
+    const nsString& wideFileName = EmptyString();
 
     uint32_t nMaxNameLength = (wideFileName.Length() * 2) + 2;
     void* retBuf = CoTaskMemAlloc(nMaxNameLength);  // freed by caller
