@@ -10,6 +10,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/PerfSpewer.h"
 

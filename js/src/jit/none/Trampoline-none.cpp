@@ -6,6 +6,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineIC.h"
+#include "jit/JitRuntime.h"
 #include "vm/Realm.h"
 
 using namespace js;
