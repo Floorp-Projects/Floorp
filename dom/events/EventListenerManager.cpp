@@ -1462,6 +1462,16 @@ bool EventListenerManager::HasListenersFor(const nsAString& aEventName) const {
 }
 
 bool EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn) const {
+  return HasListenersForInternal(aEventNameWithOn, false);
+}
+
+bool EventListenerManager::HasNonSystemGroupListenersFor(
+    nsAtom* aEventNameWithOn) const {
+  return HasListenersForInternal(aEventNameWithOn, true);
+}
+
+bool EventListenerManager::HasListenersForInternal(
+    nsAtom* aEventNameWithOn, bool aIgnoreSystemGroup) const {
 #ifdef DEBUG
   nsAutoString name;
   aEventNameWithOn->ToString(name);
@@ -1472,6 +1482,9 @@ bool EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn) const {
   for (uint32_t i = 0; i < count; ++i) {
     const Listener* listener = &mListeners.ElementAt(i);
     if (listener->mTypeAtom == aEventNameWithOn) {
+      if (aIgnoreSystemGroup && listener->mFlags.mInSystemGroup) {
+        continue;
+      }
       return true;
     }
   }
