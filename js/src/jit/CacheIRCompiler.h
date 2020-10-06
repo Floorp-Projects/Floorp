@@ -23,6 +23,8 @@ namespace jit {
 class BaselineCacheIRCompiler;
 class IonCacheIRCompiler;
 
+enum class ICStubEngine : uint8_t;
+
 // [SMDOC] CacheIR Value Representation and Tracking
 //
 // While compiling an IC stub the CacheIR compiler needs to keep track of the

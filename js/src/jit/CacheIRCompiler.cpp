@@ -24,6 +24,7 @@
 #include "jit/IonCacheIRCompiler.h"
 #include "jit/IonIC.h"
 #include "jit/JitRuntime.h"
+#include "jit/JitZone.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/TemplateObject.h"
