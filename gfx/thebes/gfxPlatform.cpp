@@ -770,7 +770,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.Report(aReport.render_tasks, "render-tasks");
         helper.Report(aReport.hit_testers, "hit-testers");
         helper.Report(aReport.fonts, "resource-cache/fonts");
-        helper.Report(aReport.weak_fonts, "resource-cache/weak-fonts");
         helper.Report(aReport.images, "resource-cache/images");
         helper.Report(aReport.rasterized_blobs,
                       "resource-cache/rasterized-blobs");
