@@ -1311,16 +1311,13 @@ MarkupView.prototype = {
    *
    * @param  {MarkupContainer} container
    *         The container we're navigating to.
-   * @return {Boolean}
-   *         Returns true if the MarkupContainer was navigated to and marked selected.
-   *         Returns false if the MarkupContainer is already selected.
    */
   navigate: function(container) {
     if (!container) {
-      return false;
+      return;
     }
 
-    return this._markContainerAsSelected(container, "treepanel");
+    this._markContainerAsSelected(container, "treepanel");
   },
 
   /**
