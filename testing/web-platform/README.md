@@ -82,6 +82,13 @@ FAQ
   [testdriver](https://web-platform-tests.org/writing-tests/testdriver.html)
   API.
 
+  For Gecko-specific testharness tests, the specialPowers extension is
+  available. Note that this should only be used when no other approach
+  works; such tests can't be shared with other browsers. If you're
+  using specialPowers for something that could be tested in other
+  browsers if we extended testdriver or added test-only APIs, please
+  file a bug.
+
 Writing tests
 -------------
 
