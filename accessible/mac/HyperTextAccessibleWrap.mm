@@ -333,7 +333,7 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
                                           int32_t* aEndOffset) {
   TextPoint here(this, aOffset);
   TextPoint end = FindTextPoint(aOffset, eDirNext, eSelectWord, eEndWord);
-  if (!end.mContainer || end < here) {
+  if (!end.mContainer || end < here || here == end) {
     // If we didn't find a word end, or if we wrapped around (bug 1652833),
     // return with no result.
     return;
@@ -341,11 +341,8 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
 
   if ((NativeState() & states::EDITABLE) &&
       !(end.mContainer->NativeState() & states::EDITABLE)) {
-    // The word search crossed an editable boundary. Return the last word of the
-    // editable root.
-    return EditableRoot()->LeftWordAt(
-        nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, aStartContainer,
-        aStartOffset, aEndContainer, aEndOffset);
+    // The word search crossed an editable boundary. Return with no result.
+    return;
   }
 
   TextPoint start =
