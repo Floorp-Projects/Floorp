@@ -2141,6 +2141,8 @@ pref("devtools.inspector.compatibility.enabled", false);
 #endif
 // Enable color scheme simulation in the inspector.
 pref("devtools.inspector.color-scheme-simulation.enabled", false);
+// Enable overflow debugging in the inspector.
+pref("devtools.overflow.debugging.enabled", true);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
@@ -2476,10 +2478,6 @@ pref("devtools.debugger.features.async-live-stacks", false);
 // This is currently not exposed by any UI to avoid making
 // about:devtools-toolbox tabs unusable by mistake.
 pref("devtools.popup.disable_autohide", false);
-
-// Part of the Overflow Debugging project
-// Here's the meta bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1529280
-pref("devtools.overflow.debugging.enabled", false);
 
 // FirstStartup service time-out in ms
 pref("first-startup.timeout", 30000);

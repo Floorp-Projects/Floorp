@@ -33,8 +33,6 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
-  await SpecialPowers.setBoolPref("devtools.overflow.debugging.enabled", true);
-
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
