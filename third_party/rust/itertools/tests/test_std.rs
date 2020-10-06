@@ -1,14 +1,14 @@
-
-#[macro_use] extern crate itertools as it;
-extern crate permutohedron;
-
-use it::Itertools;
-use it::multizip;
-use it::multipeek;
-use it::free::rciter;
-use it::free::put_back_n;
-use it::FoldWhile;
-use it::cloned;
+use permutohedron;
+use itertools as it;
+use crate::it::Itertools;
+use crate::it::multizip;
+use crate::it::multipeek;
+use crate::it::free::rciter;
+use crate::it::free::put_back_n;
+use crate::it::FoldWhile;
+use crate::it::cloned;
+use crate::it::iproduct;
+use crate::it::izip;
 
 #[test]
 fn product3() {
@@ -99,7 +99,25 @@ fn dedup() {
 }
 
 #[test]
+fn dedup_by() {
+    let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
+    let ys = [(0, 0), (0, 1), (0, 2), (3, 1), (0, 3)];
+    it::assert_equal(ys.iter(), xs.iter().dedup_by(|x, y| x.1==y.1));
+    let xs = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)];
+    let ys = [(0, 1)];
+    it::assert_equal(ys.iter(), xs.iter().dedup_by(|x, y| x.0==y.0));
+
+    let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
+    let ys = [(0, 0), (0, 1), (0, 2), (3, 1), (0, 3)];
+    let mut xs_d = Vec::new();
+    xs.iter().dedup_by(|x, y| x.1==y.1).fold((), |(), &elt| xs_d.push(elt));
+    assert_eq!(&xs_d, &ys);
+}
+
+#[test]
 fn all_equal() {
+    assert!("".chars().all_equal());
+    assert!("A".chars().all_equal());
     assert!(!"AABBCCC".chars().all_equal());
     assert!("AAAAAAA".chars().all_equal());
     for (_key, mut sub) in &"AABBCCC".chars().group_by(|&x| x) {
@@ -168,7 +186,7 @@ fn test_rciter() {
 #[allow(deprecated)]
 #[test]
 fn trait_pointers() {
-    struct ByRef<'r, I: ?Sized>(&'r mut I) where I: 'r;
+    struct ByRef<'r, I: ?Sized>(&'r mut I) ;
 
     impl<'r, X, I: ?Sized> Iterator for ByRef<'r, I> where
         I: 'r + Iterator<Item=X>
@@ -180,12 +198,12 @@ fn trait_pointers() {
         }
     }
 
-    let mut it = Box::new(0..10) as Box<Iterator<Item=i32>>;
+    let mut it = Box::new(0..10) as Box<dyn Iterator<Item=i32>>;
     assert_eq!(it.next(), Some(0));
 
     {
         /* make sure foreach works on non-Sized */
-        let jt: &mut Iterator<Item = i32> = &mut *it;
+        let jt: &mut dyn Iterator<Item = i32> = &mut *it;
         assert_eq!(jt.next(), Some(1));
 
         {
@@ -329,7 +347,7 @@ fn test_multipeek_reset() {
 
 #[test]
 fn test_multipeek_peeking_next() {
-    use it::PeekingNext;
+    use crate::it::PeekingNext;
     let nums = vec![1u8,2,3,4,5,6,7];
 
     let mut mp = multipeek(nums.iter().map(|&x| x));
@@ -581,6 +599,46 @@ fn combinations_of_too_short() {
 #[test]
 fn combinations_zero() {
     it::assert_equal((1..3).combinations(0), vec![vec![]]);
+    it::assert_equal((0..0).combinations(0), vec![vec![]]);
+}
+
+#[test]
+fn permutations_zero() {
+    it::assert_equal((1..3).permutations(0), vec![vec![]]);
+    it::assert_equal((0..0).permutations(0), vec![vec![]]);
+}
+
+#[test]
+fn combinations_with_replacement() {
+    // Pool smaller than n
+    it::assert_equal((0..1).combinations_with_replacement(2), vec![vec![0, 0]]);
+    // Pool larger than n
+    it::assert_equal(
+        (0..3).combinations_with_replacement(2),
+        vec![
+            vec![0, 0],
+            vec![0, 1],
+            vec![0, 2],
+            vec![1, 1],
+            vec![1, 2],
+            vec![2, 2],
+        ],
+    );
+    // Zero size
+    it::assert_equal(
+        (0..3).combinations_with_replacement(0),
+        vec![vec![]],
+    );
+    // Zero size on empty pool
+    it::assert_equal(
+        (0..0).combinations_with_replacement(0),
+        vec![vec![]],
+    );
+    // Empty pool
+    it::assert_equal(
+        (0..0).combinations_with_replacement(2),
+        <Vec<Vec<_>>>::new(),
+    );
 }
 
 #[test]
@@ -627,7 +685,7 @@ fn diff_shorter() {
 #[test]
 fn minmax() {
     use std::cmp::Ordering;
-    use it::MinMaxResult;
+    use crate::it::MinMaxResult;
 
     // A peculiar type: Equality compares both tuple items, but ordering only the
     // first item.  This is so we can check the stability property easily.
