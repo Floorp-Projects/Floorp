@@ -729,8 +729,8 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   NS_ENSURE_SUCCESS(rv, rv);
 
   CompileOptions options(cx);
-  options.setNoScriptRval(true)
-      .setForceStrictMode()
+  ScriptPreloader::FillCompileOptionsForCachedScript(options);
+  options.setForceStrictMode()
       .setFileAndLine(nativePath.get(), 1)
       .setSourceIsLazy(true)
       .setNonSyntacticScope(true);

@@ -1198,8 +1198,8 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   JSContext* cx = jsapi.cx();
 
   JS::CompileOptions options(cx);
+  ScriptPreloader::FillCompileOptionsForCachedScript(options);
   options.setFileAndLine(url.get(), 1);
-  options.setNoScriptRval(true);
   options.setNonSyntacticScope(true);
 
   JS::Rooted<JSScript*> script(cx);

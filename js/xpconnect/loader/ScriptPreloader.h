@@ -26,7 +26,7 @@
 #include "nsITimer.h"
 
 #include "jsapi.h"
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions
 #include "js/GCAnnotations.h"
 
 #include <prio.h>
@@ -77,6 +77,10 @@ class ScriptPreloader : public nsIObserver,
   static ScriptPreloader& GetChildSingleton();
 
   static ProcessType GetChildProcessType(const nsACString& remoteType);
+
+  // Fill some options that should be consistent across all scripts stored
+  // into preloader cache.
+  static void FillCompileOptionsForCachedScript(JS::CompileOptions& options);
 
   // Retrieves the script with the given cache key from the script cache.
   // Returns null if the script is not cached.
