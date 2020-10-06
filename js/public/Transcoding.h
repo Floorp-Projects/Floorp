@@ -121,6 +121,17 @@ extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
                                                     TranscodeBuffer& buffer);
 
+// Check if the compile options and script's flag matches.
+//
+// JS::DecodeScript* and JS::DecodeOffThreadScript internally check this.
+//
+// JS::DecodeMultiOffThreadScripts checks some options shared across multiple
+// scripts. Caller is responsible for checking each script with this API when
+// using the decoded script instead of compiling a new script wiht the given
+// options.
+extern JS_PUBLIC_API bool CheckCompileOptionsMatch(
+    const ReadOnlyCompileOptions& options, JSScript* script);
+
 }  // namespace JS
 
 #endif /* js_Transcoding_h */
