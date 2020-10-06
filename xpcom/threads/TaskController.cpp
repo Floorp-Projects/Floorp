@@ -79,6 +79,7 @@ bool TaskController::Initialize() {
 }
 
 bool TaskController::InitializeInternal() {
+  InputTaskManager::Init();
   mMTProcessingRunnable = NS_NewRunnableFunction(
       "TaskController::ExecutePendingMTTasks()",
       []() { TaskController::Get()->ProcessPendingMTTask(); });
