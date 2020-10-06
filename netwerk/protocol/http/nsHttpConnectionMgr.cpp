@@ -5062,18 +5062,6 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupConn(
         connTCP->SetFastOpenStatus(TFO_INIT_FAILED);
       }
     }
-
-    if (nullTrans) {
-      nullTrans->Close(rv);
-    } else if (nsHttpTransaction* trans =
-                   mTransaction->QueryHttpTransaction()) {
-      if (mIsHttp3) {
-        trans->DisableHttp3();
-        gHttpHandler->ExcludeHttp3(mEnt->mConnInfo);
-      }
-      Unused << gHttpHandler->ConnMgr()->CancelTransaction(trans, rv);
-    }
-
     return rv;
   }
 

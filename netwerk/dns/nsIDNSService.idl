@@ -213,13 +213,6 @@ interface nsIDNSService : nsISupports
                                              in ACString aSVCDomainName);
 
     /**
-     * Reset the exclusion list.
-     * @param aOwnerName
-     *        The owner name of this HTTPS RRs.
-     */
-    [noscript] void ResetExcludedSVCDomainName(in ACString aOwnerName);
-
-    /**
      * Returns a string containing the URI currently used by the TRR service.
      */
     readonly attribute AUTF8String currentTrrURI;
