@@ -668,7 +668,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   top_sites_count:
     type: counter
     lifetime: application
@@ -794,7 +794,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   default_moz_browser:
     type: string
     lifetime: application
@@ -813,7 +813,7 @@ metrics:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   adjust_campaign:
     type: string
     lifetime: application
