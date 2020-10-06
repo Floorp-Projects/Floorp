@@ -486,7 +486,6 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 
 #pragma mark -
 
-
 void nsChildView::SuppressAnimation(bool aSuppress) {
   GetAppWindowWidget()->SuppressAnimation(aSuppress);
 }

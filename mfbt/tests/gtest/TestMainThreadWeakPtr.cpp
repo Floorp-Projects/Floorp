@@ -40,4 +40,3 @@ TEST(MFBT_MainThreadWeakPtr, Basic)
 
   t.join();
 }
-

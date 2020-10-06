@@ -1048,8 +1048,8 @@ struct NativePtrTraits<Impl, /* Type = */ NativePtrType::WEAK_NON_INTRUSIVE> {
 
     // We cannot use Get here because that method throws an exception when the
     // object is null, which is a valid state for a stale call.
-    const auto holder = reinterpret_cast<HandleType>(
-        GetNativeHandle(env, instance.Get()));
+    const auto holder =
+        reinterpret_cast<HandleType>(GetNativeHandle(env, instance.Get()));
     MOZ_CATCH_JNI_EXCEPTION(env);
 
     if (!holder || !holder->IsAttached()) {

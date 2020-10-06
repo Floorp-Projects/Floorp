@@ -202,8 +202,8 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsOriginalFrameSource>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-bool WindowContext::CanSet(FieldIndex<IDX_DocTreeHadMedia>,
-                           const bool& aValue, ContentParent* aSource) {
+bool WindowContext::CanSet(FieldIndex<IDX_DocTreeHadMedia>, const bool& aValue,
+                           ContentParent* aSource) {
   return IsTop();
 }
 

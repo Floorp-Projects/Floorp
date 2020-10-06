@@ -3875,8 +3875,7 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   JSRuntime* rt = thing->runtimeFromAnyThread();
 
   /* Permanent atoms are never finalized by non-owning runtimes. */
-  if (thing->isPermanentAndMayBeShared() &&
-      TlsContext.get()->runtime() != rt) {
+  if (thing->isPermanentAndMayBeShared() && TlsContext.get()->runtime() != rt) {
     return false;
   }
 

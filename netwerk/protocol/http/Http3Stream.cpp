@@ -187,7 +187,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
     case SENDING_BODY: {
       rv = mSession->SendRequestBody(mStreamId, buf, count, countRead);
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-          mSendingBlockedByFlowControlCount++;
+        mSendingBlockedByFlowControlCount++;
       }
       MOZ_ASSERT(mRequestBodyLenRemaining >= *countRead,
                  "We cannot send more that than we promised.");
