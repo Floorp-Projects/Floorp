@@ -3624,13 +3624,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
 
-  // Create any required items for the 'top layer' and check if they'll be
-  // opaque over the entire area of the viewport. If they are, then we can
-  // skip building display items for the rest of the page.
-  bool topLayerIsOpaque = false;
-  nsDisplayWrapList* topLayerWrapList =
-      MaybeCreateTopLayerItems(aBuilder, &topLayerIsOpaque);
-
   if (ignoringThisScrollFrame) {
     // Root scrollframes have FrameMetrics and clipping on their container
     // layers, so don't apply clipping again.
@@ -3647,7 +3640,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
     }
 
-    if (!topLayerIsOpaque) {
+    {
       nsDisplayListBuilder::AutoBuildingDisplayList building(
           aBuilder, mOuter, visibleRect, dirtyRect);
 
@@ -3657,9 +3650,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, aLists);
     }
 
-    if (topLayerWrapList) {
-      aLists.PositionedDescendants()->AppendToTop(topLayerWrapList);
-    }
+    MaybeAddTopLayerItems(aBuilder, aLists);
 
     if (addScrollBars) {
       // Add overlay scrollbars.
@@ -3848,7 +3839,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       }
     }
 
-    if (!topLayerIsOpaque) {
+    {
       // Clip our contents to the unsnapped scrolled rect. This makes sure
       // that we don't have display items over the subpixel seam at the edge
       // of the scrolled area.
@@ -3963,9 +3954,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (topLayerWrapList) {
-    aLists.PositionedDescendants()->AppendToTop(topLayerWrapList);
-  }
+  MaybeAddTopLayerItems(aBuilder, set);
 
   if (willBuildAsyncZoomContainer) {
     MOZ_ASSERT(mClipAllDescendants);
@@ -4068,13 +4057,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   scrolledContent.MoveTo(aLists);
 }
 
-nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
-    nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
+void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
+                                              const nsDisplayListSet& aLists) {
   if (mIsRoot) {
     if (ViewportFrame* viewportFrame = do_QueryFrame(mOuter->GetParent())) {
       nsDisplayList topLayerList;
-      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList,
-                                                 aIsOpaque);
+      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
       if (!topLayerList.IsEmpty()) {
         nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
             aBuilder, viewportFrame);
@@ -4088,12 +4076,11 @@ nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
         if (wrapList) {
           wrapList->SetOverrideZIndex(
               std::numeric_limits<decltype(wrapList->ZIndex())>::max());
-          return wrapList;
+          aLists.PositionedDescendants()->AppendToTop(wrapList);
         }
       }
     }
   }
-  return nullptr;
 }
 
 nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
