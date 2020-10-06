@@ -177,14 +177,15 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
                                      "Battery Intel requires os compositor",
                                      "INTEL_BATTERY_REQUIRES_DCOMP"_ns);
       }
-    }
 
-    int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate();
-    if (maxRefreshRate > 60) {
-      mFeatureWrQualified->Disable(FeatureStatus::Blocked,
+      int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate();
+      if (maxRefreshRate > 60) {
+        mFeatureWrQualified->Disable(FeatureStatus::Blocked,
                                    "Monitor refresh rate too high",
                                    "REFRESH_RATE_TOO_HIGH"_ns);
+      }
     }
+
   }
 
   return guarded;
