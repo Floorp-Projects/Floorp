@@ -150,8 +150,6 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
       cx->runtime()->jitRuntime()->baselineInterpreter();
   data.jitcode = interp.interpretOpNoDebugTrapAddr().value;
 
-  // Note: keep this in sync with SetEnterJitData.
-
   data.osrFrame = fp;
   data.osrNumStackValues =
       fp->script()->nfixed() + cx->interpreterRegs().stackDepth();
