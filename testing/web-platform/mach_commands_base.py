@@ -33,7 +33,7 @@ class WebPlatformTestsRunner(object):
             self.update_manifest(logger)
         kwargs["manifest_update"] = False
 
-        if kwargs["product"] in ["firefox", None]:
+        if kwargs["product"] == "firefox":
             try:
                 kwargs = self.setup.kwargs_firefox(kwargs)
             except BinaryNotFoundException as e:
