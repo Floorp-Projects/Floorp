@@ -7,6 +7,7 @@
 #include "builtin/intl/LanguageTag.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
@@ -459,7 +460,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   using Attribute = LanguageTagParser::AttributesVector::ElementType;
   using Keyword = LanguageTagParser::KeywordsVector::ElementType;
 
-  bool ok;
+  mozilla::DebugOnly<bool> ok;
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseUnicodeExtension(
@@ -752,7 +753,7 @@ bool LanguageTag::canonicalizeTransformExtension(
 
   using TField = LanguageTagParser::TFieldVector::ElementType;
 
-  bool ok;
+  mozilla::DebugOnly<bool> ok;
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseTransformExtension(
