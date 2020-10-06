@@ -8,6 +8,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import android.os.Handler
+import android.view.KeyEvent
 
 import org.hamcrest.Matchers.*
 
@@ -537,6 +538,94 @@ class AutocompleteTest : BaseSessionTest() {
         sessionRule.runtime.settings.loginAutofillEnabled = false
         testLoginUsed(false)
         sessionRule.runtime.settings.loginAutofillEnabled = true
+    }
+
+    fun testPasswordAutofill(autofillEnabled: Boolean) {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                // Enable login management since it's disabled in automation.
+                "signon.rememberSignons" to true,
+                "signon.autofillForms.http" to true,
+                "signon.userInputRequiredToCapture.enabled" to false))
+
+        val runtime = sessionRule.runtime
+        val register = { delegate: LoginStorageDelegate ->
+            runtime.loginStorageDelegate = delegate
+        }
+        val unregister = { _: LoginStorageDelegate ->
+            runtime.loginStorageDelegate = null
+        }
+
+        val user1 = "user1x"
+        val pass1 = "pass1x"
+        val guid = "test-guid"
+        val origin = GeckoSessionTestRule.TEST_ENDPOINT
+        val savedLogin = LoginEntry.Builder()
+                .guid(guid)
+                .origin(origin)
+                .formActionOrigin(origin)
+                .username(user1)
+                .password(pass1)
+                .build()
+        val savedLogins = mutableListOf<LoginEntry>(savedLogin)
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                LoginStorageDelegate::class, register, unregister,
+                object : LoginStorageDelegate {
+            @AssertCalled
+            override fun onLoginFetch(domain: String)
+                    : GeckoResult<Array<LoginEntry>>? {
+                assertThat("Domain should match", domain, equalTo("localhost"))
+
+                return GeckoResult.fromValue(savedLogins.toTypedArray())
+            }
+
+            @AssertCalled(false)
+            override fun onLoginUsed(login: LoginEntry, usedFields: Int) {}
+        })
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(false)
+            override fun onLoginSave(
+                    session: GeckoSession,
+                    prompt: AutocompleteRequest<LoginSaveOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse>? {
+                return null
+            }
+        })
+
+        mainSession.loadTestPath(FORMS3_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.evaluateJS("document.querySelector('#user1').focus()")
+        mainSession.evaluateJS(
+                "document.querySelector('#user1').value = '$user1'")
+        mainSession.pressKey(KeyEvent.KEYCODE_TAB)
+
+        val pass = mainSession.evaluateJS(
+            "document.querySelector('#pass1').value") as String
+
+        if (autofillEnabled) {
+            assertThat(
+                "Password should match",
+                pass,
+                equalTo(pass1))
+        } else {
+            assertThat(
+                "Password should not be filled",
+                pass,
+                equalTo(""))
+        }
+    }
+
+    @Test
+    fun loginAutofillDisabledPasswordAutofill() {
+        sessionRule.runtime.settings.loginAutofillEnabled = false
+        testPasswordAutofill(false)
+        sessionRule.runtime.settings.loginAutofillEnabled = true
+    }
+
+    @Test
+    fun loginAutofillEnabledPasswordAutofill() {
+        testPasswordAutofill(true)
     }
 
     @Test
