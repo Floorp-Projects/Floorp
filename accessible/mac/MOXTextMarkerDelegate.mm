@@ -100,23 +100,6 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 }
 
 - (NSString*)moxStringForTextMarkerRange:(id)textMarkerRange {
-  if (mGeckoDocAccessible.IsAccessible()) {
-    if (!mGeckoDocAccessible.AsAccessible()->AsDoc()->HasLoadState(
-            DocAccessible::eTreeConstructed)) {
-      // If the accessible tree is still being constructed the text tree
-      // is not in a traversable state yet.
-      return @"";
-    }
-  } else {
-    if (mGeckoDocAccessible.AsProxy()->State() & states::STALE) {
-      // In the proxy case we don't have access to load state,
-      // so we need to use the less granular generic STALE state
-      // this state also includes DOM unloaded, which isn't ideal.
-      // Since we really only care if the a11y tree is loaded.
-      return @"";
-    }
-  }
-
   mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible,
                                             textMarkerRange);
   if (!range.IsValid()) {
