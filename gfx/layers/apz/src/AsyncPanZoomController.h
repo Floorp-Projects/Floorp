@@ -24,6 +24,7 @@
 #include "InputData.h"
 #include "Axis.h"  // for Axis, Side, etc.
 #include "ExpectedGeckoMetrics.h"
+#include "FlingAccelerator.h"
 #include "InputQueue.h"
 #include "APZUtils.h"
 #include "Layers.h"  // for Layer::ScrollDirection
@@ -1388,10 +1389,8 @@ class AsyncPanZoomController {
   friend class GenericOverscrollEffect;
   friend class WidgetOverscrollEffect;
 
-  // The initial velocity of the most recent fling.
-  ParentLayerPoint mLastFlingVelocity;
-  // The time at which the most recent fling started.
-  SampleTime mLastFlingTime;
+  FlingAccelerator mFlingAccelerator;
+
   // Indicates if the repaint-during-pinch timer is currently set
   bool mPinchPaintTimerSet;
 
