@@ -758,7 +758,25 @@ nsNSSSocketInfo::SetEchConfig(const nsACString& aEchConfig) {
     }
   }
 #endif
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsNSSSocketInfo::GetRetryEchConfig(nsACString& aEchConfig) {
+#if 0
+  if (!mFd) {
+    return NS_ERROR_FAILURE;
+  }
+
+  SECItem* item = nullptr;
+  SECStatus rv = SSL_GetEchRetryConfigs(mFd, &item);
+  if (rv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  UniqueSECItem retryConfigItem(item);
+  memcpy(aEchConfig.BeginWriting(), retryConfigItem->data, retryConfigItem->len);
+#endif
   return NS_OK;
 }
 
