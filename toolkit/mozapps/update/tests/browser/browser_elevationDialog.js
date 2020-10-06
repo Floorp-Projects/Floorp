@@ -44,11 +44,11 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  ok(!!gUpdateManager.activeUpdate, "There should be an active update");
+  ok(!!gUpdateManager.readyUpdate, "There should be a ready update");
   is(
-    gUpdateManager.activeUpdate.state,
+    gUpdateManager.readyUpdate.state,
     STATE_PENDING_ELEVATE,
-    "The active update state should equal " + STATE_PENDING_ELEVATE
+    "The ready update state should equal " + STATE_PENDING_ELEVATE
   );
   is(
     readStatusFile(),
@@ -64,7 +64,7 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  ok(!gUpdateManager.activeUpdate, "There should not be an active update");
+  ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
   is(
     readStatusFile(),
     STATE_NONE,
@@ -79,9 +79,9 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  ok(!!gUpdateManager.activeUpdate, "There should be an active update");
+  ok(!!gUpdateManager.readyUpdate, "There should be a ready update");
   is(
-    gUpdateManager.activeUpdate.state,
+    gUpdateManager.readyUpdate.state,
     STATE_PENDING_ELEVATE,
     "The active update state should equal " + STATE_PENDING_ELEVATE
   );

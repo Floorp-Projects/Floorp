@@ -87,10 +87,14 @@ async function initUpdate(params) {
       await continueFileHandler(params.continueFile);
     }
     if (params.waitForUpdateState) {
+      let whichUpdate =
+        params.waitForUpdateState == STATE_DOWNLOADING
+          ? "downloadingUpdate"
+          : "readyUpdate";
       await TestUtils.waitForCondition(
         () =>
-          gUpdateManager.activeUpdate &&
-          gUpdateManager.activeUpdate.state == params.waitForUpdateState,
+          gUpdateManager[whichUpdate] &&
+          gUpdateManager[whichUpdate].state == params.waitForUpdateState,
         "Waiting for update state: " + params.waitForUpdateState,
         undefined,
         200
@@ -101,7 +105,7 @@ async function initUpdate(params) {
       });
       // Display the UI after the update state equals the expected value.
       Assert.equal(
-        gUpdateManager.activeUpdate.state,
+        gUpdateManager[whichUpdate].state,
         params.waitForUpdateState,
         "The update state value should equal " + params.waitForUpdateState
       );
@@ -140,23 +144,31 @@ async function processUpdateStep(step) {
 
   const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
   if (checkActiveUpdate) {
+    let whichUpdate =
+      checkActiveUpdate.state == STATE_DOWNLOADING
+        ? "downloadingUpdate"
+        : "readyUpdate";
     await TestUtils.waitForCondition(
-      () => gUpdateManager.activeUpdate,
+      () => gUpdateManager[whichUpdate],
       "Waiting for active update"
     );
     Assert.ok(
-      !!gUpdateManager.activeUpdate,
+      !!gUpdateManager[whichUpdate],
       "There should be an active update"
     );
     Assert.equal(
-      gUpdateManager.activeUpdate.state,
+      gUpdateManager[whichUpdate].state,
       checkActiveUpdate.state,
       "The active update state should equal " + checkActiveUpdate.state
     );
   } else {
     Assert.ok(
-      !gUpdateManager.activeUpdate,
-      "There should not be an active update"
+      !gUpdateManager.readyUpdate,
+      "There should not be a ready update"
+    );
+    Assert.ok(
+      !gUpdateManager.downloadingUpdate,
+      "There should not be a downloadingUpdate update"
     );
   }
 
@@ -165,7 +177,10 @@ async function processUpdateStep(step) {
       let data = downloadInfo[i];
       // The About Dialog tests always specify a continue file.
       await continueFileHandler(continueFile);
-      let patch = getPatchOfType(data.patchType);
+      let patch = getPatchOfType(
+        data.patchType,
+        gUpdateManager.downloadingUpdate
+      );
       // The update is removed early when the last download fails so check
       // that there is a patch before proceeding.
       let isLastPatch = i == downloadInfo.length - 1;

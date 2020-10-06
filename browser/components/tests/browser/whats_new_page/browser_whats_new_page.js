@@ -32,13 +32,13 @@ add_task(async function whats_new_page() {
     Ci.nsIUpdateManager
   );
   await TestUtils.waitForCondition(
-    () => !um.activeUpdate,
-    "Waiting for the active update to be removed"
+    () => !um.readyUpdate,
+    "Waiting for the ready update to be removed"
   );
-  ok(!um.activeUpdate, "There should not be an active update");
+  ok(!um.readyUpdate, "There should not be a ready update");
   await TestUtils.waitForCondition(
     () => !!um.getUpdateAt(0),
-    "Waiting for the active update to be moved to the update history"
+    "Waiting for the ready update to be moved to the update history"
   );
   ok(!!um.getUpdateAt(0), "There should be an update in the update history");
 

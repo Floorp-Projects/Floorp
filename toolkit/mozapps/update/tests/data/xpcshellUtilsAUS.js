@@ -1270,6 +1270,10 @@ function checkUpdateManager(
   aUpdateErrCode,
   aUpdateCount
 ) {
+  let activeUpdate =
+    aUpdateStatusState == STATE_DOWNLOADING
+      ? gUpdateManager.downloadingUpdate
+      : gUpdateManager.readyUpdate;
   Assert.equal(
     readStatusState(),
     aStatusFileState,
@@ -1277,16 +1281,17 @@ function checkUpdateManager(
   );
   let msgTags = [" after startup ", " after a file reload "];
   for (let i = 0; i < msgTags.length; ++i) {
-    logTestInfo("checking Update Manager updates" + msgTags[i]) +
-      "is performed";
+    logTestInfo(
+      "checking Update Manager updates" + msgTags[i] + "is performed"
+    );
     if (aHasActiveUpdate) {
       Assert.ok(
-        !!gUpdateManager.activeUpdate,
+        !!activeUpdate,
         msgTags[i] + "the active update should be defined"
       );
     } else {
       Assert.ok(
-        !gUpdateManager.activeUpdate,
+        !activeUpdate,
         msgTags[i] + "the active update should not be defined"
       );
     }
@@ -2226,10 +2231,7 @@ function setupActiveUpdate() {
   writeVersionFile(DEFAULT_UPDATE_VERSION);
   writeStatusFile(pendingState);
   reloadUpdateManagerData();
-  Assert.ok(
-    !!gUpdateManager.activeUpdate,
-    "the active update should be defined"
-  );
+  Assert.ok(!!gUpdateManager.readyUpdate, "the ready update should be defined");
 }
 
 /**
@@ -2291,7 +2293,7 @@ async function stageUpdate(
     );
 
     Assert.equal(
-      gUpdateManager.activeUpdate.state,
+      gUpdateManager.readyUpdate.state,
       aStateAfterStage,
       "the update state" + MSG_SHOULD_EQUAL
     );
