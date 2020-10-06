@@ -7,22 +7,35 @@
 #ifndef jit_VMFunctions_h
 #define jit_VMFunctions_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/HashFunctions.h"
 
-#include "jspubtd.h"
+#include <stddef.h>
+#include <stdint.h>
 
-#include "jit/CompileInfo.h"
-#include "jit/IonScript.h"
-#include "jit/JitFrames.h"
+#include "jstypes.h"
+#include "NamespaceImports.h"
+
+#include "gc/Rooting.h"
+#include "jit/IonTypes.h"
 #include "js/ScalarType.h"
-#include "vm/Interpreter.h"
+#include "js/TypeDecls.h"
+
+class JSJitInfo;
+class JSLinearString;
 
 namespace js {
 
-class WithScope;
 class AbstractGeneratorObject;
+class GlobalObject;
+class InterpreterFrame;
+class LexicalScope;
+class NativeObject;
+class ObjectGroup;
+class PropertyName;
+class Shape;
 class TypedArrayObject;
+class WithScope;
 
 namespace gc {
 
@@ -31,6 +44,9 @@ struct Cell;
 }
 
 namespace jit {
+
+class BaselineFrame;
+class InterpreterStubExitFrameLayout;
 
 enum DataType : uint8_t {
   Type_Void,
