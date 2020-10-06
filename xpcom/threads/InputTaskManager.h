@@ -40,8 +40,9 @@ class InputTaskManager : public TaskManager {
     mInputHandlingStartTime = aStartTime;
   }
 
-  static InputTaskManager* Get();
+  static InputTaskManager* Get() { return gInputTaskManager.get(); }
   static void Cleanup() { gInputTaskManager = nullptr; }
+  static void Init();
 
  private:
   InputTaskManager() : mInputQueueState(STATE_DISABLED) {}

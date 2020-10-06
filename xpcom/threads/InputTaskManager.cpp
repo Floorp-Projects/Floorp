@@ -72,14 +72,6 @@ void InputTaskManager::DidRunTask() {
 }
 
 // static
-InputTaskManager* InputTaskManager::Get() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (gInputTaskManager) {
-    return gInputTaskManager.get();
-  }
-
-  gInputTaskManager = new InputTaskManager();
-  return gInputTaskManager.get();
-}
+void InputTaskManager::Init() { gInputTaskManager = new InputTaskManager(); }
 
 }  // namespace mozilla
