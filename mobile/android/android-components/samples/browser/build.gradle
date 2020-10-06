@@ -72,6 +72,7 @@ dependencies {
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
     implementation project(':concept-storage')
+    implementation project(':concept-base')
 
     implementation project(':browser-awesomebar')
     implementation project(':browser-engine-system')
@@ -123,7 +124,6 @@ dependencies {
 
     implementation project(':support-utils')
     implementation project(':feature-downloads')
-    implementation project(':support-images')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')

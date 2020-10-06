@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.support.images.CancelOnDetach
-import mozilla.components.support.images.ImageLoadRequest
-import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoader
 import java.lang.ref.WeakReference
 
 /**

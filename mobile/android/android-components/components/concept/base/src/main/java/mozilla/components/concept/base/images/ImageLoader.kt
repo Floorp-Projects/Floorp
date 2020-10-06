@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.support.images.loader
+package mozilla.components.concept.base.images
 
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.annotation.MainThread
-import mozilla.components.support.images.ImageLoadRequest
 
 /**
  * A loader that can load an image from an ID directly into an [ImageView].

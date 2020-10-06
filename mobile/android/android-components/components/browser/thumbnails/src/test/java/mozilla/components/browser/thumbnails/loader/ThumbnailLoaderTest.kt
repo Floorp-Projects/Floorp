@@ -16,7 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
-import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock

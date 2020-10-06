@@ -16,8 +16,8 @@ import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.images.ImageLoadRequest
-import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
@@ -99,7 +99,8 @@ class DefaultTabViewHolder(
             val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
             thumbnailLoader.loadIntoView(
                 thumbnailView,
-                ImageLoadRequest(id = tab.id, size = thumbnailSize))
+                ImageLoadRequest(id = tab.id, size = thumbnailSize)
+            )
         } else if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         }

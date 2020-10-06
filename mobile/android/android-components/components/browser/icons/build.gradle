@@ -44,6 +44,7 @@ tasks.register("updateBuiltInExtensionVersion", Copy) { task ->
 }
 
 dependencies {
+    implementation project(':concept-base')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':browser-state')

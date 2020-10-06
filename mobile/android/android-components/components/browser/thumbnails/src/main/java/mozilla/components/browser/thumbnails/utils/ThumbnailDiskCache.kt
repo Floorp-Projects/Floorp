@@ -8,8 +8,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.images.ImageLoadRequest
-import mozilla.components.support.images.ImageSaveRequest
+import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageSaveRequest
 import java.io.File
 import java.io.IOException
 

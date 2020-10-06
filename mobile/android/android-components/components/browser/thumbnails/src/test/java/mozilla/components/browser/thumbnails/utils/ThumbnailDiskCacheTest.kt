@@ -6,7 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

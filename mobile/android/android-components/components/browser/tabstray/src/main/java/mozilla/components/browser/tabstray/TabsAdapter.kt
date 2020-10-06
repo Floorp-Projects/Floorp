@@ -11,7 +11,7 @@ import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.concept.base.images.ImageLoader
 
 /**
  * Function responsible for creating a `TabViewHolder` in the `TabsAdapter`.

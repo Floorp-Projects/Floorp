@@ -28,6 +28,9 @@ permalink: /changelog/
 * **feature-customtabs**
   * The drawable for the Action button icon in custom tabs is now scaled to 24dp width an 24dp height.
 
+* **support-images**
+  * ⚠️ **This is a breaking change**: `ImageLoader` and `ImageRequest` have moved to the `concept-base` component.
+
 # 61.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v60.0.0...v61.0.0)
