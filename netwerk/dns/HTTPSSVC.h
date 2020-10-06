@@ -125,6 +125,10 @@ class DNSHTTPSSVCRecordBase {
 
   bool HasIPAddressesInternal(const nsTArray<SVCB>& aRecords);
 
+  void GetAllRecordsWithEchConfigInternal(
+      bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,
+      bool* aAllRecordsHaveEchConfig, nsTArray<RefPtr<nsISVCBRecord>>& aResult);
+
   // The owner name of this HTTPS RR.
   nsCString mHost;
 };
