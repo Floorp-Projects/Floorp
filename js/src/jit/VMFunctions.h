@@ -331,39 +331,6 @@ struct LastArg<HeadType, TailTypes...> {
   using Type = typename LastArg<TailTypes...>::Type;
 };
 
-class AutoDetectInvalidation {
-  JSContext* cx_;
-  IonScript* ionScript_;
-  MutableHandleValue rval_;
-  bool disabled_;
-
-  void setReturnOverride();
-
- public:
-  AutoDetectInvalidation(JSContext* cx, MutableHandleValue rval,
-                         IonScript* ionScript)
-      : cx_(cx), ionScript_(ionScript), rval_(rval), disabled_(false) {
-    MOZ_ASSERT(ionScript);
-  }
-
-  AutoDetectInvalidation(JSContext* cx, MutableHandleValue rval);
-
-  void disable() {
-    MOZ_ASSERT(!disabled_);
-    disabled_ = true;
-  }
-
-  bool shouldSetReturnOverride() const {
-    return !disabled_ && ionScript_->invalidated();
-  }
-
-  ~AutoDetectInvalidation() {
-    if (MOZ_UNLIKELY(shouldSetReturnOverride())) {
-      setReturnOverride();
-    }
-  }
-};
-
 MOZ_MUST_USE bool InvokeFunction(JSContext* cx, HandleObject obj0,
                                  bool constructing, bool ignoresReturnValue,
                                  uint32_t argc, Value* argv,
