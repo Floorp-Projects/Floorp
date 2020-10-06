@@ -175,9 +175,9 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
   gtk_print_unix_dialog_set_manual_capabilities(
       GTK_PRINT_UNIX_DIALOG(dialog),
       GtkPrintCapabilities(
-          GTK_PRINT_CAPABILITY_PAGE_SET | GTK_PRINT_CAPABILITY_COPIES |
-          GTK_PRINT_CAPABILITY_COLLATE | GTK_PRINT_CAPABILITY_REVERSE |
-          GTK_PRINT_CAPABILITY_SCALE | GTK_PRINT_CAPABILITY_GENERATE_PDF));
+          GTK_PRINT_CAPABILITY_COPIES | GTK_PRINT_CAPABILITY_COLLATE |
+          GTK_PRINT_CAPABILITY_REVERSE | GTK_PRINT_CAPABILITY_SCALE |
+          GTK_PRINT_CAPABILITY_GENERATE_PDF));
 
   // The vast majority of magic numbers in this widget construction are padding.
   // e.g. for the set_border_width below, 12px matches that of just about every
