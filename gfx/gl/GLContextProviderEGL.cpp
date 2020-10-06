@@ -695,12 +695,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
           LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
       robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
 
-      // Don't enable robust buffer access on Adreno 630 devices.
-      // It causes the linking of some shaders to fail. See bug 1485441.
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-      nsAutoString renderer;
-      gfxInfo->GetAdapterDeviceID(renderer);
-      if (renderer.Find("Adreno (TM) 630") == -1) {
+      if (gfxVars::AllowEglRbab()) {
         rbab_attribs = robustness_attribs;
         rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
         rbab_attribs.push_back(LOCAL_EGL_TRUE);

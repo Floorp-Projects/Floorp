@@ -2560,6 +2560,10 @@ void gfxPlatform::InitAcceleration() {
       gfxVars::SetWebglAllowWindowsNativeGl(status ==
                                             nsIGfxInfo::FEATURE_STATUS_OK);
     }
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE,
+                                               discardFailureId, &status))) {
+      gfxVars::SetAllowWebglAccelAngle(status == nsIGfxInfo::FEATURE_STATUS_OK);
+    }
 
     if (kIsMacOS) {
       // Avoid crash for Intel HD Graphics 3000 on OSX. (Bug 1413269)
@@ -2591,6 +2595,16 @@ void gfxPlatform::InitAcceleration() {
       }
 
       gfxVars::SetAllowWebglOop(allowWebGLOop);
+    }
+
+    if (kIsAndroid) {
+      // Don't enable robust buffer access on Adreno 630 devices.
+      // It causes the linking of some shaders to fail. See bug 1485441.
+      nsAutoString renderer;
+      gfxInfo->GetAdapterDeviceID(renderer);
+      if (renderer.Find("Adreno (TM) 630") != -1) {
+        gfxVars::SetAllowEglRbab(false);
+      }
     }
   }
 
