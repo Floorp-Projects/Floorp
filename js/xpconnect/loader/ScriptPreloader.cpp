@@ -1135,7 +1135,11 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(mReadyToExecute);
   if (mScript) {
-    return mScript;
+    if (JS::CheckCompileOptionsMatch(options, mScript)) {
+      return mScript;
+    }
+    LOG(Error, "Cached script %s has different options\n", mURL.get());
+    MOZ_DIAGNOSTIC_ASSERT(false, "Cached script has different options");
   }
 
   if (!HasRange()) {

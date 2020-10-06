@@ -987,6 +987,11 @@ bool js::CheckCompileOptionsMatch(const ReadOnlyCompileOptions& options,
                             options.nonSyntacticScope == hasNonSyntacticScope));
 }
 
+JS_PUBLIC_API bool JS::CheckCompileOptionsMatch(
+    const ReadOnlyCompileOptions& options, JSScript* script) {
+  return js::CheckCompileOptionsMatch(options, script->immutableFlags(), false);
+}
+
 template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                         HandleScriptSourceObject sourceObjectArg,
