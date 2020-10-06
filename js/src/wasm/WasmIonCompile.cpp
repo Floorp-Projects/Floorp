@@ -4307,10 +4307,11 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
   if (!(c)) return false; \
   break
 
-#define CHECK_EXPERIMENTAL_SIMD()            \
-  if (!SimdExperimentalEnabled) {            \
-    return f.iter().unrecognizedOpcode(&op); \
-  }
+#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
+#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
+#else
+#  define CHECK_SIMD_EXPERIMENTAL() return f.iter().unrecognizedOpcode(&op)
+#endif
 
   while (true) {
     if (!f.mirGen().ensureBallast()) {
@@ -4844,7 +4845,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2Ne):
             CHECK(EmitBinarySimd128(f, /* commutative= */ true, SimdOp(op.b1)));
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(EmitBinarySimd128(f, /* commutative= */ true, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128AndNot):
           case uint32_t(SimdOp::I8x16Sub):
@@ -4902,7 +4903,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F32x4PMinExperimental):
           case uint32_t(SimdOp::F64x2PMaxExperimental):
           case uint32_t(SimdOp::F64x2PMinExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(
                 EmitBinarySimd128(f, /* commutative= */ false, SimdOp(op.b1)));
           case uint32_t(SimdOp::I8x16Splat):
@@ -4950,7 +4951,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2FloorExperimental):
           case uint32_t(SimdOp::F64x2TruncExperimental):
           case uint32_t(SimdOp::F64x2NearestExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(EmitUnarySimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::I8x16AnyTrue):
           case uint32_t(SimdOp::I16x8AnyTrue):
@@ -5021,10 +5022,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK(EmitLoadExtendSimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128Load32ZeroExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float32, 4));
           case uint32_t(SimdOp::V128Load64ZeroExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_SIMD_EXPERIMENTAL();
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float64, 8));
           default:
             return f.iter().unrecognizedOpcode(&op);
@@ -5354,7 +5355,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
   MOZ_CRASH("unreachable");
 
 #undef CHECK
-#undef CHECK_EXPERIMENTAL_SIMD
+#undef CHECK_SIMD_EXPERIMENTAL
 }
 
 bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,

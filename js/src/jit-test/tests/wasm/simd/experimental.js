@@ -1,14 +1,8 @@
-// |jit-test| skip-if: !wasmSimdEnabled()
+// |jit-test| skip-if: !wasmSimdExperimentalEnabled()
 
 // Experimental opcodes.  We have no text parsing support for these yet.  The
 // tests will be cleaned up and moved into ad-hack.js if the opcodes are
 // adopted.
-
-// When simd is enabled by default in release builds we will flip the value of
-// SimdExperimentalEnabled to false in RELEASE_OR_BETA builds.  At that point,
-// these tests will start failing in release or beta builds, and a guard
-// asserting !RELEASE_OR_BETA will have to be added above.  That is how it
-// should be.
 
 load(libdir + "wasm-binary.js");
 
