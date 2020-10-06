@@ -124,6 +124,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val canShowCfr: Boolean
         get() = (System.currentTimeMillis() - lastCfrShownTimeInMillis) > THREE_DAYS_MS
 
+    var showGridViewInTabsSettings by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_grid_view_tabs_settings),
+        default = false,
+        featureFlag = FeatureFlags.showGridViewInTabsSettings
+    )
+
     var waitToShowPageUntilFirstPaint by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_wait_first_paint),
         default = false,
