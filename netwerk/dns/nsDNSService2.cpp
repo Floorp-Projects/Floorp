@@ -1449,3 +1449,10 @@ nsDNSService::IsSVCDomainNameFailed(const nsACString& aOwnerName,
   *aResult = failedList->Contains(aSVCDomainName);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
+  MutexAutoLock lock(mLock);
+  mFailedSVCDomainNames.Remove(aOwnerName);
+  return NS_OK;
+}
