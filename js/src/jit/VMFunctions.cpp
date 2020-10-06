@@ -13,6 +13,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOperations.h"
+#include "jit/AutoDetectInvalidation.h"
 #include "jit/BaselineIC.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
@@ -677,13 +678,6 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
 
   return true;
 }
-
-AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx,
-                                               MutableHandleValue rval)
-    : cx_(cx),
-      ionScript_(GetTopJitJSScript(cx)->ionScript()),
-      rval_(rval),
-      disabled_(false) {}
 
 bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
                     bool ignoresReturnValue, uint32_t argc, Value* argv,
@@ -1793,10 +1787,6 @@ bool SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index,
 
   RootedValue indexVal(cx, Int32Value(index));
   return SetObjectElement(cx, obj, indexVal, value, strict);
-}
-
-void AutoDetectInvalidation::setReturnOverride() {
-  cx_->setIonReturnOverride(rval_.get());
 }
 
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
