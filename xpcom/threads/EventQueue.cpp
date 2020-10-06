@@ -118,3 +118,8 @@ size_t EventQueueInternal<ItemsPerPage>::Count(
     const MutexAutoLock& aProofOfLock) const {
   return mQueue.Count();
 }
+
+namespace mozilla {
+template class EventQueueSized<16>;  // Used by ThreadEventQueue
+template class EventQueueSized<64>;  // Used by ThrottledEventQueue
+}  // namespace mozilla

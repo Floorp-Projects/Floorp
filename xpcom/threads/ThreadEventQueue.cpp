@@ -12,7 +12,6 @@
 #include "nsIThreadInternal.h"
 #include "nsThreadUtils.h"
 #include "nsThread.h"
-#include "PrioritizedEventQueue.h"
 #include "ThreadEventTarget.h"
 #include "mozilla/TaskController.h"
 
@@ -386,5 +385,4 @@ void ThreadEventQueue<InnerQueueT>::SetObserver(nsIThreadObserver* aObserver) {
 
 namespace mozilla {
 template class ThreadEventQueue<EventQueue>;
-template class ThreadEventQueue<PrioritizedEventQueue>;
 }  // namespace mozilla
