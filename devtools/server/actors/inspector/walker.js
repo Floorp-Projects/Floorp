@@ -212,13 +212,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       targetActor.chromeEventHandler
     );
 
-    // TODO: This preference is a client preference and should not be read here.
-    // See Bug 1662059.
-    this.isOverflowDebuggingEnabled = Services.prefs.getBoolPref(
-      "devtools.overflow.debugging.enabled",
-      false
-    );
-
     // In this map, the key-value pairs are the overflow causing elements and their
     // respective ancestor scrollable node actor.
     this.overflowCausingElementsMap = new Map();
@@ -568,7 +561,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         actor.wasScrollable = isScrollable;
       }
 
-      if (this.isOverflowDebuggingEnabled && isScrollable) {
+      if (isScrollable) {
         this.updateOverflowCausingElements(
           actor,
           currentOverflowCausingElementsMap
@@ -576,24 +569,22 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
-    if (this.isOverflowDebuggingEnabled) {
-      // Get the NodeActor for each node in the symmetric difference of
-      // currentOverflowCausingElementsMap and this.overflowCausingElementsMap
-      const overflowStateChanges = [...currentOverflowCausingElementsMap.keys()]
-        .filter(node => !this.overflowCausingElementsMap.has(node))
-        .concat(
-          [...this.overflowCausingElementsMap.keys()].filter(
-            node => !currentOverflowCausingElementsMap.has(node)
-          )
+    // Get the NodeActor for each node in the symmetric difference of
+    // currentOverflowCausingElementsMap and this.overflowCausingElementsMap
+    const overflowStateChanges = [...currentOverflowCausingElementsMap.keys()]
+      .filter(node => !this.overflowCausingElementsMap.has(node))
+      .concat(
+        [...this.overflowCausingElementsMap.keys()].filter(
+          node => !currentOverflowCausingElementsMap.has(node)
         )
-        .filter(node => this.hasNode(node))
-        .map(node => this.getNode(node));
+      )
+      .filter(node => this.hasNode(node))
+      .map(node => this.getNode(node));
 
-      this.overflowCausingElementsMap = currentOverflowCausingElementsMap;
+    this.overflowCausingElementsMap = currentOverflowCausingElementsMap;
 
-      if (overflowStateChanges.length) {
-        this.emit("overflow-change", overflowStateChanges);
-      }
+    if (overflowStateChanges.length) {
+      this.emit("overflow-change", overflowStateChanges);
     }
 
     if (displayTypeChanges.length) {
