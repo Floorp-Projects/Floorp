@@ -5192,8 +5192,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  nsresult GetDirectory(PersistenceType aPersistenceType,
-                        const nsACString& aOrigin, nsIFile** aDirectory);
+  Result<nsCOMPtr<nsIFile>, nsresult> GetDirectory(
+      PersistenceType aPersistenceType, const nsACString& aOrigin);
 
   // The aObsoleteFiles will collect files based on the marker files. For now,
   // InitOrigin() is the only consumer of this argument because it checks those
@@ -13325,13 +13325,11 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     const bool aInitializing, UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv =
-      GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDirectory);
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const nsCOMPtr<nsIFile>& directory,
+      GetDirectory(aPersistenceType, aOrigin), QM_PROPAGATE, [](const auto&) {
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDirectory);
+      });
 
   // We need to see if there are any files in the directory already. If they
   // are database files then we need to cleanup stored files (if it's needed)
@@ -13340,8 +13338,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
   AutoTArray<nsString, 20> subdirsToProcess;
   nsTHashtable<nsStringHashKey> databaseFilenames(20);
   nsTHashtable<nsStringHashKey> obsoleteFilenames;
-  rv = GetDatabaseFilenames(directory, aCanceled, subdirsToProcess,
-                            databaseFilenames, &obsoleteFilenames);
+  nsresult rv = GetDatabaseFilenames(directory, aCanceled, subdirsToProcess,
+                                     databaseFilenames, &obsoleteFilenames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
     return rv;
@@ -13717,25 +13715,20 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
   self->mPendingDeleteInfos.Clear();
 }
 
-nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
-                                   const nsACString& aOrigin,
-                                   nsIFile** aDirectory) {
+Result<nsCOMPtr<nsIFile>, nsresult> QuotaClient::GetDirectory(
+    PersistenceType aPersistenceType, const nsACString& aOrigin) {
   QuotaManager* const quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
-  IDB_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
-                                     aPersistenceType, aOrigin));
+  IDB_TRY_INSPECT(const auto& directory, quotaManager->GetDirectoryForOrigin(
+                                             aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 
-  nsresult rv =
-      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
 
-  directory.forget(aDirectory);
-  return NS_OK;
+  return directory;
 }
 
 nsresult QuotaClient::GetDatabaseFilenames(
