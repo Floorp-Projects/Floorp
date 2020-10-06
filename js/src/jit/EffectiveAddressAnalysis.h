@@ -7,11 +7,12 @@
 #ifndef jit_EffectiveAddressAnalysis_h
 #define jit_EffectiveAddressAnalysis_h
 
-#include "jit/MIRGenerator.h"
+#include "mozilla/Attributes.h"
 
 namespace js {
 namespace jit {
 
+class MIRGenerator;
 class MIRGraph;
 
 class EffectiveAddressAnalysis {
