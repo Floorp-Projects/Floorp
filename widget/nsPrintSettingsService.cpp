@@ -48,8 +48,6 @@ static const char kUnwriteableMarginBottom[] =
 static const char kUnwriteableMarginRight[] = "print_unwriteable_margin_right";
 
 // Prefs for Print Options
-static const char kPrintEvenPages[] = "print_evenpages";
-static const char kPrintOddPages[] = "print_oddpages";
 static const char kPrintHeaderStrLeft[] = "print_headerleft";
 static const char kPrintHeaderStrCenter[] = "print_headercenter";
 static const char kPrintHeaderStrRight[] = "print_headerright";
@@ -436,15 +434,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-    if (GETBOOLPREF(kPrintEvenPages, &b)) {
-      aPS->SetPrintOptions(nsIPrintSettings::kPrintEvenPages, b);
-    }
-    if (GETBOOLPREF(kPrintOddPages, &b)) {
-      aPS->SetPrintOptions(nsIPrintSettings::kPrintOddPages, b);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
     if (GETSTRPREF(kPrintHeaderStrLeft, str)) {
       aPS->SetHeaderStrLeft(str);
@@ -641,17 +630,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
   nsString uStr;
   int32_t iVal;
   double dbl;
-
-  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-    if (NS_SUCCEEDED(
-            aPS->GetPrintOptions(nsIPrintSettings::kPrintEvenPages, &b))) {
-      Preferences::SetBool(GetPrefName(kPrintEvenPages, aPrinterName), b);
-    }
-    if (NS_SUCCEEDED(
-            aPS->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &b))) {
-      Preferences::SetBool(GetPrefName(kPrintOddPages, aPrinterName), b);
-    }
-  }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
     if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(uStr))) {

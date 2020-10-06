@@ -51,8 +51,6 @@ nsPrintSettings::nsPrintSettings()
   mEdge.SizeTo(0, 0, 0, 0);
   mUnwriteableMargin.SizeTo(0, 0, 0, 0);
 
-  mPrintOptions = kPrintOddPages | kPrintEvenPages;
-
   mHeaderStrs[0].AssignLiteral("&T");
   mHeaderStrs[2].AssignLiteral("&U");
 

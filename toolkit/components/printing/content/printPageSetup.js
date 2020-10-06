@@ -516,7 +516,6 @@ function onAccept() {
     gPrintSettingsInterface.kInitSaveInColor |
     gPrintSettingsInterface.kInitSaveReversed |
     gPrintSettingsInterface.kInitSaveOrientation |
-    gPrintSettingsInterface.kInitSaveOddEvenPages |
     gPrintSettingsInterface.kInitSaveShrinkToFit |
     gPrintSettingsInterface.kInitSaveScaling;
 
