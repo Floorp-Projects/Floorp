@@ -1489,6 +1489,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
+        // This will load a page in the child
+        mainSession.loadTestPath(HELLO2_HTML_PATH)
+        sessionRule.waitForPageStop()
+
         // This loads in the parent process
         mainSession.loadUri(url)
         // Switching processes involves loading about:blank
@@ -1518,6 +1522,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
+
+        sessionRule.session.goBack()
+        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
+
+        assertThat("URL should match", currentUrl!!, endsWith(HELLO2_HTML_PATH))
 
         settings.aboutConfigEnabled = aboutConfigEnabled
     }
