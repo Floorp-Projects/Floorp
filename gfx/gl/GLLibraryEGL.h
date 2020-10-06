@@ -33,11 +33,6 @@ extern "C" {
 struct AHardwareBuffer;
 }
 
-class nsIGfxInfo;
-
-template <typename T>
-class nsCOMPtr;
-
 namespace angle {
 class Platform;
 }
