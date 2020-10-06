@@ -15,6 +15,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "gc/PublicIterators.h"
+#include "jit/AutoWritableJitCode.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
