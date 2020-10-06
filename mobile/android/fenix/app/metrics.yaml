@@ -279,7 +279,7 @@ events:
   whats_new_tapped:
     type: event
     description: |
-        A user opened the "what's new" page button
+      A user opened the "what's new" page button
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5021
     data_reviews:
@@ -942,6 +942,40 @@ metrics:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6608
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  close_tab_setting:
+    type: string
+    lifetime: application
+    description: |
+      A string that indicates the setting for tab closing:
+      MANUAL, ONE_DAY, ONE_WEEK, ONE_MONTH
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15347#issue-707408975
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15811#issuecomment-706402952
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  tab_view_setting:
+    type: string
+    lifetime: application
+    description: |
+      A string that indicates the setting for tab view:
+      GRID, LIST
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15347#issue-707408975
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15811#issuecomment-706402952
     data_sensitivity:
       - interaction
     notification_emails:
@@ -4207,3 +4241,18 @@ master_password:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-03-01"
+
+tabs:
+  setting_opened:
+    type: event
+    description: |
+      The tab settings were opened.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15347#issue-707408975
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15811#issuecomment-706402952
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"

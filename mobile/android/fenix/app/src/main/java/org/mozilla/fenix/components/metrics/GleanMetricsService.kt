@@ -48,6 +48,7 @@ import org.mozilla.fenix.GleanMetrics.SearchWidgetCfr
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
@@ -705,6 +706,9 @@ private val Event.wrapper: EventWrapper<*>?
         Event.MasterPasswordMigrationSuccess -> EventWrapper<NoExtraKeys>(
             { MasterPassword.migration.record(it) }
         )
+        Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
+            { Tabs.settingOpened.record(it) }
+        )
 
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
@@ -786,6 +790,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                     ToolbarPosition.TOP -> Event.ToolbarPositionChanged.Position.TOP.name
                 }
             )
+
+            tabViewSetting.set(context.settings().getTabViewPingString())
+            closeTabSetting.set(context.settings().getTabTimeoutPingString())
         }
 
         SearchDefaultEngine.apply {
@@ -859,7 +866,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
             val accessibilitySelection = mutableListOf<String>()
 
-            if (context.settings().switchServiceIsEnabled) { accessibilitySelection.add("switch") }
+            if (context.settings().switchServiceIsEnabled) {
+                accessibilitySelection.add("switch")
+            }
 
             if (context.settings().touchExplorationIsEnabled) {
                 accessibilitySelection.add("touch exploration")

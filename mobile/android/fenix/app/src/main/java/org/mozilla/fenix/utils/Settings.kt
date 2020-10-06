@@ -390,6 +390,31 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         else -> System.currentTimeMillis()
     }
 
+    enum class TabView {
+        GRID, LIST
+    }
+
+    fun getTabViewPingString() = if (gridTabView) TabView.GRID.name else TabView.LIST.name
+
+    enum class TabTimout {
+        ONE_DAY, ONE_WEEK, ONE_MONTH, MANUAL
+    }
+
+    fun getTabTimeoutPingString(): String = when {
+        closeTabsAfterOneDay -> {
+            TabTimout.ONE_DAY.name
+        }
+        closeTabsAfterOneWeek -> {
+            TabTimout.ONE_WEEK.name
+        }
+        closeTabsAfterOneMonth -> {
+            TabTimout.ONE_MONTH.name
+        }
+        else -> {
+            TabTimout.MANUAL.name
+        }
+    }
+
     fun getTabTimeoutString(): String = when {
         closeTabsAfterOneDay -> {
             appContext.getString(R.string.close_tabs_after_one_day)

@@ -194,6 +194,8 @@ sealed class Event {
     object MasterPasswordMigrationSuccess : Event()
     object MasterPasswordMigrationDisplayed : Event()
 
+    object TabSettingsOpened : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {
