@@ -3624,7 +3624,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
 
-  nsDisplayWrapList* topLayerWrapList = MaybeCreateTopLayerItems(aBuilder);
+  // Create any required items for the 'top layer' and check if they'll be
+  // opaque over the entire area of the viewport. If they are, then we can
+  // skip building display items for the rest of the page.
+  bool topLayerIsOpaque = false;
+  nsDisplayWrapList* topLayerWrapList =
+      MaybeCreateTopLayerItems(aBuilder, &topLayerIsOpaque);
 
   if (ignoringThisScrollFrame) {
     // Root scrollframes have FrameMetrics and clipping on their container
@@ -3642,7 +3647,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
     }
 
-    {
+    if (!topLayerIsOpaque) {
       nsDisplayListBuilder::AutoBuildingDisplayList building(
           aBuilder, mOuter, visibleRect, dirtyRect);
 
@@ -3843,7 +3848,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       }
     }
 
-    {
+    if (!topLayerIsOpaque) {
       // Clip our contents to the unsnapped scrolled rect. This makes sure
       // that we don't have display items over the subpixel seam at the edge
       // of the scrolled area.
@@ -4064,11 +4069,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
-    nsDisplayListBuilder* aBuilder) {
+    nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
   if (mIsRoot) {
     if (ViewportFrame* viewportFrame = do_QueryFrame(mOuter->GetParent())) {
       nsDisplayList topLayerList;
-      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
+      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList,
+                                                 aIsOpaque);
       if (!topLayerList.IsEmpty()) {
         nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
             aBuilder, viewportFrame);
