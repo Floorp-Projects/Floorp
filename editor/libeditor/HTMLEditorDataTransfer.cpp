@@ -2180,8 +2180,8 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return rv;
   }
 
-  const nsString& empty = u""_ns;
-  rv = InsertFromTransferable(transferable, nullptr, empty, empty, false, true);
+  rv = InsertFromTransferable(transferable, nullptr, u""_ns, u""_ns, false,
+                              true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::InsertFromTransferable() failed");
   return EditorBase::ToGenericNSResult(rv);
