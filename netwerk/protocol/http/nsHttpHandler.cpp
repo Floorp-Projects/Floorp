@@ -3023,4 +3023,9 @@ bool nsHttpHandler::EchConfigEnabled() const {
   return StaticPrefs::network_dns_echconfig_enabled();
 }
 
+bool nsHttpHandler::FallbackToOriginIfConfigsAreECHAndAllFailed() const {
+  return StaticPrefs::
+      network_dns_echconfig_fallback_to_origin_when_all_failed();
+}
+
 }  // namespace mozilla::net
