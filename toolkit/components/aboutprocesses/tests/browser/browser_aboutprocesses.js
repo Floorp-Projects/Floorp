@@ -36,6 +36,18 @@ const MEMORY_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)( \(([-+]?)([0-9.,]+)(GB|MB|KB|B
 const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ms)\)/;
 //Example: "13% (4,470ms)"
 
+function promiseTabSwitched() {
+  return new Promise(resolve => {
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        TestUtils.executeSoon(() => resolve(gBrowser.selectedTab));
+      },
+      { once: true }
+    );
+  });
+}
+
 function isCloseEnough(value, expected) {
   if (value < 0 || expected < 0) {
     throw new Error(`Invalid isCloseEnough(${value}, ${expected})`);
@@ -262,6 +274,17 @@ function extractProcessDetails(row) {
   return process;
 }
 
+function findProcess(tbody, predicate) {
+  let row = tbody.firstChild;
+  while (row) {
+    if (predicate(row)) {
+      return row;
+    }
+    row = row.nextSibling;
+  }
+  return null;
+}
+
 add_task(async function testAboutProcesses() {
   info("Setting up about:processes");
 
@@ -383,13 +406,7 @@ add_task(async function testAboutProcesses() {
       ];
       for (let finder of processesToBeFound) {
         info(`Running sanity tests on ${finder.name}`);
-        let row = tbody.firstChild;
-        while (row) {
-          if (finder.predicate(row)) {
-            break;
-          }
-          row = row.nextSibling;
-        }
+        let row = findProcess(tbody, finder.predicate);
         Assert.ok(row, `found a table row for ${finder.name}`);
         let {
           memoryResidentContent,
@@ -516,6 +533,72 @@ add_task(async function testAboutProcesses() {
         Assert.equal(typeContent, row.process.type);
         Assert.equal(Number.parseInt(pidContent), row.process.pid);
       }
+
+      info("Double-clicking on a tab");
+      let whenTabSwitchedToWeb = promiseTabSwitched();
+      await SpecialPowers.spawn(
+        tabAboutProcesses.linkedBrowser,
+        [],
+        async () => {
+          // Locate and double-click on the representation of `tabHung`.
+          let tbody = content.document.getElementById("process-tbody");
+          let foundTab = false;
+          for (let row of tbody.getElementsByClassName("tab")) {
+            // Simulate double-click.
+            row.scrollIntoView();
+            let evt = new content.window.MouseEvent("dblclick", {
+              bubbles: true,
+              cancelable: true,
+              view: content.window,
+            });
+            row.dispatchEvent(evt);
+            foundTab = true;
+          }
+          Assert.ok(foundTab, "We should have found the hung tab");
+        }
+      );
+
+      info("Waiting for tab switch");
+      await whenTabSwitchedToWeb;
+      Assert.equal(
+        gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+        tabHung.linkedBrowser.currentURI.spec,
+        "We should have focused the hung tab"
+      );
+      gBrowser.selectedTab = tabAboutProcesses;
+
+      info("Double-clicking on the extensions process");
+      let whenTabSwitchedToAddons = promiseTabSwitched();
+      await SpecialPowers.spawn(
+        tabAboutProcesses.linkedBrowser,
+        [],
+        async () => {
+          let extensionsRow = content.document.getElementsByClassName(
+            "extensions"
+          )[0];
+          Assert.ok(
+            !!extensionsRow,
+            "We should have found the extensions process"
+          );
+          extensionsRow.scrollIntoView();
+          let evt = new content.window.MouseEvent("dblclick", {
+            bubbles: true,
+            cancelable: true,
+            view: content.window,
+          });
+          extensionsRow.dispatchEvent(evt);
+        }
+      );
+      info("Waiting for tab switch");
+      await whenTabSwitchedToAddons;
+      Assert.equal(
+        gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+        "about:addons",
+        "We should now see the addon tab"
+      );
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+      info("Cleaning up tabs");
       BrowserTestUtils.removeTab(tabAboutProcesses);
       BrowserTestUtils.removeTab(tabHung);
     }
