@@ -52,7 +52,7 @@ std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot(
     const bool requireAlphaPremult) const {
   const auto context = mData.GetContext();
   if (!context) return nullptr;
-  const auto& provider = context->GetBufferProvider();
+  RefPtr<PersistentBufferProvider> provider = context->GetBufferProvider();
 
   RefPtr<gfx::SourceSurface> ss;
 
@@ -60,6 +60,7 @@ std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot(
     ss = provider->BorrowSnapshot();
   }
   if (!ss) {
+    provider = nullptr;
     ss = context->GetFrontBufferSnapshot(requireAlphaPremult);
   }
   if (!ss) return nullptr;
