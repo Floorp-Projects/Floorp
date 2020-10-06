@@ -230,69 +230,6 @@ already_AddRefed<DOMRect> XULPopupElement::GetOuterScreenRect() {
   return rect.forget();
 }
 
-void XULPopupElement::GetAlignmentPosition(nsString& positionStr) {
-  positionStr.Truncate();
-
-  // This needs to flush layout.
-  nsMenuPopupFrame* menuPopupFrame =
-      do_QueryFrame(GetPrimaryFrame(FlushType::Layout));
-  if (!menuPopupFrame) return;
-
-  int8_t position = menuPopupFrame->GetAlignmentPosition();
-  switch (position) {
-    case POPUPPOSITION_AFTERSTART:
-      positionStr.AssignLiteral("after_start");
-      break;
-    case POPUPPOSITION_AFTEREND:
-      positionStr.AssignLiteral("after_end");
-      break;
-    case POPUPPOSITION_BEFORESTART:
-      positionStr.AssignLiteral("before_start");
-      break;
-    case POPUPPOSITION_BEFOREEND:
-      positionStr.AssignLiteral("before_end");
-      break;
-    case POPUPPOSITION_STARTBEFORE:
-      positionStr.AssignLiteral("start_before");
-      break;
-    case POPUPPOSITION_ENDBEFORE:
-      positionStr.AssignLiteral("end_before");
-      break;
-    case POPUPPOSITION_STARTAFTER:
-      positionStr.AssignLiteral("start_after");
-      break;
-    case POPUPPOSITION_ENDAFTER:
-      positionStr.AssignLiteral("end_after");
-      break;
-    case POPUPPOSITION_OVERLAP:
-      positionStr.AssignLiteral("overlap");
-      break;
-    case POPUPPOSITION_AFTERPOINTER:
-      positionStr.AssignLiteral("after_pointer");
-      break;
-    case POPUPPOSITION_SELECTION:
-      positionStr.AssignLiteral("selection");
-      break;
-    default:
-      // Leave as an empty string.
-      break;
-  }
-}
-
-int32_t XULPopupElement::AlignmentOffset() {
-  nsMenuPopupFrame* menuPopupFrame =
-      do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
-  if (!menuPopupFrame) return 0;
-
-  int32_t pp = mozilla::AppUnitsPerCSSPixel();
-  // Note that the offset might be along either the X or Y axis, but for the
-  // sake of simplicity we use a point with only the X axis set so we can
-  // use ToNearestPixels().
-  nsPoint appOffset(menuPopupFrame->GetAlignmentOffset(), 0);
-  nsIntPoint popupOffset = appOffset.ToNearestPixels(pp);
-  return popupOffset.x;
-}
-
 void XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect) {
   nsMenuPopupFrame* menuPopupFrame =
       do_QueryFrame(GetPrimaryFrame(FlushType::Frames));

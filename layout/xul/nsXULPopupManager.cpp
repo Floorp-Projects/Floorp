@@ -39,6 +39,8 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/PopupPositionedEvent.h"
+#include "mozilla/dom/PopupPositionedEventBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -2611,6 +2613,39 @@ bool nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent* aPopup) {
   return false;
 }
 
+static void AlignmentPositionToString(nsMenuPopupFrame* aFrame,
+                                      nsAString& aString) {
+  aString.Truncate();
+  int8_t position = aFrame->GetAlignmentPosition();
+  switch (position) {
+    case POPUPPOSITION_AFTERSTART:
+      return aString.AssignLiteral("after_start");
+    case POPUPPOSITION_AFTEREND:
+      return aString.AssignLiteral("after_end");
+    case POPUPPOSITION_BEFORESTART:
+      return aString.AssignLiteral("before_start");
+    case POPUPPOSITION_BEFOREEND:
+      return aString.AssignLiteral("before_end");
+    case POPUPPOSITION_STARTBEFORE:
+      return aString.AssignLiteral("start_before");
+    case POPUPPOSITION_ENDBEFORE:
+      return aString.AssignLiteral("end_before");
+    case POPUPPOSITION_STARTAFTER:
+      return aString.AssignLiteral("start_after");
+    case POPUPPOSITION_ENDAFTER:
+      return aString.AssignLiteral("end_after");
+    case POPUPPOSITION_OVERLAP:
+      return aString.AssignLiteral("overlap");
+    case POPUPPOSITION_AFTERPOINTER:
+      return aString.AssignLiteral("after_pointer");
+    case POPUPPOSITION_SELECTION:
+      return aString.AssignLiteral("selection");
+    default:
+      // Leave as an empty string.
+      break;
+  }
+}
+
 NS_IMETHODIMP
 nsXULPopupPositionedEvent::Run() {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -2633,11 +2668,23 @@ nsXULPopupPositionedEvent::Run() {
   if (state != ePopupPositioning && state != ePopupShown) {
     return NS_OK;
   }
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, eXULPopupPositioned, nullptr,
-                         WidgetMouseEvent::eReal);
-  EventDispatcher::Dispatch(mPopup, popupFrame->PresContext(), &event, nullptr,
-                            &status);
+
+  // Note that the offset might be along either the X or Y axis, but for the
+  // sake of simplicity we use a point with only the X axis set so we can
+  // use ToNearestPixels().
+  int32_t popupOffset = nsPoint(popupFrame->GetAlignmentOffset(), 0)
+                            .ToNearestPixels(AppUnitsPerCSSPixel())
+                            .x;
+
+  PopupPositionedEventInit init;
+  init.mComposed = true;
+  init.mAlignmentOffset = popupOffset;
+  AlignmentPositionToString(popupFrame, init.mAlignmentPosition);
+  RefPtr<PopupPositionedEvent> event =
+      PopupPositionedEvent::Constructor(mPopup, u"popuppositioned"_ns, init);
+  event->SetTrusted(true);
+
+  mPopup->DispatchEvent(*event);
 
   // Get the popup frame and make sure it is still in the positioning
   // state. If it isn't, someone may have tried to reshow or hide it

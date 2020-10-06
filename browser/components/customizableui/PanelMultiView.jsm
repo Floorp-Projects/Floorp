@@ -1147,7 +1147,7 @@ var PanelMultiView = class extends AssociatedToNode {
     }
   }
 
-  _calculateMaxHeight() {
+  _calculateMaxHeight(aEvent) {
     // While opening the panel, we have to limit the maximum height of any
     // view based on the space that will be available. We cannot just use
     // window.screen.availTop and availHeight because these may return an
@@ -1169,7 +1169,7 @@ var PanelMultiView = class extends AssociatedToNode {
     // The distance from the anchor to the available margin of the screen is
     // based on whether the panel will open towards the top or the bottom.
     let maxHeight;
-    if (this._panel.alignmentPosition.startsWith("before_")) {
+    if (aEvent.alignmentPosition.startsWith("before_")) {
       maxHeight = anchor.screenY - cssAvailTop;
     } else {
       let anchorScreenBottom = anchor.screenY + anchorRect.height;
@@ -1229,7 +1229,7 @@ var PanelMultiView = class extends AssociatedToNode {
       }
       case "popuppositioned": {
         if (this._panel.state == "showing") {
-          let maxHeight = this._calculateMaxHeight();
+          let maxHeight = this._calculateMaxHeight(aEvent);
           this._viewStack.style.maxHeight = maxHeight + "px";
           this._offscreenViewStack.style.maxHeight = maxHeight + "px";
         }

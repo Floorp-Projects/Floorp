@@ -902,7 +902,7 @@ class WidgetEvent : public WidgetEventTime {
             mMessage == eMouseOut || mMessage == eMouseMove ||
             mMessage == eContextMenu || mMessage == eXULPopupShowing ||
             mMessage == eXULPopupHiding || mMessage == eXULPopupShown ||
-            mMessage == eXULPopupHidden || mMessage == eXULPopupPositioned;
+            mMessage == eXULPopupHidden;
         break;
       case ePointerEventClass:
         // All pointer events are composed
