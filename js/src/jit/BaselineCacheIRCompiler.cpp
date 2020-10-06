@@ -8,6 +8,7 @@
 
 #include "jit/CacheIR.h"
 #include "jit/JitRuntime.h"
+#include "jit/JitZone.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"

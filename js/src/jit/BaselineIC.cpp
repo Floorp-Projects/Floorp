@@ -26,6 +26,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/JitZone.h"
 #include "jit/Linker.h"
 #include "jit/Lowering.h"
 #ifdef JS_ION_PERF
