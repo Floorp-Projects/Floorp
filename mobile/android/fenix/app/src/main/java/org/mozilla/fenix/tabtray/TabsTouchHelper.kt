@@ -17,6 +17,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SwipeToDeleteCallback
 
 /**
@@ -67,6 +68,10 @@ class TouchCallback(
         isCurrentlyActive: Boolean
     ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+
+        if (recyclerView.context.settings().gridTabView) {
+            return
+        }
 
         val icon = recyclerView.context.getDrawableWithTint(
             R.drawable.ic_delete,
