@@ -513,7 +513,7 @@ Accessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
     }
 
     child = text->GetChildAt(childIdx);
-    if (!child || nsAccUtils::MustPrune(child)) {
+    if (!child || nsAccUtils::MustPrune(text)) {
       return text;
     }
 

@@ -10,10 +10,6 @@ function testRangeAtMarker(macDoc, marker, attribute, expected, msg) {
 }
 
 function testUIElement(macDoc, marker, msg, expectedRole, expectedValue) {
-  if (!expectedRole && !expectedValue) {
-    todo(false, "Bug 1668936 - AXUIElementForTextMarker returns nil");
-    return;
-  }
   let elem = macDoc.getParameterizedAttributeValue(
     "AXUIElementForTextMarker",
     marker
