@@ -9988,7 +9988,7 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) || defined(XP_WIN)
   value: @IS_NIGHTLY_OR_DEV_EDITION@
 #else
   value: false
