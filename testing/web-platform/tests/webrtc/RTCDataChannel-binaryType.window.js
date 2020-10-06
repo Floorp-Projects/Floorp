@@ -20,7 +20,7 @@ for (const binaryType of invalidBinaryTypes) {
     t.add_cleanup(() => pc.close());
     const dc = pc.createDataChannel('test-binary-type');
 
-    assert_throws('SyntaxError', () => {
+    assert_throws_dom('SyntaxError', () => {
       dc.binaryType = binaryType;
     });
   }, `Setting invalid binaryType '${binaryType}' should throw SyntaxError`);
