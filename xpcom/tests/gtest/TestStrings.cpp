@@ -1086,14 +1086,6 @@ TEST_F(Strings, appendint64) {
   EXPECT_TRUE(str.Equals(maxint_plus1_expected_x));
 }
 
-TEST_F(Strings, inttotstring) {
-  EXPECT_EQ("42"_ns, IntToCString(42));
-  EXPECT_EQ(u"42"_ns, IntToString(42));
-
-  EXPECT_EQ("2a"_ns, IntToCString(42, 16));
-  EXPECT_EQ(u"2a"_ns, IntToString(42, 16));
-}
-
 TEST_F(Strings, appendfloat) {
   nsCString str;
   double bigdouble = 11223344556.66;
