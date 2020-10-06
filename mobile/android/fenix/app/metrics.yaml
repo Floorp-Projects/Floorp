@@ -476,7 +476,7 @@ search_shortcuts:
       - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 toolbar_settings:
   changed_position:
@@ -2431,7 +2431,7 @@ search_widget:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   voice_button:
     type: event
     description: |
@@ -2444,7 +2444,7 @@ search_widget:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 search_widget_cfr:
   displayed:
@@ -2459,7 +2459,7 @@ search_widget_cfr:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   add_widget_pressed:
     type: event
     description: |
@@ -2472,7 +2472,7 @@ search_widget_cfr:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   not_now_pressed:
     type: event
     description: |
@@ -2485,7 +2485,7 @@ search_widget_cfr:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
   canceled:
     type: event
     description: |
@@ -2499,7 +2499,7 @@ search_widget_cfr:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 private_browsing_mode:
   garbage_icon:
@@ -3164,7 +3164,7 @@ search_suggestions:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-11-15"
+    expires: "2021-08-01"
 
 voice_search:
   tapped:
