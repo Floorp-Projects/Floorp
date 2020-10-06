@@ -615,7 +615,8 @@ void Http3Session::SetupTimer(uint64_t aTimeout) {
   LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout, this));
 
   // Remember the time when the timer should trigger.
-  mTimerShouldTrigger = TimeStamp::Now() + TimeDuration::FromMilliseconds(aTimeout);
+  mTimerShouldTrigger =
+      TimeStamp::Now() + TimeDuration::FromMilliseconds(aTimeout);
 
   if (mTimerActive && mTimer) {
     LOG(
@@ -693,7 +694,6 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     mFirstHttpTransaction = aHttpTransaction->QueryHttpTransaction();
     LOG3(("Http3Session::AddStream first session=%p trans=%p ", this,
           mFirstHttpTransaction.get()));
-
   }
 
   StreamReadyToWrite(stream);
@@ -793,7 +793,7 @@ nsresult Http3Session::TryActivating(
            this, aStream));
       mTransactionsBlockedByStreamLimitCount++;
       if (mQueuedStreams.GetSize() == 0) {
-          mBlockedByStreamLimitCount++;
+        mBlockedByStreamLimitCount++;
       }
       QueueStream(aStream);
     }

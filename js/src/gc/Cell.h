@@ -287,7 +287,6 @@ class TenuredCell : public Cell {
     return static_cast<const T*>(this);
   }
 
-
   // Default implementation for kinds that don't require fixup.
   void fixupAfterMovingGC() {}
 

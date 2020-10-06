@@ -3760,7 +3760,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("flatMap", "ArrayFlatMap", 1, 0),
     JS_SELF_HOSTED_FN("flat", "ArrayFlat", 0, 0),
 
-    /* Proposal */
+/* Proposal */
 #ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("item", "ArrayItem", 1, 0),
 #endif

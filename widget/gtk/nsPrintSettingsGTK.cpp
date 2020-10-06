@@ -36,9 +36,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsGTK, nsPrintSettings,
 /** ---------------------------------------------------
  */
 nsPrintSettingsGTK::nsPrintSettingsGTK()
-    : mPageSetup(nullptr),
-      mPrintSettings(nullptr),
-      mGTKPrinter(nullptr) {
+    : mPageSetup(nullptr), mPrintSettings(nullptr), mGTKPrinter(nullptr) {
   // The aim here is to set up the objects enough that silent printing works
   // well. These will be replaced anyway if the print dialog is used.
   mPrintSettings = gtk_print_settings_new();
@@ -77,9 +75,7 @@ nsPrintSettingsGTK::~nsPrintSettingsGTK() {
 /** ---------------------------------------------------
  */
 nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS)
-    : mPageSetup(nullptr),
-      mPrintSettings(nullptr),
-      mGTKPrinter(nullptr) {
+    : mPageSetup(nullptr), mPrintSettings(nullptr), mGTKPrinter(nullptr) {
   *this = aPS;
 }
 

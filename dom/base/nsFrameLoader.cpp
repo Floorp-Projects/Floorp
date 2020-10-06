@@ -3151,8 +3151,7 @@ class WebProgressListenerToPromise final : public nsIWebProgressListener {
   NS_IMETHOD OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
                            uint32_t aStateFlags, nsresult aStatus) override {
     if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
-        aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT &&
-        mPromise) {
+        aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT && mPromise) {
       mPromise->MaybeResolveWithUndefined();
       mPromise = nullptr;
     }

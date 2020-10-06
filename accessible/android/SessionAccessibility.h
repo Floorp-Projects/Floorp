@@ -42,7 +42,8 @@ class SessionAccessibility final
   }
 
   static void Init();
-  static RefPtr<SessionAccessibility> GetInstanceFor(ProxyAccessible* aAccessible);
+  static RefPtr<SessionAccessibility> GetInstanceFor(
+      ProxyAccessible* aAccessible);
   static RefPtr<SessionAccessibility> GetInstanceFor(Accessible* aAccessible);
 
   // Native implementations
