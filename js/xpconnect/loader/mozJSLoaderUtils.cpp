@@ -19,8 +19,8 @@ using mozilla::UniquePtr;
 // principals when writing a script. Instead, when reading it back, we set the
 // principals to the system principals.
 nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
+                          const JS::ReadOnlyCompileOptions& options,
                           MutableHandleScript scriptp) {
-  JS::CompileOptions options(cx);  // FIXME: receive from caller.
   const char* buf;
   uint32_t len;
   nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);

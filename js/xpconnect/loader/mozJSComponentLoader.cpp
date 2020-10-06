@@ -738,7 +738,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   script =
       ScriptPreloader::GetSingleton().GetCachedScript(cx, options, cachePath);
   if (!script && cache) {
-    ReadCachedScript(cache, cachePath, cx, &script);
+    ReadCachedScript(cache, cachePath, cx, options, &script);
   }
 
   if (script) {
