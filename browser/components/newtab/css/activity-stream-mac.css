@@ -1687,7 +1687,7 @@ main {
   .asrouter-toggle .icon-devtools {
     background-image: url("chrome://browser/skin/developer.svg");
     padding: 15px; }
-  .asrouter-toggle .icon-devtools:dir(rtl) {
+  .asrouter-toggle:dir(rtl) {
     transform: scaleX(-1); }
   .asrouter-toggle:hover {
     background: var(--newtab-element-hover-color); }
