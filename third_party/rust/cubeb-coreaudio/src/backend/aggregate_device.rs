@@ -36,10 +36,19 @@ impl AggregateDevice {
     ) -> std::result::Result<Self, OSStatus> {
         let plugin_id = Self::get_system_plugin_id()?;
         let device_id = Self::create_blank_device_sync(plugin_id)?;
+
+        let mut cleanup = finally(|| {
+            let r = Self::destroy_device(plugin_id, device_id);
+            assert!(r.is_ok());
+        });
+
         Self::set_sub_devices_sync(device_id, input_id, output_id)?;
         Self::set_master_device(device_id)?;
         Self::activate_clock_drift_compensation(device_id)?;
         Self::workaround_for_airpod(device_id, input_id, output_id)?;
+
+        cleanup.dismiss();
+
         cubeb_log!(
             "Add devices input {} and output {} into an aggregate device {}",
             input_id,
@@ -114,26 +123,23 @@ impl AggregateDevice {
             Property::HardwareDevices,
             DeviceType::INPUT | DeviceType::OUTPUT,
         );
-        assert_eq!(
-            audio_object_add_property_listener(
+
+        let r = audio_object_add_property_listener(
+            kAudioObjectSystemObject,
+            &address,
+            devices_changed_callback,
+            data_ptr as *mut c_void,
+        );
+        assert_eq!(r, NO_ERR);
+
+        let _teardown = finally(|| {
+            let r = audio_object_remove_property_listener(
                 kAudioObjectSystemObject,
                 &address,
                 devices_changed_callback,
                 data_ptr as *mut c_void,
-            ),
-            NO_ERR
-        );
-
-        let _teardown = finally(|| {
-            assert_eq!(
-                audio_object_remove_property_listener(
-                    kAudioObjectSystemObject,
-                    &address,
-                    devices_changed_callback,
-                    data_ptr as *mut c_void,
-                ),
-                NO_ERR
             );
+            assert_eq!(r, NO_ERR);
         });
 
         let device = Self::create_blank_device(plugin_id)?;
@@ -287,15 +293,13 @@ impl AggregateDevice {
         }
 
         let _teardown = finally(|| {
-            assert_eq!(
-                audio_object_remove_property_listener(
-                    device_id,
-                    &address,
-                    devices_changed_callback,
-                    data_ptr as *mut c_void,
-                ),
-                NO_ERR
+            let r = audio_object_remove_property_listener(
+                device_id,
+                &address,
+                devices_changed_callback,
+                data_ptr as *mut c_void,
             );
+            assert_eq!(r, NO_ERR);
         });
 
         Self::set_sub_devices(device_id, input_id, output_id)?;
