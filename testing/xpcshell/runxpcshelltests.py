@@ -1149,7 +1149,7 @@ class XPCShellTests(object):
             # symbolizer support
             llvmsym = os.path.join(
                 self.xrePath,
-                "llvm-symbolizer" + self.mozInfo["bin_suffix"].encode('ascii'))
+                "llvm-symbolizer" + self.mozInfo["bin_suffix"])
             if os.path.isfile(llvmsym):
                 if usingASan:
                     self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
