@@ -12,6 +12,7 @@
 #include "nsRect.h"
 
 #include <cstdint>
+#include <iosfwd>
 
 class nsIContent;
 class nsIFrame;
@@ -63,11 +64,45 @@ struct DisplayPortPropertyData {
   bool mPainted;
 };
 
+struct DisplayPortMargins {
+  // The margins relative to the visual scroll offset.
+  ScreenMargin mMargins;
+
+  // Some information captured at the time the margins are stored.
+  // This ensures that we can express the margins as being relative to
+  // the correct scroll offset when applying them.
+
+  // APZ's visual scroll offset at the time it requested the margins.
+  CSSPoint mVisualOffset;
+
+  // The scroll frame's layout scroll offset at the time the margins
+  // were saved.
+  CSSPoint mLayoutOffset;
+
+  // The scale required to convert between the CSS cordinates of
+  // mVisualOffset and mLayoutOffset, and the Screen coordinates of mMargins.
+  CSSToScreenScale2D mScale;
+
+  static DisplayPortMargins WithAdjustment(const ScreenMargin& aMargins,
+                                           const CSSPoint& aVisualOffset,
+                                           const CSSPoint& aLayoutOffset,
+                                           const CSSToScreenScale2D& aScale);
+
+  static DisplayPortMargins WithNoAdjustment(const ScreenMargin& aMargins);
+
+  static DisplayPortMargins Empty() { return WithNoAdjustment(ScreenMargin()); }
+
+  ScreenMargin GetRelativeToLayoutViewport() const;
+
+  friend std::ostream& operator<<(std::ostream& aOs,
+                                  const DisplayPortMargins& aMargins);
+};
+
 struct DisplayPortMarginsPropertyData {
-  DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
+  DisplayPortMarginsPropertyData(const DisplayPortMargins& aMargins,
                                  uint32_t aPriority, bool aPainted)
       : mMargins(aMargins), mPriority(aPriority), mPainted(aPainted) {}
-  ScreenMargin mMargins;
+  DisplayPortMargins mMargins;
   uint32_t mPriority;
   bool mPainted;
 };
@@ -159,8 +194,9 @@ class DisplayPortUtils {
    * @return true if the new margins were applied.
    */
   static bool SetDisplayPortMargins(
-      nsIContent* aContent, PresShell* aPresShell, const ScreenMargin& aMargins,
-      uint32_t aPriority = 0, RepaintMode aRepaintMode = RepaintMode::Repaint);
+      nsIContent* aContent, PresShell* aPresShell,
+      const DisplayPortMargins& aMargins, uint32_t aPriority = 0,
+      RepaintMode aRepaintMode = RepaintMode::Repaint);
 
   /**
    * Set the display port base rect for given element to be used with display
