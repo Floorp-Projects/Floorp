@@ -3852,11 +3852,12 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
-                           JS::WeakEdgeTraceAction::Skip),
+      : JS::CallbackTracer(rt),
         src(nullptr),
         zone(nullptr),
-        compartment(nullptr) {}
+        compartment(nullptr) {
+    setTraceWeakEdges(false);
+  }
 
   Cell* src;
   JS::TraceKind srcKind;
