@@ -7,6 +7,7 @@
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
+const { Pool } = require("devtools/shared/protocol/Pool");
 
 loader.lazyRequireGetter(
   this,
@@ -43,6 +44,12 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
     // or else fallback to asking the frameLoader itself.
     let mm = frame.messageManager || frame.frameLoader.messageManager;
     mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
+
+    const spawnInParentActorPool = new Pool(
+      connection,
+      "connectToFrame-spawnInParent"
+    );
+    connection.addActor(spawnInParentActorPool);
 
     const trackMessageManager = () => {
       frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
@@ -139,7 +146,7 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         instance.parentID = spawnedByActorID;
 
         // Manually set the actor ID in order to insert parent actorID as prefix
-        // in order to help identifying actor hiearchy via actor IDs.
+        // in order to help identifying actor hierarchy via actor IDs.
         // Remove `/` as it may confuse message forwarding between processes.
         const contentPrefix = spawnedByActorID
           .replace(connection.prefix, "")
@@ -147,7 +154,7 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         instance.actorID = connection.allocID(
           contentPrefix + "/" + instance.typeName
         );
-        connection.addActor(instance);
+        spawnInParentActorPool.manage(instance);
 
         mm.sendAsyncMessage("debug:spawn-actor-in-parent:actor", {
           prefix: connPrefix,
@@ -241,6 +248,10 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         mm,
         prefix: connPrefix,
       });
+
+      // Destroy all actors created via spawnActorInParentProcess
+      // in case content wasn't able to destroy them via a message
+      spawnInParentActorPool.destroy();
 
       if (childTransport) {
         // If we have a child transport, the actor has already
