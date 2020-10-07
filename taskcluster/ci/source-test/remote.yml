@@ -46,7 +46,7 @@ puppeteer:
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
-    run-on-projects: ["trunk"]
+    run-on-projects: []
     treeherder:
         symbol: remote(pup-fis)
     run:
