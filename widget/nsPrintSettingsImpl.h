@@ -78,8 +78,6 @@ class nsPrintSettings : public nsIPrintSettings {
   nsIntMargin mEdge;
   nsIntMargin mUnwriteableMargin;
 
-  int32_t mPrintOptions;
-
   // scriptable data members
   int16_t mPrintRange;
   int32_t mStartPageNum;  // only used for ePrintRange_SpecifiedRange
@@ -95,6 +93,7 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mShowPrintProgress;
   bool mShowMarginGuides;
   bool mHonorPageRuleMargins;
+  bool mIsPrintSelectionRBEnabled;
   bool mPrintSelectionOnly;
   int32_t mPrintPageDelay;
 

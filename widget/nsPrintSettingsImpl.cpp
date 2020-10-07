@@ -16,8 +16,7 @@
 NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
 nsPrintSettings::nsPrintSettings()
-    : mPrintOptions(0L),
-      mPrintRange(kRangeAllPages),
+    : mPrintRange(kRangeAllPages),
       mStartPageNum(1),
       mEndPageNum(1),
       mScaling(1.0),
@@ -30,6 +29,7 @@ nsPrintSettings::nsPrintSettings()
       mShowPrintProgress(true),
       mShowMarginGuides(false),
       mHonorPageRuleMargins(true),
+      mIsPrintSelectionRBEnabled(false),
       mPrintSelectionOnly(false),
       mPrintPageDelay(50),
       mPaperWidth(8.5),
@@ -470,47 +470,6 @@ NS_IMETHODIMP nsPrintSettings::SetDocURL(const nsAString& aDocURL) {
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP
-nsPrintSettings::GetPrintOptions(int32_t aType, bool* aTurnOnOff) {
-  NS_ENSURE_ARG_POINTER(aTurnOnOff);
-  *aTurnOnOff = mPrintOptions & aType ? true : false;
-  return NS_OK;
-}
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP
-nsPrintSettings::SetPrintOptions(int32_t aType, bool aTurnOnOff) {
-  if (aTurnOnOff) {
-    mPrintOptions |= aType;
-  } else {
-    mPrintOptions &= ~aType;
-  }
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP
-nsPrintSettings::GetPrintOptionsBits(int32_t* aBits) {
-  NS_ENSURE_ARG_POINTER(aBits);
-  *aBits = mPrintOptions;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettings::SetPrintOptionsBits(int32_t aBits) {
-  mPrintOptions = aBits;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetHeaderStrLeft(nsAString& aTitle) {
   aTitle = mHeaderStrs[0];
   return NS_OK;
@@ -612,6 +571,17 @@ NS_IMETHODIMP nsPrintSettings::GetHonorPageRuleMargins(bool* aResult) {
 
 NS_IMETHODIMP nsPrintSettings::SetHonorPageRuleMargins(bool aHonor) {
   mHonorPageRuleMargins = aHonor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::GetIsPrintSelectionRBEnabled(
+    bool* aIsPrintSelectionRBEnabled) {
+  *aIsPrintSelectionRBEnabled = mIsPrintSelectionRBEnabled;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetIsPrintSelectionRBEnabled(
+    bool aIsPrintSelectionRBEnabled) {
+  mIsPrintSelectionRBEnabled = aIsPrintSelectionRBEnabled;
   return NS_OK;
 }
 
@@ -791,7 +761,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mMargin = rhs.mMargin;
   mEdge = rhs.mEdge;
   mUnwriteableMargin = rhs.mUnwriteableMargin;
-  mPrintOptions = rhs.mPrintOptions;
   mScaling = rhs.mScaling;
   mPrintBGColors = rhs.mPrintBGColors;
   mPrintBGImages = rhs.mPrintBGImages;
@@ -805,6 +774,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShowPrintProgress = rhs.mShowPrintProgress;
   mShowMarginGuides = rhs.mShowMarginGuides;
   mHonorPageRuleMargins = rhs.mHonorPageRuleMargins;
+  mIsPrintSelectionRBEnabled = rhs.mIsPrintSelectionRBEnabled;
   mPrintSelectionOnly = rhs.mPrintSelectionOnly;
   mPaperId = rhs.mPaperId;
   mPaperWidth = rhs.mPaperWidth;
