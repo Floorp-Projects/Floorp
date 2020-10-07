@@ -168,6 +168,29 @@ add_task(async function clicking_button_on_notification_calls_setAsDefault() {
   });
 });
 
+add_task(async function notification_not_displayed_on_private_window() {
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await test_with_mock_shellservice(
+    { win: privateWin, isDefault: false },
+    async function() {
+      await BrowserTestUtils.openNewForegroundTab({
+        gBrowser: privateWin.gBrowser,
+        opening: "about:newtab",
+        waitForLoad: false,
+      });
+      ok(
+        !privateWin.gBrowser.getNotificationBox(
+          privateWin.gBrowser.selectedBrowser
+        ).currentNotification,
+        "There shouldn't be a notification in the private window"
+      );
+      await BrowserTestUtils.closeWindow(privateWin);
+    }
+  );
+});
+
 add_task(async function clicking_dismiss_disables_default_browser_checking() {
   await test_with_mock_shellservice({ isDefault: false }, async function() {
     let firstTab = await BrowserTestUtils.openNewForegroundTab({
@@ -240,7 +263,8 @@ add_task(async function modal_notification_shown_when_bar_disabled() {
 });
 
 async function test_with_mock_shellservice(options, testFn) {
-  let oldShellService = window.getShellService;
+  let win = options.win || window;
+  let oldShellService = win.getShellService;
   let mockShellService = {
     _isDefault: !!options.isDefault,
     canSetDesktopBackground() {},
@@ -260,7 +284,7 @@ async function test_with_mock_shellservice(options, testFn) {
       this._isDefault = true;
     },
   };
-  window.getShellService = function() {
+  win.getShellService = function() {
     return mockShellService;
   };
   let prefs = {
@@ -280,5 +304,5 @@ async function test_with_mock_shellservice(options, testFn) {
 
   await testFn();
 
-  window.getShellService = oldShellService;
+  win.getShellService = oldShellService;
 }
