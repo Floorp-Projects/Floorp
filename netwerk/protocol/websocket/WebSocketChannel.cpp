@@ -3852,7 +3852,7 @@ void WebSocketChannel::DoEnqueueOutgoingMessage() {
 
   if (!mCurrentOut) PrimeNewOutgoingMessage();
 
-  while (mCurrentOut && mConnection) {
+  if (mCurrentOut && mConnection) {
     LOG(
         ("WebSocketChannel::DoEnqueueOutgoingMessage: "
          "Try to send %u of hdr/copybreak and %u of data\n",
@@ -3862,10 +3862,6 @@ void WebSocketChannel::DoEnqueueOutgoingMessage() {
         mHdrOut, mHdrOutSize, (uint8_t*)mCurrentOut->BeginReading(),
         mCurrentOut->Length());
 
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      return;
-    }
-
     LOG(("WebSocketChannel::DoEnqueueOutgoingMessage: rv %" PRIx32 "\n",
          static_cast<uint32_t>(rv)));
 
@@ -3873,14 +3869,6 @@ void WebSocketChannel::DoEnqueueOutgoingMessage() {
       AbortSession(rv);
       return;
     }
-
-    if (!mStopped) {
-      mTargetThread->Dispatch(
-          new CallAcknowledge(this, mCurrentOut->OrigLength()),
-          NS_DISPATCH_NORMAL);
-    }
-    DeleteCurrentOutGoingMessage();
-    PrimeNewOutgoingMessage();
   }
 
   if (mReleaseOnTransmit) ReleaseSession();
@@ -3929,8 +3917,17 @@ WebSocketChannel::OnDataReceived(uint8_t* aData, uint32_t aCount) {
 }
 
 NS_IMETHODIMP
-WebSocketChannel::OnReadyToSendData() {
-  DoEnqueueOutgoingMessage();
+WebSocketChannel::OnDataSent() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!mStopped) {
+    mTargetThread->Dispatch(
+        new CallAcknowledge(this, mCurrentOut->OrigLength()),
+        NS_DISPATCH_NORMAL);
+  }
+  DeleteCurrentOutGoingMessage();
+  PrimeNewOutgoingMessage();
+
   return NS_OK;
 }
 
