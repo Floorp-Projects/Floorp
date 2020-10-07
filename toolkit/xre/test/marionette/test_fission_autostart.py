@@ -18,21 +18,6 @@ class Prefs:
 
 
 ENV_ENABLE_FISSION = 'MOZ_FORCE_ENABLE_FISSION'
-ENV_DISABLE_E10S = 'MOZ_FORCE_DISABLE_E10S'
-
-
-DECISION_STATUS = {
-    'experimentControl': 1,
-    'experimentTreatment': 2,
-    'disabledByE10sEnv': 3,
-    'enabledByEnv': 4,
-    'disabledBySafeMode': 5,
-    'enabledByDefault': 6,
-    'disabledByDefault': 7,
-    'enabledByUserPref': 8,
-    'disabledByUserPref': 9,
-    'disabledByE10sOther': 10,
-}
 
 
 class TestFissionAutostart(MarionetteTestCase):
@@ -51,23 +36,19 @@ class TestFissionAutostart(MarionetteTestCase):
           return {
             fissionAutostart: Services.appinfo.fissionAutostart,
             fissionExperimentStatus: Services.appinfo.fissionExperimentStatus,
-            decisionStatus: Services.appinfo.fissionDecisionStatus,
-            decisionStatusString: Services.appinfo.fissionDecisionStatusString,
             useRemoteSubframes: win.docShell.nsILoadContext.useRemoteSubframes,
             fissionAutostartSession: Services.prefs.getBoolPref("fission.autostart.session"),
             dynamicFissionAutostart: Services.prefs.getBoolPref("fission.autostart"),
           };
         ''')
 
-    def check_fission_status(self, enabled, experiment, decision, dynamic=None):
+    def check_fission_status(self, enabled, experiment, dynamic=None):
         if dynamic is None:
             dynamic = enabled
 
         expected = {
             'fissionAutostart': enabled,
             'fissionExperimentStatus': experiment,
-            'decisionStatus': DECISION_STATUS[decision],
-            'decisionStatusString': decision,
             'useRemoteSubframes': enabled,
             'fissionAutostartSession': enabled,
             'dynamicFissionAutostart': dynamic,
@@ -173,49 +154,41 @@ class TestFissionAutostart(MarionetteTestCase):
             return
 
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='disabledByDefault')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: True})
 
         self.check_fission_status(enabled=True,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByUserPref')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
         self.check_fission_status(enabled=True,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByUserPref')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.marionette.set_pref(Prefs.FISSION_AUTOSTART,
                                  False)
         self.check_fission_status(enabled=True,
                                   experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByUserPref',
                                   dynamic=False)
 
         self.marionette.clear_pref(Prefs.FISSION_AUTOSTART)
         self.check_fission_status(enabled=True,
                                   experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByUserPref',
                                   dynamic=False)
 
         self.restart()
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.ENROLLED_CONTROL,
-                                  decision='experimentControl')
+                                  experiment=ExperimentStatus.ENROLLED_CONTROL)
 
         self.marionette.set_pref(Prefs.ENROLLMENT_STATUS,
                                  ExperimentStatus.UNENROLLED,
                                  default_branch=True)
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.ENROLLED_CONTROL,
-                                  decision='experimentControl')
+                                  experiment=ExperimentStatus.ENROLLED_CONTROL)
 
         self.set_env(ENV_ENABLE_FISSION, '1')
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.ENROLLED_CONTROL,
-                                  decision='experimentControl')
+                                  experiment=ExperimentStatus.ENROLLED_CONTROL)
 
     def test_fission_precedence(self):
         if self.check_pref_locked():
@@ -223,43 +196,36 @@ class TestFissionAutostart(MarionetteTestCase):
             return
 
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='disabledByDefault')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: False},
                      env={ENV_ENABLE_FISSION: '1'})
         self.check_fission_status(enabled=True,
                                   experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByEnv',
                                   dynamic=False)
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: True},
                      env={ENV_ENABLE_FISSION: ''})
         self.check_fission_status(enabled=True,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='enabledByUserPref')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: None})
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.UNENROLLED,
-                                  decision='disabledByDefault')
+                                  experiment=ExperimentStatus.UNENROLLED)
 
         self.set_enrollment_status(ExperimentStatus.ENROLLED_TREATMENT)
         self.restart()
         self.check_fission_status(enabled=True,
-                                  experiment=ExperimentStatus.ENROLLED_TREATMENT,
-                                  decision='experimentTreatment')
+                                  experiment=ExperimentStatus.ENROLLED_TREATMENT)
 
         self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
         self.restart()
         self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.ENROLLED_CONTROL,
-                                  decision='experimentControl')
+                                  experiment=ExperimentStatus.ENROLLED_CONTROL)
 
         self.marionette.set_pref(Prefs.FISSION_AUTOSTART, True)
         self.check_fission_status(enabled=False,
                                   experiment=ExperimentStatus.ENROLLED_CONTROL,
-                                  decision='experimentControl',
                                   dynamic=True)
 
         self.assertEqual(self.marionette.get_pref(Prefs.ENROLLMENT_STATUS),
@@ -268,12 +234,4 @@ class TestFissionAutostart(MarionetteTestCase):
 
         self.restart()
         self.check_fission_status(enabled=True,
-                                  experiment=ExperimentStatus.DISQUALIFIED,
-                                  decision='enabledByUserPref')
-
-        app_version = self.execute_script('return Services.appinfo.version')
-        self.restart(env={ENV_DISABLE_E10S: app_version})
-        self.check_fission_status(enabled=False,
-                                  experiment=ExperimentStatus.DISQUALIFIED,
-                                  decision='disabledByE10sEnv',
-                                  dynamic=True)
+                                  experiment=ExperimentStatus.DISQUALIFIED)

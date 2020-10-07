@@ -181,12 +181,6 @@ const SNAPSHOT_SCHEMA = {
         autoStartStatus: {
           type: "number",
         },
-        fissionAutoStart: {
-          type: "boolean",
-        },
-        fissionDecisionStatus: {
-          type: "string",
-        },
         numTotalWindows: {
           type: "number",
         },
