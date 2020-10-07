@@ -248,12 +248,13 @@ class TextureData {
 
   static TextureData* Create(TextureForwarder* aAllocator,
                              gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
-                             LayersBackend aLayersBackend,
-                             int32_t aMaxTextureSize, BackendSelector aSelector,
+                             KnowsCompositor* aKnowsCompositor,
+                             BackendSelector aSelector,
                              TextureFlags aTextureFlags,
                              TextureAllocationFlags aAllocFlags);
 
-  static bool IsRemote(LayersBackend aLayersBackend, BackendSelector aSelector);
+  static bool IsRemote(KnowsCompositor* aKnowsCompositor,
+                       BackendSelector aSelector);
 
   MOZ_COUNTED_DTOR_VIRTUAL(TextureData)
 
@@ -681,7 +682,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   friend class TextureClientPool;
   static already_AddRefed<TextureClient> CreateForDrawing(
       TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
-      gfx::IntSize aSize, LayersBackend aLayersBackend, int32_t aMaxTextureSize,
+      gfx::IntSize aSize, KnowsCompositor* aKnowsCompositor,
       BackendSelector aSelector, TextureFlags aTextureFlags,
       TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
 
@@ -920,7 +921,7 @@ class TKeepAlive : public KeepAlive {
 bool UpdateYCbCrTextureClient(TextureClient* aTexture,
                               const PlanarYCbCrData& aData);
 
-TextureType PreferredCanvasTextureType(const KnowsCompositor&);
+TextureType PreferredCanvasTextureType(KnowsCompositor* aKnowsCompositor);
 
 }  // namespace layers
 }  // namespace mozilla
