@@ -489,28 +489,6 @@ either Raptor or browsertime."""
             else:
                 LOG.info("Playback recording information not available")
 
-    def get_playback_config(self, test):
-        platform = self.config["platform"]
-        playback_dir = os.path.join(here, "tooltool-manifests", "playback")
-
-        self.config.update(
-            {
-                "playback_tool": test.get("playback"),
-                "playback_version": test.get("playback_version", "4.0.4"),
-                "playback_binary_zip": test.get("playback_binary_zip_%s" % platform),
-                "playback_pageset_zip": test.get("playback_pageset_zip_%s" % platform),
-                "playback_binary_manifest": test.get("playback_binary_manifest"),
-                "playback_pageset_manifest": test.get("playback_pageset_manifest"),
-            }
-        )
-
-        for key in ("playback_pageset_manifest", "playback_pageset_zip"):
-            if self.config.get(key) is None:
-                continue
-            self.config[key] = os.path.join(playback_dir, self.config[key])
-
-        LOG.info("test uses playback tool: %s " % self.config["playback_tool"])
-
     def delete_proxy_settings_from_profile(self):
         # Must delete the proxy settings from the profile if running
         # the test with a host different from localhost.
@@ -523,10 +501,21 @@ either Raptor or browsertime."""
 
     def start_playback(self, test):
         # creating the playback tool
-        self.get_playback_config(test)
-        self.playback = get_playback(self.config)
 
-        self.playback.config["playback_files"] = self.get_recording_paths(test)
+        playback_dir = os.path.join(here, "tooltool-manifests", "playback")
+
+        self.config.update(
+            {
+                "playback_tool": test.get("playback"),
+                "playback_version": test.get("playback_version", "4.0.4"),
+                "playback_pageset_manifest":  os.path.join(playback_dir,
+                                                           test.get("playback_pageset_manifest")),
+            }
+        )
+
+        LOG.info("test uses playback tool: %s " % self.config["playback_tool"])
+
+        self.playback = get_playback(self.config)
 
         # let's start it!
         self.playback.start()

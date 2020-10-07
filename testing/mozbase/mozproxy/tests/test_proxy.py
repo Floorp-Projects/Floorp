@@ -64,13 +64,10 @@ def get_status_code(url, playback):
 
 def test_mitm_check_proxy(*args):
     # test setup
-    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
-    pageset_name = "mitm4-linux-firefox-amazon.manifest"
-    playback_recordings = "amazon.mp"
+    pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": os.path.join(here, "files", pageset_name),
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
@@ -83,8 +80,6 @@ def test_mitm_check_proxy(*args):
     with tempdir() as obj_path:
         config["obj_path"] = obj_path
         playback = get_playback(config)
-        playback.config['playback_files'] = [
-            os.path.join(obj_path, "testing", "mozproxy", playback_recordings)]
         assert playback is not None
 
         try:
@@ -104,16 +99,13 @@ def test_mitm_check_proxy(*args):
 @mock.patch("mozproxy.utils.ProcessHandler", new=Process)
 @mock.patch("os.kill", new=kill)
 def test_mitm(*args):
-    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
-    pageset_name = "mitm4-linux-firefox-amazon.manifest"
+    pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
-        "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
         "binary": "firefox",
         "app": "firefox",
@@ -123,7 +115,6 @@ def test_mitm(*args):
     with tempdir() as obj_path:
         config["obj_path"] = obj_path
         playback = get_playback(config)
-        playback.config['playback_files'] = config['playback_recordings']
     assert playback is not None
     try:
         playback.start()
@@ -145,16 +136,13 @@ def test_playback_setup_failed(*args):
 
         return _s
 
-    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
-    pageset_name = "mitm4-linux-firefox-amazon.manifest"
+    pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
         "playback_version": '4.0.4',
         "platform": mozinfo.os,
-        "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
         "binary": "firefox",
         "app": "firefox",
@@ -169,7 +157,6 @@ def test_playback_setup_failed(*args):
             with mock.patch(prefix + "stop_mitmproxy_playback") as p:
                 try:
                     pb = get_playback(config)
-                    pb.config['playback_files'] = config['playback_recordings']
                     pb.start()
                 except SetupFailed:
                     assert p.call_count == 1
@@ -182,16 +169,13 @@ def test_playback_setup_failed(*args):
 @mock.patch("mozproxy.utils.ProcessHandler", new=ProcessWithRetry)
 @mock.patch("os.kill", new=kill)
 def test_mitm_with_retry(*args):
-    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
-    pageset_name = "mitm4-linux-firefox-amazon.manifest"
+    pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
-        "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
         "binary": "firefox",
         "app": "firefox",
@@ -201,7 +185,6 @@ def test_mitm_with_retry(*args):
     with tempdir() as obj_path:
         config["obj_path"] = obj_path
         playback = get_playback(config)
-        playback.config['playback_files'] = config['playback_recordings']
     assert playback is not None
     try:
         playback.start()

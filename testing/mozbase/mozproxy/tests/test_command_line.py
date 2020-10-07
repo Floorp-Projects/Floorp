@@ -98,7 +98,7 @@ def test_run(install_mozproxy):
          "--binary=firefox",
          "--topsrcdir=" + build.topsrcdir,
          "--objdir=" + build.topobjdir,
-         os.path.join(here, "example.dump")],
+         os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip")],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
     )
@@ -121,7 +121,7 @@ def test_failure(install_mozproxy):
         ["mozproxy",
          "--local",
          # Exclude some options here to trigger a command-line error.
-         os.path.join(here, "example.dump")],
+         os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip")],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
     )
