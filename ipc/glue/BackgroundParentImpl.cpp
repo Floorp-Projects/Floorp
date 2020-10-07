@@ -1128,6 +1128,16 @@ BackgroundParentImpl::AllocPGamepadTestChannelParent() {
   return parent.forget().take();
 }
 
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPGamepadTestChannelConstructor(
+    PGamepadTestChannelParent* aActor) {
+  MOZ_ASSERT(aActor);
+  if (!static_cast<dom::GamepadTestChannelParent*>(aActor)->Init()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
 bool BackgroundParentImpl::DeallocPGamepadTestChannelParent(
     dom::PGamepadTestChannelParent* aActor) {
   MOZ_ASSERT(aActor);
