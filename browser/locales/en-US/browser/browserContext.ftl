@@ -357,6 +357,10 @@ main-context-menu-frame-view-info =
     .label = View Frame Info
     .accesskey = I
 
+main-context-menu-print-selection =
+    .label = Print Selection
+    .accesskey = r
+
 main-context-menu-view-selection-source =
     .label = View Selection Source
     .accesskey = e
