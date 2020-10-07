@@ -12,7 +12,7 @@
 #include "nsHTTPSOnlyUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpsOnlyModePermission.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
@@ -421,21 +421,14 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
   }
 
   // Check if the original top-level channel which https-only is trying
-  // to upgrade is already in progress or if the channel is an auth channel.
-  // If it is in progress or Auth is in progress, then all good, if not
+  // to upgrade is already in progress. If it is, then all good, if not
   // then let's cancel that channel so we can dispaly the exception page.
   nsCOMPtr<nsIChannel> httpsOnlyChannel = mDocumentLoadListener->GetChannel();
   if (httpsOnlyChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = httpsOnlyChannel->LoadInfo();
-    uint32_t topLevelLoadInProgress =
-        loadInfo->GetHttpsOnlyStatus() &
-        nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS;
-
-    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-        do_QueryInterface(httpsOnlyChannel);
-    bool isAuthChannel = false;
-    Unused << httpChannelInternal->GetIsAuthChannel(&isAuthChannel);
-    if (!topLevelLoadInProgress && !isAuthChannel) {
+    uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+    if (!(httpsOnlyStatus &
+          nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS)) {
       // Only really cancel the original top-level channel if it's
       // status is still NS_OK, otherwise it might have already
       // encountered some other error and was cancelled.
