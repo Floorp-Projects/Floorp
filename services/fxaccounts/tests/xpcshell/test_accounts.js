@@ -156,7 +156,7 @@ function MockFxAccountsClient() {
   this.getScopedKeyData = function(sessionToken, client_id, scopes) {
     Assert.ok(sessionToken);
     Assert.equal(client_id, FX_OAUTH_CLIENT_ID);
-    Assert.equal(scopes, SCOPE_OLD_SYNC + " " + SCOPE_ECOSYSTEM_TELEMETRY);
+    Assert.equal(scopes, SCOPE_OLD_SYNC);
     return new Promise(resolve => {
       do_timeout(50, () => {
         resolve({
@@ -278,7 +278,7 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   let account = await MakeFxAccounts();
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
     verified: true,
@@ -322,7 +322,7 @@ add_task(async function test_set_signed_in_user_signs_out_previous_account() {
   let signOutServerCalled = false;
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
     verified: true,
@@ -343,7 +343,7 @@ add_task(async function test_update_account_data() {
   _("Check updateUserAccountData does the right thing.");
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
     verified: true,
@@ -366,7 +366,7 @@ add_task(async function test_update_account_data() {
   // but we should fail attempting to change the uid.
   newCreds = {
     email: credentials.email,
-    uid: "11111111111111111111222222222222",
+    uid: "another_uid",
     assertion: "new_assertion",
   };
   await Assert.rejects(
@@ -386,7 +386,7 @@ add_task(async function test_update_account_data() {
   // and should fail with a field name that's not known by storage.
   newCreds = {
     email: credentials.email,
-    uid: "11111111111111111111222222222222",
+    uid: "another_uid",
     foo: "bar",
   };
   await Assert.rejects(
@@ -399,7 +399,7 @@ add_task(async function test_getCertificateOffline() {
   _("getCertificateOffline()");
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     sessionToken: "dead",
     verified: true,
   };
@@ -427,7 +427,7 @@ add_task(async function test_getCertificateCached() {
   _("getCertificateCached()");
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     sessionToken: "dead",
     verified: true,
     // A cached keypair and cert that remain valid.
@@ -455,7 +455,7 @@ add_task(async function test_getCertificateExpiredCert() {
   _("getCertificateExpiredCert()");
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef1234567890abcdef",
+    uid: "1234@lcip.org",
     sessionToken: "dead",
     verified: true,
     // A cached keypair that remains valid.
@@ -490,7 +490,7 @@ add_task(async function test_getCertificateExpiredKeypair() {
   _("getCertificateExpiredKeypair()");
   let credentials = {
     email: "foo@example.com",
-    uid: "1234567890abcdef",
+    uid: "1234@lcip.org",
     sessionToken: "dead",
     verified: true,
     // A cached keypair that has expired.
@@ -822,7 +822,6 @@ add_test(function test_getKeyForScope() {
       Assert.equal(!!user2.kXCS, false);
       Assert.equal(!!user2.kExtSync, false);
       Assert.equal(!!user2.kExtKbHash, false);
-      Assert.equal(!!user2.ecosystemUserId, false);
       // And we still have a key-fetch token and unwrapBKey to use
       Assert.equal(!!user2.keyFetchToken, true);
       Assert.equal(!!user2.unwrapBKey, true);
@@ -837,7 +836,6 @@ add_test(function test_getKeyForScope() {
           Assert.notEqual(null, user3.kXCS);
           Assert.notEqual(null, user3.kExtSync);
           Assert.notEqual(null, user3.kExtKbHash);
-          Assert.notEqual(null, user3.ecosystemUserId);
           Assert.equal(user3.keyFetchToken, undefined);
           Assert.equal(user3.unwrapBKey, undefined);
           run_next_test();
@@ -868,13 +866,8 @@ add_task(async function test_getKeyForScope_kb_migration() {
         "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
       kty: "oct",
     },
-    "https://identity.mozilla.com/ids/ecosystem_telemetry": {
-      kid: "1234567890-ruhbB-qilFS-9bwxlCe4Qw",
-      k: "niMTzlPWb01A2nkO4SkEAUalO7FiQ61yq69X6b8V08Y",
-      kty: "oct",
-    },
     "sync:addon_storage": {
-      kid: "1234567890123-pBOR6B6JulbJr3BxKVOqIU4Cq_WAjFp4ApLn5NRVARE",
+      kid: "1234567890123-Je0Ks64vHlNl2SPJQC1CVXcNvmznmwntSfUWmFwKoME",
       k:
         "ut7VPrNYfXkA5gTopo2GCr-d4wtclV08TV26Y_Jv2IJlzYWSP26dzRau87gryIA5qJxZ7NnojeCadBjH2U-QyQ",
       kty: "oct",
@@ -894,11 +887,7 @@ add_task(async function test_getKeyForScope_kb_migration() {
   );
   Assert.equal(
     newUser.kExtKbHash,
-    "a41391e81e89ba56c9af70712953aa214e02abf5808c5a780292e7e4d4550111"
-  );
-  Assert.equal(
-    newUser.ecosystemUserId,
-    "9e2313ce53d66f4d40da790ee129040146a53bb16243ad72abaf57e9bf15d3c6"
+    "25ed0ab3ae2f1e5365d923c9402d4255770dbe6ce79b09ed49f516985c0aa0c1"
   );
 });
 
@@ -912,7 +901,6 @@ add_task(async function test_getKeyForScope_scopedKeys_migration() {
   user.kXCS = MOCK_ACCOUNT_KEYS.kXCS;
   user.kExtSync = MOCK_ACCOUNT_KEYS.kExtSync;
   user.kExtKbHash = MOCK_ACCOUNT_KEYS.kExtKbHash;
-  Assert.equal(user.ecosystemUserId, null);
   Assert.equal(user.scopedKeys, null);
 
   await fxa.setSignedInUser(user);
@@ -920,17 +908,13 @@ add_task(async function test_getKeyForScope_scopedKeys_migration() {
   let newUser = await fxa._internal.getUserAccountData();
   Assert.equal(newUser.kA, null);
   Assert.equal(newUser.kB, null);
-  // It should have correctly formatted the corresponding scoped keys,
-  // but failed to magic the ecosystem-telemetry key out of nowhere.
-  const expectedScopedKeys = { ...MOCK_ACCOUNT_KEYS.scopedKeys };
-  delete expectedScopedKeys[SCOPE_ECOSYSTEM_TELEMETRY];
-  Assert.deepEqual(newUser.scopedKeys, expectedScopedKeys);
+  // It should have correctly formatted the corresponding scoped keys.
+  Assert.deepEqual(newUser.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
   // And left the existing key fields unchanged.
   Assert.equal(newUser.kSync, user.kSync);
   Assert.equal(newUser.kXCS, user.kXCS);
   Assert.equal(newUser.kExtSync, user.kExtSync);
   Assert.equal(newUser.kExtKbHash, user.kExtKbHash);
-  Assert.equal(user.ecosystemUserId, null);
 });
 
 add_task(async function test_getKeyForScope_nonexistent_account() {
@@ -1973,7 +1957,7 @@ function expandBytes(two_hex) {
 function getTestUser(name) {
   return {
     email: name + "@example.com",
-    uid: "1ad7f5024cc74ec1a209071fd2fae348",
+    uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),

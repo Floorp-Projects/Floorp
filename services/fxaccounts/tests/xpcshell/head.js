@@ -11,11 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-const {
-  SCOPE_OLD_SYNC,
-  SCOPE_ECOSYSTEM_TELEMETRY,
-  LEGACY_SCOPE_WEBEXT_SYNC,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 
 // Some mock key data, in both scoped-key and legacy field formats.
 const MOCK_ACCOUNT_KEYS = {
@@ -24,11 +22,6 @@ const MOCK_ACCOUNT_KEYS = {
       kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",
       k:
         "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
-      kty: "oct",
-    },
-    [SCOPE_ECOSYSTEM_TELEMETRY]: {
-      kid: "1234567890123-7u7u7u7u7u7u7u7u7u7u7g",
-      k: "7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4",
       kty: "oct",
     },
     [LEGACY_SCOPE_WEBEXT_SYNC]: {
@@ -45,8 +38,6 @@ const MOCK_ACCOUNT_KEYS = {
     "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   kExtKbHash:
     "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd ",
-  ecosystemUserId:
-    "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
 };
 
 (function initFxAccountsTestingInfrastructure() {

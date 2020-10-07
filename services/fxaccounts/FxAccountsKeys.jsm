@@ -17,7 +17,6 @@ const { CryptoUtils } = ChromeUtils.import(
 const {
   LEGACY_DERIVED_KEYS_NAMES,
   SCOPE_OLD_SYNC,
-  SCOPE_ECOSYSTEM_TELEMETRY,
   LEGACY_SCOPE_WEBEXT_SYNC,
   FX_OAUTH_CLIENT_ID,
   log,
@@ -393,15 +392,13 @@ class FxAccountsKeys {
   async _fetchScopedKeysMetadata(sessionToken) {
     // Hard-coded list of scopes that we know about.
     // This list will probably grow in future.
-    // Note that LEGACY_SCOPE_WEBEXT_SYNC is not in this list, it gets special-case handling below.
-    const scopes = [SCOPE_OLD_SYNC, SCOPE_ECOSYSTEM_TELEMETRY].join(" ");
+    // Note that SCOPE_OLD_SYNC_WEBEXT is not in this list, it get special-case handling below.
+    const scopes = [SCOPE_OLD_SYNC].join(" ");
     const scopedKeysMetadata = await this._fxai.fxAccountsClient.getScopedKeyData(
       sessionToken,
       FX_OAUTH_CLIENT_ID,
       scopes
     );
-    // The server may decline us permission for some of those scopes, although it really shouldn't.
-    // We can live without them...except for the OLDSYNC scope, whose absence would be catastrophic.
     if (!scopedKeysMetadata.hasOwnProperty(SCOPE_OLD_SYNC)) {
       log.warn(
         "The FxA server did not grant Firefox the `oldsync` scope; this is most unexpected!" +
@@ -455,12 +452,6 @@ class FxAccountsKeys {
       kExtKbHash: scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC]
         ? this.kidAsHex(scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC])
         : CommonUtils.bytesAsHex(await this._deriveWebExtKbHash(uid, kBbytes)),
-      // The `ecosystemUserId` is derived from `kB` but is used more like an identifier
-      // than a key. We unpack it into the top-level user account data so that it can be
-      // stored in plaintext storage, and used for telemetry even when passwords are locked.
-      ecosystemUserId: scopedKeys[SCOPE_ECOSYSTEM_TELEMETRY]
-        ? CommonUtils.base64urlToHex(scopedKeys[SCOPE_ECOSYSTEM_TELEMETRY].k)
-        : null,
     };
   }
 
@@ -540,89 +531,11 @@ class FxAccountsKeys {
   /**
    * Derive a scoped key for an individual OAuth scope.
    *
-   * The derivation here uses HKDF to combine:
-   *   - the root key material kB
-   *   - a unique identifier for this scoped key
-   *   - a server-provided secret that allows for key rotation
-   *   - the account uid as an additional salt
-   *
-   * It produces 32 bytes of (secret) key material along with a (potentially public)
-   * key identifier, formatted as a JWK.
-   *
-   * The full details are in the technical docs at
-   * https://docs.google.com/document/d/1IvQJFEBFz0PnL4uVlIvt8fBS_IPwSK-avK0BRIHucxQ/
    */
   async _deriveScopedKey(uid, kBbytes, scope, scopedKeyMetadata) {
-    kBbytes = CommonUtils.byteStringToArrayBuffer(kBbytes);
-
-    const FINGERPRINT_LENGTH = 16;
-    const KEY_LENGTH = 32;
-    const VALID_UID = /^[0-9a-f]{32}$/i;
-    const VALID_ROTATION_SECRET = /^[0-9a-f]{64}$/i;
-
-    // Engage paranoia mode for input data.
-    if (!VALID_UID.test(uid)) {
-      throw new Error("uid must be a 32-character hex string");
-    }
-    if (kBbytes.length != 32) {
-      throw new Error("kBbytes must be exactly 32 bytes");
-    }
-    if (
-      typeof scopedKeyMetadata.identifier !== "string" ||
-      scopedKeyMetadata.identifier.length < 10
-    ) {
-      throw new Error("identifier must be a string of length >= 10");
-    }
-    if (typeof scopedKeyMetadata.keyRotationTimestamp !== "number") {
-      throw new Error("keyRotationTimestamp must be a number");
-    }
-    if (!VALID_ROTATION_SECRET.test(scopedKeyMetadata.keyRotationSecret)) {
-      throw new Error("keyRotationSecret must be a 64-character hex string");
-    }
-
-    // The server returns milliseconds, we want seconds as a string.
-    const keyRotationTimestamp =
-      "" + Math.round(scopedKeyMetadata.keyRotationTimestamp / 1000);
-    if (keyRotationTimestamp.length < 10) {
-      throw new Error("keyRotationTimestamp must round to a 10-digit number");
-    }
-
-    const keyRotationSecret = CommonUtils.hexToArrayBuffer(
-      scopedKeyMetadata.keyRotationSecret
-    );
-    const salt = CommonUtils.hexToArrayBuffer(uid);
-    const context = new TextEncoder("utf8").encode(
-      "identity.mozilla.com/picl/v1/scoped_key\n" + scopedKeyMetadata.identifier
-    );
-
-    const inputKey = new Uint8Array(64);
-    inputKey.set(kBbytes, 0);
-    inputKey.set(keyRotationSecret, 32);
-
-    const derivedKeyMaterial = await CryptoUtils.hkdf(
-      inputKey,
-      salt,
-      context,
-      FINGERPRINT_LENGTH + KEY_LENGTH
-    );
-    const fingerprint = derivedKeyMaterial.slice(0, FINGERPRINT_LENGTH);
-    const key = derivedKeyMaterial.slice(
-      FINGERPRINT_LENGTH,
-      FINGERPRINT_LENGTH + KEY_LENGTH
-    );
-
-    return {
-      kid:
-        keyRotationTimestamp +
-        "-" +
-        ChromeUtils.base64URLEncode(fingerprint, {
-          pad: false,
-        }),
-      k: ChromeUtils.base64URLEncode(key, {
-        pad: false,
-      }),
-      kty: "oct",
-    };
+    // N.B. when we come to implement this, remember that `kBbytes` will be a string
+    // with bytes in it, not an `ArrayBuffer`.
+    throw new Error("Only legacy scoped keys are currently implemented");
   }
 
   /**
