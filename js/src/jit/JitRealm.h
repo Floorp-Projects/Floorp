@@ -35,35 +35,6 @@ struct VMFunctionData;
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
-struct EnterJitData {
-  explicit EnterJitData(JSContext* cx)
-      : jitcode(nullptr),
-        osrFrame(nullptr),
-        calleeToken(nullptr),
-        maxArgv(nullptr),
-        maxArgc(0),
-        numActualArgs(0),
-        osrNumStackValues(0),
-        envChain(cx),
-        result(cx),
-        constructing(false) {}
-
-  uint8_t* jitcode;
-  InterpreterFrame* osrFrame;
-
-  void* calleeToken;
-
-  Value* maxArgv;
-  unsigned maxArgc;
-  unsigned numActualArgs;
-  unsigned osrNumStackValues;
-
-  RootedObject envChain;
-  RootedValue result;
-
-  bool constructing;
-};
-
 enum class BaselineICFallbackKind {
 #define DEF_ENUM_KIND(kind) kind,
   IC_BASELINE_FALLBACK_CODE_KIND_LIST(DEF_ENUM_KIND)
