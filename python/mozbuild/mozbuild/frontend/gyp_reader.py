@@ -119,7 +119,7 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
     # Process all targets from the given gyp files and its dependencies.
     # The path given to AllTargets needs to use os.sep, while the frontend code
     # gives us paths normalized with forward slash separator.
-    for target in gyp.common.AllTargets(flat_list, targets, path.replace('/', os.sep)):
+    for target in sorted(gyp.common.AllTargets(flat_list, targets, path.replace('/', os.sep))):
         build_file, target_name, toolset = gyp.common.ParseQualifiedTarget(target)
 
         # Each target is given its own objdir. The base of that objdir
