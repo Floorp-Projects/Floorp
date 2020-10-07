@@ -36,3 +36,12 @@ containers-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "containers-button-done.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "containers-button-done.accesskey") }
 """, from_path="browser/browser/preferences/containers.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/permissions.ftl",
+        "browser/browser/preferences/permissions.ftl",
+        transforms_from("""
+permission-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "permissions-button-ok.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "permissions-button-ok.accesskey") }
+""", from_path="browser/browser/preferences/permissions.ftl"))

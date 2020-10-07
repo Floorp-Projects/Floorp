@@ -16,8 +16,12 @@
         data-l10n-attrs="title, style"
         onload="gSitePermissionsManager.onLoad();"
         onunload="gSitePermissionsManager.uninit();"
-        persist="screenX screenY width height"
-        onkeypress="gSitePermissionsManager.onWindowKeyPress(event);">
+        persist="screenX screenY width height">
+
+  <dialog
+    buttons="accept,cancel"
+    data-l10n-id="permission-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/preferences.ftl"/>
@@ -77,10 +81,5 @@
             class="extension-controlled-button accessory-button"
             data-l10n-id="disable-extension"/>
   </hbox>
-  <hbox class="actionButtons" pack="end">
-    <button oncommand="window.close();" id="cancel"
-            data-l10n-id="permissions-button-cancel" />
-    <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();"
-            data-l10n-id="permissions-button-ok" />
-  </hbox>
+  </dialog>
 </window>
