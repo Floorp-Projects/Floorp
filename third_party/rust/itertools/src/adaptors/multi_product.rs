@@ -1,7 +1,7 @@
 #![cfg(feature = "use_std")]
 
-use size_hint;
-use Itertools;
+use crate::size_hint;
+use crate::Itertools;
 
 #[derive(Clone)]
 /// An iterator adaptor that iterates over the cartesian product of
@@ -65,7 +65,7 @@ impl<I> MultiProduct<I>
             let on_first_iter = match state {
                 StartOfIter => {
                     let on_first_iter = !last.in_progress();
-                    state = MidIter { on_first_iter: on_first_iter };
+                    state = MidIter { on_first_iter };
                     on_first_iter
                 },
                 MidIter { on_first_iter } => on_first_iter

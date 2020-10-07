@@ -2,7 +2,7 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 use super::size_hint;
 use std::iter::Fuse;
 
-use either_or_both::EitherOrBoth;
+use crate::either_or_both::EitherOrBoth;
 
 // ZipLongest originally written by SimonSapin,
 // and dedicated to itertools https://github.com/rust-lang/rust/pull/19283

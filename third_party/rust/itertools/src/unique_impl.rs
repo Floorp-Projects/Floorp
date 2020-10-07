@@ -30,9 +30,9 @@ pub fn unique_by<I, V, F>(iter: I, f: F) -> UniqueBy<I, V, F>
           I: Iterator,
 {
     UniqueBy {
-        iter: iter,
+        iter,
         used: HashMap::new(),
-        f: f,
+        f,
     }
 }
 
@@ -126,7 +126,7 @@ pub fn unique<I>(iter: I) -> Unique<I>
 {
     Unique {
         iter: UniqueBy {
-            iter: iter,
+            iter,
             used: HashMap::new(),
             f: (),
         }

@@ -10,23 +10,23 @@ use std::iter::{self, Zip};
 type VecIntoIter<T> = ::std::vec::IntoIter<T>;
 
 #[cfg(feature = "use_std")]
-use Itertools;
+use crate::Itertools;
 
-pub use adaptors::{
+pub use crate::adaptors::{
     interleave,
     merge,
     put_back,
 };
 #[cfg(feature = "use_std")]
-pub use put_back_n_impl::put_back_n;
+pub use crate::put_back_n_impl::put_back_n;
 #[cfg(feature = "use_std")]
-pub use multipeek_impl::multipeek;
+pub use crate::multipeek_impl::multipeek;
 #[cfg(feature = "use_std")]
-pub use kmerge_impl::kmerge;
-pub use zip_eq_impl::zip_eq;
-pub use merge_join::merge_join_by;
+pub use crate::kmerge_impl::kmerge;
+pub use crate::zip_eq_impl::zip_eq;
+pub use crate::merge_join::merge_join_by;
 #[cfg(feature = "use_std")]
-pub use rciter_impl::rciter;
+pub use crate::rciter_impl::rciter;
 
 /// Iterate `iterable` with a running index.
 ///
