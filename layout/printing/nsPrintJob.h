@@ -127,7 +127,12 @@ class nsPrintJob final : public nsIObserver,
   bool HasEverPrinted() const { return mHasEverPrinted; }
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetRawNumPages() const;
-  int32_t GetPrintPreviewNumPages();
+
+  // Returns the total number of PrintedSheetFrames (i.e. faces of a sheet of
+  // paper) for this print job. (This may be less than the raw number of pages,
+  // due to pages having been skipped in a page range or combined into a single
+  // sheet via pages-per-sheet.)
+  int32_t GetPrintPreviewNumSheets();
   already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // The setters here also update the DocViewer
@@ -136,11 +141,11 @@ class nsPrintJob final : public nsIObserver,
   void SetIsPrintPreview(bool aIsPrintPreview);
   bool GetIsCreatingPrintPreview() const { return mIsCreatingPrintPreview; }
 
-  std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountPages();
+  std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountSheets();
 
-  bool PrePrintPage();
-  bool PrintPage(nsPrintObject* aPOect, bool& aInRange);
-  bool DonePrintingPages(nsPrintObject* aPO, nsresult aResult);
+  bool PrePrintSheet();
+  bool PrintSheet(nsPrintObject* aPOect, bool& aInRange);
+  bool DonePrintingSheets(nsPrintObject* aPO, nsresult aResult);
 
   nsresult CleanupOnFailure(nsresult aResult, bool aIsPrinting);
   // If FinishPrintPreview() fails, caller may need to reset the state of the

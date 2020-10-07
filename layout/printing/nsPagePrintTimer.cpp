@@ -64,25 +64,25 @@ NS_IMETHODIMP
 nsPagePrintTimer::Run() {
   bool initNewTimer = true;
   // Check to see if we are done
-  // inRange will be true if a page is actually printed
+  // inRange will be true if a sheet is actually printed
   bool inRange;
   bool donePrinting;
 
   // donePrinting will be true if it completed successfully or
   // if the printing was cancelled
-  donePrinting = !mPrintJob || mPrintJob->PrintPage(mPrintObj, inRange);
+  donePrinting = !mPrintJob || mPrintJob->PrintSheet(mPrintObj, inRange);
   if (donePrinting) {
     if (mWaitingForRemotePrint ||
         // If we are not waiting for the remote printing, it is the time to
-        // end printing task by calling DonePrintingPages.
-        (!mPrintJob || mPrintJob->DonePrintingPages(mPrintObj, NS_OK))) {
+        // end printing task by calling DonePrintingSheets.
+        (!mPrintJob || mPrintJob->DonePrintingSheets(mPrintObj, NS_OK))) {
       initNewTimer = false;
       mDone = true;
     }
   }
 
   // Note that the Stop() destroys this after the print job finishes
-  // (The nsPrintJob stops holding a reference when DonePrintingPages
+  // (The nsPrintJob stops holding a reference when DonePrintingSheets
   // returns true.)
   Stop();
   if (initNewTimer) {
@@ -108,7 +108,7 @@ nsPagePrintTimer::Notify(nsITimer* timer) {
   }
 
   // There are four things that call Notify with different values for timer:
-  // 1) the delay between pages (timer == mTimer)
+  // 1) the delay between sheets (timer == mTimer)
   // 2) canvasPrintState done (timer == null)
   // 3) the watch dog timer (timer == mWatchDogTimer)
   // 4) the waiting for remote print "timer" (timer == mWaitingForRemotePrint)
@@ -116,14 +116,14 @@ nsPagePrintTimer::Notify(nsITimer* timer) {
     // Reset the counter since a mozPrintCallback has finished.
     mWatchDogCount = 0;
   } else if (timer == mTimer) {
-    // Reset the watchdog timer before the start of every page.
+    // Reset the watchdog timer before the start of every sheet.
     mWatchDogCount = 0;
     mTimer = nullptr;
   } else if (timer == mWaitingForRemotePrint) {
     mWaitingForRemotePrint = nullptr;
 
-    // If we are still waiting for the page delay timer, don't let the
-    // notification from the remote print job trigger the next page.
+    // If we are still waiting for the sheet delay timer, don't let the
+    // notification from the remote print job trigger the next sheet.
     if (mTimer) {
       return NS_OK;
     }
@@ -138,7 +138,7 @@ nsPagePrintTimer::Notify(nsITimer* timer) {
   bool donePrePrint = true;
   // Don't start to pre-print if we're waiting on the parent still.
   if (mPrintJob && !mWaitingForRemotePrint) {
-    donePrePrint = mPrintJob->PrePrintPage();
+    donePrePrint = mPrintJob->PrePrintSheet();
   }
 
   if (donePrePrint && !mWaitingForRemotePrint) {
@@ -168,7 +168,7 @@ void nsPagePrintTimer::RemotePrintFinished() {
 
   // now clean up print or print the next webshell
   if (mDone && mPrintJob) {
-    mDone = mPrintJob->DonePrintingPages(mPrintObj, NS_OK);
+    mDone = mPrintJob->DonePrintingSheets(mPrintObj, NS_OK);
   }
 
   mWaitingForRemotePrint->SetTarget(
