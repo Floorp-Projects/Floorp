@@ -516,6 +516,12 @@
     <string name="library_recently_closed_tabs">الألسنة المُغلقة حديثًا</string>
     <!-- Option in library to open Recently Closed Tabs page -->
     <string name="recently_closed_show_full_history">اعرض التأريخ كاملا</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">عدد الألسنة: %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">عدد الألسنة: %d</string>
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">ما من ألسنة أُغلقت حديثًا</string>
 
@@ -630,6 +636,9 @@
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">حدّدتَ %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">احذف العناصر (عددها %1$d)</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">آخر 24 ساعة</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -821,6 +830,12 @@
     <string name="create_collection_deselect_all">ألغِ تحديد الكل</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">حدّد الألسنة لحفظها</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">الألسنة المحدّدة: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">الألسنة المحدّدة: %d</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">حُفظت الألسنة!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
@@ -958,10 +973,18 @@
     <string name="preferences_delete_browsing_data">حذف بيانات التصفح</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">الألسنة المفتوحة</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">الألسنة: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title">تأريخ التصفح وبيانات الموقع</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">العناوين: %d</string>
     <!-- Title for history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">التأريخ</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">الصفحات: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">الكعكات</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1243,7 +1266,15 @@
 
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">المكتبات التي نستعمل</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">قائمة التنقيح: بقيت من النقرات %1$d لتفعيلها</string>
     <string name="about_debug_menu_toast_done">فُعّلت قائمة التنقيح</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">عدد الألسنة: 1</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">عدد الألسنة: %d</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->

@@ -327,6 +327,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Setélan akun</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Otokumplit URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Buka tutumbu dina aplikasi</string>
     <!-- Preference for open download with an external download manager app -->
@@ -464,6 +466,10 @@
     <string name="preference_auto_battery_theme">Atur ku Pangirit Batré</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Turutan téma paranti</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Betot pikeun nyegerkeun</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1259,6 +1265,9 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Pabukon OSS</string>
 
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Meresihan réréméh anu diatur ku alihan ka raramatloka palacak anu dipikawanoh.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Pangrojong</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1374,8 +1383,12 @@
     <string name="logins_site_copied">Loka ditiron kana papan klip</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Niron sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Beresihan sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Niron sandiasma</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Beresihan sandiasma</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Niron loka</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->

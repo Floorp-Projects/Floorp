@@ -78,6 +78,12 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">अभी नहीं</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">सेटिंग पर जाएं</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">सेटिंग पर जाएं</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">नया टैब</string>
@@ -309,6 +315,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ऐड-ऑन</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">अधिसूचनाएं</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">अब सिंक करें</string>
@@ -470,6 +479,27 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">बंद करें</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">हाल ही में बंद किए गए टैब</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">पूरा इतिहास दिखाएं</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d टैब</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d टैब</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">टैब बंद करें</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">एक दिन बाद</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">एक हफ्ते के बाद</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">एक महीने बाद</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">खुले टैब</string>
@@ -489,6 +519,10 @@
     <string name="tab_tray_menu_item_save">संग्रहण में सहेजें</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">सभी टैब साझा करें</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">हाल ही में बंद किए गए टैब</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">टैब सेटिंग</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">सभी टैब बंद करें</string>
     <!-- Shortcut action to open new tab -->
@@ -535,6 +569,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">हटाएं</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">इतिहास से मिटाएं</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (निजी मोड)</string>
 
@@ -736,10 +772,6 @@
     <string name="collections_header">संग्रह</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">संग्रह मेन्यू</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">जो चीजें आपके लिए मायने रखती हैं, उन्हें इकट्ठा करें</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">बाद में तुरंत ऐक्सेस लिए एक जैसा खोज, साइट और टैब को एक साथ समूहित करें।</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">टैब चुने</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -992,13 +1024,8 @@
     <string name="onboarding_whats_new_description">%s पुनर्निर्देशित के बारे में प्रश्न हैं? जानना चाहते हैं कि क्या बदला है?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">यहां उत्तर पाएं</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s का अधिकतम लाभ उठाएं।</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">आप इस फ़ोन पर किसी अन्य Firefox  ब्राउज़र पर %s के रूप में साइन इन हैं। क्या आप इस खाते से साइन इन करना चाहेंगे?</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">अधिक जानें</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">हां, मुझे साइन इन करें</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1249,9 +1276,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">शॉर्टकट नाम</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">आप आसानी से इस वेबसाइट को अपने फ़ोन मुख्य स्क्रीन पर तुरंत ऐक्सेस के लिए जोड़ सकते हैं और ऐप जैसे अनुभव के साथ तेज़ी से ब्राउज़ कर सकते हैं।</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">लॉगिन और पासवर्ड</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1489,7 +1513,7 @@
     <string name="saved_login_duplicate">एक लॉगिन इस उपयोगकर्ता नाम के साथ मौजूद है</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">अन्य डिवाइस कनेक्ट करें</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">कृपया पुनः प्रमाणित करें।</string>
@@ -1502,12 +1526,26 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">सिंक करने के लिए साइन इन करें</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">कोई खुला टैब नहीं</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">शीर्ष साइट सीमा पहुंच गई</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">एक नई शीर्ष साइट जोड़ने के लिए, एक हटा दें। साइट को लंबे समय तक दबाएं और निकालें का चयन करें।</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ठीक है, समझ गए</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s का अधिकतम लाभ उठाएं।</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">जो चीजें आपके लिए मायने रखती हैं, उन्हें इकट्ठा करें</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">बाद में तुरंत ऐक्सेस लिए एक जैसा खोज, साइट और टैब को एक साथ समूहित करें।</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">आप इस फ़ोन पर किसी अन्य Firefox  ब्राउज़र पर %s के रूप में साइन इन हैं। क्या आप इस खाते से साइन इन करना चाहेंगे?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">आप आसानी से इस वेबसाइट को अपने फ़ोन मुख्य स्क्रीन पर तुरंत ऐक्सेस के लिए जोड़ सकते हैं और ऐप जैसे अनुभव के साथ तेज़ी से ब्राउज़ कर सकते हैं।</string>
 
     </resources>

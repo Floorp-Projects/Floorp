@@ -202,7 +202,7 @@
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_engines_search_with">Lần này, tìm kiếm với:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Điền liên kết từ bộ nhớ tạm</string>
+    <string name="awesomebar_clipboard_title">Điền liên kết từ khay nhớ tạm</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Cho phép</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -316,13 +316,13 @@
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">Hiển thị công cụ tìm kiếm</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">Hiển thị gợi ý tìm kiếm</string>
+    <string name="preferences_show_search_suggestions">Hiển thị đề xuất tìm kiếm</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Hiển thị tìm kiếm bằng giọng nói</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Hiển thị trong phiên riêng tư</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Hiển thị đề xuất bộ nhớ tạm</string>
+    <string name="preferences_show_clipboard_suggestions">Hiển thị đề xuất khay nhớ tạm</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Tìm kiếm lịch sử duyệt web</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -1320,7 +1320,7 @@
     <string name="add_to_homescreen_description_2">Bạn có thể dễ dàng thêm trang web vào màn hình chính thiết bị của bạn để có thể truy cập và duyệt web nhanh hơn với trải nghiệm giống như trên ứng dụng.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Đăng nhập và mật khẩu</string>
+    <string name="preferences_passwords_logins_and_passwords">Thông tin đăng nhập và mật khẩu</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Lưu thông tin đăng nhập và mật khẩu</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1330,7 +1330,7 @@
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Tự động điền</string>
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Đồng bộ hóa đăng nhập</string>
+    <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Bật</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1340,7 +1340,7 @@
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Đăng nhập vào đồng bộ hóa</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Đăng nhập đã lưu</string>
+    <string name="preferences_passwords_saved_logins">Thông tin đăng nhập đã lưu</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Thông tin đăng nhập bạn lưu hoặc đồng bộ hóa với %s sẽ hiển thị tại đây.</string>
     <!-- Preference to access list of saved logins -->
@@ -1348,9 +1348,9 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Ngoại trừ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Đăng nhập và mật khẩu không được lưu sẽ được hiển thị ở đây.</string>
+    <string name="preferences_passwords_exceptions_description_empty">Thông tin đăng nhập và mật khẩu không được lưu sẽ được hiển thị ở đây.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Đăng nhập và mật khẩu sẽ không được lưu cho các trang web này.</string>
+    <string name="preferences_passwords_exceptions_description">Thông tin đăng nhập và mật khẩu sẽ không được lưu cho các trang web này.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả các ngoại lệ</string>
     <!-- Hint for search box in logins list -->
