@@ -501,7 +501,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
     PresShell* presShell = aFrame->PresShell();
     if (presShell->IsVisualViewportSizeSet()) {
       dirtyRectRelativeToDirtyFrame =
-          nsRect(presShell->GetVisualViewportOffset(),
+          nsRect(presShell->GetVisualViewportOffsetRelativeToLayoutViewport(),
                  presShell->GetVisualViewportSize());
       // But if we have a displayport, expand it to the displayport, so
       // that async-scrolling the visual viewport within the layout viewport
