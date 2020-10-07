@@ -148,20 +148,18 @@ bool WindowsSMTCProvider::Open() {
     return false;
   }
 
-  if (!EnableControl(true)) {
-    LOG("Failed to enable SMTC control");
-    return false;
-  }
-
   if (!UpdateButtons()) {
     LOG("Failed to initialize the buttons");
-    Unused << EnableControl(false);
     return false;
   }
 
   if (!RegisterEvents()) {
     LOG("Failed to register SMTC key-event listener");
-    Unused << EnableControl(false);
+    return false;
+  }
+
+  if (!EnableControl(true)) {
+    LOG("Failed to enable SMTC control");
     return false;
   }
 
