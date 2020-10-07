@@ -13,6 +13,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "gc/Zone.h"
+#include "jit/CalleeToken.h"
 #include "jit/CompileWrappers.h"
 #include "jit/JitFrames.h"
 #include "vm/ProxyObject.h"

@@ -9,6 +9,7 @@
 
 #include <stdint.h>  // uintptr_t
 
+#include "jit/CalleeToken.h"
 #include "jit/JSJitFrameIter.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -18,50 +19,6 @@ namespace jit {
 
 struct SafepointSlotEntry;
 struct VMFunctionData;
-
-enum CalleeTokenTag {
-  CalleeToken_Function = 0x0,  // untagged
-  CalleeToken_FunctionConstructing = 0x1,
-  CalleeToken_Script = 0x2
-};
-
-// Any CalleeToken with this bit set must be CalleeToken_Script.
-static const uintptr_t CalleeTokenScriptBit = CalleeToken_Script;
-
-static const uintptr_t CalleeTokenMask = ~uintptr_t(0x3);
-
-static inline CalleeTokenTag GetCalleeTokenTag(CalleeToken token) {
-  CalleeTokenTag tag = CalleeTokenTag(uintptr_t(token) & 0x3);
-  MOZ_ASSERT(tag <= CalleeToken_Script);
-  return tag;
-}
-static inline CalleeToken CalleeToToken(JSFunction* fun, bool constructing) {
-  CalleeTokenTag tag =
-      constructing ? CalleeToken_FunctionConstructing : CalleeToken_Function;
-  return CalleeToken(uintptr_t(fun) | uintptr_t(tag));
-}
-static inline CalleeToken CalleeToToken(JSScript* script) {
-  return CalleeToken(uintptr_t(script) | uintptr_t(CalleeToken_Script));
-}
-static inline bool CalleeTokenIsFunction(CalleeToken token) {
-  CalleeTokenTag tag = GetCalleeTokenTag(token);
-  return tag == CalleeToken_Function || tag == CalleeToken_FunctionConstructing;
-}
-static inline bool CalleeTokenIsConstructing(CalleeToken token) {
-  return GetCalleeTokenTag(token) == CalleeToken_FunctionConstructing;
-}
-static inline JSFunction* CalleeTokenToFunction(CalleeToken token) {
-  MOZ_ASSERT(CalleeTokenIsFunction(token));
-  return (JSFunction*)(uintptr_t(token) & CalleeTokenMask);
-}
-static inline JSScript* CalleeTokenToScript(CalleeToken token) {
-  MOZ_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
-  return (JSScript*)(uintptr_t(token) & CalleeTokenMask);
-}
-static inline bool CalleeTokenIsModuleScript(CalleeToken token) {
-  CalleeTokenTag tag = GetCalleeTokenTag(token);
-  return tag == CalleeToken_Script && CalleeTokenToScript(token)->isModule();
-}
 
 static inline JSScript* ScriptFromCalleeToken(CalleeToken token) {
   switch (GetCalleeTokenTag(token)) {
@@ -851,8 +808,6 @@ class InvalidationBailoutStack {
 };
 
 void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes);
-
-CalleeToken TraceCalleeToken(JSTracer* trc, CalleeToken token);
 
 // Baseline requires one slot for this/argument type checks.
 static const uint32_t MinJITStackSize = 1;

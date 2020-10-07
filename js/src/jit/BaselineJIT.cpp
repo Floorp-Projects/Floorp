@@ -18,6 +18,7 @@
 #include "jit/AutoWritableJitCode.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/BaselineIC.h"
+#include "jit/CalleeToken.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRuntime.h"
