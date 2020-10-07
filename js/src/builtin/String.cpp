@@ -3639,10 +3639,6 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("fontcolor", "String_fontcolor", 1, 0),
     JS_SELF_HOSTED_FN("fontsize", "String_fontsize", 1, 0),
 
-#ifdef NIGHTLY_BUILD
-    JS_SELF_HOSTED_FN("item", "String_item", 1, 0),
-#endif
-
     JS_SELF_HOSTED_SYM_FN(iterator, "String_iterator", 0, 0), JS_FS_END};
 
 // ES6 rev 27 (2014 Aug 24) 21.1.1
