@@ -126,6 +126,9 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   if (!YIsDown()) {
     flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }
+  if (IsOpaque()) {
+    flags |= TextureFlags::IS_OPAQUE;
+  }
 
   // -
 
