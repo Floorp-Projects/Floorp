@@ -97,11 +97,16 @@ def config_status(config):
     sanitized_config = {}
     sanitized_config['substs'] = {
         k: sanitize_config(v) for k, v in six.iteritems(config)
-        if k not in ('DEFINES', 'TOPSRCDIR', 'TOPOBJDIR', 'CONFIG_STATUS_DEPS')
+        if k not in ('DEFINES', 'TOPSRCDIR', 'TOPOBJDIR', 'CONFIG_STATUS_DEPS',
+                     'OLD_CONFIGURE_SUBSTS', 'OLD_CONFIGURE_DEFINES')
     }
+    for k, v in config['OLD_CONFIGURE_SUBSTS']:
+        sanitized_config['substs'][k] = sanitize_config(v)
     sanitized_config['defines'] = {
         k: sanitize_config(v) for k, v in six.iteritems(config['DEFINES'])
     }
+    for k, v in config['OLD_CONFIGURE_DEFINES']:
+        sanitized_config['defines'][k] = sanitize_config(v)
     sanitized_config['topsrcdir'] = config['TOPSRCDIR']
     sanitized_config['topobjdir'] = config['TOPOBJDIR']
     sanitized_config['mozconfig'] = config.get('MOZCONFIG')
