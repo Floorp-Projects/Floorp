@@ -70,7 +70,11 @@ def get_dt_from_hg(path):
 
     data = response.json()
 
-    date = data['pushdate'][0]
+    try:
+        date = data['pushdate'][0]
+    except KeyError as exc:
+        msg = "{}\ndata is: {}".format(str(exc), json.dumps(data, indent=2, sort_keys=True))
+        raise KeyError(msg)
 
     return datetime.datetime.utcfromtimestamp(date)
 
