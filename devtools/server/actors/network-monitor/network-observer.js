@@ -390,7 +390,7 @@ NetworkObserver.prototype = {
     if (httpActivity.owner) {
       // Try extracting server timings. Note that they will be sent to the client
       // in the `_onTransactionClose` method together with network event timings.
-      httpActivity.owner.addSeverTimings(serverTimings);
+      httpActivity.owner.addServerTimings(serverTimings);
     } else {
       // If the owner isn't set we need to create the network event and send
       // it to the client. This happens in case where the request has been
