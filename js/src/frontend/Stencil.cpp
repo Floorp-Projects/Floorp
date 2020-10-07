@@ -37,7 +37,8 @@
 using namespace js;
 using namespace js::frontend;
 
-AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
+AbstractScopePtr ScopeStencil::enclosing(
+    CompilationInfo& compilationInfo) const {
   if (enclosing_) {
     return AbstractScopePtr(compilationInfo, *enclosing_);
   }
@@ -47,7 +48,7 @@ AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
 
 Scope* ScopeStencil::createScope(JSContext* cx,
                                  CompilationInfo& compilationInfo,
-                                 CompilationGCOutput& gcOutput) {
+                                 CompilationGCOutput& gcOutput) const {
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
@@ -310,7 +311,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
     return false;
   }
 
-  for (auto& scd : compilationInfo.stencil.scopeData) {
+  for (const ScopeStencil& scd : compilationInfo.stencil.scopeData) {
     Scope* scope = scd.createScope(cx, compilationInfo, gcOutput);
     if (!scope) {
       return false;
