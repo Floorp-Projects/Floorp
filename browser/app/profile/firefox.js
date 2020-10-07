@@ -1978,7 +1978,11 @@ pref("doh-rollout.provider-steering.enabled", false);
 pref("doh-rollout.provider-steering.provider-list", "[{ \"name\": \"comcast\", \"canonicalName\": \"doh-discovery.xfinity.com\", \"uri\": \"https://doh.xfinity.com/dns-query\" }]");
 
 // DoH Rollout: whether to clear the mode value at shutdown.
-pref("doh-rollout.clearModeOnShutdown", true);
+#ifdef NIGHTLY_BUILD
+  pref("doh-rollout.clearModeOnShutdown", false);
+#else
+  pref("doh-rollout.clearModeOnShutdown", true);
+#endif
 
 // URL for Learn More link for browser error logging in preferences
 pref("browser.chrome.errorReporter.infoURL",
