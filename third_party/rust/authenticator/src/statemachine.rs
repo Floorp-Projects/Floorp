@@ -52,7 +52,6 @@ fn send_status(status_mutex: &Mutex<Sender<crate::StatusUpdate>>, msg: crate::St
         },
         Err(e) => {
             error!("Couldn't obtain status mutex: {:?}", e);
-            return;
         }
     };
 }

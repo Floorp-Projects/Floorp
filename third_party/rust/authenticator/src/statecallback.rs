@@ -11,6 +11,8 @@ pub struct StateCallback<T> {
 }
 
 impl<T> StateCallback<T> {
+    // This is used for the Condvar, which requires this kind of construction
+    #[allow(clippy::mutex_atomic)]
     pub fn new(cb: Box<dyn Fn(T) + Send>) -> Self {
         Self {
             callback: Arc::new(Mutex::new(Some(cb))),
@@ -134,11 +136,13 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_statecallback_observer_unclonable() {
         let mut sc = StateCallback::<()>::new(Box::new(move |_| {}));
         sc.add_uncloneable_observer(Box::new(move || {}));
 
         assert!(sc.observer.lock().unwrap().is_some());
+        // This is deliberate, to force an extra clone
         assert!(sc.clone().observer.lock().unwrap().is_none());
     }
 

@@ -13,15 +13,24 @@
 [package]
 edition = "2018"
 name = "authenticator"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>", "Kyle Machulis <kyle@nonpolynomial.com>"]
 description = "Library for interacting with CTAP1/2 security keys for Web Authentication. Used by Firefox."
 keywords = ["ctap2", "u2f", "fido", "webauthn"]
 categories = ["cryptography", "hardware-support", "os"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/authenticator-rs/"
+[dependencies.base64]
+version = "^0.10"
+optional = true
+
 [dependencies.bitflags]
 version = "1.0"
+
+[dependencies.bytes]
+version = "0.5"
+features = ["serde"]
+optional = true
 
 [dependencies.libc]
 version = "0.2"
@@ -34,6 +43,24 @@ version = "0.7"
 
 [dependencies.runloop]
 version = "0.1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1.0"
+optional = true
+
+[dependencies.tokio]
+version = "0.2"
+features = ["macros"]
+optional = true
+
+[dependencies.warp]
+version = "0.2.4"
+optional = true
 [dev-dependencies.assert_matches]
 version = "1.2"
 
@@ -54,6 +81,7 @@ optional = true
 
 [features]
 binding-recompile = ["bindgen"]
+webdriver = ["base64", "bytes", "warp", "tokio", "serde", "serde_json"]
 [target."cfg(target_os = \"freebsd\")".dependencies.devd-rs]
 version = "0.3"
 [target."cfg(target_os = \"linux\")".dependencies.libudev]
