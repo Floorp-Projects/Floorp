@@ -152,35 +152,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1567610",
-    platform: "all",
-    domain: "dns.google.com",
-    bug: "1567610",
-    contentScripts: {
-      matches: ["*://dns.google.com/*", "*://dns.google/*"],
-      css: [
-        {
-          file: "injections/css/bug1567610-dns.google.com-moz-fit-content.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1568908",
-    platform: "desktop",
-    domain: "console.cloud.google.com",
-    bug: "1568908",
-    contentScripts: {
-      matches: ["*://*.console.cloud.google.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1568908-console.cloud.google.com-scrollbar-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1570119",
     platform: "desktop",
     domain: "teamcoco.com",
@@ -256,20 +227,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1605611-maps.google.com-directions-time.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1609991",
-    platform: "android",
-    domain: "www.cracked.com",
-    bug: "1609991",
-    contentScripts: {
-      matches: ["https://www.cracked.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1609991-cracked.com-flex-basis-fix.css",
         },
       ],
     },
@@ -457,16 +414,16 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1654906",
-    platform: "all",
-    domain: "reallygoodemails.com",
-    bug: "1654906",
+    id: "bug1666771",
+    platform: "desktop",
+    domain: "zillow.com",
+    bug: "1666771",
     contentScripts: {
       allFrames: true,
-      matches: ["*://reallygoodemails.com/emails/*/live"],
-      js: [
+      matches: ["*://*.zillow.com/*"],
+      css: [
         {
-          file: "injections/js/bug1654906-contentDocument-fix.js",
+          file: "injections/css/bug1666771-zilow-map-overdraw.css",
         },
       ],
     },
