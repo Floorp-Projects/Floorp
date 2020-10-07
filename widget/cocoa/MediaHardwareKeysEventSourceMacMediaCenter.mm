@@ -137,7 +137,6 @@ bool MediaHardwareKeysEventSourceMacMediaCenter::Open() {
 
 void MediaHardwareKeysEventSourceMacMediaCenter::Close() {
   LOG("Close MediaHardwareKeysEventSourceMacMediaCenter");
-  SetPlaybackState(dom::MediaSessionPlaybackState::None);
   EndListeningForEvents();
   mOpened = false;
   MediaControlKeySource::Close();

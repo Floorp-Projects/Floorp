@@ -82,8 +82,6 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   bool UpdateThumbnail(const nsAString& aUrl);
   void CancelPendingStoreAsyncOperation() const;
 
-  void ClearMetadata();
-
   bool mInitialized = false;
 
   // A bit table indicating what keys are enabled

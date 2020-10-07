@@ -29,21 +29,21 @@ namespace mozilla {
 namespace dom {
 
 bool MediaControlKeyManager::IsOpened() const {
-  return mEventSource && mEventSource->IsOpened();
+  // As MediaControlKeyManager represents a platform-indenpendent event source,
+  // which we can use to add other listeners to moniter media key events, we
+  // would always return true even if we fail to open the real media key event
+  // source, because we still have chances to open the source again when there
+  // are other new controllers being added.
+  return true;
 }
 
 bool MediaControlKeyManager::Open() {
-  if (IsOpened()) {
-    return true;
-  }
-  return StartMonitoringControlKeys();
-}
-
-void MediaControlKeyManager::Close() {
-  // We don't call parent's `Close()` because we want to keep the listener
-  // (MediaControlKeyHandler) all the time. It would be manually removed by
-  // `MediaControlService` when shutdown.
-  StopMonitoringControlKeys();
+  mControllerAmountChangedListener =
+      MediaControlService::GetService()
+          ->MediaControllerAmountChangedEvent()
+          .Connect(AbstractThread::MainThread(), this,
+                   &MediaControlKeyManager::ControllerAmountChanged);
+  return true;
 }
 
 MediaControlKeyManager::MediaControlKeyManager()
@@ -57,6 +57,7 @@ MediaControlKeyManager::~MediaControlKeyManager() { Shutdown(); }
 void MediaControlKeyManager::Shutdown() {
   StopMonitoringControlKeys();
   mEventSource = nullptr;
+  mControllerAmountChangedListener.DisconnectIfExists();
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
     Preferences::RemoveObserver(mObserver, MEDIA_CONTROL_PREF);
@@ -64,42 +65,44 @@ void MediaControlKeyManager::Shutdown() {
   }
 }
 
-bool MediaControlKeyManager::StartMonitoringControlKeys() {
+void MediaControlKeyManager::StartMonitoringControlKeys() {
   if (!StaticPrefs::media_hardwaremediakeys_enabled()) {
-    return false;
+    return;
   }
 
   if (!mEventSource) {
     mEventSource = widget::CreateMediaControlKeySource();
   }
-  if (mEventSource && mEventSource->Open()) {
+
+  // When cross-compiling with MinGW, we cannot use the related WinAPI, thus
+  // mEventSource might be null there.
+  if (!mEventSource) {
+    return;
+  }
+
+  if (!mEventSource->IsOpened() && mEventSource->Open()) {
     LOG_INFO("StartMonitoringControlKeys");
     mEventSource->SetPlaybackState(mPlaybackState);
     mEventSource->SetMediaMetadata(mMetadata);
     mEventSource->SetSupportedMediaKeys(mSupportedKeys);
     mEventSource->AddListener(this);
-    return true;
   }
-  // Fail to open or create event source (eg. when cross-compiling with MinGW,
-  // we cannot use the related WinAPI)
-  return false;
 }
 
 void MediaControlKeyManager::StopMonitoringControlKeys() {
-  if (!mEventSource || !mEventSource->IsOpened()) {
-    return;
+  if (mEventSource && mEventSource->IsOpened()) {
+    LOG_INFO("StopMonitoringControlKeys");
+    mEventSource->Close();
   }
+}
 
-  LOG_INFO("StopMonitoringControlKeys");
-  mEventSource->Close();
-  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
-    // Close the source would reset the displayed playback state and metadata.
-    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-      obs->NotifyObservers(nullptr, "media-displayed-playback-changed",
-                           nullptr);
-      obs->NotifyObservers(nullptr, "media-displayed-metadata-changed",
-                           nullptr);
-    }
+void MediaControlKeyManager::ControllerAmountChanged(
+    uint64_t aControllerAmount) {
+  LOG("Controller amount changed=%" PRId64, aControllerAmount);
+  if (aControllerAmount > 0) {
+    StartMonitoringControlKeys();
+  } else if (aControllerAmount == 0) {
+    StopMonitoringControlKeys();
   }
 }
 
@@ -161,6 +164,18 @@ void MediaControlKeyManager::SetSupportedMediaKeys(
   }
 }
 
+void MediaControlKeyManager::SetControlledTabBrowsingContextId(
+    Maybe<uint64_t> aTopLevelBrowsingContextId) {
+  if (aTopLevelBrowsingContextId) {
+    LOG_INFO("Controlled tab Id=%" PRId64, *aTopLevelBrowsingContextId);
+  } else {
+    LOG_INFO("No controlled tab exists");
+  }
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetControlledTabBrowsingContextId(aTopLevelBrowsingContextId);
+  }
+}
+
 void MediaControlKeyManager::SetEnableFullScreen(bool aIsEnabled) {
   LOG_INFO("Set fullscreen %s", aIsEnabled ? "enabled" : "disabled");
   if (mEventSource && mEventSource->IsOpened()) {
@@ -194,7 +209,7 @@ void MediaControlKeyManager::OnPreferenceChange() {
   LOG_INFO("Preference change : %s media control",
            isPrefEnabled ? "enable" : "disable");
   if (shouldMonitorKeys) {
-    Unused << StartMonitoringControlKeys();
+    StartMonitoringControlKeys();
   } else {
     StopMonitoringControlKeys();
   }
