@@ -338,12 +338,12 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
 
     if show_estimates:
         base_cmd.extend([
-            '--preview', 'python {} -g {} -s -c {} -t "{{+f}}"'.format(
-                PREVIEW_SCRIPT, dep_cache, cache_dir),
+            '--preview', '{} {} -g {} -s -c {} -t "{{+f}}"'.format(
+                sys.executable, PREVIEW_SCRIPT, dep_cache, cache_dir),
         ])
     else:
         base_cmd.extend([
-            '--preview', 'python {} -t "{{+f}}"'.format(PREVIEW_SCRIPT),
+            '--preview', '{} {} -t "{{+f}}"'.format(sys.executable, PREVIEW_SCRIPT),
         ])
 
     if exact:
