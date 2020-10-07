@@ -746,6 +746,28 @@ struct RoleDescrComparator {
   return @([self stateWithMask:states::REQUIRED] != 0);
 }
 
+- (mozAccessible*)topWebArea {
+  AccessibleOrProxy doc = [self geckoDocument];
+  while (!doc.IsNull()) {
+    if (doc.IsAccessible()) {
+      DocAccessible* docAcc = doc.AsAccessible()->AsDoc();
+      if (docAcc->DocumentNode()->GetBrowsingContext()->IsTopContent()) {
+        return GetNativeFromGeckoAccessible(docAcc);
+      }
+
+      doc = docAcc->ParentDocument();
+    } else {
+      DocAccessibleParent* docProxy = doc.AsProxy()->AsDoc();
+      if (docProxy->IsTopLevel()) {
+        return GetNativeFromGeckoAccessible(docProxy);
+      }
+      doc = docProxy->ParentDoc();
+    }
+  }
+
+  return nil;
+}
+
 - (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate {
   // Create our search object and set it up with the searchPredicate
   // params. The init function does additional parsing. We pass a
@@ -883,8 +905,7 @@ struct RoleDescrComparator {
             (selectedRange ? selectedRange : [NSNull null])
       };
 
-      mozAccessible* webArea =
-          GetNativeFromGeckoAccessible([self geckoDocument]);
+      mozAccessible* webArea = [self topWebArea];
       [webArea
           moxPostNotification:NSAccessibilitySelectedTextChangedNotification
                  withUserInfo:userInfo];
