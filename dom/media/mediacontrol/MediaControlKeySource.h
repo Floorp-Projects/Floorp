@@ -95,6 +95,17 @@ class MediaControlKeySource {
    * the same time, we would only update information from one of that tabs that
    * would be done by `MediaControlService`.
    */
+
+  // Currently, this method is only useful for GeckoView. It would be called
+  // before all the other `SetXXX()` functions after the key source is open.
+  // It's used to indicate where the property change occurs. We would send the
+  // top level browsing context Id in order to allow the key source know which
+  // tab that the following coming information belong to. This function would be
+  // called whenever we change the controlled tab. If no controlled tab exists,
+  // the `aTopLevelBrowsingContextId` would be `Nothing()`.
+  virtual void SetControlledTabBrowsingContextId(
+      Maybe<uint64_t> aTopLevelBrowsingContextId){};
+
   virtual void SetPlaybackState(MediaSessionPlaybackState aState);
   virtual MediaSessionPlaybackState GetPlaybackState() const;
 

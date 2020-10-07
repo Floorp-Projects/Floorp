@@ -148,18 +148,20 @@ bool WindowsSMTCProvider::Open() {
     return false;
   }
 
+  if (!EnableControl(true)) {
+    LOG("Failed to enable SMTC control");
+    return false;
+  }
+
   if (!UpdateButtons()) {
     LOG("Failed to initialize the buttons");
+    Unused << EnableControl(false);
     return false;
   }
 
   if (!RegisterEvents()) {
     LOG("Failed to register SMTC key-event listener");
-    return false;
-  }
-
-  if (!EnableControl(true)) {
-    LOG("Failed to enable SMTC control");
+    Unused << EnableControl(false);
     return false;
   }
 
@@ -170,19 +172,26 @@ bool WindowsSMTCProvider::Open() {
 
 void WindowsSMTCProvider::Close() {
   MediaControlKeySource::Close();
-  // Prevent calling Set methods when init failed
-  if (mInitialized) {
+  if (mInitialized) {  // Prevent calling Set methods when init failed
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    UnregisterEvents();
-    ClearMetadata();
-    // We have observed an Windows issue, if we modify `mControls` , (such as
-    // setting metadata, disable buttons) before disabling control, and those
-    // operations are not done sequentially within a same main thread task,
-    // then it would cause a problem where the SMTC wasn't clean up completely
-    // and show the executable name.
     EnableControl(false);
     mInitialized = false;
   }
+
+  UnregisterEvents();
+
+  // Cancel the pending image fetch process
+  mImageFetchRequest.DisconnectIfExists();
+
+  CancelPendingStoreAsyncOperation();
+
+  // Clear the cached image urls
+  mThumbnailUrl.Truncate();
+  mProcessingUrl.Truncate();
+
+  mNextImageIndex = 0;
+
+  mSupportedKeys = 0;
 }
 
 void WindowsSMTCProvider::SetPlaybackState(
@@ -225,19 +234,6 @@ void WindowsSMTCProvider::SetMediaMetadata(
   SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
                    aMetadata.mAlbum.get());
   LoadThumbnail(aMetadata.mArtwork);
-}
-
-void WindowsSMTCProvider::ClearMetadata() {
-  MOZ_ASSERT(mDisplay);
-  if (FAILED(mDisplay->ClearAll())) {
-    LOG("Failed to clear SMTC display");
-  }
-  mImageFetchRequest.DisconnectIfExists();
-  CancelPendingStoreAsyncOperation();
-  mThumbnailUrl.Truncate();
-  mProcessingUrl.Truncate();
-  mNextImageIndex = 0;
-  mSupportedKeys = 0;
 }
 
 void WindowsSMTCProvider::SetSupportedMediaKeys(

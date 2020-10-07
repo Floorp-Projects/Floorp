@@ -334,10 +334,6 @@ void MPRISServiceHandler::Close() {
   gchar serviceName[256];
   SprintfLiteral(serviceName, DBUS_MPRIS_SERVICE_NAME ".instance%d", getpid());
 
-  // Reset playback state and metadata before disconnect from dbus.
-  SetPlaybackState(dom::MediaSessionPlaybackState::None);
-  ClearMetadata();
-
   OnNameLost(mConnection, serviceName);
 
   if (mOwnerId != 0) {
@@ -349,6 +345,18 @@ void MPRISServiceHandler::Close() {
 
   mInitialized = false;
   MediaControlKeySource::Close();
+
+  mImageFetchRequest.DisconnectIfExists();
+
+  RemoveAllLocalImages();
+  mMPRISMetadata.Clear();
+
+  mCurrentImageUrl.Truncate();
+  mFetchingUrl.Truncate();
+
+  mNextImageIndex = 0;
+
+  mSupportedKeys = 0;
 }
 
 bool MPRISServiceHandler::IsOpened() const { return mInitialized; }
@@ -473,17 +481,6 @@ void MPRISServiceHandler::SetMediaMetadataInternal(
   if (aClearArtUrl) {
     mMPRISMetadata.mArtUrl.Truncate();
   }
-  EmitMetadataChanged();
-}
-
-void MPRISServiceHandler::ClearMetadata() {
-  mMPRISMetadata.Clear();
-  mImageFetchRequest.DisconnectIfExists();
-  RemoveAllLocalImages();
-  mCurrentImageUrl.Truncate();
-  mFetchingUrl.Truncate();
-  mNextImageIndex = 0;
-  mSupportedKeys = 0;
   EmitMetadataChanged();
 }
 
