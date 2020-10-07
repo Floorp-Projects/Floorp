@@ -10,7 +10,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "jit/JitCode.h"
-#include "jit/JitRealm.h"
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {

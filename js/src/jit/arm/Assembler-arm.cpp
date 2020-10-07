@@ -16,7 +16,6 @@
 #include "jit/arm/MacroAssembler-arm.h"
 #include "jit/AutoWritableJitCode.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
 #include "vm/Realm.h"
 
