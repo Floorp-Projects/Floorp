@@ -55,8 +55,6 @@ using namespace mozilla::a11y;
   id root =
       [mRoot isKindOfClass:[mozAccessible class]] ? mRoot : [mRoot moxParent];
 
-  MOZ_ASSERT([mRoot isKindOfClass:[mozAccessible class]]);
-
   return [static_cast<mozAccessible*>(root) geckoAccessible];
 }
 
@@ -132,7 +130,7 @@ using namespace mozilla::a11y;
               continue;
             }
           }
-        } else if (mImmediateDescendantsOnly &&
+        } else if (mImmediateDescendantsOnly && mStartElem != mRoot &&
                    [mStartElem isKindOfClass:[MOXRootGroup class]]) {
           // Moving forward from root group. If we don't match descendants,
           // there is no match. Continue.

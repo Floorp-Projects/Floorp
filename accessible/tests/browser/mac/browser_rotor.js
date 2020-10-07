@@ -1046,6 +1046,31 @@ addAccessibleTask(
       "AXWebArea",
       "Got web area accessible"
     );
+
+    const rootGroup = webArea.getAttributeValue("AXChildren")[0];
+    is(
+      rootGroup.getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Is generated root group"
+    );
+
+    searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: 1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    results = rootGroup.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(
+      results[0].getAttributeValue("AXRole"),
+      "AXHeading",
+      "Is first heading child"
+    );
   }
 );
 

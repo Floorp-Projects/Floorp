@@ -7,6 +7,8 @@
 
 #import "MOXWebAreaAccessible.h"
 
+#import "MOXSearchInfo.h"
+
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
 
@@ -53,6 +55,20 @@ using namespace mozilla::a11y;
 
 - (NSValue*)moxSize {
   return [mParent moxSize];
+}
+
+- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate {
+  MOXSearchInfo* search =
+      [[MOXSearchInfo alloc] initWithParameters:searchPredicate andRoot:self];
+
+  return [search performSearch];
+}
+
+- (NSNumber*)moxUIElementCountForSearchPredicate:
+    (NSDictionary*)searchPredicate {
+  return [NSNumber
+      numberWithDouble:[[self moxUIElementsForSearchPredicate:searchPredicate]
+                           count]];
 }
 
 - (BOOL)disableChild:(id)child {
