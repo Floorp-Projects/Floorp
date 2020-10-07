@@ -1,3 +1,4 @@
+#!/bin/bash
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -44,3 +45,29 @@ done
 # Patch the imported files.
 patch -p1 < moz-libsoundtouch.patch
 
+if [ -d $1/.git ]; then
+  rev=$(cd $1 && git rev-parse --verify HEAD)
+  date=$(cd $1 && git show -s --format=%ci HEAD)
+  dirty=$(cd $1 && git diff-index --name-only HEAD)
+  set +e
+  pre_rev=$(grep -o '[[:xdigit:]]\{40\}' moz.yaml)
+  commits=$(cd $1 && git log --pretty=format:'%h - %s' $pre_rev..$rev)
+  set -e
+fi
+
+if [ -n "$rev" ]; then
+  version=$rev
+  if [ -n "$dirty" ]; then
+    version=$version-dirty
+    echo "WARNING: updating from a dirty git repository."
+  fi
+  sed -i.bak -e "s/^ *release:.*/  release: \"$version ($date)\"/" moz.yaml
+  if [[ ! "$( grep "$version" moz.yaml )" ]]; then
+    echo "Updating moz.yaml failed."
+    exit 1
+  fi
+  rm moz.yaml.bak
+  [[ -n "$commits" ]] && echo -e "Pick commits:\n$commits"
+else
+  echo "Remember to update moz.yaml with the version details."
+fi
