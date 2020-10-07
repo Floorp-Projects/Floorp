@@ -164,18 +164,6 @@ void MediaControlKeyManager::SetSupportedMediaKeys(
   }
 }
 
-void MediaControlKeyManager::SetControlledTabBrowsingContextId(
-    Maybe<uint64_t> aTopLevelBrowsingContextId) {
-  if (aTopLevelBrowsingContextId) {
-    LOG_INFO("Controlled tab Id=%" PRId64, *aTopLevelBrowsingContextId);
-  } else {
-    LOG_INFO("No controlled tab exists");
-  }
-  if (mEventSource && mEventSource->IsOpened()) {
-    mEventSource->SetControlledTabBrowsingContextId(aTopLevelBrowsingContextId);
-  }
-}
-
 void MediaControlKeyManager::SetEnableFullScreen(bool aIsEnabled) {
   LOG_INFO("Set fullscreen %s", aIsEnabled ? "enabled" : "disabled");
   if (mEventSource && mEventSource->IsOpened()) {
