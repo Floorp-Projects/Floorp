@@ -59,27 +59,13 @@ function wasmCompilationShouldFail(bin, compile_error_regex) {
     }
 }
 
-function typeToCraneliftName(ty) {
-    switch(ty) {
-        case 'externref':
-            return 'ExternRef';
-        case 'funcref':
-            return 'FuncRef';
-        default:
-            return ty.toUpperCase();
-    }
-}
-
 function mismatchError(actual, expect) {
-    let actualCL = typeToCraneliftName(actual);
-    let expectCL = typeToCraneliftName(expect);
-    var str = `(type mismatch: expression has type ${actual} but expected ${expect})|` +
-              `(type mismatch: expected Some\\(${expectCL}\\), found Some\\(${actualCL}\\))`;
+    var str = `type mismatch: expression has type ${actual} but expected ${expect}`;
     return RegExp(str);
 }
 
-const emptyStackError = /(from empty stack)|(nothing on stack)/;
-const unusedValuesError = /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/;
+const emptyStackError = /from empty stack/;
+const unusedValuesError = /unused values not explicitly dropped by end of block/;
 
 function jsify(wasmVal) {
     if (wasmVal === 'nan')

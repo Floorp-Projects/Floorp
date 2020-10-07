@@ -1,5 +1,7 @@
 //! This module defines x86_64-specific machine instruction types.
 #![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
 
 use crate::binemit::{CodeOffset, StackMap};
 use crate::ir::{types, ExternalName, Opcode, SourceLoc, TrapCode, Type};
@@ -32,13 +34,13 @@ use regs::{create_reg_universe_systemv, show_ireg_sized};
 /// Instructions.  Destinations are on the RIGHT (a la AT&T syntax).
 #[derive(Clone)]
 pub enum Inst {
-    /// Nops of various sizes, including zero.
+    /// nops of various sizes, including zero
     Nop { len: u8 },
 
     // =====================================
     // Integer instructions.
     /// Integer arithmetic/bit-twiddling: (add sub and or xor mul adc? sbb?) (32 64) (reg addr imm) reg
-    AluRmiR {
+    Alu_RMI_R {
         is_64: bool,
         op: AluRmiROpcode,
         src: RegMemImm,
@@ -112,7 +114,7 @@ pub enum Inst {
     },
 
     /// GPR to GPR move: mov (64 32) reg reg.
-    MovRR {
+    Mov_R_R {
         is_64: bool,
         src: Reg,
         dst: Writable<Reg>,
@@ -121,7 +123,7 @@ pub enum Inst {
     /// Zero-extended loads, except for 64 bits: movz (bl bq wl wq lq) addr reg.
     /// Note that the lq variant doesn't really exist since the default zero-extend rule makes it
     /// unnecessary. For that case we emit the equivalent "movl AM, reg32".
-    MovzxRmR {
+    MovZX_RM_R {
         ext_mode: ExtMode,
         src: RegMem,
         dst: Writable<Reg>,
@@ -130,7 +132,7 @@ pub enum Inst {
     },
 
     /// A plain 64-bit integer load, since MovZX_RM_R can't represent that.
-    Mov64MR {
+    Mov64_M_R {
         src: SyntheticAmode,
         dst: Writable<Reg>,
         /// Source location, if the memory access can be out-of-bounds.
@@ -144,7 +146,7 @@ pub enum Inst {
     },
 
     /// Sign-extended loads and moves: movs (bl bq wl wq lq) addr reg.
-    MovsxRmR {
+    MovSX_RM_R {
         ext_mode: ExtMode,
         src: RegMem,
         dst: Writable<Reg>,
@@ -153,7 +155,7 @@ pub enum Inst {
     },
 
     /// Integer stores: mov (b w l q) reg addr.
-    MovRM {
+    Mov_R_M {
         size: u8, // 1, 2, 4 or 8.
         src: Reg,
         dst: SyntheticAmode,
@@ -162,7 +164,7 @@ pub enum Inst {
     },
 
     /// Arithmetic shifts: (shl shr sar) (b w l q) imm reg.
-    ShiftR {
+    Shift_R {
         size: u8, // 1, 2, 4 or 8
         kind: ShiftKind,
         /// shift count: Some(0 .. #bits-in-type - 1), or None to mean "%cl".
@@ -178,7 +180,7 @@ pub enum Inst {
     },
 
     /// Integer comparisons/tests: cmp (b w l q) (reg addr imm) reg.
-    CmpRmiR {
+    Cmp_RMI_R {
         size: u8, // 1, 2, 4 or 8
         src: RegMemImm,
         dst: Reg,
@@ -208,7 +210,7 @@ pub enum Inst {
     // =====================================
     // Floating-point operations.
     /// XMM (scalar or vector) binary op: (add sub and or xor mul adc? sbb?) (32 64) (reg addr) reg
-    XmmRmR {
+    XMM_RM_R {
         op: SseOpcode,
         src: RegMem,
         dst: Writable<Reg>,
@@ -229,7 +231,7 @@ pub enum Inst {
     },
 
     /// XMM (scalar or vector) unary op (from xmm to reg/mem): stores, movd, movq
-    XmmMovRM {
+    Xmm_Mov_R_M {
         op: SseOpcode,
         src: Reg,
         dst: SyntheticAmode,
@@ -325,7 +327,7 @@ pub enum Inst {
     },
 
     /// Float comparisons/tests: cmp (b w l q) (reg addr imm) reg.
-    XmmCmpRmR {
+    XMM_Cmp_RM_R {
         op: SseOpcode,
         src: RegMem,
         dst: Reg,
@@ -517,7 +519,7 @@ impl Inst {
     ) -> Self {
         src.assert_regclass_is(RegClass::I64);
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Self::AluRmiR {
+        Self::Alu_RMI_R {
             is_64,
             op,
             src,
@@ -607,7 +609,7 @@ impl Inst {
     pub(crate) fn mov_r_r(is_64: bool, src: Reg, dst: Writable<Reg>) -> Inst {
         debug_assert!(src.get_class() == RegClass::I64);
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::MovRR { is_64, src, dst }
+        Inst::Mov_R_R { is_64, src, dst }
     }
 
     // TODO Can be replaced by `Inst::move` (high-level) and `Inst::unary_rm_r` (low-level)
@@ -649,7 +651,7 @@ impl Inst {
     pub(crate) fn xmm_rm_r(op: SseOpcode, src: RegMem, dst: Writable<Reg>) -> Self {
         src.assert_regclass_is(RegClass::V128);
         debug_assert!(dst.to_reg().get_class() == RegClass::V128);
-        Inst::XmmRmR { op, src, dst }
+        Inst::XMM_RM_R { op, src, dst }
     }
 
     pub(crate) fn xmm_uninit_value(dst: Writable<Reg>) -> Self {
@@ -664,7 +666,7 @@ impl Inst {
         srcloc: Option<SourceLoc>,
     ) -> Inst {
         debug_assert!(src.get_class() == RegClass::V128);
-        Inst::XmmMovRM {
+        Inst::Xmm_Mov_R_M {
             op,
             src,
             dst: dst.into(),
@@ -707,7 +709,7 @@ impl Inst {
     pub(crate) fn xmm_cmp_rm_r(op: SseOpcode, src: RegMem, dst: Reg) -> Inst {
         src.assert_regclass_is(RegClass::V128);
         debug_assert!(dst.get_class() == RegClass::V128);
-        Inst::XmmCmpRmR { op, src, dst }
+        Inst::XMM_Cmp_RM_R { op, src, dst }
     }
 
     pub(crate) fn cvt_u64_to_float_seq(
@@ -822,7 +824,7 @@ impl Inst {
     ) -> Inst {
         src.assert_regclass_is(RegClass::I64);
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::MovzxRmR {
+        Inst::MovZX_RM_R {
             ext_mode,
             src,
             dst,
@@ -844,7 +846,7 @@ impl Inst {
     ) -> Inst {
         src.assert_regclass_is(RegClass::I64);
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::MovsxRmR {
+        Inst::MovSX_RM_R {
             ext_mode,
             src,
             dst,
@@ -858,7 +860,7 @@ impl Inst {
         srcloc: Option<SourceLoc>,
     ) -> Inst {
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::Mov64MR {
+        Inst::Mov64_M_R {
             src: src.into(),
             dst,
             srcloc,
@@ -882,7 +884,7 @@ impl Inst {
     ) -> Inst {
         debug_assert!(size == 8 || size == 4 || size == 2 || size == 1);
         debug_assert!(src.get_class() == RegClass::I64);
-        Inst::MovRM {
+        Inst::Mov_R_M {
             size,
             src,
             dst: dst.into(),
@@ -911,7 +913,7 @@ impl Inst {
             true
         });
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::ShiftR {
+        Inst::Shift_R {
             size,
             kind,
             num_bits,
@@ -929,7 +931,7 @@ impl Inst {
         src.assert_regclass_is(RegClass::I64);
         debug_assert!(size == 8 || size == 4 || size == 2 || size == 1);
         debug_assert!(dst.get_class() == RegClass::I64);
-        Inst::CmpRmiR { size, src, dst }
+        Inst::Cmp_RMI_R { size, src, dst }
     }
 
     pub(crate) fn trap(srcloc: SourceLoc, trap_code: TrapCode) -> Inst {
@@ -1133,12 +1135,12 @@ impl Inst {
     /// same as the first register (already handled).
     fn produces_const(&self) -> bool {
         match self {
-            Self::AluRmiR { op, src, dst, .. } => {
+            Self::Alu_RMI_R { op, src, dst, .. } => {
                 src.to_reg() == Some(dst.to_reg())
                     && (*op == AluRmiROpcode::Xor || *op == AluRmiROpcode::Sub)
             }
 
-            Self::XmmRmR { op, src, dst, .. } => {
+            Self::XMM_RM_R { op, src, dst, .. } => {
                 src.to_reg() == Some(dst.to_reg())
                     && (*op == SseOpcode::Xorps
                         || *op == SseOpcode::Xorpd
@@ -1181,11 +1183,11 @@ impl ShowWithRRU for Inst {
             ljustify(s1 + &s2)
         }
 
-        fn suffix_lq(is_64: bool) -> String {
+        fn suffixLQ(is_64: bool) -> String {
             (if is_64 { "q" } else { "l" }).to_string()
         }
 
-        fn size_lq(is_64: bool) -> u8 {
+        fn sizeLQ(is_64: bool) -> u8 {
             if is_64 {
                 8
             } else {
@@ -1193,7 +1195,7 @@ impl ShowWithRRU for Inst {
             }
         }
 
-        fn suffix_bwlq(size: u8) -> String {
+        fn suffixBWLQ(size: u8) -> String {
             match size {
                 1 => "b".to_string(),
                 2 => "w".to_string(),
@@ -1206,34 +1208,34 @@ impl ShowWithRRU for Inst {
         match self {
             Inst::Nop { len } => format!("{} len={}", ljustify("nop".to_string()), len),
 
-            Inst::AluRmiR {
+            Inst::Alu_RMI_R {
                 is_64,
                 op,
                 src,
                 dst,
             } => format!(
                 "{} {}, {}",
-                ljustify2(op.to_string(), suffix_lq(*is_64)),
-                src.show_rru_sized(mb_rru, size_lq(*is_64)),
-                show_ireg_sized(dst.to_reg(), mb_rru, size_lq(*is_64)),
+                ljustify2(op.to_string(), suffixLQ(*is_64)),
+                src.show_rru_sized(mb_rru, sizeLQ(*is_64)),
+                show_ireg_sized(dst.to_reg(), mb_rru, sizeLQ(*is_64)),
             ),
 
             Inst::UnaryRmR { src, dst, op, size } => format!(
                 "{} {}, {}",
-                ljustify2(op.to_string(), suffix_bwlq(*size)),
+                ljustify2(op.to_string(), suffixBWLQ(*size)),
                 src.show_rru_sized(mb_rru, *size),
                 show_ireg_sized(dst.to_reg(), mb_rru, *size),
             ),
 
             Inst::Not { size, src } => format!(
                 "{} {}",
-                ljustify2("not".to_string(), suffix_bwlq(*size)),
+                ljustify2("not".to_string(), suffixBWLQ(*size)),
                 show_ireg_sized(src.to_reg(), mb_rru, *size)
             ),
 
             Inst::Neg { size, src } => format!(
                 "{} {}",
-                ljustify2("neg".to_string(), suffix_bwlq(*size)),
+                ljustify2("neg".to_string(), suffixBWLQ(*size)),
                 show_ireg_sized(src.to_reg(), mb_rru, *size)
             ),
 
@@ -1296,14 +1298,14 @@ impl ShowWithRRU for Inst {
                 show_ireg_sized(dst.to_reg(), mb_rru, 8),
             ),
 
-            Inst::XmmMovRM { op, src, dst, .. } => format!(
+            Inst::Xmm_Mov_R_M { op, src, dst, .. } => format!(
                 "{} {}, {}",
                 ljustify(op.to_string()),
                 show_ireg_sized(*src, mb_rru, 8),
                 dst.show_rru(mb_rru),
             ),
 
-            Inst::XmmRmR { op, src, dst } => format!(
+            Inst::XMM_RM_R { op, src, dst } => format!(
                 "{} {}, {}",
                 ljustify(op.to_string()),
                 src.show_rru_sized(mb_rru, 8),
@@ -1381,7 +1383,7 @@ impl ShowWithRRU for Inst {
                 dst.show_rru(mb_rru)
             ),
 
-            Inst::XmmCmpRmR { op, src, dst } => format!(
+            Inst::XMM_Cmp_RM_R { op, src, dst } => format!(
                 "{} {}, {}",
                 ljustify(op.to_string()),
                 src.show_rru_sized(mb_rru, 8),
@@ -1472,14 +1474,14 @@ impl ShowWithRRU for Inst {
                 }
             }
 
-            Inst::MovRR { is_64, src, dst } => format!(
+            Inst::Mov_R_R { is_64, src, dst } => format!(
                 "{} {}, {}",
-                ljustify2("mov".to_string(), suffix_lq(*is_64)),
-                show_ireg_sized(*src, mb_rru, size_lq(*is_64)),
-                show_ireg_sized(dst.to_reg(), mb_rru, size_lq(*is_64))
+                ljustify2("mov".to_string(), suffixLQ(*is_64)),
+                show_ireg_sized(*src, mb_rru, sizeLQ(*is_64)),
+                show_ireg_sized(dst.to_reg(), mb_rru, sizeLQ(*is_64))
             ),
 
-            Inst::MovzxRmR {
+            Inst::MovZX_RM_R {
                 ext_mode, src, dst, ..
             } => {
                 if *ext_mode == ExtMode::LQ {
@@ -1499,7 +1501,7 @@ impl ShowWithRRU for Inst {
                 }
             }
 
-            Inst::Mov64MR { src, dst, .. } => format!(
+            Inst::Mov64_M_R { src, dst, .. } => format!(
                 "{} {}, {}",
                 ljustify("movq".to_string()),
                 src.show_rru(mb_rru),
@@ -1513,7 +1515,7 @@ impl ShowWithRRU for Inst {
                 dst.show_rru(mb_rru)
             ),
 
-            Inst::MovsxRmR {
+            Inst::MovSX_RM_R {
                 ext_mode, src, dst, ..
             } => format!(
                 "{} {}, {}",
@@ -1522,14 +1524,14 @@ impl ShowWithRRU for Inst {
                 show_ireg_sized(dst.to_reg(), mb_rru, ext_mode.dst_size())
             ),
 
-            Inst::MovRM { size, src, dst, .. } => format!(
+            Inst::Mov_R_M { size, src, dst, .. } => format!(
                 "{} {}, {}",
-                ljustify2("mov".to_string(), suffix_bwlq(*size)),
+                ljustify2("mov".to_string(), suffixBWLQ(*size)),
                 show_ireg_sized(*src, mb_rru, *size),
                 dst.show_rru(mb_rru)
             ),
 
-            Inst::ShiftR {
+            Inst::Shift_R {
                 size,
                 kind,
                 num_bits,
@@ -1537,13 +1539,13 @@ impl ShowWithRRU for Inst {
             } => match num_bits {
                 None => format!(
                     "{} %cl, {}",
-                    ljustify2(kind.to_string(), suffix_bwlq(*size)),
+                    ljustify2(kind.to_string(), suffixBWLQ(*size)),
                     show_ireg_sized(dst.to_reg(), mb_rru, *size)
                 ),
 
                 Some(num_bits) => format!(
                     "{} ${}, {}",
-                    ljustify2(kind.to_string(), suffix_bwlq(*size)),
+                    ljustify2(kind.to_string(), suffixBWLQ(*size)),
                     num_bits,
                     show_ireg_sized(dst.to_reg(), mb_rru, *size)
                 ),
@@ -1556,9 +1558,9 @@ impl ShowWithRRU for Inst {
                 dst.to_reg().show_rru(mb_rru)
             ),
 
-            Inst::CmpRmiR { size, src, dst } => format!(
+            Inst::Cmp_RMI_R { size, src, dst } => format!(
                 "{} {}, {}",
-                ljustify2("cmp".to_string(), suffix_bwlq(*size)),
+                ljustify2("cmp".to_string(), suffixBWLQ(*size)),
                 src.show_rru_sized(mb_rru, *size),
                 show_ireg_sized(*dst, mb_rru, *size)
             ),
@@ -1571,7 +1573,7 @@ impl ShowWithRRU for Inst {
 
             Inst::Cmove { size, cc, src, dst } => format!(
                 "{} {}, {}",
-                ljustify(format!("cmov{}{}", cc.to_string(), suffix_bwlq(*size))),
+                ljustify(format!("cmov{}{}", cc.to_string(), suffixBWLQ(*size))),
                 src.show_rru_sized(mb_rru, *size),
                 show_ireg_sized(dst.to_reg(), mb_rru, *size)
             ),
@@ -1660,7 +1662,7 @@ impl ShowWithRRU for Inst {
             Inst::LockCmpxchg { ty, src, dst, .. } => {
                 let size = ty.bytes() as u8;
                 format!("lock cmpxchg{} {}, {}",
-                        suffix_bwlq(size), show_ireg_sized(*src, mb_rru, size), dst.show_rru(mb_rru))
+                        suffixBWLQ(size), show_ireg_sized(*src, mb_rru, size), dst.show_rru(mb_rru))
             }
 
             Inst::AtomicRmwSeq { ty, op, .. } => {
@@ -1700,7 +1702,7 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
     // regalloc.rs will "fix" this for us by removing the the modified set from the use and def
     // sets.
     match inst {
-        Inst::AluRmiR { src, dst, .. } => {
+        Inst::Alu_RMI_R { src, dst, .. } => {
             if inst.produces_const() {
                 // No need to account for src, since src == dst.
                 collector.add_def(*dst);
@@ -1752,7 +1754,7 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst);
         }
-        Inst::XmmRmR { src, dst, .. } => {
+        Inst::XMM_RM_R { src, dst, .. } => {
             if inst.produces_const() {
                 // No need to account for src, since src == dst.
                 collector.add_def(*dst);
@@ -1787,18 +1789,18 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
             src.get_regs_as_uses(collector);
             collector.add_mod(*dst);
         }
-        Inst::XmmMovRM { src, dst, .. } => {
+        Inst::Xmm_Mov_R_M { src, dst, .. } => {
             collector.add_use(*src);
             dst.get_regs_as_uses(collector);
         }
-        Inst::XmmCmpRmR { src, dst, .. } => {
+        Inst::XMM_Cmp_RM_R { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_use(*dst);
         }
         Inst::Imm { dst, .. } => {
             collector.add_def(*dst);
         }
-        Inst::MovRR { src, dst, .. } | Inst::XmmToGpr { src, dst, .. } => {
+        Inst::Mov_R_R { src, dst, .. } | Inst::XmmToGpr { src, dst, .. } => {
             collector.add_use(*src);
             collector.add_def(*dst);
         }
@@ -1837,29 +1839,29 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
             collector.add_def(*tmp_gpr);
             collector.add_def(*tmp_xmm);
         }
-        Inst::MovzxRmR { src, dst, .. } => {
+        Inst::MovZX_RM_R { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst);
         }
-        Inst::Mov64MR { src, dst, .. } | Inst::LoadEffectiveAddress { addr: src, dst } => {
+        Inst::Mov64_M_R { src, dst, .. } | Inst::LoadEffectiveAddress { addr: src, dst } => {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst)
         }
-        Inst::MovsxRmR { src, dst, .. } => {
+        Inst::MovSX_RM_R { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst);
         }
-        Inst::MovRM { src, dst, .. } => {
+        Inst::Mov_R_M { src, dst, .. } => {
             collector.add_use(*src);
             dst.get_regs_as_uses(collector);
         }
-        Inst::ShiftR { num_bits, dst, .. } => {
+        Inst::Shift_R { num_bits, dst, .. } => {
             if num_bits.is_none() {
                 collector.add_use(regs::rcx());
             }
             collector.add_mod(*dst);
         }
-        Inst::CmpRmiR { src, dst, .. } => {
+        Inst::Cmp_RMI_R { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_use(*dst); // yes, really `add_use`
         }
@@ -2034,7 +2036,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
 
     match inst {
         // ** Nop
-        Inst::AluRmiR {
+        Inst::Alu_RMI_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2091,7 +2093,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
                 map_mod(mapper, dst);
             }
         }
-        Inst::XmmRmR {
+        Inst::XMM_RM_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2126,7 +2128,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             map_use(mapper, lhs);
             map_mod(mapper, rhs_dst);
         }
-        Inst::XmmMovRM {
+        Inst::Xmm_Mov_R_M {
             ref mut src,
             ref mut dst,
             ..
@@ -2134,7 +2136,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             map_use(mapper, src);
             dst.map_uses(mapper);
         }
-        Inst::XmmCmpRmR {
+        Inst::XMM_Cmp_RM_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2143,7 +2145,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             map_use(mapper, dst);
         }
         Inst::Imm { ref mut dst, .. } => map_def(mapper, dst),
-        Inst::MovRR {
+        Inst::Mov_R_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2195,7 +2197,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             map_def(mapper, tmp_gpr);
             map_def(mapper, tmp_xmm);
         }
-        Inst::MovzxRmR {
+        Inst::MovZX_RM_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2203,11 +2205,11 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             src.map_uses(mapper);
             map_def(mapper, dst);
         }
-        Inst::Mov64MR { src, dst, .. } | Inst::LoadEffectiveAddress { addr: src, dst } => {
+        Inst::Mov64_M_R { src, dst, .. } | Inst::LoadEffectiveAddress { addr: src, dst } => {
             src.map_uses(mapper);
             map_def(mapper, dst);
         }
-        Inst::MovsxRmR {
+        Inst::MovSX_RM_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2215,7 +2217,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             src.map_uses(mapper);
             map_def(mapper, dst);
         }
-        Inst::MovRM {
+        Inst::Mov_R_M {
             ref mut src,
             ref mut dst,
             ..
@@ -2223,10 +2225,10 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             map_use(mapper, src);
             dst.map_uses(mapper);
         }
-        Inst::ShiftR { ref mut dst, .. } => {
+        Inst::Shift_R { ref mut dst, .. } => {
             map_mod(mapper, dst);
         }
-        Inst::CmpRmiR {
+        Inst::Cmp_RMI_R {
             ref mut src,
             ref mut dst,
             ..
@@ -2341,7 +2343,7 @@ impl MachInst for Inst {
             // out the upper 32 bits of the destination.  For example, we could
             // conceivably use `movl %reg, %reg` to zero out the top 32 bits of
             // %reg.
-            Self::MovRR {
+            Self::Mov_R_R {
                 is_64, src, dst, ..
             } if *is_64 => Some((*dst, *src)),
             // Note as well that MOVS[S|D] when used in the `XmmUnaryRmR` context are pure moves of

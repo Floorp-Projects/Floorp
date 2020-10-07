@@ -20,7 +20,7 @@ assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indi
 assertErrorMessage(() => wasmEvalText('(module (func (br $a)))'), SyntaxError, /failed to find label/);
 assertErrorMessage(() => wasmEvalText('(module (func (block $a ) (br $a)))'), SyntaxError, /failed to find label/);
 
-assertErrorMessage(() => wasmEvalText(`(module (func (call ${0xffffffff})))`), WebAssembly.CompileError, /(callee index out of range)|(function index out of bounds)/);
+assertErrorMessage(() => wasmEvalText(`(module (func (call ${0xffffffff})))`), WebAssembly.CompileError, /callee index out of range/);
 assertErrorMessage(() => wasmEvalText(`(module (export "func" ${0xffffffff}))`), SyntaxError, parsingError);
 
 wasmEvalText('(module (func (param $a i32)))');

@@ -326,7 +326,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result externref)
        (table.get 2 (i32.const 0))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.get)|(table index out of bounds)/);
+                   /table index out of range for table.get/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -335,7 +335,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (param externref)
        (table.set 2 (i32.const 0) (local.get 0))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.set)|(table index out of bounds)/);
+                   /table index out of range for table.set/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -344,7 +344,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (param externref)
        (table.copy 0 2 (i32.const 0) (i32.const 0) (i32.const 2))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.copy)|(table index out of bounds)/);
+                   /table index out of range for table.copy/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -353,7 +353,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (param externref)
        (table.copy 2 0 (i32.const 0) (i32.const 0) (i32.const 2))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.copy)|(table index out of bounds)/);
+                   /table index out of range for table.copy/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -362,7 +362,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result i32)
        (table.size 2)))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.size)|(table index out of bounds)/);
+                   /table index out of range for table.size/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -371,7 +371,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result i32)
        (table.grow 2 (ref.null extern) (i32.const 1))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.grow)|(table index out of bounds)/);
+                   /table index out of range for table.grow/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -380,14 +380,14 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result i32)
        (table.init 2 0 (i32.const 0) (i32.const 0) (i32.const 0))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for table.init)|(table index out of bounds)/);
+                   /table index out of range for table.init/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t0 2 funcref)
       (elem 2 (i32.const 0) func))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for element segment)|(table index out of bounds)/);
+                   /table index out of range for element segment/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -396,7 +396,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f (result i32)
        (call_indirect 2 (type $ft) (f64.const 3.14) (i32.const 0))))`),
                    WebAssembly.CompileError,
-                   /(table index out of range for call_indirect)|(table index out of bounds)/);
+                   /table index out of range for call_indirect/);
 
 // Syntax errors when parsing text
 

@@ -84,7 +84,7 @@ wasmFailValidateText('(module (func (param i32) (result i32) (f32.sqrt (local.ge
 wasmFailValidateText('(module (func (param i32) (result f64) (f64.sqrt (local.get 0))))', mismatchError("i32", "f64"));
 wasmFailValidateText('(module (func (param f64) (result i32) (f64.sqrt (local.get 0))))', mismatchError("f64", "i32"));
 wasmFailValidateText('(module (func (param i32) (result i32) (f64.sqrt (local.get 0))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (f32.sqrt (nop))))', /(popping value from empty stack)|(type mismatch: expected Some\(F32\) but nothing on stack)/);
+wasmFailValidateText('(module (func (f32.sqrt (nop))))', /popping value from empty stack/);
 
 wasmFailValidateText('(module (func (param i32) (param f32) (result f32) (f32.add (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (param f32) (param i32) (result f32) (f32.add (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));

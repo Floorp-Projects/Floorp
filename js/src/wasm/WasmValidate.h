@@ -138,7 +138,6 @@ struct ModuleEnvironment {
   uint32_t numStructTypes;
   TypeDefVector types;
   FuncTypeWithIdPtrVector funcTypes;
-  Uint32Vector funcTypeIndices;
   Uint32Vector funcImportGlobalDataOffsets;
   GlobalDescVector globals;
   TableDescVector tables;

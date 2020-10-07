@@ -1,4 +1,9 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+#![feature(test)]
+
+extern crate test;
+extern crate itertools;
+
+use test::Bencher;
 use itertools::Itertools;
 
 fn s1(a: u32) -> u32 {
@@ -51,7 +56,6 @@ fn sum_t4(s: &(&u32, &u32, &u32, &u32)) -> u32 {
 
 macro_rules! def_benchs {
     ($N:expr;
-     $BENCH_GROUP:ident,
      $TUPLE_FUN:ident,
      $TUPLES:ident,
      $TUPLE_WINDOWS:ident;
@@ -61,101 +65,84 @@ macro_rules! def_benchs {
      $FOR_CHUNKS:ident,
      $FOR_WINDOWS:ident
      ) => (
-        fn $FOR_CHUNKS(c: &mut Criterion) {
+        #[bench]
+        fn $FOR_CHUNKS(b: &mut Bencher) {
             let v: Vec<u32> = (0.. $N * 1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($FOR_CHUNKS).replace('_', " "), move |b| {
-                b.iter(|| {
-                    let mut j = 0;
-                    for _ in 0..1_000 {
-                        s += $SLICE_FUN(&v[j..(j + $N)]);
-                        j += $N;
-                    }
-                    s
-                })
+            b.iter(|| {
+                let mut j = 0;
+                for _ in 0..1_000 {
+                    s += $SLICE_FUN(&v[j..(j + $N)]);
+                    j += $N;
+                }
+                s
             });
         }
 
-        fn $FOR_WINDOWS(c: &mut Criterion) {
+        #[bench]
+        fn $FOR_WINDOWS(b: &mut Bencher) {
             let v: Vec<u32> = (0..1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($FOR_WINDOWS).replace('_', " "), move |b| {
-                b.iter(|| {
-                    for i in 0..(1_000 - $N) {
-                        s += $SLICE_FUN(&v[i..(i + $N)]);
-                    }
-                    s
-                })
+            b.iter(|| {
+                for i in 0..(1_000 - $N) {
+                    s += $SLICE_FUN(&v[i..(i + $N)]);
+                }
+                s
             });
         }
 
-        fn $TUPLES(c: &mut Criterion) {
+        #[bench]
+        fn $TUPLES(b: &mut Bencher) {
             let v: Vec<u32> = (0.. $N * 1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($TUPLES).replace('_', " "), move |b| {
-                b.iter(|| {
-                    for x in v.iter().tuples() {
-                        s += $TUPLE_FUN(&x);
-                    }
-                    s
-                })
+            b.iter(|| {
+                for x in v.iter().tuples() {
+                    s += $TUPLE_FUN(&x);
+                }
+                s
             });
         }
 
-        fn $CHUNKS(c: &mut Criterion) {
+        #[bench]
+        fn $CHUNKS(b: &mut Bencher) {
             let v: Vec<u32> = (0.. $N * 1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($CHUNKS).replace('_', " "), move |b| {
-                b.iter(|| {
-                    for x in v.chunks($N) {
-                        s += $SLICE_FUN(x);
-                    }
-                    s
-                })
+            b.iter(|| {
+                for x in v.chunks($N) {
+                    s += $SLICE_FUN(x);
+                }
+                s
             });
         }
 
-        fn $TUPLE_WINDOWS(c: &mut Criterion) {
+        #[bench]
+        fn $TUPLE_WINDOWS(b: &mut Bencher) {
             let v: Vec<u32> = (0..1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($TUPLE_WINDOWS).replace('_', " "), move |b| {
-                b.iter(|| {
-                    for x in v.iter().tuple_windows() {
-                        s += $TUPLE_FUN(&x);
-                    }
-                    s
-                })
+            b.iter(|| {
+                for x in v.iter().tuple_windows() {
+                    s += $TUPLE_FUN(&x);
+                }
+                s
             });
         }
 
-        fn $WINDOWS(c: &mut Criterion) {
+        #[bench]
+        fn $WINDOWS(b: &mut Bencher) {
             let v: Vec<u32> = (0..1_000).collect();
             let mut s = 0;
-            c.bench_function(&stringify!($WINDOWS).replace('_', " "), move |b| {
-                b.iter(|| {
-                    for x in v.windows($N) {
-                        s += $SLICE_FUN(x);
-                    }
-                    s
-                })
+            b.iter(|| {
+                for x in v.windows($N) {
+                    s += $SLICE_FUN(x);
+                }
+                s
             });
         }
-
-        criterion_group!(
-            $BENCH_GROUP,
-            $FOR_CHUNKS,
-            $FOR_WINDOWS,
-            $TUPLES,
-            $CHUNKS,
-            $TUPLE_WINDOWS,
-            $WINDOWS,
-        );
     )
 }
 
 def_benchs!{
     1;
-    benches_1,
     sum_t1,
     tuple_chunks_1,
     tuple_windows_1;
@@ -168,7 +155,6 @@ def_benchs!{
 
 def_benchs!{
     2;
-    benches_2,
     sum_t2,
     tuple_chunks_2,
     tuple_windows_2;
@@ -181,7 +167,6 @@ def_benchs!{
 
 def_benchs!{
     3;
-    benches_3,
     sum_t3,
     tuple_chunks_3,
     tuple_windows_3;
@@ -194,7 +179,6 @@ def_benchs!{
 
 def_benchs!{
     4;
-    benches_4,
     sum_t4,
     tuple_chunks_4,
     tuple_windows_4;
@@ -204,10 +188,3 @@ def_benchs!{
     for_chunks_4,
     for_windows_4
 }
-
-criterion_main!(
-    benches_1,
-    benches_2,
-    benches_3,
-    benches_4,
-);
