@@ -5156,6 +5156,13 @@ void WorkerPrivate::AssertIsOnWorkerThread() const {
 void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
   auto data = mWorkerThreadAccessible.Access();
 
+  aString.Append("IsChromeWorker(");
+  if (IsChromeWorker()) {
+    aString.Append(NS_ConvertUTF16toUTF8(ScriptURL()));
+  } else {
+    aString.Append("false");
+  }
+  aString.Append(")");
   for (const auto* workerRef : data->mWorkerRefs.NonObservingRange()) {
     if (workerRef->IsPreventingShutdown()) {
       aString.Append("|");
