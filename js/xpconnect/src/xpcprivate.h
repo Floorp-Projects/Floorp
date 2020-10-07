@@ -2089,15 +2089,6 @@ using AutoMarkingWrappedNativeProtoPtr =
     TypedAutoMarkingPtr<XPCWrappedNativeProto>;
 
 /***************************************************************************/
-namespace xpc {
-// Allocates a string that grants all access ("AllAccess")
-char* CloneAllAccess();
-
-// Returns access if wideName is in list
-char* CheckAccessList(const char16_t* wideName, const char* const list[]);
-} /* namespace xpc */
-
-/***************************************************************************/
 // in xpcvariant.cpp...
 
 // {1809FD50-91E8-11d5-90F9-0010A4E73D9A}
