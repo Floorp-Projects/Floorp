@@ -92,7 +92,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
      (func (export "f")
        (table.copy 0 1 (i32.const 5) (i32.const 0) (i32.const 5))))`)),
     WebAssembly.CompileError,
-    /expression has type funcref but expected externref/);
+    /(expression has type funcref but expected externref)|(type mismatch)/);
 
 // Wasm: table.copy from table(externref) to table(funcref) should not work
 
@@ -103,7 +103,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func (export "f")
          (table.copy 0 1 (i32.const 0) (i32.const 0) (i32.const 5))))`)),
                    WebAssembly.CompileError,
-                   /expression has type externref but expected funcref/);
+                   /(expression has type externref but expected funcref)|(type mismatch)/);
 
 // Wasm: Element segments of funcref can't target tables of externref
 
@@ -136,7 +136,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func
          (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
                    WebAssembly.CompileError,
-                   /expression has type funcref but expected externref/);
+                   /(expression has type funcref but expected externref)|(type mismatch)/);
 
 
 // Wasm: table.init on table-of-funcref is not allowed when the segment has
@@ -149,7 +149,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func
          (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
                    WebAssembly.CompileError,
-                   /expression has type externref but expected funcref/);
+                   /(expression has type externref but expected funcref)|(type mismatch)/);
 
 // Wasm: table types must match at link time
 
@@ -170,7 +170,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func (result i32)
          (call_indirect (type $t) (i32.const 37))))`)),
                    WebAssembly.CompileError,
-                   /indirect calls must go through a table of 'funcref'/);
+                   /(indirect calls must go through a table of 'funcref')|(type mismatch)/);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -243,7 +243,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func (export "f") (param i32)
          (drop (table.get (local.get 0)))))`)),
                    WebAssembly.CompileError,
-                   /table index out of range for table.get/);
+                   /(table index out of range for table.get)|(table index out of bounds)/);
 
 // table.set in bounds with i32 x externref - works, no value generated
 // table.set with null - works
@@ -276,7 +276,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
            (func (export "set_ref") (param i32) (param externref)
              (table.set (local.get 0) (local.get 1))))`)),
                    WebAssembly.CompileError,
-                   /type mismatch: expression has type externref but expected funcref/);
+                   /(type mismatch: expression has type externref but expected funcref)|(type mismatch: expected Some\(FuncRef\), found Some\(ExternRef\))/);
 
 // table.set with non-i32 index - fails validation
 
@@ -312,7 +312,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
       (func (export "f") (param externref)
        (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
-                   /table index out of range for table.set/);
+                   /(table index out of range for table.set)|(table index out of bounds)/);
 
 function testTableGrow(lhs_type, lhs_reftype, rhs_type, x) {
   let ins = wasmEvalText(
@@ -360,7 +360,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
         (func (export "grow2") (param i32) (param externref) (result i32)
          (table.grow (local.get 1) (local.get 0))))`)),
                    WebAssembly.CompileError,
-                   /type mismatch: expression has type externref but expected funcref/);
+                   /(type mismatch: expression has type externref but expected funcref)|(type mismatch: expected Some\(FuncRef\), found Some\(ExternRef\))/);
 
 // Special case for private tables without a maximum
 
@@ -393,7 +393,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (func (export "f") (param i32)
         (table.grow (ref.null extern) (local.get 0))))`)),
                    WebAssembly.CompileError,
-                   /table index out of range for table.grow/);
+                   /(table index out of range for table.grow)|(table index out of bounds)/);
 
 // table.size on table of externref
 
