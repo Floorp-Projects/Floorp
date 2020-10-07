@@ -92,7 +92,7 @@ class SearchOneOffs {
      */
     this._contextEngine = null;
 
-    this._engines = null;
+    this._engineInfo = null;
 
     /**
      * `_rebuild()` is async, because it queries the Search Service, which means
@@ -183,6 +183,31 @@ class SearchOneOffs {
     } else {
       throw new Error("Unrecognized search-one-offs event: " + event.type);
     }
+  }
+
+  /**
+   * @returns {boolean}
+   *   True if we will hide the one-offs when they are requested.
+   */
+  async willHide() {
+    if (this._engineInfo?.willHide !== undefined) {
+      return this._engineInfo.willHide;
+    }
+    let engineInfo = await this.getEngineInfo();
+    let oneOffCount = engineInfo.engines.length;
+    this._engineInfo.willHide =
+      !oneOffCount ||
+      (oneOffCount == 1 &&
+        engineInfo.engines[0].name == engineInfo.default.name);
+    return this._engineInfo.willHide;
+  }
+
+  /**
+   * Invalidates the engine cache. After invalidating the cache, the one-offs
+   * will be rebuilt the next time they are shown.
+   */
+  invalidateCache() {
+    this._engineInfo = null;
   }
 
   /**
@@ -353,24 +378,29 @@ class SearchOneOffs {
     return this._bundle;
   }
 
-  async getEngines() {
-    if (this._engines) {
-      return this._engines;
+  async getEngineInfo() {
+    if (this._engineInfo) {
+      return this._engineInfo;
     }
+
+    this._engineInfo = {};
+    if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+      this._engineInfo.default = await Services.search.getDefaultPrivate();
+    } else {
+      this._engineInfo.default = await Services.search.getDefault();
+    }
+
     let currentEngineNameToIgnore;
     if (!this.getAttribute("includecurrentengine")) {
-      if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
-        currentEngineNameToIgnore = (await Services.search.getDefaultPrivate())
-          .name;
-      } else {
-        currentEngineNameToIgnore = (await Services.search.getDefault()).name;
-      }
+      currentEngineNameToIgnore = this._engineInfo.default.name;
     }
 
     let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
 
-    this._engines = (await Services.search.getVisibleEngines()).filter(e => {
+    this._engineInfo.engines = (
+      await Services.search.getVisibleEngines()
+    ).filter(e => {
       let name = e.name;
       return (
         (!currentEngineNameToIgnore || name != currentEngineNameToIgnore) &&
@@ -378,12 +408,12 @@ class SearchOneOffs {
       );
     });
 
-    return this._engines;
+    return this._engineInfo;
   }
 
   observe(aEngine, aTopic, aData) {
-    // Make sure the engine list is refetched next time it's needed.
-    this._engines = null;
+    // Make sure the engine list was updated.
+    this.invalidateCache();
   }
 
   /**
@@ -417,7 +447,7 @@ class SearchOneOffs {
     }
 
     // Return early if the list of engines has not changed.
-    if (!this.popup && this._engines) {
+    if (!this.popup && this._engineInfo?.domWasUpdated) {
       return;
     }
 
@@ -426,7 +456,10 @@ class SearchOneOffs {
       let textboxWidth = await this.window.promiseDocumentFlushed(() => {
         return this._textbox.clientWidth;
       });
-      if (this._engines && this._textboxWidth == textboxWidth) {
+      if (
+        this._engineInfo?.domWasUpdated &&
+        this._textboxWidth == textboxWidth
+      ) {
         return;
       }
       this._textboxWidth = textboxWidth;
@@ -443,14 +476,14 @@ class SearchOneOffs {
     headerText.id = this.telemetryOrigin + "-one-offs-header-label";
     this.buttons.setAttribute("aria-labelledby", headerText.id);
 
-    let engines = await this.getEngines();
-    let defaultEngine = PrivateBrowsingUtils.isWindowPrivate(this.window)
-      ? await Services.search.getDefaultPrivate()
-      : await Services.search.getDefault();
-    let oneOffCount = engines.length;
-    let hideOneOffs =
-      !oneOffCount ||
-      (oneOffCount == 1 && engines[0].name == defaultEngine.name);
+    let hideOneOffs = await this.willHide();
+
+    // The _engineInfo cache is used by more consumers, thus it is not a good
+    // representation of whether this method already updated the one-off buttons
+    // DOM. For this reason we introduce a separate flag tracking the DOM
+    // updating, and use it to know when it's okay to not rebuild the one-offs.
+    // We set this early, since we might either rebuild the DOM or hide it.
+    this._engineInfo.domWasUpdated = true;
 
     if (this.compact) {
       this.container.hidden = hideOneOffs;
@@ -467,6 +500,7 @@ class SearchOneOffs {
       this.spacerCompact.setAttribute("flex", "1");
     }
 
+    let engines = (await this.getEngineInfo()).engines;
     if (this.popup) {
       let buttonsWidth = this.popup.clientWidth;
 
@@ -498,7 +532,7 @@ class SearchOneOffs {
       // If the <div> with the list of search engines doesn't have
       // a fixed height, the panel will be sized incorrectly, causing the bottom
       // of the suggestion <tree> to be hidden.
-      let rowCount = Math.ceil(oneOffCount / enginesPerRow);
+      let rowCount = Math.ceil(engines.length / enginesPerRow);
       let height = rowCount * this.buttonHeight;
       this.buttons.style.setProperty("height", `${height}px`);
     }

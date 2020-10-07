@@ -2788,7 +2788,7 @@ class UrlbarInput {
       this.view.clear();
     } else if (!value && !UrlbarPrefs.get("suggest.topsites")) {
       this.view.clear();
-      if (!this.searchMode) {
+      if (!this.searchMode || !this.view.oneOffSearchButtons.hasView) {
         this.view.close();
         return;
       }
