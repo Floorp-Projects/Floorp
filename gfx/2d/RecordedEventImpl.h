@@ -2798,9 +2798,11 @@ inline bool RecordedDrawDependentSurface::PlayEvent(
     return false;
   }
 
+  // We still return true even if this fails, since dependent surfaces are
+  // used for cross-origin iframe drawing and can fail.
   RefPtr<SourceSurface> surface = aTranslator->LookupExternalSurface(mId);
   if (!surface) {
-    return false;
+    return true;
   }
 
   dt->DrawSurface(surface, mDest, Rect(Point(), Size(surface->GetSize())),
