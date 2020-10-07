@@ -17,6 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
     </div>
     <pre id="test">
       <script type="application/javascript">
+        const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
         /**
          * Pointer Lock tests for bug 633602.  These depend on the fullscreen api
@@ -60,7 +61,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           "file_changeLockElement.html",
         ];
 
-        var gDisableList = [
+        var gDisableList = [ 
+          // Bug 1615802
+          { file: "file_screenClientXYConst.html", platform: "macosx" },
+          // Bug 1357082
+          { file: "file_retargetMouseEvents.html", platform: "all" },
         ];
 
         var gTestWindow = null;
@@ -80,7 +85,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
             var skipTest = false;
             for (var item of gDisableList) {
-              if (item.file == file && navigator.platform == item.platform) {
+              if (item.file == file &&
+                  ("all" == item.platform || AppConstants.platform == item.platform)) {
                 skipTest = true;
                 break;
               }
@@ -89,6 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
               info(`Testing ${file}`);
               gTestWindow = window.open(file, "", "width=500,height=500");
             } else {
+              info(`Skip ${file}`);
               nextTest();
             }
           } else {
