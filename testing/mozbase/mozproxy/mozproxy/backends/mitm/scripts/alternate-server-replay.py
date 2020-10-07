@@ -144,7 +144,7 @@ class AlternateServerPlayback:
                 except exceptions.FlowReadException as e:
                     raise exceptions.CommandError(str(e))
                 self.load_flows(flows)
-                proto = os.path.splitext(path)[0] + ".json"
+                proto = os.path.join(os.path.dirname(path) + "metadata.json")
                 if os.path.exists(proto):
                     ctx.log.info("Loading proto info from %s" % proto)
                     with open(proto) as f:
