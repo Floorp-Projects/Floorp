@@ -237,3 +237,45 @@ TEST(OpusAudioTrackEncoder, DefaultInitDuration)
   const uint64_t fifteen = 48000 * 15;
   EXPECT_EQ(totalDuration, fifteen + encoder.GetLookahead());
 }
+
+uint64_t TestSampleRate(TrackRate aSampleRate, uint64_t aInputFrames) {
+  OpusTrackEncoder encoder(aSampleRate);
+  AudioGenerator<AudioDataValue> generator(2, aSampleRate);
+  AudioSegment segment;
+  const uint64_t chunkSize = aSampleRate / 10;
+  const uint64_t chunks = aInputFrames / chunkSize;
+  // 15 seconds should trigger the default-init rate.
+  // The default-init timeout is evaluated once per chunk, so keep chunks
+  // reasonably short.
+  for (size_t i = 0; i < chunks; ++i) {
+    generator.Generate(segment, chunkSize);
+  }
+  generator.Generate(segment, aInputFrames % chunks);
+  encoder.AppendAudioSegment(std::move(segment));
+  encoder.NotifyEndOfStream();
+
+  nsTArray<RefPtr<EncodedFrame>> frames;
+  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  // Verify that encoded data is 15 seconds long.
+  uint64_t totalDuration = 0;
+  for (auto& frame : frames) {
+    totalDuration += frame->mDuration;
+  }
+  return totalDuration - encoder.GetLookahead();
+}
+
+TEST(OpusAudioTrackEncoder, DurationSampleRates)
+{
+  // Factors of 48k
+  EXPECT_EQ(TestSampleRate(48000, 48000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(24000, 24000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(16000, 16000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(12000, 12000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(8000, 8000 * 3 / 2), 48000U * 3 / 2);
+
+  // Non-factors of 48k, resampled
+  EXPECT_EQ(TestSampleRate(44100, 44100 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(32000, 32000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(96000, 96000 * 3 / 2), 48000U * 3 / 2);
+  EXPECT_EQ(TestSampleRate(33330, 33330 * 3 / 2), 48000U * 3 / 2);
+}
