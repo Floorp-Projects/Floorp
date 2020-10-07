@@ -223,6 +223,7 @@ var ModuleManager = {
     });
 
     parent.appendChild(this.browser);
+    this.browser.restoreProgressListeners();
 
     this.messageManager.addMessageListener(
       "GeckoView:ContentModuleLoaded",
