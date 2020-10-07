@@ -160,9 +160,6 @@ class InterceptedHttpChannel final
   SetupFallbackChannel(const char* aFallbackKey) override;
 
   NS_IMETHOD
-  GetIsAuthChannel(bool* aIsAuthChannel) override;
-
-  NS_IMETHOD
   SetPriority(int32_t aPriority) override;
 
   NS_IMETHOD

@@ -73,7 +73,6 @@ class TRRServiceChannel : public HttpBaseChannel,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
   NS_IMETHOD SetupFallbackChannel(const char* aFallbackKey) override;
-  NS_IMETHOD GetIsAuthChannel(bool* aIsAuthChannel) override;
 
   NS_IMETHOD SetNotificationCallbacks(
       nsIInterfaceRequestor* aCallbacks) override;
