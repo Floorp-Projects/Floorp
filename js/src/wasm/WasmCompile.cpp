@@ -26,6 +26,7 @@
 #include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "vm/HelperThreadState.h"
+#include "vm/Realm.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmGenerator.h"

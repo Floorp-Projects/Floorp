@@ -7,19 +7,36 @@
 #ifndef jit_RangeAnalysis_h
 #define jit_RangeAnalysis_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <algorithm>
+#include <stdint.h>
 
 #include "jit/IonAnalysis.h"
-#include "jit/MIR.h"
+#include "jit/IonTypes.h"
+#include "jit/JitAllocPolicy.h"
+#include "js/AllocPolicy.h"
+#include "js/Value.h"
+#include "js/Vector.h"
 
 namespace js {
+
+class GenericPrinter;
+
 namespace jit {
 
 class MBasicBlock;
+class MBinaryBitwiseInstruction;
+class MBoundsCheck;
+class MDefinition;
+class MIRGenerator;
 class MIRGraph;
+class MPhi;
+class MTest;
 
 // An upper bound computed on the number of backedges a loop will take.
 // This count only includes backedges taken while running Ion code: for OSR

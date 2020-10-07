@@ -1044,7 +1044,7 @@ var E10SUtils = {
       csp: aCsp ? this.serializeCSP(aCsp) : null,
     };
     // Retarget the load to the correct process
-    if (Services.appinfo.sessionHistoryInParent) {
+    if (!Services.appinfo.sessionHistoryInParent) {
       let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
         .sessionHistory;
       actor.sendAsyncMessage("Browser:LoadURI", {

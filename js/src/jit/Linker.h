@@ -7,17 +7,24 @@
 #ifndef jit_Linker_h
 #define jit_Linker_h
 
-#include "jit/ExecutableAllocator.h"
-#include "jit/JitCode.h"
-#include "jit/JitRealm.h"
+#include "mozilla/Maybe.h"
+
+#include <stdint.h>
+
+#include "jstypes.h"
+
+#include "jit/AutoWritableJitCode.h"
 #include "jit/MacroAssembler.h"
-#include "vm/JSContext.h"
-#include "vm/Realm.h"
+#include "vm/Runtime.h"
+
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 namespace jit {
 
-class MacroAssembler;
+class JitCode;
+
+enum class CodeKind : uint8_t;
 
 class Linker {
   MacroAssembler& masm;

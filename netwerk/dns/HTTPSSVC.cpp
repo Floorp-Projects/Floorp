@@ -169,15 +169,16 @@ bool SVCB::NoDefaultAlpn() const {
   return false;
 }
 
-Maybe<nsCString> SVCB::GetAlpn(bool aNoHttp2, bool aNoHttp3) const {
-  Maybe<nsCString> alpn;
+Maybe<Tuple<nsCString, bool>> SVCB::GetAlpn(bool aNoHttp2,
+                                            bool aNoHttp3) const {
+  Maybe<Tuple<nsCString, bool>> alpn;
   nsAutoCString alpnValue;
   for (const auto& value : mSvcFieldValue) {
     if (value.mValue.is<SvcParamAlpn>()) {
       alpn.emplace();
       alpnValue = value.mValue.as<SvcParamAlpn>().mValue;
       if (!alpnValue.IsEmpty()) {
-        alpn->Assign(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
+        alpn = Some(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
       }
       return alpn;
     }
@@ -212,7 +213,7 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
 
 Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
-Maybe<nsCString> SVCBRecord::GetAlpn() { return mAlpn; }
+Maybe<Tuple<nsCString, bool>> SVCBRecord::GetAlpn() { return mAlpn; }
 
 NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
   aEchConfig = mData.mEchConfig;
@@ -241,6 +242,7 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   uint32_t recordExcludedCount = 0;
   aRecordsAllExcluded = false;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  bool RRSetHasEchConfig = false;
   for (const SVCB& record : aRecords) {
     if (record.mSvcFieldPriority == 0) {
       // In ServiceMode, the SvcPriority should never be 0.
@@ -250,6 +252,8 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     if (record.NoDefaultAlpn()) {
       ++recordHasNoDefaultAlpnCount;
     }
+
+    RRSetHasEchConfig |= record.mHasEchConfig;
 
     bool excluded = false;
     if (NS_SUCCEEDED(dns->IsSVCDomainNameFailed(mHost, record.mSvcDomainName,
@@ -266,9 +270,15 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
       continue;
     }
 
-    Maybe<nsCString> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
-    if (alpn && alpn->IsEmpty()) {
+    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && Get<0>(*alpn).IsEmpty()) {
       // Can't find any supported protocols, skip.
+      continue;
+    }
+
+    if (gHttpHandler->EchConfigEnabled() && RRSetHasEchConfig &&
+        !record.mHasEchConfig) {
+      // Don't use this record if this record has no echConfig, but others have.
       continue;
     }
 
@@ -287,6 +297,54 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   }
 
   return selectedRecord.forget();
+}
+
+void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
+    bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,
+    bool* aAllRecordsHaveEchConfig, nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
+  if (aRecords.IsEmpty()) {
+    return;
+  }
+
+  *aAllRecordsHaveEchConfig = aRecords[0].mHasEchConfig;
+  // The first record should have echConfig.
+  if (!(*aAllRecordsHaveEchConfig)) {
+    return;
+  }
+
+  for (const SVCB& record : aRecords) {
+    if (record.mSvcFieldPriority == 0) {
+      // This should not happen, since GetAllRecordsWithEchConfigInternal()
+      // should be called only if GetServiceModeRecordInternal() returns a
+      // non-null record.
+      MOZ_ASSERT(false);
+      return;
+    }
+
+    // Records with echConfig are in front of records without echConfig, so we
+    // don't have to continue.
+    *aAllRecordsHaveEchConfig &= record.mHasEchConfig;
+    if (!(*aAllRecordsHaveEchConfig)) {
+      aResult.Clear();
+      return;
+    }
+
+    Maybe<uint16_t> port = record.GetPort();
+    if (port && *port == 0) {
+      // Found an unsafe port, skip this record.
+      continue;
+    }
+
+    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && Get<0>(*alpn).IsEmpty()) {
+      // Can't find any supported protocols, skip.
+      continue;
+    }
+
+    RefPtr<nsISVCBRecord> svcbRecord =
+        new SVCBRecord(record, std::move(port), std::move(alpn));
+    aResult.AppendElement(svcbRecord);
+  }
 }
 
 bool DNSHTTPSSVCRecordBase::HasIPAddressesInternal(

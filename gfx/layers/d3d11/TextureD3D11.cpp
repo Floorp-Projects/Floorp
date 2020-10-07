@@ -276,13 +276,9 @@ static void DestroyDrawTarget(RefPtr<DrawTarget>& aDT,
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
   // shouldn't -really- need the lock but the debug layer chokes on this.
-#ifdef DEBUG
   LockD3DTexture(aTexture.get());
-#endif
   aDT = nullptr;
-#ifdef DEBUG
   UnlockD3DTexture(aTexture.get());
-#endif
   aTexture = nullptr;
 }
 

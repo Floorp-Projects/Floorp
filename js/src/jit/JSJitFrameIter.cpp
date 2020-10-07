@@ -8,11 +8,14 @@
 
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineIC.h"
+#include "jit/CalleeToken.h"
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "jit/Safepoints.h"
+#include "jit/VMFunctions.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
 
 #include "vm/JSScript-inl.h"

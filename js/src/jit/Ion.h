@@ -49,8 +49,6 @@ MethodStatus CanEnterIon(JSContext* cx, RunState& state);
 
 MethodStatus Recompile(JSContext* cx, HandleScript script, bool force);
 
-struct EnterJitData;
-
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(TypeZone& types, JSFreeOp* fop,
                 const RecompileInfoVector& invalid, bool resetUses = true,

@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "vm/Stack.h"
 

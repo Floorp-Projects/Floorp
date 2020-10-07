@@ -17,6 +17,7 @@
 #include "jit/BaselineInspector.h"
 #include "jit/InlinableNatives.h"
 #include "jit/IonBuilder.h"
+#include "jit/JitRealm.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
@@ -944,7 +945,7 @@ IonBuilder::InliningResult IonBuilder::inlineArrayPush(CallInfo& callInfo) {
 
     // Restore the stack, such that resume points are created with the stack
     // as it was before the call.
-    if (!callInfo.pushPriorCallStack(&mirGen_, current)) {
+    if (!callInfo.pushPriorCallStack(current)) {
       return abort(AbortReason::Alloc);
     }
   }

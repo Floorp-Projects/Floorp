@@ -19,6 +19,7 @@
 #ifndef wasm_code_h
 #define wasm_code_h
 
+#include "gc/Memory.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/HashTable.h"
 #include "threading/ExclusiveData.h"

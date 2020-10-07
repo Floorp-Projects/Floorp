@@ -18,8 +18,9 @@
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
+#include "js/ProfilingStack.h"
 #include "js/TraceLoggerAPI.h"
 #include "util/StringBuffer.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter

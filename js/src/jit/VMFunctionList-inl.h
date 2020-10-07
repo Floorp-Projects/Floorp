@@ -14,7 +14,6 @@
 #include "builtin/String.h"
 #include "jit/BaselineIC.h"
 #include "jit/IonIC.h"
-#include "jit/JitRealm.h"
 #include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"
 #include "vm/AsyncFunction.h"

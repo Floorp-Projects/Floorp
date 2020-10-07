@@ -28,7 +28,6 @@
 #include "jit/ExecutableAllocator.h"
 
 #include "gc/Zone.h"
-#include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
 #include "util/Poison.h"
 

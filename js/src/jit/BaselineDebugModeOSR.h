@@ -7,11 +7,13 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
+#include "mozilla/Attributes.h"
+
+#include "jstypes.h"
+
 #include "debugger/DebugAPI.h"
-#include "jit/BaselineFrame.h"
-#include "jit/BaselineIC.h"
-#include "jit/BaselineJIT.h"
-#include "jit/JSJitFrameIter.h"
+
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 namespace jit {

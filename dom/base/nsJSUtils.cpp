@@ -273,7 +273,7 @@ nsresult nsJSUtils::ExecutionContext::Decode(
 
   MOZ_ASSERT(!mWantsReturnValue);
   JS::TranscodeResult tr = JS::DecodeScriptMaybeStencil(
-      mCx, aBytecodeBuf, aCompileOptions, &mScript, aBytecodeIndex);
+      mCx, aCompileOptions, aBytecodeBuf, &mScript, aBytecodeIndex);
   // These errors are external parameters which should be handled before the
   // decoding phase, and which are the only reasons why you might want to
   // fallback on decoding failures.

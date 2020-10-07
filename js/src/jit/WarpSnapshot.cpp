@@ -323,7 +323,8 @@ void WarpCacheIR::traceData(JSTracer* trc) {
     while (true) {
       StubField::Type fieldType = stubInfo_->fieldType(field);
       switch (fieldType) {
-        case StubField::Type::RawWord:
+        case StubField::Type::RawInt32:
+        case StubField::Type::RawPointer:
         case StubField::Type::RawInt64:
         case StubField::Type::DOMExpandoGeneration:
           break;

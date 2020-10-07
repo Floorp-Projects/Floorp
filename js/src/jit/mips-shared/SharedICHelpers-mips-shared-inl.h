@@ -7,6 +7,7 @@
 #ifndef jit_mips_shared_SharedICHelpers_mips_shared_inl_h
 #define jit_mips_shared_SharedICHelpers_mips_shared_inl_h
 
+#include "jit/BaselineFrame.h"
 #include "jit/SharedICHelpers.h"
 
 #include "jit/MacroAssembler-inl.h"

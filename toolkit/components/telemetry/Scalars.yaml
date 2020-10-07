@@ -4887,6 +4887,7 @@ networking:
       - 1572666
       - 1590124
       - 1621800
+      - 1668604
     description: >
       How many KB of HTTP data transferred by type, there are some categories
       separated by keys based on 5 parameters:
@@ -4921,11 +4922,13 @@ networking:
         "Y21_P3FpLead",
         "Y22_P3FpBg",
         "Y23_P3FpOth"
-    expires: "84"
+    expires: "91"
     keyed: true
     kind: uint
     notification_emails:
-      - gachen@mozilla.com
+      - arthur@mozilla.com
+      - tanvi@mozilla.com
+      - tihuang@mozilla.com
     products:
       - 'firefox'
       - 'fennec'

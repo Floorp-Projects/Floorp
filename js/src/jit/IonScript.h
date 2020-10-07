@@ -14,6 +14,7 @@
 
 #include "jstypes.h"
 
+#include "gc/Barrier.h"  // HeapPtr{JitCode,Object}, PreBarrieredValue
 #include "jit/IonOptimizationLevels.h"  // OptimizationLevel
 #include "jit/IonTypes.h"               // IonCompilationId
 #include "jit/JitCode.h"                // JitCode

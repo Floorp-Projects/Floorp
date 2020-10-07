@@ -1196,9 +1196,15 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     return;
   }
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSScript*> script(cx);
 
-  script = ScriptPreloader::GetChildSingleton().GetCachedScript(cx, url);
+  JS::CompileOptions options(cx);
+  ScriptPreloader::FillCompileOptionsForCachedScript(options);
+  options.setFileAndLine(url.get(), 1);
+  options.setNonSyntacticScope(true);
+
+  JS::Rooted<JSScript*> script(cx);
+  script =
+      ScriptPreloader::GetChildSingleton().GetCachedScript(cx, options, url);
 
   if (!script) {
     nsCOMPtr<nsIChannel> channel;
@@ -1240,11 +1246,6 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     if (!srcBuf.init(cx, std::move(srcChars), dataStringLength)) {
       return;
     }
-
-    JS::CompileOptions options(cx);
-    options.setFileAndLine(url.get(), 1);
-    options.setNoScriptRval(true);
-    options.setNonSyntacticScope(true);
 
     script = JS::Compile(cx, options, srcBuf);
     if (!script) {

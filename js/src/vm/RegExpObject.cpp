@@ -17,7 +17,6 @@
 #include "frontend/TokenStream.h"
 #include "gc/HashUtil.h"
 #include "irregexp/RegExpAPI.h"
-#include "jit/VMFunctions.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/Object.h"              // JS::GetBuiltinClass
 #include "js/RegExp.h"

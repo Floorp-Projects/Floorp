@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "gc/Marking.h"
-#include "jit/JitRealm.h"
+#include "jit/AutoWritableJitCode.h"
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
