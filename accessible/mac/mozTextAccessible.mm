@@ -407,7 +407,7 @@ enum AXTextStateChangeType {
     } ]
   };
 
-  mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
+  mozAccessible* webArea = [self topWebArea];
   [webArea moxPostNotification:NSAccessibilityValueChangedNotification
                   withUserInfo:userInfo];
   [self moxPostNotification:NSAccessibilityValueChangedNotification
