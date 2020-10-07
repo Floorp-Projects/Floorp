@@ -63,6 +63,39 @@ interface nsIXULRuntime : nsISupports
     eExperimentStatusCount,
   };
 
+  cenum FissionDecisionStatus : 8 {
+    eFissionStatusUnknown = 0,
+    // Fission is disabled because the user is in the control group of a
+    // Normandy experiment.
+    eFissionExperimentControl = 1,
+    // Fission is enabled because the user is in the treatment group of a
+    // Normandy experiment.
+    eFissionExperimentTreatment = 2,
+    // Fission is disabled because the `MOZ_FORCE_DISABLE_E10S` environment
+    // variable is set.
+    eFissionDisabledByE10sEnv = 3,
+    // Fission is enabled because the `MOZ_FORCE_ENABLE_FISSION` environment
+    // variable is set.
+    eFissionEnabledByEnv = 4,
+    // Fission is disabled because the current session is running in safe
+    // mode.
+    eFissionDisabledBySafeMode = 5,
+    // Fission is enabled because the "fission.autostart" preference is true
+    // by default.
+    eFissionEnabledByDefault = 6,
+    // Fission is disabled because the "fission.autostart" preference is false
+    // by default.
+    eFissionDisabledByDefault = 7,
+    // Fission is enabled because the "fission.autostart" preference was
+    // turned on by the user.
+    eFissionEnabledByUserPref = 8,
+    // Fission is enabled because the "fission.autostart" preference was
+    // turned on by the user.
+    eFissionDisabledByUserPref = 9,
+    // Fission is disabled because e10s is disabled for some other reason.
+    eFissionDisabledByE10sOther = 10,
+  };
+
   /**
    * Whether Fission should be automatically enabled for new browser windows.
    * This may not match the value of the 'fission.autostart' pref.
@@ -82,6 +115,14 @@ interface nsIXULRuntime : nsISupports
    * session.
    */
   readonly attribute nsIXULRuntime_ExperimentStatus fissionExperimentStatus;
+
+  /**
+   * The deciding factor which caused Fission to be enabled or disabled in
+   * this session. The string version is the same of the name of the constant,
+   * without the leading `eFission`, and with an initial lower-case letter.
+   */
+  readonly attribute nsIXULRuntime_FissionDecisionStatus fissionDecisionStatus;
+  readonly attribute ACString fissionDecisionStatusString;
 
   /**
    * Whether session history is stored in the parent process.

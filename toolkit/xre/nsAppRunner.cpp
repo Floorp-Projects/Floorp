@@ -500,6 +500,85 @@ static nsIXULRuntime::ExperimentStatus gFissionExperimentStatus =
     nsIXULRuntime::eExperimentStatusUnenrolled;
 static bool gFissionAutostart = false;
 static bool gFissionAutostartInitialized = false;
+static nsIXULRuntime::FissionDecisionStatus gFissionDecisionStatus;
+
+static bool gBrowserTabsRemoteAutostart = false;
+static uint64_t gBrowserTabsRemoteStatus = 0;
+static bool gBrowserTabsRemoteAutostartInitialized = false;
+
+// TODO: Remove this when fissionDecisionStatus is exposed in about:support.
+// If you add anything to this enum, please update about:support to reflect it
+enum {
+  // kE10sEnabledByUser = 0, removed when ending non-e10s support
+  kE10sEnabledByDefault = 1,
+  kE10sDisabledByUser = 2,
+  // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
+  // kE10sDisabledForAccessibility = 4,
+  // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
+  // kE10sDisabledForBidi = 6, removed in bug 1309599
+  // kE10sDisabledForAddons = 7, removed in bug 1406212
+  kE10sForceDisabled = 8,
+  // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
+  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
+};
+
+namespace mozilla {
+
+bool BrowserTabsRemoteAutostart() {
+  if (gBrowserTabsRemoteAutostartInitialized) {
+    return gBrowserTabsRemoteAutostart;
+  }
+  gBrowserTabsRemoteAutostartInitialized = true;
+
+  // If we're not in the parent process, we are running E10s.
+  if (!XRE_IsParentProcess()) {
+    gBrowserTabsRemoteAutostart = true;
+    return gBrowserTabsRemoteAutostart;
+  }
+
+#if defined(MOZILLA_OFFICIAL) && MOZ_BUILD_APP_IS_BROWSER
+  bool allowSingleProcessOutsideAutomation = false;
+#else
+  bool allowSingleProcessOutsideAutomation = true;
+#endif
+
+  int status = kE10sEnabledByDefault;
+  // We use "are non-local connections disabled" as a proxy for
+  // "are we running some kind of automated test". It would be nicer to use
+  // xpc::IsInAutomation(), but that depends on some prefs being set, which
+  // they are not in (at least) gtests (where we can't) and xpcshell.
+  // Long-term, hopefully we can make tests switch to environment variables
+  // to disable e10s and then we can get rid of this.
+  if (allowSingleProcessOutsideAutomation ||
+      xpc::AreNonLocalConnectionsDisabled()) {
+    bool optInPref =
+        Preferences::GetBool("browser.tabs.remote.autostart", true);
+
+    if (optInPref) {
+      gBrowserTabsRemoteAutostart = true;
+    } else {
+      status = kE10sDisabledByUser;
+    }
+  } else {
+    gBrowserTabsRemoteAutostart = true;
+  }
+
+  // Uber override pref for emergency blocking
+  if (gBrowserTabsRemoteAutostart) {
+    const char* forceDisable = PR_GetEnv("MOZ_FORCE_DISABLE_E10S");
+    // The environment variable must match the application version to apply.
+    if (forceDisable && gAppData && !strcmp(forceDisable, gAppData->version)) {
+      gBrowserTabsRemoteAutostart = false;
+      status = kE10sForceDisabled;
+    }
+  }
+
+  gBrowserTabsRemoteStatus = status;
+
+  return gBrowserTabsRemoteAutostart;
+}
+
+}  // namespace mozilla
 
 static bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -570,14 +649,37 @@ static void EnsureFissionAutostartInitialized() {
                          PrefValueKind::Default);
   }
 
-  if (gSafeMode) {
+  if (!BrowserTabsRemoteAutostart()) {
     gFissionAutostart = false;
+    if (gBrowserTabsRemoteStatus == kE10sForceDisabled) {
+      gFissionDecisionStatus = nsIXULRuntime::eFissionDisabledByE10sEnv;
+    } else {
+      gFissionDecisionStatus = nsIXULRuntime::eFissionDisabledByE10sOther;
+    }
+  } else if (gSafeMode) {
+    gFissionAutostart = false;
+    gFissionDecisionStatus = nsIXULRuntime::eFissionDisabledBySafeMode;
   } else if (EnvHasValue("MOZ_FORCE_ENABLE_FISSION")) {
     gFissionAutostart = true;
+    gFissionDecisionStatus = nsIXULRuntime::eFissionEnabledByEnv;
   } else {
     // NOTE: This will take into account changes to the default due to
     // `InitializeFissionExperimentStatus`.
     gFissionAutostart = Preferences::GetBool(kPrefFissionAutostart, false);
+    if (gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl) {
+      gFissionDecisionStatus = nsIXULRuntime::eFissionExperimentControl;
+    } else if (gFissionExperimentStatus ==
+               nsIXULRuntime::eExperimentStatusTreatment) {
+      gFissionDecisionStatus = nsIXULRuntime::eFissionExperimentTreatment;
+    } else if (Preferences::HasUserValue(kPrefFissionAutostart)) {
+      gFissionDecisionStatus = gFissionAutostart
+                                   ? nsIXULRuntime::eFissionEnabledByUserPref
+                                   : nsIXULRuntime::eFissionDisabledByUserPref;
+    } else {
+      gFissionDecisionStatus = gFissionAutostart
+                                   ? nsIXULRuntime::eFissionEnabledByDefault
+                                   : nsIXULRuntime::eFissionDisabledByDefault;
+    }
   }
 
   // Content processes cannot run the same logic as we're running in the parent
@@ -917,13 +1019,10 @@ nsXULAppInfo::GetLastAppBuildID(nsACString& aResult) {
   return NS_OK;
 }
 
-static bool gBrowserTabsRemoteAutostart = false;
-static uint64_t gBrowserTabsRemoteStatus = 0;
-static bool gBrowserTabsRemoteAutostartInitialized = false;
-
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports* aSubject, const char* aTopic,
                       const char16_t* aData) {
+  // TODO: Remove this when fissionDecisionStatus is exposed in about:support.
   if (!nsCRT::strcmp(aTopic, "getE10SBlocked")) {
     nsCOMPtr<nsISupportsPRUint64> ret = do_QueryInterface(aSubject);
     if (!ret) return NS_ERROR_FAILURE;
@@ -948,7 +1047,64 @@ nsXULAppInfo::GetFissionExperimentStatus(ExperimentStatus* aResult) {
   }
 
   EnsureFissionAutostartInitialized();
+
+  MOZ_ASSERT(gFissionExperimentStatus != eFissionStatusUnknown);
   *aResult = gFissionExperimentStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetFissionDecisionStatus(FissionDecisionStatus* aResult) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureFissionAutostartInitialized();
+  *aResult = gFissionDecisionStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetFissionDecisionStatusString(nsACString& aResult) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureFissionAutostartInitialized();
+  switch (gFissionDecisionStatus) {
+    case eFissionExperimentControl:
+      aResult = "experimentControl";
+      break;
+    case eFissionExperimentTreatment:
+      aResult = "experimentTreatment";
+      break;
+    case eFissionDisabledByE10sEnv:
+      aResult = "disabledByE10sEnv";
+      break;
+    case eFissionEnabledByEnv:
+      aResult = "enabledByEnv";
+      break;
+    case eFissionDisabledBySafeMode:
+      aResult = "disabledBySafeMode";
+      break;
+    case eFissionEnabledByDefault:
+      aResult = "enabledByDefault";
+      break;
+    case eFissionDisabledByDefault:
+      aResult = "disabledByDefault";
+      break;
+    case eFissionEnabledByUserPref:
+      aResult = "enabledByUserPref";
+      break;
+    case eFissionDisabledByUserPref:
+      aResult = "disabledByUserPref";
+      break;
+    case eFissionDisabledByE10sOther:
+      aResult = "disabledByE10sOther";
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected enum value");
+  }
   return NS_OK;
 }
 
@@ -5262,76 +5418,7 @@ bool XRE_UseNativeEventProcessing() {
   return true;
 }
 
-// If you add anything to this enum, please update about:support to reflect it
-enum {
-  // kE10sEnabledByUser = 0, removed when ending non-e10s support
-  kE10sEnabledByDefault = 1,
-  kE10sDisabledByUser = 2,
-  // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
-  // kE10sDisabledForAccessibility = 4,
-  // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
-  // kE10sDisabledForBidi = 6, removed in bug 1309599
-  // kE10sDisabledForAddons = 7, removed in bug 1406212
-  kE10sForceDisabled = 8,
-  // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
-  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
-};
-
 namespace mozilla {
-
-bool BrowserTabsRemoteAutostart() {
-  if (gBrowserTabsRemoteAutostartInitialized) {
-    return gBrowserTabsRemoteAutostart;
-  }
-  gBrowserTabsRemoteAutostartInitialized = true;
-
-  // If we're not in the parent process, we are running E10s.
-  if (!XRE_IsParentProcess()) {
-    gBrowserTabsRemoteAutostart = true;
-    return gBrowserTabsRemoteAutostart;
-  }
-
-#if defined(MOZILLA_OFFICIAL) && MOZ_BUILD_APP_IS_BROWSER
-  bool allowSingleProcessOutsideAutomation = false;
-#else
-  bool allowSingleProcessOutsideAutomation = true;
-#endif
-
-  int status = kE10sEnabledByDefault;
-  // We use "are non-local connections disabled" as a proxy for
-  // "are we running some kind of automated test". It would be nicer to use
-  // xpc::IsInAutomation(), but that depends on some prefs being set, which
-  // they are not in (at least) gtests (where we can't) and xpcshell.
-  // Long-term, hopefully we can make tests switch to environment variables
-  // to disable e10s and then we can get rid of this.
-  if (allowSingleProcessOutsideAutomation ||
-      xpc::AreNonLocalConnectionsDisabled()) {
-    bool optInPref =
-        Preferences::GetBool("browser.tabs.remote.autostart", true);
-
-    if (optInPref) {
-      gBrowserTabsRemoteAutostart = true;
-    } else {
-      status = kE10sDisabledByUser;
-    }
-  } else {
-    gBrowserTabsRemoteAutostart = true;
-  }
-
-  // Uber override pref for emergency blocking
-  if (gBrowserTabsRemoteAutostart) {
-    const char* forceDisable = PR_GetEnv("MOZ_FORCE_DISABLE_E10S");
-    // The environment variable must match the application version to apply.
-    if (forceDisable && gAppData && !strcmp(forceDisable, gAppData->version)) {
-      gBrowserTabsRemoteAutostart = false;
-      status = kE10sForceDisabled;
-    }
-  }
-
-  gBrowserTabsRemoteStatus = status;
-
-  return gBrowserTabsRemoteAutostart;
-}
 
 uint32_t GetMaxWebProcessCount() {
   // multiOptOut is in int to allow us to run multiple experiments without
