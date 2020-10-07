@@ -1,4 +1,7 @@
 const PRINT_DOCUMENT_URI = "chrome://global/content/print.html";
+const { MockFilePicker } = SpecialPowers;
+
+let pickerMocked = false;
 
 class PrintHelper {
   static async withTestPage(testFn) {
@@ -19,6 +22,7 @@ class PrintHelper {
     for (let name of Services.prefs.getChildList("print.")) {
       Services.prefs.clearUserPref(name);
     }
+    Services.prefs.clearUserPref("print_printer");
 
     return taskReturn;
   }
@@ -119,7 +123,19 @@ class PrintHelper {
     ok(BrowserTestUtils.is_hidden(this.dialog._box), "The dialog is hidden");
   }
 
-  async setupMockPrint() {
+  async assertPrintToFile(file, testFn) {
+    ok(!file.exists(), "File does not exist before printing");
+    await this.withClosingFn(testFn);
+    await TestUtils.waitForCondition(
+      () => file.exists(),
+      "Wait for printed file",
+      50
+    );
+
+    ok(file.exists(), "Printed the file");
+  }
+
+  setupMockPrint() {
     if (this.resolveShowSystemDialog) {
       throw new Error("Print already mocked");
     }
@@ -287,5 +303,22 @@ class PrintHelper {
 
   awaitAnimationFrame() {
     return new Promise(resolve => this.win.requestAnimationFrame(resolve));
+  }
+
+  mockFilePicker(filename) {
+    if (!pickerMocked) {
+      pickerMocked = true;
+      MockFilePicker.init(window);
+      registerCleanupFunction(() => MockFilePicker.cleanup());
+    }
+    let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    file.append(filename);
+    registerCleanupFunction(() => {
+      if (file.exists()) {
+        file.remove(false);
+      }
+    });
+    MockFilePicker.setFiles([file]);
+    return file;
   }
 }
