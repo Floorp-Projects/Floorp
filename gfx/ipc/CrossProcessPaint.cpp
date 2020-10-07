@@ -294,6 +294,24 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
   return true;
 }
 
+/* static */
+RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
+    nsTHashtable<nsUint64HashKey>&& aDependencies) {
+  MOZ_ASSERT(!aDependencies.IsEmpty());
+  RefPtr<CrossProcessPaint> resolver =
+      new CrossProcessPaint(1.0, dom::TabId(0));
+
+  RefPtr<CrossProcessPaint::ResolvePromise> promise = resolver->Init();
+
+  PaintFragment rootFragment;
+  rootFragment.mDependencies = std::move(aDependencies);
+
+  resolver->QueueDependencies(rootFragment.mDependencies);
+  resolver->mReceivedFragments.Put(dom::TabId(0), std::move(rootFragment));
+
+  return promise;
+}
+
 CrossProcessPaint::CrossProcessPaint(float aScale, dom::TabId aRoot)
     : mRoot{aRoot}, mScale{aScale}, mPendingFragments{0} {}
 
