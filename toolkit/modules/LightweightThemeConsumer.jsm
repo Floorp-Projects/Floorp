@@ -71,10 +71,12 @@ const toolkitVariableMap = [
       lwtProperty: "popup_text",
       processColor(rgbaChannels, element) {
         const disabledColorVariable = "--panel-disabled-color";
+        const descriptionColorVariable = "--panel-description-color";
 
         if (!rgbaChannels) {
           element.removeAttribute("lwt-popup-brighttext");
           element.style.removeProperty(disabledColorVariable);
+          element.style.removeProperty(descriptionColorVariable);
           return null;
         }
 
@@ -89,6 +91,10 @@ const toolkitVariableMap = [
         element.style.setProperty(
           disabledColorVariable,
           `rgba(${r}, ${g}, ${b}, 0.5)`
+        );
+        element.style.setProperty(
+          descriptionColorVariable,
+          `rgba(${r}, ${g}, ${b}, 0.65)`
         );
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       },
