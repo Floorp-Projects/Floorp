@@ -95,6 +95,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
   prefs.clearUserPref("network.http.http3.enabled");
+  prefs.clearUserPref("network.dns.httpssvc.http3_fast_fallback_timeout");
   trrServer.stop();
 });
 
@@ -761,7 +762,7 @@ add_task(async function testH3Connection() {
   );
 
   let chan = makeChan(`https://test.h3.com`);
-  let [req, resp] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
+  let [req, resp] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h3");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
@@ -773,3 +774,105 @@ add_task(async function testH3Connection() {
   await trrServer.stop();
 });
 
+add_task(async function testFastfallbackToH2() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  // Use a short timeout to make sure the fast fallback timer will be triggered.
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    1
+  );
+
+  await trrServer.registerDoHAnswers("test.fastfallback.com", "HTTPS", [
+    {
+      name: "test.fastfallback.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "test.fastfallback1.com",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+    {
+      name: "test.fastfallback.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 2,
+        name: "test.fastfallback2.com",
+        values: [
+          { key: "alpn", value: "h2" },
+          { key: "port", value: h2Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+  ]);
+
+  await trrServer.registerDoHAnswers("test.fastfallback2.com", "A", [
+    {
+      name: "test.fastfallback2.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "test.fastfallback.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  let chan = makeChan(`https://test.fastfallback.com/server-timing`);
+  let [req, resp] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h2");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h2Port);
+
+  // Use a longer timeout to test the case that the timer is canceled.
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    5000
+  );
+
+  chan = makeChan(`https://test.fastfallback.com/server-timing`);
+  [req, resp] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h2");
+  internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h2Port);
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+
+  await trrServer.stop();
+});
