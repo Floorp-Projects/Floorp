@@ -13,11 +13,12 @@ using namespace mozilla;
 
 class TestOpusTrackEncoder : public OpusTrackEncoder {
  public:
-  TestOpusTrackEncoder() : OpusTrackEncoder(90000) {}
+  explicit TestOpusTrackEncoder(TrackRate aTrackRate)
+      : OpusTrackEncoder(aTrackRate) {}
 
   // Return true if it has successfully initialized the Opus encoder.
-  bool TestOpusRawCreation(int aChannels, int aSamplingRate) {
-    if (Init(aChannels, aSamplingRate) == NS_OK) {
+  bool TestOpusRawCreation(int aChannels) {
+    if (Init(aChannels) == NS_OK) {
       if (IsInitialized()) {
         return true;
       }
@@ -33,9 +34,9 @@ class TestOpusTrackEncoder : public OpusTrackEncoder {
   }
 };
 
-static bool TestOpusInit(int aChannels, int aSamplingRate) {
-  TestOpusTrackEncoder encoder;
-  return encoder.TestOpusRawCreation(aChannels, aSamplingRate);
+static bool TestOpusInit(int aChannels, TrackRate aSamplingRate) {
+  TestOpusTrackEncoder encoder(aSamplingRate);
+  return encoder.TestOpusRawCreation(aChannels);
 }
 
 TEST(OpusAudioTrackEncoder, InitRaw)
@@ -153,9 +154,9 @@ TEST(OpusAudioTrackEncoder, Init)
   }
 }
 
-static int TestOpusResampler(int aChannels, int aSamplingRate) {
-  TestOpusTrackEncoder encoder;
-  EXPECT_TRUE(encoder.TestOpusRawCreation(aChannels, aSamplingRate));
+static int TestOpusResampler(int aChannels, TrackRate aTrackRate) {
+  TestOpusTrackEncoder encoder(aTrackRate);
+  EXPECT_TRUE(encoder.TestOpusRawCreation(aChannels));
   return encoder.TestGetOutputSampleRate();
 }
 
@@ -178,9 +179,9 @@ TEST(OpusAudioTrackEncoder, Resample)
 TEST(OpusAudioTrackEncoder, FetchMetadata)
 {
   const int32_t channels = 1;
-  const int32_t sampleRate = 44100;
-  TestOpusTrackEncoder encoder;
-  EXPECT_TRUE(encoder.TestOpusRawCreation(channels, sampleRate));
+  const TrackRate sampleRate = 44100;
+  TestOpusTrackEncoder encoder(sampleRate);
+  EXPECT_TRUE(encoder.TestOpusRawCreation(channels));
 
   RefPtr<TrackMetadataBase> metadata = encoder.GetMetadata();
   ASSERT_EQ(TrackMetadataBase::METADATA_OPUS, metadata->GetKind());
@@ -193,9 +194,9 @@ TEST(OpusAudioTrackEncoder, FetchMetadata)
 TEST(OpusAudioTrackEncoder, FrameEncode)
 {
   const int32_t channels = 1;
-  const int32_t sampleRate = 44100;
-  TestOpusTrackEncoder encoder;
-  EXPECT_TRUE(encoder.TestOpusRawCreation(channels, sampleRate));
+  const TrackRate sampleRate = 44100;
+  TestOpusTrackEncoder encoder(sampleRate);
+  EXPECT_TRUE(encoder.TestOpusRawCreation(channels));
 
   // Generate five seconds of raw audio data.
   AudioGenerator<AudioDataValue> generator(channels, sampleRate);

@@ -18,8 +18,8 @@ class WebMOpusTrackEncoder : public OpusTrackEncoder {
  public:
   explicit WebMOpusTrackEncoder(TrackRate aTrackRate)
       : OpusTrackEncoder(aTrackRate) {}
-  bool TestOpusCreation(int aChannels, int aSamplingRate) {
-    if (NS_SUCCEEDED(Init(aChannels, aSamplingRate))) {
+  bool TestOpusCreation(int aChannels) {
+    if (NS_SUCCEEDED(Init(aChannels))) {
       return true;
     }
     return false;
@@ -40,11 +40,10 @@ class WebMVP8TrackEncoder : public VP8TrackEncoder {
   }
 };
 
-static void GetOpusMetadata(int aChannels, int aSampleRate,
-                            TrackRate aTrackRate,
+static void GetOpusMetadata(int aChannels, TrackRate aTrackRate,
                             nsTArray<RefPtr<TrackMetadataBase>>& aMeta) {
   WebMOpusTrackEncoder opusEncoder(aTrackRate);
-  EXPECT_TRUE(opusEncoder.TestOpusCreation(aChannels, aSampleRate));
+  EXPECT_TRUE(opusEncoder.TestOpusCreation(aChannels));
   aMeta.AppendElement(opusEncoder.GetMetadata());
 }
 
@@ -106,18 +105,18 @@ TEST(WebMWriter, Metadata)
 
   nsTArray<RefPtr<TrackMetadataBase>> meta;
 
+  TrackRate trackRate = 44100;
+
   // Get opus metadata.
   int channel = 1;
-  int sampleRate = 44100;
-  TrackRate aTrackRate = 90000;
-  GetOpusMetadata(channel, sampleRate, aTrackRate, meta);
+  GetOpusMetadata(channel, trackRate, meta);
 
   // Get vp8 metadata
   int32_t width = 640;
   int32_t height = 480;
   int32_t displayWidth = 640;
   int32_t displayHeight = 480;
-  GetVP8Metadata(width, height, displayWidth, displayHeight, aTrackRate, meta);
+  GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
 
   // Set metadata
   writer.SetMetadata(meta);
@@ -130,17 +129,16 @@ TEST(WebMWriter, Cluster)
 {
   TestWebMWriter writer;
   nsTArray<RefPtr<TrackMetadataBase>> meta;
+  TrackRate trackRate = 48000;
   // Get opus metadata.
   int channel = 1;
-  int sampleRate = 48000;
-  TrackRate aTrackRate = 90000;
-  GetOpusMetadata(channel, sampleRate, aTrackRate, meta);
+  GetOpusMetadata(channel, trackRate, meta);
   // Get vp8 metadata
   int32_t width = 320;
   int32_t height = 240;
   int32_t displayWidth = 320;
   int32_t displayHeight = 240;
-  GetVP8Metadata(width, height, displayWidth, displayHeight, aTrackRate, meta);
+  GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
   writer.SetMetadata(meta);
 
   nsTArray<nsTArray<uint8_t>> encodedBuf;
@@ -173,17 +171,16 @@ TEST(WebMWriter, FLUSH_NEEDED)
 {
   TestWebMWriter writer;
   nsTArray<RefPtr<TrackMetadataBase>> meta;
+  TrackRate trackRate = 44100;
   // Get opus metadata.
   int channel = 2;
-  int sampleRate = 44100;
-  TrackRate aTrackRate = 100000;
-  GetOpusMetadata(channel, sampleRate, aTrackRate, meta);
+  GetOpusMetadata(channel, trackRate, meta);
   // Get vp8 metadata
   int32_t width = 176;
   int32_t height = 352;
   int32_t displayWidth = 176;
   int32_t displayHeight = 352;
-  GetVP8Metadata(width, height, displayWidth, displayHeight, aTrackRate, meta);
+  GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
   writer.SetMetadata(meta);
 
   // write the first I-Frame.
@@ -294,17 +291,16 @@ TEST(WebMWriter, bug970774_aspect_ratio)
 {
   TestWebMWriter writer;
   nsTArray<RefPtr<TrackMetadataBase>> meta;
+  TrackRate trackRate = 44100;
   // Get opus metadata.
   int channel = 1;
-  int sampleRate = 44100;
-  TrackRate aTrackRate = 90000;
-  GetOpusMetadata(channel, sampleRate, aTrackRate, meta);
+  GetOpusMetadata(channel, trackRate, meta);
   // Set vp8 metadata
   int32_t width = 640;
   int32_t height = 480;
   int32_t displayWidth = 1280;
   int32_t displayHeight = 960;
-  GetVP8Metadata(width, height, displayWidth, displayHeight, aTrackRate, meta);
+  GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
   writer.SetMetadata(meta);
 
   // write the first I-Frame.
@@ -353,7 +349,7 @@ TEST(WebMWriter, bug970774_aspect_ratio)
       rv = nestegg_track_audio_params(context, track, &params);
       EXPECT_EQ(rv, 0);
       EXPECT_EQ(channel, static_cast<int>(params.channels));
-      EXPECT_EQ(static_cast<double>(sampleRate), params.rate);
+      EXPECT_EQ(static_cast<double>(trackRate), params.rate);
     }
   }
   if (context) {

@@ -178,7 +178,7 @@ void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
       continue;
     }
 
-    nsresult rv = Init(iter->mChannelData.Length(), mTrackRate);
+    nsresult rv = Init(iter->mChannelData.Length());
 
     if (NS_SUCCEEDED(rv)) {
       TRACK_LOG(LogLevel::Info,
@@ -204,7 +204,7 @@ void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
               ("[AudioTrackEncoder]: Initialize failed for %ds. Attempting to "
                "init with %d (default) channels!",
                AUDIO_INIT_FAILED_DURATION, DEFAULT_CHANNELS));
-    nsresult rv = Init(DEFAULT_CHANNELS, mTrackRate);
+    nsresult rv = Init(DEFAULT_CHANNELS);
     Telemetry::Accumulate(
         Telemetry::MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE, 0);
     if (NS_FAILED(rv)) {
@@ -231,7 +231,7 @@ void AudioTrackEncoder::NotifyEndOfStream() {
   if (!mCanceled && !mInitialized) {
     // If source audio track is completely silent till the end of encoding,
     // initialize the encoder with a default channel count.
-    Init(DEFAULT_CHANNELS, mTrackRate);
+    Init(DEFAULT_CHANNELS);
   }
 
   mEndOfStream = true;
