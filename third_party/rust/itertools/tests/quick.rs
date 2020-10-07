@@ -3,20 +3,17 @@
 //!
 //! In particular we test the tedious size_hint and exact size correctness.
 
-#[macro_use] extern crate itertools;
-
-extern crate quickcheck;
-extern crate rand;
-
-use std::default::Default;
-
 use quickcheck as qc;
+use std::default::Default;
 use std::ops::Range;
-use std::cmp::Ordering;
+use std::cmp::{max, min, Ordering};
+use std::collections::HashSet;
 use itertools::Itertools;
 use itertools::{
     multizip,
     EitherOrBoth,
+    iproduct,
+    izip,
 };
 use itertools::free::{
     cloned,
@@ -85,7 +82,7 @@ impl qc::Arbitrary for Inexact {
         }
     }
 
-    fn shrink(&self) -> Box<Iterator<Item=Self>> {
+    fn shrink(&self) -> Box<dyn Iterator<Item=Self>> {
         let underestimate_value = self.underestimate;
         let overestimate_value = self.overestimate;
         Box::new(
@@ -123,7 +120,7 @@ impl<T, HK> Iter<T, HK> where HK: HintKind
         Iter {
             iterator: it,
             fuse_flag: 0,
-            hint_kind: hint_kind
+            hint_kind,
         }
     }
 }
@@ -176,7 +173,7 @@ impl<T, HK> qc::Arbitrary for Iter<T, HK>
         Iter::new(T::arbitrary(g)..T::arbitrary(g), HK::arbitrary(g))
     }
 
-    fn shrink(&self) -> Box<Iterator<Item=Iter<T, HK>>>
+    fn shrink(&self) -> Box<dyn Iterator<Item=Iter<T, HK>>>
     {
         let r = self.iterator.clone();
         let hint_kind = self.hint_kind;
@@ -238,14 +235,51 @@ impl<HK> qc::Arbitrary for ShiftRange<HK>
         let hint_kind = qc::Arbitrary::arbitrary(g);
 
         ShiftRange {
-            range_start: range_start,
-            range_end: range_end,
-            start_step: start_step,
-            end_step: end_step,
-            iter_count: iter_count,
-            hint_kind: hint_kind
+            range_start,
+            range_end,
+            start_step,
+            end_step,
+            iter_count,
+            hint_kind,
         }
     }
+}
+
+fn correct_count<I, F>(get_it: F) -> bool
+where
+    I: Iterator,
+    F: Fn() -> I
+{
+    let mut counts = vec![get_it().count()];
+
+    'outer: loop {
+        let mut it = get_it();
+
+        for _ in 0..(counts.len() - 1) {
+            if let None = it.next() {
+                panic!("Iterator shouldn't be finished, may not be deterministic");
+            }
+        }
+
+        if let None = it.next() {
+            break 'outer;
+        }
+
+        counts.push(it.count());
+    }
+
+    let total_actual_count = counts.len() - 1;
+
+    for (i, returned_count) in counts.into_iter().enumerate() {
+        let actual_count = total_actual_count - i;
+        if actual_count != returned_count {
+            println!("Total iterations: {} True count: {} returned count: {}", i, actual_count, returned_count);
+
+            return false;
+        }
+    }
+
+    true
 }
 
 fn correct_size_hint<I: Iterator>(mut it: I) -> bool {
@@ -625,6 +659,88 @@ quickcheck! {
         let size = a.clone().count();
         a.collect_tuple::<(_, _, _)>().is_some() == (size == 3)
     }
+
+    fn correct_permutations(vals: HashSet<i32>, k: usize) -> () {
+        // Test permutations only on iterators of distinct integers, to prevent
+        // false positives.
+
+        const MAX_N: usize = 5;
+
+        let n = min(vals.len(), MAX_N);
+        let vals: HashSet<i32> = vals.into_iter().take(n).collect();
+
+        let perms = vals.iter().permutations(k);
+
+        let mut actual = HashSet::new();
+
+        for perm in perms {
+            assert_eq!(perm.len(), k);
+
+            let all_items_valid = perm.iter().all(|p| vals.contains(p));
+            assert!(all_items_valid, "perm contains value not from input: {:?}", perm);
+
+            // Check that all perm items are distinct
+            let distinct_len = {
+                let perm_set: HashSet<_> = perm.iter().collect();
+                perm_set.len()
+            };
+            assert_eq!(perm.len(), distinct_len);
+
+            // Check that the perm is new
+            assert!(actual.insert(perm.clone()), "perm already encountered: {:?}", perm);
+        }
+    }
+
+    fn permutations_lexic_order(a: usize, b: usize) -> () {
+        let a = a % 6;
+        let b = b % 6;
+
+        let n = max(a, b);
+        let k = min (a, b);
+
+        let expected_first: Vec<usize> = (0..k).collect();
+        let expected_last: Vec<usize> = ((n - k)..n).rev().collect();
+
+        let mut perms = (0..n).permutations(k);
+
+        let mut curr_perm = match perms.next() {
+            Some(p) => p,
+            None => { return; }
+        };
+
+        assert_eq!(expected_first, curr_perm);
+
+        while let Some(next_perm) = perms.next() {
+            assert!(
+                next_perm > curr_perm,
+                "next perm isn't greater-than current; next_perm={:?} curr_perm={:?} n={}",
+                next_perm, curr_perm, n
+            );
+
+            curr_perm = next_perm;
+        }
+
+        assert_eq!(expected_last, curr_perm);
+
+    }
+
+    fn permutations_count(n: usize, k: usize) -> bool {
+        let n = n % 6;
+
+        correct_count(|| (0..n).permutations(k))
+    }
+
+    fn permutations_size(a: Iter<i32>, k: usize) -> bool {
+        correct_size_hint(a.take(5).permutations(k))
+    }
+
+    fn permutations_k0_yields_once(n: usize) -> () {
+        let k = 0;
+        let expected: Vec<Vec<usize>> = vec![vec![]];
+        let actual = (0..n).permutations(k).collect_vec();
+
+        assert_eq!(expected, actual);
+    }
 }
 
 quickcheck! {
@@ -636,8 +752,22 @@ quickcheck! {
 }
 
 quickcheck! {
+    fn equal_dedup_by(a: Vec<(i32, i32)>) -> bool {
+        let mut b = a.clone();
+        b.dedup_by(|x, y| x.0==y.0);
+        itertools::equal(&b, a.iter().dedup_by(|x, y| x.0==y.0))
+    }
+}
+
+quickcheck! {
     fn size_dedup(a: Vec<i32>) -> bool {
         correct_size_hint(a.iter().dedup())
+    }
+}
+
+quickcheck! {
+    fn size_dedup_by(a: Vec<(i32, i32)>) -> bool {
+        correct_size_hint(a.iter().dedup_by(|x, y| x.0==y.0))
     }
 }
 
@@ -942,7 +1072,7 @@ impl qc::Arbitrary for Val {
         let (x, y) = <(u32, u32)>::arbitrary(g);
         Val(x, y)
     }
-    fn shrink(&self) -> Box<Iterator<Item = Self>> {
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new((self.0, self.1).shrink().map(|(x, y)| Val(x, y)))
     }
 }
@@ -1013,5 +1143,15 @@ quickcheck! {
         let expected = a.pop();
 
         TestResult::from_bool(actual == expected)
+    }
+}
+
+quickcheck! {
+    fn exactly_one_i32(a: Vec<i32>) -> TestResult {
+        let ret = a.iter().cloned().exactly_one();
+        match a.len() {
+            1 => TestResult::from_bool(ret.unwrap() == a[0]),
+            _ => TestResult::from_bool(ret.unwrap_err().eq(a.iter().cloned())),
+        }
     }
 }

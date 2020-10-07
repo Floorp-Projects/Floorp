@@ -5,14 +5,14 @@
 //! except according to those terms.
 #![no_std]
 
-#[macro_use] extern crate itertools as it;
-
 use core::iter;
-
-use it::Itertools;
-use it::interleave;
-use it::multizip;
-use it::free::put_back;
+use itertools as it;
+use crate::it::Itertools;
+use crate::it::interleave;
+use crate::it::multizip;
+use crate::it::free::put_back;
+use crate::it::iproduct;
+use crate::it::izip;
 
 #[test]
 fn product2() {
@@ -243,4 +243,30 @@ fn tree_fold1() {
     for i in 0..100 {
         assert_eq!((0..i).tree_fold1(|x, y| x + y), (0..i).fold1(|x, y| x + y));
     }
+}
+
+#[test]
+fn exactly_one() {
+    assert_eq!((0..10).filter(|&x| x == 2).exactly_one().unwrap(), 2);
+    assert!((0..10).filter(|&x| x > 1 && x < 4).exactly_one().unwrap_err().eq(2..4));
+    assert!((0..10).filter(|&x| x > 1 && x < 5).exactly_one().unwrap_err().eq(2..5));
+    assert!((0..10).filter(|&_| false).exactly_one().unwrap_err().eq(0..0));
+}
+
+#[test]
+fn sum1() {
+    let v: &[i32] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    assert_eq!(v[..0].iter().cloned().sum1::<i32>(), None);
+    assert_eq!(v[1..2].iter().cloned().sum1::<i32>(), Some(1));
+    assert_eq!(v[1..3].iter().cloned().sum1::<i32>(), Some(3));
+    assert_eq!(v.iter().cloned().sum1::<i32>(), Some(55));
+}
+
+#[test]
+fn product1() {
+    let v: &[i32] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    assert_eq!(v[..0].iter().cloned().product1::<i32>(), None);
+    assert_eq!(v[..1].iter().cloned().product1::<i32>(), Some(0));
+    assert_eq!(v[1..3].iter().cloned().product1::<i32>(), Some(2));
+    assert_eq!(v[1..5].iter().cloned().product1::<i32>(), Some(24));
 }
