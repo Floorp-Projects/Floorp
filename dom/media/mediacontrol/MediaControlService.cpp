@@ -404,9 +404,6 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
   if (!mMainController) {
     LOG_MAINCONTROLLER_INFO("Clear main controller");
     mSource->Close();
-    mSource->SetPlaybackState(MediaSessionPlaybackState::None);
-    mSource->SetMediaMetadata(MediaMetadataBase::EmptyData());
-    mSource->SetSupportedMediaKeys(MediaKeysArray());
     DisconnectMainControllerEvents();
   } else {
     LOG_MAINCONTROLLER_INFO("Set controller %" PRId64 " as main controller",
