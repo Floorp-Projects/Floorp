@@ -40,9 +40,19 @@ class nsSharedPageData {
   // that it's reflowed the final page):
   int32_t mRawNumPages = 0;
 
-  // Page range info (only relevant if mDoingPageRange is true):
+  // Smallest included page num. 1-based. Only used if mDoingPageRange is true.
   int32_t mFromPageNum = 0;
+
+  // Largest included page num. 1-based. Only used if mDoingPageRange is true.
   int32_t mToPageNum = 0;
+
+  // If there's more than one page-range, then its components are stored here
+  // as pairs of (start,end).  They're stored in the order provided (not
+  // necessarily in ascending order). The most extreme included values will
+  // still be stored in mFromPageNum and mToPageNum, so that entirely
+  // out-of-bounds pages can be easily filtered out without needing to inspect
+  // this array. As above, the values are 1-based, and this member is only used
+  // if mDoingPageRange is true.
   nsTArray<int32_t> mPageRanges;
 
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
