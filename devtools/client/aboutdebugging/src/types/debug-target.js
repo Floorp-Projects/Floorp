@@ -27,8 +27,6 @@ const extensionTargetDetails = {
 const processTargetDetails = {
   // Description for the process.
   description: PropTypes.string.isRequired,
-  // The id for the process. #0 is the main/parent process, #1++ are parent processes
-  processId: PropTypes.number.isRequired,
 };
 
 const tabTargetDetails = {

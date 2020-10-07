@@ -56,7 +56,6 @@ function toMainProcessComponentData(process) {
     type,
     details: {
       description,
-      processId: process.id,
     },
   };
 }
