@@ -172,12 +172,6 @@ class APZCCallbackHelper {
 
   static void CancelAutoscroll(const ScrollableLayerGuid::ViewID& aScrollId);
 
-  /* Adjust the display-port margins by the difference between the requested
-   * scroll offset and the resulting scroll offset after setting the requested
-   * value. */
-  static ScreenMargin AdjustDisplayPortForScrollDelta(ScreenMargin aMargins,
-                                                      ScreenPoint aScrollDelta);
-
   /*
    * Check if the scrollable frame is currently in the middle of a main thread
    * async or smooth scroll, or has already requested some other apz scroll that
