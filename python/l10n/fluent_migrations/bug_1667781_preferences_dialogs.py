@@ -54,3 +54,12 @@ site-data-settings-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "site-data-button-save.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "site-data-button-save.accesskey") }
 """, from_path="browser/browser/preferences/siteDataSettings.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/translation.ftl",
+        "browser/browser/preferences/translation.ftl",
+        transforms_from("""
+translation-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "translation-button-close.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "translation-button-close.accesskey") }
+""", from_path="browser/browser/preferences/translation.ftl"))
