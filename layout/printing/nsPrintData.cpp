@@ -33,7 +33,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mPreparingForPrint(false),
       mShrinkToFit(false),
       mNumPrintablePages(0),
-      mNumPagesPrinted(0),
       mShrinkRatio(1.0) {}
 
 nsPrintData::~nsPrintData() {

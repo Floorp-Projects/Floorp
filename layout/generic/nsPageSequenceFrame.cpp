@@ -352,15 +352,6 @@ nsresult nsPageSequenceFrame::GetFrameName(nsAString& aResult) const {
 }
 #endif
 
-//====================================================================
-//== Asynch Printing
-//====================================================================
-void nsPageSequenceFrame::GetPrintRange(int32_t* aFromPage,
-                                        int32_t* aToPage) const {
-  *aFromPage = mPageData->mFromPageNum;
-  *aToPage = mPageData->mToPageNum;
-}
-
 // Helper Function
 void nsPageSequenceFrame::SetPageNumberFormat(const char* aPropName,
                                               const char* aDefPropVal,
@@ -404,7 +395,7 @@ nsresult nsPageSequenceFrame::StartPrint(nsPresContext* aPresContext,
   }
 
   // Begin printing of the document
-  mPageNum = 1;
+  mCurrentSheetIdx = 0;
   return NS_OK;
 }
 
@@ -461,45 +452,12 @@ static void GetPrintCanvasElementsInFrame(
 // a variable delay between firings, depending on whether the last page was
 // skipped.
 //
-// [1] DetermineWhetherToPrintPage(), GetCurrentPageFrame(),
-// PrePrintNextPage(), and PrintNextPage()
-void nsPageSequenceFrame::DetermineWhetherToPrintPage() {
-  // See whether we should print this page
-  mPrintThisPage = true;
-
-  // If printing a range of pages check whether the page number is in the
-  // range of pages to print
-  if (mPageData->mDoingPageRange) {
-    if (mPageNum < mPageData->mFromPageNum) {
-      mPrintThisPage = false;
-    } else if (mPageNum > mPageData->mToPageNum) {
-      mPageNum++;
-      mPrintThisPage = false;
-      return;
-    } else {
-      const auto& ranges = mPageData->mPageRanges;
-      int32_t length = ranges.Length();
-
-      // Page ranges are pairs (start, end)
-      if (length && (length % 2 == 0)) {
-        mPrintThisPage = false;
-
-        int32_t i;
-        for (i = 0; i < length; i += 2) {
-          if (ranges[i] <= mPageNum && mPageNum <= ranges[i + 1]) {
-            mPrintThisPage = true;
-            break;
-          }
-        }
-      }
-    }
-  }
-}
+// [1] PrePrintNextPage(), and PrintNextPage()
 
 nsIFrame* nsPageSequenceFrame::GetCurrentPageFrame() {
-  int32_t i = 1;
+  uint32_t i = 0;
   for (nsIFrame* child : mFrames) {
-    if (i == mPageNum) {
+    if (i == mCurrentSheetIdx) {
       return child;
     }
     ++i;
@@ -515,11 +473,12 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
     return NS_ERROR_FAILURE;
   }
 
-  DetermineWhetherToPrintPage();
-  // Nothing to do if the current page doesn't get printed OR rendering to
-  // preview. For preview, the `CallPrintCallback` is called from within the
-  // HTMLCanvasElement::HandlePrintCallback.
-  if (!mPrintThisPage || !PresContext()->IsRootPaginatedDocument()) {
+  if (!PresContext()->IsRootPaginatedDocument()) {
+    // XXXdholbert I don't think this clause is ever actually visited in
+    // practice... Maybe we should warn & return a failure code?  There used to
+    // be a comment here explaining why we don't need to proceed past this
+    // point for print preview, but in fact, this function isn't even called for
+    // print preview.
     *aDone = true;
     return NS_OK;
   }
@@ -619,43 +578,39 @@ nsresult nsPageSequenceFrame::PrintNextPage() {
 
   nsresult rv = NS_OK;
 
-  DetermineWhetherToPrintPage();
+  nsDeviceContext* dc = PresContext()->DeviceContext();
 
-  if (mPrintThisPage) {
-    nsDeviceContext* dc = PresContext()->DeviceContext();
-
-    if (PresContext()->IsRootPaginatedDocument()) {
-      if (!mCalledBeginPage) {
-        // We must make sure BeginPage() has been called since some printing
-        // backends can't give us a valid rendering context for a [physical]
-        // page otherwise.
-        PR_PL(("\n"));
-        PR_PL(("***************** BeginPage *****************\n"));
-        rv = dc->BeginPage();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+  if (PresContext()->IsRootPaginatedDocument()) {
+    if (!mCalledBeginPage) {
+      // We must make sure BeginPage() has been called since some printing
+      // backends can't give us a valid rendering context for a [physical]
+      // page otherwise.
+      PR_PL(("\n"));
+      PR_PL(("***************** BeginPage *****************\n"));
+      rv = dc->BeginPage();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    PR_PL(
-        ("SeqFr::PrintNextPage -> %p PageNo: %d", currentPageFrame, mPageNum));
-
-    // CreateRenderingContext can fail
-    RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
-    NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
-
-    nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
-    nsRegion drawingRegion(drawingRect);
-    nsLayoutUtils::PaintFrame(gCtx, currentPageFrame, drawingRegion,
-                              NS_RGBA(0, 0, 0, 0),
-                              nsDisplayListBuilderMode::Painting,
-                              nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);
   }
+
+  PR_PL(("SeqFr::PrintNextPage -> %p SheetIdx: %d", currentPageFrame,
+         mCurrentSheetIdx));
+
+  // CreateRenderingContext can fail
+  RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
+  NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
+
+  nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
+  nsRegion drawingRegion(drawingRect);
+  nsLayoutUtils::PaintFrame(gCtx, currentPageFrame, drawingRegion,
+                            NS_RGBA(0, 0, 0, 0),
+                            nsDisplayListBuilderMode::Painting,
+                            nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);
   return rv;
 }
 
 nsresult nsPageSequenceFrame::DoPageEnd() {
   nsresult rv = NS_OK;
-  if (PresContext()->IsRootPaginatedDocument() && mPrintThisPage) {
+  if (PresContext()->IsRootPaginatedDocument()) {
     PR_PL(("***************** End Page (DoPageEnd) *****************\n"));
     rv = PresContext()->DeviceContext()->EndPage();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -664,7 +619,7 @@ nsresult nsPageSequenceFrame::DoPageEnd() {
   ResetPrintCanvasList();
   mCalledBeginPage = false;
 
-  mPageNum++;
+  mCurrentSheetIdx++;
 
   return rv;
 }

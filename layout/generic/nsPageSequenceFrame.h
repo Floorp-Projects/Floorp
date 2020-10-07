@@ -107,10 +107,11 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   nsresult PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone);
   nsresult PrintNextPage();
   void ResetPrintCanvasList();
-  int32_t GetCurrentPageNum() const { return mPageNum; }
+
+  uint32_t GetCurrentSheetIdx() const { return mCurrentSheetIdx; }
+
   int32_t GetRawNumPages() const { return mPageData->mRawNumPages; }
-  bool IsDoingPrintRange() const { return mPageData->mDoingPageRange; }
-  void GetPrintRange(int32_t* aFromPage, int32_t* aToPage) const;
+
   nsresult DoPageEnd();
 
   // We must allow Print Preview UI to have a background, no matter what the
@@ -148,7 +149,6 @@ class nsPageSequenceFrame final : public nsContainerFrame {
                                  nscoord aChildPaddingBoxWidth,
                                  const nsMargin& aChildPhysicalMargin);
 
-  void DetermineWhetherToPrintPage();
   nsIFrame* GetCurrentPageFrame();
 
   nsSize mSize;
@@ -170,13 +170,12 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   // Data shared by all the nsPageFrames:
   mozilla::UniquePtr<nsSharedPageData> mPageData;
 
-  // Async Printing
-  int32_t mPageNum;
+  // The zero-based index of the PrintedSheetFrame child that is being printed
+  // (or about-to-be-printed), in an async print operation.
+  // This is an index into our PrincipalChildList, effectively.
+  uint32_t mCurrentSheetIdx = 0;
 
   nsTArray<RefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
-
-  // Asynch Printing
-  bool mPrintThisPage;
 
   bool mCalledBeginPage;
 
