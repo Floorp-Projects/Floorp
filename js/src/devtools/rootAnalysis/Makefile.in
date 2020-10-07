@@ -15,11 +15,11 @@
 include $(topsrcdir)/config/config.mk
 
 # Tree to build and analyze, defaulting to the current tree
-TARGET_JSOBJDIR ?= $(MOZ_BUILD_ROOT)
+TARGET_JSOBJDIR ?= $(TOPOBJDIR)
 
 # Path to a JS binary to use to run the analysis. You really want this to be an
 # optimized build.
-JS ?= $(MOZ_BUILD_ROOT)/shell/js
+JS ?= $(DIST)/bin/js
 
 # Path to an xgill checkout containing the GCC plugin, xdb-processing binaries,
 # and compiler wrapper scripts used to automatically integrate into an existing
