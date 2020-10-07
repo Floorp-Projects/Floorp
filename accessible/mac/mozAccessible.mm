@@ -10,6 +10,7 @@
 #import "MacUtils.h"
 #import "mozView.h"
 #import "MOXSearchInfo.h"
+#import "mozTextAccessible.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -768,6 +769,17 @@ struct RoleDescrComparator {
   return nil;
 }
 
+- (id)moxEditableAncestor {
+  for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
+       element = [element moxUnignoredParent]) {
+    if ([element isKindOfClass:[mozTextAccessible class]]) {
+      return element;
+    }
+  }
+
+  return nil;
+}
+
 - (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate {
   // Create our search object and set it up with the searchPredicate
   // params. The init function does additional parsing. We pass a
@@ -899,8 +911,10 @@ struct RoleDescrComparator {
       // reduntant.
       id<MOXTextMarkerSupport> delegate = [self moxTextMarkerDelegate];
       id selectedRange = [delegate moxSelectedTextMarkerRange];
+      id editableAncestor = [self moxEditableAncestor];
+      id textChangeElement = editableAncestor ? editableAncestor : self;
       NSDictionary* userInfo = @{
-        @"AXTextChangeElement" : self,
+        @"AXTextChangeElement" : textChangeElement,
         @"AXSelectedTextMarkerRange" :
             (selectedRange ? selectedRange : [NSNull null])
       };
@@ -909,8 +923,9 @@ struct RoleDescrComparator {
       [webArea
           moxPostNotification:NSAccessibilitySelectedTextChangedNotification
                  withUserInfo:userInfo];
-      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification
-                   withUserInfo:userInfo];
+      [textChangeElement
+          moxPostNotification:NSAccessibilitySelectedTextChangedNotification
+                 withUserInfo:userInfo];
       break;
     }
   }

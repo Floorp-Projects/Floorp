@@ -271,7 +271,14 @@ addAccessibleTask(
 addAccessibleTask(
   `<div id="input" contentEditable="true" tabindex="0" role="textbox" aria-multiline="true"><div id="inner"><br /></div></div>`,
   async (browser, accDoc) => {
-    await focusIntoInputAndType(accDoc, "input", "inner");
+    const inner = getNativeInterface(accDoc, "inner");
+    const editableAncestor = inner.getAttributeValue("AXEditableAncestor");
+    is(
+      editableAncestor.getAttributeValue("AXDOMIdentifier"),
+      "input",
+      "Editable ancestor is input"
+    );
+    await focusIntoInputAndType(accDoc, "input");
   }
 );
 
