@@ -43,6 +43,4 @@ done
 
 # Patch the imported files.
 patch -p1 < moz-libsoundtouch.patch
-# Disable a path on s16 + !x86 (bug 1624026) to sidestep a bug
-patch -p1 < disable-cross-corr-accumulate.patch
 
