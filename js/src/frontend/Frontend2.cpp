@@ -430,6 +430,9 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     if (!script.sharedData) {
       return false;
     }
+    if (!SharedImmutableScriptData::shareScriptData(cx, script.sharedData)) {
+      return false;
+    }
   }
 
   script.extent.sourceStart = smooshScript.extent.source_start;
