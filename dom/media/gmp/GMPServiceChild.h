@@ -56,6 +56,11 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService,
     // Nothing to do here.
   }
 
+  template <typename Func>
+  RefPtr<GetGMPContentParentPromise> GetContentParentImpl(
+      GMPCrashHelper* aHelper, const nsCString& aAPI,
+      const nsTArray<nsCString>& aTags, Func aSendLaunchGMPFunc);
+
   RefPtr<GetGMPContentParentPromise> GetContentParent(
       GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
       const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
