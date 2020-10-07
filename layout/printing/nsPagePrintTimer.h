@@ -20,6 +20,10 @@ class nsPrintJob;
 //---------------------------------------------------
 //-- Page Timer Class
 //---------------------------------------------------
+// Strictly speaking, this actually manages the timing of printing *sheets*
+// (instances of "PrintedSheetFrame"), each of which may encompass multiple
+// pages (nsPageFrames) of the document. The use of "Page" in the class name
+// here is for historical / colloquial purposes.
 class nsPagePrintTimer final : public mozilla::Runnable,
                                public nsITimerCallback {
  public:
