@@ -8,15 +8,9 @@
 # =========================================================
 
 @depends(build_project)
-def building_js(build_project):
-    return build_project == 'js'
-
-# Exception to the rule above: JS_STANDALONE is a special option that doesn't
-# want the js_option treatment. When we're done merging js/src/configure and
-# top-level configure, it can go away, although the JS_STANDALONE config
-# will still need to be set depending on building_js above.
-option(env='JS_STANDALONE', default=building_js,
-       help='Reserved for internal use')
+def js_standalone(build_project):
+    if build_project == 'js':
+        return True
 
 # Branding
 # ==============================================================
@@ -24,7 +18,7 @@ js_option('--with-app-name', env='MOZ_APP_NAME', nargs=1,
           help='Used for e.g. the binary program file name. If not set, '
           'defaults to a lowercase form of MOZ_APP_BASENAME.')
 
-@depends('--with-app-name', 'JS_STANDALONE', moz_app_basename)
+@depends('--with-app-name', js_standalone, moz_app_basename)
 def moz_app_name(value, js_standalone, moz_app_basename):
     if value:
         return value[0]
@@ -56,17 +50,13 @@ include('../build/moz.configure/rust.configure',
 include('../build/moz.configure/bindgen.configure',
         when='--enable-compile-environment')
 
-@depends('JS_STANDALONE')
-def js_standalone(value):
-    if value:
-        return True
 set_config('JS_STANDALONE', js_standalone)
 set_define('JS_STANDALONE', js_standalone)
 add_old_configure_assignment('JS_STANDALONE', js_standalone)
-js_option('--disable-js-shell', default=building_js,
+js_option('--enable-js-shell', default=js_standalone,
           help='{Build|Do not build} the JS shell')
 
-@depends('--disable-js-shell')
+@depends('--enable-js-shell')
 def js_disable_shell(value):
     if not value:
         return True
@@ -420,9 +410,9 @@ set_define('JS_MORE_DETERMINISTIC', more_deterministic)
 
 # CTypes
 # =======================================================
-@depends(building_js)
-def ctypes_default(building_js):
-    return not building_js
+@depends(js_standalone)
+def ctypes_default(js_standalone):
+    return not js_standalone
 
 js_option('--enable-ctypes',
           default=ctypes_default,
@@ -771,9 +761,9 @@ set_define('MOZ_SYSTEM_ICU', True, when=system_icu)
 
 js_option('--without-intl-api', help='Disable ECMAScript Internationalization API')
 
-@depends('--with-intl-api', building_js)
-def check_intl_api(enabled, building_js):
-    if not enabled and not building_js:
+@depends('--with-intl-api', js_standalone)
+def check_intl_api(enabled, js_standalone):
+    if not enabled and not js_standalone:
         die('--without-intl-api is not supported')
 
 set_config('JS_HAS_INTL_API', True, when='--with-intl-api')
