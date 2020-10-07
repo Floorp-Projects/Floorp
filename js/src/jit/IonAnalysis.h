@@ -11,12 +11,22 @@
 
 #include "mozilla/Attributes.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
-#include "vm/TypeInference.h"
+#include "js/TypeDecls.h"
+#include "js/Utility.h"
+#include "js/Vector.h"
 
 namespace js {
 
+class DPAConstraintInfo;
+class GenericPrinter;
+class ObjectGroup;
 class PlainObject;
+class TypeNewScriptInitializer;
 
 namespace jit {
 
@@ -168,8 +178,8 @@ MCompare* ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block,
                                   const LinearSum& sum);
 
 MOZ_MUST_USE bool AnalyzeNewScriptDefiniteProperties(
-    JSContext* cx, DPAConstraintInfo& constraintInfo, HandleFunction fun,
-    ObjectGroup* group, Handle<PlainObject*> baseobj,
+    JSContext* cx, DPAConstraintInfo& constraintInfo, JS::HandleFunction fun,
+    ObjectGroup* group, JS::Handle<PlainObject*> baseobj,
     Vector<TypeNewScriptInitializer>* initializerList);
 
 MOZ_MUST_USE bool AnalyzeArgumentsUsage(JSContext* cx, JSScript* script);
