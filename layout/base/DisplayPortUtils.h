@@ -22,24 +22,6 @@ namespace mozilla {
 
 class PresShell;
 
-struct DisplayPortPropertyData {
-  DisplayPortPropertyData(const nsRect& aRect, uint32_t aPriority,
-                          bool aPainted)
-      : mRect(aRect), mPriority(aPriority), mPainted(aPainted) {}
-  nsRect mRect;
-  uint32_t mPriority;
-  bool mPainted;
-};
-
-struct DisplayPortMarginsPropertyData {
-  DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
-                                 uint32_t aPriority, bool aPainted)
-      : mMargins(aMargins), mPriority(aPriority), mPainted(aPainted) {}
-  ScreenMargin mMargins;
-  uint32_t mPriority;
-  bool mPainted;
-};
-
 // For GetDisplayPort
 enum class DisplayportRelativeTo { ScrollPort, ScrollFrame };
 
@@ -70,6 +52,24 @@ struct DisplayPortOptions {
     result.mMaxSizeExceededBehaviour = aMaxSizeExceededBehaviour;
     return result;
   }
+};
+
+struct DisplayPortPropertyData {
+  DisplayPortPropertyData(const nsRect& aRect, uint32_t aPriority,
+                          bool aPainted)
+      : mRect(aRect), mPriority(aPriority), mPainted(aPainted) {}
+  nsRect mRect;
+  uint32_t mPriority;
+  bool mPainted;
+};
+
+struct DisplayPortMarginsPropertyData {
+  DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
+                                 uint32_t aPriority, bool aPainted)
+      : mMargins(aMargins), mPriority(aPriority), mPainted(aPainted) {}
+  ScreenMargin mMargins;
+  uint32_t mPriority;
+  bool mPainted;
 };
 
 class DisplayPortUtils {
