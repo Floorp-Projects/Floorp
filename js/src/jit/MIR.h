@@ -6582,11 +6582,17 @@ class MPhi final : public MDefinition,
   }
 
   // Use only if capacity has been reserved by reserveLength
-  void addInput(MDefinition* ins) { inputs_.infallibleEmplaceBack(ins, this); }
+  void addInput(MDefinition* ins) {
+    MOZ_ASSERT_IF(JitOptions.warpBuilder && type() != MIRType::Value,
+                  ins->type() == type());
+    inputs_.infallibleEmplaceBack(ins, this);
+  }
 
   // Appends a new input to the input vector. May perform reallocation.
   // Prefer reserveLength() and addInput() instead, where possible.
   MOZ_MUST_USE bool addInputSlow(MDefinition* ins) {
+    MOZ_ASSERT_IF(JitOptions.warpBuilder && type() != MIRType::Value,
+                  ins->type() == type());
     return inputs_.emplaceBack(ins, this);
   }
 

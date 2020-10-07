@@ -1005,22 +1005,25 @@ bool MBasicBlock::addPredecessorPopN(TempAllocator& alloc, MBasicBlock* pred,
     MDefinition* other = pred->getSlot(i);
 
     if (mine != other) {
+      MIRType phiType = mine->type();
+      if (phiType != other->type()) {
+        phiType = MIRType::Value;
+      }
+
       // If the current instruction is a phi, and it was created in this
       // basic block, then we have already placed this phi and should
       // instead append to its operands.
       if (mine->isPhi() && mine->block() == this) {
         MOZ_ASSERT(predecessors_.length());
+        MOZ_ASSERT(!mine->hasDefUses(),
+                   "should only change type of newly created phis");
+        mine->setResultType(phiType);
         if (!mine->toPhi()->addInputSlow(other)) {
           return false;
         }
       } else {
         // Otherwise, create a new phi node.
-        MPhi* phi;
-        if (mine->type() == other->type()) {
-          phi = MPhi::New(alloc.fallible(), mine->type());
-        } else {
-          phi = MPhi::New(alloc.fallible());
-        }
+        MPhi* phi = MPhi::New(alloc.fallible(), phiType);
         if (!phi) {
           return false;
         }
