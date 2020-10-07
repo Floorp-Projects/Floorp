@@ -248,6 +248,9 @@ var dataProviders = {
       data.launcherProcessState = Services.appinfo.launcherProcessState;
     } catch (e) {}
 
+    data.fissionAutoStart = Services.appinfo.fissionAutostart;
+    data.fissionDecisionStatus = Services.appinfo.fissionDecisionStatusString;
+
     data.remoteAutoStart = Services.appinfo.browserTabsRemoteAutostart;
 
     try {
