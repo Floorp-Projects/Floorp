@@ -175,8 +175,12 @@ WebSocketConnectionChild::OnDataReceived(uint8_t* aData, uint32_t aCount) {
 }
 
 NS_IMETHODIMP
-WebSocketConnectionChild::OnReadyToSendData() {
-  // TODO: implement flow control between parent and socket process.
+WebSocketConnectionChild::OnDataSent() {
+  LOG(("WebSocketConnectionChild::OnDataSent %p\n", this));
+
+  if (CanSend()) {
+    Unused << SendOnDataSent();
+  }
   return NS_OK;
 }
 
