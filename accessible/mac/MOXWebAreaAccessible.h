@@ -73,6 +73,12 @@ using namespace mozilla::a11y;
 - (NSValue*)moxSize;
 
 // override
+- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
+
+// override
+- (NSNumber*)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate;
+
+// override
 - (BOOL)disableChild:(id)child;
 
 // override
