@@ -9,7 +9,6 @@
 
 #include "mozilla/EndianUtils.h"
 
-#include "jit/JitFrames.h"
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"
 #include "vm/BytecodeUtil.h"
