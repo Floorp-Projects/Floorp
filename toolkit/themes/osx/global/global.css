@@ -16,6 +16,7 @@
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
   --arrowpanel-border-radius: 3.5px;
   --panel-disabled-color: GrayText;
+  --panel-description-color: hsl(0,0%,50%);
 
   --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
   /* ::::: Styles ::::: */

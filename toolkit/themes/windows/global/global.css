@@ -18,6 +18,7 @@
   --arrowpanel-color: var(--default-arrowpanel-color);
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
   --panel-disabled-color: GrayText;
+  --panel-description-color: GrayText;
   /* ::::: Styles ::::: */
   background-color: -moz-Dialog;
   color: -moz-DialogText;

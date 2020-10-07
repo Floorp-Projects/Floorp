@@ -25,14 +25,12 @@
 }
 
 #protections-popup {
-  --protections-popup-description-color: #737373;
   --protections-popup-switch-off-background: #f9f9fa;
   --protections-popup-switch-off-hover-background: #c9c9ca;
   --protections-popup-switch-off-active-background: #b1b1b2;
 }
 
 :root[lwt-popup-brighttext] #protections-popup {
-  --protections-popup-description-color: #f9f9fa;
   --protections-popup-switch-off-background: #5c5c61;
   --protections-popup-switch-off-hover-background: #6d6d71;
   --protections-popup-switch-off-active-background: #737379;
@@ -166,8 +164,7 @@
 }
 #identity-popup-security-httpsonlymode-info {
   font-size: 0.85em;
-  /* Temporary, will fix that with bug 1668857 */
-  opacity: 0.65;
+  color: var(--panel-description-color);
 }
 
 .identity-popup-connection-secure.upgraded {
@@ -343,7 +340,7 @@
 
 #identity-popup-permissions-content > description,
 #protections-popup-content > description {
-  color: var(--panel-disabled-color);
+  color: var(--panel-description-color);
 }
 
 /* This element needs the pre-wrap because we add newlines to it in the code. */
@@ -547,7 +544,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-empty-label {
   margin-inline-start: 0;
-  color: var(--panel-disabled-color);
+  color: var(--panel-description-color);
 }
 
 .protections-popup-trackersView-empty-image {
@@ -563,7 +560,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-cookiesView-list-header {
-  color: var(--protections-popup-description-color);
+  color: var(--panel-description-color);
   margin: 5px 0;
 }
 
@@ -652,7 +649,7 @@ description#identity-popup-content-verifier,
   margin: 4.85em 7.25em;
   font-size: 1.1em;
   text-align: center;
-  color: var(--protections-popup-description-color);
+  color: var(--panel-description-color);
 }
 
 #protections-popup-content {
@@ -665,7 +662,7 @@ description#identity-popup-content-verifier,
 #protections-popup-not-found-section-header {
   margin: 0;
   padding: var(--vertical-section-padding) var(--horizontal-padding);
-  color: var(--protections-popup-description-color);
+  color: var(--panel-description-color);
 }
 
 #tracking-protection-container > tooltip {
@@ -705,8 +702,8 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-category.notFound {
-  color: var(--panel-disabled-color);
-  fill: var(--panel-disabled-color);
+  color: var(--panel-description-color);
+  fill: var(--panel-description-color);
 }
 
 .protections-popup-category.notFound:hover {
@@ -809,7 +806,7 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-state-label {
-  color: var(--panel-disabled-color);
+  color: var(--panel-description-color);
 }
 
 #protections-popup[hasException] .protections-popup-category-state-label {
@@ -1034,12 +1031,12 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-trackers-blocked-counter-description {
-  color: var(--protections-popup-description-color);
+  color: var(--panel-description-color);
 }
 
 #protections-popup-footer-protection-type-label {
     margin-inline-end: var(--horizontal-padding);
-    color: var(--protections-popup-description-color);
+    color: var(--panel-description-color);
 }
 
 .protections-popup-description {
