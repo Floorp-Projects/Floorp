@@ -409,7 +409,7 @@ class StencilModuleMetadata {
   StencilModuleMetadata() = default;
 
   bool initModule(JSContext* cx, CompilationInfo& compilationInfo,
-                  JS::Handle<ModuleObject*> module);
+                  JS::Handle<ModuleObject*> module) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
