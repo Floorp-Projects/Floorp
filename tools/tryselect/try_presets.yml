@@ -16,6 +16,20 @@ builds:
     query:
         - "^build- !fuzzing !notarization !reproduced !rusttests !signing !upload-symbols"
 
+builds-debug:
+    selector: fuzzy
+    description: >-
+        Run the bare minimum of debug build jobs to ensure builds work on
+        all tier-1 platforms.
+        - "^build- 'debug !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+
+builds-debugopt:
+    selector: fuzzy
+    description: >-
+        Run the bare minimum of debug and opt build jobs to ensure builds work on
+        all tier-1 platforms.
+        - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+
 debugger-tests:
     selector: fuzzy
     description: >-
