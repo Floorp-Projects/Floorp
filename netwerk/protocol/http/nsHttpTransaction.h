@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsIDNSListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsITimer.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
@@ -52,7 +53,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
                                 public nsIInputStreamCallback,
                                 public nsIOutputStreamCallback,
                                 public ARefBase,
-                                public nsIDNSListener {
+                                public nsIDNSListener,
+                                public nsITimerCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
@@ -60,6 +62,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSIDNSLISTENER
+  NS_DECL_NSITIMERCALLBACK
 
   nsHttpTransaction();
 
@@ -481,6 +484,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIDNSHTTPSSVCRecord> mHTTPSSVCRecord;
   nsTArray<RefPtr<nsISVCBRecord>> mRecordsForRetry;
   bool mDontRetryWithDirectRoute = false;
+  bool mFastFallbackTriggered = false;
+  nsCOMPtr<nsITimer> mFastFallbackTimer;
+  nsCOMPtr<nsISVCBRecord> mFastFallbackRecord;
 };
 
 }  // namespace net
