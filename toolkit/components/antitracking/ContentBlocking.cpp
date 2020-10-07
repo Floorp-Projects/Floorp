@@ -20,6 +20,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/PermissionManager.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
@@ -601,6 +602,28 @@ ContentBlocking::CompleteAllowAccessFor(
 
   if (!doc->GetChannel()) {
     return;
+  }
+
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::StorageGranted);
+
+  switch (aReason) {
+    case ContentBlockingNotifier::StorageAccessPermissionGrantedReason::
+        eStorageAccessAPI:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::StorageAccessAPI);
+      break;
+    case ContentBlockingNotifier::StorageAccessPermissionGrantedReason::
+        eOpenerAfterUserInteraction:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::OpenerAfterUI);
+      break;
+    case ContentBlockingNotifier::StorageAccessPermissionGrantedReason::eOpener:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::Opener);
+      break;
+    default:
+      break;
   }
 
   // Theoratically this can be done in the parent process. But right now,
