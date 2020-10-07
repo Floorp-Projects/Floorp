@@ -68,7 +68,6 @@ struct CraneliftStaticEnvironment {
   bool has_lzcnt;
   bool platform_is_windows;
   bool ref_types_enabled;
-  bool threads_enabled;
   size_t static_memory_bound;
   size_t memory_guard_size;
   size_t memory_base_tls_offset;
@@ -215,27 +214,12 @@ enum class BD_SymbolicAddress : uint32_t {
 extern "C" {
 js::wasm::TypeCode env_unpack(BD_ValType type);
 
-size_t env_num_tables(const CraneliftModuleEnvironment* env);
-size_t env_num_globals(const CraneliftModuleEnvironment* env);
-size_t env_num_types(const CraneliftModuleEnvironment* env);
-size_t env_num_funcs(const CraneliftModuleEnvironment* env);
-size_t env_num_elems(const CraneliftModuleEnvironment* env);
-size_t env_num_datas(const CraneliftModuleEnvironment* env);
-js::wasm::TypeCode env_elem_typecode(const CraneliftModuleEnvironment* env,
-                                     uint32_t index);
-bool env_is_func_valid_for_ref(const CraneliftModuleEnvironment* env,
-                               uint32_t index);
-/// Returns the maximum memory size as an uint32, or UINT32_MAX if not defined.
-uint32_t env_max_memory(const CraneliftModuleEnvironment* env);
-
 bool env_uses_shared_memory(const CraneliftModuleEnvironment* env);
-bool env_has_memory(const CraneliftModuleEnvironment* env);
+size_t env_num_types(const CraneliftModuleEnvironment* env);
 const js::wasm::FuncTypeWithId* env_type(const CraneliftModuleEnvironment* env,
                                          size_t typeIndex);
 const js::wasm::FuncTypeWithId* env_func_sig(
     const CraneliftModuleEnvironment* env, size_t funcIndex);
-size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
-                          size_t funcIndex);
 size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
                                   size_t funcIndex);
 bool env_func_is_import(const CraneliftModuleEnvironment* env,
@@ -254,10 +238,6 @@ js::wasm::TypeCode global_type(const js::wasm::GlobalDesc*);
 size_t global_tlsOffset(const js::wasm::GlobalDesc*);
 
 size_t table_tlsOffset(const js::wasm::TableDesc*);
-uint32_t table_initialLimit(const js::wasm::TableDesc*);
-// Returns the maximum limit as an uint32, or UINT32_MAX if not defined.
-uint32_t table_maximumLimit(const js::wasm::TableDesc*);
-js::wasm::TypeCode table_elementTypeCode(const js::wasm::TableDesc*);
 
 size_t funcType_numArgs(const js::wasm::FuncTypeWithId*);
 const BD_ValType* funcType_args(const js::wasm::FuncTypeWithId*);

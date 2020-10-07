@@ -1,6 +1,8 @@
-use crate::operators_validator::OperatorValidator;
-use crate::{BinaryReader, Result, Type};
-use crate::{FunctionBody, Operator, WasmFeatures, WasmModuleResources};
+use super::ModuleState;
+use crate::operators_validator::{FunctionEnd, OperatorValidator};
+use crate::{BinaryReaderError, Result, Type};
+use crate::{Operator, WasmModuleResources, WasmTypeDef};
+use std::sync::Arc;
 
 /// Validation context for a WebAssembly function.
 ///
@@ -9,81 +11,29 @@ use crate::{FunctionBody, Operator, WasmFeatures, WasmModuleResources};
 /// and is created per-function in a WebAssembly module. This structure is
 /// suitable for sending to other threads while the original
 /// [`Validator`](crate::Validator) continues processing other functions.
-pub struct FuncValidator<T> {
-    validator: OperatorValidator,
-    resources: T,
+pub struct FuncValidator {
+    pub(super) validator: OperatorValidator,
+    pub(super) state: Arc<ModuleState>,
+    pub(super) offset: usize,
+    pub(super) eof_found: bool,
 }
 
-impl<T: WasmModuleResources> FuncValidator<T> {
-    /// Creates a new `FuncValidator`.
-    ///
-    /// The returned `FuncValidator` can be used to validate a function with
-    /// the type `ty` specified. The `resources` indicate what the containing
-    /// module has for the function to use, and the `features` configure what
-    /// WebAssembly proposals are enabled for this function.
-    ///
-    /// The returned validator can be used to then parse a [`FunctionBody`], for
-    /// example, to read locals and validate operators.
-    pub fn new(
-        ty: u32,
-        offset: usize,
-        resources: T,
-        features: &WasmFeatures,
-    ) -> Result<FuncValidator<T>> {
-        Ok(FuncValidator {
-            validator: OperatorValidator::new(ty, offset, features, &resources)?,
-            resources,
-        })
-    }
-
-    /// Convenience function to validate an entire function's body.
-    ///
-    /// You may not end up using this in final implementations because you'll
-    /// often want to interleave validation with parsing.
-    pub fn validate(&mut self, body: &FunctionBody<'_>) -> Result<()> {
-        let mut reader = body.get_binary_reader();
-        self.read_locals(&mut reader)?;
-        while !reader.eof() {
-            let pos = reader.original_position();
-            let op = reader.read_operator()?;
-            self.op(pos, &op)?;
-        }
-        self.finish(reader.original_position())
-    }
-
-    /// Reads the local defintions from the given `BinaryReader`, often sourced
-    /// from a `FunctionBody`.
-    ///
-    /// This function will automatically advance the `BinaryReader` forward,
-    /// leaving reading operators up to the caller afterwards.
-    pub fn read_locals(&mut self, reader: &mut BinaryReader<'_>) -> Result<()> {
-        for _ in 0..reader.read_var_u32()? {
-            let offset = reader.original_position();
-            let cnt = reader.read_var_u32()?;
-            let ty = reader.read_type()?;
-            self.define_locals(offset, cnt, ty)?;
-        }
-        Ok(())
-    }
-
-    /// Defines locals into this validator.
-    ///
-    /// This should be used if the application is already reading local
-    /// definitions and there's no need to re-parse the function again.
-    pub fn define_locals(&mut self, offset: usize, count: u32, ty: Type) -> Result<()> {
-        self.validator.define_locals(offset, count, ty)
-    }
-
+impl FuncValidator {
     /// Validates the next operator in a function.
     ///
     /// This functions is expected to be called once-per-operator in a
     /// WebAssembly function. Each operator's offset in the original binary and
-    /// the operator itself are passed to this function to provide more useful
-    /// error messages.
+    /// the operator itself are passed to this function.
     pub fn op(&mut self, offset: usize, operator: &Operator<'_>) -> Result<()> {
-        self.validator
-            .process_operator(operator, &self.resources)
+        self.offset = offset;
+        let end = self
+            .validator
+            .process_operator(operator, &*self.state)
             .map_err(|e| e.set_offset(offset))?;
+        match end {
+            FunctionEnd::Yes => self.eof_found = true,
+            FunctionEnd::No => {}
+        }
         Ok(())
     }
 
@@ -92,16 +42,71 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     /// This will validate that the function was properly terminated with the
     /// `end` opcode. If this function is not called then the function will not
     /// be properly validated.
-    ///
-    /// The `offset` provided to this function will be used as a position for an
-    /// error if validation fails.
-    pub fn finish(&mut self, offset: usize) -> Result<()> {
-        self.validator.finish().map_err(|e| e.set_offset(offset))?;
+    pub fn finish(&mut self) -> Result<()> {
+        if !self.eof_found {
+            return Err(BinaryReaderError::new(
+                "end of function not found",
+                self.offset,
+            ));
+        }
         Ok(())
     }
+}
 
-    /// Returns the underlying module resources that this validator is using.
-    pub fn resources(&self) -> &T {
-        &self.resources
+impl WasmModuleResources for ModuleState {
+    type TypeDef = super::TypeDef;
+    type TableType = crate::TableType;
+    type MemoryType = crate::MemoryType;
+    type GlobalType = crate::GlobalType;
+
+    fn type_at(&self, at: u32) -> Option<&Self::TypeDef> {
+        self.get_type(self.def(at)).map(|t| t.item)
+    }
+
+    fn table_at(&self, at: u32) -> Option<&Self::TableType> {
+        self.get_table(self.def(at)).map(|t| &t.item)
+    }
+
+    fn memory_at(&self, at: u32) -> Option<&Self::MemoryType> {
+        self.get_memory(self.def(at))
+    }
+
+    fn global_at(&self, at: u32) -> Option<&Self::GlobalType> {
+        self.get_global(self.def(at)).map(|t| &t.item)
+    }
+
+    fn func_type_at(&self, at: u32) -> Option<&super::FuncType> {
+        let ty = self.get_func_type_index(self.def(at))?;
+        match self.get_type(ty)?.item {
+            super::TypeDef::Func(f) => Some(f),
+            _ => None,
+        }
+    }
+
+    fn element_type_at(&self, at: u32) -> Option<Type> {
+        self.element_types.get(at as usize).cloned()
+    }
+
+    fn element_count(&self) -> u32 {
+        self.element_types.len() as u32
+    }
+
+    fn data_count(&self) -> u32 {
+        self.data_count.unwrap_or(0)
+    }
+
+    fn is_function_referenced(&self, idx: u32) -> bool {
+        self.function_references.contains(&idx)
+    }
+}
+
+impl WasmTypeDef for super::TypeDef {
+    type FuncType = crate::FuncType;
+
+    fn as_func(&self) -> Option<&Self::FuncType> {
+        match self {
+            super::TypeDef::Func(f) => Some(f),
+            _ => None,
+        }
     }
 }

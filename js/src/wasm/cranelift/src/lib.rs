@@ -136,10 +136,7 @@ mod utils;
 mod wasm2clif;
 
 use log::{self, error, info};
-use std::ffi::CString;
-use std::os::raw::c_char;
 use std::ptr;
-use std::fmt::Display;
 
 use crate::bindings::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
 use crate::compile::BatchCompiler;
@@ -200,26 +197,14 @@ pub unsafe extern "C" fn cranelift_compiler_destroy(compiler: *mut BatchCompiler
     let _box = Box::from_raw(compiler);
 }
 
-fn error_to_cstring<D: Display>(err: D) -> *mut c_char {
-    use std::fmt::Write;
-    let mut s = String::new();
-    write!(&mut s, "{}", err);
-    let cstr = CString::new(s).unwrap();
-    cstr.into_raw()
-}
-
 /// Compile a single function.
 ///
 /// This is declared in `clifapi.h`.
-///
-/// If a Wasm validation error is returned in *error, then it *must* be later
-/// freed by `cranelift_compiler_free_error()`.
 #[no_mangle]
 pub unsafe extern "C" fn cranelift_compile_function(
     compiler: *mut BatchCompiler,
     data: *const FuncCompileInput,
     result: *mut CompiledFunc,
-    error: *mut *mut c_char,
 ) -> bool {
     let compiler = compiler.as_mut().unwrap();
     let data = data.as_ref().unwrap();
@@ -228,8 +213,8 @@ pub unsafe extern "C" fn cranelift_compile_function(
     compiler.clear();
 
     if let Err(e) = compiler.translate_wasm(data) {
-        let cstr = error_to_cstring(e);
-        unsafe { *error = cstr; }
+        error!("Wasm translation error: {}\n", e);
+        info!("Translated function: {}", compiler);
         return false;
     };
 
@@ -244,8 +229,8 @@ pub unsafe extern "C" fn cranelift_compile_function(
             CodegenError::ImplLimitExceeded
             | CodegenError::CodeTooLarge
             | CodegenError::Unsupported(_) => {
-                let cstr = error_to_cstring(e);
-                unsafe { *error = cstr; }
+                error!("Cranelift compilation error: {}\n", e);
+                info!("Compiled function: {}", compiler);
                 return false;
             }
         }
@@ -257,12 +242,6 @@ pub unsafe extern "C" fn cranelift_compile_function(
     result.reset(&compiler.current_func);
 
     true
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cranelift_compiler_free_error(s: *mut c_char)  {
-    // Convert back into a `CString` and then let it drop.
-    let _cstr = unsafe { CString::from_raw(s) };
 }
 
 /// Returns true whether a platform (target ISA) is supported or not.
