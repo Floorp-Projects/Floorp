@@ -246,87 +246,35 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
   XPCCallContext ccx(cx, obj);
   RootedObject wrapScope(cx, scope);
 
-  {
-    if (ccx.GetScriptable() && ccx.GetScriptable()->WantPreCreate()) {
-      // We have a precreate hook. This object might enforce that we only
-      // ever create JS object for it.
+  if (ccx.GetScriptable() && ccx.GetScriptable()->WantPreCreate()) {
+    // We have a precreate hook. This object might enforce that we only
+    // ever create JS object for it.
 
-      // Note: this penalizes objects that only have one wrapper, but are
-      // being accessed across compartments. We would really prefer to
-      // replace the above code with a test that says "do you only have one
-      // wrapper?"
-      nsresult rv = wn->GetScriptable()->PreCreate(wn->Native(), cx, scope,
-                                                   wrapScope.address());
-      if (NS_FAILED(rv)) {
-        retObj.set(waive ? WaiveXray(cx, obj) : obj);
-        return;
-      }
-
-      // If the handed back scope differs from the passed-in scope and is in
-      // a separate compartment, then this object is explicitly requesting
-      // that we don't create a second JS object for it: create a security
-      // wrapper.
-      if (JS::GetCompartment(scope) != JS::GetCompartment(wrapScope)) {
-        retObj.set(waive ? WaiveXray(cx, obj) : obj);
-        return;
-      }
-
-      RootedObject currentScope(cx, JS::GetNonCCWObjectGlobal(obj));
-      if (MOZ_UNLIKELY(wrapScope != currentScope)) {
-        // The wrapper claims it wants to be in the new scope, but
-        // currently has a reflection that lives in the old scope. This
-        // can mean one of two things, both of which are rare:
-        //
-        // 1 - The object has a PreCreate hook (we checked for it above),
-        // but is deciding to request one-wrapper-per-scope (rather than
-        // one-wrapper-per-native) for some reason. Usually, a PreCreate
-        // hook indicates one-wrapper-per-native. In this case we want to
-        // make a new wrapper in the new scope.
-        //
-        // 2 - We're midway through wrapper reparenting. The document has
-        // moved to a new scope, but |wn| hasn't been moved yet, and
-        // we ended up calling JS_WrapObject() on its JS object. In this
-        // case, we want to return the existing wrapper.
-        //
-        // So we do a trick: call PreCreate _again_, but say that we're
-        // wrapping for the old scope, rather than the new one. If (1) is
-        // the case, then PreCreate will return the scope we pass to it
-        // (the old scope). If (2) is the case, PreCreate will return the
-        // scope of the document (the new scope).
-        RootedObject probe(cx);
-        rv = wn->GetScriptable()->PreCreate(wn->Native(), cx, currentScope,
-                                            probe.address());
-
-        // Check for case (2).
-        if (probe != currentScope) {
-          MOZ_ASSERT(probe == wrapScope);
-          retObj.set(waive ? WaiveXray(cx, obj) : obj);
-          return;
-        }
-
-        // Ok, must be case (1). Fall through and create a new wrapper.
-      }
-
-      // Nasty hack for late-breaking bug 781476. This will confuse identity
-      // checks, but it's probably better than any of our alternatives.
-      //
-      // Note: We have to ignore domain here. The JS engine assumes that, given
-      // a compartment c, if c->wrap(x) returns a cross-compartment wrapper at
-      // time t0, it will also return a cross-compartment wrapper for any time
-      // t1 > t0 unless an explicit transplant is performed. In particular,
-      // wrapper recomputation assumes that recomputing a wrapper will always
-      // result in a wrapper.
-      //
-      // This doesn't actually pose a security issue, because we'll still
-      // compute the correct (opaque) wrapper for the object below given the
-      // security characteristics of the two compartments.
-      if (!AccessCheck::isChrome(JS::GetCompartment(wrapScope)) &&
-          CompartmentOriginInfo::Subsumes(JS::GetCompartment(wrapScope),
-                                          JS::GetCompartment(obj))) {
-        retObj.set(waive ? WaiveXray(cx, obj) : obj);
-        return;
-      }
+    // Note: this penalizes objects that only have one wrapper, but are
+    // being accessed across compartments. We would really prefer to
+    // replace the above code with a test that says "do you only have one
+    // wrapper?"
+    nsresult rv = wn->GetScriptable()->PreCreate(wn->Native(), cx, scope,
+                                                 wrapScope.address());
+    if (NS_FAILED(rv)) {
+      retObj.set(waive ? WaiveXray(cx, obj) : obj);
+      return;
     }
+
+    // If the handed back scope differs from the passed-in scope and is in
+    // a separate compartment, then this object is explicitly requesting
+    // that we don't create a second JS object for it: create a security
+    // wrapper.
+    //
+    // Note: The only two objects that still use PreCreate are BackstagePass
+    // and Components, both of which unconditionally request their canonical
+    // scope. Since SpiderMonkey only invokes the prewrap callback in
+    // situations where the object is nominally cross-compartment, we should
+    // always get a different scope here.
+    MOZ_RELEASE_ASSERT(JS::GetCompartment(scope) !=
+                       JS::GetCompartment(wrapScope));
+    retObj.set(waive ? WaiveXray(cx, obj) : obj);
+    return;
   }
 
   // This public WrapNativeToJSVal API enters the compartment of 'wrapScope'
