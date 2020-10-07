@@ -35,6 +35,9 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "inspectorActor";
+
+    // Map of highlighter types to unsettled promises to create a highlighter of that type
+    this._pendingGetHighlighterMap = new Map();
   }
 
   // async initialization
@@ -124,12 +127,38 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     return this._highlighters.get(type);
   }
 
+  /**
+   * Return a highlighter instance of the given type.
+   * If an instance was previously created, return it. Else, create and return a new one.
+   *
+   * Store a promise for the request to create a new highlighter. If another request
+   * comes in before that promise is resolved, wait for it to resolve and return the
+   * highlighter instance it resolved with instead of creating a new request.
+   *
+   * @param  {String} type
+   *         Highlighter type
+   * @return {Promise}
+   *         Promise which resolves with a highlighter instance of the given type
+   */
   async getOrCreateHighlighterByType(type) {
     let front = this._highlighters.get(type);
-    if (!front) {
-      front = await this.getHighlighterByType(type);
-      this._highlighters.set(type, front);
+    let pendingGetHighlighter = this._pendingGetHighlighterMap.get(type);
+
+    if (!front && !pendingGetHighlighter) {
+      pendingGetHighlighter = (async () => {
+        const highlighter = await this.getHighlighterByType(type);
+        this._highlighters.set(type, highlighter);
+        return highlighter;
+      })();
+
+      this._pendingGetHighlighterMap.set(type, pendingGetHighlighter);
     }
+
+    if (pendingGetHighlighter) {
+      front = await pendingGetHighlighter;
+      this._pendingGetHighlighterMap.delete(type);
+    }
+
     return front;
   }
 
