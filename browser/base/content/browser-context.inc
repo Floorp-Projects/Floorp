@@ -337,6 +337,9 @@
 #endif
         </menupopup>
       </menu>
+      <menuitem id="context-print-selection"
+                data-l10n-id="main-context-menu-print-selection"
+                oncommand="gContextMenu.printSelection();"/>
       <menuitem id="context-viewpartialsource-selection"
                 data-l10n-id="main-context-menu-view-selection-source"
                 oncommand="gContextMenu.viewPartialSource();"/>
