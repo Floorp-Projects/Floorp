@@ -75,101 +75,34 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
   return true;
 }
 
-template <typename Policy>
-static bool Filter(JSContext* cx, HandleObject wrapper,
-                   MutableHandleIdVector props) {
-  size_t w = 0;
-  RootedId id(cx);
-  for (size_t n = 0; n < props.length(); ++n) {
-    id = props[n];
-    if (Policy::check(cx, wrapper, id, Wrapper::GET) ||
-        Policy::check(cx, wrapper, id, Wrapper::SET)) {
-      props[w++].set(id);
-    } else if (JS_IsExceptionPending(cx)) {
-      return false;
-    }
-  }
-  if (!props.resize(w)) {
-    return false;
-  }
-
-  return true;
-}
-
-template <typename Policy>
-static bool FilterPropertyDescriptor(JSContext* cx, HandleObject wrapper,
-                                     HandleId id,
-                                     MutableHandle<PropertyDescriptor> desc) {
-  MOZ_ASSERT(!JS_IsExceptionPending(cx));
-  bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
-  if (JS_IsExceptionPending(cx)) {
-    return false;
-  }
-  bool setAllowed = Policy::check(cx, wrapper, id, Wrapper::SET);
-  if (JS_IsExceptionPending(cx)) {
-    return false;
-  }
-
-  MOZ_ASSERT(
-      getAllowed || setAllowed,
-      "Filtering policy should not allow GET_PROPERTY_DESCRIPTOR in this case");
-
-  if (!desc.hasGetterOrSetter()) {
-    // Handle value properties.
-    if (!getAllowed) {
-      desc.value().setUndefined();
-    }
-  } else {
-    // Handle accessor properties.
-    MOZ_ASSERT(desc.value().isUndefined());
-    if (!getAllowed) {
-      desc.setGetter(nullptr);
-    }
-    if (!setAllowed) {
-      desc.setSetter(nullptr);
-    }
-  }
-
-  return true;
-}
-
+// Note: Previously, FilteringWrapper supported complex access policies where
+// certain properties on an object were accessible and others weren't. Today,
+// the only supported policies are Opaque and OpaqueWithCall, none of which need
+// that. So we just stub out the unreachable paths.
 template <typename Base, typename Policy>
 bool FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     MutableHandle<PropertyDescriptor> desc) const {
-  assertEnteredPolicy(cx, wrapper, id,
-                      BaseProxyHandler::GET | BaseProxyHandler::SET |
-                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
-  if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc)) {
-    return false;
-  }
-  return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
+  MOZ_CRASH("FilteringWrappers are now always opaque");
 }
 
 template <typename Base, typename Policy>
 bool FilteringWrapper<Base, Policy>::ownPropertyKeys(
     JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-  return Base::ownPropertyKeys(cx, wrapper, props) &&
-         Filter<Policy>(cx, wrapper, props);
+  MOZ_CRASH("FilteringWrappers are now always opaque");
 }
 
 template <typename Base, typename Policy>
 bool FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(
     JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-  return Base::getOwnEnumerablePropertyKeys(cx, wrapper, props) &&
-         Filter<Policy>(cx, wrapper, props);
+  MOZ_CRASH("FilteringWrappers are now always opaque");
 }
 
 template <typename Base, typename Policy>
 bool FilteringWrapper<Base, Policy>::enumerate(
     JSContext* cx, HandleObject wrapper,
     JS::MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-  // Trigger the default proxy enumerate trap, which will use
-  // js::GetPropertyKeys for the list of (censored) ids.
-  return js::BaseProxyHandler::enumerate(cx, wrapper, props);
+  MOZ_CRASH("FilteringWrappers are now always opaque");
 }
 
 template <typename Base, typename Policy>
