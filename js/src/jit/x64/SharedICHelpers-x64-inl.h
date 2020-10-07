@@ -7,6 +7,7 @@
 #ifndef jit_x64_SharedICHelpers_x64_inl_h
 #define jit_x64_SharedICHelpers_x64_inl_h
 
+#include "jit/BaselineFrame.h"
 #include "jit/SharedICHelpers.h"
 
 #include "jit/MacroAssembler-inl.h"
