@@ -53,9 +53,6 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
 
     options.append('--prefix=%s/dist' % build_env.topobjdir)
 
-    if substs.get('ZLIB_IN_MOZGLUE'):
-        substs['MOZ_ZLIB_LIBS'] = ''
-
     environ['MOZILLA_CENTRAL_PATH'] = build_env.topsrcdir
     if 'MOZ_BUILD_APP' in environ:
         del environ['MOZ_BUILD_APP']
