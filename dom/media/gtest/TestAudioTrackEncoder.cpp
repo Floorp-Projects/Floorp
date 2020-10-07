@@ -197,6 +197,7 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
   generator.Generate(segment, samples);
 
   encoder.AppendAudioSegment(std::move(segment));
+  encoder.NotifyEndOfStream();
 
   nsTArray<RefPtr<EncodedFrame>> frames;
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
@@ -208,7 +209,7 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
   }
   // 44100 as used above gets resampled to 48000 for opus.
   const uint64_t five = 48000 * 5;
-  EXPECT_EQ(five, totalDuration);
+  EXPECT_EQ(five + encoder.GetLookahead(), totalDuration);
 }
 
 TEST(OpusAudioTrackEncoder, DefaultInitDuration)
