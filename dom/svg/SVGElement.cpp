@@ -1388,10 +1388,11 @@ void SVGElement::MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify) {
   mAttrs.SetAndSwapAttr(aName, oldAttrValue, &oldValueSet);
 }
 
-/* static */
 nsAtom* SVGElement::GetEventNameForAttr(nsAtom* aAttr) {
-  if (aAttr == nsGkAtoms::onload) return nsGkAtoms::onSVGLoad;
-  if (aAttr == nsGkAtoms::onscroll) return nsGkAtoms::onSVGScroll;
+  if (IsSVGElement(nsGkAtoms::svg)) {
+    if (aAttr == nsGkAtoms::onload) return nsGkAtoms::onSVGLoad;
+    if (aAttr == nsGkAtoms::onscroll) return nsGkAtoms::onSVGScroll;
+  }
   if (aAttr == nsGkAtoms::onbegin) return nsGkAtoms::onbeginEvent;
   if (aAttr == nsGkAtoms::onrepeat) return nsGkAtoms::onrepeatEvent;
   if (aAttr == nsGkAtoms::onend) return nsGkAtoms::onendEvent;

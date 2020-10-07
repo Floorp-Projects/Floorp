@@ -380,7 +380,7 @@ class SVGElement : public SVGElementBase  // nsIContent
                       const mozAutoDocUpdate& aProofOfUpdate);
   void MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify);
 
-  static nsAtom* GetEventNameForAttr(nsAtom* aAttr);
+  nsAtom* GetEventNameForAttr(nsAtom* aAttr);
 
   struct LengthInfo {
     nsStaticAtom* const mName;
