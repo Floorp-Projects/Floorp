@@ -22,26 +22,8 @@ def prepare_mozconfig(mozconfig):
         return items
 
 
-@depends('OLD_CONFIGURE', 'MOZILLABUILD', prepare_mozconfig, awk, m4, check_build_environment,
-         shell, old_configure_assignments, build_project)
-@imports(_from='__builtin__', _import='open')
-@imports(_from='__builtin__', _import='print')
-@imports(_from='__builtin__', _import='sorted')
-@imports('glob')
-@imports('itertools')
-@imports('subprocess')
-# Import getmtime without overwriting the sandbox os.path.
-@imports(_from='os.path', _import='getmtime')
-@imports(_from='os.path', _import='exists')
-@imports(_from='mozbuild.shellutil', _import='quote')
-@imports(_from='tempfile', _import='NamedTemporaryFile')
-@imports(_from='os', _import='environ')
-@imports(_from='os', _import='remove')
-@imports(_from='os', _import='rename')
-@imports(_from='subprocess', _import='CalledProcessError')
-@imports(_from='__builtin__', _import='OSError')
-def prepare_configure(old_configure, mozillabuild, mozconfig, awk, m4, build_env, shell,
-                      old_configure_assignments, build_project):
+@depends('OLD_CONFIGURE', build_project)
+def old_configure(old_configure, build_project):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -52,70 +34,15 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, awk, m4, build_env
         if not old_configure_dir.endswith('/js/src'):
             old_configure = os.path.join(old_configure_dir, 'js', 'src',
                                          os.path.basename(old_configure))
+    return old_configure
 
-    refresh = True
-    if exists(old_configure):
-        mtime = getmtime(old_configure)
-        aclocal = os.path.join(build_env.topsrcdir, 'build', 'autoconf',
-                               '*.m4')
-        for input in itertools.chain(
-            (old_configure + '.in',
-             os.path.join(os.path.dirname(old_configure), 'aclocal.m4')),
-            glob.iglob(aclocal),
-        ):
-            if getmtime(input) > mtime:
-                break
-        else:
-            refresh = False
 
-    if refresh:
-        autoconf = os.path.join(build_env.topsrcdir, 'build', 'autoconf', 'autoconf.sh')
-        log.info('Refreshing %s with %s', old_configure, autoconf)
-        env = dict(environ)
-        env['M4'] = m4
-        env['AWK'] = awk
-        env['AC_MACRODIR'] = os.path.join(build_env.topsrcdir, 'build', 'autoconf')
-
-        try:
-            script = subprocess.check_output([
-                shell, autoconf,
-                '--localdir=%s' % os.path.dirname(old_configure),
-                old_configure + '.in'], env=env)
-        except CalledProcessError as exc:
-            # Autoconf on win32 may break due to a bad $PATH.  Let the user know
-            # their $PATH is suspect.
-            if mozillabuild:
-                mozillabuild_path = normsep(mozillabuild[0])
-                sh_path = normsep(find_program('sh'))
-                if mozillabuild_path not in sh_path:
-                    log.warning("The '{}msys/bin' directory is not first in $PATH. "
-                                "This may cause autoconf to fail. ($PATH is currently "
-                                "set to: {})".format(mozillabuild_path, environ[
-                        'PATH']))
-            die('autoconf exited with return code {}'.format(exc.returncode))
-
-        if not script:
-            die('Generated old-configure is empty! Check that your autoconf 2.13 program works!')
-
-        # Make old-configure append to config.log, where we put our own log.
-        # This could be done with a m4 macro, but it's way easier this way
-        script = script.replace(b'>./config.log', b'>>${CONFIG_LOG=./config.log}')
-
-        with NamedTemporaryFile(mode='wb', prefix=os.path.basename(old_configure),
-                                dir=os.path.dirname(old_configure), delete=False) as fh:
-            fh.write(script)
-
-        try:
-            rename(fh.name, old_configure)
-        except OSError:
-            try:
-                # Likely the file already existed (on Windows). Retry after removing it.
-                remove(old_configure)
-                rename(fh.name, old_configure)
-            except OSError as e:
-                die('Failed re-creating old-configure: %s' % e.message)
-
-    cmd = [shell, old_configure]
+@depends(prepare_mozconfig, old_configure_assignments)
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='print')
+@imports(_from='__builtin__', _import='sorted')
+@imports(_from='mozbuild.shellutil', _import='quote')
+def prepare_configure(mozconfig, old_configure_assignments):
     with open('old-configure.vars', 'w') as out:
         log.debug('Injecting the following to old-configure:')
 
@@ -136,8 +63,6 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, awk, m4, build_env
 
         for k, v in old_configure_assignments:
             inject('%s=%s' % (k, quote(v)))
-
-    return cmd
 
 
 @template
@@ -201,20 +126,91 @@ def prepare_configure_options(host, target, all_options, *options):
     return namespace(options=options, all_options=all_options)
 
 
-@depends(prepare_configure, prepare_configure_options, altered_path)
+@depends(prepare_configure, prepare_configure_options, altered_path,
+         check_build_environment, old_configure, 'MOZILLABUILD', awk, m4, shell)
 @imports(_from='__builtin__', _import='compile')
 @imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='OSError')
+@imports('glob')
+@imports('itertools')
 @imports('logging')
 @imports('os')
 @imports('subprocess')
 @imports('sys')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
+@imports(_from='tempfile', _import='NamedTemporaryFile')
+@imports(_from='subprocess', _import='CalledProcessError')
 @imports(_from='six', _import='exec_')
 @imports(_from='six', _import='iteritems')
 @imports(_from='six', _import='string_types')
-def old_configure(prepare_configure, prepare_configure_options, altered_path):
-    cmd = prepare_configure + prepare_configure_options.options
+def old_configure(prepare_configure, prepare_configure_options, altered_path, build_env,
+                  old_configure, mozillabuild, awk, m4, shell):
+    # Use prepare_configure to make lint happy
+    prepare_configure
+    refresh = True
+    if os.path.exists(old_configure):
+        mtime = os.path.getmtime(old_configure)
+        aclocal = os.path.join(build_env.topsrcdir, 'build', 'autoconf',
+                               '*.m4')
+        for input in itertools.chain(
+            (old_configure + '.in',
+             os.path.join(os.path.dirname(old_configure), 'aclocal.m4')),
+            glob.iglob(aclocal),
+        ):
+            if os.path.getmtime(input) > mtime:
+                break
+        else:
+            refresh = False
+
+    if refresh:
+        autoconf = os.path.join(build_env.topsrcdir, 'build', 'autoconf', 'autoconf.sh')
+        log.info('Refreshing %s with %s', old_configure, autoconf)
+        env = dict(os.environ)
+        env['M4'] = m4
+        env['AWK'] = awk
+        env['AC_MACRODIR'] = os.path.join(build_env.topsrcdir, 'build', 'autoconf')
+
+        try:
+            script = subprocess.check_output([
+                shell, autoconf,
+                '--localdir=%s' % os.path.dirname(old_configure),
+                old_configure + '.in'], env=env)
+        except CalledProcessError as exc:
+            # Autoconf on win32 may break due to a bad $PATH.  Let the user know
+            # their $PATH is suspect.
+            if mozillabuild:
+                mozillabuild_path = normsep(mozillabuild[0])
+                sh_path = normsep(find_program('sh'))
+                if mozillabuild_path not in sh_path:
+                    log.warning("The '{}msys/bin' directory is not first in $PATH. "
+                                "This may cause autoconf to fail. ($PATH is currently "
+                                "set to: {})".format(mozillabuild_path, os.environ[
+                        'PATH']))
+            die('autoconf exited with return code {}'.format(exc.returncode))
+
+        if not script:
+            die('Generated old-configure is empty! Check that your autoconf 2.13 program works!')
+
+        # Make old-configure append to config.log, where we put our own log.
+        # This could be done with a m4 macro, but it's way easier this way
+        script = script.replace(b'>./config.log', b'>>${CONFIG_LOG=./config.log}')
+
+        with NamedTemporaryFile(mode='wb', prefix=os.path.basename(old_configure),
+                                dir=os.path.dirname(old_configure), delete=False) as fh:
+            fh.write(script)
+
+        try:
+            os.rename(fh.name, old_configure)
+        except OSError:
+            try:
+                # Likely the file already existed (on Windows). Retry after removing it.
+                os.remove(old_configure)
+                os.rename(fh.name, old_configure)
+            except OSError as e:
+                die('Failed re-creating old-configure: %s' % e.message)
+
+    cmd = [shell, old_configure] + prepare_configure_options.options
 
     env = dict(os.environ)
 
