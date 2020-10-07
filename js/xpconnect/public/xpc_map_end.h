@@ -61,15 +61,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::NewEnumerate(
 }
 #endif
 
-#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_ENUMERATE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Enumerate(nsIXPConnectWrappedNative* wrapper,
-                                           JSContext* cx, JSObject* obj,
-                                           bool* _retval) {
-  NS_ERROR("never called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#endif
-
 #if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_RESOLVE)
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative* wrapper,
                                          JSContext* cx, JSObject* obj, jsid id,
