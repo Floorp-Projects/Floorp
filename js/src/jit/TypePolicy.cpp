@@ -6,6 +6,7 @@
 
 #include "jit/TypePolicy.h"
 
+#include "jit/JitAllocPolicy.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
