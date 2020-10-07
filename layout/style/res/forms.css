@@ -321,6 +321,7 @@ option {
   float: none !important;
   position: static !important;
   min-block-size: 1em;
+  padding-block: 2px;
   /*
    * Note that the "UA !important" tests in
    * layout/style/test/test_animations.html depend on this rule, because
@@ -336,8 +337,7 @@ option {
 }
 
 select > option {
-  padding-block: 0;
-  padding-inline: 3px 5px;
+  padding-inline: 4px;
 }
 
 option:checked {
