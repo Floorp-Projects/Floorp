@@ -34,7 +34,7 @@ add_task(async function() {
   let doc = await openDialog();
 
   let name = doc.getElementById("name");
-  let btnApplyChanges = doc.getElementById("btnApplyChanges");
+  let btnApplyChanges = doc.querySelector("dialog").getButton("accept");
 
   Assert.equal(name.value, "", "The name textbox should initlally be empty");
   Assert.ok(
