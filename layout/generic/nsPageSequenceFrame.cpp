@@ -435,26 +435,7 @@ static void GetPrintCanvasElementsInFrame(
   }
 }
 
-// XXXdholbert The next four functions[1] exist to support functionality to let
-// us include/skip various pages (e.g. only print even pages, or page 7, or the
-// page-range "1,4,6-8"). These four functions are all named in terms of
-// "page", which is somewhat problematic now that we've got a level of
-// indirection between us and the actual page frames; but in practice, they're
-// still valid & fine as long as there's exactly one nsPageFrame per
-// PrintedSheetFrame (as there is right now).
-//
-// When we implement built-in support for N Pages Per Sheet (bug 1631452),
-// we'll need this logic to cooperate with PrintedSheetFrame, so that a given
-// PrintedSheetFrame instance can figure out which of the upcoming pages it
-// should include/skip in its N tiny pages. We may need to change our calling
-// pattern all the way up to nsPagePrintTimer, too (which currently has a
-// repeating timer that fires to prompt us to print each successive page, with
-// a variable delay between firings, depending on whether the last page was
-// skipped.
-//
-// [1] PrePrintNextPage(), and PrintNextPage()
-
-nsIFrame* nsPageSequenceFrame::GetCurrentPageFrame() {
+nsIFrame* nsPageSequenceFrame::GetCurrentSheetFrame() {
   uint32_t i = 0;
   for (nsIFrame* child : mFrames) {
     if (i == mCurrentSheetIdx) {
@@ -465,10 +446,10 @@ nsIFrame* nsPageSequenceFrame::GetCurrentPageFrame() {
   return nullptr;
 }
 
-nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
-                                               bool* aDone) {
-  nsIFrame* currentPage = GetCurrentPageFrame();
-  if (!currentPage) {
+nsresult nsPageSequenceFrame::PrePrintNextSheet(nsITimerCallback* aCallback,
+                                                bool* aDone) {
+  nsIFrame* currentSheet = GetCurrentSheetFrame();
+  if (!currentSheet) {
     *aDone = true;
     return NS_ERROR_FAILURE;
   }
@@ -487,7 +468,7 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
   // process for all the canvas.
   if (!mCurrentCanvasListSetup) {
     mCurrentCanvasListSetup = true;
-    GetPrintCanvasElementsInFrame(currentPage, &mCurrentCanvasList);
+    GetPrintCanvasElementsInFrame(currentSheet, &mCurrentCanvasList);
 
     if (!mCurrentCanvasList.IsEmpty()) {
       nsresult rv = NS_OK;
@@ -563,7 +544,7 @@ void nsPageSequenceFrame::ResetPrintCanvasList() {
   mCurrentCanvasListSetup = false;
 }
 
-nsresult nsPageSequenceFrame::PrintNextPage() {
+nsresult nsPageSequenceFrame::PrintNextSheet() {
   // Note: When print al the pages or a page range the printed page shows the
   // actual page number, when printing selection it prints the page number
   // starting with the first page of the selection. For example if the user has
@@ -571,8 +552,8 @@ nsresult nsPageSequenceFrame::PrintNextPage() {
   // print are 1 and then two (which is different than printing a page range,
   // where the page numbers would have been 2 and then 3)
 
-  nsIFrame* currentPageFrame = GetCurrentPageFrame();
-  if (!currentPageFrame) {
+  nsIFrame* currentSheetFrame = GetCurrentSheetFrame();
+  if (!currentSheetFrame) {
     return NS_ERROR_FAILURE;
   }
 
@@ -592,16 +573,16 @@ nsresult nsPageSequenceFrame::PrintNextPage() {
     }
   }
 
-  PR_PL(("SeqFr::PrintNextPage -> %p SheetIdx: %d", currentPageFrame,
+  PR_PL(("SeqFr::PrintNextSheet -> %p SheetIdx: %d", currentSheetFrame,
          mCurrentSheetIdx));
 
   // CreateRenderingContext can fail
   RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
   NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
+  nsRect drawingRect(nsPoint(0, 0), currentSheetFrame->GetSize());
   nsRegion drawingRegion(drawingRect);
-  nsLayoutUtils::PaintFrame(gCtx, currentPageFrame, drawingRegion,
+  nsLayoutUtils::PaintFrame(gCtx, currentSheetFrame, drawingRegion,
                             NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::Painting,
                             nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);
