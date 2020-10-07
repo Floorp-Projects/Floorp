@@ -20,8 +20,8 @@ to updates in the browser such as network- and console logs.
 
 The remote interfaces are served over an HTTP wire protocol, by a
 server listener hosted in the Firefox binary.  This can only be
-started by passing the `--remote-debugger` or `--remote-debugging-port`
-flags.  Connections are by default restricted to loopback devices
+started by passing the `--remote-debugging-port`
+flag.  Connections are by default restricted to loopback devices
 (such as localhost and 127.0.0.1), but this can be overridden with
 the `remote.force-local` preference.
 
@@ -51,8 +51,8 @@ and thereby follows all browser-internal secrets.
 How the remote agent works
 --------------------------
 
-When the `--remote-debugger` or `--remote-debugging-port` flags are
-used, it spins up an HTTPD on the desired port, or defaults to
+When the `--remote-debugging-port` flag is used,
+it spins up an HTTPD on the desired port, or defaults to
 localhost:9222.  The HTTPD serves WebSocket connections via
 `nsIWebSocket.createServerWebSocket` that clients connect to in
 order to give the agent remote instructions.

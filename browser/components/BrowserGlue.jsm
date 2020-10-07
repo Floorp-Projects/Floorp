@@ -2575,7 +2575,7 @@ BrowserGlue.prototype = {
       },
 
       // request startup of Chromium remote debugging protocol
-      // (observer will only be notified when --remote-debugger is passed)
+      // (observer will only be notified when --remote-debugging-port is passed)
       {
         condition: AppConstants.ENABLE_REMOTE_AGENT,
         task: () => {

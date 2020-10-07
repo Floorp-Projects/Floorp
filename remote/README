@@ -14,4 +14,4 @@ See https://firefox-source-docs.mozilla.org/remote/ for documentation.
 
 It is available in Firefox Nightly and is started this way:
 
-	% ./mach run --remote-debugger
+	% ./mach run --remote-debugging-port

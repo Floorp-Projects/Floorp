@@ -7,9 +7,9 @@ Remote Agent startup
 --------------------
 
 Everything starts with `RemoteAgent` class.
-This singleton handles command lines arguments (--remote-debugger and --remote-debugging-port)
-to eventually start a server listening on the TCP port 9222 (or the one specified by the command line).
-The browser target websocket URL will be printed to stdout.
+This singleton handles command lines arguments (--remote-debugging-port) to eventually
+start a server listening on the TCP port 9222 (or the one specified by the command line).
+The browser target websocket URL will be printed to stderr.
 To do that this component glue together three main high level components:
 
   * `server/HTTPD`
