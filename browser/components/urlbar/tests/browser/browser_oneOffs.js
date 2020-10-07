@@ -620,9 +620,7 @@ add_task(async function localOneOffs_legacy() {
     set: [["browser.urlbar.update2", false]],
   });
 
-  // Null out _engines so that the one-offs rebuild themselves when the view
-  // opens.
-  oneOffSearchButtons._engines = null;
+  oneOffSearchButtons.invalidateCache();
   let rebuildPromise = BrowserTestUtils.waitForEvent(
     oneOffSearchButtons,
     "rebuild"
@@ -656,9 +654,7 @@ add_task(async function localOneOffs_legacy() {
 
 // Makes sure local search mode one-offs exist.
 add_task(async function localOneOffs() {
-  // Null out _engines so that the one-offs rebuild themselves when the view
-  // opens.
-  oneOffSearchButtons._engines = null;
+  oneOffSearchButtons.invalidateCache();
   await doLocalOneOffsShownTest();
 });
 
@@ -676,9 +672,7 @@ add_task(async function localOneOffClick() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
 
-  // Null out _engines so that the one-offs rebuild themselves when the view
-  // opens.
-  oneOffSearchButtons._engines = null;
+  oneOffSearchButtons.invalidateCache();
   let rebuildPromise = BrowserTestUtils.waitForEvent(
     oneOffSearchButtons,
     "rebuild"
@@ -726,9 +720,7 @@ add_task(async function localOneOffReturn() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
 
-  // Null out _engines so that the one-offs rebuild themselves when the view
-  // opens.
-  oneOffSearchButtons._engines = null;
+  oneOffSearchButtons.invalidateCache();
   let rebuildPromise = BrowserTestUtils.waitForEvent(
     oneOffSearchButtons,
     "rebuild"
@@ -799,9 +791,7 @@ add_task(async function localOneOffEmptySearchString() {
     ],
   });
 
-  // Null out _engines so that the one-offs rebuild themselves when the view
-  // opens.
-  oneOffSearchButtons._engines = null;
+  oneOffSearchButtons.invalidateCache();
   let rebuildPromise = BrowserTestUtils.waitForEvent(
     oneOffSearchButtons,
     "rebuild"
@@ -860,6 +850,93 @@ add_task(async function localOneOffEmptySearchString() {
   await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 
   await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Trigger SearchOneOffs.willHide() outside of SearchOneOffs.__rebuild(). Ensure
+// that we always show the correct engines in the one-offs. This effectively
+// tests SearchOneOffs._engineInfo.domWasUpdated.
+add_task(async function avoidWillHideRace() {
+  // We set maxHistoricalSearchSuggestions to 0 since this test depends on
+  // UrlbarView calling SearchOneOffs.willHide(). That only happens when the
+  // Urlbar is in search mode after a query that returned no results.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
+    ],
+  });
+
+  oneOffSearchButtons.invalidateCache();
+
+  // Accel+K triggers SearchOneOffs.willHide() from UrlbarView instead of from
+  // SearchOneOffs.__rebuild.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  await searchPromise;
+  Assert.ok(
+    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    "One-offs should be visible"
+  );
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  info("Hide all engines but the test engine.");
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  let engines = (await Services.search.getVisibleEngines()).filter(
+    e => e.name != engine.name
+  );
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.hiddenOneOffs", engines.map(e => e.name).join(",")]],
+  });
+  Assert.ok(
+    !oneOffSearchButtons._engineInfo,
+    "_engineInfo should be nulled out."
+  );
+
+  // This call to SearchOneOffs.willHide() should repopulate _engineInfo but not
+  // rebuild the one-offs. _engineInfo.willHide will be true and thus UrlbarView
+  // will not open.
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  // We can't wait for UrlbarTestUtils.promiseSearchComplete here since we
+  // expect the popup will not open. We wait for _engineInfo to be populated
+  // instead.
+  await BrowserTestUtils.waitForCondition(
+    () => !!oneOffSearchButtons._engineInfo,
+    "_engineInfo is set."
+  );
+  Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "The UrlbarView is closed.");
+  Assert.equal(
+    oneOffSearchButtons._engineInfo.willHide,
+    true,
+    "_engineInfo should be repopulated and willHide should be true."
+  );
+  Assert.equal(
+    oneOffSearchButtons._engineInfo.domWasUpdated,
+    undefined,
+    "domWasUpdated should not be populated since we haven't yet tried to rebuild the one-offs."
+  );
+
+  // Now search. The view will open and the one-offs will rebuild, although
+  // the one-offs will not be shown since there is only one engine.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+  Assert.equal(
+    oneOffSearchButtons._engineInfo.domWasUpdated,
+    true,
+    "domWasUpdated should be true"
+  );
+  Assert.ok(
+    !UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    "One-offs should be hidden since there is only one engine."
+  );
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await SpecialPowers.popPrefEnv();
+  await Services.search.setDefault(oldDefaultEngine);
   await SpecialPowers.popPrefEnv();
 });
 

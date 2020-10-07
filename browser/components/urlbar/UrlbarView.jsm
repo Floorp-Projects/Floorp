@@ -389,6 +389,7 @@ class UrlbarView {
 
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
+    this._openPanelInstance = null;
 
     this.input.removeAttribute("open");
     this.input.endLayoutExtend();
@@ -490,6 +491,7 @@ class UrlbarView {
   onQueryStarted(queryContext) {
     this._queryWasCancelled = false;
     this._queryUpdatedResults = false;
+    this._openPanelInstance = null;
     this._startRemoveStaleRowsTimer();
   }
 
@@ -519,10 +521,15 @@ class UrlbarView {
       return;
     }
 
-    // Search mode is active.  Make sure the view is open and the one-offs are
-    // enabled.
-    this.oneOffSearchButtons.enable(true);
-    this._openPanel();
+    // Search mode is active.  If the one-offs should be shown, make sure they
+    // are enabled and show the view.
+    let openPanelInstance = (this._openPanelInstance = {});
+    this.oneOffSearchButtons.willHide().then(willHide => {
+      if (!willHide && openPanelInstance == this._openPanelInstance) {
+        this.oneOffSearchButtons.enable(true);
+        this._openPanel();
+      }
+    });
   }
 
   onQueryResults(queryContext) {
