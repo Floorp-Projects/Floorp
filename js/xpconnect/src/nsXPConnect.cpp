@@ -14,6 +14,7 @@
 #include "XPCWrapper.h"
 #include "jsfriendapi.h"
 #include "js/AllocationLogging.h"  // JS::SetLogCtorDtorFunctions
+#include "js/CompileOptions.h"     // JS::ReadOnlyCompileOptions
 #include "js/Object.h"             // JS::GetClass
 #include "js/ProfilingStack.h"
 #include "GeckoProfiler.h"
@@ -956,6 +957,7 @@ nsXPConnect::WriteScript(nsIObjectOutputStream* stream, JSContext* cx,
 
 NS_IMETHODIMP
 nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
+                        const JS::ReadOnlyCompileOptions& options,
                         JSScript** scriptp) {
   uint8_t flags;
   nsresult rv = stream->Read8(&flags);
@@ -991,7 +993,6 @@ nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
   {
     TranscodeResult code;
     Rooted<JSScript*> script(cx);
-    JS::CompileOptions options(cx);  // FIXME: receive from caller.
     code = DecodeScript(cx, options, buffer, &script);
     if (code == TranscodeResult_Ok) {
       *scriptp = script.get();
