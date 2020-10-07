@@ -417,6 +417,25 @@
   color: var(--urlbar-popup-action-color);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes urlbarView-action-slide-in {
+    0% {
+      transform: translateX(200px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] {
+    animation-name: urlbarView-action-slide-in;
+    animation-duration: 250ms;
+    animation-timing-function: var(--animation-easing-function);
+  }
+}
+
 .urlbarView-url {
   overflow: hidden;
   color: var(--urlbar-popup-url-color);

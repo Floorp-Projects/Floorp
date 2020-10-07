@@ -1194,6 +1194,12 @@ class UrlbarView {
         break;
     }
 
+    if (result.providerName == "TabToSearch") {
+      action.toggleAttribute("slide-in", true);
+    } else {
+      action.removeAttribute("slide-in");
+    }
+
     let url = item._elements.get("url");
     if (setURL) {
       item.setAttribute("has-url", "true");
