@@ -5402,6 +5402,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       // subframe.
       MOZ_ALWAYS_SUCCEEDS(
           bc->SetOpenerPolicy(sourceBC->Top()->GetOpenerPolicy()));
+      MOZ_DIAGNOSTIC_ASSERT(bc->Group() == sourceBC->Group());
     }
 
     if (RefPtr<Document> doc = cv->GetDocument()) {
