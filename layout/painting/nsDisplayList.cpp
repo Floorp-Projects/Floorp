@@ -513,7 +513,8 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
         // covers the visual viewport with some margins around it, which is
         // exactly what we want.
         if (DisplayPortUtils::GetHighResolutionDisplayPort(
-                rootScrollFrame->GetContent(), &displayport)) {
+                rootScrollFrame->GetContent(), &displayport,
+                DisplayPortOptions().With(ContentGeometryType::Fixed))) {
           dirtyRectRelativeToDirtyFrame = displayport;
         }
       }
