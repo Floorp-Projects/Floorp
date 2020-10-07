@@ -8,6 +8,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
+#include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"

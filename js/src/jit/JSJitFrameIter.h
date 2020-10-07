@@ -23,8 +23,6 @@ class ArgumentsObject;
 
 namespace jit {
 
-using CalleeToken = void*;
-
 enum class FrameType {
   // A JS frame is analogous to a js::InterpreterFrame, representing one
   // scripted function activation. IonJS frames are used by the optimizing

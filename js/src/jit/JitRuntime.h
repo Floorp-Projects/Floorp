@@ -20,6 +20,7 @@
 
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CalleeToken.h"
 #include "jit/IonCompileTask.h"
 #include "jit/IonTypes.h"
 #include "jit/JitCode.h"

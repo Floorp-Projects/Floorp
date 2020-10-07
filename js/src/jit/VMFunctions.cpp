@@ -15,6 +15,7 @@
 #include "jit/AtomicOperations.h"
 #include "jit/AutoDetectInvalidation.h"
 #include "jit/BaselineIC.h"
+#include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/mips32/Simulator-mips32.h"
