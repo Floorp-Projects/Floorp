@@ -11,7 +11,7 @@ To increase the internal logging verbosity you can use the
 
 If you use mach to start Firefox:
 
-	./mach run --setpref "remote.log.level=Trace" --remote-debugger
+	./mach run --setpref "remote.log.level=Trace" --remote-debugging-port
 
 By default, long log lines are truncated. To print long lines in full, you
 can set `remote.log.truncate` to false.
@@ -23,7 +23,7 @@ To dump events produced by EventEmitter,
 including CDP events produced by the remote agent,
 you can use the `toolkit.dump.emit` [preference]:
 
-  ./mach run --setpref "toolkit.dump.emit=true" --remote-debugger
+  ./mach run --setpref "toolkit.dump.emit=true" --remote-debuggiing-port
 
 
 Logging observer notifications

@@ -21,8 +21,7 @@ can look in its help message for this:
 
 	% ./firefox -h
 	…
-	  --remote-debugging-port <port>
-	  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is
+	  --remote-debugging-port [<port>] Start the Firefox remote agent, which is
 	                     a low-level debugging interface based on the CDP protocol.
 	                     Defaults to listen on localhost:9222.
 	…
@@ -31,37 +30,28 @@ When used, the remote agent will start an HTTP server and print a
 message on stderr with the location of the main target’s WebSocket
 listener:
 
-	% firefox --remote-debugger
+	% firefox --remote-debugging-port
 	DevTools listening on ws://localhost:9222/devtools/browser/7b4e84a4-597f-4839-ac6d-c9e86d16fb83
 
-As you will tell from the flag description, `--remote-debugger`
-takes an optional address spec as input:
+`--remote-debugging-port` takes an optional port as input:
 
-	[<host>][:<port>]
+	[<port>]
 
 You can use this to instruct the remote agent to bind to a particular
-interface and port on your system.  Either host and port are optional,
-which means `./firefox --remote-debugger` will bind the HTTPD to
+port on your system.  port is optional,
+which means `firefox --remote-debugging-port` will bind the HTTPD to
 the default `localhost:9222`.
 
-Other examples of address specs include:
+If port has been specified the default port will be overridden:
 
-	localhost:9222
-	127.0.0.1:9999
-	[::1]:4567
-	:0
+	% firefox --remote-debugging-port 9989
+    DevTools listening on ws://localhost:9989/devtools/browser/b49481af-8ad3-9b4d-b1bf-bb0cdb9a0620
 
-The use of `localhost` in the first example above will, depending
-on whether the system supports IPv6, bind to both IP layers and
-accept incoming connections from either IPv4 or IPv6.  The second
-(`127.0.0.1`) and third (`[::1]`) examples will, respectively,
-force the HTTP to listen on IPv4 or IPv6.
+When you ask the remote agent to listen on port 0,
+the system will atomically allocate an arbitrary free port:
 
-The fourth example will use the default hostname, `localhost`, to
-listen on all available IP layers, but override the default port
-with the special purpose port 0.  When you ask the remote agent to
-listen on port 0, the system will atomically allocate an arbitrary
-free port.
+    % firefox --remote-debugging-port 0
+    DevTools listening on ws://localhost:59982/devtools/browser/a12b22a9-1b8b-954a-b81f-bd31552d3f1c
 
 Allocating an atomic port can be useful if you want to avoid race
 conditions.  The atomically allocated port will be somewhere in the

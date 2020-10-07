@@ -68,28 +68,16 @@ impl RemoteAgentHandler {
     fn handle_inner(&self, command_line: &nsICommandLine) -> RemoteAgentResult<()> {
         let flags = CommandLine::new(command_line);
 
-        let remote_debugger = if flags.present("remote-debugger") {
-            Some(flags.opt_str("remote-debugger")?)
-        } else {
-            None
-        };
         let remote_debugging_port = if flags.present("remote-debugging-port") {
             Some(flags.opt_u16("remote-debugging-port")?)
         } else {
             None
         };
 
-        let addr = match (remote_debugger, remote_debugging_port) {
-            (Some(_), Some(_)) => return Err(FlagConflict),
-            (None, None) => return Ok(()),
-
-            // --remote-debugger [<host>][:<port>]
-            (Some(Some(spec)), _) => spec,
-            (Some(None), _) => format!("{}:{}", DEFAULT_HOST, DEFAULT_PORT),
-
-            // --remote-debugging-port <port>
-            (None, Some(Some(port))) => format!("{}:{}", DEFAULT_HOST, port),
-            (None, Some(None)) => return Err(MissingPort),
+        let addr = match remote_debugging_port {
+            Some(Some(port)) => format!("{}:{}", DEFAULT_HOST, port),
+            Some(None) => format!("{}:{}", DEFAULT_HOST, DEFAULT_PORT),
+            None => return Ok(()),
         };
 
         *self.address.borrow_mut() = addr.to_string();
@@ -117,11 +105,13 @@ impl RemoteAgentHandler {
 
     xpcom_method!(help_info => GetHelpInfo() -> nsACString);
     fn help_info(&self) -> Result<nsCString, nsresult> {
-        let help = r#"  --remote-debugger [<host>][:<port>]
-  --remote-debugging-port <port> Start the Firefox remote agent, which is
-                     a low-level debugging interface based on the CDP protocol.
-                     Defaults to listen on localhost:9222.
-"#;
+        let help = format!(
+            r#"  --remote-debugging-port [<port>] Start the Firefox remote agent,
+                     which is a low-level debugging interface based on the CDP protocol.
+                     Defaults to listen on {}:{}.
+"#,
+            DEFAULT_HOST, DEFAULT_PORT
+        );
         Ok(nsCString::from(help))
     }
 
@@ -191,7 +181,7 @@ impl<'a> CommandLine<'a> {
     //   - possibly any other NS exception
     //
     // This means we need to treat NS_ERROR_INVALID_ARG with special care
-    // because --remote-debugger can be used both with and without a value.
+    // because --remote-debugging-port can be used both with and without a value.
     fn opt_str(&self, name: &str) -> RemoteAgentResult<Option<String>> {
         if self.present(name) {
             let flag = nsString::from(name);
