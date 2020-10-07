@@ -249,7 +249,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
 
   void SendDeleteMeInternal();
 
-  [[nodiscard]] bool EnsureDOMObject();
+  void EnsureDOMObject();
 
   void ReleaseDOMObject();
 
