@@ -14,13 +14,9 @@ add-engine-alias = Alias
 
 add-engine-url = Engine URL, use %s in place of the search term
 
-add-engine-cancel =
-    .label = Cancel
-    .accesskey = C
-
-add-engine-ok =
-    .label = Add Engine
-    .accesskey = A
+add-engine-dialog=
+    .buttonlabelaccept = Add Engine
+    .buttonaccesskeyaccept = A
 
 engine-name-exists = An engine with that name already exists
 engine-alias-exists = An engine with that alias already exists
