@@ -115,15 +115,12 @@ def check_build_environment(help, dist):
 
 set_config('TOPSRCDIR', check_build_environment.topsrcdir)
 set_config('TOPOBJDIR', check_build_environment.topobjdir)
-set_config('MOZ_BUILD_ROOT', check_build_environment.topobjdir)
 set_config('DIST', check_build_environment.dist)
 
 add_old_configure_assignment(
     '_topsrcdir', check_build_environment.topsrcdir)
 add_old_configure_assignment(
     '_objdir', check_build_environment.topobjdir)
-add_old_configure_assignment(
-    'MOZ_BUILD_ROOT', check_build_environment.topobjdir)
 add_old_configure_assignment(
     'DIST', check_build_environment.dist)
 

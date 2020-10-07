@@ -61,7 +61,6 @@ showbuild showhost: _DEPEND_CFLAGS=
 showbuild showhost: COMPILE_PDB_FLAG=
 showbuild:
 	$(call print_vars,\
-		MOZ_BUILD_ROOT \
 		MOZ_WIDGET_TOOLKIT \
 		CC \
 		CXX \
