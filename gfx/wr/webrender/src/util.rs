@@ -1483,5 +1483,5 @@ fn weak_table() {
     for _ in 0..target_count*2 {
         tbl.insert(Arc::downgrade(&Arc::new(vec![5])))
     }
-    assert!(tbl.inner.capacity() == 1);
+    assert!(tbl.inner.capacity() <= 4);
 }
