@@ -26,47 +26,9 @@
 pub use crate::binary_reader::BinaryReader;
 pub use crate::binary_reader::Range;
 
-pub use crate::primitives::BinaryReaderError;
-pub use crate::primitives::BrTable;
-pub use crate::primitives::CustomSectionKind;
-pub use crate::primitives::ExportType;
-pub use crate::primitives::ExternalKind;
-pub use crate::primitives::FuncType;
-pub use crate::primitives::GlobalType;
-pub use crate::primitives::Ieee32;
-pub use crate::primitives::Ieee64;
-pub use crate::primitives::ImportSectionEntryType;
-pub use crate::primitives::InstanceType;
-pub use crate::primitives::LinkingType;
-pub use crate::primitives::MemoryImmediate;
-pub use crate::primitives::MemoryType;
-pub use crate::primitives::ModuleType;
-pub use crate::primitives::NameType;
-pub use crate::primitives::Naming;
-pub use crate::primitives::Operator;
-pub use crate::primitives::RelocType;
-pub use crate::primitives::ResizableLimits;
-pub use crate::primitives::Result;
-pub use crate::primitives::SectionCode;
-pub use crate::primitives::TableType;
-pub use crate::primitives::Type;
-pub use crate::primitives::TypeDef;
-pub use crate::primitives::TypeOrFuncType;
-pub use crate::primitives::V128;
-
-pub use crate::module_resources::WasmFuncType;
-pub use crate::module_resources::WasmGlobalType;
-pub use crate::module_resources::WasmMemoryType;
-pub use crate::module_resources::WasmModuleResources;
-pub use crate::module_resources::WasmTableType;
-pub use crate::module_resources::WasmType;
-pub use crate::module_resources::WasmTypeDef;
-
-pub(crate) use crate::module_resources::{wasm_func_type_inputs, wasm_func_type_outputs};
-
-pub use crate::operators_validator::OperatorValidatorConfig;
-
+pub use crate::module_resources::*;
 pub use crate::parser::*;
+pub use crate::primitives::*;
 pub use crate::readers::*;
 pub use crate::validator::*;
 

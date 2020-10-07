@@ -1,5 +1,3 @@
-extern crate itertools;
-
 use itertools::Itertools;
 use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::free::zip_eq;
