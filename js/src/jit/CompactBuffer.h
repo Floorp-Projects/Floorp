@@ -7,7 +7,11 @@
 #ifndef jit_Compactbuffer_h
 #define jit_Compactbuffer_h
 
-#include "jit/IonTypes.h"
+#include "mozilla/Assertions.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
