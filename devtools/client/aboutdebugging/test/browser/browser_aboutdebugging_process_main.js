@@ -43,10 +43,14 @@ async function testMainProcessTarget(name, description) {
     deviceName: RUNTIME_DEVICE_NAME,
     name: RUNTIME_APP_NAME,
   });
+
+  // Note: about:debugging assumes that the main process has the id 0 and will
+  // rely on it to create the about:devtools-toolbox URL.
+  // Only check that about:debugging doesn't create a target unnecessarily.
   usbRuntime.getMainProcess = () => {
     return {
       getTarget: () => {
-        return { actorID: 0 };
+        ok(false, "about:debugging should not create the main process target");
       },
     };
   };
