@@ -87,6 +87,11 @@ AppInitDLLs:
     reflects the contents of the AppInit_DLLs registry key.
   type: string
 
+ApplicationBuildID:
+  description: >
+    Product application's build ID.
+  type: string
+
 AsyncShutdownModule:
   description: >
     Holds the contents of the AsyncShutdown.js script
