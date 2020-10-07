@@ -244,3 +244,24 @@ jobs:
                 armeabi-v7a:
                     - '--test-url-params=exclude=1,2,9,10,17,18,21,22,26,28,30,32,39,40,47,48,55,56,63,64,71,72,79,80,83,84,89,90,95,96'
                 default: []
+
+    youtube-playback-av1-sfr:
+        description: "Raptor YouTube Playback AV1 SFR on Fenix"
+        test-name: youtube-playback-av1-sfr
+        run-visual-metrics: False
+        treeherder:
+            symbol: 'Btime(ytp-av1-sfr)'
+
+    youtube-playback-h264-sfr:
+        description: "Raptor YouTube Playback H264 SFR on Fenix"
+        test-name: youtube-playback-h264-sfr
+        run-visual-metrics: False
+        treeherder:
+            symbol: Btime(ytp-h264-sfr)
+
+    youtube-playback-vp9-sfr:
+        description: "Raptor YouTube Playback VP9 SFR on Fenix"
+        run-visual-metrics: False
+        test-name: youtube-playback-vp9-sfr
+        treeherder:
+            symbol: Btime(ytp-vp9-sfr)
