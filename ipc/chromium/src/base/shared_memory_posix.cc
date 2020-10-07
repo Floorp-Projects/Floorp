@@ -26,29 +26,23 @@
 
 namespace base {
 
-SharedMemory::SharedMemory()
-    : memory_(nullptr),
-      max_size_(0),
-      mapped_file_(nullptr),
-      frozen_file_(nullptr),
-      mapped_size_(0),
-      read_only_(false),
-      freezeable_(false) {}
-
-SharedMemory::SharedMemory(SharedMemory&& other) {
-  memory_ = other.memory_;
-  max_size_ = other.max_size_;
-  mapped_file_ = std::move(other.mapped_file_);
-  frozen_file_ = std::move(other.frozen_file_);
-  mapped_size_ = other.mapped_size_;
-  read_only_ = other.read_only_;
-  freezeable_ = other.freezeable_;
-
-  other.mapped_size_ = 0;
-  other.memory_ = nullptr;
+void SharedMemory::MappingDeleter::operator()(void* ptr) {
+  // Check that this isn't a default-constructed deleter.  (`munmap`
+  // is specified to fail with `EINVAL` if the length is 0, so this
+  // assertion isn't load-bearing.)
+  DCHECK(mapped_size_ != 0);
+  munmap(ptr, mapped_size_);
+  // Guard against multiple calls of the same deleter, which shouldn't
+  // happen (but could, if `UniquePtr::reset` were used).  Calling
+  // `munmap` with an incorrect non-zero length would be bad.
+  mapped_size_ = 0;
 }
 
-SharedMemory::~SharedMemory() { Close(); }
+SharedMemory::~SharedMemory() {
+  // This is almost equal to the default destructor, except for the
+  // warning message about unfrozen freezable memory.
+  Close();
+}
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(!mapped_file_);
@@ -267,17 +261,7 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
     return false;
   }
 
-  memory_ = mem;
-  mapped_size_ = bytes;
-  return true;
-}
-
-bool SharedMemory::Unmap() {
-  if (memory_ == NULL) return false;
-
-  munmap(memory_, mapped_size_);
-  memory_ = NULL;
-  mapped_size_ = 0;
+  memory_ = UniqueMapping(mem, MappingDeleter(bytes));
   return true;
 }
 
