@@ -74,7 +74,8 @@ class nsSharedPageData {
 // Page sequence frame class. Manages a series of pages, in paginated mode.
 // (Strictly speaking, this frame's direct children are PrintedSheetFrame
 // instances, and each of those will usually contain one nsPageFrame, depending
-// on the "pages-per-sheet" setting.)
+// on the "pages-per-sheet" setting and whether the print operation is
+// restricted to a custom page range.)
 class nsPageSequenceFrame final : public nsContainerFrame {
   using LogicalSize = mozilla::LogicalSize;
 
@@ -104,8 +105,8 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   nsresult StartPrint(nsPresContext* aPresContext,
                       nsIPrintSettings* aPrintSettings,
                       const nsAString& aDocTitle, const nsAString& aDocURL);
-  nsresult PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone);
-  nsresult PrintNextPage();
+  nsresult PrePrintNextSheet(nsITimerCallback* aCallback, bool* aDone);
+  nsresult PrintNextSheet();
   void ResetPrintCanvasList();
 
   uint32_t GetCurrentSheetIdx() const { return mCurrentSheetIdx; }
@@ -149,7 +150,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
                                  nscoord aChildPaddingBoxWidth,
                                  const nsMargin& aChildPhysicalMargin);
 
-  nsIFrame* GetCurrentPageFrame();
+  nsIFrame* GetCurrentSheetFrame();
 
   nsSize mSize;
 
