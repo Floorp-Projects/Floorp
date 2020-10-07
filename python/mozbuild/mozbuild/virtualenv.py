@@ -328,7 +328,7 @@ class VirtualenvManager(VirtualenvHelper):
         python_lib = distutils.sysconfig.get_python_lib()
         do_close = not bool(sitecustomize)
         sitecustomize = sitecustomize or open(
-            os.path.join(os.path.dirname(os.__file__), 'sitecustomize.py'),
+            os.path.join(os.path.dirname(python_lib), 'sitecustomize.py'),
             mode='w')
 
         def handle_package(package):
