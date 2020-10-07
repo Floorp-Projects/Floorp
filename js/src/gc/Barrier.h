@@ -861,11 +861,6 @@ struct DefineComparisonOps<js::WeakHeapPtr<T>> : std::true_type {
 
 namespace js {
 
-// A WeakRef pointer does not hold its target live and is automatically nulled
-// out when the GC discovers that it is not reachable from any other path.
-template <typename T>
-using WeakRef = WeakHeapPtr<T>;
-
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
 // memory, but with substantially less overhead than a HeapPtr.

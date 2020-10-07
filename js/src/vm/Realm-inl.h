@@ -36,8 +36,7 @@ js::LexicalEnvironmentObject* JS::Realm::unbarrieredLexicalEnvironment() const {
 
 inline bool JS::Realm::globalIsAboutToBeFinalized() {
   MOZ_ASSERT(zone_->isGCSweeping());
-  return global_ &&
-         js::gc::IsAboutToBeFinalizedUnbarriered(global_.unbarrieredAddress());
+  return global_ && js::gc::IsAboutToBeFinalized(&global_);
 }
 
 inline bool JS::Realm::hasLiveGlobal() const {
