@@ -634,7 +634,10 @@ const TargetingGetters = {
     };
   },
   get isFissionExperimentEnabled() {
-    return Services.appinfo.fissionExperimentStatus || false;
+    return (
+      Services.appinfo.fissionExperimentStatus ===
+      Ci.nsIXULRuntime.eExperimentStatusTreatment
+    );
   },
 };
 
