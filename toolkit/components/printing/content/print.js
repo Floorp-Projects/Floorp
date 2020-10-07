@@ -284,7 +284,8 @@ var PrintEventHandler = {
 
     // Now that we're showing the form, select the destination select.
     window.focus();
-    document.getElementById("printer-picker").focus();
+    let fm = Services.focus;
+    fm.setFocus(document.getElementById("printer-picker"), fm.FLAG_SHOWRING);
 
     await initialPreviewDone;
   },
@@ -350,7 +351,9 @@ var PrintEventHandler = {
     Services.prefs.setStringPref("print_printer", settings.printerName);
 
     try {
-      this.settings.showPrintProgress = true;
+      // The print progress dialog is causing an uncaught exception in tests.
+      // Only show it to users.
+      this.settings.showPrintProgress = !Cu.isInAutomation;
       let bc = this.previewBrowser.browsingContext;
       await this._doPrint(bc, settings);
     } catch (e) {
@@ -1131,8 +1134,8 @@ var PrintSettingsViewProxy = {
         return (
           this.defaultSystemPrinter?.value ||
           Object.getOwnPropertyNames(this.availablePrinters).find(
-            p => p.name != PrintUtils.SAVE_TO_PDF_PRINTER
-          )?.value
+            name => name != PrintUtils.SAVE_TO_PDF_PRINTER
+          )
         );
 
       case "numCopies":
@@ -1279,6 +1282,11 @@ function PrintUIControlMixin(superClass) {
 }
 
 class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
+  initialize() {
+    super.initialize();
+    this.addEventListener("keypress", this);
+  }
+
   connectedCallback() {
     this.settingName = this.dataset.settingName;
     super.connectedCallback();
@@ -1300,14 +1308,23 @@ class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
   }
 
   update(settings) {
-    this.value = settings[this.settingName];
+    if (this.settingName) {
+      this.value = settings[this.settingName];
+    }
   }
 
   handleEvent(e) {
-    if (e.type == "change") {
+    if (e.type == "change" && this.settingName) {
       this.dispatchSettingsChange({
         [this.settingName]: e.target.value,
       });
+    } else if (e.type == "keypress") {
+      if (
+        e.key == "Enter" &&
+        (!e.metaKey || AppConstants.platform == "macosx")
+      ) {
+        this.form.requestPrint();
+      }
     }
   }
 }
@@ -1434,13 +1451,21 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
 
-    this.setAttribute("platform", AppConstants.platform);
-
     this.addEventListener("change", this);
     this.addEventListener("submit", this);
     this.addEventListener("click", this);
     this.addEventListener("input", this);
     this.addEventListener("revalidate", this);
+
+    this.printButton = this.querySelector("#print-button");
+    if (AppConstants.platform != "win") {
+      // Move the Print button to the end if this isn't Windows.
+      this.printButton.parentElement.append(this.printButton);
+    }
+  }
+
+  requestPrint() {
+    this.requestSubmit(this.printButton);
   }
 
   update(settings) {
@@ -1462,16 +1487,8 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
 
     if (e.type == "submit") {
       e.preventDefault();
-      switch (e.submitter.name) {
-        case "print":
-          if (!this.checkValidity()) {
-            return;
-          }
-          this.dispatchEvent(new Event("print", { bubbles: true }));
-          break;
-        case "cancel":
-          this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
-          break;
+      if (e.submitter.name == "print" && this.checkValidity()) {
+        this.dispatchEvent(new Event("print", { bubbles: true }));
       }
     } else if (
       e.type == "change" ||
@@ -1639,11 +1656,16 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   handleEvent(e) {
     if (e.type == "keypress") {
-      this.handleKeypress(e);
+      if (e.target == this._startRange || e.target == this._endRange) {
+        this.handleKeypress(e);
+      }
       return;
     }
 
-    if (e.type === "paste") {
+    if (
+      e.type === "paste" &&
+      (e.target == this._startRange || e.target == this._endRange)
+    ) {
       this.handlePaste(e);
     }
 
@@ -2065,6 +2087,16 @@ class PrintButton extends PrintUIControlMixin(HTMLButtonElement) {
   }
 }
 customElements.define("print-button", PrintButton, { extends: "button" });
+
+class CancelButton extends HTMLButtonElement {
+  constructor() {
+    super();
+    this.addEventListener("click", () => {
+      this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
+    });
+  }
+}
+customElements.define("cancel-button", CancelButton, { extends: "button" });
 
 async function pickFileName(contentTitle, currentURI) {
   let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);

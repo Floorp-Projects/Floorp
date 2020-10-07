@@ -55,13 +55,13 @@
   background-color: var(--in-content-button-background-active);
 }
 
-.toggle-group-input:focus + .toggle-group-label{
+.toggle-group-input:-moz-focusring + .toggle-group-label {
   box-shadow: 0 0 0 1px var(--border-color), 0 0 0 4px rgba(10, 132, 255, 0.3);
   outline: none;
   z-index: 1;
 }
 
-.toggle-group-input:checked:focus + .toggle-group-label {
+.toggle-group-input:checked:-moz-focusring + .toggle-group-label {
   box-shadow: 0 0 0 1px var(--in-content-border-active), 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
 
