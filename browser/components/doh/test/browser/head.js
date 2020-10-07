@@ -90,15 +90,8 @@ async function setup() {
   // controlled e.g. via Normandy, but for testing let's enable.
   Preferences.set(prefs.PROVIDER_STEERING_PREF, true);
 
-  // Check that the default value of the clearModeOnShutdown pref is true. This
-  // forces us to update tests in the future if/when we change the defaut. When
-  // the time comes, browser_cleanFlow.js needs to be updated to test when this
-  // pref is true. Currently since the default is true, it tests the false case.
-  is(
-    Preferences.get(prefs.CLEAR_ON_SHUTDOWN_PREF),
-    true,
-    "Clear mode on shutdown is enabled."
-  );
+  // Clear mode on shutdown by default.
+  Preferences.set(prefs.CLEAR_ON_SHUTDOWN_PREF, true);
 
   // Set up heuristics, all passing by default.
 

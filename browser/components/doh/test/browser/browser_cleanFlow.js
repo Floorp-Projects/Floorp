@@ -83,5 +83,5 @@ add_task(async function testCleanFlow() {
   ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
-  Preferences.reset(prefs.CLEAR_ON_SHUTDOWN_PREF);
+  Preferences.set(prefs.CLEAR_ON_SHUTDOWN_PREF, true);
 });
