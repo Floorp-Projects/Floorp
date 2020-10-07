@@ -448,6 +448,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
   // Accumulates total time we actually waited for telemetry
   mozilla::TimeDuration mSlowScriptActualWait;
   bool mTimeoutAccumulated;
+  bool mExecutedChromeScript;
 
   bool mHasScriptActivity;
 
