@@ -16,14 +16,6 @@
 #  include "mozilla/Ashmem.h"
 #endif
 
-#ifdef OS_LINUX
-#  include "linux_memfd_defs.h"
-#endif
-
-#ifdef __FreeBSD__
-#  include <sys/capsicum.h>
-#endif
-
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
 #include "base/string_util.h"
@@ -34,32 +26,43 @@
 
 namespace base {
 
-void SharedMemory::MappingDeleter::operator()(void* ptr) {
-  // Check that this isn't a default-constructed deleter.  (`munmap`
-  // is specified to fail with `EINVAL` if the length is 0, so this
-  // assertion isn't load-bearing.)
-  DCHECK(mapped_size_ != 0);
-  munmap(ptr, mapped_size_);
-  // Guard against multiple calls of the same deleter, which shouldn't
-  // happen (but could, if `UniquePtr::reset` were used).  Calling
-  // `munmap` with an incorrect non-zero length would be bad.
-  mapped_size_ = 0;
+SharedMemory::SharedMemory()
+    : mapped_file_(-1),
+      frozen_file_(-1),
+      mapped_size_(0),
+      memory_(nullptr),
+      read_only_(false),
+      freezeable_(false),
+      max_size_(0) {}
+
+SharedMemory::SharedMemory(SharedMemory&& other) {
+  if (this == &other) {
+    return;
+  }
+
+  mapped_file_ = other.mapped_file_;
+  mapped_size_ = other.mapped_size_;
+  frozen_file_ = other.frozen_file_;
+  memory_ = other.memory_;
+  read_only_ = other.read_only_;
+  freezeable_ = other.freezeable_;
+  max_size_ = other.max_size_;
+
+  other.mapped_file_ = -1;
+  other.mapped_size_ = 0;
+  other.frozen_file_ = -1;
+  other.memory_ = nullptr;
 }
 
-SharedMemory::~SharedMemory() {
-  // This is almost equal to the default destructor, except for the
-  // warning message about unfrozen freezable memory.
-  Close();
-}
+SharedMemory::~SharedMemory() { Close(); }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
-  DCHECK(!mapped_file_);
-  DCHECK(!frozen_file_);
+  DCHECK(mapped_file_ == -1);
+  DCHECK(frozen_file_ == -1);
 
   freezeable_ = false;
-  mapped_file_.reset(handle.fd);
+  mapped_file_ = handle.fd;
   read_only_ = read_only;
-  // is_memfd_ only matters for freezing, which isn't possible
   return true;
 }
 
@@ -68,123 +71,16 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
   return handle.fd >= 0;
 }
 
+bool SharedMemory::IsValid() const { return mapped_file_ >= 0; }
+
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
-
-// memfd_create is a nonstandard interface for creating anonymous
-// shared memory accessible as a file descriptor but not tied to any
-// filesystem.  It first appeared in Linux 3.17, and was adopted by
-// FreeBSD in version 13.
-
-#if !defined(HAVE_MEMFD_CREATE) && defined(OS_LINUX) && \
-    defined(SYS_memfd_create)
-
-// Older libc versions (e.g., glibc before 2.27) don't have the
-// wrapper, but we can supply our own; see `linux_memfd_defs.h`.
-
-static int memfd_create(const char* name, unsigned int flags) {
-  return syscall(SYS_memfd_create, name, flags);
-}
-
-#  define HAVE_MEMFD_CREATE 1
-#endif
-
-// memfd supports having "seals" applied to the file, to prevent
-// various types of changes (which apply to all fds referencing the
-// file).  Unfortunately, we can't rely on F_SEAL_WRITE to implement
-// Freeze(); see the comments in ReadOnlyCopy() below.
-//
-// Instead, to prevent a child process from regaining write access to
-// a read-only copy, the OS must also provide a way to remove write
-// permissions at the file descriptor level.  This next section
-// attempts to accomplish that.
-
-#ifdef HAVE_MEMFD_CREATE
-#  define USE_MEMFD_CREATE 1
-#  ifdef OS_LINUX
-
-// To create a read-only duplicate of an fd, we can use procfs; the
-// same operation could restore write access, but sandboxing prevents
-// child processes from accessing /proc.
-
-static int DupReadOnly(int fd) {
-  std::string path = StringPrintf("/proc/self/fd/%d", fd);
-  // procfs opens probably won't EINTR, but checking for it can't hurt
-  return HANDLE_EINTR(open(path.c_str(), O_RDONLY | O_CLOEXEC));
-}
-
-#  elif defined(__FreeBSD__)
-
-// FreeBSD's Capsicum framework allows irrevocably restricting the
-// operations permitted on a file descriptor.
-
-static int DupReadOnly(int fd) {
-  int rofd = dup(fd);
-  if (rofd < 0) {
-    return -1;
-  }
-
-  cap_rights_t rights;
-  cap_rights_init(&rights, CAP_FSTAT, CAP_MMAP_R);
-  if (cap_rights_limit(rofd, &rights) < 0) {
-    int err = errno;
-    close(rofd);
-    errno = err;
-    return -1;
-  }
-
-  return rofd;
-}
-
-#  else  // unhandled OS
-#    warning "OS has memfd_create but no DupReadOnly implementation"
-#    undef USE_MEMFD_CREATE
-#  endif  // OS selection
-#endif    // HAVE_MEMFD_CREATE
-
-static bool HaveMemfd() {
-#ifdef USE_MEMFD_CREATE
-  static const bool kHave = [] {
-#  ifdef OS_LINUX
-    // The Tor Browser project was, at one point, attempting to run
-    // Firefox in an environment without /proc mounted, to reduce
-    // possibilities for fingerprinting.  If that's the case, we can't
-    // use memfd, because ReadOnlyCopy requires access to procfs to
-    // remove write permissions.
-    //
-    // Complicating this further, in a sandboxed child process, the
-    // first call to this function may happen after sandboxing is
-    // started; in that case, it's expected that procfs isn't
-    // reachable, but it's also expected that ReadOnlyCopy may not be
-    // possible.
-    if (!PR_GetEnv("MOZ_SANDBOXED") &&
-        access("/proc/self/fd", R_OK | X_OK) < 0) {
-      CHROMIUM_LOG(WARNING) << "can't use memfd without procfs";
-      return false;
-    }
-#  endif
-    int fd = memfd_create("mozilla-ipc-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
-    if (fd < 0) {
-      DCHECK_EQ(errno, ENOSYS);
-      return false;
-    }
-    close(fd);
-    return true;
-  }();
-  return kHave;
-#else
-  return false;
-#endif  // USE_MEMFD_CREATE
-}
 
 // static
 bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
 #if defined(ANDROID)
   return false;
 #else
-  if (HaveMemfd()) {
-    return false;
-  }
   *str += '/';
 #  ifdef OS_LINUX
   // The Snap package environment doesn't provide a private /dev/shm
@@ -215,79 +111,53 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   read_only_ = false;
 
   DCHECK(size > 0);
-  DCHECK(!mapped_file_);
-  DCHECK(!frozen_file_);
+  DCHECK(mapped_file_ == -1);
+  DCHECK(frozen_file_ == -1);
 
   mozilla::UniqueFileHandle fd;
   mozilla::UniqueFileHandle frozen_fd;
   bool needs_truncate = true;
-  bool is_memfd = false;
 
-#ifdef USE_MEMFD_CREATE
-  if (HaveMemfd()) {
-    const unsigned flags = MFD_CLOEXEC | (freezeable ? MFD_ALLOW_SEALING : 0);
-    fd.reset(memfd_create("mozilla-ipc", flags));
-    if (!fd) {
-      // In general it's too late to fall back here -- in a sandboxed
-      // child process, shm_open is already blocked.  And it shouldn't
-      // be necessary.
-      CHROMIUM_LOG(WARNING) << "failed to create memfd: " << strerror(errno);
-      return false;
-    }
-    is_memfd = true;
-    if (freezeable) {
-      frozen_fd.reset(DupReadOnly(fd.get()));
-      if (!frozen_fd) {
-        CHROMIUM_LOG(WARNING)
-            << "failed to create read-only memfd: " << strerror(errno);
-        return false;
-      }
-    }
-  }
-#endif
-
-  if (!fd) {
 #ifdef ANDROID
-    // Android has its own shared memory facility:
-    fd.reset(mozilla::android::ashmem_create(nullptr, size));
-    if (!fd) {
-      CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
-      return false;
-    }
-    needs_truncate = false;
+  // Android has its own shared memory facility:
+  fd.reset(mozilla::android::ashmem_create(nullptr, size));
+  if (!fd) {
+    CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
+    return false;
+  }
+  needs_truncate = false;
 #else
-    // Generic Unix: shm_open + shm_unlink
-    do {
-      // The names don't need to be unique, but it saves time if they
-      // usually are.
-      static mozilla::Atomic<size_t> sNameCounter;
-      std::string name;
-      CHECK(AppendPosixShmPrefix(&name, getpid()));
-      StringAppendF(&name, "%zu", sNameCounter++);
-      // O_EXCL means the names being predictable shouldn't be a problem.
-      fd.reset(HANDLE_EINTR(
-          shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600)));
-      if (fd) {
-        if (freezeable) {
-          frozen_fd.reset(HANDLE_EINTR(shm_open(name.c_str(), O_RDONLY, 0400)));
-          if (!frozen_fd) {
-            int open_err = errno;
-            shm_unlink(name.c_str());
-            DLOG(FATAL) << "failed to re-open freezeable shm: "
-                        << strerror(open_err);
-            return false;
-          }
-        }
-        if (shm_unlink(name.c_str()) != 0) {
-          // This shouldn't happen, but if it does: assume the file is
-          // in fact leaked, and bail out now while it's still 0-length.
-          DLOG(FATAL) << "failed to unlink shm: " << strerror(errno);
+  // Generic Unix: shm_open + shm_unlink
+  do {
+    // The names don't need to be unique, but it saves time if they
+    // usually are.
+    static mozilla::Atomic<size_t> sNameCounter;
+    std::string name;
+    CHECK(AppendPosixShmPrefix(&name, getpid()));
+    StringAppendF(&name, "%zu", sNameCounter++);
+    // O_EXCL means the names being predictable shouldn't be a problem.
+    fd.reset(
+        HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600)));
+    if (fd) {
+      if (freezeable) {
+        frozen_fd.reset(HANDLE_EINTR(shm_open(name.c_str(), O_RDONLY, 0400)));
+        if (!frozen_fd) {
+          int open_err = errno;
+          shm_unlink(name.c_str());
+          DLOG(FATAL) << "failed to re-open freezeable shm: "
+                      << strerror(open_err);
           return false;
         }
       }
-    } while (!fd && errno == EEXIST);
+      if (shm_unlink(name.c_str()) != 0) {
+        // This shouldn't happen, but if it does: assume the file is
+        // in fact leaked, and bail out now while it's still 0-length.
+        DLOG(FATAL) << "failed to unlink shm: " << strerror(errno);
+        return false;
+      }
+    }
+  } while (!fd && errno == EEXIST);
 #endif
-  }
 
   if (!fd) {
     CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
@@ -340,16 +210,14 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
 #endif
   }
 
-  mapped_file_ = std::move(fd);
-  frozen_file_ = std::move(frozen_fd);
+  mapped_file_ = fd.release();
+  frozen_file_ = frozen_fd.release();
   max_size_ = size;
   freezeable_ = freezeable;
-  is_memfd_ = is_memfd;
   return true;
 }
 
 bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
-  DCHECK(mapped_file_);
   DCHECK(!read_only_);
   CHECK(freezeable_);
 
@@ -357,77 +225,28 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
     DCHECK(!memory_);
   }
 
-  mozilla::UniqueFileHandle ro_file;
-  bool is_ashmem = false;
-
+  int ro_file = -1;
 #ifdef ANDROID
-  if (!is_memfd_) {
-    is_ashmem = true;
-    DCHECK(!frozen_file_);
-    ro_file = std::move(mapped_file_);
-    if (mozilla::android::ashmem_setProt(ro_file.get(), PROT_READ) != 0) {
-      CHROMIUM_LOG(WARNING)
-          << "failed to set ashmem read-only: " << strerror(errno);
-      return false;
-    }
+  if (mozilla::android::ashmem_setProt(mapped_file_, PROT_READ) != 0) {
+    CHROMIUM_LOG(WARNING) << "failed to set ashmem read-only: "
+                          << strerror(errno);
+    return false;
   }
+  ro_file = mapped_file_;
+#else
+  DCHECK(frozen_file_ >= 0);
+  DCHECK(mapped_file_ >= 0);
+  close(mapped_file_);
+  ro_file = frozen_file_;
+  frozen_file_ = -1;
 #endif
 
-#ifdef USE_MEMFD_CREATE
-  static const bool useSeals = !PR_GetEnv("MOZ_SHM_NO_SEALS");
-  if (is_memfd_ && useSeals) {
-    // Seals are added to the file as defense-in-depth.  The primary
-    // method of access control is creating a read-only fd (using
-    // procfs in this case) and requiring that sandboxes processes not
-    // have access to /proc/self/fd to regain write permission; this
-    // is the same as with shm_open.
-    //
-    // Unfortunately, F_SEAL_WRITE is unreliable: if the process
-    // forked while there was a writeable mapping, it will inherit a
-    // copy of the mapping, which causes the seal to fail.
-    //
-    // (Also, in the future we may want to split this into separate
-    // classes for mappings and shared memory handles, which would
-    // complicate identifying the case where `F_SEAL_WRITE` would be
-    // possible even in the absence of races with fork.)
-    //
-    // However, Linux 5.1 added F_SEAL_FUTURE_WRITE, which prevents
-    // write operations afterwards, but existing writeable mappings
-    // are unaffected (similar to ashmem protection semantics).
-
-    const int seals = F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL;
-    int sealError = EINVAL;
-
-#  ifdef F_SEAL_FUTURE_WRITE
-    sealError =
-        fcntl(mapped_file_.get(), F_ADD_SEALS, seals | F_SEAL_FUTURE_WRITE) == 0
-            ? 0
-            : errno;
-#  endif  // F_SEAL_FUTURE_WRITE
-    if (sealError == EINVAL) {
-      sealError =
-          fcntl(mapped_file_.get(), F_ADD_SEALS, seals) == 0 ? 0 : errno;
-    }
-    if (sealError != 0) {
-      CHROMIUM_LOG(WARNING) << "failed to seal memfd: " << strerror(errno);
-      return false;
-    }
-  }
-#else  // !USE_MEMFD_CREATE
-  DCHECK(!is_memfd_);
-#endif
-
-  if (!is_ashmem) {
-    DCHECK(frozen_file_);
-    DCHECK(mapped_file_);
-    mapped_file_ = nullptr;
-    ro_file = std::move(frozen_file_);
-  }
-
-  DCHECK(ro_file);
+  DCHECK(ro_file >= 0);
+  mapped_file_ = -1;
   freezeable_ = false;
+
   ro_out->Close();
-  ro_out->mapped_file_ = std::move(ro_file);
+  ro_out->mapped_file_ = ro_file;
   ro_out->max_size_ = max_size_;
   ro_out->read_only_ = true;
   ro_out->freezeable_ = false;
@@ -436,16 +255,14 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
 }
 
 bool SharedMemory::Map(size_t bytes, void* fixed_address) {
-  if (!mapped_file_) {
-    return false;
-  }
+  if (mapped_file_ == -1) return false;
   DCHECK(!memory_);
 
   // Don't use MAP_FIXED when a fixed_address was specified, since that can
   // replace pages that are alread mapped at that address.
   void* mem =
       mmap(fixed_address, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
-           MAP_SHARED, mapped_file_.get(), 0);
+           MAP_SHARED, mapped_file_, 0);
 
   if (mem == MAP_FAILED) {
     CHROMIUM_LOG(WARNING) << "Call to mmap failed: " << strerror(errno);
@@ -458,7 +275,17 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
     return false;
   }
 
-  memory_ = UniqueMapping(mem, MappingDeleter(bytes));
+  memory_ = mem;
+  mapped_size_ = bytes;
+  return true;
+}
+
+bool SharedMemory::Unmap() {
+  if (memory_ == NULL) return false;
+
+  munmap(memory_, mapped_size_);
+  memory_ = NULL;
+  mapped_size_ = 0;
   return true;
 }
 
@@ -473,7 +300,7 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         SharedMemoryHandle* new_handle,
                                         bool close_self) {
   freezeable_ = false;
-  const int new_fd = dup(mapped_file_.get());
+  const int new_fd = dup(mapped_file_);
   DCHECK(new_fd >= -1);
   new_handle->fd = new_fd;
   new_handle->auto_close = true;
@@ -488,11 +315,24 @@ void SharedMemory::Close(bool unmap_view) {
     Unmap();
   }
 
-  mapped_file_ = nullptr;
-  if (frozen_file_) {
-    CHROMIUM_LOG(WARNING) << "freezeable shared memory was never frozen";
-    frozen_file_ = nullptr;
+  if (mapped_file_ >= 0) {
+    close(mapped_file_);
+    mapped_file_ = -1;
   }
+  if (frozen_file_ >= 0) {
+    CHROMIUM_LOG(WARNING) << "freezeable shared memory was never frozen";
+    close(frozen_file_);
+    frozen_file_ = -1;
+  }
+}
+
+mozilla::UniqueFileHandle SharedMemory::TakeHandle() {
+  mozilla::UniqueFileHandle fh(mapped_file_);
+  mapped_file_ = -1;
+  // Now that the main fd is removed, reset everything else: close the
+  // frozen fd if present and unmap the memory if mapped.
+  Close();
+  return fh;
 }
 
 }  // namespace base
