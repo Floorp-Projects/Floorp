@@ -3,12 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    when:
-        files-changed:
-            - "remote/**"
     platform: linux1804-64/opt
     require-build:
-        linux1804-64/opt: build-linux64/opt
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
     fetches:
         build:
             - target.tar.bz2
@@ -34,7 +35,7 @@ job-defaults:
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
-    run-on-projects: ["mozilla-central"]
+    run-on-projects: ["trunk"]
     treeherder:
         symbol: remote(pup)
     run:
@@ -45,7 +46,7 @@ puppeteer:
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
-    run-on-projects: []
+    run-on-projects: ["trunk"]
     treeherder:
         symbol: remote(pup-fis)
     run:
