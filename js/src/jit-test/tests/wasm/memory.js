@@ -122,11 +122,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /can't touch memory/);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /(can't touch memory)|(unknown memory 0)/);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /can't touch memory/);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /(can't touch memory)|(unknown memory 0)/);
 }
 
 // Can't touch memory.

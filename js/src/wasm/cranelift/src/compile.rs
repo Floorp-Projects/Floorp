@@ -21,6 +21,7 @@
 use log::{debug, info};
 use std::fmt;
 use std::mem;
+use std::rc::Rc;
 
 use cranelift_codegen::binemit::{
     Addend, CodeInfo, CodeOffset, NullStackMapSink, Reloc, RelocSink, TrapSink,
@@ -28,13 +29,14 @@ use cranelift_codegen::binemit::{
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::{
     self, constant::ConstantOffset, stackslot::StackSize, ExternalName, JumpTable, SourceLoc,
-    TrapCode, Type,
+    TrapCode,
 };
 use cranelift_codegen::isa::TargetIsa;
 use cranelift_codegen::machinst::MachStackMap;
 use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
-use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResult};
+use cranelift_wasm::wasmparser::{FuncValidator, WasmFeatures};
+use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult};
 
 use crate::bindings;
 use crate::isa::make_isa;
@@ -91,10 +93,9 @@ impl CompiledFunc {
 /// compilations.
 pub struct BatchCompiler<'static_env, 'module_env> {
     // Attributes that are constant accross multiple compilations.
-    static_environ: &'static_env bindings::StaticEnvironment,
+    static_env: &'static_env bindings::StaticEnvironment,
 
-    environ: bindings::ModuleEnvironment<'module_env>,
-    module_state: ModuleTranslationState,
+    module_env: Rc<bindings::ModuleEnvironment<'module_env>>,
 
     isa: Box<dyn TargetIsa>,
 
@@ -117,17 +118,17 @@ pub struct BatchCompiler<'static_env, 'module_env> {
 
 impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
     pub fn new(
-        static_environ: &'static_env bindings::StaticEnvironment,
-        environ: bindings::ModuleEnvironment<'module_env>,
+        static_env: &'static_env bindings::StaticEnvironment,
+        module_env: bindings::ModuleEnvironment<'module_env>,
     ) -> DashResult<Self> {
-        let isa = make_isa(static_environ)?;
-        let trans_env = TransEnv::new(&*isa, environ, static_environ);
+        let isa = make_isa(static_env)?;
+        let module_env = Rc::new(module_env);
+        let trans_env = TransEnv::new(&*isa, module_env.clone(), static_env);
         Ok(BatchCompiler {
-            static_environ,
-            environ,
+            static_env,
+            module_env,
             isa,
             func_translator: FuncTranslator::new(),
-            module_state: create_module_translation_state(&environ)?,
             context: Context::new(),
             trap_relocs: Traps::new(),
             trans_env,
@@ -156,11 +157,27 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
         let index = FuncIndex::new(func.index as usize);
 
         self.context.func.signature =
-            init_sig(&self.environ, self.static_environ.call_conv(), index)?;
+            init_sig(&*self.module_env, self.static_env.call_conv(), index)?;
         self.context.func.name = wasm_function_name(index);
 
+        let features = WasmFeatures {
+            reference_types: self.static_env.ref_types_enabled,
+            module_linking: false,
+            simd: false, // TODO
+            multi_value: true,
+            threads: self.static_env.threads_enabled,
+            tail_call: false,
+            bulk_memory: true,
+            deterministic_only: true,
+            memory64: false,
+            multi_memory: false,
+        };
+        let sig_index = self.module_env.func_sig_index(index);
+        let mut validator =
+            FuncValidator::new(sig_index.index() as u32, 0, &*self.module_env, &features)?;
+
         self.func_translator.translate(
-            &self.module_state,
+            &mut validator,
             func.bytecode(),
             func.offset_in_module as usize,
             &mut self.context.func,
@@ -222,7 +239,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
                 .append(&mut self.trap_relocs.metadata);
         }
 
-        if self.static_environ.ref_types_enabled {
+        if self.static_env.ref_types_enabled {
             self.emit_stackmaps(stackmaps);
         }
 
@@ -285,27 +302,6 @@ impl<'static_env, 'module_env> fmt::Display for BatchCompiler<'static_env, 'modu
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.context.func.display(self.isa.as_ref()))
     }
-}
-
-fn create_module_translation_state(
-    env: &bindings::ModuleEnvironment,
-) -> WasmResult<ModuleTranslationState> {
-    let num_sig = env.num_types();
-
-    let mut arg_vecs = vec![];
-    let mut result_vecs = vec![];
-    for i in 0..num_sig {
-        let sig = env.type_(i);
-        arg_vecs.push(sig.args()?);
-        result_vecs.push(sig.results()?);
-    }
-    let types: Vec<(&[Type], &[Type])> = arg_vecs
-        .iter()
-        .zip(result_vecs.iter())
-        .map(|(args, results)| (&args[..], &results[..]))
-        .collect();
-
-    ModuleTranslationState::from_func_sigs(&types[..])
 }
 
 /// Create a Cranelift function name representing a WebAssembly function with `index`.

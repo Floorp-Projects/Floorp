@@ -2,13 +2,13 @@ wasmFailValidateText(`(module
    (func (param i32) (result i32)
      (loop (if (i32.const 0) (br 0)) (local.get 0)))
    (export "" (func 0))
-)`, /unused values not explicitly dropped by end of block/);
+)`, /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 wasmFailValidateText(`(module
    (func (param i32)
      (loop (if (i32.const 0) (br 0)) (local.get 0)))
    (export "" (func 0))
-)`, /unused values not explicitly dropped by end of block/);
+)`, /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 wasmFailValidateText(`(module
    (func (param i32) (result i32)
@@ -204,7 +204,7 @@ wasmFailValidateText(`
         (br_table 1 0 (i32.const 15))
       )
     )
-)`, /br_table targets must all have the same arity/);
+)`, /(br_table targets must all have the same arity)|(br_table target labels have different types)/);
 
 wasmFailValidateText(`
 (module
@@ -214,7 +214,7 @@ wasmFailValidateText(`
       (br_table 1 0 (i32.const 15))
     )
   )
-)`, /br_table targets must all have the same arity/);
+)`, /(br_table targets must all have the same arity)|(br_table target labels have different types)/);
 
 wasmValidateText(`
 (module

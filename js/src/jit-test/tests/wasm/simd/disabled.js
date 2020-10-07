@@ -15,7 +15,7 @@ wasmFailValidateText(`(module (func (result v128)))`,
                      /(v128 not enabled)|(bad type)/);
 
 wasmFailValidateText(`(module (func (local v128)))`,
-                     /(v128 not enabled)|(bad type)/);
+                     /(v128 not enabled)|(bad type)|(SIMD support is not enabled)/);
 
 wasmFailValidateText(`(module (global (import "m" "g") v128))`,
                      /expected global type/);

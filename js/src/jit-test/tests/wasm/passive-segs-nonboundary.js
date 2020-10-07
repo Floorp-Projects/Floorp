@@ -294,10 +294,10 @@ checkNoDataCount([I32ConstCode, 0,
                   I32ConstCode, 0,
                   I32ConstCode, 0,
                   MiscPrefix, MemoryInitCode, 0, 0],
-                /memory.init requires a DataCount section/);
+                /(memory.init requires a DataCount section)|(unknown data segment)/);
 
 checkNoDataCount([MiscPrefix, DataDropCode, 0],
-                 /data.drop requires a DataCount section/);
+                 /(data.drop requires a DataCount section)|(unknown data segment)/);
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
@@ -318,7 +318,7 @@ function checkMiscPrefixed(opcode, expect_failure) {
                            MiscPrefix, ...opcode]})])]);
     if (expect_failure) {
         assertErrorMessage(() => new WebAssembly.Module(binary),
-                           WebAssembly.CompileError, /unrecognized opcode/);
+                           WebAssembly.CompileError, /(unrecognized opcode)|(Unknown.*subopcode)/);
     } else {
         assertEq(WebAssembly.validate(binary), true);
     }
@@ -370,7 +370,7 @@ checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unas
         )`;
         assertErrorMessage(() => wasmEvalText(text1),
                            WebAssembly.CompileError,
-                           /popping value from empty stack/);
+                           /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
         let text2 =
         `(module
           (memory (export "memory") 1 1)
@@ -384,7 +384,7 @@ checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unas
         )`;
         assertErrorMessage(() => wasmEvalText(text2),
                            WebAssembly.CompileError,
-                           /unused values not explicitly dropped by end of block/);
+                           /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
     }
 }
 
@@ -399,7 +399,7 @@ checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unas
         )`;
         assertErrorMessage(() => wasmEvalText(text),
                            WebAssembly.CompileError,
-                           /can't touch memory without memory/);
+                           /(can't touch memory without memory)|(unknown memory)/);
     }
 }
 
