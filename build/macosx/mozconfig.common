@@ -14,4 +14,3 @@ if [ -z "$USE_ARTIFACT" ]; then
     fi
 fi
 
-. $topsrcdir/build/mozconfig.stylo

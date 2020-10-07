@@ -2,11 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file is included at the top of all native android mozconfigs
-if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
-  . "$topsrcdir/build/mozconfig.stylo"
-fi
-
 . "$topsrcdir/build/mozconfig.common"
 
 # For Android builds in TaskCluster, the system image is Debian, and
