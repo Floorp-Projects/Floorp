@@ -61,38 +61,22 @@ nsresult MaybeDeserializeAndWrapForMainThread(
 }  // anonymous namespace
 
 /* static */ void FetchEventOpProxyParent::Create(
-    PRemoteWorkerParent* aManager, const ServiceWorkerFetchEventOpArgs& aArgs,
-    RefPtr<FetchEventOpParent> aReal) {
+    PRemoteWorkerParent* aManager,
+    RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise,
+    const ServiceWorkerFetchEventOpArgs& aArgs,
+    RefPtr<FetchEventOpParent> aReal, nsCOMPtr<nsIInputStream> aBodyStream) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aReal);
 
   FetchEventOpProxyParent* actor =
-      new FetchEventOpProxyParent(std::move(aReal));
-
-  if (aArgs.internalRequest().body().isNothing()) {
-    Unused << aManager->SendPFetchEventOpProxyConstructor(actor, aArgs);
-    return;
-  }
+      new FetchEventOpProxyParent(std::move(aReal), std::move(aPromise));
 
   ServiceWorkerFetchEventOpArgs copyArgs = aArgs;
   IPCInternalRequest& copyRequest = copyArgs.internalRequest();
 
-  if (copyRequest.body().ref().type() ==
-      BodyStreamVariant::TParentToParentStream) {
-    nsCOMPtr<nsIInputStream> stream;
-    auto streamLength = copyRequest.bodySize();
-    const auto& uuid =
-        copyRequest.body().ref().get_ParentToParentStream().uuid();
-
-    auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
-    MOZ_DIAGNOSTIC_ASSERT(storage);
-    storage->GetStream(uuid, 0, streamLength, getter_AddRefs(stream));
-    storage->ForgetStream(uuid);
-
-    MOZ_DIAGNOSTIC_ASSERT(stream);
-
+  if (aBodyStream) {
     PBackgroundParent* bgParent = aManager->Manager();
     MOZ_ASSERT(bgParent);
 
@@ -100,7 +84,7 @@ nsresult MaybeDeserializeAndWrapForMainThread(
 
     RemoteLazyStream ipdlStream;
     MOZ_ALWAYS_SUCCEEDS(RemoteLazyInputStreamUtils::SerializeInputStream(
-        stream, streamLength, ipdlStream, bgParent));
+        aBodyStream, copyRequest.bodySize(), ipdlStream, bgParent));
 
     copyRequest.body().ref().get_ParentToChildStream().actorParent() =
         ipdlStream;
@@ -114,8 +98,9 @@ FetchEventOpProxyParent::~FetchEventOpProxyParent() {
 }
 
 FetchEventOpProxyParent::FetchEventOpProxyParent(
-    RefPtr<FetchEventOpParent>&& aReal)
-    : mReal(std::move(aReal)) {}
+    RefPtr<FetchEventOpParent>&& aReal,
+    RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise)
+    : mReal(std::move(aReal)), mLifetimePromise(std::move(aPromise)) {}
 
 mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvAsyncLog(
     const nsCString& aScriptSpec, const uint32_t& aLineNumber,
@@ -177,16 +162,25 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvRespondWith(
 mozilla::ipc::IPCResult FetchEventOpProxyParent::Recv__delete__(
     const ServiceWorkerFetchEventOpResult& aResult) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mLifetimePromise);
   MOZ_ASSERT(mReal);
 
-  Unused << mReal->Send__delete__(mReal, aResult);
-  mReal = nullptr;
+  if (mLifetimePromise) {
+    mLifetimePromise->Resolve(aResult, __func__);
+    mLifetimePromise = nullptr;
+    mReal = nullptr;
+  }
 
   return IPC_OK();
 }
 
 void FetchEventOpProxyParent::ActorDestroy(ActorDestroyReason) {
   AssertIsOnBackgroundThread();
+  if (mLifetimePromise) {
+    mLifetimePromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mLifetimePromise = nullptr;
+    mReal = nullptr;
+  }
 }
 
 }  // namespace dom

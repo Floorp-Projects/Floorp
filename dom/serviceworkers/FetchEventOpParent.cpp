@@ -22,26 +22,6 @@ using namespace ipc;
 
 namespace dom {
 
-void FetchEventOpParent::Initialize(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  RemoteWorkerControllerParent* manager =
-      static_cast<RemoteWorkerControllerParent*>(Manager());
-  MOZ_ASSERT(manager);
-
-  // This will be null when the manager's RemoteWorkerController has shutdown.
-  RefPtr<RemoteWorkerParent> proxyManager = manager->GetRemoteWorkerParent();
-  if (NS_WARN_IF(!proxyManager)) {
-    Unused << Send__delete__(this, NS_ERROR_DOM_ABORT_ERR);
-
-    return;
-  }
-
-  FetchEventOpProxyParent::Create(proxyManager.get(), aArgs, this);
-}
-
 void FetchEventOpParent::ActorDestroy(ActorDestroyReason) {
   AssertIsOnBackgroundThread();
 }
