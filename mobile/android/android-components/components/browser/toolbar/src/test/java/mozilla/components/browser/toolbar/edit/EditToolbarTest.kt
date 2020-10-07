@@ -183,6 +183,15 @@ class EditToolbarTest {
     }
 
     @Test
+    fun `setIconClickListener sets a click listener on the icon view`() {
+        val (_, editToolbar) = createEditToolbar()
+        val iconView = editToolbar.views.icon
+        assertFalse(iconView.hasOnClickListeners())
+        editToolbar.setIconClickListener { /* noop */ }
+        assertTrue(iconView.hasOnClickListeners())
+    }
+
+    @Test
     fun `clearView clears text in urlView`() {
         val (_, editToolbar) = createEditToolbar()
         val clearView = editToolbar.views.clear

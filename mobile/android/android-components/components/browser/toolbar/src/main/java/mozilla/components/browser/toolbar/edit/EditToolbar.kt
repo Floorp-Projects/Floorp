@@ -162,6 +162,13 @@ class EditToolbar internal constructor(
     }
 
     /**
+     * Sets a click listener on the icon view
+     */
+    fun setIconClickListener(listener: ((View) -> Unit)?) {
+        views.icon.setOnClickListener(listener)
+    }
+
+    /**
      * Sets the text to be displayed when the URL of the toolbar is empty.
      */
     var hint: String
