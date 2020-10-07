@@ -42,6 +42,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/LockGuard.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmInstance.h"
