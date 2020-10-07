@@ -47,8 +47,6 @@ using js::Wrapper;
 
 namespace xpc {
 
-using namespace XrayUtils;
-
 #define Between(x, a, b) (a <= x && x <= b)
 
 static_assert(JSProto_URIError - JSProto_Error == 8,
@@ -1833,34 +1831,6 @@ const JSClass* DOMXrayTraits::getExpandoClass(JSContext* cx,
                                               HandleObject target) const {
   return XrayGetExpandoClass(cx, target);
 }
-
-namespace XrayUtils {
-
-bool HasNativeProperty(JSContext* cx, HandleObject wrapper, HandleId id,
-                       bool* hasProp) {
-  MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
-  XrayTraits* traits = GetXrayTraits(wrapper);
-  MOZ_ASSERT(traits);
-  RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
-  RootedObject holder(cx, traits->ensureHolder(cx, wrapper));
-  NS_ENSURE_TRUE(holder, false);
-  *hasProp = false;
-  Rooted<PropertyDescriptor> desc(cx);
-
-  // Try resolveOwnProperty.
-  if (!traits->resolveOwnProperty(cx, wrapper, target, holder, id, &desc)) {
-    return false;
-  }
-  if (desc.object()) {
-    *hasProp = true;
-    return true;
-  }
-
-  // Try the holder.
-  return JS_AlreadyHasOwnPropertyById(cx, holder, id, hasProp);
-}
-
-}  // namespace XrayUtils
 
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::preventExtensions(
