@@ -1612,7 +1612,7 @@ pub extern "C" fn wr_window_new(
 
     let window_size = DeviceIntSize::new(window_width, window_height);
     let notifier = Box::new(CppNotifier { window_id: window_id });
-    let (renderer, sender) = match Renderer::new(gl, notifier, opts, shaders, window_size) {
+    let (renderer, sender) = match Renderer::new(gl, notifier, opts, shaders) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             warn!(" Failed to create a Renderer: {:?}", e);
