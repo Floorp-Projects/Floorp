@@ -1079,10 +1079,12 @@ static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
   EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
 }
 
-static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
-                                     JSObject* obj, HandleShape shape,
-                                     ICState::Mode mode) {
-  MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
+static bool CanAttachDOMCall(JSContext* cx, JSJitInfo::OpType type,
+                             JSObject* obj, JSFunction* fun,
+                             ICState::Mode mode) {
+  MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter ||
+             type == JSJitInfo::Method);
+
   if (!JitOptions.warpBuilder) {
     return false;
   }
@@ -1091,9 +1093,6 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
     return false;
   }
 
-  Value v =
-      type == JSJitInfo::Getter ? shape->getterValue() : shape->setterValue();
-  JSFunction* fun = &v.toObject().as<JSFunction>();
   if (!fun->hasJitInfo()) {
     return false;
   }
@@ -1109,13 +1108,29 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
   }
 
   const JSClass* clasp = obj->getClass();
-  if (!clasp->isDOMClass() || clasp->isProxy()) {
+  if (!clasp->isDOMClass()) {
+    return false;
+  }
+
+  if (type != JSJitInfo::Method && clasp->isProxy()) {
     return false;
   }
 
   DOMInstanceClassHasProtoAtDepth instanceChecker =
       cx->runtime()->DOMcallbacks->instanceClassMatchesProto;
   return instanceChecker(clasp, jitInfo->protoID, jitInfo->depth);
+}
+
+static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
+                                     JSObject* obj, HandleShape shape,
+                                     ICState::Mode mode) {
+  MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
+
+  Value v =
+      type == JSJitInfo::Getter ? shape->getterValue() : shape->setterValue();
+  JSFunction* fun = &v.toObject().as<JSFunction>();
+
+  return CanAttachDOMCall(cx, type, obj, fun, mode);
 }
 
 static void EmitCallDOMGetterResultNoGuards(CacheIRWriter& writer, Shape* shape,
@@ -9631,10 +9646,32 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
-  if (isSpecialized) {
+  // DOM calls need an additional guard so only try optimizing the first stub.
+  // Can only optimize normal (non-spread) calls.
+  if (isFirstStub_ && !isSpread && thisval_.isObject() &&
+      CanAttachDOMCall(cx_, JSJitInfo::Method, &thisval_.toObject(), calleeFunc,
+                       mode_)) {
+    MOZ_ASSERT(!isConstructing, "DOM functions are not constructors");
+
+    // Guard that |this| is an object.
+    ValOperandId thisValId =
+        writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId, flags);
+    ObjOperandId thisObjId = writer.guardToObject(thisValId);
+
+    // Guard on the |this| class to make sure it's the right instance.
+    writer.guardAnyClass(thisObjId, thisval_.toObject().getClass());
+
+    // Ensure callee matches this stub's callee
+    writer.guardSpecificFunction(calleeObjId, calleeFunc);
+    writer.callDOMFunction(calleeObjId, argcId, thisObjId, calleeFunc, flags);
+
+    trackAttached("CallDOM");
+  } else if (isSpecialized) {
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
     writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
+
+    trackAttached("CallNative");
   } else {
     // Guard that object is a native function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
@@ -9648,20 +9685,16 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
       writer.guardNotClassConstructor(calleeObjId);
     }
     writer.callAnyNativeFunction(calleeObjId, argcId, flags);
+
+    trackAttached("CallAnyNative");
   }
 
   writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   if (templateObj) {
     MOZ_ASSERT(isSpecialized);
     writer.metaNativeTemplateObject(calleeFunc, templateObj);
-  }
-
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  if (isSpecialized) {
-    trackAttached("Call native func");
-  } else {
-    trackAttached("Call any native func");
   }
 
   return AttachDecision::Attach;

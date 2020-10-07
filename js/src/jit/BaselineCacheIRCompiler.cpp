@@ -3153,6 +3153,18 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
   return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
                               ignoresReturnValue, targetOffset_);
 }
+
+bool BaselineCacheIRCompiler::emitCallDOMFunction(ObjOperandId calleeId,
+                                                  Int32OperandId argcId,
+                                                  ObjOperandId thisObjId,
+                                                  CallFlags flags,
+                                                  uint32_t targetOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Maybe<bool> ignoresReturnValue;
+  Maybe<uint32_t> targetOffset_ = mozilla::Some(targetOffset);
+  return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
+                              ignoresReturnValue, targetOffset_);
+}
 #else
 bool BaselineCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
                                                      Int32OperandId argcId,
@@ -3163,6 +3175,17 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction(ObjOperandId calleeId,
   Maybe<uint32_t> targetOffset;
   return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
                               ignoresReturnValue_, targetOffset);
+}
+
+bool BaselineCacheIRCompiler::emitCallDOMFunction(ObjOperandId calleeId,
+                                                  Int32OperandId argcId,
+                                                  ObjOperandId thisObjId,
+                                                  CallFlags flags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Maybe<bool> ignoresReturnValue = mozilla::Some(false);
+  Maybe<uint32_t> targetOffset;
+  return emitCallNativeShared(NativeCallType::Native, calleeId, argcId, flags,
+                              ignoresReturnValue, targetOffset);
 }
 #endif
 
