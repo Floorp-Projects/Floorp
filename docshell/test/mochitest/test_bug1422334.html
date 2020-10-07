@@ -10,26 +10,26 @@
     addLoadEvent(function() {
       var ifr = document.querySelector("iframe");
       var win = ifr.contentWindow;
-      is(win.location.href,
-         location.href.replace("mochitest/test_bug1422334.html",
-                               "navigation/blank.html?x=y"),
+      is(win.location.href, location.href.replace(location.search, "")
+                            .replace("mochitest/test_bug1422334.html",
+                            "navigation/blank.html?x=y"),
          "Should have the right location on initial load");
 
       win.history.replaceState(null, '', win.location.pathname);
-      is(win.location.href,
-         location.href.replace("mochitest/test_bug1422334.html",
-                               "navigation/blank.html"),
+      is(win.location.href, location.href.replace(location.search, "")
+                            .replace("mochitest/test_bug1422334.html",
+                            "navigation/blank.html"),
          "Should have the right location after replaceState call");
 
       ifr.onload = function() {
-        is(win.location.href,
-           location.href.replace("mochitest/test_bug1422334.html",
-                                 "navigation/blank.html"),
+        is(win.location.href, location.href.replace(location.search, "")
+                              .replace("mochitest/test_bug1422334.html",
+                              "navigation/blank.html"),
            "Should have the right location after reload");
         SimpleTest.finish();
       }
       win.location.reload();
-    })
+    });
   </script>
 </head>
 <body>
