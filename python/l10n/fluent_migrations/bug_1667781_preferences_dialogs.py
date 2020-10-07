@@ -63,3 +63,12 @@ translation-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "translation-button-close.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "translation-button-close.accesskey") }
 """, from_path="browser/browser/preferences/translation.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/blocklists.ftl",
+        "browser/browser/preferences/blocklists.ftl",
+        transforms_from("""
+blocklist-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "blocklist-button-ok.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "blocklist-button-ok.accesskey") }
+""", from_path="browser/browser/preferences/blocklists.ftl"))
