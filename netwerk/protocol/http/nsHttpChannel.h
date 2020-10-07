@@ -152,6 +152,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD GetEncodedBodySize(uint64_t* aEncodedBodySize) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char* aFallbackKey) override;
+  NS_IMETHOD GetIsAuthChannel(bool* aIsAuthChannel) override;
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
@@ -652,6 +653,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   uint32_t mCacheQueueSizeWhenOpen;
 
   Atomic<bool, Relaxed> mCachedContentIsValid;
+  Atomic<bool> mIsAuthChannel;
   Atomic<bool> mAuthRetryPending;
 
   // state flags

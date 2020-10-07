@@ -101,6 +101,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char* aFallbackKey) override;
+  NS_IMETHOD GetIsAuthChannel(bool* aIsAuthChannel) override;
   // nsISupportsPriority
   NS_IMETHOD SetPriority(int32_t value) override;
   // nsIClassOfService

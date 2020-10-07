@@ -1276,6 +1276,11 @@ TRRServiceChannel::SetupFallbackChannel(const char* aFallbackKey) {
 }
 
 NS_IMETHODIMP
+TRRServiceChannel::GetIsAuthChannel(bool* aIsAuthChannel) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRServiceChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
   mCallbacks = aCallbacks;
   return NS_OK;

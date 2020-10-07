@@ -93,6 +93,12 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] void setupFallbackChannel(in string aFallbackKey);
 
     /**
+     * Returns true in case this channel is used for auth;
+     * (the response header includes 'www-authenticate').
+     */
+    [noscript, must_use] readonly attribute bool isAuthChannel;
+
+    /**
      * This flag is set to force relevant cookies to be sent with this load
      * even if normally they wouldn't be.
      */
