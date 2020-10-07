@@ -64,11 +64,7 @@ if test -z "$JS_STANDALONE"; then
 fi
 AC_SUBST(autoconfmk)
 
-if test -n "$JS_STANDALONE"; then
-  jsconfdefs=$_objdir/js/src/js-confdefs.h
-else
-  jsconfdefs=$_objdir/js-confdefs.h
-fi
+jsconfdefs=$_objdir/js/src/js-confdefs.h
 
 MOZ_ANDROID_NDK
 
