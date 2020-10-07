@@ -74,6 +74,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     ValidityCheckingMode validityCheckingMode, CertVerifier::SHA1Mode sha1Mode,
     NetscapeStepUpPolicy netscapeStepUpPolicy,
     DistrustedCAPolicy distrustedCAPolicy, CRLiteMode crliteMode,
+    uint64_t crliteCTMergeDelaySeconds,
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
@@ -96,6 +97,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mDistrustedCAPolicy(distrustedCAPolicy),
       mCRLiteMode(crliteMode),
+      mCRLiteCTMergeDelaySeconds(crliteCTMergeDelaySeconds),
       mSawDistrustedCAByPolicyError(false),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
@@ -711,6 +713,27 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       // SCT timestamps are milliseconds since the epoch.
       Time earliestCertificateTimestamp(
           TimeFromEpochInSeconds(*earliestSCTTimestamp / 1000));
+      Result result =
+          earliestCertificateTimestamp.AddSeconds(mCRLiteCTMergeDelaySeconds);
+      if (result != Success) {
+        // This shouldn't happen - the merge delay is at most a year in seconds,
+        // and the SCT timestamp is supposed to be in the past.
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                ("NSSCertDBTrustDomain::CheckRevocation: integer overflow "
+                 "calculating sct timestamp + merge delay (%llu + %llu)",
+                 static_cast<unsigned long long>(*earliestSCTTimestamp / 1000),
+                 static_cast<unsigned long long>(mCRLiteCTMergeDelaySeconds)));
+        if (mCRLiteMode == CRLiteMode::Enforce) {
+          // While we do have control over the possible values of the CT merge
+          // delay parameter, we don't have control over the SCT timestamp.
+          // Thus, if we've reached this point, the CA has probably made a
+          // mistake and we should treat this certificate as revoked.
+          return Result::ERROR_REVOKED_CERTIFICATE;
+        }
+        // If Time::AddSeconds fails, the original value is unchanged. Since in
+        // this case `earliestCertificateTimestamp` must represent a value far
+        // in the future, any CRLite result will be discarded.
+      }
       if (earliestCertificateTimestamp <= filterTimestampTime &&
           crliteRevocationState == nsICertStorage::STATE_ENFORCE) {
         if (mCRLiteTelemetryInfo) {

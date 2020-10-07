@@ -15,10 +15,13 @@
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "gc/PublicIterators.h"
+#include "jit/AutoWritableJitCode.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/BaselineIC.h"
+#include "jit/CalleeToken.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithStackPointer
 #include "util/Memory.h"
@@ -68,6 +71,35 @@ static bool CheckFrame(InterpreterFrame* fp) {
 
   return true;
 }
+
+struct EnterJitData {
+  explicit EnterJitData(JSContext* cx)
+      : jitcode(nullptr),
+        osrFrame(nullptr),
+        calleeToken(nullptr),
+        maxArgv(nullptr),
+        maxArgc(0),
+        numActualArgs(0),
+        osrNumStackValues(0),
+        envChain(cx),
+        result(cx),
+        constructing(false) {}
+
+  uint8_t* jitcode;
+  InterpreterFrame* osrFrame;
+
+  void* calleeToken;
+
+  Value* maxArgv;
+  unsigned maxArgc;
+  unsigned numActualArgs;
+  unsigned osrNumStackValues;
+
+  RootedObject envChain;
+  RootedValue result;
+
+  bool constructing;
+};
 
 static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   MOZ_ASSERT(data.osrFrame);
@@ -148,8 +180,6 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
   const BaselineInterpreter& interp =
       cx->runtime()->jitRuntime()->baselineInterpreter();
   data.jitcode = interp.interpretOpNoDebugTrapAddr().value;
-
-  // Note: keep this in sync with SetEnterJitData.
 
   data.osrFrame = fp;
   data.osrNumStackValues =

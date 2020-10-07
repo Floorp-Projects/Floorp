@@ -73,6 +73,8 @@ class MIRGenerator;
 class MIRGraph;
 class WarpSnapshot;
 
+enum class CacheKind : uint8_t;
+
 // Data that is shared across all WarpBuilders for a given compilation.
 class MOZ_STACK_CLASS WarpCompilation {
   // The total loop depth, including loops in the caller while

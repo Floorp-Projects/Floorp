@@ -15,7 +15,6 @@
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
 #include "gc/Nursery.h"
-#include "jit/JitRealm.h"
 #include "threading/CpuCount.h"
 #include "util/Poison.h"
 #include "vm/JSContext.h"

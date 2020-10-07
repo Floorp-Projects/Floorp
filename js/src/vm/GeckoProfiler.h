@@ -7,14 +7,21 @@
 #ifndef vm_GeckoProfiler_h
 #define vm_GeckoProfiler_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
-#include "js/ProfilingStack.h"
+#include "jspubtd.h"
+
+#include "js/AllocPolicy.h"
+#include "js/HashTable.h"
+#include "js/ProfilingCategory.h"
+#include "js/TypeDecls.h"
+#include "js/Utility.h"
 #include "threading/ProtectedData.h"
-#include "vm/JSScript.h"
-#include "vm/MutexIDs.h"
 
 /*
  * Gecko Profiler integration with the JS Engine
@@ -100,10 +107,13 @@
 
 namespace js {
 
+class BaseScript;
+class GeckoProfilerThread;
+
 // The `ProfileStringMap` weakly holds its `BaseScript*` keys and owns its
 // string values. Entries are removed when the `BaseScript` is finalized; see
 // `GeckoProfiler::onScriptFinalized`.
-using ProfileStringMap = HashMap<BaseScript*, UniqueChars,
+using ProfileStringMap = HashMap<BaseScript*, JS::UniqueChars,
                                  DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 
 class GeckoProfilerRuntime {
@@ -124,7 +134,7 @@ class GeckoProfilerRuntime {
 
   void setEventMarker(void (*fn)(const char*, const char*));
 
-  static UniqueChars allocProfileString(JSContext* cx, BaseScript* script);
+  static JS::UniqueChars allocProfileString(JSContext* cx, BaseScript* script);
   const char* profileString(JSContext* cx, BaseScript* script);
 
   void onScriptFinalized(BaseScript* script);

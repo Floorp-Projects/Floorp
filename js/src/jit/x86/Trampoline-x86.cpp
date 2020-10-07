@@ -7,11 +7,12 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/Bailouts.h"
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
-#include "jit/Linker.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif

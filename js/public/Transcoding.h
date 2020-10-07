@@ -65,12 +65,13 @@ extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
 
 // Decode JSScript from the buffer.
 extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, TranscodeBuffer& buffer,
-             MutableHandle<JSScript*> scriptp, size_t cursorIndex = 0);
+DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+             TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
+             size_t cursorIndex = 0);
 
 extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, const TranscodeRange& range,
-             MutableHandle<JSScript*> scriptp);
+DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+             const TranscodeRange& range, MutableHandle<JSScript*> scriptp);
 
 // If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
 //
@@ -79,8 +80,8 @@ DecodeScript(JSContext* cx, const TranscodeRange& range,
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
 // If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
@@ -96,8 +97,8 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
 //
 // options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
-    JSContext* cx, TranscodeBuffer& buffer,
-    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
 // Finish incremental encoding started by one of:
@@ -119,6 +120,17 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
 extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
                                                     TranscodeBuffer& buffer);
+
+// Check if the compile options and script's flag matches.
+//
+// JS::DecodeScript* and JS::DecodeOffThreadScript internally check this.
+//
+// JS::DecodeMultiOffThreadScripts checks some options shared across multiple
+// scripts. Caller is responsible for checking each script with this API when
+// using the decoded script instead of compiling a new script wiht the given
+// options.
+extern JS_PUBLIC_API bool CheckCompileOptionsMatch(
+    const ReadOnlyCompileOptions& options, JSScript* script);
 
 }  // namespace JS
 

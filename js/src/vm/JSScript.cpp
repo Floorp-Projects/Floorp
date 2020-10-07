@@ -43,7 +43,7 @@
 #include "jit/IonScript.h"
 #include "jit/JitCode.h"
 #include "jit/JitOptions.h"
-#include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "js/CompileOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
@@ -941,12 +941,61 @@ template /* static */
     XDRResult
     js::XDRSourceExtent(XDRState<XDR_DECODE>* xdr, SourceExtent* extent);
 
+void js::FillImmutableFlagsFromCompileOptionsForTopLevel(
+    const ReadOnlyCompileOptions& options, ImmutableScriptFlags& flags) {
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+  js::FillImmutableFlagsFromCompileOptionsForFunction(options, flags);
+
+  flags.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+  flags.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+}
+
+void js::FillImmutableFlagsFromCompileOptionsForFunction(
+    const ReadOnlyCompileOptions& options, ImmutableScriptFlags& flags) {
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+  flags.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
+  flags.setFlag(ImmutableFlags::ForceStrict, options.forceStrictMode());
+  flags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                options.nonSyntacticScope);
+}
+
+// Check if flags matches to compile options for flags set by
+// FillImmutableFlagsFromCompileOptionsForTopLevel above.
+//
+// If isMultiDecode is true, this check minimal set of CompileOptions that is
+// shared across multiple scripts in JS::DecodeMultiOffThreadScripts.
+// Other options should be checked when getting the decoded script from the
+// cache.
+bool js::CheckCompileOptionsMatch(const ReadOnlyCompileOptions& options,
+                                  ImmutableScriptFlags flags,
+                                  bool isMultiDecode) {
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+  bool selfHosted = !!(flags & uint32_t(ImmutableFlags::SelfHosted));
+  bool forceStrict = !!(flags & uint32_t(ImmutableFlags::ForceStrict));
+  bool hasNonSyntacticScope =
+      !!(flags & uint32_t(ImmutableFlags::HasNonSyntacticScope));
+  bool noScriptRval = !!(flags & uint32_t(ImmutableFlags::NoScriptRval));
+  bool treatAsRunOnce = !!(flags & uint32_t(ImmutableFlags::TreatAsRunOnce));
+
+  return options.selfHostingMode == selfHosted &&
+         options.noScriptRval == noScriptRval &&
+         options.isRunOnce == treatAsRunOnce &&
+         (isMultiDecode || (options.forceStrictMode() == forceStrict &&
+                            options.nonSyntacticScope == hasNonSyntacticScope));
+}
+
+JS_PUBLIC_API bool JS::CheckCompileOptionsMatch(
+    const ReadOnlyCompileOptions& options, JSScript* script) {
+  return js::CheckCompileOptionsMatch(options, script->immutableFlags(), false);
+}
+
 template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                         HandleScriptSourceObject sourceObjectArg,
                         HandleObject funOrMod, MutableHandleScript scriptp) {
-  using ImmutableFlags = JSScript::ImmutableFlags;
-
   /* NB: Keep this in sync with CopyScriptImpl. */
 
   enum XDRScriptFlags {
@@ -1003,22 +1052,24 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   Maybe<CompileOptions> options;
 
   if (mode == XDR_DECODE) {
-    // When loading from the bytecode cache, we get the CompileOptions from
-    // the document. If the noScriptRval or selfHostingMode flag doesn't
-    // match, we should fail. This only applies to the top-level and not
-    // its inner functions.
-    bool noScriptRval =
-        !!(immutableFlags & uint32_t(ImmutableFlags::NoScriptRval));
-    bool selfHosted = !!(immutableFlags & uint32_t(ImmutableFlags::SelfHosted));
-    if (xdr->hasOptions() && (xdrFlags & OwnSource)) {
+    MOZ_ASSERT(xdr->hasOptions());
+
+    // When loading from the bytecode cache, and if we get the CompileOptions
+    // from the document, if the ImmutableFlags and options don't agree, we
+    // should fail. This only applies to the top-level and not its inner
+    // functions.
+    //
+    // Also, JS::DecodeMultiOffThreadScripts uses single CompileOptions for
+    // multiple scripts with different CompileOptions.
+    // We should check minimal set of common flags here, and let the consumer
+    // check the full flags when getting from the cache.
+    if (xdrFlags & OwnSource) {
       options.emplace(xdr->cx(), xdr->options());
-      if (options->noScriptRval != noScriptRval ||
-          options->selfHostingMode != selfHosted) {
+      if (!js::CheckCompileOptionsMatch(*options,
+                                        ImmutableScriptFlags(immutableFlags),
+                                        xdr->isMultiDecode())) {
         return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
       }
-    } else {
-      options.emplace(xdr->cx());
-      (*options).setNoScriptRval(noScriptRval).setSelfHostingMode(selfHosted);
     }
   }
 
@@ -3166,9 +3217,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     }
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      // NOTE: If the decoder has an option, then the filename is defined by
-      // the CompileOption from the document.
-      if (!xdr->hasOptions()) {
+      if (!ss->filename()) {
         if (!ss->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }

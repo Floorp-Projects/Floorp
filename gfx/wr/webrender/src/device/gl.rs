@@ -1490,8 +1490,18 @@ impl Device {
 
         info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}, depth {:?}",
             color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage, depth_format);
-        let supports_copy_image_sub_data = supports_extension(&extensions, "GL_EXT_copy_image") ||
-            supports_extension(&extensions, "GL_ARB_copy_image");
+
+        // On Mali devices glCopyImageSubData appears to stall the pipeline until any pending
+        // renders to the source texture have completed. Using an alternative such as
+        // glBlitFramebuffer is preferable on such devices, so pretend we don't support
+        // glCopyImageSubData. This was observed on a Mali-T830, but as a precaution we avoid this
+        // on Mali-G too. See bug 1669494.
+        let supports_copy_image_sub_data = if renderer_name.starts_with("Mali") {
+            false
+        } else {
+            supports_extension(&extensions, "GL_EXT_copy_image") ||
+            supports_extension(&extensions, "GL_ARB_copy_image")
+        };
 
         // Due to a bug on Adreno devices, blitting to an fbo bound to
         // a non-0th layer of a texture array is not supported.

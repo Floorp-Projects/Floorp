@@ -629,6 +629,21 @@ TypeHostRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 }
 
 NS_IMETHODIMP
+TypeHostRecord::GetAllRecordsWithEchConfig(
+    bool aNoHttp2, bool aNoHttp3, bool* aAllRecordsHaveEchConfig,
+    nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
+  MutexAutoLock lock(mResultsLock);
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& records = mResults.as<TypeRecordHTTPSSVC>();
+  GetAllRecordsWithEchConfigInternal(aNoHttp2, aNoHttp3, records,
+                                     aAllRecordsHaveEchConfig, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TypeHostRecord::GetHasIPAddresses(bool* aResult) {
   NS_ENSURE_ARG(aResult);
 

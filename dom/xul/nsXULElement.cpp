@@ -1626,6 +1626,13 @@ nsresult nsXULPrototypeScript::SerializeOutOfLine(
   return rv;
 }
 
+void nsXULPrototypeScript::FillCompileOptions(JS::CompileOptions& options) {
+  // If the script was inline, tell the JS parser to save source for
+  // Function.prototype.toSource(). If it's out of line, we retrieve the
+  // source from the files on demand.
+  options.setSourceIsLazy(mOutOfLine);
+}
+
 nsresult nsXULPrototypeScript::Deserialize(
     nsIObjectInputStream* aStream, nsXULPrototypeDocument* aProtoDoc,
     nsIURI* aDocumentURI,
@@ -1647,8 +1654,11 @@ nsresult nsXULPrototypeScript::Deserialize(
   }
   JSContext* cx = jsapi.cx();
 
+  JS::CompileOptions options(cx);
+  FillCompileOptions(options);
+
   JS::Rooted<JSScript*> newScriptObject(cx);
-  rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx,
+  rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx, options,
                                                newScriptObject.address());
   NS_ENSURE_SUCCESS(rv, rv);
   Set(newScriptObject);
@@ -1831,12 +1841,10 @@ nsresult nsXULPrototypeScript::Compile(
 
   // Ok, compile it to create a prototype script object!
   JS::CompileOptions options(cx);
+  FillCompileOptions(options);
   options.setIntroductionType(mOutOfLine ? "srcScript" : "inlineScript")
       .setFileAndLine(urlspec.get(), mOutOfLine ? 1 : aLineNo);
-  // If the script was inline, tell the JS parser to save source for
-  // Function.prototype.toSource(). If it's out of line, we retrieve the
-  // source from the files on demand.
-  options.setSourceIsLazy(mOutOfLine);
+
   JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
 
   if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aTextLength)) {

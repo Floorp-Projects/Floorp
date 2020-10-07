@@ -15,14 +15,14 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "jit/JSJitFrameIter.h"  // js::jit::CalleeToken
-#include "js/CallArgs.h"         // JS::CallArgs
-#include "js/RootingAPI.h"       // JS::Handle, JS::Rooted
-#include "js/TypeDecls.h"        // jsbytecode
-#include "js/UniquePtr.h"        // js::UniquePtr
-#include "js/Value.h"            // JS::Value
-#include "vm/SavedFrame.h"       // js::SavedFrame
-#include "vm/Stack.h"            // js::InterpreterRegs
+#include "jit/CalleeToken.h"  // js::jit::CalleeToken
+#include "js/CallArgs.h"      // JS::CallArgs
+#include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
+#include "js/TypeDecls.h"     // jsbytecode
+#include "js/UniquePtr.h"     // js::UniquePtr
+#include "js/Value.h"         // JS::Value
+#include "vm/SavedFrame.h"    // js::SavedFrame
+#include "vm/Stack.h"         // js::InterpreterRegs
 
 struct JS_PUBLIC_API JSContext;
 

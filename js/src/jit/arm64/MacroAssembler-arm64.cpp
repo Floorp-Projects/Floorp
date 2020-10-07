@@ -10,6 +10,7 @@
 #include "jit/arm64/SharedICRegisters-arm64.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
+#include "jit/JitRuntime.h"
 #include "jit/MacroAssembler.h"
 #include "util/Memory.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
@@ -290,6 +291,10 @@ void MacroAssemblerCompat::profilerEnterFrame(RegisterOrSP framePtr,
   }
   storePtr(ImmPtr(nullptr),
            Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
+}
+
+void MacroAssemblerCompat::profilerExitFrame() {
+  jump(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
 void MacroAssemblerCompat::breakpoint() {

@@ -75,9 +75,6 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
       mTransparencyMode;
 
-  // Locked back buffer of BasicCompositor
-  uint8_t* mLockedBackBufferData;
-
   std::unique_ptr<remote_backbuffer::Client> mRemoteBackbufferClient;
 };
 

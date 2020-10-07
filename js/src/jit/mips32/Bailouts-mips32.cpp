@@ -6,6 +6,7 @@
 
 #include "jit/mips32/Bailouts-mips32.h"
 
+#include "jit/JitRuntime.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 

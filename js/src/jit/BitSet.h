@@ -7,12 +7,17 @@
 #ifndef jit_BitSet_h
 #define jit_BitSet_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/JitAllocPolicy.h"
+#include <stddef.h>
+#include <stdint.h>
 
 namespace js {
 namespace jit {
+
+class TempAllocator;
 
 // Provides constant time set insertion and removal, and fast linear
 // set operations such as intersection, difference, and union.

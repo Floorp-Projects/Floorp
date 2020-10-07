@@ -6,9 +6,12 @@
 
 #include "jit/BaselineDebugModeOSR.h"
 
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
+#include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
-#include "jit/Linker.h"
+#include "jit/JitRuntime.h"
+#include "jit/JSJitFrameIter.h"
 #include "jit/PerfSpewer.h"
 
 #include "jit/JitFrames-inl.h"

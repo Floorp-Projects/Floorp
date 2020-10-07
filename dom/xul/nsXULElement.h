@@ -12,6 +12,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
+#include "js/CompileOptions.h"  // JS::CompileOptions
 #include "js/SourceText.h"
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
@@ -184,6 +185,8 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
 
  private:
   virtual ~nsXULPrototypeScript();
+
+  void FillCompileOptions(JS::CompileOptions& options);
 
  public:
   virtual nsresult Serialize(

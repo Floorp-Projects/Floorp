@@ -166,7 +166,7 @@ class VirtualenvMixin(object):
                          level=error_level)
                 return {}
             pip_freeze_output = self.get_output_from_command(
-                [pip, "freeze"], silent=True, ignore_errors=True)
+                [pip, "list", "--format", "freeze"], silent=True, ignore_errors=True)
             if not isinstance(pip_freeze_output, string_types):
                 self.fatal(
                     "package_versions: Error encountered running `pip freeze`: "

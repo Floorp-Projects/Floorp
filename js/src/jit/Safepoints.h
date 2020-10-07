@@ -14,6 +14,7 @@
 namespace js {
 namespace jit {
 
+class SafepointIndex;
 struct SafepointSlotEntry;
 
 class LAllocation;

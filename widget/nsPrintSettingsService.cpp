@@ -115,6 +115,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   data->honorPageRuleMargins() = aSettings->GetHonorPageRuleMargins();
   data->showMarginGuides() = aSettings->GetShowMarginGuides();
+  data->isPrintSelectionRBEnabled() = aSettings->GetIsPrintSelectionRBEnabled();
   data->printSelectionOnly() = aSettings->GetPrintSelectionOnly();
 
   aSettings->GetPrintRange(&data->printRange());
@@ -158,8 +159,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetDuplex(&data->duplex());
   aSettings->GetIsInitializedFromPrinter(&data->isInitializedFromPrinter());
   aSettings->GetIsInitializedFromPrefs(&data->isInitializedFromPrefs());
-
-  aSettings->GetPrintOptionsBits(&data->optionFlags());
 
   // Initialize the platform-specific values that don't
   // default-initialize, so that we don't send uninitialized data over
@@ -215,6 +214,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintBGImages(data.printBGImages());
   settings->SetHonorPageRuleMargins(data.honorPageRuleMargins());
   settings->SetShowMarginGuides(data.showMarginGuides());
+  settings->SetIsPrintSelectionRBEnabled(data.isPrintSelectionRBEnabled());
   settings->SetPrintSelectionOnly(data.printSelectionOnly());
   settings->SetPrintRange(data.printRange());
 
@@ -260,8 +260,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetDuplex(data.duplex());
   settings->SetIsInitializedFromPrinter(data.isInitializedFromPrinter());
   settings->SetIsInitializedFromPrefs(data.isInitializedFromPrefs());
-
-  settings->SetPrintOptionsBits(data.optionFlags());
 
   return NS_OK;
 }

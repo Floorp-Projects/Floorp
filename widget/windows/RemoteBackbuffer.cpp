@@ -85,8 +85,8 @@ class SharedImage {
   }
 
   bool Initialize(int32_t aWidth, int32_t aHeight) {
-    MOZ_ASSERT(aWidth);
-    MOZ_ASSERT(aHeight);
+    MOZ_ASSERT(aWidth > 0);
+    MOZ_ASSERT(aHeight > 0);
 
     mWidth = aWidth;
     mHeight = aHeight;
@@ -113,8 +113,8 @@ class SharedImage {
   }
 
   bool InitializeRemote(int32_t aWidth, int32_t aHeight, HANDLE aFileMapping) {
-    MOZ_ASSERT(aWidth);
-    MOZ_ASSERT(aHeight);
+    MOZ_ASSERT(aWidth > 0);
+    MOZ_ASSERT(aHeight > 0);
     MOZ_ASSERT(aFileMapping);
 
     mWidth = aWidth;
@@ -164,6 +164,20 @@ class SharedImage {
         GetStride(), gfx::SurfaceFormat::B8G8R8A8);
   }
 
+  void CopyPixelsFrom(const SharedImage& other) {
+    const unsigned char* src = other.mPixelData;
+    unsigned char* dst = mPixelData;
+
+    int32_t width = std::min(mWidth, other.mWidth);
+    int32_t height = std::min(mHeight, other.mHeight);
+
+    for (int32_t row = 0; row < height; ++row) {
+      memcpy(dst, src, static_cast<uint32_t>(width * kBytesPerPixel));
+      src += other.GetStride();
+      dst += GetStride();
+    }
+  }
+
   int32_t GetWidth() { return mWidth; }
 
   int32_t GetHeight() { return mHeight; }
@@ -174,9 +188,9 @@ class SharedImage {
   SharedImage& operator=(SharedImage&&) = delete;
 
  private:
-  int32_t GetStride() {
-    constexpr int32_t kBytesPerPixel = 4;
+  static constexpr int32_t kBytesPerPixel = 4;
 
+  int32_t GetStride() const {
     // DIB requires 32-bit row alignment
     return (((mWidth * kBytesPerPixel) + 3) / 4) * 4;
   }
@@ -283,6 +297,10 @@ class PresentableSharedImage {
 
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget() {
     return mSharedImage.CreateDrawTarget();
+  }
+
+  void CopyPixelsFrom(const PresentableSharedImage& other) {
+    mSharedImage.CopyPixelsFrom(other.mSharedImage);
   }
 
   int32_t GetWidth() { return mSharedImage.GetWidth(); }
@@ -486,11 +504,15 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
     return;
   }
 
-  mBackbuffer.reset();
-
   auto newBackbuffer = std::make_unique<PresentableSharedImage>();
   if (!newBackbuffer->Initialize(width, height)) {
     return;
+  }
+
+  // Preserve the contents of the old backbuffer (if it exists)
+  if (mBackbuffer) {
+    newBackbuffer->CopyPixelsFrom(*mBackbuffer);
+    mBackbuffer.reset();
   }
 
   HANDLE remoteFileMapping =
