@@ -111,10 +111,23 @@ static void SerializeOpusCommentHeader(const nsCString& aVendor,
   }
 }
 
+bool IsSampleRateSupported(TrackRate aSampleRate) {
+  // According to www.opus-codec.org, creating an opus encoder requires the
+  // sampling rate of source signal be one of 8000, 12000, 16000, 24000, or
+  // 48000. If this constraint is not satisfied, we resample the input to 48kHz.
+  AutoTArray<int, 5> supportedSamplingRates;
+  supportedSamplingRates.AppendElements(
+      kOpusSupportedInputSamplingRates,
+      ArrayLength(kOpusSupportedInputSamplingRates));
+  return supportedSamplingRates.Contains(aSampleRate);
+}
+
 }  // Anonymous namespace.
 
 OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
     : AudioTrackEncoder(aTrackRate),
+      mOutputSampleRate(IsSampleRateSupported(aTrackRate) ? aTrackRate
+                                                          : kOpusSamplingRate),
       mEncoder(nullptr),
       mLookahead(0),
       mResampler(nullptr) {}
@@ -142,14 +155,7 @@ nsresult OpusTrackEncoder::Init(int aChannels) {
   NS_ENSURE_TRUE(mTrackRate >= 8000, NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(mTrackRate <= 192000, NS_ERROR_INVALID_ARG);
 
-  // According to www.opus-codec.org, creating an opus encoder requires the
-  // sampling rate of source signal be one of 8000, 12000, 16000, 24000, or
-  // 48000. If this constraint is not satisfied, we resample the input to 48kHz.
-  nsTArray<int> supportedSamplingRates;
-  supportedSamplingRates.AppendElements(
-      kOpusSupportedInputSamplingRates,
-      ArrayLength(kOpusSupportedInputSamplingRates));
-  if (!supportedSamplingRates.Contains(mTrackRate)) {
+  if (NeedsResampler()) {
     int error;
     mResampler = speex_resampler_init(mChannels, mTrackRate, kOpusSamplingRate,
                                       SPEEX_RESAMPLER_QUALITY_DEFAULT, &error);
@@ -160,7 +166,7 @@ nsresult OpusTrackEncoder::Init(int aChannels) {
   }
 
   int error = 0;
-  mEncoder = opus_encoder_create(GetOutputSampleRate(), mChannels,
+  mEncoder = opus_encoder_create(mOutputSampleRate, mChannels,
                                  OPUS_APPLICATION_AUDIO, &error);
 
   if (error != OPUS_OK) {
@@ -185,15 +191,11 @@ nsresult OpusTrackEncoder::Init(int aChannels) {
   }
 
   // Calculate offset in microseconds
-  mCodecDelay = FramesToTimeUnit(mLookahead, GetOutputSampleRate());
+  mCodecDelay = FramesToTimeUnit(mLookahead, mOutputSampleRate);
 
   SetInitialized();
 
   return NS_OK;
-}
-
-int OpusTrackEncoder::GetOutputSampleRate() const {
-  return mResampler ? kOpusSamplingRate : mTrackRate;
 }
 
 int OpusTrackEncoder::NumInputFramesPerPacket() const {
@@ -201,7 +203,14 @@ int OpusTrackEncoder::NumInputFramesPerPacket() const {
 }
 
 int OpusTrackEncoder::NumOutputFramesPerPacket() const {
-  return GetOutputSampleRate() * kFrameDurationMs / 1000;
+  return mOutputSampleRate * kFrameDurationMs / 1000;
+}
+
+bool OpusTrackEncoder::NeedsResampler() const {
+  // A resampler is needed when mTrackRate is not supported by the opus encoder.
+  // This is equivalent to !IsSampleRateSupported(mTrackRate) but less cycles.
+  return mTrackRate != mOutputSampleRate &&
+         mOutputSampleRate == kOpusSamplingRate;
 }
 
 already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
@@ -222,9 +231,9 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   meta->mSamplingFrequency = mTrackRate;
 
   // Ogg and Webm timestamps are always sampled at 48k for Opus.
-  SerializeOpusIdHeader(
-      mChannels, mLookahead * (kOpusSamplingRate / GetOutputSampleRate()),
-      mTrackRate, &meta->mIdHeader);
+  SerializeOpusIdHeader(mChannels,
+                        mLookahead * (kOpusSamplingRate / mOutputSampleRate),
+                        mTrackRate, &meta->mIdHeader);
 
   nsCString vendor;
   vendor.AppendASCII(opus_get_version_string());
