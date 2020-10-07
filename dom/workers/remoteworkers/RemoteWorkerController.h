@@ -86,6 +86,7 @@ namespace dom {
  */
 
 class ErrorValue;
+class FetchEventOpParent;
 class RemoteWorkerControllerParent;
 class RemoteWorkerData;
 class RemoteWorkerManager;
@@ -134,6 +135,10 @@ class RemoteWorkerController final {
 
   RefPtr<ServiceWorkerOpPromise> ExecServiceWorkerOp(
       ServiceWorkerOpArgs&& aArgs);
+
+  RefPtr<ServiceWorkerFetchEventOpPromise> ExecServiceWorkerFetchEventOp(
+      const ServiceWorkerFetchEventOpArgs& aArgs,
+      RefPtr<FetchEventOpParent> aReal);
 
   RefPtr<GenericPromise> SetServiceWorkerSkipWaitingFlag() const;
 
@@ -193,12 +198,24 @@ class RemoteWorkerController final {
     virtual ~PendingOp() = default;
 
     /**
-     * Returns `true` if execution has started and `false` otherwise.
+     * Returns `true` if execution has started or the operation is moot and
+     * doesn't need to be queued, `false` if execution hasn't started and the
+     * operation should be queued.  In general, operations should only return
+     * false when a remote worker is first starting up.  Operations may also
+     * somewhat non-intuitively return true without doing anything if the worker
+     * has already been told to shutdown.
      *
      * Starting execution may depend the state of `aOwner.`
      */
     virtual bool MaybeStart(RemoteWorkerController* const aOwner) = 0;
 
+    /**
+     * Invoked if the operation will never have MaybeStart() called again
+     * because the RemoteWorkerController has terminated (or will never start).
+     * This should be used by PendingOps to clean up any resources they own and
+     * may also be called internally by their MaybeStart() methods if they
+     * determine the worker has been terminated.  This should be idempotent.
+     */
     virtual void Cancel() = 0;
   };
 
@@ -247,6 +264,36 @@ class RemoteWorkerController final {
    private:
     ServiceWorkerOpArgs mArgs;
     RefPtr<ServiceWorkerOpPromise::Private> mPromise;
+  };
+
+  /**
+   * Custom pending op type to deal with the complexities of FetchEvents having
+   * their own actor.
+   *
+   * FetchEvent Ops have their own actor type because their lifecycle is more
+   * complex than IPDL's async return value mechanism allows.  Additionally,
+   * its IPC struct potentially has to serialize RemoteLazyStreams which
+   * requires us to hold an nsIInputStream when at rest and serialize it when
+   * eventually sending.
+   */
+  class PendingSWFetchEventOp final : public PendingOp {
+   public:
+    PendingSWFetchEventOp(
+        const ServiceWorkerFetchEventOpArgs& aArgs,
+        RefPtr<ServiceWorkerFetchEventOpPromise::Private> aPromise,
+        RefPtr<FetchEventOpParent>&& aReal);
+
+    ~PendingSWFetchEventOp();
+
+    bool MaybeStart(RemoteWorkerController* const aOwner) override;
+
+    void Cancel() override;
+
+   private:
+    ServiceWorkerFetchEventOpArgs mArgs;
+    RefPtr<ServiceWorkerFetchEventOpPromise::Private> mPromise;
+    RefPtr<FetchEventOpParent> mReal;
+    nsCOMPtr<nsIInputStream> mBodyStream;
   };
 
   nsTArray<UniquePtr<PendingOp>> mPendingOps;

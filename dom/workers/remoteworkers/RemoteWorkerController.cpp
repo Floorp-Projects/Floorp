@@ -12,7 +12,11 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RemoteLazyInputStreamUtils.h"
+#include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/dom/ServiceWorkerCloneData.h"
@@ -279,6 +283,26 @@ RefPtr<ServiceWorkerOpPromise> RemoteWorkerController::ExecServiceWorkerOp(
   return promise;
 }
 
+RefPtr<ServiceWorkerFetchEventOpPromise>
+RemoteWorkerController::ExecServiceWorkerFetchEventOp(
+    const ServiceWorkerFetchEventOpArgs& aArgs,
+    RefPtr<FetchEventOpParent> aReal) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mIsServiceWorker);
+
+  RefPtr<ServiceWorkerFetchEventOpPromise::Private> promise =
+      new ServiceWorkerFetchEventOpPromise::Private(__func__);
+
+  UniquePtr<PendingSWFetchEventOp> op =
+      MakeUnique<PendingSWFetchEventOp>(aArgs, promise, std::move(aReal));
+
+  if (!op->MaybeStart(this)) {
+    mPendingOps.AppendElement(std::move(op));
+  }
+
+  return promise;
+}
+
 RefPtr<GenericPromise> RemoteWorkerController::SetServiceWorkerSkipWaitingFlag()
     const {
   AssertIsOnBackgroundThread();
@@ -483,6 +507,78 @@ void RemoteWorkerController::PendingServiceWorkerOp::Cancel() {
 
   mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
   mPromise = nullptr;
+}
+
+RemoteWorkerController::PendingSWFetchEventOp::PendingSWFetchEventOp(
+    const ServiceWorkerFetchEventOpArgs& aArgs,
+    RefPtr<ServiceWorkerFetchEventOpPromise::Private> aPromise,
+    RefPtr<FetchEventOpParent>&& aReal)
+    : mArgs(aArgs), mPromise(std::move(aPromise)), mReal(aReal) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+
+  // If there is a TParentToParentStream in the request body, we need to
+  // save it to our stream.
+  IPCInternalRequest& req = mArgs.internalRequest();
+  if (req.body().isSome() &&
+      req.body().ref().type() == BodyStreamVariant::TParentToParentStream) {
+    nsCOMPtr<nsIInputStream> stream;
+    auto streamLength = req.bodySize();
+    const auto& uuid = req.body().ref().get_ParentToParentStream().uuid();
+
+    auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+    MOZ_DIAGNOSTIC_ASSERT(storage);
+    storage->GetStream(uuid, 0, streamLength, getter_AddRefs(mBodyStream));
+    storage->ForgetStream(uuid);
+
+    MOZ_DIAGNOSTIC_ASSERT(mBodyStream);
+
+    req.body() = Nothing();
+  }
+}
+
+RemoteWorkerController::PendingSWFetchEventOp::~PendingSWFetchEventOp() {
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(!mPromise);
+}
+
+bool RemoteWorkerController::PendingSWFetchEventOp::MaybeStart(
+    RemoteWorkerController* const aOwner) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+  MOZ_ASSERT(aOwner);
+
+  if (NS_WARN_IF(aOwner->mState == RemoteWorkerController::eTerminated)) {
+    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromise = nullptr;
+    // Because the worker has transitioned to terminated, this operation is moot
+    // and so we should return true because there's no need to queue it.
+    return true;
+  }
+
+  // The target content process must still be starting up.
+  if (!aOwner->mActor) {
+    MOZ_ASSERT(aOwner->mState == RemoteWorkerController::ePending);
+    return false;
+  }
+
+  // At this point we are handing off responsibility for the promise to the
+  // actor.
+  FetchEventOpProxyParent::Create(aOwner->mActor.get(), std::move(mPromise),
+                                  mArgs, std::move(mReal),
+                                  std::move(mBodyStream));
+
+  return true;
+}
+
+void RemoteWorkerController::PendingSWFetchEventOp::Cancel() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+
+  if (mPromise) {
+    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromise = nullptr;
+  }
 }
 
 }  // namespace dom

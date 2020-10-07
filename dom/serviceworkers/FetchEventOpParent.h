@@ -24,8 +24,6 @@ class FetchEventOpParent final : public PFetchEventOpParent {
 
   FetchEventOpParent() = default;
 
-  void Initialize(const ServiceWorkerFetchEventOpArgs& aArgs);
-
  private:
   ~FetchEventOpParent() = default;
 
