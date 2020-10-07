@@ -27,6 +27,8 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ᱦᱟᱹᱞᱤᱭᱟᱹᱜ ᱢᱮ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">ᱥᱟᱵᱟᱫ ᱜᱟᱫᱮᱞ ᱠᱷᱟᱹᱞᱤ ᱟᱞᱚ ᱛᱟᱦᱮᱸᱱ ᱢᱟ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">ᱞᱚᱜᱤᱱ ᱵᱟᱭ ᱥᱟᱸᱪᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱥᱟᱸᱪᱟᱣ ᱢᱮ?</string>
@@ -34,6 +36,9 @@
     <string name="mozac_feature_prompt_login_update_headline">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱦᱟᱹᱞᱤᱭᱟᱜ ᱢᱮ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">ᱥᱟᱸᱪᱟᱣᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱨᱮ ᱵᱮᱵᱷᱟᱨᱤᱡ ᱧᱩᱛᱩᱢ ᱥᱮᱞᱮᱫ ᱟᱢ?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">ᱚᱱᱚᱞ ᱟᱫᱮᱨ ᱡᱟᱭᱜᱟ ᱨᱮᱭᱟᱜ ᱞᱮᱵᱮᱞ</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">ᱨᱚᱝ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱞᱟᱝ ᱢᱮ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
@@ -76,4 +81,10 @@
     <string name="mozac_feature_prompts_dec">ᱟᱜᱷ</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">ᱞᱚᱜᱤᱱ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱠᱚ</string>
-    </resources>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱴᱟᱨᱟᱝ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱠᱟᱹᱴᱤᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
+</resources>

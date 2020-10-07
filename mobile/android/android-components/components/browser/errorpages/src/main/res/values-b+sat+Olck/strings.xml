@@ -110,8 +110,16 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">ᱡᱟᱹᱯᱛᱤ ᱠᱟᱨᱚᱬ ᱞᱟᱹᱜᱤᱛ ᱟᱠᱚᱴ ᱛᱤᱸᱜᱩ ᱴᱷᱟᱸᱣ</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>ᱱᱮᱸᱦᱚᱨᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱯᱚᱨᱴ ᱮ ᱩᱫᱩᱜᱮᱟᱭ(ᱡᱮᱢᱚᱱ, <q>mozilla.org:80</q> ᱯᱚᱨᱴ 80 ᱞᱟᱹᱜᱤᱫ mozilla.org ᱨᱮ) ᱚᱫᱷᱤᱠᱟᱸᱥ ᱵᱮᱵᱷᱟᱨᱟᱠᱚ <em>ᱚᱞᱟᱜᱟ ᱦᱤᱹᱥᱟᱵ ᱛᱮ</em> ᱣᱮᱵᱨᱟᱩᱡᱤᱝ ᱪᱷᱚᱰᱟ ᱾ ᱵᱨᱟᱣᱡᱟᱹᱨ ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱹᱛᱤᱨ ᱟᱨ ᱥᱨᱩᱠᱷᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ  ᱱᱮᱦᱚᱨ ᱵᱟᱛᱤᱞ ᱠᱮᱜᱼᱟᱭ ᱾</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ᱡᱚᱱᱚᱲᱟᱹᱣ ᱫᱚ ᱨᱤᱥᱮᱴ ᱮᱱᱟ</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[¶•<p>ᱡᱩᱲᱟᱹᱣ ᱱᱮᱜᱚᱥᱤᱭᱮᱴ ᱡᱚᱠᱷᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱞᱤᱸᱠ ᱠᱚᱴᱟᱣᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮ ᱾ </li>¶•</ul¶•]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ᱨᱮᱫ ᱯᱨᱚᱠᱟᱨ ᱵᱟᱝᱨᱟᱠᱷᱭᱟᱼᱟᱜ ᱠᱟᱱᱟ</string>
@@ -125,24 +133,70 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">ᱨᱟᱹᱯᱩᱫ ᱡᱤᱱᱤᱥ ᱦᱩᱲᱟᱹᱜ</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      ¶•<ul>¶
+       • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱞᱮᱱᱟ᱾</li>
+        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>¶•      
+      </ul>•
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ᱡᱤᱱᱤᱥ ᱠᱨᱟᱥ</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      ¶•<ul>¶
+       • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱞᱮ ᱫᱮᱠᱷᱟᱣ ᱫᱟᱲᱮᱭᱟᱞᱮᱢ ᱠᱟᱱᱟ ᱾</li>
+        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>¶•      
+      </ul>•
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">ᱡᱤᱱᱤᱥ ᱮᱱᱠᱳᱰᱤᱸᱝ ᱵᱷᱩᱞ</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      ¶•<ul>¶
+       • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱮᱢ ᱚᱱᱟ ᱫᱚ ᱤᱱᱣᱮᱞᱤᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱭ ᱥᱟᱯᱯᱚᱴ ᱮᱫ ᱠᱚᱢᱯᱨᱮᱥᱥᱚᱱ ᱯᱷᱚᱨᱢ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱷᱟᱹᱛᱤᱨ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</li>
+        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>¶•      
+      </ul>•
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ᱴᱷᱤᱠᱬᱟᱹ ᱵᱟᱝ ᱧᱟᱞ ᱞᱟᱱᱟ</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱨᱮ ᱵᱨᱟᱣᱡᱚᱨ ᱦᱚᱥᱴ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱵᱟᱭ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱭ ᱾</p>
+      <ul>
+        <li>ᱵᱷᱩᱞ ᱴᱭᱯᱤᱝ ᱞᱟᱹᱜᱤᱫ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱡᱮᱢᱚᱱ
+          <strong>ww</strong>.example.com ᱵᱚᱫᱚᱞ ᱛᱮ
+          <strong>www</strong>.example.com.</li>
+        <li>ᱟᱢ ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱢᱮᱱᱠᱷᱟᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">ᱤᱱᱴᱟᱹᱨᱱᱮᱴ ᱡᱚᱱᱚᱲᱟᱣ ᱵᱟᱹᱱᱩᱜ-ᱟ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱵᱟᱝ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱨᱤᱞᱚᱰ ᱢᱮ ᱾</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ᱫᱚᱦᱲᱟ ᱞᱟᱫᱤ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ᱵᱷᱩᱞ ᱴᱷᱤᱠᱟᱱᱟᱹ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱯᱷᱚᱨᱢᱟᱴ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱫᱚᱭᱟᱠᱟᱛᱮ ᱡᱟᱭᱜᱟ ᱵᱟᱨ ᱨᱮ  ᱵᱷᱩᱞ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ᱴᱷᱤᱠᱬᱟᱹ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>ᱣᱮᱵ ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ<strong>http://www.example.com/</strong>ᱠᱚ ᱚᱞᱟ</li>
+        <li>ᱯᱷᱚᱨᱣᱟᱰ ᱥᱞᱟᱥ ᱮᱢ ᱟᱞᱚ ᱦᱤᱲᱤᱧᱟᱢ (ᱡᱮᱢᱚᱱ <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱯᱚᱨᱴᱟᱞ</string>
@@ -159,6 +213,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ᱮᱲᱮ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ᱢᱟᱞᱣᱮᱨ ᱥᱟᱭᱤᱴ ᱤᱥᱥᱩ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ᱵᱮᱠᱷᱟᱛᱤᱨ ᱥᱟᱭᱤᱴ ᱤᱥᱥᱩ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">ᱵᱚᱛᱚᱨ ᱥᱟᱭᱤᱴ ᱤᱢ ᱪᱟᱞ</string>
