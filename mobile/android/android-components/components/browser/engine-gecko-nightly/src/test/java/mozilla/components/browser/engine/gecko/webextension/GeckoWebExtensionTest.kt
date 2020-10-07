@@ -548,6 +548,42 @@ class GeckoWebExtensionTest {
         assertFalse(webExtensionWithoutPrivateBrowsing.isAllowedInPrivateBrowsing())
     }
 
+    @Test
+    fun `loadIcon tries to load icon from metadata`() {
+        val runtime: GeckoRuntime = mock()
+        whenever(runtime.webExtensionController).thenReturn(mock())
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+
+        val metaDataBundle = GeckoBundle()
+        val emptyIconBundle = GeckoBundle()
+        metaDataBundle.putBoolean("enabled", true)
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        metaDataBundle.putBundle("icons", emptyIconBundle)
+        bundle.putBundle("metaData", metaDataBundle)
+        val nativeWebExtensionWithoutIcon = MockWebExtension(bundle)
+        val webExtensionWithoutIcon = GeckoWebExtension(nativeWebExtensionWithoutIcon, runtime)
+
+        var iconLoadComplete = false
+        var result = webExtensionWithoutIcon.getIcon(48)
+        assertNotNull(result)
+        result.accept { iconLoadComplete = true }
+        assertTrue(iconLoadComplete)
+
+        iconLoadComplete = false
+        val iconBundle = GeckoBundle()
+        iconBundle.putString("48", "test")
+        metaDataBundle.putBundle("icons", iconBundle)
+        val nativeWebExtensionWithIcon = MockWebExtension(bundle)
+        val webExtensionWithIcon = GeckoWebExtension(nativeWebExtensionWithIcon, runtime)
+
+        result = webExtensionWithIcon.getIcon(48)
+        assertNotNull(result)
+        result.accept { iconLoadComplete = true }
+        assertFalse(iconLoadComplete)
+    }
+
     private fun mockNativeExtension(useBundle: GeckoBundle? = null): WebExtension {
         val bundle = useBundle ?: GeckoBundle().apply {
             putString("webExtensionId", "id")

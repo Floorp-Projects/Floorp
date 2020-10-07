@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.addons.amo
 
+import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.addons.AddonManager.Companion.TEMPORARY_ADDON_ICON_SIZE
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.update.AddonUpdater.Status
@@ -173,15 +175,20 @@ class AddonManagerTest {
 
         // Add temporary extension
         val temporaryExtension: WebExtension = mock()
+        val temporaryExtensionIcon: Bitmap = mock()
         val temporaryExtensionMetadata: Metadata = mock()
         whenever(temporaryExtensionMetadata.temporary).thenReturn(true)
         whenever(temporaryExtensionMetadata.name).thenReturn("name")
         whenever(temporaryExtension.id).thenReturn("temp_ext")
         whenever(temporaryExtension.url).thenReturn("site_url")
         whenever(temporaryExtension.getMetadata()).thenReturn(temporaryExtensionMetadata)
+        whenever(temporaryExtension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)).thenReturn(temporaryExtensionIcon)
         WebExtensionSupport.installedExtensions["temp_ext"] = temporaryExtension
 
-        val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
+        val addonManager = spy(AddonManager(store, mock(), addonsProvider, mock()))
+        whenever(addonManager.getIconDispatcher()).thenReturn(Dispatchers.Main)
+
+        val addons = addonManager.getAddons()
         assertEquals(1, addons.size)
 
         // Temporary extension should be returned and marked as supported
@@ -191,6 +198,7 @@ class AddonManagerTest {
         assertTrue(addons[0].translatableName.containsValue("name"))
         assertNotNull(addons[0].installedState)
         assertTrue(addons[0].isSupported())
+        assertEquals(temporaryExtensionIcon, addons[0].installedState!!.icon)
     }
 
     @Test(expected = AddonManagerException::class)

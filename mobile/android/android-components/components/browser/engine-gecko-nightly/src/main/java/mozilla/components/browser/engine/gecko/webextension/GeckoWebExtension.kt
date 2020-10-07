@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.webextension
 
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
@@ -370,6 +371,15 @@ class GeckoWebExtension(
 
     override fun isAllowedInPrivateBrowsing(): Boolean {
         return isBuiltIn() || nativeExtension.metaData.allowedInPrivateBrowsing
+    }
+
+    override suspend fun loadIcon(size: Int): Bitmap? {
+        return getIcon(size).await()
+    }
+
+    @VisibleForTesting
+    internal fun getIcon(size: Int): GeckoResult<Bitmap> {
+        return nativeExtension.metaData.icon.getBitmap(size)
     }
 }
 

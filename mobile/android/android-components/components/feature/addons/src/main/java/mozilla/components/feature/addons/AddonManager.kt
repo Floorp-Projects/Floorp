@@ -4,9 +4,14 @@
 
 package mozilla.components.feature.addons
 
+import android.os.Handler
+import android.os.HandlerThread
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.webextension.EnableSource
@@ -87,7 +92,10 @@ class AddonManager(
 
                     // Temporary add-ons should be treated as supported
                     val installedState = if (extension.getMetadata()?.temporary == true) {
-                        extension.toInstalledState()
+                        val icon = withContext(getIconDispatcher()) {
+                            extension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)
+                        }
+                        extension.toInstalledState().copy(icon = icon)
                     } else {
                         extension.toInstalledState().copy(enabled = false, supported = false)
                     }
@@ -331,10 +339,21 @@ class AddonManager(
         pendingAddonActions.remove(action)
     }
 
+    @VisibleForTesting
+    internal fun getIconDispatcher(): CoroutineDispatcher {
+        val iconThread = HandlerThread("IconThread").also {
+            it.start()
+        }
+        return Handler(iconThread.looper).asCoroutineDispatcher("WebExtensionIconDispatcher")
+    }
+
     companion object {
         // List of invalid permissions for external add-ons i.e. permissions only
         // granted to built-in extensions:
         val BLOCKED_PERMISSIONS = listOf("geckoViewAddons", "nativeMessaging")
+
+        // Size of the icon to load for temporary extensions
+        const val TEMPORARY_ADDON_ICON_SIZE = 48
     }
 }
 

@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine.webextension
 
+import android.graphics.Bitmap
 import android.net.Uri
 import mozilla.components.concept.engine.EngineSession
 import org.json.JSONObject
@@ -170,6 +171,15 @@ abstract class WebExtension(
      * Checks whether or not this extension is allowed in private browsing.
      */
     abstract fun isAllowedInPrivateBrowsing(): Boolean
+
+    /**
+     * Returns the icon of this extension as specified in the extension's manifest:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/icons
+     *
+     * @param size the desired size of the icon. The returned icon will be the closest
+     * available icon to the provided size.
+     */
+    abstract suspend fun loadIcon(size: Int): Bitmap?
 }
 
 /**

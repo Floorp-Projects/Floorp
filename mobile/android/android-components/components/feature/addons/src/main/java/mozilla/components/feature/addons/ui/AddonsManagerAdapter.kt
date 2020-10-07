@@ -244,13 +244,17 @@ class AddonsManagerAdapter(
                 val iconBitmap = addonCollectionProvider.getAddonIconBitmap(addon)
                 val timeToFetch: Double = (System.currentTimeMillis() - startTime) / 1000.0
                 val isFromCache = timeToFetch < 1
-                iconBitmap?.let {
+                if (iconBitmap != null) {
                     scope.launch(Main) {
                         if (isFromCache) {
-                            iconView.setImageDrawable(BitmapDrawable(iconView.resources, it))
+                            iconView.setImageDrawable(BitmapDrawable(iconView.resources, iconBitmap))
                         } else {
-                            setWithCrossFadeAnimation(iconView, it)
+                            setWithCrossFadeAnimation(iconView, iconBitmap)
                         }
+                    }
+                } else if (addon.installedState?.icon != null) {
+                    scope.launch(Main) {
+                        iconView.setImageDrawable(BitmapDrawable(iconView.resources, addon.installedState.icon))
                     }
                 }
             } catch (e: IOException) {

@@ -5,6 +5,7 @@
 package mozilla.components.feature.addons
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Parcelable
 import androidx.core.net.toUri
 import kotlinx.android.parcel.Parcelize
@@ -95,6 +96,8 @@ data class Addon(
      * options page (options_ui in the extension's manifest).
      * @property allowedInPrivateBrowsing true if this addon should be allowed to run in private
      * browsing pages, false otherwise.
+     * @property icon the icon of the installed extension, only used for temporary extensions
+     * as we get the icon from AMO otherwise, see [iconUrl].
      */
     @Parcelize
     data class InstalledState(
@@ -105,7 +108,8 @@ data class Addon(
         val enabled: Boolean = false,
         val supported: Boolean = true,
         val disabledAsUnsupported: Boolean = false,
-        val allowedInPrivateBrowsing: Boolean = false
+        val allowedInPrivateBrowsing: Boolean = false,
+        val icon: Bitmap? = null
     ) : Parcelable
 
     /**
