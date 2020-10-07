@@ -2069,9 +2069,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!env->funcTypes.append(&env->types[funcTypeIndex].funcType())) {
         return false;
       }
-      if (!env->funcTypeIndices.append(funcTypeIndex)) {
-        return false;
-      }
       if (env->funcTypes.length() > MaxFuncs) {
         return d.fail("too many functions");
       }
@@ -2176,9 +2173,6 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
   if (!env->funcTypes.reserve(numFuncs.value())) {
     return false;
   }
-  if (!env->funcTypeIndices.reserve(numFuncs.value())) {
-    return false;
-  }
 
   for (uint32_t i = 0; i < numDefs; i++) {
     uint32_t funcTypeIndex;
@@ -2186,7 +2180,6 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
       return false;
     }
     env->funcTypes.infallibleAppend(&env->types[funcTypeIndex].funcType());
-    env->funcTypeIndices.infallibleAppend(funcTypeIndex);
   }
 
   return d.finishSection(*range, "function");

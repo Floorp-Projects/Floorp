@@ -133,7 +133,7 @@ wasmEval(moduleWithSections([memorySection0()]));
 assertErrorMessage(() => wasmEval(moduleWithSections([invalidMemorySection2()])), CompileError, /number of memories must be at most one/);
 
 // Test early 'end'
-const bodyMismatch = /(function body length mismatch)|(operators remaining after end of function)/;
+const bodyMismatch = /function body length mismatch/;
 assertErrorMessage(() => wasmEval(moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[EndCode]})])])), CompileError, bodyMismatch);
 assertErrorMessage(() => wasmEval(moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[UnreachableCode,EndCode]})])])), CompileError, bodyMismatch);
 assertErrorMessage(() => wasmEval(moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[EndCode,UnreachableCode]})])])), CompileError, bodyMismatch);
@@ -217,20 +217,20 @@ assertErrorMessage(() => wasmEval(moduleWithSections([
 
 // Diagnose invalid block signature types.
 for (var bad of [0xff, 1, 0x3f])
-    assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /(invalid .*block type)|(unknown type)/);
+    assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /invalid .*block type/);
 
 const multiValueModule = moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, 0, EndCode]})])]);
 if (wasmMultiValueEnabled()) {
     // In this test module, 0 denotes a void-to-void block type.
     assertEq(WebAssembly.validate(multiValueModule), true);
 } else {
-    assertErrorMessage(() => wasmEval(multiValueModule), CompileError, /(invalid .*block type)|(unknown type)/);
+    assertErrorMessage(() => wasmEval(multiValueModule), CompileError, /invalid .*block type/);
 }
 
 // Ensure all invalid opcodes rejected
 for (let op of undefinedOpcodes) {
     let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[op]})])]);
-    assertErrorMessage(() => wasmEval(binary), CompileError, /((unrecognized|Unknown) opcode)|(tail calls support is not enabled)|(Unexpected EOF)/);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
 
@@ -241,7 +241,7 @@ function checkIllegalPrefixed(prefix, opcode) {
                                      declSection([0]),
                                      bodySection([funcBody({locals:[],
                                                             body:[prefix, ...varU32(opcode)]})])]);
-    assertErrorMessage(() => wasmEval(binary), CompileError, /((unrecognized|Unknown) opcode)|(Unknown.*subopcode)|(Unexpected EOF)|(SIMD support is not enabled)|(invalid lane index)/);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
 
@@ -330,7 +330,7 @@ for (let prefix of [ThreadPrefix, MiscPrefix, SimdPrefix, MozPrefix]) {
     // Prefix without a subsequent opcode.  We must ask funcBody not to add an
     // End code after the prefix, so the body really is just the prefix byte.
     let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]}, /*withEndCode=*/false)])]);
-    assertErrorMessage(() => wasmEval(binary), CompileError, /(unable to read opcode)|(Unexpected EOF)|(Unknown opcode)/);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unable to read opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
 

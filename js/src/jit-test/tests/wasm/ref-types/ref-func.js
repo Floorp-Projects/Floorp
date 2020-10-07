@@ -74,7 +74,7 @@ assertErrorMessage(() => {
 			(func (result funcref) ref.func 10)
 		)
 	`);
-}, WebAssembly.CompileError, /(function index out of range)|(function index out of bounds)/);
+}, WebAssembly.CompileError, /function index out of range/);
 
 function validFuncRefText(forwardDeclare, tbl_type) {
 	return wasmEvalText(`
@@ -88,7 +88,7 @@ function validFuncRefText(forwardDeclare, tbl_type) {
 }
 
 // referenced function must be forward declared somehow
-assertErrorMessage(() => validFuncRefText('', 'funcref'), WebAssembly.CompileError, /(function index is not declared in a section before the code section)|(undeclared function reference)/);
+assertErrorMessage(() => validFuncRefText('', 'funcref'), WebAssembly.CompileError, /function index is not declared in a section before the code section/);
 
 // referenced function can be forward declared via segments
 assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
@@ -106,7 +106,7 @@ assertEq(validFuncRefText('(global funcref (ref.func $referenced))', 'externref'
 assertEq(validFuncRefText('(export "referenced" (func $referenced))', 'externref') instanceof WebAssembly.Instance, true);
 
 // reference function cannot be forward declared via start
-assertErrorMessage(() => validFuncRefText('(start $referenced)', 'externref'), WebAssembly.CompileError, /(function index is not declared in a section before the code section)|(undeclared function reference)/);
+assertErrorMessage(() => validFuncRefText('(start $referenced)', 'externref'), WebAssembly.CompileError, /function index is not declared in a section before the code section/);
 
 // Tests not expressible in the text format.
 

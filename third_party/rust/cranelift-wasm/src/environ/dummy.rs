@@ -10,6 +10,7 @@ use crate::environ::{
     WasmFuncType, WasmResult,
 };
 use crate::func_translator::FuncTranslator;
+use crate::state::ModuleTranslationState;
 use crate::translation_utils::{
     DataIndex, DefinedFuncIndex, ElemIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex,
     SignatureIndex, Table, TableIndex,
@@ -25,7 +26,6 @@ use cranelift_frontend::FunctionBuilder;
 use std::boxed::Box;
 use std::string::String;
 use std::vec::Vec;
-use wasmparser::{FuncValidator, FunctionBody, ValidatorResources, WasmFeatures};
 
 /// Compute a `ir::ExternalName` for a given wasm function index.
 fn get_func_name(func_index: FuncIndex) -> ir::ExternalName {
@@ -738,11 +738,10 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
 
     fn define_function_body(
         &mut self,
-        mut validator: FuncValidator<ValidatorResources>,
-        body: FunctionBody<'data>,
+        module_translation_state: &ModuleTranslationState,
+        body_bytes: &'data [u8],
+        body_offset: usize,
     ) -> WasmResult<()> {
-        self.func_bytecode_sizes
-            .push(body.get_binary_reader().bytes_remaining());
         let func = {
             let mut func_environ = DummyFuncEnvironment::new(&self.info, self.return_mode);
             let func_index =
@@ -753,10 +752,16 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
             if self.debug_info {
                 func.collect_debug_info();
             }
-            self.trans
-                .translate_body(&mut validator, body, &mut func, &mut func_environ)?;
+            self.trans.translate(
+                module_translation_state,
+                body_bytes,
+                body_offset,
+                &mut func,
+                &mut func_environ,
+            )?;
             func
         };
+        self.func_bytecode_sizes.push(body_bytes.len());
         self.info.function_bodies.push(func);
         Ok(())
     }
@@ -767,15 +772,5 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
 
     fn declare_func_name(&mut self, func_index: FuncIndex, name: &'data str) {
         self.function_names[func_index] = String::from(name);
-    }
-
-    fn wasm_features(&self) -> WasmFeatures {
-        WasmFeatures {
-            multi_value: true,
-            simd: true,
-            reference_types: true,
-            bulk_memory: true,
-            ..WasmFeatures::default()
-        }
     }
 }

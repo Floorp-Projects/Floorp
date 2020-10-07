@@ -61,17 +61,9 @@ void cranelift_compiler_destroy(CraneliftCompiler* compiler);
 // The function described by `data` is compiled.
 //
 // Returns true on success.
-//
-// If this function returns false, an error message is returned in `*error`.
-// This string must be freed by `cranelift_compiler_free_error()` (it is on the
-// Rust heap so must not be freed by `free()` or similar).
 bool cranelift_compile_function(CraneliftCompiler* compiler,
                                 const CraneliftFuncCompileInput* data,
-                                CraneliftCompiledFunc* result, char** error);
-
-// Free an error string returned by `cranelift_compile_function()`.
-void cranelift_compiler_free_error(char* error);
-
+                                CraneliftCompiledFunc* result);
 }  // extern "C"
 
 #endif  // wasm_cranelift_clifapi_h
