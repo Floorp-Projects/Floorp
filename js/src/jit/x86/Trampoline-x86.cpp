@@ -9,7 +9,6 @@
 #include "jit/Bailouts.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #ifdef JS_ION_PERF

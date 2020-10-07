@@ -33,7 +33,6 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
-#include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
 #include "jit/LIR.h"

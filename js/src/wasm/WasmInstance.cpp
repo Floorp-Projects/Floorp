@@ -26,7 +26,6 @@
 #include "jit/Disassemble.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
-#include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "js/ForOfIterator.h"
