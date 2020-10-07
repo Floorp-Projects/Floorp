@@ -14,83 +14,16 @@
  */
 
 use crate::limits::*;
-use crate::operators_validator::{
-    FunctionEnd, OperatorValidator, OperatorValidatorConfig, DEFAULT_OPERATOR_VALIDATOR_CONFIG,
-};
+use crate::ResizableLimits64;
 use crate::WasmModuleResources;
 use crate::{Alias, AliasedInstance, ExternalKind, Import, ImportSectionEntryType};
 use crate::{BinaryReaderError, GlobalType, MemoryType, Range, Result, TableType, Type};
 use crate::{DataKind, ElementItem, ElementKind, InitExpr, Instance, Operator};
-use crate::{Export, ExportType, FunctionBody, OperatorsReader, Parser, Payload};
+use crate::{Export, ExportType, FunctionBody, Parser, Payload};
 use crate::{FuncType, ResizableLimits, SectionReader, SectionWithLimitedItems};
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::sync::Arc;
-
-/// Test whether the given buffer contains a valid WebAssembly function.
-/// The resources parameter contains all needed data to validate the operators.
-pub fn validate_function_body(
-    bytes: &[u8],
-    offset: usize,
-    func_index: u32,
-    resources: impl WasmModuleResources,
-    operator_config: Option<OperatorValidatorConfig>,
-) -> Result<()> {
-    let operator_config = operator_config.unwrap_or(DEFAULT_OPERATOR_VALIDATOR_CONFIG);
-    let function_body = FunctionBody::new(offset, bytes);
-    let mut locals_reader = function_body.get_locals_reader()?;
-    let local_count = locals_reader.get_count() as usize;
-    if local_count > MAX_WASM_FUNCTION_LOCALS {
-        return Err(BinaryReaderError::new(
-            "locals exceed maximum",
-            locals_reader.original_position(),
-        ));
-    }
-    let mut locals: Vec<(u32, Type)> = Vec::with_capacity(local_count);
-    let mut locals_total: usize = 0;
-    for _ in 0..local_count {
-        let (count, ty) = locals_reader.read()?;
-        locals_total = locals_total.checked_add(count as usize).ok_or_else(|| {
-            BinaryReaderError::new("locals overflow", locals_reader.original_position())
-        })?;
-        if locals_total > MAX_WASM_FUNCTION_LOCALS {
-            return Err(BinaryReaderError::new(
-                "locals exceed maximum",
-                locals_reader.original_position(),
-            ));
-        }
-        locals.push((count, ty));
-    }
-    let operators_reader = function_body.get_operators_reader()?;
-    let func_type = resources
-        .func_type_at(func_index)
-        // Note: This was an out-of-bounds access before the change to return `Option`
-        // so I assumed it is considered a bug to access a non-existing function
-        // id here and went with panicking instead of returning a proper error.
-        .expect("the function index of the validated function itself is out of bounds");
-    let mut operator_validator = OperatorValidator::new(func_type, &locals, operator_config)
-        .map_err(|e| e.set_offset(offset))?;
-    let mut eof_found = false;
-    let mut last_op = 0;
-    for item in operators_reader.into_iter_with_offsets() {
-        let (ref op, offset) = item?;
-        match operator_validator
-            .process_operator(op, &resources)
-            .map_err(|e| e.set_offset(offset))?
-        {
-            FunctionEnd::Yes => {
-                eof_found = true;
-            }
-            FunctionEnd::No => {
-                last_op = offset;
-            }
-        }
-    }
-    if !eof_found {
-        return Err(BinaryReaderError::new("end of function not found", last_op));
-    }
-    Ok(())
-}
 
 /// Test whether the given buffer contains a valid WebAssembly module,
 /// analogous to [`WebAssembly.validate`][js] in the JS API.
@@ -207,16 +140,29 @@ struct ModuleState {
     parent: Option<Arc<ModuleState>>,
 }
 
-#[derive(Clone)]
-struct WasmFeatures {
-    reference_types: bool,
-    module_linking: bool,
-    simd: bool,
-    multi_value: bool,
-    threads: bool,
-    tail_call: bool,
-    bulk_memory: bool,
-    deterministic_only: bool,
+/// Flags for features that are enabled for validation.
+#[derive(Hash, Debug, Copy, Clone)]
+pub struct WasmFeatures {
+    /// The WebAssembly reference types proposal
+    pub reference_types: bool,
+    /// The WebAssembly module linking proposal
+    pub module_linking: bool,
+    /// The WebAssembly SIMD proposal
+    pub simd: bool,
+    /// The WebAssembly multi-value proposal (enabled by default)
+    pub multi_value: bool,
+    /// The WebAssembly threads proposal
+    pub threads: bool,
+    /// The WebAssembly tail-call proposal
+    pub tail_call: bool,
+    /// The WebAssembly bulk memory operations proposal
+    pub bulk_memory: bool,
+    /// Whether or not only deterministic instructions are allowed
+    pub deterministic_only: bool,
+    /// The WebAssembly multi memory proposal
+    pub multi_memory: bool,
+    /// The WebAssembly memory64 proposal
+    pub memory64: bool,
 }
 
 impl Default for WasmFeatures {
@@ -229,6 +175,8 @@ impl Default for WasmFeatures {
             threads: false,
             tail_call: false,
             bulk_memory: false,
+            multi_memory: false,
+            memory64: false,
             deterministic_only: cfg!(feature = "deterministic"),
 
             // on-by-default features
@@ -316,10 +264,7 @@ pub enum ValidPayload<'a> {
     /// validator that was in use should be popped off the stack to resume.
     Pop,
     /// A function was found to be validate.
-    ///
-    /// The function validator will need to be run over the operators in
-    /// [`OperatorsReader`] to finish validation.
-    Func(FuncValidator, OperatorsReader<'a>),
+    Func(FuncValidator<ValidatorResources>, FunctionBody<'a>),
 }
 
 impl Validator {
@@ -332,74 +277,9 @@ impl Validator {
         Validator::default()
     }
 
-    /// Configures whether the reference types proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `false`.
-    pub fn wasm_reference_types(&mut self, enabled: bool) -> &mut Validator {
-        self.features.reference_types = enabled;
-        self
-    }
-
-    /// Configures whether the module linking proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `false`.
-    pub fn wasm_module_linking(&mut self, enabled: bool) -> &mut Validator {
-        self.features.module_linking = enabled;
-        self
-    }
-
-    /// Configures whether the SIMD proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `false`.
-    pub fn wasm_simd(&mut self, enabled: bool) -> &mut Validator {
-        self.features.simd = enabled;
-        self
-    }
-
-    /// Configures whether the threads proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `false`.
-    pub fn wasm_threads(&mut self, enabled: bool) -> &mut Validator {
-        self.features.threads = enabled;
-        self
-    }
-
-    /// Configures whether the tail call proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `false`.
-    pub fn wasm_tail_call(&mut self, enabled: bool) -> &mut Validator {
-        self.features.tail_call = enabled;
-        self
-    }
-
-    /// Configures whether the multi-value proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `true`.
-    pub fn wasm_multi_value(&mut self, enabled: bool) -> &mut Validator {
-        self.features.multi_value = enabled;
-        self
-    }
-
-    /// Configures whether the bulk-memory proposal for WebAssembly is
-    /// enabled.
-    ///
-    /// The default for this option is `true`.
-    pub fn wasm_bulk_memory(&mut self, enabled: bool) -> &mut Validator {
-        self.features.bulk_memory = enabled;
-        self
-    }
-
-    /// Configures whether only deterministic instructions are allowed to validate.
-    ///
-    /// The default for this option is `true`.
-    pub fn deterministic_only(&mut self, enabled: bool) -> &mut Validator {
-        self.features.deterministic_only = enabled;
+    /// Configures the enabled WebAssembly features for this `Validator`.
+    pub fn wasm_features(&mut self, features: WasmFeatures) -> &mut Validator {
+        self.features = features;
         self
     }
 
@@ -426,12 +306,8 @@ impl Validator {
             }
         }
 
-        for (mut validator, ops) in functions_to_validate {
-            for item in ops.into_iter_with_offsets() {
-                let (op, offset) = item?;
-                validator.op(offset, &op)?;
-            }
-            validator.finish()?;
+        for (mut validator, body) in functions_to_validate {
+            validator.validate(&body)?;
         }
         Ok(())
     }
@@ -472,8 +348,8 @@ impl Validator {
                 size: _,
             } => self.code_section_start(*count, range)?,
             CodeSectionEntry(body) => {
-                let (func_validator, ops) = self.code_section_entry(body)?;
-                return Ok(ValidPayload::Func(func_validator, ops));
+                let func_validator = self.code_section_entry()?;
+                return Ok(ValidPayload::Func(func_validator, body.clone()));
             }
             ModuleCodeSectionStart {
                 count,
@@ -526,7 +402,7 @@ impl Validator {
         }
         // ... otherwise if this is a repeated section then only the "module
         // linking header" is allows to have repeats
-        if order == self.order && self.order == Order::ModuleLinkingHeader {
+        if prev == self.order && self.order == Order::ModuleLinkingHeader {
             return Ok(());
         }
         self.create_error("section out of order")
@@ -735,23 +611,9 @@ impl Validator {
     }
 
     fn value_type(&self, ty: Type) -> Result<()> {
-        match ty {
-            Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
-            Type::FuncRef | Type::ExternRef => {
-                if self.features.reference_types {
-                    Ok(())
-                } else {
-                    self.create_error("reference types support is not enabled")
-                }
-            }
-            Type::V128 => {
-                if self.features.simd {
-                    Ok(())
-                } else {
-                    self.create_error("SIMD support is not enabled")
-                }
-            }
-            _ => self.create_error("invalid value type"),
+        match self.features.check_value_type(ty) {
+            Ok(()) => Ok(()),
+            Err(e) => self.create_error(e),
         }
     }
 
@@ -785,25 +647,49 @@ impl Validator {
             }
             _ => return self.create_error("element is not reference type"),
         }
-        self.limits(&ty.limits)
+        self.limits(&ty.limits)?;
+        if ty.limits.initial > MAX_WASM_TABLE_ENTRIES as u32 {
+            return self.create_error("minimum table size is out of bounds");
+        }
+        Ok(())
     }
 
     fn memory_type(&self, ty: &MemoryType) -> Result<()> {
-        self.limits(&ty.limits)?;
-        let initial = ty.limits.initial;
-        if initial as usize > MAX_WASM_MEMORY_PAGES {
-            return self.create_error("memory size must be at most 65536 pages (4GiB)");
-        }
-        let maximum = ty.limits.maximum;
-        if maximum.is_some() && maximum.unwrap() as usize > MAX_WASM_MEMORY_PAGES {
-            return self.create_error("memory size must be at most 65536 pages (4GiB)");
-        }
-        if ty.shared {
-            if !self.features.threads {
-                return self.create_error("threads must be enabled for shared memories");
+        match ty {
+            MemoryType::M32 { limits, shared } => {
+                self.limits(limits)?;
+                let initial = limits.initial;
+                if initial as usize > MAX_WASM_MEMORY_PAGES {
+                    return self.create_error("memory size must be at most 65536 pages (4GiB)");
+                }
+                if let Some(maximum) = limits.maximum {
+                    if maximum as usize > MAX_WASM_MEMORY_PAGES {
+                        return self.create_error("memory size must be at most 65536 pages (4GiB)");
+                    }
+                }
+                if *shared {
+                    if !self.features.threads {
+                        return self.create_error("threads must be enabled for shared memories");
+                    }
+                    if limits.maximum.is_none() {
+                        return self.create_error("shared memory must have maximum size");
+                    }
+                }
             }
-            if ty.limits.maximum.is_none() {
-                return self.create_error("shared memory must have maximum size");
+            MemoryType::M64 { limits } => {
+                if !self.features.memory64 {
+                    return self.create_error("memory64 must be enabled for 64-bit memories");
+                }
+                self.limits64(&limits)?;
+                let initial = limits.initial;
+                if initial > MAX_WASM_MEMORY64_PAGES {
+                    return self.create_error("memory initial size too large");
+                }
+                if let Some(maximum) = limits.maximum {
+                    if maximum > MAX_WASM_MEMORY64_PAGES {
+                        return self.create_error("memory initial size too large");
+                    }
+                }
             }
         }
         Ok(())
@@ -822,6 +708,15 @@ impl Validator {
         Ok(())
     }
 
+    fn limits64(&self, limits: &ResizableLimits64) -> Result<()> {
+        if let Some(max) = limits.maximum {
+            if limits.initial > max {
+                return self.create_error("size minimum must not be greater than maximum");
+            }
+        }
+        Ok(())
+    }
+
     /// Validates [`Payload::ImportSection`](crate::Payload)
     pub fn import_section(&mut self, section: &crate::ImportSectionReader<'_>) -> Result<()> {
         let order = self.header_order(Order::Import);
@@ -829,6 +724,9 @@ impl Validator {
     }
 
     fn import(&mut self, entry: Import<'_>) -> Result<()> {
+        if !self.features.module_linking && entry.field.is_none() {
+            return self.create_error("module linking proposal is not enabled");
+        }
         self.import_entry_type(&entry.ty)?;
         let (len, max, desc) = match entry.ty {
             ImportSectionEntryType::Function(type_index) => {
@@ -846,7 +744,7 @@ impl Validator {
             ImportSectionEntryType::Memory(ty) => {
                 let state = self.state.assert_mut();
                 state.memories.push(ty);
-                (state.memories.len(), MAX_WASM_MEMORIES, "memories")
+                (state.memories.len(), self.max_memories(), "memories")
             }
             ImportSectionEntryType::Global(ty) => {
                 let def = self.state.def(ty);
@@ -1085,16 +983,20 @@ impl Validator {
         expected: Def<&ImportSectionEntryType>,
         actual: Def<&ImportSectionEntryType>,
     ) -> Result<()> {
-        let limits_match = |expected: &ResizableLimits, actual: &ResizableLimits| {
-            actual.initial >= expected.initial
-                && match expected.maximum {
-                    Some(expected_max) => match actual.maximum {
-                        Some(actual_max) => actual_max <= expected_max,
-                        None => false,
-                    },
-                    None => true,
-                }
-        };
+        macro_rules! limits_match {
+            ($expected:expr, $actual:expr) => {{
+                let expected = $expected;
+                let actual = $actual;
+                actual.initial >= expected.initial
+                    && match expected.maximum {
+                        Some(expected_max) => match actual.maximum {
+                            Some(actual_max) => actual_max <= expected_max,
+                            None => false,
+                        },
+                        None => true,
+                    }
+            }};
+        }
         match (expected.item, actual.item) {
             (
                 ImportSectionEntryType::Function(expected_idx),
@@ -1109,17 +1011,34 @@ impl Validator {
             }
             (ImportSectionEntryType::Table(expected), ImportSectionEntryType::Table(actual)) => {
                 if expected.element_type == actual.element_type
-                    && limits_match(&expected.limits, &actual.limits)
+                    && limits_match!(&expected.limits, &actual.limits)
                 {
                     return Ok(());
                 }
                 self.create_error("table provided for instantiation has wrong type")
             }
             (ImportSectionEntryType::Memory(expected), ImportSectionEntryType::Memory(actual)) => {
-                if limits_match(&expected.limits, &actual.limits)
-                    && expected.shared == actual.shared
-                {
-                    return Ok(());
+                match (expected, actual) {
+                    (
+                        MemoryType::M32 {
+                            limits: a,
+                            shared: ash,
+                        },
+                        MemoryType::M32 {
+                            limits: b,
+                            shared: bsh,
+                        },
+                    ) => {
+                        if limits_match!(a, b) && ash == bsh {
+                            return Ok(());
+                        }
+                    }
+                    (MemoryType::M64 { limits: a }, MemoryType::M64 { limits: b }) => {
+                        if limits_match!(a, b) {
+                            return Ok(());
+                        }
+                    }
+                    _ => {}
                 }
                 self.create_error("memory provided for instantiation has wrong type")
             }
@@ -1232,11 +1151,19 @@ impl Validator {
         })
     }
 
+    fn max_memories(&self) -> usize {
+        if self.features.multi_memory {
+            MAX_WASM_MEMORIES
+        } else {
+            1
+        }
+    }
+
     pub fn memory_section(&mut self, section: &crate::MemorySectionReader<'_>) -> Result<()> {
         self.check_max(
             self.state.memories.len(),
             section.get_count(),
-            MAX_WASM_MEMORIES,
+            self.max_memories(),
             "memories",
         )?;
         self.section(Order::Memory, section, |me, ty| {
@@ -1256,14 +1183,14 @@ impl Validator {
         )?;
         self.section(Order::Global, section, |me, g| {
             me.global_type(&g.ty)?;
-            me.init_expr(&g.init_expr, g.ty.content_type)?;
+            me.init_expr(&g.init_expr, g.ty.content_type, false)?;
             let def = me.state.def(g.ty);
             me.state.assert_mut().globals.push(def);
             Ok(())
         })
     }
 
-    fn init_expr(&mut self, expr: &InitExpr<'_>, expected_ty: Type) -> Result<()> {
+    fn init_expr(&mut self, expr: &InitExpr<'_>, expected_ty: Type, allow32: bool) -> Result<()> {
         let mut ops = expr.get_operators_reader().into_iter_with_offsets();
         let (op, offset) = match ops.next() {
             Some(Err(e)) => return Err(e),
@@ -1298,7 +1225,9 @@ impl Validator {
             }
         };
         if ty != expected_ty {
-            return self.create_error("type mismatch: invalid init_expr type");
+            if !allow32 || ty != Type::I32 {
+                return self.create_error("type mismatch: invalid init_expr type");
+            }
         }
 
         // Make sure the next instruction is an `end`
@@ -1515,7 +1444,7 @@ impl Validator {
                     if e.ty != table.item.element_type {
                         return me.create_error("element_type != table type");
                     }
-                    me.init_expr(&init_expr, Type::I32)?;
+                    me.init_expr(&init_expr, Type::I32, false)?;
                 }
                 ElementKind::Passive | ElementKind::Declared => {
                     if !me.features.bulk_memory {
@@ -1532,10 +1461,16 @@ impl Validator {
                 match items.read()? {
                     ElementItem::Null(ty) => {
                         if ty != e.ty {
-                            return me.create_error("null type doesn't match element type");
+                            return me.create_error(
+                                "type mismatch: null type doesn't match element type",
+                            );
                         }
                     }
                     ElementItem::Func(f) => {
+                        if e.ty != Type::FuncRef {
+                            return me
+                                .create_error("type mismatch: segment does not have funcref type");
+                        }
                         me.get_func_type_index(me.state.def(f))?;
                         me.state.assert_mut().function_references.insert(f);
                     }
@@ -1552,6 +1487,9 @@ impl Validator {
         self.offset = range.start;
         self.update_order(Order::DataCount)?;
         self.state.assert_mut().data_count = Some(count);
+        if count > MAX_WASM_DATA_SEGMENTS as u32 {
+            return self.create_error("data count section specifies too many data segments");
+        }
         Ok(())
     }
 
@@ -1620,68 +1558,25 @@ impl Validator {
     /// This function will prepare a [`FuncValidator`] which can be used to
     /// validate the function. The function body provided will be parsed only
     /// enough to create the function validation context. After this the
-    /// [`OperatorsReader`] returned can be used to read the opcodes of the
-    /// function as well as feed information into the validator.
+    /// [`OperatorsReader`](crate::readers::OperatorsReader) returned can be used to read the
+    /// opcodes of the function as well as feed information into the validator.
     ///
     /// Note that the returned [`FuncValidator`] is "connected" to this
     /// [`Validator`] in that it uses the internal context of this validator for
     /// validating the function. The [`FuncValidator`] can be sent to
     /// another thread, for example, to offload actual processing of functions
     /// elsewhere.
-    pub fn code_section_entry<'a>(
-        &mut self,
-        body: &FunctionBody<'a>,
-    ) -> Result<(FuncValidator, OperatorsReader<'a>)> {
+    pub fn code_section_entry(&mut self) -> Result<FuncValidator<ValidatorResources>> {
         let ty_index = self.state.func_type_indices[self.code_section_index];
         self.code_section_index += 1;
-        self.offset = body.get_binary_reader().original_position();
-
-        let mut locals = body.get_locals_reader()?;
-
-        let mut list = Vec::new();
-        let mut total = 0u32;
-        let max = MAX_WASM_FUNCTION_LOCALS as u32;
-        if locals.get_count() > max {
-            return self.create_error("locals exceed maximum");
-        }
-        for _ in 0..locals.get_count() {
-            self.offset = locals.original_position();
-            let (cnt, ty) = locals.read()?;
-            total = match total.checked_add(cnt) {
-                Some(total) => total,
-                None => return self.create_error("locals overflow"),
-            };
-            if total > max {
-                return self.create_error("locals exceed maximum");
-            }
-            list.push((cnt, ty));
-        }
-        let config = OperatorValidatorConfig {
-            enable_module_linking: self.features.module_linking,
-            enable_reference_types: self.features.reference_types,
-            enable_multi_value: self.features.multi_value,
-            enable_simd: self.features.simd,
-            enable_bulk_memory: self.features.bulk_memory,
-            enable_threads: self.features.threads,
-            enable_tail_call: self.features.tail_call,
-            #[cfg(feature = "deterministic")]
-            deterministic_only: self.features.deterministic_only,
-        };
-        let ty = self.func_type_at(ty_index)?;
-        Ok((
-            FuncValidator {
-                validator: OperatorValidator::new(ty.item, &list, config).map_err(|e| e.0)?,
-                state: self.state.arc().clone(),
-                offset: body.get_binary_reader().original_position(),
-                eof_found: false,
-            },
-            body.get_operators_reader()?,
-        ))
+        let resources = ValidatorResources(self.state.arc().clone());
+        Ok(FuncValidator::new(ty_index.item, 0, resources, &self.features).unwrap())
     }
 
     /// Validates [`Payload::DataSection`](crate::Payload).
     pub fn data_section(&mut self, section: &crate::DataSectionReader<'_>) -> Result<()> {
         self.data_found = section.get_count();
+        self.check_max(0, section.get_count(), MAX_WASM_DATA_SEGMENTS, "segments")?;
         self.section(Order::Data, section, |me, d| {
             match d.kind {
                 DataKind::Passive => {}
@@ -1689,8 +1584,9 @@ impl Validator {
                     memory_index,
                     init_expr,
                 } => {
-                    me.get_memory(me.state.def(memory_index))?;
-                    me.init_expr(&init_expr, Type::I32)?;
+                    let ty = me.get_memory(me.state.def(memory_index))?.index_type();
+                    let allow32 = ty == Type::I64;
+                    me.init_expr(&init_expr, ty, allow32)?;
                 }
             }
             Ok(())
@@ -1732,6 +1628,29 @@ impl Validator {
             }
         }
         Ok(())
+    }
+}
+
+impl WasmFeatures {
+    pub(crate) fn check_value_type(&self, ty: Type) -> Result<(), &'static str> {
+        match ty {
+            Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
+            Type::FuncRef | Type::ExternRef => {
+                if self.reference_types {
+                    Ok(())
+                } else {
+                    Err("reference types support is not enabled")
+                }
+            }
+            Type::V128 => {
+                if self.simd {
+                    Ok(())
+                } else {
+                    Err("SIMD support is not enabled")
+                }
+            }
+            _ => Err("invalid value type"),
+        }
     }
 }
 
@@ -1809,6 +1728,56 @@ impl<T> Def<T> {
             depth: self.depth,
             item: item,
         }
+    }
+}
+
+/// The implementation of [`WasmModuleResources`] used by [`Validator`].
+pub struct ValidatorResources(Arc<ModuleState>);
+
+impl WasmModuleResources for ValidatorResources {
+    type FuncType = crate::FuncType;
+
+    fn table_at(&self, at: u32) -> Option<TableType> {
+        self.0.get_table(self.0.def(at)).map(|t| t.item)
+    }
+
+    fn memory_at(&self, at: u32) -> Option<MemoryType> {
+        self.0.get_memory(self.0.def(at)).copied()
+    }
+
+    fn global_at(&self, at: u32) -> Option<GlobalType> {
+        self.0.get_global(self.0.def(at)).map(|t| t.item)
+    }
+
+    fn func_type_at(&self, at: u32) -> Option<&Self::FuncType> {
+        match self.0.get_type(self.0.def(at))?.item {
+            TypeDef::Func(f) => Some(f),
+            _ => None,
+        }
+    }
+
+    fn type_of_function(&self, at: u32) -> Option<&Self::FuncType> {
+        let ty = self.0.get_func_type_index(self.0.def(at))?;
+        match self.0.get_type(ty)?.item {
+            TypeDef::Func(f) => Some(f),
+            _ => None,
+        }
+    }
+
+    fn element_type_at(&self, at: u32) -> Option<Type> {
+        self.0.element_types.get(at as usize).cloned()
+    }
+
+    fn element_count(&self) -> u32 {
+        self.0.element_types.len() as u32
+    }
+
+    fn data_count(&self) -> u32 {
+        self.0.data_count.unwrap_or(0)
+    }
+
+    fn is_function_referenced(&self, idx: u32) -> bool {
+        self.0.function_references.contains(&idx)
     }
 }
 

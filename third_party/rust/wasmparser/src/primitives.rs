@@ -32,7 +32,7 @@ pub(crate) struct BinaryReaderErrorInner {
     pub(crate) needed_hint: Option<usize>,
 }
 
-pub type Result<T> = result::Result<T, BinaryReaderError>;
+pub type Result<T, E = BinaryReaderError> = result::Result<T, E>;
 
 impl Error for BinaryReaderError {}
 
@@ -196,15 +196,35 @@ pub struct ResizableLimits {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct ResizableLimits64 {
+    pub initial: u64,
+    pub maximum: Option<u64>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TableType {
     pub element_type: Type,
     pub limits: ResizableLimits,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct MemoryType {
-    pub limits: ResizableLimits,
-    pub shared: bool,
+pub enum MemoryType {
+    M32 {
+        limits: ResizableLimits,
+        shared: bool,
+    },
+    M64 {
+        limits: ResizableLimits64,
+    },
+}
+
+impl MemoryType {
+    pub fn index_type(&self) -> Type {
+        match self {
+            MemoryType::M32 { .. } => Type::I32,
+            MemoryType::M64 { .. } => Type::I64,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -225,8 +245,10 @@ pub enum ImportSectionEntryType {
 
 #[derive(Debug, Copy, Clone)]
 pub struct MemoryImmediate {
-    pub flags: u32,
+    /// Alignment, stored as `n` where the actual alignment is `2^n`
+    pub align: u8,
     pub offset: u32,
+    pub memory: u32,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -260,9 +282,9 @@ pub enum RelocType {
 }
 
 /// A br_table entries representation.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BrTable<'a> {
-    pub(crate) buffer: &'a [u8],
+    pub(crate) reader: crate::BinaryReader<'a>,
     pub(crate) cnt: usize,
 }
 
@@ -354,8 +376,8 @@ pub enum Operator<'a> {
     I64Store8 { memarg: MemoryImmediate },
     I64Store16 { memarg: MemoryImmediate },
     I64Store32 { memarg: MemoryImmediate },
-    MemorySize { reserved: u32 },
-    MemoryGrow { reserved: u32 },
+    MemorySize { mem: u32, mem_byte: u8 },
+    MemoryGrow { mem: u32, mem_byte: u8 },
     I32Const { value: i32 },
     I64Const { value: i64 },
     F32Const { value: Ieee32 },
@@ -505,10 +527,10 @@ pub enum Operator<'a> {
 
     // 0xFC operators
     // bulk memory https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md
-    MemoryInit { segment: u32 },
+    MemoryInit { segment: u32, mem: u32 },
     DataDrop { segment: u32 },
-    MemoryCopy,
-    MemoryFill,
+    MemoryCopy { src: u32, dst: u32 },
+    MemoryFill { mem: u32 },
     TableInit { segment: u32, table: u32 },
     ElemDrop { segment: u32 },
     TableCopy { dst_table: u32, src_table: u32 },
@@ -520,9 +542,9 @@ pub enum Operator<'a> {
 
     // 0xFE operators
     // https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md
-    AtomicNotify { memarg: MemoryImmediate },
-    I32AtomicWait { memarg: MemoryImmediate },
-    I64AtomicWait { memarg: MemoryImmediate },
+    MemoryAtomicNotify { memarg: MemoryImmediate },
+    MemoryAtomicWait32 { memarg: MemoryImmediate },
+    MemoryAtomicWait64 { memarg: MemoryImmediate },
     AtomicFence { flags: u8 },
     I32AtomicLoad { memarg: MemoryImmediate },
     I64AtomicLoad { memarg: MemoryImmediate },
@@ -670,11 +692,11 @@ pub enum Operator<'a> {
     I8x16ShrS,
     I8x16ShrU,
     I8x16Add,
-    I8x16AddSaturateS,
-    I8x16AddSaturateU,
+    I8x16AddSatS,
+    I8x16AddSatU,
     I8x16Sub,
-    I8x16SubSaturateS,
-    I8x16SubSaturateU,
+    I8x16SubSatS,
+    I8x16SubSatU,
     I8x16MinS,
     I8x16MinU,
     I8x16MaxS,
@@ -688,11 +710,11 @@ pub enum Operator<'a> {
     I16x8ShrS,
     I16x8ShrU,
     I16x8Add,
-    I16x8AddSaturateS,
-    I16x8AddSaturateU,
+    I16x8AddSatS,
+    I16x8AddSatU,
     I16x8Sub,
-    I16x8SubSaturateS,
-    I16x8SubSaturateU,
+    I16x8SubSatS,
+    I16x8SubSatU,
     I16x8Mul,
     I16x8MinS,
     I16x8MinU,
@@ -720,6 +742,14 @@ pub enum Operator<'a> {
     I64x2Add,
     I64x2Sub,
     I64x2Mul,
+    F32x4Ceil,
+    F32x4Floor,
+    F32x4Trunc,
+    F32x4Nearest,
+    F64x2Ceil,
+    F64x2Floor,
+    F64x2Trunc,
+    F64x2Nearest,
     F32x4Abs,
     F32x4Neg,
     F32x4Sqrt,
@@ -729,6 +759,8 @@ pub enum Operator<'a> {
     F32x4Div,
     F32x4Min,
     F32x4Max,
+    F32x4PMin,
+    F32x4PMax,
     F64x2Abs,
     F64x2Neg,
     F64x2Sqrt,
@@ -738,16 +770,18 @@ pub enum Operator<'a> {
     F64x2Div,
     F64x2Min,
     F64x2Max,
+    F64x2PMin,
+    F64x2PMax,
     I32x4TruncSatF32x4S,
     I32x4TruncSatF32x4U,
     F32x4ConvertI32x4S,
     F32x4ConvertI32x4U,
-    V8x16Swizzle,
-    V8x16Shuffle { lanes: [SIMDLaneIndex; 16] },
-    V8x16LoadSplat { memarg: MemoryImmediate },
-    V16x8LoadSplat { memarg: MemoryImmediate },
-    V32x4LoadSplat { memarg: MemoryImmediate },
-    V64x2LoadSplat { memarg: MemoryImmediate },
+    I8x16Swizzle,
+    I8x16Shuffle { lanes: [SIMDLaneIndex; 16] },
+    V128Load8Splat { memarg: MemoryImmediate },
+    V128Load16Splat { memarg: MemoryImmediate },
+    V128Load32Splat { memarg: MemoryImmediate },
+    V128Load64Splat { memarg: MemoryImmediate },
     I8x16NarrowI16x8S,
     I8x16NarrowI16x8U,
     I16x8NarrowI32x4S,
@@ -760,12 +794,12 @@ pub enum Operator<'a> {
     I32x4WidenHighI16x8S,
     I32x4WidenLowI16x8U,
     I32x4WidenHighI16x8U,
-    I16x8Load8x8S { memarg: MemoryImmediate },
-    I16x8Load8x8U { memarg: MemoryImmediate },
-    I32x4Load16x4S { memarg: MemoryImmediate },
-    I32x4Load16x4U { memarg: MemoryImmediate },
-    I64x2Load32x2S { memarg: MemoryImmediate },
-    I64x2Load32x2U { memarg: MemoryImmediate },
+    V128Load8x8S { memarg: MemoryImmediate },
+    V128Load8x8U { memarg: MemoryImmediate },
+    V128Load16x4S { memarg: MemoryImmediate },
+    V128Load16x4U { memarg: MemoryImmediate },
+    V128Load32x2S { memarg: MemoryImmediate },
+    V128Load32x2U { memarg: MemoryImmediate },
     I8x16RoundingAverageU,
     I16x8RoundingAverageU,
 }

@@ -1,4 +1,4 @@
-use size_hint;
+use crate::size_hint;
 
 /// An iterator adaptor that allows putting multiple
 /// items in front of the iterator.
