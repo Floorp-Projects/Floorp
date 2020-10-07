@@ -274,8 +274,8 @@ TEST_VARIANTS = {
                 'by-test-platform': {
                     'mac.*': ['trunk'],
                     'default': [],
-                }
-            }
+                },
+            },
         },
         'merge': {
             'mozharness': {
@@ -283,9 +283,8 @@ TEST_VARIANTS = {
                     '--setpref=webgl.out-of-process=true',
                 ],
             },
-            'tier': 2
-        }
-    }
+        },
+    },
 }
 
 

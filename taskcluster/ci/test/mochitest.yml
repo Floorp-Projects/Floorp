@@ -317,6 +317,8 @@ mochitest-media:
                 macosx.*64.*: false
                 windows10-64.*: false
                 default: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
     tier:
         by-test-platform:
             android-em.*: 1
@@ -392,6 +394,8 @@ mochitest-webgl1-core:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
+        extra-options:
+            - --setpref=webgl.out-of-process=false
 
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
@@ -422,6 +426,8 @@ mochitest-webgl1-ext:
     mozharness:
         mochitest-flavor: plain
         chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
 
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
@@ -474,6 +480,8 @@ mochitest-webgl2-ext:
     mozharness:
         mochitest-flavor: plain
         chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
 
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
@@ -495,6 +503,8 @@ mochitest-webgl2-deqp:
     mozharness:
         mochitest-flavor: plain
         chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
 
 mochitest-webgpu:
     description: "Mochitest webgpu run"
