@@ -86,21 +86,6 @@ static bool JSValIsInterfaceOfType(JSContext* cx, HandleValue v, REFNSIID iid) {
          iface;
 }
 
-char* xpc::CloneAllAccess() { return moz_xstrdup("AllAccess"); }
-
-char* xpc::CheckAccessList(const char16_t* wideName, const char* const list[]) {
-  nsAutoCString asciiName;
-  CopyUTF16toUTF8(nsDependentString(wideName), asciiName);
-
-  for (const char* const* p = list; *p; p++) {
-    if (!strcmp(*p, asciiName.get())) {
-      return CloneAllAccess();
-    }
-  }
-
-  return nullptr;
-}
-
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
