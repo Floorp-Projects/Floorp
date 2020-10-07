@@ -15,15 +15,13 @@ ChromeUtils.defineModuleGetter(
 var gClearSiteDataDialog = {
   _clearSiteDataCheckbox: null,
   _clearCacheCheckbox: null,
-  _clearButton: null,
 
   onLoad() {
     document.mozSubdialogReady = this.init();
   },
 
   async init() {
-    this._clearButton = document.getElementById("clearButton");
-    this._cancelButton = document.getElementById("cancelButton");
+    this._dialog = document.querySelector("dialog");
     this._clearSiteDataCheckbox = document.getElementById("clearSiteData");
     this._clearCacheCheckbox = document.getElementById("clearCache");
 
@@ -52,10 +50,7 @@ var gClearSiteDataDialog = {
       this._clearSiteDataCheckbox,
     ]);
 
-    window.addEventListener("keypress", this.onWindowKeyPress);
-
-    this._cancelButton.addEventListener("command", window.close);
-    this._clearButton.addEventListener("command", () => this.onClear());
+    document.addEventListener("dialogaccept", event => this.onClear(event));
 
     this._clearSiteDataCheckbox.addEventListener("command", e =>
       this.onCheckboxCommand(e)
@@ -65,39 +60,37 @@ var gClearSiteDataDialog = {
     );
   },
 
-  onWindowKeyPress(event) {
-    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      window.close();
-    }
-  },
-
   onCheckboxCommand(event) {
-    this._clearButton.disabled = !(
-      this._clearSiteDataCheckbox.checked || this._clearCacheCheckbox.checked
+    this._dialog.setAttribute(
+      "buttondisabledaccept",
+      !(this._clearSiteDataCheckbox.checked || this._clearCacheCheckbox.checked)
     );
   },
 
-  onClear() {
-    let allowed = true;
+  onClear(event) {
+    let clearSiteData = this._clearSiteDataCheckbox.checked;
+    let clearCache = this._clearCacheCheckbox.checked;
 
-    if (this._clearCacheCheckbox.checked && allowed) {
+    if (clearSiteData) {
+      // Ask for confirmation before clearing site data
+      if (!SiteDataManager.promptSiteDataRemoval(window)) {
+        clearSiteData = false;
+        // Prevent closing the dialog when the data removal wasn't allowed.
+        event.preventDefault();
+      }
+    }
+
+    if (clearSiteData) {
+      SiteDataManager.removeSiteData();
+    }
+    if (clearCache) {
       SiteDataManager.removeCache();
+
       // If we're not clearing site data, we need to tell the
       // SiteDataManager to signal that it's updating.
-      if (!this._clearSiteDataCheckbox.checked) {
+      if (!clearSiteData) {
         SiteDataManager.updateSites();
       }
-    }
-
-    if (this._clearSiteDataCheckbox.checked) {
-      allowed = SiteDataManager.promptSiteDataRemoval(window);
-      if (allowed) {
-        SiteDataManager.removeSiteData();
-      }
-    }
-
-    if (allowed) {
-      window.close();
     }
   },
 };
