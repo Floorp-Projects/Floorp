@@ -18,3 +18,12 @@ add-engine-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "add-engine-ok.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "add-engine-ok.accesskey") }
 """, from_path="browser/browser/preferences/addEngine.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/clearSiteData.ftl",
+        "browser/browser/preferences/clearSiteData.ftl",
+        transforms_from("""
+clear-site-data-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "clear-site-data-clear.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "clear-site-data-clear.accesskey") }
+""", from_path="browser/browser/preferences/clearSiteData.ftl"))
