@@ -7,6 +7,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/Bailouts.h"
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
