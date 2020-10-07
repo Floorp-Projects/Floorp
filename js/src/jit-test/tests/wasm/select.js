@@ -2,7 +2,7 @@
 
 wasmFailValidateText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
 
-wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" (func 0)))', /select operand types must match/);
+wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" (func 0)))', /(select operand types must match)|(type mismatch: expected Some\(F32\), found Some\(I32\))/);
 wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" (func 0)))', emptyStackError);
 wasmFailValidateText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" (func 0)))', unusedValuesError);
 assertEq(wasmEvalText('(module (func (drop (select (return) (i32.const 0) (i32.const 0)))) (export "" (func 0)))').exports[""](), undefined);
@@ -169,14 +169,14 @@ if (wasmReftypesEnabled()) {
           (select (local.get 0) (local.get 0) (i32.const 0))
           drop
         ))`,
-        /untyped select/);
+        /(untyped select)|(type mismatch: select only takes integral types)/);
 
     wasmFailValidateText(`(module
         (func (param funcref)
           (select (local.get 0) (local.get 0) (i32.const 0))
           drop
         ))`,
-        /untyped select/);
+        /(untyped select)|(type mismatch: select only takes integral types)/);
 
     function testRefSelect(type, trueVal, falseVal) {
         // Always true condition
