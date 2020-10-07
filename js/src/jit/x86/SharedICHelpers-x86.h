@@ -7,8 +7,8 @@
 #ifndef jit_x86_SharedICHelpers_x86_h
 #define jit_x86_SharedICHelpers_x86_h
 
-#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
+#include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
 

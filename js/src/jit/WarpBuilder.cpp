@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/BaselineFrame.h"
 #include "jit/CacheIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"

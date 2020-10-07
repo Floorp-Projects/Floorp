@@ -13,7 +13,6 @@
 #include "mozilla/Likely.h"      // MOZ_UNLIKELY
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::CalleeToken
 #include "vm/FrameIter.h"        // js::FrameIter
 #include "vm/JitActivation.h"    // js::jit::JitActivation

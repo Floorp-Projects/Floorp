@@ -7,8 +7,8 @@
 #ifndef jit_arm64_SharedICHelpers_arm64_h
 #define jit_arm64_SharedICHelpers_arm64_h
 
-#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
+#include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
 

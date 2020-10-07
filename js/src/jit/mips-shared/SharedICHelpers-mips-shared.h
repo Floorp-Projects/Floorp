@@ -7,8 +7,8 @@
 #ifndef jit_mips_shared_SharedICHelpers_mips_shared_h
 #define jit_mips_shared_SharedICHelpers_mips_shared_h
 
-#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
+#include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
 
