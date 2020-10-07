@@ -22,11 +22,18 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent {
       const uint32_t& aID, const GamepadChangeEvent& aGamepadEvent);
   mozilla::ipc::IPCResult RecvShutdownChannel();
 
-  void OnMonitoringStateChanged(bool aNewState) {}
+  void OnMonitoringStateChanged(bool aNewState);
 
  private:
+  struct DeferredGamepadAdded {
+    uint32_t promiseId;
+    GamepadAdded gamepadAdded;
+  };
+  void AddGamepadToPlatformService(uint32_t aPromiseId,
+                                   const GamepadAdded& aGamepadAdded);
   ~GamepadTestChannelParent() = default;
   bool mShuttingdown;
+  nsTArray<DeferredGamepadAdded> mDeferredGamepadAdded;
 };
 
 }  // namespace dom
