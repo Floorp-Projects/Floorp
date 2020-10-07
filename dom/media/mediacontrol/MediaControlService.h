@@ -67,12 +67,6 @@ class MediaControlService final : public nsIObserver {
   // key events and would show its metadata to virtual controller interface.
   MediaController* GetMainController() const;
 
-  // This event is used to generate a media event indicating media controller
-  // amount changed.
-  MediaEventSource<uint64_t>& MediaControllerAmountChangedEvent() {
-    return mMediaControllerAmountChangedEvent;
-  }
-
   /**
    * These following functions are used for testing only. We use them to
    * generate fake media control key events, get the media metadata and playback
