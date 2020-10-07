@@ -4357,7 +4357,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         // We need to use GLX to get visual even on EGL until
         // EGL can provide compositable visual:
         // https://gitlab.freedesktop.org/mesa/mesa/-/issues/149
-        if ((true /* !gfx::gfxVars::UseEGL() */)) {
+        if (!gfx::gfxVars::UseEGL() || gfx::gfxVars::AllowGLXOnEGL()) {
           auto display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
           int screenNumber = GDK_SCREEN_XNUMBER(screen);
           haveVisual = GLContextGLX::FindVisual(
