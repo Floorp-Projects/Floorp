@@ -137,7 +137,7 @@ class GeckoViewPermission {
         }
 
         const dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
-        const uri = win.document.documentURIObject;
+        const uri = win.top.document.documentURIObject;
         return dispatcher
           .sendRequestForResult({
             type: "GeckoView:MediaPermission",
