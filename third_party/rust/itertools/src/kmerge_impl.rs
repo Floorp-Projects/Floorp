@@ -1,19 +1,8 @@
-
-use size_hint;
-use Itertools;
+use crate::size_hint;
+use crate::Itertools;
 
 use std::mem::replace;
 use std::fmt;
-
-macro_rules! clone_fields {
-    ($name:ident, $base:expr, $($field:ident),+) => (
-        $name {
-            $(
-                $field : $base . $field .clone()
-            ),*
-        }
-    );
-}
 
 /// Head element and Tail iterator pair
 ///
@@ -65,9 +54,7 @@ impl<I> Clone for HeadTail<I>
     where I: Iterator + Clone,
           I::Item: Clone
 {
-    fn clone(&self) -> Self {
-        clone_fields!(HeadTail, self, head, tail)
-    }
+    clone_fields!(head, tail);
 }
 
 /// Make `data` a heap (min-heap w.r.t the sorting).
@@ -112,17 +99,25 @@ fn sift_down<T, S>(heap: &mut [T], index: usize, mut less_than: S)
 ///
 /// See [`.kmerge()`](../trait.Itertools.html#method.kmerge) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-pub struct KMerge<I>
-    where I: Iterator
-{
-    heap: Vec<HeadTail<I>>,
+pub type KMerge<I> = KMergeBy<I, KMergeByLt>;
+
+pub trait KMergePredicate<T> {
+    fn kmerge_pred(&mut self, a: &T, b: &T) -> bool;
 }
 
-impl<I> fmt::Debug for KMerge<I>
-    where I: Iterator + fmt::Debug,
-          I::Item: fmt::Debug,
-{
-    debug_fmt_fields!(KMerge, heap);
+#[derive(Clone)]
+pub struct KMergeByLt;
+
+impl<T: PartialOrd> KMergePredicate<T> for KMergeByLt {
+    fn kmerge_pred(&mut self, a: &T, b: &T) -> bool {
+        a < b
+    }
+}
+
+impl<T, F: FnMut(&T, &T)->bool> KMergePredicate<T> for F {
+    fn kmerge_pred(&mut self, a: &T, b: &T) -> bool {
+        self(a, b)
+    }
 }
 
 /// Create an iterator that merges elements of the contained iterators using
@@ -142,48 +137,7 @@ pub fn kmerge<I>(iterable: I) -> KMerge<<I::Item as IntoIterator>::IntoIter>
           I::Item: IntoIterator,
           <<I as IntoIterator>::Item as IntoIterator>::Item: PartialOrd
 {
-    let iter = iterable.into_iter();
-    let (lower, _) = iter.size_hint();
-    let mut heap = Vec::with_capacity(lower);
-    heap.extend(iter.filter_map(|it| HeadTail::new(it.into_iter())));
-    heapify(&mut heap, |a, b| a.head < b.head);
-    KMerge { heap: heap }
-}
-
-impl<I> Clone for KMerge<I>
-    where I: Iterator + Clone,
-          I::Item: Clone
-{
-    fn clone(&self) -> KMerge<I> {
-        clone_fields!(KMerge, self, heap)
-    }
-}
-
-impl<I> Iterator for KMerge<I>
-    where I: Iterator,
-          I::Item: PartialOrd
-{
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.heap.is_empty() {
-            return None;
-        }
-        let result = if let Some(next) = self.heap[0].next() {
-            next
-        } else {
-            self.heap.swap_remove(0).head
-        };
-        sift_down(&mut self.heap, 0, |a, b| a.head < b.head);
-        Some(result)
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.heap.iter()
-                 .map(|i| i.size_hint())
-                 .fold1(size_hint::add)
-                 .unwrap_or((0, Some(0)))
-    }
+    kmerge_by(iterable, KMergeByLt)
 }
 
 /// An iterator adaptor that merges an abitrary number of base iterators
@@ -215,21 +169,27 @@ pub fn kmerge_by<I, F>(iterable: I, mut less_than: F)
     -> KMergeBy<<I::Item as IntoIterator>::IntoIter, F>
     where I: IntoIterator,
           I::Item: IntoIterator,
-          F: FnMut(&<<I as IntoIterator>::Item as IntoIterator>::Item,
-                   &<<I as IntoIterator>::Item as IntoIterator>::Item) -> bool
+          F: KMergePredicate<<<I as IntoIterator>::Item as IntoIterator>::Item>,
 {
     let iter = iterable.into_iter();
     let (lower, _) = iter.size_hint();
     let mut heap: Vec<_> = Vec::with_capacity(lower);
     heap.extend(iter.filter_map(|it| HeadTail::new(it.into_iter())));
-    heapify(&mut heap, |a, b| less_than(&a.head, &b.head));
-    KMergeBy { heap: heap, less_than: less_than }
+    heapify(&mut heap, |a, b| less_than.kmerge_pred(&a.head, &b.head));
+    KMergeBy { heap, less_than }
 }
 
+impl<I, F> Clone for KMergeBy<I, F>
+    where I: Iterator + Clone,
+          I::Item: Clone,
+          F: Clone,
+{
+    clone_fields!(heap, less_than);
+}
 
 impl<I, F> Iterator for KMergeBy<I, F>
     where I: Iterator,
-          F: FnMut(&I::Item, &I::Item) -> bool
+          F: KMergePredicate<I::Item>
 {
     type Item = I::Item;
 
@@ -243,7 +203,7 @@ impl<I, F> Iterator for KMergeBy<I, F>
             self.heap.swap_remove(0).head
         };
         let less_than = &mut self.less_than;
-        sift_down(&mut self.heap, 0, |a, b| less_than(&a.head, &b.head));
+        sift_down(&mut self.heap, 0, |a, b| less_than.kmerge_pred(&a.head, &b.head));
         Some(result)
     }
 
