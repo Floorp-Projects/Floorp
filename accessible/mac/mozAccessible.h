@@ -188,6 +188,9 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 - (NSNumber*)moxRequired;
 
 // override
+- (id)moxEditableAncestor;
+
+// override
 - (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
 
 // override

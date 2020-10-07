@@ -261,6 +261,9 @@
 // AXInsertionPointLineNumber
 - (NSNumber* _Nullable)moxInsertionPointLineNumber;
 
+// AXEditableAncestor
+- (id _Nullable)moxEditableAncestor;
+
 #pragma mark - AttributeSetters
 
 // AXValue
