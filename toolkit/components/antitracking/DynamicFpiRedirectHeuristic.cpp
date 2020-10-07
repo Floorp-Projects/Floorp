@@ -11,6 +11,7 @@
 #include "ContentBlockingUserInteraction.h"
 
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsICookieService.h"
@@ -319,6 +320,11 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
        newOrigin.get()));
 
   AddConsoleReport(aNewChannel, aNewURI, oldOrigin, newOrigin);
+
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::StorageGranted);
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::Redirect);
 
   // We don't care about this promise because the operation is actually sync.
   RefPtr<ContentBlocking::ParentAccessGrantPromise> promise =
