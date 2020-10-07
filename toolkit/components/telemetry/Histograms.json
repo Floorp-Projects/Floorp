@@ -15157,9 +15157,9 @@
   "HTTP_TRAFFIC_ANALYSIS_3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["gachen@mozilla.com"],
-    "bug_numbers": [1533363, 1546796, 1546906, 1550756, 1572666, 1590124, 1621800],
-    "expires_in_version": "84",
+    "alert_emails": ["arthur@mozilla.com", "tanvi@mozilla.com", "tihuang@mozilla.com"],
+    "bug_numbers": [1533363, 1546796, 1546906, 1550756, 1572666, 1590124, 1621800, 1668604],
+    "expires_in_version": "91",
     "kind": "categorical",
     "n_values": 50,
     "labels": [
