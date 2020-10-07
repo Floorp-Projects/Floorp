@@ -12306,6 +12306,23 @@
     "bug_numbers": [1058133],
     "products": ["fennec"]
   },
+  "STORAGE_ACCESS_GRANTED_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "StorageGranted",
+      "StorageAccessAPI",
+      "OpenerAfterUI",
+      "Opener",
+      "Redirect"
+    ],
+    "description": "A count of the granted storage access. ('StorageGranted' = There was a storage access granted, 'StorageAccessAPI' = the storage access was granted by the storage access API, 'OpenerAfterUserInteraction' = the storage access was granted due to the heuristic 'OpenerAfterUserInteraction', 'Opener' = the storage access was granted due to the heuristic 'Opener', 'Redirect' = the storage access was granted due to the heuristic 'Redirect'.) Note, StorageGranted is used as a baseline measurement.",
+    "alert_emails": ["tihuang@mozilla.com", "aedelstein@mozilla.com", "senglehardt@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1668199]
+  },
   "SERVICE_WORKER_LAUNCH_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

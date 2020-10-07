@@ -15,6 +15,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
@@ -294,6 +295,11 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     LOG(("Can't obtain the principal from the redirected"));
     return;
   }
+
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::StorageGranted);
+  Telemetry::AccumulateCategorical(
+      Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::Redirect);
 
   // We don't care about this promise because the operation is actually sync.
   RefPtr<ContentBlocking::ParentAccessGrantPromise> promise =
