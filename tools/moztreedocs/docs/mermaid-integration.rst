@@ -68,5 +68,5 @@ will show:
 
 See `Mermaid's official <https://mermaid-js.github.io/mermaid/#/>`__ docs for
 more details on the syntax, and use the
-`Mermaid Live Editor <https://mermaidjs.github.io/mermaid-live-editor>`__ to
+`Mermaid Live Editor <https://mermaidjs.github.io/mermaid-live-editor/>`__ to
 experiment with creating your own diagrams.
