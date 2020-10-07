@@ -13,6 +13,12 @@
         data-l10n-attrs="title, style"
         persist="screenX screenY width height" screenX="24" screenY="24">
 
+  <dialog
+    buttons="accept,cancel"
+    buttondisabledaccept="true"
+    data-l10n-id="add-engine-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
+
   <linkset>
     <html:link rel="localization" href="browser/preferences/addEngine.ftl"/>
   </linkset>
@@ -41,15 +47,5 @@
       <html:input id="engineAlias" type="text" />
     </hbox>
   </html:form>
-
-  <separator class="thin"/>
-
-  <hbox pack="end">
-    <button oncommand="window.close();"
-            data-l10n-id="add-engine-cancel" />
-    <button id="addButton"
-            disabled="true"
-            data-l10n-id="add-engine-ok" />
-  </hbox>
-
+  </dialog>
 </window>
