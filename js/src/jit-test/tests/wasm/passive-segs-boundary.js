@@ -142,7 +142,7 @@ function tab_test_nofail(insn1, insn2,
 
 // drop with no memory and no data segments
 mem_test("data.drop 0", "",
-         WebAssembly.CompileError, /data.drop segment index out of range/,
+         WebAssembly.CompileError, /(data.drop segment index out of range)|(unknown data segment 0)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/false);
 
 // drop with no memory but with both passive and active segments, ix in range
@@ -154,7 +154,7 @@ mem_test("data.drop 3", "",
 
 // drop with no memory but with passive segments only, ix out of range
 mem_test("data.drop 2", "",
-         WebAssembly.CompileError, /data.drop segment index out of range/,
+         WebAssembly.CompileError, /(data.drop segment index out of range)|(unknown data segment 2)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/true);
 
 // drop with no memory but with passive segments only, ix in range
@@ -164,16 +164,16 @@ mem_test_nofail("data.drop 1", "",
 
 // init with no memory and no data segs
 mem_test("(memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.CompileError, /can't touch memory without memory/,
+         WebAssembly.CompileError, /(can't touch memory without memory)|(unknown memory 0)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/false);
 
 // drop with data seg ix out of range
 mem_test("data.drop 4", "",
-         WebAssembly.CompileError, /data.drop segment index out of range/);
+         WebAssembly.CompileError, /(data.drop segment index out of range)|(unknown data segment 4)/);
 
 // init with data seg ix out of range
 mem_test("(memory.init 4 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.CompileError, /memory.init segment index out of range/);
+         WebAssembly.CompileError, /(memory.init segment index out of range)|(unknown data segment 4)/);
 
 // drop with data seg ix indicating an active segment
 mem_test("data.drop 2", "");
@@ -236,17 +236,17 @@ mem_test("",
 // drop: too many args
 mem_test("data.drop 1 (i32.const 42)", "",
          WebAssembly.CompileError,
-         /unused values not explicitly dropped by end of block/);
+         /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 // init: too many args
 mem_test("(memory.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1))",
          "",
-         WebAssembly.CompileError, /unused values/);
+         WebAssembly.CompileError, /(unused values)|(values remaining on stack at end of block)/);
 
 // init: too few args
 mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError,
-         /popping value from empty stack/);
+         /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
 
 // invalid argument types
 {
@@ -268,7 +268,7 @@ mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
 // drop with no tables and no elem segments
 tab_test("elem.drop 0", "",
          WebAssembly.CompileError,
-         /element segment index out of range for elem.drop/,
+         /(element segment index out of range for elem.drop)|(segment index out of bounds)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/false);
 
 // drop with no tables but with both passive and active segments, ix in range
@@ -281,7 +281,7 @@ tab_test("elem.drop 3", "",
 // drop with no tables but with passive segments only, ix out of range
 tab_test("elem.drop 2", "",
          WebAssembly.CompileError,
-         /element segment index out of range for elem.drop/,
+         /(element segment index out of range for elem.drop)|(segment index out of bounds)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/true);
 
 // drop with no tables but with passive segments only, ix in range
@@ -291,16 +291,16 @@ tab_test_nofail("elem.drop 1", "",
 
 // init with no table
 tab_test("(table.init 1 (i32.const 12) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.CompileError, /table index out of range/,
+         WebAssembly.CompileError, /(table index out of range)|(table index out of bounds)/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/false);
 
 // drop with elem seg ix out of range
 tab_test("elem.drop 4", "",
-         WebAssembly.CompileError, /element segment index out of range for elem.drop/);
+         WebAssembly.CompileError, /(element segment index out of range for elem.drop)|(segment index out of bounds)/);
 
 // init with elem seg ix out of range
 tab_test("(table.init 4 (i32.const 12) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.CompileError, /table.init segment index out of range/);
+         WebAssembly.CompileError, /(table.init segment index out of range)|(segment index out of bounds)/);
 
 // drop with elem seg ix indicating an active segment
 tab_test("elem.drop 2", "");
@@ -362,17 +362,17 @@ tab_test("",
 // drop: too many args
 tab_test("elem.drop 1 (i32.const 42)", "",
          WebAssembly.CompileError,
-         /unused values not explicitly dropped by end of block/);
+         /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 // init: too many args
 tab_test("(table.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1))",
          "",
-         WebAssembly.CompileError, /unused values/);
+         WebAssembly.CompileError, /(unused values)|(values remaining on stack at end of block)/);
 
 // init: too few args
 tab_test("(table.init 1 (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError,
-         /popping value from empty stack/);
+         /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
 
 // invalid argument types
 {
