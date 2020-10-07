@@ -5235,21 +5235,6 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   }
 
 #ifdef NS_PRINTING
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (!printSettingsService) {
-    // we currently return here in headless mode - should we?
-    aError.ThrowNotSupportedError("No print settings service");
-    return;
-  }
-
-  nsCOMPtr<nsIPrintSettings> settings;
-  aError = printSettingsService->GetDefaultPrintSettingsForPrinting(
-      getter_AddRefs(settings));
-  if (aError.Failed()) {
-    return;
-  }
-
   RefPtr<BrowsingContext> top =
       mBrowsingContext ? mBrowsingContext->Top() : nullptr;
   bool oldIsPrinting = top && top->GetIsPrinting();
@@ -5265,13 +5250,7 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
 
   const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
                          !StaticPrefs::print_always_print_silent();
-  if (isPreview) {
-    // When printing with the new UI, we don't want to show the print progress
-    // dialog no matter what.
-    settings->SetShowPrintProgress(false);
-  }
-
-  Print(settings, nullptr, nullptr, IsPreview(isPreview),
+  Print(nullptr, nullptr, nullptr, IsPreview(isPreview),
         BlockUntilDone(isPreview), nullptr, aError);
 #endif
 }
@@ -5411,10 +5390,16 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   }
 
   if (aIsPreview == IsPreview::Yes) {
-    aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener,
-                                           std::move(aPrintPreviewCallback));
-    if (aError.Failed()) {
-      return nullptr;
+    // When using the new print preview UI from window.print()
+    // (BlockUntilDone::Yes), this would be wasted work (and use
+    // probably-incorrect settings). So skip it, the preview UI will take care
+    // of calling PrintPreview again.
+    if (aBlockUntilDone != BlockUntilDone::Yes) {
+      aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener,
+                                             std::move(aPrintPreviewCallback));
+      if (aError.Failed()) {
+        return nullptr;
+      }
     }
   } else {
     // Historically we've eaten this error.
