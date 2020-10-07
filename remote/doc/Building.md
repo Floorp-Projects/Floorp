@@ -4,7 +4,7 @@ Building
 The remote agent is included in the default Firefox build, but only
 ships on the Firefox Nightly release channel:
 
-	% ./mach run --remote-debugger
+	% ./mach run --remote-debugging-port
 
 The source code can be found under [remote/ in central].
 
