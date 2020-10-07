@@ -260,6 +260,7 @@ var State = {
         result.push(win);
       }
     }
+
     return result;
   },
 
@@ -270,7 +271,6 @@ var State = {
    * @param {ProcessSnapshot?} prev
    */
   _getProcessDelta(cur, prev) {
-    let windows = this._getDOMWindows(cur);
     let result = {
       pid: cur.pid,
       childID: cur.childID,
@@ -286,8 +286,8 @@ var State = {
       type: cur.type,
       origin: cur.origin || "",
       threads: null,
-      displayRank: Control._getDisplayGroupRank(cur, windows),
-      windows,
+      displayRank: Control._getDisplayGroupRank(cur),
+      windows: this._getDOMWindows(cur),
       // If this process has an unambiguous title, store it here.
       title: null,
     };
@@ -409,7 +409,6 @@ var View = {
     // Column: Name
     {
       let fluentName;
-      let classNames = [];
       switch (data.type) {
         case "web":
           fluentName = "about-processes-web-process-name";
@@ -425,7 +424,6 @@ var View = {
           break;
         case "extension":
           fluentName = "about-processes-extension-process-name";
-          classNames = ["extensions"];
           break;
         case "privilegedabout":
           fluentName = "about-processes-privilegedabout-process-name";
@@ -478,7 +476,7 @@ var View = {
           origin: data.origin,
           type: data.type,
         },
-        classes: ["type", "favicon", ...classNames],
+        classes: ["type", "favicon"],
       });
 
       let image;
@@ -594,7 +592,6 @@ var View = {
     let tab = tabFinder.get(data.outerWindowId);
     let fluentName;
     let name;
-    let className;
     if (parent.type == "extension") {
       fluentName = "about-processes-extension-name";
       if (data.addon) {
@@ -608,19 +605,15 @@ var View = {
     } else if (tab && tab.tabbrowser) {
       fluentName = "about-processes-tab-name";
       name = data.documentTitle;
-      className = "tab";
     } else if (tab) {
       fluentName = "about-processes-preloaded-tab";
       name = null;
-      className = "preloaded-tab";
     } else if (data.count == 1) {
       fluentName = "about-processes-frame-name-one";
       name = data.prePath;
-      className = "frame-one";
     } else {
       fluentName = "about-processes-frame-name-many";
       name = data.prePath;
-      className = "frame-many";
     }
     let elt = this._addCell(row, {
       fluentName,
@@ -633,7 +626,7 @@ var View = {
             ? data.documentURI.spec
             : data.documentURI.prePath,
       },
-      classes: ["name", "indent", "favicon", className],
+      classes: ["name", "indent", "favicon"],
     });
     let image = tab?.tab.getAttribute("image");
     if (image) {
@@ -855,10 +848,6 @@ var Control = {
     this._initHangReports();
 
     let tbody = document.getElementById("process-tbody");
-
-    // Single click:
-    // - show or hide the contents of a twisty;
-    // - change selection.
     tbody.addEventListener("click", event => {
       this._updateLastMouseEvent();
 
@@ -891,43 +880,10 @@ var Control = {
       }
     });
 
-    // Double click:
-    // - navigate to tab;
-    // - navigate to about:addons.
-    tbody.addEventListener("dblclick", event => {
-      this._updateLastMouseEvent();
-      event.stopPropagation();
-
-      // Bubble up the doubleclick manually.
-      for (
-        let target = event.target;
-        target && target.getAttribute("id") != "process-tbody";
-        target = target.parentNode
-      ) {
-        if (target.classList.contains("tab")) {
-          // We've clicked on a tab, navigate.
-          let { tab, tabbrowser } = target.parentNode.win.tab;
-          tabbrowser.selectedTab = tab;
-          tabbrowser.ownerGlobal.focus();
-          return;
-        }
-        if (target.classList.contains("extensions")) {
-          // We've clicked on the extensions process, open or reuse window.
-          let parentWin =
-            window.docShell.browsingContext.embedderElement.ownerGlobal;
-          parentWin.BrowserOpenAddonsMgr();
-          return;
-        }
-      }
-    });
-
     tbody.addEventListener("mousemove", () => {
       this._updateLastMouseEvent();
     });
 
-    // Visibility change:
-    // - stop updating while the user isn't looking;
-    // - resume updating when the user returns.
     window.addEventListener("visibilitychange", event => {
       if (!document.hidden) {
         this._updateDisplay(true);
@@ -1164,16 +1120,14 @@ var Control = {
   // Assign a display rank to a process.
   //
   // The `browser` process comes first (rank 0).
-  // Then come web tabs (rank 1).
-  // Then come web frames (rank 2).
-  // Then come special processes (minus preallocated) (rank 3).
-  // Then come preallocated processes (rank 4).
-  _getDisplayGroupRank(data, windows) {
+  // Then comes web content (rank 1).
+  // Then come special processes (minus preallocated) (rank 2).
+  // Then come preallocated processes (rank 3).
+  _getDisplayGroupRank(data) {
     const RANK_BROWSER = 0;
-    const RANK_WEB_TABS = 1;
-    const RANK_WEB_FRAMES = 2;
-    const RANK_UTILITY = 3;
-    const RANK_PREALLOCATED = 4;
+    const RANK_WEB_CONTENT = 1;
+    const RANK_UTILITY = 2;
+    const RANK_PREALLOCATED = 3;
     let type = data.type;
     switch (type) {
       // Browser comes first.
@@ -1182,12 +1136,8 @@ var Control = {
       // Web content comes next.
       case "webIsolated":
       case "webLargeAllocation":
-      case "withCoopCoep": {
-        if (windows.some(w => w.tab)) {
-          return RANK_WEB_TABS;
-        }
-        return RANK_WEB_FRAMES;
-      }
+      case "withCoopCoep":
+        return RANK_WEB_CONTENT;
       // Preallocated processes come last.
       case "preallocated":
         return RANK_PREALLOCATED;
@@ -1195,11 +1145,8 @@ var Control = {
       // - web content currently loading/unloading/...
       // - a preallocated process.
       case "web":
-        if (windows.some(w => w.tab)) {
-          return RANK_WEB_TABS;
-        }
-        if (windows.length >= 1) {
-          return RANK_WEB_FRAMES;
+        if (data.windows.length >= 1) {
+          return RANK_WEB_CONTENT;
         }
         // For the time being, we do not display DOM workers
         // (and there's no API to get information on them).
