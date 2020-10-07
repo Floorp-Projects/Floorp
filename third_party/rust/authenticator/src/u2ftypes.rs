@@ -7,8 +7,6 @@ use std::{cmp, fmt, io, str};
 use crate::consts::*;
 use crate::util::io_err;
 
-use log;
-
 pub fn to_hex(data: &[u8], joiner: &str) -> String {
     let parts: Vec<String> = data.iter().map(|byte| format!("{:02x}", byte)).collect();
     parts.join(joiner)
