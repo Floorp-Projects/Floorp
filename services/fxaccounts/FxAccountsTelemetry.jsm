@@ -71,6 +71,14 @@ class FxAccountsTelemetry {
   // Instead, AET-related telemetry pings can identify the user by their "ecosystemAnonId",
   // an encrypted bundle that can communicate the "ecosystemUserId" through to the telemetry
   // backend without allowing it to be snooped on in transit.
+  //
+  // Thanks to the way this encryption works, it's possible for each signed-in client to have the same
+  // userid but a *different* value for ecosystemAnonId. This may offer some incremental privacy benefits
+  // for the un-processed data, and we can rely on the values all decrypting back to the same ecosystemUserId
+  // value during processing.
+  //
+  // Thus, the code below will try to generate its own unique ecosystemAnonId value if possible, but
+  // will fall back to using a shared value provided by the FxA server if not.
 
   // Get the user's ecosystemAnonId, or null if it's not available.
   //
@@ -81,22 +89,42 @@ class FxAccountsTelemetry {
   //
   // If you want to ensure that a value is present then use `ensureEcosystemAnonId()` instead.
   async getEcosystemAnonId() {
-    try {
-      // N.B. `getProfile()` may kick off a silent background update but won't await network requests.
-      const profile = await this._fxai.profile.getProfile();
-      if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
-        return profile.ecosystemAnonId;
+    return this._fxai.withCurrentAccountState(async state => {
+      // If we know the ecosystemUserId, we generate and store our own unique ecosystemAnonId value.
+      // Otherwise, we may be able to use a shared value from the user's profile data.
+      let {
+        ecosystemAnonId,
+        ecosystemUserId,
+      } = await state.getUserAccountData([
+        "ecosystemAnonId",
+        "ecosystemUserId",
+      ]);
+      // N.B. We should never have `ecosystemAnonId` without `ecosystemUserId`.
+      if (!ecosystemUserId) {
+        try {
+          // N.B. `getProfile()` may kick off a silent background update but won't await network requests.
+          const profile = await this._fxai.profile.getProfile();
+          if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
+            ecosystemAnonId = profile.ecosystemAnonId;
+          }
+        } catch (err) {
+          log.error("Getting ecosystemAnonId from profile failed", err);
+        }
       }
-    } catch (err) {
-      log.error("Getting ecosystemAnonId from profile failed", err);
-    }
-    // Calling `ensureEcosystemAnonId()` so the calling code doesn't have to do
-    // this when a call/ to `getProfile()` doesn't produce `ecosystemAnonId`.
-    // (ie, so that the next call to `getEcosystemAnonId() will return it)
-    this.ensureEcosystemAnonId().catch(err => {
-      log.error("Failed ensuring we have an anon-id in the background ", err);
+      // If we don't have ecosystemAnonId, call `ensureEcosystemAnonId()` to fetch or generate it in
+      // the background, so the calling code doesn't have to do this for itself.
+      // (ie, so that the next call to `getEcosystemAnonId() will return it)
+      if (!ecosystemAnonId) {
+        // N.B. deliberately not awaiting the promise here.
+        this.ensureEcosystemAnonId().catch(err => {
+          log.error(
+            "Failed ensuring we have an anon-id in the background ",
+            err
+          );
+        });
+      }
+      return ecosystemAnonId || null;
     });
-    return null;
   }
 
   // Get the user's ecosystemAnonId, fetching it from the server if necessary.
@@ -118,66 +146,95 @@ class FxAccountsTelemetry {
     return this._promiseEnsureEcosystemAnonId;
   }
 
-  async _ensureEcosystemAnonId(generatePlaceholder = true) {
-    const telemetry = this;
-    return this._fxai.withCurrentAccountState(async function(state) {
-      // Fetching a fresh profile should never *change* the ID, but it might
-      // fetch the first value we see, and saving a network request matters for
-      // telemetry, so:
-      // * first time around we are fine with a slightly stale profile - if it
-      //   has an ID, it's a stable ID we can be sure is good.
-      // * But if we didn't have one, so generated a new one, but then raced
-      //   with another client to update it, we *must* fetch a new profile, even
-      //   if our current version is fresh.
-      let options = generatePlaceholder
-        ? { staleOk: true }
-        : { forceFresh: true };
-      const profile = await telemetry._fxai.profile.ensureProfile(options);
-      if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
-        return profile.ecosystemAnonId;
-      }
-      if (!generatePlaceholder) {
-        throw new Error("Profile data does not contain an 'ecosystemAnonId'");
-      }
-      // If the server doesn't have ecosystemAnonId yet, we can create a placeholder value.
-      // First, generate a random ecosystemUserId.
-      let ecosystemUserId = CommonUtils.bufferToHex(
-        CryptoUtils.generateRandomBytes(32)
-      );
-      // Now encrypt it to the AET public key, as advertized by the FxA server.
-      const serverConfig = await FxAccountsConfig.fetchConfigDocument();
-      const ecosystemKeys = serverConfig.ecosystem_anon_id_keys;
-      if (!ecosystemKeys || !ecosystemKeys.length) {
-        throw new Error(
-          "Unable to fetch ecosystem_anon_id_keys from FxA server"
-        );
-      }
-      const randomKey = Math.floor(
-        Math.random() * Math.floor(ecosystemKeys.length)
-      );
-      const ecosystemAnonId = await jwcrypto.generateJWE(
-        ecosystemKeys[randomKey],
-        new TextEncoder().encode(ecosystemUserId)
-      );
-      // Persist the encrypted value to the server so other clients can find it.
-      try {
-        await telemetry._fxai.profile.client.setEcosystemAnonId(
-          ecosystemAnonId
-        );
-      } catch (err) {
-        if (err && err.code && err.code === 412) {
-          // Another client raced us to upload the placeholder, fetch it.
-          return telemetry._ensureEcosystemAnonId(false);
-        }
-        throw err;
-      }
-      // Locally persist the unencrypted ecosystemUserId for possible future use.
-      ecosystemUserId = state.ecosystemUserId;
-      await state.updateUserAccountData({
+  async _ensureEcosystemAnonId() {
+    return this._fxai.withCurrentAccountState(async state => {
+      // If we know the ecosystemUserId, we generate and store our own unique ecosystemAnonId value.
+      // Otherwise, we need to work with a shared value stored in the user's profile.
+      let {
+        ecosystemAnonId,
         ecosystemUserId,
-      });
+      } = await state.getUserAccountData([
+        "ecosystemAnonId",
+        "ecosystemUserId",
+      ]);
+      if (ecosystemUserId) {
+        if (!ecosystemAnonId) {
+          ecosystemAnonId = await this._generateAnonIdFromUserId(
+            ecosystemUserId
+          );
+          await state.updateUserAccountData({ ecosystemAnonId });
+        }
+      } else {
+        ecosystemAnonId = await this._ensureEcosystemAnonIdInProfile();
+      }
       return ecosystemAnonId;
     });
+  }
+
+  // Ensure that we have an ecosystemAnonId obtained from account profile data.
+  //
+  // This is a bootstrapping mechanism for clients that are already connected to
+  // the user's account, to obtain ecosystemAnonId from shared profile data rather
+  // than from derived key material.
+  //
+  async _ensureEcosystemAnonIdInProfile(generatePlaceholder = true) {
+    // Fetching a fresh profile should never *change* the ID, but it might
+    // fetch the first value we see, and saving a network request matters for
+    // telemetry, so:
+    // * first time around we are fine with a slightly stale profile - if it
+    //   has an ID, it's a stable ID we can be sure is good.
+    // * But if we didn't have one, so generated a new one, but then raced
+    //   with another client to update it, we *must* fetch a new profile, even
+    //   if our current version is fresh.
+    let options = generatePlaceholder
+      ? { staleOk: true }
+      : { forceFresh: true };
+    const profile = await this._fxai.profile.ensureProfile(options);
+    if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
+      return profile.ecosystemAnonId;
+    }
+    if (!generatePlaceholder) {
+      throw new Error("Profile data does not contain an 'ecosystemAnonId'");
+    }
+    // If the server doesn't have ecosystemAnonId yet then we can fill it in
+    // with a randomly-generated placeholder.
+    const ecosystemUserId = CommonUtils.bufferToHex(
+      CryptoUtils.generateRandomBytes(32)
+    );
+    const ecosystemAnonId = await this._generateAnonIdFromUserId(
+      ecosystemUserId
+    );
+    // Persist the encrypted value to the server so other clients can find it.
+    try {
+      await this._fxai.profile.client.setEcosystemAnonId(ecosystemAnonId);
+    } catch (err) {
+      if (err && err.code && err.code === 412) {
+        // Another client raced us to upload the placeholder, fetch it.
+        return this._ensureEcosystemAnonIdInProfile(false);
+      }
+      throw err;
+    }
+    return ecosystemAnonId;
+  }
+
+  // Generate an ecosystemAnonId value from the given ecosystemUserId.
+  //
+  // To do so, we must fetch the AET public keys from the server, and encrypt
+  // ecosystemUserId into a JWE using one of those keys.
+  //
+  async _generateAnonIdFromUserId(ecosystemUserId) {
+    const serverConfig = await FxAccountsConfig.fetchConfigDocument();
+    const ecosystemKeys = serverConfig.ecosystem_anon_id_keys;
+    if (!ecosystemKeys || !ecosystemKeys.length) {
+      throw new Error("Unable to fetch ecosystem_anon_id_keys from FxA server");
+    }
+    const randomKey = Math.floor(
+      Math.random() * Math.floor(ecosystemKeys.length)
+    );
+    return jwcrypto.generateJWE(
+      ecosystemKeys[randomKey],
+      new TextEncoder().encode(ecosystemUserId)
+    );
   }
 
   // Prior to Account Ecosystem Telemetry, FxA- and Sync-related metrics were submitted in
