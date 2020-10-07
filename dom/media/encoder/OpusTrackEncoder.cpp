@@ -296,10 +296,10 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
       AudioChunk chunk = *iter;
 
       // Chunk to the required frame size.
-      TrackTime frameToCopy = chunk.GetDuration();
-      if (frameToCopy > framesToFetch - frameCopied) {
-        frameToCopy = framesToFetch - frameCopied;
-      }
+      TrackTime frameToCopy =
+          std::min(chunk.GetDuration(),
+                   static_cast<TrackTime>(framesToFetch - frameCopied));
+
       // Possible greatest value of framesToFetch = 3844: see
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1349421#c8. frameToCopy
       // should not be able to exceed this value.
