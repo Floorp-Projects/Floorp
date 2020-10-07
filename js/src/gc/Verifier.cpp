@@ -106,8 +106,7 @@ class js::VerifyPreTracer final : public JS::CallbackTracer {
   NodeMap nodemap;
 
   explicit VerifyPreTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
-                           JS::WeakEdgeTraceAction::Skip),
+      : JS::CallbackTracer(rt),
         noggc(rt->mainContextFromOwnThread()),
         number(rt->gc.gcNumber()),
         count(0),
@@ -117,6 +116,7 @@ class js::VerifyPreTracer final : public JS::CallbackTracer {
         term(nullptr) {
     // We don't care about weak edges here. Since they are not marked they
     // cannot cause the problem that the pre-write barrier protects against.
+    setTraceWeakEdges(false);
   }
 
   ~VerifyPreTracer() { js_free(root); }
@@ -758,7 +758,8 @@ void GCRuntime::finishMarkingValidation() {
 
 class HeapCheckTracerBase : public JS::CallbackTracer {
  public:
-  explicit HeapCheckTracerBase(JSRuntime* rt, JS::TraceOptions options);
+  explicit HeapCheckTracerBase(JSRuntime* rt,
+                               JS::WeakMapTraceAction weakMapAction);
   bool traceHeap(AutoTraceSession& session);
   virtual void checkCell(Cell* cell) = 0;
 
@@ -796,12 +797,16 @@ class HeapCheckTracerBase : public JS::CallbackTracer {
 };
 
 HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt,
-                                         JS::TraceOptions options)
-    : CallbackTracer(rt, JS::TracerKind::Callback, options),
+                                         JS::WeakMapTraceAction weakMapAction)
+    : CallbackTracer(rt, JS::TracerKind::Callback, weakMapAction),
       failures(0),
       rt(rt),
       oom(false),
-      parentIndex(-1) {}
+      parentIndex(-1) {
+#  ifdef DEBUG
+  setCheckEdges(false);
+#  endif
+}
 
 void HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing) {
   Cell* cell = thing.asCell();
@@ -948,9 +953,9 @@ class CheckGrayMarkingTracer final : public HeapCheckTracerBase {
 };
 
 CheckGrayMarkingTracer::CheckGrayMarkingTracer(JSRuntime* rt)
-    : HeapCheckTracerBase(rt, JS::TraceOptions(JS::WeakMapTraceAction::Skip,
-                                               JS::WeakEdgeTraceAction::Skip)) {
+    : HeapCheckTracerBase(rt, JS::WeakMapTraceAction::Skip) {
   // Weak gray->black edges are allowed.
+  setTraceWeakEdges(false);
 }
 
 void CheckGrayMarkingTracer::checkCell(Cell* cell) {
