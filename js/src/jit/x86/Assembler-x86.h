@@ -11,7 +11,6 @@
 
 #include "jit/CompactBuffer.h"
 #include "jit/JitCode.h"
-#include "jit/JitRealm.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/x86-shared/Constants-x86-shared.h"
 

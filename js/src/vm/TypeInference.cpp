@@ -25,7 +25,6 @@
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
-#include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/UniquePtr.h"

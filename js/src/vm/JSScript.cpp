@@ -43,7 +43,6 @@
 #include "jit/IonScript.h"
 #include "jit/JitCode.h"
 #include "jit/JitOptions.h"
-#include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "js/CompileOptions.h"
 #include "js/MemoryMetrics.h"

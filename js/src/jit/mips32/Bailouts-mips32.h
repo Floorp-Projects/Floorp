@@ -8,7 +8,6 @@
 #define jit_mips32_Bailouts_mips32_h
 
 #include "jit/Bailouts.h"
-#include "jit/JitRealm.h"
 
 namespace js {
 namespace jit {
