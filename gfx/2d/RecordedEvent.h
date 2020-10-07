@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "RecordingTypes.h"
+#include "mozilla/ipc/ByteBuf.h"
 
 namespace mozilla {
 namespace gfx {
@@ -60,6 +61,20 @@ struct RecordedFontDetails {
   uint64_t fontDataKey;
   uint32_t size;
   uint32_t index;
+};
+
+struct RecordedDependentSurface {
+  NS_INLINE_DECL_REFCOUNTING(RecordedDependentSurface);
+
+  RecordedDependentSurface(const IntSize& aSize,
+                           mozilla::ipc::ByteBuf&& aRecording)
+      : mSize(aSize), mRecording(std::move(aRecording)) {}
+
+  IntSize mSize;
+  mozilla::ipc::ByteBuf mRecording;
+
+ private:
+  ~RecordedDependentSurface() = default;
 };
 
 // Used by the Azure drawing debugger (player2d)

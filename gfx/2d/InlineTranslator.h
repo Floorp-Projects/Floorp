@@ -40,6 +40,11 @@ class InlineTranslator : public Translator {
       nsRefPtrHashtable<nsUint64HashKey, SourceSurface>* aExternalSurfaces) {
     mExternalSurfaces = aExternalSurfaces;
   }
+  void SetDependentSurfaces(
+      nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
+          aDependentSurfaces) {
+    mDependentSurfaces = aDependentSurfaces;
+  }
 
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final {
     DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
@@ -96,10 +101,7 @@ class InlineTranslator : public Translator {
     return result;
   }
 
-  already_AddRefed<SourceSurface> LookupExternalSurface(
-      uint64_t aKey) override {
-    return mExternalSurfaces->Get(aKey);
-  }
+  already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) override;
 
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) final {
     mDrawTargets.Put(aRefPtr, RefPtr{aDT});
@@ -188,7 +190,10 @@ class InlineTranslator : public Translator {
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
   nsRefPtrHashtable<nsPtrHashKey<void>, UnscaledFont> mUnscaledFonts;
   nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
-  nsRefPtrHashtable<nsUint64HashKey, SourceSurface>* mExternalSurfaces;
+  nsRefPtrHashtable<nsUint64HashKey, SourceSurface>* mExternalSurfaces =
+      nullptr;
+  nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
+      mDependentSurfaces = nullptr;
 };
 
 }  // namespace gfx
