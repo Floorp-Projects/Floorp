@@ -23,6 +23,7 @@
 #include "mozpkix/Result.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixtypes.h"
+#include "mozpkix/pkixutil.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfoImpl.h"
@@ -632,10 +633,24 @@ NS_IMETHODIMP
 nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
     nsACString& aSha256SPKIDigest) {
   aSha256SPKIDigest.Truncate();
+
+  pkix::Input certInput;
+  pkix::Result result = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // NB: since we're not building a trust path, the endEntityOrCA parameter is
+  // irrelevant.
+  pkix::BackCert cert(certInput, pkix::EndEntityOrCA::MustBeEndEntity, nullptr);
+  result = cert.Init();
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  pkix::Input derPublicKey = cert.GetSubjectPublicKeyInfo();
   Digest digest;
-  nsresult rv = digest.DigestBuf(SEC_OID_SHA256, mCert->derPublicKey.data,
-                                 mCert->derPublicKey.len);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsresult rv = digest.DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
+                                 derPublicKey.GetLength());
+  if (NS_FAILED(rv)) {
     return rv;
   }
   rv = Base64Encode(nsDependentCSubstring(
