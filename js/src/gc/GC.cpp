@@ -3075,24 +3075,14 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone) {
   TriggerResult trigger =
       checkHeapThreshold(zone, zone->gcHeapSize, zone->gcHeapThreshold);
 
-  if (trigger.kind == TriggerKind::None) {
-    return;
-  }
-
-  if (trigger.kind == TriggerKind::NonIncremental) {
+  if (trigger.shouldTrigger) {
+    // Start or continue an in progress incremental GC. We do this to try to
+    // avoid performing non-incremental GCs on zones which allocate a lot of
+    // data, even when incremental slices can't be triggered via scheduling in
+    // the event loop.
     triggerZoneGC(zone, JS::GCReason::ALLOC_TRIGGER, trigger.usedBytes,
                   trigger.thresholdBytes);
-    return;
   }
-
-  MOZ_ASSERT(trigger.kind == TriggerKind::Incremental);
-
-  // Start or continue an in progress incremental GC. We do this to try to avoid
-  // performing non-incremental GCs on zones which allocate a lot of data, even
-  // when incremental slices can't be triggered via scheduling in the event
-  // loop.
-  triggerZoneGC(zone, JS::GCReason::INCREMENTAL_ALLOC_TRIGGER,
-                trigger.usedBytes, trigger.thresholdBytes);
 }
 
 void js::gc::MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
@@ -3118,7 +3108,8 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
                                          const HeapThreshold& threshold,
                                          JS::GCReason reason) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
-    // Zones in use by a helper thread can't be collected.
+    // Zones in use by a helper thread can't be collected. Also ignore malloc
+    // during sweeping, for example when we resize hash tables.
     MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone() ||
                JS::RuntimeHeapIsBusy());
     return false;
@@ -3129,7 +3120,7 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
   }
 
   TriggerResult trigger = checkHeapThreshold(zone, heap, threshold);
-  if (trigger.kind == TriggerKind::None) {
+  if (!trigger.shouldTrigger) {
     return false;
   }
 
@@ -3146,27 +3137,23 @@ TriggerResult GCRuntime::checkHeapThreshold(
   size_t usedBytes = heapSize.bytes();
   size_t thresholdBytes = zone->wasGCStarted() ? heapThreshold.sliceBytes()
                                                : heapThreshold.startBytes();
-  if (usedBytes < thresholdBytes) {
-    return TriggerResult{TriggerKind::None, 0, 0};
-  }
-
   size_t niThreshold = heapThreshold.incrementalLimitBytes();
-  if (usedBytes >= niThreshold) {
-    // We have passed the non-incremental threshold: immediately trigger a
-    // non-incremental GC.
-    return TriggerResult{TriggerKind::NonIncremental, usedBytes, niThreshold};
+  MOZ_ASSERT(niThreshold >= thresholdBytes);
+
+  if (usedBytes < thresholdBytes) {
+    return TriggerResult{false, 0, 0};
   }
 
   // Don't trigger incremental slices during background sweeping or decommit, as
   // these will have no effect. A slice will be triggered automatically when
   // these tasks finish.
-  if (zone->wasGCStarted() &&
+  if (usedBytes < niThreshold && zone->wasGCStarted() &&
       (state() == State::Finalize || state() == State::Decommit)) {
-    return TriggerResult{TriggerKind::None, 0, 0};
+    return TriggerResult{false, 0, 0};
   }
 
   // Start or continue an in progress incremental GC.
-  return TriggerResult{TriggerKind::Incremental, usedBytes, thresholdBytes};
+  return TriggerResult{true, usedBytes, thresholdBytes};
 }
 
 bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,

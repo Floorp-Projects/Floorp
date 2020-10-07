@@ -664,10 +664,8 @@ class GCSchedulingState {
   }
 };
 
-enum class TriggerKind { None, Incremental, NonIncremental };
-
 struct TriggerResult {
-  TriggerKind kind;
+  bool shouldTrigger;
   size_t usedBytes;
   size_t thresholdBytes;
 };
