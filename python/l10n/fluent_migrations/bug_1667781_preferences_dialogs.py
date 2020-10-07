@@ -27,3 +27,12 @@ clear-site-data-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "clear-site-data-clear.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "clear-site-data-clear.accesskey") }
 """, from_path="browser/browser/preferences/clearSiteData.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/containers.ftl",
+        "browser/browser/preferences/containers.ftl",
+        transforms_from("""
+containers-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "containers-button-done.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "containers-button-done.accesskey") }
+""", from_path="browser/browser/preferences/containers.ftl"))
