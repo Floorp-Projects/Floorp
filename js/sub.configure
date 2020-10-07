@@ -45,7 +45,7 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
         if isinstance(handler, ConfigureOutputHandler):
             handler._stdout = PrefixOutput('js/src> ', handler._stdout)
 
-    substs = dict(old_configure['substs'])
+    substs = dict(old_configure.substs)
     assignments = dict(old_configure_assignments)
     environ = dict(os.environ)
 
