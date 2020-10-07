@@ -260,12 +260,11 @@ function requestProcesses() {
 
     try {
       const mainProcessDescriptorFront = await clientWrapper.getMainProcess();
-      const mainProcessFront = await mainProcessDescriptorFront.getTarget();
       dispatch({
         type: REQUEST_PROCESSES_SUCCESS,
         mainProcess: {
           id: 0,
-          processFront: mainProcessFront,
+          processFront: mainProcessDescriptorFront,
         },
       });
     } catch (e) {
