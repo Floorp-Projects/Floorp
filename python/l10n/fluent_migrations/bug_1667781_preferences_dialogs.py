@@ -45,3 +45,12 @@ permission-dialog =
   .buttonlabelaccept = { COPY_PATTERN(from_path, "permissions-button-ok.label") }
   .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "permissions-button-ok.accesskey") }
 """, from_path="browser/browser/preferences/permissions.ftl"))
+
+    ctx.add_transforms(
+        "browser/browser/preferences/siteDataSettings.ftl",
+        "browser/browser/preferences/siteDataSettings.ftl",
+        transforms_from("""
+site-data-settings-dialog =
+  .buttonlabelaccept = { COPY_PATTERN(from_path, "site-data-button-save.label") }
+  .buttonaccesskeyaccept = { COPY_PATTERN(from_path, "site-data-button-save.accesskey") }
+""", from_path="browser/browser/preferences/siteDataSettings.ftl"))

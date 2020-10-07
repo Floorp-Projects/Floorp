@@ -174,7 +174,7 @@ add_task(async function() {
       let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         let removeBtn = frameDoc.getElementById("removeSelected");
-        let saveBtn = frameDoc.getElementById("save");
+        let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
         site.click();
         removeBtn.doCommand();
         saveBtn.doCommand();
@@ -325,7 +325,7 @@ add_task(async function() {
       );
 
       let removeBtn = frameDoc.getElementById("removeSelected");
-      let saveBtn = frameDoc.getElementById("save");
+      let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
       site2.click();
       removeBtn.doCommand();
       saveBtn.doCommand();
@@ -374,7 +374,7 @@ add_task(async function() {
       );
 
       let removeBtn = frameDoc.getElementById("removeSelected");
-      let saveBtn = frameDoc.getElementById("save");
+      let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
       site1.click();
       removeBtn.doCommand();
       saveBtn.doCommand();
