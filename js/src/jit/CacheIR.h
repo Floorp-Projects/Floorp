@@ -228,7 +228,8 @@ class StubField {
  public:
   enum class Type : uint8_t {
     // These fields take up a single word.
-    RawWord,
+    RawInt32,
+    RawPointer,
     Shape,
     ObjectGroup,
     JSObject,
@@ -621,11 +622,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(script);
     addStubField(uintptr_t(script), StubField::Type::BaseScript);
   }
-  void writeRawWordField(uintptr_t word) {
-    addStubField(word, StubField::Type::RawWord);
+  void writeRawInt32Field(uint32_t val) {
+    addStubField(val, StubField::Type::RawInt32);
   }
   void writeRawPointerField(const void* ptr) {
-    addStubField(uintptr_t(ptr), StubField::Type::RawWord);
+    addStubField(uintptr_t(ptr), StubField::Type::RawPointer);
   }
   void writeIdField(jsid id) {
     addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
@@ -938,6 +939,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 #endif
   }
 
+  void callDOMFunction(ObjOperandId calleeId, Int32OperandId argc,
+                       ObjOperandId thisObjId, HandleFunction calleeFunc,
+                       CallFlags flags) {
+#ifdef JS_SIMULATOR
+    void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, calleeFunc->native());
+    void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
+    callDOMFunction_(calleeId, argc, thisObjId, flags, redirected);
+#else
+    callDOMFunction_(calleeId, argc, thisObjId, flags);
+#endif
+  }
+
   void callAnyNativeFunction(ObjOperandId calleeId, Int32OperandId argc,
                              CallFlags flags) {
     MOZ_ASSERT(!flags.isSameRealm());
@@ -1207,7 +1220,7 @@ class MOZ_RAII CacheIRCloner {
   PropertyName* getPropertyNameField(uint32_t stubOffset);
   JS::Symbol* getSymbolField(uint32_t stubOffset);
   BaseScript* getBaseScriptField(uint32_t stubOffset);
-  uintptr_t getRawWordField(uint32_t stubOffset);
+  uint32_t getRawInt32Field(uint32_t stubOffset);
   const void* getRawPointerField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);
   const Value getValueField(uint32_t stubOffset);

@@ -17,7 +17,6 @@
 namespace js {
 namespace jit {
 
-class BytecodeAnalysis;
 class MBasicBlock;
 class MIRGraph;
 class MStart;

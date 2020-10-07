@@ -43,6 +43,7 @@ namespace jit {
 
 class BaselineFrame;
 class CacheIRStubInfo;
+class ICScript;
 class MacroAssembler;
 
 enum class TailCallVMFunctionId;

@@ -35,7 +35,7 @@ class WarpBuilderShared {
   void pushConstant(const Value& v);
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
-                  WrappedFunction* target = nullptr);
+                  WrappedFunction* target = nullptr, bool isDOMCall = false);
   MInstruction* makeSpreadCall(CallInfo& callInfo, bool isSameRealm = false,
                                WrappedFunction* target = nullptr);
 

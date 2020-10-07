@@ -13,7 +13,8 @@
 #include "frontend/ModuleSharedContext.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
-#include "vm/StencilEnums.h"           // ImmutableScriptFlagsEnum
+#include "vm/JSScript.h"  // js::FillImmutableFlagsFromCompileOptionsForTopLevel, js::FillImmutableFlagsFromCompileOptionsForFunction
+#include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
@@ -56,14 +57,12 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   // Initialize the transitive "input" flags. These are applied to all
   // SharedContext in this compilation and generally cannot be determined from
   // the source text alone.
-  setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
-  setFlag(ImmutableFlags::ForceStrict, options.forceStrictMode());
-  setFlag(ImmutableFlags::HasNonSyntacticScope, options.nonSyntacticScope);
-
-  // Initialize the non-transistive "input" flags if this is a top-level.
   if (isTopLevelContext()) {
-    setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+    js::FillImmutableFlagsFromCompileOptionsForTopLevel(options,
+                                                        immutableFlags_);
+  } else {
+    js::FillImmutableFlagsFromCompileOptionsForFunction(options,
+                                                        immutableFlags_);
   }
 
   // Initialize the strict flag. This may be updated by the parser as we observe

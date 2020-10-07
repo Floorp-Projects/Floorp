@@ -14,8 +14,8 @@
 #include "jit/arm64/Architecture-arm64.h"
 #include "jit/arm64/MacroAssembler-arm64.h"
 #include "jit/arm64/vixl/Disasm-vixl.h"
+#include "jit/AutoWritableJitCode.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/JitRealm.h"
 #include "vm/Realm.h"
 
 #include "gc/StoreBuffer-inl.h"

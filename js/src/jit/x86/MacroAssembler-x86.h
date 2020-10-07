@@ -7,7 +7,6 @@
 #ifndef jit_x86_MacroAssembler_x86_h
 #define jit_x86_MacroAssembler_x86_h
 
-#include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 #include "js/HeapAPI.h"

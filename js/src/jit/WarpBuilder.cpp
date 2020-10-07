@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/BaselineFrame.h"
 #include "jit/CacheIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
@@ -3236,7 +3237,7 @@ bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
   callInfo.setImplicitlyUsedUnchecked();
 
   // Capture formals in the outer resume point.
-  if (!callInfo.pushCallStack(&mirGen(), current)) {
+  if (!callInfo.pushCallStack(current)) {
     return false;
   }
   MResumePoint* outerResumePoint =

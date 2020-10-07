@@ -6,6 +6,8 @@
 
 #include "jit/WarpCacheIRTranspiler.h"
 
+#include "mozilla/Maybe.h"
+
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"
@@ -174,15 +176,17 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
                                          uint32_t slotIndex);
 
-  // Calls are either Native (native function without a JitEntry) or Scripted
-  // (scripted function or native function with a JitEntry).
-  enum class CallKind { Native, Scripted };
+  // Calls are either Native (native function without a JitEntry),
+  // a DOM Native (native function with a JitInfo OpType::Method),
+  // or Scripted (scripted function or native function with a JitEntry).
+  enum class CallKind { Native, DOM, Scripted };
 
   MOZ_MUST_USE bool updateCallInfo(MDefinition* callee, CallFlags flags);
 
   MOZ_MUST_USE bool emitCallFunction(ObjOperandId calleeId,
-                                     Int32OperandId argcId, CallFlags flags,
-                                     CallKind kind);
+                                     Int32OperandId argcId,
+                                     mozilla::Maybe<ObjOperandId> thisObjId,
+                                     CallFlags flags, CallKind kind);
   MOZ_MUST_USE bool emitFunApplyArgs(WrappedFunction* wrappedTarget,
                                      CallFlags flags);
 
@@ -3411,7 +3415,7 @@ WrappedFunction* WarpCacheIRTranspiler::maybeWrappedFunction(
 
   WrappedFunction* wrappedTarget =
       new (alloc()) WrappedFunction(nativeTarget, nargs, flags);
-  MOZ_ASSERT_IF(kind == CallKind::Native,
+  MOZ_ASSERT_IF(kind == CallKind::Native || kind == CallKind::DOM,
                 wrappedTarget->isNativeWithoutJitEntry());
   MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
   return wrappedTarget;
@@ -3516,6 +3520,7 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
 // must check its return value.
 bool WarpCacheIRTranspiler::maybeCreateThis(MDefinition* callee,
                                             CallFlags flags, CallKind kind) {
+  MOZ_ASSERT(kind != CallKind::DOM, "DOM functions are not constructors");
   MDefinition* thisArg = callInfo_->thisArg();
 
   if (kind == CallKind::Native) {
@@ -3553,9 +3558,9 @@ bool WarpCacheIRTranspiler::maybeCreateThis(MDefinition* callee,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
-                                             Int32OperandId argcId,
-                                             CallFlags flags, CallKind kind) {
+bool WarpCacheIRTranspiler::emitCallFunction(
+    ObjOperandId calleeId, Int32OperandId argcId,
+    mozilla::Maybe<ObjOperandId> thisObjId, CallFlags flags, CallKind kind) {
   MDefinition* callee = getOperand(calleeId);
 #ifdef DEBUG
   MDefinition* argc = getOperand(argcId);
@@ -3565,6 +3570,13 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
 
   if (!updateCallInfo(callee, flags)) {
     return false;
+  }
+
+  if (kind == CallKind::DOM) {
+    MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
+    // For DOM calls |this| has a class guard.
+    MDefinition* thisObj = getOperand(*thisObjId);
+    callInfo_->setThis(thisObj);
   }
 
   WrappedFunction* wrappedTarget = maybeCallTarget(callee, kind);
@@ -3580,7 +3592,8 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
 
   switch (callInfo_->argFormat()) {
     case CallInfo::ArgFormat::Standard: {
-      MCall* call = makeCall(*callInfo_, needsThisCheck, wrappedTarget);
+      MCall* call = makeCall(*callInfo_, needsThisCheck, wrappedTarget,
+                             kind == CallKind::DOM);
       if (!call) {
         return false;
       }
@@ -3589,10 +3602,16 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
         call->setNotCrossRealm();
       }
 
-      addEffectful(call);
-      pushResult(call);
+      if (call->isEffectful()) {
+        addEffectful(call);
+        pushResult(call);
+        return resumeAfter(call);
+      }
 
-      return resumeAfter(call);
+      MOZ_ASSERT(kind == CallKind::DOM);
+      add(call);
+      pushResult(call);
+      return true;
     }
     case CallInfo::ArgFormat::Array: {
       MInstruction* call =
@@ -3645,21 +3664,41 @@ bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
                                                    CallFlags flags,
                                                    bool ignoresReturnValue) {
   // Instead of ignoresReturnValue we use CallInfo::ignoresReturnValue.
-  return emitCallFunction(calleeId, argcId, flags, CallKind::Native);
+  return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
+                          CallKind::Native);
+}
+
+bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
+                                                Int32OperandId argcId,
+                                                ObjOperandId thisObjId,
+                                                CallFlags flags) {
+  return emitCallFunction(calleeId, argcId, mozilla::Some(thisObjId), flags,
+                          CallKind::DOM);
 }
 #else
 bool WarpCacheIRTranspiler::emitCallNativeFunction(ObjOperandId calleeId,
                                                    Int32OperandId argcId,
                                                    CallFlags flags,
                                                    uint32_t targetOffset) {
-  return emitCallFunction(calleeId, argcId, flags, CallKind::Native);
+  return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
+                          CallKind::Native);
+}
+
+bool WarpCacheIRTranspiler::emitCallDOMFunction(ObjOperandId calleeId,
+                                                Int32OperandId argcId,
+                                                ObjOperandId thisObjId,
+                                                CallFlags flags,
+                                                uint32_t targetOffset) {
+  return emitCallFunction(calleeId, argcId, mozilla::Some(thisObjId), flags,
+                          CallKind::DOM);
 }
 #endif
 
 bool WarpCacheIRTranspiler::emitCallScriptedFunction(ObjOperandId calleeId,
                                                      Int32OperandId argcId,
                                                      CallFlags flags) {
-  return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
+  return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
+                          CallKind::Scripted);
 }
 
 bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
@@ -3696,7 +3735,8 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
     }
     return true;
   }
-  return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
+  return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
+                          CallKind::Scripted);
 }
 
 bool WarpCacheIRTranspiler::emitCallGetterResult(CallKind kind,

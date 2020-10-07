@@ -10,24 +10,30 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Result.h"
 
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "jit/CompileInfo.h"
+#include "jit/CompileWrappers.h"
 #include "jit/JitAllocPolicy.h"
-#include "jit/JitRealm.h"
-#include "jit/MIR.h"
+#include "jit/JitContext.h"
+#include "jit/JitSpewer.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif
-#include "jit/RegisterSets.h"
-#include "vm/JSContext.h"
-#include "vm/Realm.h"
+#include "js/Utility.h"
+#include "vm/GeckoProfiler.h"
 
 namespace js {
 namespace jit {
 
+class JitRuntime;
 class MIRGraph;
 class OptimizationInfo;
 

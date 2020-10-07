@@ -96,17 +96,10 @@ uint FIRFilter::evaluateFilterStereo(SAMPLETYPE *dest, const SAMPLETYPE *src, ui
         suml = sumr = 0;
         ptr = src + j;
 
-        for (i = 0; i < length; i += 4) 
+        for (i = 0; i < length; i ++) 
         {
-            // loop is unrolled by factor of 4 here for efficiency
-            suml += ptr[2 * i + 0] * filterCoeffs[i + 0] +
-                    ptr[2 * i + 2] * filterCoeffs[i + 1] +
-                    ptr[2 * i + 4] * filterCoeffs[i + 2] +
-                    ptr[2 * i + 6] * filterCoeffs[i + 3];
-            sumr += ptr[2 * i + 1] * filterCoeffs[i + 0] +
-                    ptr[2 * i + 3] * filterCoeffs[i + 1] +
-                    ptr[2 * i + 5] * filterCoeffs[i + 2] +
-                    ptr[2 * i + 7] * filterCoeffs[i + 3];
+            suml += ptr[2 * i] * filterCoeffs[i];
+            sumr += ptr[2 * i + 1] * filterCoeffs[i];
         }
 
 #ifdef SOUNDTOUCH_INTEGER_SAMPLES
@@ -148,13 +141,9 @@ uint FIRFilter::evaluateFilterMono(SAMPLETYPE *dest, const SAMPLETYPE *src, uint
         uint i;
 
         sum = 0;
-        for (i = 0; i < length; i += 4) 
+        for (i = 0; i < length; i ++) 
         {
-            // loop is unrolled by factor of 4 here for efficiency
-            sum += pSrc[i + 0] * filterCoeffs[i + 0] + 
-                   pSrc[i + 1] * filterCoeffs[i + 1] + 
-                   pSrc[i + 2] * filterCoeffs[i + 2] + 
-                   pSrc[i + 3] * filterCoeffs[i + 3];
+            sum += pSrc[i] * filterCoeffs[i];
         }
 #ifdef SOUNDTOUCH_INTEGER_SAMPLES
         sum >>= resultDivFactor;

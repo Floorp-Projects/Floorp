@@ -62,9 +62,6 @@ interface nsIPrintSettings : nsISupports
 
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
-  /* Print Option Flags for Bit Field*/
-  const long kEnableSelectionRB = 0x00000001;
-
   /* Print Range Enums */
   const long kRangeAllPages           = 0;
   const long kRangeSpecifiedPageRange = 1;
@@ -99,26 +96,6 @@ interface nsIPrintSettings : nsISupports
   const short kSimplex          = 0;
   const short kDuplexHorizontal = 1;
   const short kDuplexVertical   = 2;
-
-  /**
-   * Set PrintOptions
-   */
-  void SetPrintOptions(in int32_t aType, in boolean aTurnOnOff);
-
-  /**
-   * Get PrintOptions
-   */
-  boolean GetPrintOptions(in int32_t aType);
-
-  /**
-   * Get PrintOptions Bit field
-   */
-  int32_t GetPrintOptionsBits();
-
-  /**
-   * Set PrintOptions Bit field
-   */
-  void SetPrintOptionsBits(in int32_t bits);
 
   /**
    * Get the page size in twips, considering the
@@ -182,6 +159,10 @@ interface nsIPrintSettings : nsISupports
 
   /** Whether to draw guidelines showing the margin settings */
   [infallible] attribute boolean showMarginGuides;
+
+  /** Whether whether the "print selection" radio button should be enabled
+   *  in the UI (i.e. whether there is an active selection) */
+  [infallible] attribute boolean isPrintSelectionRBEnabled;
 
   /** Whether to only print the selected nodes */
   [infallible] attribute boolean printSelectionOnly;

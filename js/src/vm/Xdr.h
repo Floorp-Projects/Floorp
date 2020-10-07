@@ -251,6 +251,8 @@ class XDRState : public XDRCoderBase {
     return false;
   }
 
+  virtual bool isMultiDecode() const { return false; }
+
   virtual bool hasOptions() const { return false; }
   virtual const JS::ReadOnlyCompileOptions& options() {
     MOZ_CRASH("does not have options");
@@ -478,20 +480,30 @@ using XDRDecoderBase = XDRState<XDR_DECODE>;
 
 class XDRDecoder : public XDRDecoderBase {
  public:
-  XDRDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : XDRDecoderBase(cx, buffer, cursor), atomTable_(cx) {}
+  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
+             JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : XDRDecoderBase(cx, buffer, cursor), options_(options), atomTable_(cx) {
+    MOZ_ASSERT(options);
+  }
 
   template <typename RangeType>
-  XDRDecoder(JSContext* cx, const RangeType& range)
-      : XDRDecoderBase(cx, range), atomTable_(cx) {}
+  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
+             const RangeType& range)
+      : XDRDecoderBase(cx, range), options_(options), atomTable_(cx) {
+    MOZ_ASSERT(options);
+  }
 
   bool hasAtomTable() const override { return hasFinishedAtomTable_; }
   XDRAtomTable& atomTable() override { return atomTable_; }
   void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
+  bool hasOptions() const override { return true; }
+  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
+
   void trace(JSTracer* trc);
 
  private:
+  const JS::ReadOnlyCompileOptions* options_;
   XDRAtomTable atomTable_;
   bool hasFinishedAtomTable_ = false;
 };
@@ -548,10 +560,15 @@ class XDRStencilDecoder : public XDRDecoderBase {
 };
 
 class XDROffThreadDecoder : public XDRDecoder {
-  const JS::ReadOnlyCompileOptions* options_;
   ScriptSourceObject** sourceObjectOut_;
+  bool isMultiDecode_;
 
  public:
+  enum class Type {
+    Single,
+    Multi,
+  };
+
   // Note, when providing an JSContext, where isJSContext is false,
   // then the initialization of the ScriptSourceObject would remain
   // incomplete. Thus, the sourceObjectOut must be used to finish the
@@ -561,18 +578,17 @@ class XDROffThreadDecoder : public XDRDecoder {
   // When providing a sourceObjectOut pointer, you have to ensure that it is
   // marked by the GC to avoid dangling pointers.
   XDROffThreadDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                      ScriptSourceObject** sourceObjectOut,
+                      Type type, ScriptSourceObject** sourceObjectOut,
                       const JS::TranscodeRange& range)
-      : XDRDecoder(cx, range),
-        options_(options),
-        sourceObjectOut_(sourceObjectOut) {
-    MOZ_ASSERT(options);
+      : XDRDecoder(cx, options, range),
+        sourceObjectOut_(sourceObjectOut),
+        isMultiDecode_(type == Type::Multi) {
     MOZ_ASSERT(sourceObjectOut);
     MOZ_ASSERT(*sourceObjectOut == nullptr);
   }
 
-  bool hasOptions() const override { return true; }
-  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
+  bool isMultiDecode() const override { return isMultiDecode_; }
+
   bool hasScriptSourceObjectOut() const override { return true; }
   ScriptSourceObject** scriptSourceObjectOut() override {
     return sourceObjectOut_;

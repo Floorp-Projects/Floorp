@@ -166,6 +166,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       CertVerifier::SHA1Mode sha1Mode,
       NetscapeStepUpPolicy netscapeStepUpPolicy,
       DistrustedCAPolicy distrustedCAPolicy, CRLiteMode crliteMode,
+      uint64_t crliteCTMergeDelaySeconds,
       const OriginAttributes& originAttributes,
       const Vector<mozilla::pkix::Input>& thirdPartyRootInputs,
       const Vector<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
@@ -288,6 +289,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   DistrustedCAPolicy mDistrustedCAPolicy;
   CRLiteMode mCRLiteMode;
+  uint64_t mCRLiteCTMergeDelaySeconds;
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
   const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning

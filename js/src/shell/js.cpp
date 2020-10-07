@@ -95,7 +95,6 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
@@ -2252,6 +2251,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     loadCacheKind = CacheEntry_getKind(cx, cacheEntry);
   }
 
+  if (envChain.length() != 0) {
+    options.setNonSyntacticScope(true);
+  }
+
   {
     JSAutoRealm ar(cx, global);
     RootedScript script(cx);
@@ -2285,20 +2288,20 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             }
           }
 
-          rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, loadBuffer,
-                                                           options, &script);
+          rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, options,
+                                                           loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
         } else if (loadCacheKind == BytecodeCacheKind::Script) {
-          rv = JS::DecodeScript(cx, loadBuffer, &script);
+          rv = JS::DecodeScript(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
         } else {
           MOZ_ASSERT(loadCacheKind == BytecodeCacheKind::Stencil);
           MOZ_ASSERT(!js::UseOffThreadParseGlobal());
-          rv = JS::DecodeScriptMaybeStencil(cx, loadBuffer, options, &script);
+          rv = JS::DecodeScriptMaybeStencil(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
@@ -2309,10 +2312,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
                          JS::SourceOwnership::Borrowed)) {
           return false;
-        }
-
-        if (envChain.length() != 0) {
-          options.setNonSyntacticScope(true);
         }
 
         if (saveIncrementalBytecode) {
@@ -5182,7 +5181,11 @@ static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  XDRDecoder xdrDecoder_(cx, *args[0].toObject().as<XDRBufferObject>().data());
+  JS::CompileOptions options(cx);
+  options.setModule();
+
+  XDRDecoder xdrDecoder_(cx, &options,
+                         *args[0].toObject().as<XDRBufferObject>().data());
   RootedModuleObject modObject(cx, nullptr);
   XDRResult res = xdrDecoder_.codeModuleObject(&modObject);
   if (res.isErr()) {
@@ -5859,8 +5862,9 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // These option settings must override whatever the caller requested.
-  options.setIsRunOnce(true).setSourceIsLazy(false);
+  // These option settings must override whatever the caller requested, and
+  // this should match `Evaluate` that encodes the script.
+  options.setIsRunOnce(false).setSourceIsLazy(false);
 
   // We assume the caller wants caching if at all possible, ignoring
   // heuristics that make sense for a real browser.

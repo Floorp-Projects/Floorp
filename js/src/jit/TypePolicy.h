@@ -8,7 +8,6 @@
 #define jit_TypePolicy_h
 
 #include "jit/IonTypes.h"
-#include "jit/JitAllocPolicy.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 
 namespace js {
@@ -16,6 +15,7 @@ namespace jit {
 
 class MInstruction;
 class MDefinition;
+class TempAllocator;
 
 extern MDefinition* AlwaysBoxAt(TempAllocator& alloc, MInstruction* at,
                                 MDefinition* operand);

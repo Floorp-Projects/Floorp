@@ -280,7 +280,7 @@ static nsAssertBehavior GetAssertBehavior() {
 struct FixedBuffer final : public mozilla::PrintfTarget {
   FixedBuffer() : curlen(0) { buffer[0] = '\0'; }
 
-  char buffer[500];
+  char buffer[764];
   uint32_t curlen;
 
   bool append(const char* sp, size_t len) override;
@@ -335,11 +335,9 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
   if (aExpr) {
     nonPIDBuf.print("'%s', ", aExpr);
   }
-  if (aFile) {
-    nonPIDBuf.print("file %s, ", aFile);
-  }
-  if (aLine != -1) {
-    nonPIDBuf.print("line %d", aLine);
+  if (aFile || aLine != -1) {
+    nonPIDBuf.print("file %s:%d", aFile ? aFile : "<unknown>",
+                    aLine != -1 ? aLine : 0);
   }
 
   // Print "[PID]" or "[Desc PID]" at the beginning of the message.

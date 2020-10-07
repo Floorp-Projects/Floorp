@@ -7,17 +7,21 @@
 #ifndef jit_JitAllocPolicy_h
 #define jit_JitAllocPolicy_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/TemplateLib.h"
 
 #include <algorithm>
+#include <stddef.h>
+#include <string.h>
 #include <type_traits>
 #include <utility>
 
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
-#include "jit/JitContext.h"
-#include "vm/JSContext.h"
+#include "js/Utility.h"
 
 namespace js {
 namespace jit {
@@ -119,25 +123,6 @@ class JitAllocPolicy {
   void reportAllocOverflow() const {}
   MOZ_MUST_USE bool checkSimulatedOOM() const {
     return !js::oom::ShouldFailWithOOM();
-  }
-};
-
-class AutoJitContextAlloc {
-  TempAllocator tempAlloc_;
-  JitContext* jcx_;
-  TempAllocator* prevAlloc_;
-
- public:
-  explicit AutoJitContextAlloc(JSContext* cx)
-      : tempAlloc_(&cx->tempLifoAlloc()),
-        jcx_(GetJitContext()),
-        prevAlloc_(jcx_->temp) {
-    jcx_->temp = &tempAlloc_;
-  }
-
-  ~AutoJitContextAlloc() {
-    MOZ_ASSERT(jcx_->temp == &tempAlloc_);
-    jcx_->temp = prevAlloc_;
   }
 };
 

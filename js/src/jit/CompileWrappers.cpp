@@ -9,7 +9,7 @@
 #include "gc/GC.h"
 #include "gc/Heap.h"
 #include "jit/Ion.h"
-#include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 
 #include "vm/Realm-inl.h"
 

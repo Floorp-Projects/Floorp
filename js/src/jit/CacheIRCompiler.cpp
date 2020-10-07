@@ -23,8 +23,12 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
 #include "jit/IonIC.h"
+#include "jit/JitRuntime.h"
+#include "jit/JitZone.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
+#include "jit/TemplateObject.h"
+#include "jit/VMFunctions.h"
 #include "js/friend/DOMProxy.h"     // JS::ExpandoAndGeneration
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
@@ -1107,7 +1111,8 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
 
   for (const StubField& field : stubFields_) {
     switch (field.type()) {
-      case StubField::Type::RawWord:
+      case StubField::Type::RawInt32:
+      case StubField::Type::RawPointer:
         *destWords = field.asWord();
         break;
       case StubField::Type::Shape:
@@ -1154,7 +1159,8 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
   while (true) {
     StubField::Type fieldType = stubInfo->fieldType(field);
     switch (fieldType) {
-      case StubField::Type::RawWord:
+      case StubField::Type::RawInt32:
+      case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
       case StubField::Type::DOMExpandoGeneration:
         break;
@@ -2006,7 +2012,7 @@ bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
   }
 
   // Guard on the expected object.
-  StubFieldOffset slot(slotOffset, StubField::Type::RawWord);
+  StubFieldOffset slot(slotOffset, StubField::Type::RawInt32);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
   emitLoadStubField(slot, scratch2);
   BaseObjectSlotIndex expectedSlot(scratch1, scratch2);
@@ -5391,7 +5397,7 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
     Scalar::Type type, uint32_t rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
 
   AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
 
@@ -5473,7 +5479,7 @@ bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
-  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
 
   // Allocate BigInt if needed. The code after this should be infallible.
   Maybe<Register> bigInt;
@@ -5572,7 +5578,7 @@ bool CacheIRCompiler::emitStoreFixedSlotUndefinedResult(ObjOperandId objId,
   Register obj = allocator.useRegister(masm, objId);
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
-  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
   emitLoadStubField(offset, scratch);
 
   BaseIndex slot(obj, scratch, TimesOne);
@@ -6963,7 +6969,10 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::JSObject:
       masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
       break;
-    case StubField::Type::RawWord:
+    case StubField::Type::RawPointer:
+      masm.movePtr(ImmPtr(pointerStubField(val.getOffset())), dest);
+      break;
+    case StubField::Type::RawInt32:
       masm.move32(Imm32(int32StubField(val.getOffset())), dest);
       break;
     default:
@@ -6987,6 +6996,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     Address load(ICStubReg, stubDataOffset_ + val.getOffset());
 
     switch (val.getStubFieldType()) {
+      case StubField::Type::RawPointer:
       case StubField::Type::Shape:
       case StubField::Type::ObjectGroup:
       case StubField::Type::JSObject:
@@ -6995,7 +7005,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
       case StubField::Type::Id:
         masm.loadPtr(load, dest);
         break;
-      case StubField::Type::RawWord:
+      case StubField::Type::RawInt32:
         masm.load32(load, dest);
         break;
       default:
@@ -7007,7 +7017,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
 Address CacheIRCompiler::emitAddressFromStubField(StubFieldOffset val,
                                                   Register base) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::RawWord);
+  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::RawInt32);
 
   if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
     int32_t offset = int32StubField(val.getOffset());
@@ -7239,7 +7249,7 @@ bool CacheIRCompiler::emitLoadInt32Constant(uint32_t valOffset,
                                             Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register reg = allocator.defineRegister(masm, resultId);
-  StubFieldOffset val(valOffset, StubField::Type::RawWord);
+  StubFieldOffset val(valOffset, StubField::Type::RawInt32);
   emitLoadStubField(val, reg);
   return true;
 }

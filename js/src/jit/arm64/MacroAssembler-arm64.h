@@ -11,7 +11,6 @@
 #include "jit/arm64/vixl/Debugger-vixl.h"
 #include "jit/arm64/vixl/MacroAssembler-vixl.h"
 #include "jit/AtomicOp.h"
-#include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 #include "vm/BigIntType.h"  // JS::BigInt
 
@@ -2006,9 +2005,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void profilerEnterFrame(Register framePtr, Register scratch);
   void profilerEnterFrame(RegisterOrSP framePtr, Register scratch);
-  void profilerExitFrame() {
-    jump(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
-  }
+  void profilerExitFrame();
   Address ToPayload(Address value) { return value; }
   Address ToType(Address value) { return value; }
 

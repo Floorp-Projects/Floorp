@@ -171,6 +171,13 @@ int32_t HyperTextIterator::NextLinkOffset() {
 }
 
 bool HyperTextIterator::Next() {
+  if (!mCurrentContainer->Document()->HasLoadState(
+          DocAccessible::eTreeConstructed)) {
+    // If the accessible tree is still being constructed the text tree
+    // is not in a traversable state yet.
+    return false;
+  }
+
   if (mCurrentContainer == mEndContainer &&
       (mCurrentEndOffset == -1 || mEndOffset <= mCurrentEndOffset)) {
     return false;
@@ -326,7 +333,7 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
                                           int32_t* aEndOffset) {
   TextPoint here(this, aOffset);
   TextPoint end = FindTextPoint(aOffset, eDirNext, eSelectWord, eEndWord);
-  if (!end.mContainer || end < here) {
+  if (!end.mContainer || end < here || here == end) {
     // If we didn't find a word end, or if we wrapped around (bug 1652833),
     // return with no result.
     return;
@@ -334,11 +341,8 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
 
   if ((NativeState() & states::EDITABLE) &&
       !(end.mContainer->NativeState() & states::EDITABLE)) {
-    // The word search crossed an editable boundary. Return the last word of the
-    // editable root.
-    return EditableRoot()->LeftWordAt(
-        nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, aStartContainer,
-        aStartOffset, aEndContainer, aEndOffset);
+    // The word search crossed an editable boundary. Return with no result.
+    return;
   }
 
   TextPoint start =
@@ -506,7 +510,7 @@ Accessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
     }
 
     child = text->GetChildAt(childIdx);
-    if (!child || nsAccUtils::MustPrune(child)) {
+    if (!child || nsAccUtils::MustPrune(text)) {
       return text;
     }
 
@@ -566,7 +570,19 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(
       }
     }
 
-    innerOffset -= text->GetChildOffset(childIdx);
+    int32_t childOffset = text->GetChildOffset(childIdx);
+
+    if (child->IsHyperText() && aDirection == eDirPrevious && childIdx > 0 &&
+        innerOffset - childOffset == 0) {
+      // If we are searching backwards, and this is the begining of a
+      // segment, get the previous sibling so that layout will start
+      // its search there.
+      childIdx--;
+      innerOffset -= text->GetChildOffset(childIdx);
+      child = text->GetChildAt(childIdx);
+    } else {
+      innerOffset -= childOffset;
+    }
 
     text = child->AsHyperText();
   } while (text);

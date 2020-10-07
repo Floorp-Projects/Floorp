@@ -61,6 +61,11 @@ protected:
 
 public:
     InterpolateShannon();
+
+    int getLatency() const
+    {
+        return 3;
+    }
 };
 
 }
