@@ -145,7 +145,7 @@ static nsRect GetDisplayPortFromRectData(nsIContent* aContent,
 
 static nsRect GetDisplayPortFromMarginsData(
     nsIContent* aContent, DisplayPortMarginsPropertyData* aMarginsData,
-    float aMultiplier) {
+    float aMultiplier, const DisplayPortOptions& aOptions) {
   // In the case where the displayport is set via margins, we apply the margins
   // to a base rect. Then we align the expanded rect based on the alignment
   // requested, further expand the rect by the multiplier, and finally, clamp it
@@ -407,9 +407,9 @@ static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
   }
 }
 
-static bool GetDisplayPortImpl(
-    nsIContent* aContent, nsRect* aResult, float aMultiplier,
-    const DisplayPortOptions& aOptions = DisplayPortOptions()) {
+static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
+                               float aMultiplier,
+                               const DisplayPortOptions& aOptions) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
 
@@ -445,9 +445,11 @@ static bool GetDisplayPortImpl(
              nsLayoutUtils::ShouldDisableApzForElement(aContent)) {
     DisplayPortMarginsPropertyData noMargins(DisplayPortMargins::Empty(), 1,
                                              /*painted=*/false);
-    result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier);
+    result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier,
+                                           aOptions);
   } else {
-    result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier);
+    result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier,
+                                           aOptions);
   }
 
   if (!StaticPrefs::layers_enable_tiles_AtStartup()) {
@@ -711,12 +713,10 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
   }
 }
 
-bool DisplayPortUtils::GetCriticalDisplayPort(nsIContent* aContent,
-                                              nsRect* aResult) {
+bool DisplayPortUtils::GetCriticalDisplayPort(
+    nsIContent* aContent, nsRect* aResult, const DisplayPortOptions& aOptions) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetDisplayPortImpl(
-        aContent, aResult, 1.0f,
-        DisplayPortOptions().With(MaxSizeExceededBehaviour::Assert));
+    return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
   }
   return false;
 }
@@ -725,14 +725,12 @@ bool DisplayPortUtils::HasCriticalDisplayPort(nsIContent* aContent) {
   return GetCriticalDisplayPort(aContent, nullptr);
 }
 
-bool DisplayPortUtils::GetHighResolutionDisplayPort(nsIContent* aContent,
-                                                    nsRect* aResult) {
+bool DisplayPortUtils::GetHighResolutionDisplayPort(
+    nsIContent* aContent, nsRect* aResult, const DisplayPortOptions& aOptions) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetCriticalDisplayPort(aContent, aResult);
+    return GetCriticalDisplayPort(aContent, aResult, aOptions);
   }
-  return GetDisplayPort(
-      aContent, aResult,
-      DisplayPortOptions().With(DisplayportRelativeTo::ScrollPort));
+  return GetDisplayPort(aContent, aResult, aOptions);
 }
 
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {

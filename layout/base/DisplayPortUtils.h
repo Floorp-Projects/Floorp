@@ -211,7 +211,9 @@ class DisplayPortUtils {
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+  static bool GetCriticalDisplayPort(
+      nsIContent* aContent, nsRect* aResult,
+      const DisplayPortOptions& aOptions = DisplayPortOptions());
 
   /**
    * Check whether the given element has a critical display port.
@@ -222,8 +224,9 @@ class DisplayPortUtils {
    * If low-precision painting is turned on, delegates to
    * GetCriticalDisplayPort. Otherwise, delegates to GetDisplayPort.
    */
-  static bool GetHighResolutionDisplayPort(nsIContent* aContent,
-                                           nsRect* aResult);
+  static bool GetHighResolutionDisplayPort(
+      nsIContent* aContent, nsRect* aResult,
+      const DisplayPortOptions& aOptions = DisplayPortOptions());
 
   /**
    * Remove the displayport for the given element.
