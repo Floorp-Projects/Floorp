@@ -16,6 +16,9 @@ const { AppConstants } = ChromeUtils.import(
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://messaging-system/experiments/ExperimentAPI.jsm"
 );
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -81,7 +84,10 @@ class AboutNewTabChild extends JSWindowActorChild {
       (event.type == "pageshow" || event.type == "visibilitychange") &&
       // The default browser notification shouldn't be shown on about:welcome
       // since we don't want to distract from the onboarding wizard.
-      !this.contentWindow.location.pathname.includes("welcome")
+      !this.contentWindow.location.pathname.includes("welcome") &&
+      // Don't show the notification in private windows since it is expected
+      // to have very little opt-in here.
+      !PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow)
     ) {
       if (this.document.visibilityState == "visible") {
         this.sendAsyncMessage("DefaultBrowserNotification");
