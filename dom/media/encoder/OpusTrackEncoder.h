@@ -55,10 +55,17 @@ class OpusTrackEncoder : public AudioTrackEncoder {
   int NumOutputFramesPerPacket() const;
 
   /**
+   * True if the input needs to be resampled to be fed to the underlying opus
+   * encoder.
+   */
+  bool NeedsResampler() const;
+
+ public:
+  /**
    * Get the samplerate of the data to be fed to the Opus encoder. This might be
    * different from the input samplerate if resampling occurs.
    */
-  int GetOutputSampleRate() const;
+  const TrackRate mOutputSampleRate;
 
  private:
   /**
