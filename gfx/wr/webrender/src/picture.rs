@@ -299,27 +299,6 @@ pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
     _unit: marker::PhantomData,
 };
 
-pub const TILE_SIZE_FOR_TESTS: [DeviceIntSize; 6] = [
-    DeviceIntSize {
-        width: 128,
-        height: 128,
-        _unit: marker::PhantomData,
-    },
-    DeviceIntSize {
-        width: 256,
-        height: 256,
-        _unit: marker::PhantomData,
-    },
-    DeviceIntSize {
-        width: 512,
-        height: 512,
-        _unit: marker::PhantomData,
-    },
-    TILE_SIZE_DEFAULT,
-    TILE_SIZE_SCROLLBAR_VERTICAL,
-    TILE_SIZE_SCROLLBAR_HORIZONTAL,
-];
-
 /// The maximum size per axis of a surface,
 ///  in WorldPixel coordinates.
 const MAX_SURFACE_SIZE: f32 = 4096.0;

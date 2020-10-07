@@ -1789,9 +1789,7 @@ impl ResourceCache {
                 self.texture_cache = TextureCache::new(
                     self.texture_cache.max_texture_size(),
                     self.texture_cache.max_texture_layers(),
-                    &self.texture_cache.picture_tile_sizes(),
                     self.texture_cache.default_picture_tile_size(),
-                    DeviceIntSize::zero(),
                     self.texture_cache.color_formats(),
                     self.texture_cache.swizzle_settings(),
                 );
