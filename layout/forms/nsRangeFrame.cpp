@@ -39,8 +39,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::image;
 
-NS_IMPL_ISUPPORTS(nsRangeFrame::DummyTouchListener, nsIDOMEventListener)
-
 nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsRangeFrame(aStyle, aPresShell->GetPresContext());
 }
@@ -57,30 +55,11 @@ NS_QUERYFRAME_HEAD(nsRangeFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-void nsRangeFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                        nsIFrame* aPrevInFlow) {
-  // With APZ enabled, touch events may be handled directly by the APZC code
-  // if the APZ knows that there is no content interested in the touch event.
-  // The range input element *is* interested in touch events, but doesn't use
-  // the usual mechanism (i.e. registering an event listener) to handle touch
-  // input. Instead, we do it here so that the APZ finds out about it, and
-  // makes sure to wait for content to run handlers before handling the touch
-  // input itself.
-  if (!mDummyTouchListener) {
-    mDummyTouchListener = new DummyTouchListener();
-  }
-  aContent->AddEventListener(u"touchstart"_ns, mDummyTouchListener, false);
-
-  return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
-}
-
 void nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                PostDestroyData& aPostDestroyData) {
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-
-  mContent->RemoveEventListener(u"touchstart"_ns, mDummyTouchListener, false);
 
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   aPostDestroyData.AddAnonymousContent(mTrackDiv.forget());
