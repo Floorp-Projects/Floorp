@@ -56,6 +56,10 @@ function testValueChangedEventData(
     "AXLeftWordTextMarkerRangeForTextMarker",
     textMarker
   );
+  if (!range) {
+    todo(!!range, "Bug 1669596");
+    return;
+  }
   let str = macIface.getParameterizedAttributeValue(
     "AXStringForTextMarkerRange",
     range,
@@ -92,7 +96,7 @@ async function synthKeyAndTestSelectionChanged(
   ]);
 
   EventUtils.synthesizeKey(synthKey, synthEvent);
-  let [, inputEvent] = await selectionChangedEvents;
+  let [webareaEvent, inputEvent] = await selectionChangedEvents;
   is(
     inputEvent.data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier"),
     expectedId,
@@ -107,6 +111,12 @@ async function synthKeyAndTestSelectionChanged(
     rangeString,
     expectedSelectionString,
     `selection has correct value (${expectedSelectionString})`
+  );
+
+  is(
+    webareaEvent.macIface.getAttributeValue("AXDOMIdentifier"),
+    "body",
+    "Input event target is top-level WebArea"
   );
 }
 
@@ -258,4 +268,13 @@ addAccessibleTask(
   async (browser, accDoc) => {
     await focusIntoInputAndType(accDoc, "input", "inner");
   }
+);
+
+// Test text input in iframe
+addAccessibleTask(
+  `<a href="#">link</a> <input id="input">`,
+  async (browser, accDoc) => {
+    await focusIntoInputAndType(accDoc, "input");
+  },
+  { iframe: true }
 );
