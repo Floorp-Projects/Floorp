@@ -166,8 +166,7 @@ class GeckoViewPermission {
                 throw new Error("invalid video id");
               }
               Services.cpmm.sendAsyncMessage("GeckoView:AddCameraPermission", {
-                origin: win.document.nodePrincipal.origin,
-                documentURI: win.document.documentURI,
+                origin: win.top.document.nodePrincipal.origin,
               });
               allowedDevices.appendElement(video);
             }
