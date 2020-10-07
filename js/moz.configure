@@ -433,13 +433,8 @@ build_ctypes = depends_if('--enable-ctypes')(lambda _: True)
 set_config('BUILD_CTYPES', build_ctypes)
 set_define('BUILD_CTYPES', build_ctypes)
 
-@depends(build_ctypes, building_js)
-def js_has_ctypes(ctypes, js):
-    if ctypes and js:
-        return True
-
-set_config('JS_HAS_CTYPES', js_has_ctypes)
-set_define('JS_HAS_CTYPES', js_has_ctypes)
+set_config('JS_HAS_CTYPES', build_ctypes)
+set_define('JS_HAS_CTYPES', build_ctypes)
 
 @depends('--enable-ctypes', '--enable-compile-environment')
 def ctypes_and_compile_environment(ctypes, compile_environment):

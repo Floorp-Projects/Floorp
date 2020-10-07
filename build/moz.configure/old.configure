@@ -127,8 +127,11 @@ def prepare_configure_options(host, target, all_options, *options):
 
 
 @template
-def old_configure_for(old_configure_path):
-    @depends(prepare_configure, prepare_configure_options, altered_path,
+def old_configure_for(old_configure_path, extra_env=None):
+    if extra_env is None:
+        extra_env = dependable(None)
+
+    @depends(prepare_configure, prepare_configure_options, altered_path, extra_env,
              check_build_environment, old_configure_path, 'MOZILLABUILD', awk, m4, shell)
     @imports(_from='__builtin__', _import='compile')
     @imports(_from='__builtin__', _import='open')
@@ -146,8 +149,8 @@ def old_configure_for(old_configure_path):
     @imports(_from='six', _import='exec_')
     @imports(_from='six', _import='iteritems')
     @imports(_from='six', _import='string_types')
-    def old_configure(prepare_configure, prepare_configure_options, altered_path, build_env,
-                      old_configure, mozillabuild, awk, m4, shell):
+    def old_configure(prepare_configure, prepare_configure_options, altered_path, extra_env,
+                      build_env, old_configure, mozillabuild, awk, m4, shell):
         # Use prepare_configure to make lint happy
         prepare_configure
         refresh = True
@@ -235,6 +238,10 @@ def old_configure_for(old_configure_path):
         if altered_path:
             env['PATH'] = altered_path
 
+        if extra_env:
+            env.update(extra_env)
+
+        env['OLD_CONFIGURE_VARS'] = os.path.join(build_env.topobjdir, 'old-configure.vars')
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 env=env)
         while True:
