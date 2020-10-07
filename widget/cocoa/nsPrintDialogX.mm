@@ -363,8 +363,7 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
   mPrintSelectionOnlyCheckbox = [self checkboxWithLabel:"selectionOnly"
                                                andFrame:NSMakeRect(156, 155, 0, 0)];
 
-  bool canPrintSelection;
-  mSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canPrintSelection);
+  bool canPrintSelection = mSettings->GetIsPrintSelectionRBEnabled();
   [mPrintSelectionOnlyCheckbox setEnabled:canPrintSelection];
 
   if (mSettings->GetPrintSelectionOnly()) {

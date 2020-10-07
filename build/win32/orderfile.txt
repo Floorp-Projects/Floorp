@@ -10084,7 +10084,6 @@ Gecko_IsDocumentBody
 ?StripTrackingIdentifiers@URLDecorationStripper@mozilla@@SA?AW4nsresult@@PAVnsIURI@@AAV?$nsTSubstring@D@@@Z
 ??1gfxWindowsNativeDrawing@@QAE@XZ
 ?RecvAddChild@SHEntryParent@dom@mozilla@@AAE_NPAVPSHEntryParent@23@ABHAB_NPAW4nsresult@@@Z
-?SetPrintOptionsBits@nsPrintSettings@@UAG?AW4nsresult@@H@Z
 ?SetRealmPrincipals@JS@@YAXPAVRealm@1@PAUJSPrincipals@@@Z
 ?MarkAsBroken@nsHtml5TreeOpExecutor@@UAE?AW4nsresult@@W42@@Z
 ??$AppendElements@UnsTArrayInfallibleAllocator@@@?$nsTArray_Impl@VPrincipalInfo@ipc@mozilla@@UnsTArrayInfallibleAllocator@@@@IAEPAVPrincipalInfo@ipc@mozilla@@I@Z

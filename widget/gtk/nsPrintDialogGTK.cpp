@@ -197,9 +197,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
   // GTK+2.18 and above allow us to add a "Selection" option to the main
   // settings screen, rather than adding an option on a custom tab like we must
   // do on older versions.
-  bool canSelectText;
-  aSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
-                             &canSelectText);
+  bool canSelectText = aSettings->GetIsPrintSelectionRBEnabled();
   if (gtk_major_version > 2 ||
       (gtk_major_version == 2 && gtk_minor_version >= 18)) {
     useNativeSelection = true;

@@ -605,8 +605,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   }
 
   // Now determine how to set up the Frame print UI
-  printData->mPrintSettings->SetPrintOptions(
-      nsIPrintSettings::kEnableSelectionRB,
+  printData->mPrintSettings->SetIsPrintSelectionRBEnabled(
       !mDisallowSelectionPrint && printData->mSelectionRoot);
 
   bool printingViaParent =
