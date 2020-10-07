@@ -35,11 +35,15 @@ enum class MaxSizeExceededBehaviour {
   Drop,
 };
 
+// Is the displayport being applied to scrolled content or fixed content?
+enum class ContentGeometryType { Scrolled, Fixed };
+
 struct DisplayPortOptions {
   // The default options.
   DisplayportRelativeTo mRelativeTo = DisplayportRelativeTo::ScrollPort;
   MaxSizeExceededBehaviour mMaxSizeExceededBehaviour =
       MaxSizeExceededBehaviour::Assert;
+  ContentGeometryType mGeometryType = ContentGeometryType::Scrolled;
 
   // Fluent interface for changing the defaults.
   DisplayPortOptions With(DisplayportRelativeTo aRelativeTo) const {
@@ -51,6 +55,11 @@ struct DisplayPortOptions {
       MaxSizeExceededBehaviour aMaxSizeExceededBehaviour) const {
     DisplayPortOptions result = *this;
     result.mMaxSizeExceededBehaviour = aMaxSizeExceededBehaviour;
+    return result;
+  }
+  DisplayPortOptions With(ContentGeometryType aGeometryType) const {
+    DisplayPortOptions result = *this;
+    result.mGeometryType = aGeometryType;
     return result;
   }
 };
@@ -92,10 +101,22 @@ struct DisplayPortMargins {
 
   static DisplayPortMargins Empty() { return WithNoAdjustment(ScreenMargin()); }
 
-  ScreenMargin GetRelativeToLayoutViewport() const;
+  // Get the margins relative to the layout viewport.
+  // |aGeometryType| tells us whether the margins are being queried for the
+  // purpose of being applied to scrolled content or fixed content.
+  // |aScrollableFrame| is the scroll frame whose content the margins will be
+  // applied to (or, in the case of fixed content), the scroll frame wrt. which
+  // the content is fixed.
+  ScreenMargin GetRelativeToLayoutViewport(
+      ContentGeometryType aGeometryType,
+      nsIScrollableFrame* aScrollableFrame) const;
 
   friend std::ostream& operator<<(std::ostream& aOs,
                                   const DisplayPortMargins& aMargins);
+
+ private:
+  CSSPoint ComputeAsyncTranslation(ContentGeometryType aGeometryType,
+                                   nsIScrollableFrame* aScrollableFrame) const;
 };
 
 struct DisplayPortMarginsPropertyData {

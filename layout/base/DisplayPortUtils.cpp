@@ -56,8 +56,18 @@ DisplayPortMargins DisplayPortMargins::WithNoAdjustment(
                         CSSToScreenScale2D(1.0, 1.0));
 }
 
-ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport() const {
-  ScreenPoint scrollDelta = (mVisualOffset - mLayoutOffset) * mScale;
+ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
+    ContentGeometryType aGeometryType,
+    nsIScrollableFrame* aScrollableFrame) const {
+  // APZ wants |mMargins| applied relative to the visual viewport.
+  // The main-thread painting code applies margins relative to
+  // the layout viewport. To get the main thread to paint the
+  // area APZ wants, apply a translation between the two. The
+  // magnitude of the translation depends on whether we are
+  // applying the displayport to scrolled or fixed content.
+  CSSPoint scrollDeltaCss =
+      ComputeAsyncTranslation(aGeometryType, aScrollableFrame);
+  ScreenPoint scrollDelta = scrollDeltaCss * mScale;
   ScreenMargin margins = mMargins;
   margins.left -= scrollDelta.x;
   margins.right += scrollDelta.x;
@@ -76,6 +86,58 @@ std::ostream& operator<<(std::ostream& aOs,
         << aMargins.mLayoutOffset << "}";
   }
   return aOs;
+}
+
+CSSPoint DisplayPortMargins::ComputeAsyncTranslation(
+    ContentGeometryType aGeometryType,
+    nsIScrollableFrame* aScrollableFrame) const {
+  // If we are applying the displayport to scrolled content, the
+  // translation is the entire difference between the visual and
+  // layout offsets.
+  if (aGeometryType == ContentGeometryType::Scrolled) {
+    return mVisualOffset - mLayoutOffset;
+  }
+
+  // If we are applying the displayport to fixed content, only
+  // part of the difference between the visual and layout offsets
+  // should be applied. This is because fixed content remains fixed
+  // to the layout viewport, and some of the async delta between
+  // the visual and layout offsets can drag the layout viewport
+  // with it. We want only the remaining delta, i.e. the offset of
+  // the visual viewport relative to the (async-scrolled) layout
+  // viewport.
+  if (!aScrollableFrame) {
+    // Displayport on a non-scrolling frame for some reason.
+    // There will be no divergence between the two viewports.
+    return CSSPoint();
+  }
+  // Fixed content is always fixed to an RSF.
+  MOZ_ASSERT(aScrollableFrame->IsRootScrollFrameOfDocument());
+  nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
+  if (!scrollFrame->PresShell()->IsVisualViewportSizeSet()) {
+    // Zooming is disabled, so the layout viewport tracks the
+    // visual viewport completely.
+    return CSSPoint();
+  }
+  // Use KeepLayoutViewportEnclosingViewportVisual() to compute
+  // an async layout viewport the way APZ would.
+  const CSSRect visualViewport{
+      mVisualOffset,
+      // TODO: There are probably some edge cases here around async zooming
+      // that are not currently being handled properly. For proper handling,
+      // we'd likely need to save APZ's async zoom when populating
+      // mVisualOffset, and using it to adjust the visual viewport size here.
+      // Note that any incorrectness caused by this will only occur transiently
+      // during async zooming.
+      CSSSize::FromAppUnits(scrollFrame->PresShell()->GetVisualViewportSize())};
+  const CSSRect scrollableRect = CSSRect::FromAppUnits(
+      nsLayoutUtils::CalculateExpandedScrollableRect(scrollFrame));
+  CSSRect asyncLayoutViewport{
+      mLayoutOffset,
+      CSSSize::FromAppUnits(aScrollableFrame->GetScrollPortRect().Size())};
+  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
+      visualViewport, scrollableRect, /* out */ asyncLayoutViewport);
+  return mVisualOffset - asyncLayoutViewport.TopLeft();
 }
 
 // Return the maximum displayport size, based on the LayerManager's maximum
@@ -177,8 +239,9 @@ static nsRect GetDisplayPortFromMarginsData(
     isRoot = true;
   }
 
+  nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
   nsPoint scrollPos;
-  if (nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame()) {
+  if (scrollableFrame) {
     scrollPos = scrollableFrame->GetScrollPosition();
   }
 
@@ -231,7 +294,8 @@ static nsRect GetDisplayPortFromMarginsData(
 
   bool useWebRender = gfxVars::UseWebRender();
 
-  ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport();
+  ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport(
+      aOptions.mGeometryType, scrollableFrame);
 
   if (presShell->IsDisplayportSuppressed()) {
     alignment = ScreenSize(1, 1);
