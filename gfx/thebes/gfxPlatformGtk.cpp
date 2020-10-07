@@ -696,7 +696,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     bool useGlxVsync = false;
     // Nvidia doesn't support GLX at the same time as EGL.
-    if (!gfxVars::UseEGL()) {
+    if (!gfxVars::UseEGL() || gfxVars::AllowGLXOnEGL()) {
       useGlxVsync = gl::sGLXLibrary.SupportsVideoSync();
     }
     if (useGlxVsync) {
