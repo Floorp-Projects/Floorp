@@ -35,14 +35,6 @@ class nsIPrincipal;
 
 namespace xpc {
 
-namespace XrayUtils {
-
-bool IsTransparent(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id);
-
-bool HasNativeProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                       bool* hasProp);
-}  // namespace XrayUtils
-
 enum XrayType {
   XrayForDOMObject,
   XrayForJSObject,
