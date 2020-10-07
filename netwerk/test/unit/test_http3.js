@@ -34,6 +34,7 @@ let tests = [
   test_post,
   test_patch,
   test_http_alt_svc,
+  test_slow_receiver,
   // This test should be at the end, because it will close http3
   // connection and the transaction will switch to already existing http2
   // connection.
@@ -453,6 +454,56 @@ function test_http_alt_svc() {
 
   do_test_pending();
   doTest(httpOrigin + "http3-test", h3Route, h3AltSvc);
+}
+
+let SlowReceiverListener = function() {};
+
+SlowReceiverListener.prototype = new Http3CheckListener();
+SlowReceiverListener.prototype.count = 0;
+
+SlowReceiverListener.prototype.onDataAvailable = function(
+  request,
+  stream,
+  off,
+  cnt
+) {
+  this.onDataAvailableFired = true;
+  this.count += cnt;
+  read_stream(stream, cnt);
+};
+
+SlowReceiverListener.prototype.onStopRequest = function(request, status) {
+  Assert.equal(status, this.expectedStatus);
+  Assert.equal(this.count, 10000000);
+  let routed = "NA";
+  try {
+    routed = request.getRequestHeader("Alt-Used");
+  } catch (e) {}
+  dump("routed is " + routed + "\n");
+
+  Assert.equal(routed, this.expectedRoute);
+
+  if (Components.isSuccessCode(this.expectedStatus)) {
+    let httpVersion = "";
+    try {
+      httpVersion = request.protocolVersion;
+    } catch (e) {}
+    Assert.equal(httpVersion, "h3");
+    Assert.equal(this.onDataAvailableFired, true);
+  }
+  run_next_test();
+  do_test_finished();
+};
+
+function test_slow_receiver() {
+  dump("test_slow_receiver()\n");
+  let chan = makeChan(httpsOrigin + "10000000");
+  let listener = new SlowReceiverListener();
+  listener.expectedRoute = h3Route;
+  chan.asyncOpen(listener);
+  do_test_pending();
+  chan.suspend();
+  do_timeout(1000, chan.resume);
 }
 
 let CheckFallbackListener = function() {};
