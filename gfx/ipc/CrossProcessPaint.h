@@ -122,6 +122,9 @@ class CrossProcessPaint final {
                     float aScale, nscolor aBackgroundColor,
                     CrossProcessPaintFlags aFlags, dom::Promise* aPromise);
 
+  static RefPtr<ResolvePromise> Start(
+      nsTHashtable<nsUint64HashKey>&& aDependencies);
+
   void ReceiveFragment(dom::WindowGlobalParent* aWGP,
                        PaintFragment&& aFragment);
   void LostFragment(dom::WindowGlobalParent* aWGP);
