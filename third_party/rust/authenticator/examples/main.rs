@@ -40,6 +40,15 @@ fn main() {
 
     let mut opts = Options::new();
     opts.optflag("x", "no-u2f-usb-hid", "do not enable u2f-usb-hid platforms");
+    #[cfg(feature = "webdriver")]
+    opts.optflag("w", "webdriver", "enable WebDriver virtual bus");
+
+    opts.optflag("h", "help", "print this help menu").optopt(
+        "t",
+        "timeout",
+        "timeout in seconds",
+        "SEC",
+    );
 
     opts.optflag("h", "help", "print this help menu");
     let matches = match opts.parse(&args[1..]) {
@@ -57,6 +66,25 @@ fn main() {
     if !matches.opt_present("no-u2f-usb-hid") {
         manager.add_u2f_usb_hid_platform_transports();
     }
+
+    #[cfg(feature = "webdriver")]
+    {
+        if matches.opt_present("webdriver") {
+            manager.add_webdriver_virtual_bus();
+        }
+    }
+
+    let timeout_ms = match matches.opt_get_default::<u64>("timeout", 15) {
+        Ok(timeout_s) => {
+            println!("Using {}s as the timeout", &timeout_s);
+            timeout_s * 1_000
+        }
+        Err(e) => {
+            println!("{}", e);
+            print_usage(&program, opts);
+            return;
+        }
+    };
 
     println!("Asking a security key to register now...");
     let challenge_str = format!(
@@ -101,7 +129,7 @@ fn main() {
     manager
         .register(
             flags,
-            60_000 * 5,
+            timeout_ms,
             chall_bytes.clone(),
             app_bytes.clone(),
             vec![],
@@ -133,7 +161,7 @@ fn main() {
 
     if let Err(e) = manager.sign(
         flags,
-        15_000,
+        timeout_ms,
         chall_bytes,
         vec![app_bytes],
         vec![key_handle],

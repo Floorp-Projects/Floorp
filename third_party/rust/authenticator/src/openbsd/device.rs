@@ -5,6 +5,7 @@
 extern crate libc;
 
 use std::ffi::OsString;
+use std::io;
 use std::io::{Read, Result, Write};
 use std::mem;
 

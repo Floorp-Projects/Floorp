@@ -84,6 +84,17 @@ impl AuthenticatorService {
         }
     }
 
+    #[cfg(feature = "webdriver")]
+    pub fn add_webdriver_virtual_bus(&mut self) {
+        match crate::virtualdevices::webdriver::VirtualManager::new() {
+            Ok(token) => {
+                println!("WebDriver ready, listening at {}", &token.url());
+                self.add_transport(Box::new(token));
+            }
+            Err(e) => error!("Could not add WebDriver virtual bus: {}", e),
+        }
+    }
+
     pub fn register(
         &mut self,
         flags: crate::RegisterFlags,
@@ -125,7 +136,7 @@ impl AuthenticatorService {
             );
 
             transport_mutex.lock().unwrap().register(
-                flags.clone(),
+                flags,
                 timeout,
                 challenge.clone(),
                 application.clone(),
@@ -178,7 +189,7 @@ impl AuthenticatorService {
             transports_to_cancel.remove(idx);
 
             transport_mutex.lock().unwrap().sign(
-                flags.clone(),
+                flags,
                 timeout,
                 challenge.clone(),
                 app_ids.clone(),
@@ -533,7 +544,7 @@ mod tests {
                 mk_challenge(),
                 mk_appid(),
                 vec![],
-                status_tx.clone(),
+                status_tx,
                 callback.clone(),
             )
             .is_ok());
@@ -605,7 +616,7 @@ mod tests {
                 mk_challenge(),
                 mk_appid(),
                 vec![],
-                status_tx.clone(),
+                status_tx,
                 callback.clone(),
             )
             .is_ok());

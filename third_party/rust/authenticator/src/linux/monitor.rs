@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use libc::{c_int, c_short, c_ulong};
-use libudev;
 use libudev::EventType;
 use runloop::RunLoop;
 use std::collections::HashMap;
