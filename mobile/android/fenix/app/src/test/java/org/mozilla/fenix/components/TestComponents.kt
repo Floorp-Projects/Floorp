@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import io.mockk.mockk
+import org.mozilla.fenix.helpers.TestStrictModeManager
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Settings
 
@@ -33,4 +34,6 @@ class TestComponents(private val context: Context) : Components(context) {
     override val clipboardHandler by lazy { ClipboardHandler(context) }
 
     override val settings by lazy { mockk<Settings>(relaxed = true) }
+
+    override val strictMode by lazy { TestStrictModeManager() }
 }

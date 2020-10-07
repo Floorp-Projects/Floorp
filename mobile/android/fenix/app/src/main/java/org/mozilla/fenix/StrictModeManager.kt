@@ -19,6 +19,7 @@ import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.perf.Performance
+import org.mozilla.fenix.utils.Mockable
 
 private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
 private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
@@ -29,6 +30,7 @@ private val mainLooper = Looper.getMainLooper()
 /**
  * Manages strict mode settings for the application.
  */
+@Mockable
 class StrictModeManager(
     config: Config,
 

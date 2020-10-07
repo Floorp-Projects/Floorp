@@ -17,6 +17,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.intent.processing.IntentProcessor
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -202,7 +203,10 @@ class IntentReceiverActivityTest {
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns mockk(relaxed = true)
         every { activity.components.intentProcessors } returns intentProcessors
-        every { activity.components.strictMode } returns mockk(relaxed = true)
+
+        // For some reason, activity.components doesn't return application.components, which is the
+        // globally defined TestComponents, so we redirect it.
+        every { activity.components.strictMode } returns testContext.components.strictMode
     }
 
     private inline fun <reified T : IntentProcessor> mockIntentProcessor(): T {
