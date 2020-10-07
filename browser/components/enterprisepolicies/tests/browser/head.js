@@ -58,7 +58,7 @@ async function checkBlockedPage(url, expectedBlocked) {
       "Should be blocked by policy"
     );
   } else {
-    let promise = BrowserTestUtils.browserLoaded(gBrowser);
+    let promise = BrowserTestUtils.browserStopped(gBrowser, url);
     BrowserTestUtils.loadURI(gBrowser, url);
     await promise;
 
