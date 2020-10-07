@@ -8,7 +8,6 @@ if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
     # mozilla-central based build
     export CC=$MOZ_FETCHES_DIR/clang/bin/clang
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
-    export LLVMCONFIG=$MOZ_FETCHES_DIR/clang/bin/llvm-config
     export DSYMUTIL=$MOZ_FETCHES_DIR/clang/bin/llvm-dsymutil
     # Use an updated linker.
     ldflags="-B$MOZ_FETCHES_DIR/cctools/bin"

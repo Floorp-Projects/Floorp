@@ -1,5 +1,4 @@
 export TOOLTOOL_DIR="$topsrcdir"
-export LLVM_CONFIG="${MOZ_FETCHES_DIR}/clang/bin/llvm-config"
 
 CARGO="${MOZ_FETCHES_DIR}/rustc/bin/cargo"
 RUSTC="${MOZ_FETCHES_DIR}/rustc/bin/rustc"

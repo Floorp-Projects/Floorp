@@ -5,34 +5,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 AC_DEFUN([MOZ_CONFIG_CLANG_PLUGIN], [
 
 if test -n "$ENABLE_CLANG_PLUGIN"; then
-    if test -z "${CLANG_CC}${CLANG_CL}"; then
-        AC_MSG_ERROR([Can't use clang plugin without clang.])
-    fi
-
-    AC_MSG_CHECKING([for llvm-config])
-    if test -z "$LLVMCONFIG"; then
-      if test -n "$CLANG_CL"; then
-          CXX_COMPILER="$(dirname "$CXX")/clang"
-      else
-          CXX_COMPILER="${CXX}"
-      fi
-      LLVMCONFIG=`$CXX_COMPILER -print-prog-name=llvm-config`
-    fi
-
-    if test -z "$LLVMCONFIG"; then
-      LLVMCONFIG=`which llvm-config`
-    fi
-
-    if test ! -x "$LLVMCONFIG"; then
-      AC_MSG_RESULT([not found])
-      AC_MSG_ERROR([Cannot find an llvm-config binary for building a clang plugin])
-    fi
-
-    AC_MSG_RESULT([$LLVMCONFIG])
-
-    if test -z "$LLVMCONFIG"; then
-        AC_MSG_ERROR([Cannot find an llvm-config binary for building a clang plugin])
-    fi
     dnl For some reason the llvm-config downloaded from clang.llvm.org for clang3_8
     dnl produces a -isysroot flag for a sysroot which might not ship when passed
     dnl --cxxflags. We use sed to remove this argument so that builds work on OSX
@@ -40,9 +12,9 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl For a similar reason, we remove any -gcc-toolchain arguments, since the
     dnl directories specified by such arguments might not exist on the current
     dnl machine.
-    LLVM_CXXFLAGS=`$LLVMCONFIG --cxxflags | sed -e 's/-isysroot [[^ ]]*//' -e 's/-gcc-toolchain [[^ ]]*//'`
+    LLVM_CXXFLAGS=`$LLVM_CONFIG --cxxflags | sed -e 's/-isysroot [[^ ]]*//' -e 's/-gcc-toolchain [[^ ]]*//'`
 
-    LLVM_LDFLAGS=`$LLVMCONFIG --ldflags | tr '\n' ' '`
+    LLVM_LDFLAGS=`$LLVM_CONFIG --ldflags | tr '\n' ' '`
 
     if test "${HOST_OS_ARCH}" = "Darwin"; then
         dnl We need to make sure that we use the symbols coming from the clang
@@ -55,7 +27,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         CLANG_LDFLAGS="-Wl,-flat_namespace -Wl,-undefined,suppress"
         dnl We are loaded into clang, so we don't need to link to very many things,
         dnl we just need to link to clangASTMatchers because it is not used by clang
-        CLANG_LDFLAGS="$CLANG_LDFLAGS `$LLVMCONFIG --prefix`/lib/libclangASTMatchers.a"
+        CLANG_LDFLAGS="$CLANG_LDFLAGS `$LLVM_CONFIG --prefix`/lib/libclangASTMatchers.a"
         dnl We need to remove -L/path/to/clang/lib from LDFLAGS to ensure that we
         dnl don't accidentally link against the libc++ there which is a newer
         dnl version that what our build machines have installed.

@@ -2286,6 +2286,34 @@ js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
                              depends_if('--enable-clang-plugin')(lambda _: True))
 
+@depends(host_c_compiler, c_compiler, when='--enable-clang-plugin')
+def llvm_config(host_c_compiler, c_compiler):
+    clang = None
+    for compiler in (host_c_compiler, c_compiler):
+        if compiler and compiler.type == 'clang':
+            clang = compiler.compiler
+            break
+        elif compiler and compiler.type == 'clang-cl':
+            clang = os.path.join(os.path.dirname(compiler.compiler), 'clang')
+            break
+
+    if not clang:
+        die('Cannot --enable-clang-plugin when not building with clang')
+    llvm_config = 'llvm-config'
+    out = check_cmd_output(clang, '--print-prog-name=llvm-config',
+                           onerror=lambda: None)
+    if out:
+        llvm_config = out.rstrip()
+    return (llvm_config,)
+
+
+llvm_config = check_prog('LLVM_CONFIG', llvm_config, what='llvm-config',
+                         when='--enable-clang-plugin',
+                         paths=toolchain_search_path)
+
+add_old_configure_assignment('LLVM_CONFIG', llvm_config)
+
+
 js_option('--enable-clang-plugin-alpha', env='ENABLE_CLANG_PLUGIN_ALPHA',
             help='Enable static analysis with clang-plugin alpha checks.')
 
