@@ -79,13 +79,7 @@ inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
 }
 
 template <typename T>
-inline bool IsAboutToBeFinalized(const WriteBarriered<T>* thingp) {
-  return IsAboutToBeFinalizedInternal(
-      ConvertToBase(thingp->unbarrieredAddress()));
-}
-
-template <typename T>
-inline bool IsAboutToBeFinalized(ReadBarriered<T>* thingp) {
+inline bool IsAboutToBeFinalized(const BarrieredBase<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
       ConvertToBase(thingp->unbarrieredAddress()));
 }
