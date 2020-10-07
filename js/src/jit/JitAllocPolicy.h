@@ -7,16 +7,22 @@
 #ifndef jit_JitAllocPolicy_h
 #define jit_JitAllocPolicy_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/TemplateLib.h"
 
 #include <algorithm>
+#include <stddef.h>
+#include <string.h>
 #include <type_traits>
 #include <utility>
 
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
 #include "jit/JitContext.h"
+#include "js/Utility.h"
 #include "vm/JSContext.h"
 
 namespace js {
