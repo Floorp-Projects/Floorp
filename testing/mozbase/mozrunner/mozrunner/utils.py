@@ -155,7 +155,7 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
                 llvmSymbolizerDir = xrePath
             llvmsym = os.path.join(
                 llvmSymbolizerDir,
-                "llvm-symbolizer" + mozinfo.info["bin_suffix"].encode('ascii'))
+                "llvm-symbolizer" + mozinfo.info["bin_suffix"])
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 log.info("INFO | runtests.py | ASan using symbolizer at %s"
