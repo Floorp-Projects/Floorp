@@ -158,7 +158,7 @@ assertEq(wasmEvalText('(module (func (param i32) (result i32) (local.get 0)) (ex
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (local.get 0)) (export "" (func 0)))').exports[""](42, 43), 42);
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (local.get 1)) (export "" (func 0)))').exports[""](42, 43), 43);
 
-wasmFailValidateText('(module (func (local.get 0)))', /local.get index out of range/);
+wasmFailValidateText('(module (func (local.get 0)))', /(local.get index out of range)|(local index out of bounds)/);
 wasmFailValidateText('(module (func (result f32) (local i32) (local.get 0)))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (result i32) (local f32) (local.get 0)))', mismatchError("f32", "i32"));
 wasmFailValidateText('(module (func (param i32) (result f32) (local f32) (local.get 0)))', mismatchError("i32", "f32"));
@@ -171,7 +171,7 @@ wasmFullPass('(module (func (result i32) (local i32) (local.get 0)) (export "run
 wasmFullPass('(module (func (param i32) (result i32) (local f32) (local.get 0)) (export "run" (func 0)))', 0);
 wasmFullPass('(module (func (param i32) (result f32) (local f32) (local.get 1)) (export "run" (func 0)))', 0);
 
-wasmFailValidateText('(module (func (local.set 0 (i32.const 0))))', /local.set index out of range/);
+wasmFailValidateText('(module (func (local.set 0 (i32.const 0))))', /(local.set index out of range)|(local index out of bounds)/);
 wasmFailValidateText('(module (func (local f32) (local.set 0 (i32.const 0))))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (local f32) (local.set 0 (nop))))', emptyStackError);
 wasmFailValidateText('(module (func (local i32) (local f32) (local.set 0 (local.get 1))))', mismatchError("f32", "i32"));
@@ -215,7 +215,7 @@ wasmFailValidateText('(module (func (nop)) (func (call 0 (i32.const 0))))', unus
 
 wasmFailValidateText('(module (func (param i32) (nop)) (func (call 0)))', emptyStackError);
 wasmFailValidateText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (nop)) (func (call 3)))', /callee index out of range/);
+wasmFailValidateText('(module (func (nop)) (func (call 3)))', /(callee index out of range)|(function index out of bounds)/);
 
 wasmValidateText('(module (func (nop)) (func (call 0)))');
 wasmValidateText('(module (func (param i32) (nop)) (func (call 0 (i32.const 0))))');
@@ -277,7 +277,7 @@ wasmFullPass(`(module (import "" "evalcx" (func (param i32) (result i32))) (func
 if (typeof evaluate === 'function')
     evaluate(`new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module)'))) `, { fileName: null });
 
-wasmFailValidateText(`(module (type $t (func)) (func (call_indirect (type $t) (i32.const 0))))`, /can't call_indirect without a table/);
+wasmFailValidateText(`(module (type $t (func)) (func (call_indirect (type $t) (i32.const 0))))`, /(can't call_indirect without a table)|(unknown table)/);
 
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type (func (result i32)))
