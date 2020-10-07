@@ -33,7 +33,7 @@ interface nsIXPConnectWrappedNative;
     #define XPC_SCRIPTABLE_WANT_PRECREATE                   (1 <<  0)
     // (1 << 1) is unused
     // (1 << 2) is unused
-    #define XPC_SCRIPTABLE_WANT_ENUMERATE                   (1 <<  3)
+    // (1 << 3) is unused
     #define XPC_SCRIPTABLE_WANT_NEWENUMERATE                (1 <<  4)
     #define XPC_SCRIPTABLE_WANT_RESOLVE                     (1 <<  5)
     #define XPC_SCRIPTABLE_WANT_FINALIZE                    (1 <<  6)
@@ -68,9 +68,6 @@ interface nsIXPCScriptable : nsISupports
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
 
-    boolean enumerate(in nsIXPConnectWrappedNative wrapper,
-                     in JSContextPtr cx, in JSObjectPtr obj);
-
     boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
                         in JSContextPtr cx, in JSObjectPtr obj,
                         in JSMutableHandleIdVector properties,
@@ -102,7 +99,6 @@ interface nsIXPCScriptable : nsISupports
     }
 
     GET_IT(WantPreCreate,                WANT_PRECREATE)
-    GET_IT(WantEnumerate,                WANT_ENUMERATE)
     GET_IT(WantNewEnumerate,             WANT_NEWENUMERATE)
     GET_IT(WantResolve,                  WANT_RESOLVE)
     GET_IT(WantFinalize,                 WANT_FINALIZE)
