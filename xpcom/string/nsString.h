@@ -128,6 +128,27 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString {
   NS_ConvertUTF8toUTF16(char16_t) = delete;
 };
 
+/**
+ * Converts an integer (signed/unsigned, 32/64bit) to its decimal string
+ * representation and returns it as an nsAutoCString/nsAutoString.
+ */
+template <typename T, typename U>
+nsTAutoString<T> IntToTString(const U aInt, const int aRadix = 10) {
+  nsTAutoString<T> string;
+  string.AppendInt(aInt, aRadix);
+  return string;
+}
+
+template <typename U>
+nsAutoCString IntToCString(const U aInt, const int aRadix = 10) {
+  return IntToTString<char>(aInt, aRadix);
+}
+
+template <typename U>
+nsAutoString IntToString(const U aInt, const int aRadix = 10) {
+  return IntToTString<char16_t>(aInt, aRadix);
+}
+
 // MOZ_DBG support
 
 inline std::ostream& operator<<(std::ostream& aOut, const nsACString& aString) {
