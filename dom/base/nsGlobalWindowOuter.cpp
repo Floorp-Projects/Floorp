@@ -5289,14 +5289,12 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   nsCOMPtr<nsIContentViewer> cv;
   RefPtr<BrowsingContext> bc;
   bool hasPrintCallbacks = false;
-  if (docToPrint->IsStaticDocument() && aIsPreview == IsPreview::Yes) {
+  if (docToPrint->IsStaticDocument() &&
+      (aIsPreview == IsPreview::Yes ||
+       StaticPrefs::print_tab_modal_enabled())) {
     MOZ_DIAGNOSTIC_ASSERT(aBlockUntilDone == BlockUntilDone::No);
     // We're already a print preview window, just reuse our browsing context /
     // content viewer.
-    //
-    // TODO(emilio): When the old print preview UI is gone and the new print UI
-    // auto-closes when printing (bug 1659624), we can remove the aIsPreview
-    // condition and just reuse the document for printing as well.
     bc = sourceBC;
     nsCOMPtr<nsIDocShell> docShell = bc->GetDocShell();
     if (!docShell) {
