@@ -110,8 +110,9 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    */
   get hasView() {
     // Return true if the one-offs are enabled.  We set style.display = "none"
-    // when they're disabled, so use that to check.
-    return this.style.display != "none";
+    // when they're disabled, and we hide the container when there are no
+    // engines to show.
+    return this.style.display != "none" && !this.container.hidden;
   }
 
   /**
@@ -305,14 +306,14 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   that branch.
    */
   onPrefChanged(changedPref) {
-    // Null out this._engines when the local-one-offs-related prefs change so
-    // that they rebuild themselves the next time the view opens.
+    // Invalidate the engine cache when the local-one-offs-related prefs change
+    // so that the one-offs rebuild themselves the next time the view opens.
     if (
       ["update2", "update2.localOneOffs", "update2.oneOffsRefresh"].includes(
         changedPref
       )
     ) {
-      this._engines = null;
+      this.invalidateCache();
     }
     this._setupOneOffsHorizontalKeyNavigation();
   }

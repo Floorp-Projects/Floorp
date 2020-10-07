@@ -53,14 +53,19 @@
 
   /* Match urlbar-background's border. */
   border-inline: 1px solid transparent;
+}
 
-  /* Offsets the toolbar overlap so the view's top border aligns with the
-     toolbar. */
+/* If the view is open, offset the toolbar overlap so the view's top border
+   aligns with the toolbar. */
+#urlbar[open] > .urlbarView {
   margin-block-start: -@urlbarBreakoutExtend@;
 }
 
 .urlbarView-body-inner {
   width: 100%;
+}
+
+#urlbar[open] > .urlbarView > .urlbarView-body-outer > .urlbarView-body-inner {
   border-top: 1px solid var(--urlbar-separator-color);
 }
 
