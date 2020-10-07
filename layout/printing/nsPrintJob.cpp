@@ -2192,7 +2192,7 @@ bool nsPrintJob::PrePrintPage() {
   // If the page doesn't get printed at all, the |done| will be |true|.
   bool done = false;
   nsPageSequenceFrame* pageSeqFrame = do_QueryFrame(mPageSeqFrame.GetFrame());
-  nsresult rv = pageSeqFrame->PrePrintNextPage(mPagePrintTimer, &done);
+  nsresult rv = pageSeqFrame->PrePrintNextSheet(mPagePrintTimer, &done);
   if (NS_FAILED(rv)) {
     // ??? ::PrintPage doesn't set |printData->mIsAborted = true| if
     // rv != NS_ERROR_ABORT, but I don't really understand why this should be
@@ -2270,7 +2270,7 @@ bool nsPrintJob::PrintPage(nsPrintObject* aPO, bool& aInRange) {
   //
   // When rv == NS_ERROR_ABORT, it means we want out of the
   // print job without displaying any error messages
-  nsresult rv = pageSeqFrame->PrintNextPage();
+  nsresult rv = pageSeqFrame->PrintNextSheet();
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_ABORT) {
       FirePrintingErrorEvent(rv);
