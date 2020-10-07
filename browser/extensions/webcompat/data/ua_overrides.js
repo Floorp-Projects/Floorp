@@ -658,6 +658,25 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1666754 - Mobile UA override for lffl.org
+     * Bug 1665720 - lffl.org article page takes 2x as much time to load on Moto G
+     *
+     * This site returns desktop site based on server side UA detection.
+     * Spoofing as Chrome allows to get mobile experience
+     */
+    id: "bug1666754",
+    platform: "android",
+    domain: "lffl.org",
+    bug: "1666754",
+    config: {
+      matches: ["*://*.lffl.org/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 const UAHelpers = {

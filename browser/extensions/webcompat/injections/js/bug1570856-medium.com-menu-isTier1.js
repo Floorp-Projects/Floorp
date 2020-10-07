@@ -11,10 +11,6 @@
 
 /* globals exportFunction */
 
-console.info(
-  "window.GLOBALS.useragent.isTier1 has been set to true for compatibility reasons. See https://webcompat.com/issues/25844 for details."
-);
-
 let globals = {};
 
 Object.defineProperty(window.wrappedJSObject, "GLOBALS", {
