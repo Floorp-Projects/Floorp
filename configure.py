@@ -116,6 +116,26 @@ def config_status(config):
         print("Please file a bug for the above.", file=sys.stderr)
         sys.exit(1)
 
+    # Some values in sanitized_config also have more complex types, such as
+    # EnumString, which using when calling config_status would currently
+    # break the build, as well as making it inconsistent with re-running
+    # config.status, for which they are normalized to plain strings via
+    # indented_repr. Likewise for non-dict non-string iterables being
+    # converted to lists.
+    def normalize(obj):
+        if isinstance(obj, dict):
+            return {
+                k: normalize(v)
+                for k, v in six.iteritems(obj)
+            }
+        if isinstance(obj, six.text_type):
+            return six.text_type(obj)
+        if isinstance(obj, Iterable):
+            return [normalize(o) for o in obj]
+        return obj
+
+    sanitized_config = normalize(sanitized_config)
+
     # Create config.status. Eventually, we'll want to just do the work it does
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
@@ -160,25 +180,7 @@ def config_status(config):
     os.chmod('config.status', 0o755)
     if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
         from mozbuild.config_status import config_status
-
-        # Some values in sanitized_config also have more complex types, such as
-        # EnumString, which using when calling config_status would currently
-        # break the build, as well as making it inconsistent with re-running
-        # config.status, for which they are normalized to plain strings via
-        # indented_repr. Likewise for non-dict non-string iterables being
-        # converted to lists.
-        def normalize(obj):
-            if isinstance(obj, dict):
-                return {
-                    k: normalize(v)
-                    for k, v in six.iteritems(obj)
-                }
-            if isinstance(obj, six.text_type):
-                return six.text_type(obj)
-            if isinstance(obj, Iterable):
-                return [normalize(o) for o in obj]
-            return obj
-        return config_status(args=[], **normalize(sanitized_config))
+        return config_status(args=[], **sanitized_config)
     return 0
 
 
