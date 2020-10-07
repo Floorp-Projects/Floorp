@@ -829,28 +829,6 @@ bool XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id,
   return retval;
 }
 
-bool XPC_WN_Helper_Enumerate(JSContext* cx, HandleObject obj) {
-  XPCCallContext ccx(cx, obj);
-  XPCWrappedNative* wrapper = ccx.GetWrapper();
-  THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
-
-  nsCOMPtr<nsIXPCScriptable> scr = wrapper->GetScriptable();
-  if (!scr || !scr->WantEnumerate()) {
-    return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-  }
-
-  if (!XPC_WN_Shared_Enumerate(cx, obj)) {
-    return false;
-  }
-
-  bool retval = true;
-  nsresult rv = scr->Enumerate(wrapper, cx, obj, &retval);
-  if (NS_FAILED(rv)) {
-    return Throw(rv, cx);
-  }
-  return retval;
-}
-
 /***************************************************************************/
 
 bool XPC_WN_NewEnumerate(JSContext* cx, HandleObject obj,
