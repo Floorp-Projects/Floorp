@@ -361,7 +361,12 @@ AboutReader.prototype = {
       case "touchstart":
       /* fall through */
       case "mousedown":
-        if (!target.closest(".dropdown-popup")) {
+        if (
+          !target.closest(".dropdown-popup") &&
+          // Skip handling the toggle button here becase
+          // the dropdown will get toggled with the 'click' event.
+          !target.classList.contains("dropdown-toggle")
+        ) {
           this._closeDropdowns();
         }
         break;
