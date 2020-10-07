@@ -27,41 +27,35 @@
 namespace base {
 
 SharedMemory::SharedMemory()
-    : mapped_file_(-1),
-      frozen_file_(-1),
+    : memory_(nullptr),
+      max_size_(0),
+      mapped_file_(nullptr),
+      frozen_file_(nullptr),
       mapped_size_(0),
-      memory_(nullptr),
       read_only_(false),
-      freezeable_(false),
-      max_size_(0) {}
+      freezeable_(false) {}
 
 SharedMemory::SharedMemory(SharedMemory&& other) {
-  if (this == &other) {
-    return;
-  }
-
-  mapped_file_ = other.mapped_file_;
-  mapped_size_ = other.mapped_size_;
-  frozen_file_ = other.frozen_file_;
   memory_ = other.memory_;
+  max_size_ = other.max_size_;
+  mapped_file_ = std::move(other.mapped_file_);
+  frozen_file_ = std::move(other.frozen_file_);
+  mapped_size_ = other.mapped_size_;
   read_only_ = other.read_only_;
   freezeable_ = other.freezeable_;
-  max_size_ = other.max_size_;
 
-  other.mapped_file_ = -1;
   other.mapped_size_ = 0;
-  other.frozen_file_ = -1;
   other.memory_ = nullptr;
 }
 
 SharedMemory::~SharedMemory() { Close(); }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
-  DCHECK(mapped_file_ == -1);
-  DCHECK(frozen_file_ == -1);
+  DCHECK(!mapped_file_);
+  DCHECK(!frozen_file_);
 
   freezeable_ = false;
-  mapped_file_ = handle.fd;
+  mapped_file_.reset(handle.fd);
   read_only_ = read_only;
   return true;
 }
@@ -70,8 +64,6 @@ bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
 bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
   return handle.fd >= 0;
 }
-
-bool SharedMemory::IsValid() const { return mapped_file_ >= 0; }
 
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
@@ -111,8 +103,8 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   read_only_ = false;
 
   DCHECK(size > 0);
-  DCHECK(mapped_file_ == -1);
-  DCHECK(frozen_file_ == -1);
+  DCHECK(!mapped_file_);
+  DCHECK(!frozen_file_);
 
   mozilla::UniqueFileHandle fd;
   mozilla::UniqueFileHandle frozen_fd;
@@ -210,14 +202,15 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
 #endif
   }
 
-  mapped_file_ = fd.release();
-  frozen_file_ = frozen_fd.release();
+  mapped_file_ = std::move(fd);
+  frozen_file_ = std::move(frozen_fd);
   max_size_ = size;
   freezeable_ = freezeable;
   return true;
 }
 
 bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
+  DCHECK(mapped_file_);
   DCHECK(!read_only_);
   CHECK(freezeable_);
 
@@ -225,28 +218,25 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
     DCHECK(!memory_);
   }
 
-  int ro_file = -1;
+  mozilla::UniqueFileHandle ro_file;
 #ifdef ANDROID
-  if (mozilla::android::ashmem_setProt(mapped_file_, PROT_READ) != 0) {
+  ro_file = std::move(mapped_file_);
+  if (mozilla::android::ashmem_setProt(ro_file.get(), PROT_READ) != 0) {
     CHROMIUM_LOG(WARNING) << "failed to set ashmem read-only: "
                           << strerror(errno);
     return false;
   }
-  ro_file = mapped_file_;
 #else
-  DCHECK(frozen_file_ >= 0);
-  DCHECK(mapped_file_ >= 0);
-  close(mapped_file_);
-  ro_file = frozen_file_;
-  frozen_file_ = -1;
+  DCHECK(frozen_file_);
+  mapped_file_ = nullptr;
+  ro_file = std::move(frozen_file_);
 #endif
 
-  DCHECK(ro_file >= 0);
-  mapped_file_ = -1;
+  DCHECK(ro_file);
   freezeable_ = false;
 
   ro_out->Close();
-  ro_out->mapped_file_ = ro_file;
+  ro_out->mapped_file_ = std::move(ro_file);
   ro_out->max_size_ = max_size_;
   ro_out->read_only_ = true;
   ro_out->freezeable_ = false;
@@ -255,14 +245,16 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
 }
 
 bool SharedMemory::Map(size_t bytes, void* fixed_address) {
-  if (mapped_file_ == -1) return false;
+  if (!mapped_file_) {
+    return false;
+  }
   DCHECK(!memory_);
 
   // Don't use MAP_FIXED when a fixed_address was specified, since that can
   // replace pages that are alread mapped at that address.
   void* mem =
       mmap(fixed_address, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
-           MAP_SHARED, mapped_file_, 0);
+           MAP_SHARED, mapped_file_.get(), 0);
 
   if (mem == MAP_FAILED) {
     CHROMIUM_LOG(WARNING) << "Call to mmap failed: " << strerror(errno);
@@ -300,7 +292,7 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         SharedMemoryHandle* new_handle,
                                         bool close_self) {
   freezeable_ = false;
-  const int new_fd = dup(mapped_file_);
+  const int new_fd = dup(mapped_file_.get());
   DCHECK(new_fd >= -1);
   new_handle->fd = new_fd;
   new_handle->auto_close = true;
@@ -315,24 +307,11 @@ void SharedMemory::Close(bool unmap_view) {
     Unmap();
   }
 
-  if (mapped_file_ >= 0) {
-    close(mapped_file_);
-    mapped_file_ = -1;
-  }
-  if (frozen_file_ >= 0) {
+  mapped_file_ = nullptr;
+  if (frozen_file_) {
     CHROMIUM_LOG(WARNING) << "freezeable shared memory was never frozen";
-    close(frozen_file_);
-    frozen_file_ = -1;
+    frozen_file_ = nullptr;
   }
-}
-
-mozilla::UniqueFileHandle SharedMemory::TakeHandle() {
-  mozilla::UniqueFileHandle fh(mapped_file_);
-  mapped_file_ = -1;
-  // Now that the main fd is removed, reset everything else: close the
-  // frozen fd if present and unmap the memory if mapped.
-  Close();
-  return fh;
 }
 
 }  // namespace base
