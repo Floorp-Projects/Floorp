@@ -354,11 +354,6 @@ ClassifierDummyChannel::SetupFallbackChannel(const char* aFallbackKey) {
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::GetIsAuthChannel(bool* aIsAuthChannel) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 ClassifierDummyChannel::GetThirdPartyFlags(uint32_t* aThirdPartyFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
