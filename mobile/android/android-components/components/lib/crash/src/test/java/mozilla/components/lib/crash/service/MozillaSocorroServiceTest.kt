@@ -132,8 +132,8 @@ class MozillaSocorroServiceTest {
 
             assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
             assert(request.contains("name=ProductID\r\n\r\n{aa3c5121-dab2-40e2-81ca-7ea25febc110}"))
-            assert(request.contains("name=Vendor\r\n\r\nMozilla"))
-            assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
+            assert(request.contains("name=Vendor\r\n\r\nN/A"))
+            assert(request.contains("name=ReleaseChannel\r\n\r\nN/A"))
             assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$FATAL_NATIVE_CRASH_TYPE"))
@@ -348,6 +348,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    vendor = "Mozilla",
+                    releaseChannel = "nightly",
                     serverUrl = serverUrl.toString()
                 )
             )
@@ -401,6 +403,8 @@ class MozillaSocorroServiceTest {
                     testContext,
                     "Test App",
                     appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    vendor = "Mozilla",
+                    releaseChannel = "nightly",
                     serverUrl = serverUrl.toString()
                 )
             )

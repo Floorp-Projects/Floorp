@@ -18,7 +18,6 @@ import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import org.mozilla.geckoview.BuildConfig
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -46,6 +45,10 @@ internal const val NON_FATAL_NATIVE_CRASH_TYPE = "non-fatal native crash"
 
 internal const val DEFAULT_VERSION_NAME = "N/A"
 internal const val DEFAULT_VERSION_CODE = "N/A"
+internal const val DEFAULT_VERSION = "N/A"
+internal const val DEFAULT_BUILD_ID = "N/A"
+internal const val DEFAULT_VENDOR = "N/A"
+internal const val DEFAULT_RELEASE_CHANNEL = "N/A"
 
 private const val KEY_CRASH_ID = "CrashID"
 
@@ -75,14 +78,14 @@ class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,
     private val appId: String = MOZILLA_PRODUCT_ID,
-    private val version: String = BuildConfig.MOZILLA_VERSION,
-    private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
-    private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
+    private val version: String = DEFAULT_VERSION,
+    private val buildId: String = DEFAULT_BUILD_ID,
+    private val vendor: String = DEFAULT_VENDOR,
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var serverUrl: String? = null,
     private var versionName: String = DEFAULT_VERSION_NAME,
     private var versionCode: String = DEFAULT_VERSION_CODE,
-    private val releaseChannel: String = BuildConfig.MOZ_UPDATE_CHANNEL
+    private val releaseChannel: String = DEFAULT_RELEASE_CHANNEL
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
