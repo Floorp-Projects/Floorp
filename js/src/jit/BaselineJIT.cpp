@@ -70,6 +70,35 @@ static bool CheckFrame(InterpreterFrame* fp) {
   return true;
 }
 
+struct EnterJitData {
+  explicit EnterJitData(JSContext* cx)
+      : jitcode(nullptr),
+        osrFrame(nullptr),
+        calleeToken(nullptr),
+        maxArgv(nullptr),
+        maxArgc(0),
+        numActualArgs(0),
+        osrNumStackValues(0),
+        envChain(cx),
+        result(cx),
+        constructing(false) {}
+
+  uint8_t* jitcode;
+  InterpreterFrame* osrFrame;
+
+  void* calleeToken;
+
+  Value* maxArgv;
+  unsigned maxArgc;
+  unsigned numActualArgs;
+  unsigned osrNumStackValues;
+
+  RootedObject envChain;
+  RootedValue result;
+
+  bool constructing;
+};
+
 static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   MOZ_ASSERT(data.osrFrame);
 
