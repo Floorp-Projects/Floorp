@@ -400,8 +400,7 @@ element.ReferenceStore = class {
  *   <dd>Element to use as the root of the search.
  *
  * @param {Object.<string, WindowProxy>} container
- *     Window object and an optional shadow root that contains the
- *     root shadow DOM element.
+ *     Window object.
  * @param {string} strategy
  *     Search strategy whereby to locate the element(s).
  * @param {string} selector
@@ -472,7 +471,7 @@ function find_(
   searchFn,
   { startNode = null, all = false } = {}
 ) {
-  let rootNode = container.shadowRoot || container.frame.document;
+  let rootNode = container.frame.document;
 
   if (!startNode) {
     startNode = rootNode;

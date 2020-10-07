@@ -67,12 +67,7 @@ action.Chain.prototype.dispatchActions = function(
 
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = evaluate.fromJSON(
-    args,
-    seenEls,
-    container.frame,
-    container.shadowRoot
-  );
+  let commandArray = evaluate.fromJSON(args, seenEls, container.frame);
 
   if (touchId == null) {
     touchId = this.nextTouchId++;
