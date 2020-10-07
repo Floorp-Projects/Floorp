@@ -13,8 +13,13 @@
         data-l10n-attrs="title, style"
         onload="gContainersManager.onLoad();"
         onunload="gContainersManager.uninit();"
-        persist="screenX screenY width height"
-        onkeypress="gContainersManager.onWindowKeyPress(event);">
+        persist="screenX screenY width height">
+
+  <dialog
+    buttons="accept"
+    buttondisabledaccept="true"
+    data-l10n-id="containers-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/containers.ftl"/>
@@ -44,9 +49,5 @@
              data-l10n-attrs="style"/>
     </hbox>
   </vbox>
-
-  <hbox class="actionButtons" pack="end">
-    <button id="btnApplyChanges" disabled="true" oncommand="gContainersManager.onApplyChanges();"
-            data-l10n-id="containers-button-done"/>
-  </hbox>
+  </dialog>
 </window>

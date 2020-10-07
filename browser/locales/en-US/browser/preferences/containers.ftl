@@ -40,9 +40,9 @@ containers-color-label = Color
     .accesskey = o
     .style = { -containers-labels-style }
 
-containers-button-done =
-    .label = Done
-    .accesskey = D
+containers-dialog =
+    .buttonlabelaccept = Done
+    .buttonaccesskeyaccept = D
 
 containers-color-blue =
     .label = Blue
