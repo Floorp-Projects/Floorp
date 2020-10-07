@@ -142,8 +142,13 @@ class FirefoxConnector {
       owner: this.owner,
     });
 
-    // Register all listeners
-    await this.addListeners();
+    // Register target listeners if we switched to a new top level one
+    if (isTargetSwitching) {
+      await this.addTargetListeners();
+    } else {
+      // Otherwise, this is the first top level target, so register all the listeners
+      await this.addListeners();
+    }
 
     // Initialize Responsive Emulation front for network throttling.
     this.responsiveFront = await this.currentTarget.getFront("responsive");
@@ -235,6 +240,10 @@ class FirefoxConnector {
       ignoreExistingResources,
     });
 
+    await this.addTargetListeners();
+  }
+
+  async addTargetListeners() {
     // Support for EventSource monitoring is currently hidden behind this pref.
     if (
       Services.prefs.getBoolPref(
