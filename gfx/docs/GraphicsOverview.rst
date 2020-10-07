@@ -151,7 +151,7 @@ background, or reasoning that led to different solutions and approaches.
 -  2010-01 `Layers: Cross Platform Acceleration <http://www.basschouten.com/blog1.php/layers-cross-platform-acceleration>`__
 -  2010-04 `Layers <http://robert.ocallahan.org/2010/04/layers_01.html>`__
 -  2010-07 `Retained Layers <http://robert.ocallahan.org/2010/07/retained-layers_16.html>`__
--  2011-04 `Introduction <https://blog.mozilla.org/joe/2011/04/26/introducing-the-azure-project/%20Moz2D>`__
+-  2011-04 `Introduction <https://web.archive.org/web/20140604005804/https://blog.mozilla.org/joe/2011/04/26/introducing-the-azure-project/>`__
 -  2011-07 `Layers <http://chrislord.net/index.php/2011/07/25/shadow-layers-and-learning-by-failing/%20Shadow>`__
 -  2011-09 `Graphics API Design <http://robert.ocallahan.org/2011/09/graphics-api-design.html>`__
 -  2012-04 `Moz2D Canvas on OSX <http://muizelaar.blogspot.ca/2012/04/azure-canvas-on-os-x.html>`__
