@@ -56,6 +56,11 @@ protected:
 
 public:
     InterpolateCubic();
+
+    int getLatency() const
+    {
+        return 1;
+    }
 };
 
 }
