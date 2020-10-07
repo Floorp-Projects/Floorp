@@ -23,6 +23,9 @@ import org.mozilla.fenix.perf.Performance
 private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
 private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 
+private val logger = Performance.logger
+private val mainLooper = Looper.getMainLooper()
+
 /**
  * Manages strict mode settings for the application.
  */
@@ -32,16 +35,10 @@ class StrictModeManager(
     // Ideally, we'd pass in a more specific value but there is a circular dependency: StrictMode
     // is passed into Core but we'd need to pass in Core here. Instead, we take components and later
     // fetch the value we need from it.
-    //
-    // Public to be accessible by inline functions.
-    val components: Components
+    private val components: Components
 ) {
 
-    val logger = Performance.logger // public to be accessible by inline functions.
-    val mainLooper = Looper.getMainLooper() // public to be accessible by inline functions.
-
-    // This is public so it can be used by inline functions.
-    val isEnabledByBuildConfig = config.channel.isDebug
+    private val isEnabledByBuildConfig = config.channel.isDebug
 
     /**
      * The number of times StrictMode has been suppressed. StrictMode can be used to prevent main
@@ -114,7 +111,7 @@ class StrictModeManager(
      *
      * @return the value returned by [functionBlock].
      */
-    inline fun <R> resetAfter(policy: StrictMode.ThreadPolicy, functionBlock: () -> R): R {
+    fun <R> resetAfter(policy: StrictMode.ThreadPolicy, functionBlock: () -> R): R {
         // Calling resetAfter takes 1-2ms (unknown device) so we only execute it if StrictMode can
         // actually be enabled. https://github.com/mozilla-mobile/fenix/issues/11617
         return if (isEnabledByBuildConfig) {
