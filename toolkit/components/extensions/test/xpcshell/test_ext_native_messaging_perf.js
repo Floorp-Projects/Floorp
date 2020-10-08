@@ -10,16 +10,19 @@ const ECHO_BODY = String.raw`
   import struct
   import sys
 
+  stdin = getattr(sys.stdin, 'buffer', sys.stdin)
+  stdout = getattr(sys.stdout, 'buffer', sys.stdout)
+
   while True:
-      rawlen = sys.stdin.read(4)
-      if len(rawlen) == 0:
-          sys.exit(0)
+    rawlen = stdin.read(4)
+    if len(rawlen) == 0:
+      sys.exit(0)
 
-      msglen = struct.unpack('@I', rawlen)[0]
-      msg = sys.stdin.read(msglen)
+    msglen = struct.unpack('@I', rawlen)[0]
+    msg = stdin.read(msglen)
 
-      sys.stdout.write(struct.pack('@I', msglen))
-      sys.stdout.write(msg)
+    stdout.write(struct.pack('@I', msglen))
+    stdout.write(msg)
 `;
 
 const SCRIPTS = [
