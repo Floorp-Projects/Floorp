@@ -1070,25 +1070,6 @@ struct nsHypotheticalPosition {
   WritingMode mWritingMode;
 };
 
-static bool GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize,
-                                LayoutFrameType aFrameType) {
-  // See if it is an image frame
-  bool success = false;
-
-  // Currently the only type of replaced frame that we can get the intrinsic
-  // size for is an image frame
-  // XXX We should add back the GetReflowOutput() function and one of the
-  // things should be the intrinsic size...
-  if (aFrameType == LayoutFrameType::Image) {
-    Maybe<nsSize> size = aFrame->GetIntrinsicSize().ToSize();
-    if (size) {
-      aIntrinsicSize = *size;
-      success = true;
-    }
-  }
-  return success;
-}
-
 /**
  * aInsideBoxSizing returns the part of the padding, border, and margin
  * in the aAxis dimension that goes inside the edge given by box-sizing;
@@ -1226,11 +1207,10 @@ void ReflowInput::CalculateHypotheticalPosition(
 
   const auto& styleISize = mStylePosition->ISize(wm);
   bool isAutoISize = styleISize.IsAuto();
-  nsSize intrinsicSize;
-  bool knowIntrinsicSize = false;
+  Maybe<nsSize> intrinsicSize;
   if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoISize) {
     // See if we can get the intrinsic size of the element
-    knowIntrinsicSize = GetIntrinsicSizeFor(mFrame, intrinsicSize, aFrameType);
+    intrinsicSize = mFrame->GetIntrinsicSize().ToSize();
   }
 
   // See if we can calculate what the box inline size would have been if
@@ -1257,9 +1237,9 @@ void ReflowInput::CalculateHypotheticalPosition(
     if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoISize) {
       // It's a replaced element with an 'auto' inline size so the box
       // inline size is its intrinsic size plus any border/padding/margin
-      if (knowIntrinsicSize) {
-        boxISize = LogicalSize(wm, intrinsicSize).ISize(wm) + outsideBoxSizing +
-                   insideBoxSizing;
+      if (intrinsicSize) {
+        boxISize = LogicalSize(wm, *intrinsicSize).ISize(wm) +
+                   outsideBoxSizing + insideBoxSizing;
         knowBoxISize = true;
       }
 
@@ -1443,11 +1423,11 @@ void ReflowInput::CalculateHypotheticalPosition(
     nscoord boxBSize;
     const auto& styleBSize = mStylePosition->BSize(wm);
     if (styleBSize.BehavesLikeInitialValueOnBlockAxis()) {
-      if (NS_FRAME_IS_REPLACED(mFrameType) && knowIntrinsicSize) {
+      if (NS_FRAME_IS_REPLACED(mFrameType) && intrinsicSize) {
         // It's a replaced element with an 'auto' block size so the box
         // block size is its intrinsic size plus any border/padding/margin
-        boxBSize = LogicalSize(wm, intrinsicSize).BSize(wm) + outsideBoxSizing +
-                   insideBoxSizing;
+        boxBSize = LogicalSize(wm, *intrinsicSize).BSize(wm) +
+                   outsideBoxSizing + insideBoxSizing;
       } else {
         // XXX Bug 1191801
         // Figure out how to get the correct boxBSize here (need to reflow the
