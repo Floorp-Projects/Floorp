@@ -58,8 +58,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   template <typename T>
   T rawInt64StubField(uint32_t offset);
 
-  uint64_t* expandoGenerationStubFieldPtr(uint32_t offset);
-
   void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
 
   template <typename Fn, Fn fn>
