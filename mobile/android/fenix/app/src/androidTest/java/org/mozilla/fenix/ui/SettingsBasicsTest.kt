@@ -69,7 +69,7 @@ class SettingsBasicsTest {
             verifyBasicsHeading()
             verifySearchEngineButton()
             verifyDefaultBrowserItem()
-            verifyCloseTabsItem()
+            verifyTabsItem()
             // drill down to submenu
         }.openSearchSubMenu {
             verifyDefaultSearchEngineHeader()
@@ -175,7 +175,7 @@ class SettingsBasicsTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-        }.openCloseTabsSubMenu {
+        }.openTabsSubMenu {
             verifyOptions()
         }
     }

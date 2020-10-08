@@ -51,7 +51,7 @@ class SettingsRobot {
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
     fun verifyDefaultBrowserItem() = assertDefaultBrowserItem()
-    fun verifyCloseTabsItem() = assertCloseTabsItem()
+    fun verifyTabsItem() = assertTabsItem()
     fun verifyDefaultBrowserIsDisaled() = assertDefaultBrowserIsDisabled()
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
     fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
@@ -135,10 +135,10 @@ class SettingsRobot {
             return SettingsSubMenuThemeRobot.Transition()
         }
 
-        fun openCloseTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
+        fun openTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
 
-            fun closeTabsButton() = onView(withText("Close tabs"))
-            closeTabsButton().click()
+            fun tabsButton() = onView(withText("Tabs"))
+            tabsButton().click()
 
             SettingsSubMenuTabsRobot().interact()
             return SettingsSubMenuTabsRobot.Transition()
@@ -297,9 +297,9 @@ private fun assertDefaultBrowserItem() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertCloseTabsItem() {
-    mDevice.wait(Until.findObject(By.text("Close tabs")), waitingTime)
-    onView(withText("Close tabs"))
+private fun assertTabsItem() {
+    mDevice.wait(Until.findObject(By.text("Tabs")), waitingTime)
+    onView(withText("Tabs"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
