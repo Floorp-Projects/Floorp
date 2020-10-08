@@ -3,25 +3,21 @@ ChromeUtils.defineModuleGetter(
   "TelemetryTestUtils",
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { AttributionCode } = ChromeUtils.import(
-  "resource:///modules/AttributionCode.jsm"
-);
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-add_task(function setup() {
-  // Clear cache call is only possible in a testing environment
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
-
-  registerCleanupFunction(() => {
-    env.set("XPCSHELL_TEST_PROFILE_DIR", null);
-  });
-});
-
 add_task(async function test_parse_error() {
+  if (AppConstants.platform == "macosx") {
+    // On macOS, the underlying data is the OS-level quarantine
+    // database.  We need to start from nothing to isolate the cache.
+    const { MacAttribution } = ChromeUtils.import(
+      "resource:///modules/MacAttribution.jsm"
+    );
+    let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+      Ci.nsIMacAttributionService
+    );
+    attributionSvc.setReferrerUrl(MacAttribution.applicationPath, "", true);
+  }
+
   registerCleanupFunction(async () => {
     await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
@@ -44,13 +40,16 @@ add_task(async function test_parse_error() {
   // Write an invalid file to trigger a decode error
   await AttributionCode.deleteFileAsync();
   AttributionCode._clearCache();
-  await AttributionCode.writeAttributionFile(""); // empty string is invalid
+  // Empty string is valid on macOS.
+  await AttributionCode.writeAttributionFile(
+    AppConstants.platform == "macosx" ? "invalid" : ""
+  );
   result = await AttributionCode.getAttrDataAsync();
   Assert.deepEqual(result, {}, "Should have failed to parse");
 
   // `assertHistogram` also ensures that `read_error` index 0 is 0
   // as we should not have recorded telemetry from the previous `getAttrDataAsync` call
-  TelemetryTestUtils.assertHistogram(histogram, 1, 1);
+  TelemetryTestUtils.assertHistogram(histogram, INDEX_DECODE_ERROR, 1);
   // Reset
   histogram.clear();
 });
@@ -70,14 +69,16 @@ add_task(async function test_read_error() {
   // Clear any existing telemetry
   histogram.clear();
 
-  // Force a read error
-  const stub = sandbox.stub(OS.File, "read");
-  stub.throws(() => new Error("read_error"));
+  // Force the file to exist but then cause a read error
+  const exists = sandbox.stub(OS.File, "exists");
+  exists.resolves(true);
+  const read = sandbox.stub(OS.File, "read");
+  read.throws(() => new Error("read_error"));
   // Try to read the file
   await AttributionCode.getAttrDataAsync();
 
   // It should record the read error
-  TelemetryTestUtils.assertHistogram(histogram, 0, 1);
+  TelemetryTestUtils.assertHistogram(histogram, INDEX_READ_ERROR, 1);
 
   // Clear any existing telemetry
   histogram.clear();
