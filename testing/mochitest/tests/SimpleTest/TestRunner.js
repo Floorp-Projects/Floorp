@@ -290,7 +290,7 @@ TestRunner._dumpMessage = function(message) {
   }
 };
 
-// From https://dxr.mozilla.org/mozilla-central/source/testing/modules/StructuredLog.jsm
+// From https://searchfox.org/mozilla-central/source/testing/modules/StructuredLog.jsm
 TestRunner.structuredLogger = new StructuredLogger(
   "mochitest",
   TestRunner._dumpMessage

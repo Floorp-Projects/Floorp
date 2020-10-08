@@ -14,7 +14,7 @@ import android.telephony.TelephonyManager;
 public class NetworkUtils {
     /*
      * Keep the below constants in sync with
-     * http://dxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
+     * http://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
      */
     public enum ConnectionSubType {
         CELL_2G("2g"),
@@ -33,7 +33,7 @@ public class NetworkUtils {
 
     /*
      * Keep the below constants in sync with
-     * http://dxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
+     * http://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
      */
     public enum NetworkStatus {
         UP("up"),

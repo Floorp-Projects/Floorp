@@ -209,7 +209,7 @@ public class GeckoAppShell {
 
     /*
      * Keep in sync with constants found here:
-     * http://dxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
+     * http://searchfox.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
     */
     static public final int WPL_STATE_START = 0x00000001;
     static public final int WPL_STATE_STOP = 0x00000010;
@@ -217,7 +217,7 @@ public class GeckoAppShell {
     static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
     /* Keep in sync with constants found here:
-      http://dxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
+      http://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
     */
     static public final int LINK_TYPE_UNKNOWN = 0;
     static public final int LINK_TYPE_ETHERNET = 1;

@@ -75,7 +75,7 @@
             "description": "The data can be defined within an object, or through a path to where the data can be found"
         }
     },
-    "id": "https://dxr.mozilla.org/mozilla-central/source/python/mozperftest/mozperftest/schemas/results-schema.json",
+    "id": "https://searchfox.org/mozilla-central/source/python/mozperftest/mozperftest/schemas/intermediate-results-schema.json",
     "allOf": [
         {"$ref": "#/definitions/perfherder-options-schema"},
         {
