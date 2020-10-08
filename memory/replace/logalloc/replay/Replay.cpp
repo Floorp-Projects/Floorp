@@ -16,6 +16,7 @@ typedef intptr_t ssize_t;
 #  include <unistd.h>
 #endif
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -391,17 +392,45 @@ class Replay {
     }
     mOps++;
     jemalloc_stats_t stats;
-    ::jemalloc_stats_internal(&stats, nullptr);
-    FdPrintf(mStdErr,
-             "#%zu mapped: %zu; allocated: %zu; waste: %zu; dirty: %zu; "
-             "bookkeep: %zu; binunused: %zu\n",
-             mOps, stats.mapped, stats.allocated, stats.waste, stats.page_cache,
-             stats.bookkeeping, stats.bin_unused);
+    jemalloc_bin_stats_t bin_stats[JEMALLOC_MAX_STATS_BINS];
+    ::jemalloc_stats_internal(&stats, bin_stats);
+    FdPrintf(mStdErr, "\n");
+    FdPrintf(mStdErr, "Ops:          %9zu\n", mOps);
+    FdPrintf(mStdErr, "mapped:       %9zu\n", stats.mapped);
+    FdPrintf(mStdErr, "allocated:    %9zu\n", stats.allocated);
+    FdPrintf(mStdErr, "waste:        %9zu\n", stats.waste);
+    FdPrintf(mStdErr, "dirty:        %9zu\n", stats.page_cache);
+    FdPrintf(mStdErr, "bookkeep:     %9zu\n", stats.bookkeeping);
+    FdPrintf(mStdErr, "bin-unused:   %9zu\n", stats.bin_unused);
+    FdPrintf(mStdErr, "quantum-max:  %9zu\n", stats.quantum_max);
+    FdPrintf(mStdErr, "subpage-max:  %9zu\n", stats.page_size / 2);
+    FdPrintf(mStdErr, "large-max:    %9zu\n", stats.large_max);
+
+    FdPrintf(mStdErr, "\n%8s %11s %10s %8s %9s %9s %8s\n", "bin-size",
+             "unused (c)", "total (c)", "used (c)", "non-full (r)", "total (r)",
+             "used (r)");
+    for (auto& bin : bin_stats) {
+      if (bin.size) {
+        FdPrintf(mStdErr, "%8zu %8zuKiB %7zuKiB %7zu%% %12zu %9zu %7zu%%\n",
+                 bin.size, bin.bytes_unused / 1024, bin.bytes_total / 1024,
+                 percent(bin.bytes_total - bin.bytes_unused, bin.bytes_total),
+                 bin.num_non_full_runs, bin.num_runs,
+                 percent(bin.num_runs - bin.num_non_full_runs, bin.num_runs));
+      }
+    }
+
     /* TODO: Add more data, like actual RSS as measured by OS, but compensated
      * for the replay internal data. */
   }
 
  private:
+  static size_t percent(size_t a, size_t b) {
+    if (!b) {
+      return 0;
+    }
+    return size_t(round(double(a) / double(b) * 100.0));
+  }
+
   MemSlot& SlotForResult(Buffer& aResult) {
     /* Parse result value and get the corresponding slot. */
     Buffer dummy = aResult.SplitChar('=');
