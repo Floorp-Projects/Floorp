@@ -64,7 +64,7 @@ Value Definitions</h3>
 
 	In addition to the property-specific values listed in their definitions,
 	all properties defined in this specification
-	also accept the <a>CSS-wide keywords</a> keywords as their property value.
+	also accept the <a>CSS-wide keywords</a> as their property value.
 	For readability they have not been repeated explicitly.
 
 <h2 id='masonry-layout'>
@@ -75,7 +75,7 @@ Masonry layout is supported for [=grid containers=] by specifying the value ''gr
 
 <pre class='propdef partial'>
 	Name: grid-template-columns, grid-template-rows
-	Value: none | <<track-list>> | <<auto-track-list>> | subgrid <<line-name-list>>? | masonry
+	New values: masonry
 	Initial: none
 	Applies to: [=grid containers=]
 	Inherited: no
@@ -101,7 +101,7 @@ If ''grid-template-columns/masonry'' is specified in both axes then the inline-a
 
 <a>Grid items</a> are formed and [=blockified=] exactly the same as in a regular [=grid container=].
 
-All CSS properties works the same as in a regular [=grid container=] unless otherwise specified by this specification.  For example, <a href="https://www.w3.org/TR/css-grid/#order-accessibility">order<a> can be used to specify a different layout order for the items.
+All CSS properties works the same as in a regular [=grid container=] unless otherwise specified by this specification.  For example, ''order'' can be used to specify a different layout order for the items.
 
 <h3 id="line-name-resolution">
 Line Name Resolution</h3>
@@ -114,16 +114,26 @@ Grid Item Placement</h3>
 <a>Grid items</a> are placed using these steps:
 <ol>
   <li>Place the items as if the [=masonry axis=] had ''grid-template-columns/none'' specified in that axis.
-  <li>Items that were placed at the first (hypothetical) implicit track in the [=masonry axis=] after step 1 keep their placement in both axes as their final placement. They will be laid out first in each [=grid axis=] track and their [=grid axis=] placement is considered definite henceforth. All other items ignore their placement from step 1.  Any item with with a specified definite placement in the [=masonry axis=] that doesn't result in it being placed at the first implicit line in the [=masonry axis=] will be treated as having 'auto'-placement in that axis.
+  <li>Items that were placed at the first (hypothetical) implicit line in the [=masonry axis=] after step 1 keep their placement in both axes as their final placement. They will be laid out first in each [=grid axis=] track and their [=grid axis=] placement is considered definite henceforth. All other items ignore their placement from step 1.  Any item with with a specified definite placement in the [=masonry axis=] that doesn't result in it being placed at the first implicit line in the [=masonry axis=] will be treated as having 'auto'-placement in that axis.
   <li>Place items using the <a href="#masonry-layout-algorithm">Masonry layout algorithm</a> below.
 </ol>
 
-(The reason for step 1 above is to determine which items contribute to intrinsic track sizing in the [=grid axis=], see <a href="#track-sizing">Track sizing</a> below.)
+(The reason for step 1 above is to determine which items contribute to intrinsic track sizing in the [=grid axis=], see [[#track-sizing]] below.)
+
+<h3 id="track-sizing">
+Grid Axis Track Sizing</h3>
+
+Track sizing works the same as in <a href="https://drafts.csswg.org/css-grid-2/#algo-track-sizing">CSS Grid</a>, except that that the algorithm is run only with the subset of items that has a known grid axis placement.  This subset is the items placed at the first implicit line in the [=masonry axis=] in <a href="#grid-item-placement">Grid Item Placement</a> above, plus the items that have a specified definite placement in the grid axis, plus the items that span all grid axis tracks (which obviously will be placed at the first implicit line since there is no other way to place them).  Other items will be placed in the grid axis by the [[#masonry-layout-algorithm]] below and don't contribute to intrinsic track sizing (because that would create circular dependencies).
+
+<h4 id="repeat-auto-fit">
+repeat(auto-fit)</h3>
+
+''grid-template-rows/repeat(auto-fit)'' behaves as ''grid-template-rows/repeat(auto-fill)'' when the other axis is a [=masonry axis=].  The reason for this is that ''grid-row/auto''-placed items depend on the layout size of its siblings.  Removing empty tracks after layout wouldn't be possible in most cases since it might affect any intrinsic track sizes.  Even if all track sizes are definite the containing block size could change for grid-aligned abs.pos. descendants.  This makes ''grid-template-rows/repeat(auto-fit)'' impossible to support in a grid container with masonry layout.
 
 <h3 id="masonry-layout-algorithm">
 Masonry Layout Algorithm</h3>
 
-Items are placed in <a href="https://drafts.csswg.org/css-flexbox-1/#order-modified-document-order">order-modifed document order</a> but items with a definite placement are placed before items with an indefinite position (as in regular grid layout). For each of the tracks in the [=grid axis=], keep a <dfn>running position</dfn> initialized to zero. For each item that was placed at line 1 in the [=masonry axis=] in <a href="#grid-item-placement">Grid Item Placement</a> step 1 above:
+Items are placed in <a href="https://drafts.csswg.org/css-flexbox-1/#order-modified-document-order">order-modifed document order</a> but items with a definite placement are placed before items with an indefinite position (as in regular grid layout). For each of the tracks in the [=grid axis=], keep a <dfn>running position</dfn> initialized to zero. For each item placed at the first implicit line in the [=masonry axis=] in <a href="#grid-item-placement">Grid Item Placement</a> step 1 above:
 <ol>
 	<li>position the item at the content edge of the grid container in the [=masonry axis=] and at its start track in the [=grid axis=]</li>
 	<li>calculate the size of the <a href="#containing-block">containing block</a> and then layout the item.  Then calculate its resulting margin-box in the [=masonry axis=]. Set the [=running position=] of the [=grid axis=] tracks the item spans to the maximum of <code>margin-box-end + grid-gap</code> and the current [=running position=] of those tracks.
@@ -146,7 +156,10 @@ The remaining items get their final placement using the following steps:
 	<li>calculate the size of the item's <a href="#containing-block">containing block</a> and then layout the item. Then calculate its resulting margin-box in the [=masonry axis=]. Set the [=running position=] of the [=grid axis=] tracks the item spans to <code>max_pos + margin-box-end + grid-gap</code>.
 </ol>
 
-The Masonry Layout Algorithm above can be modified in two ways, using the new 'masonry-auto-flow' property:
+<h3 id="masonry-auto-flow">
+The ''masonry-auto-flow'' Property</h3>
+
+The [[#masonry-layout-algorithm]] above can be modified in two ways, using the new 'masonry-auto-flow' property:
 
 <pre class='propdef'>
 	Name: masonry-auto-flow
@@ -202,21 +215,10 @@ Containing Block</h2>
 
 The <a>containing block</a> for a <a>grid item</a> is formed by its <a>grid area</a> in the [=grid axis=] and the grid container's content-box in the [=masonry axis=].
 
-
-<h2 id="track-sizing">
-Track sizing</h2>
-
-The <a href="https://drafts.csswg.org/css-grid-2/#algo-track-sizing">Track Sizing Algorithm</a> works as usual in the [=grid axis=], except only the subset of items with a definite placement in the [=grid axis=], or which span all tracks, contribute to the intrinsic sizing.  This makes the first implicit line in the [=masonry axis=] special since those items will contribute to the intrinsic sizing even if they were 'auto'-placed in the [=grid axis=].  Other 'auto'-placed items don't contribute since which track they end up in depends on layout results; unless they span all tracks in which case there is only one possible placement and thus its placement is independent of layout results.
-
-<h3 id="repeat-auto-fit">
-repeat(auto-fit)</h3>
-
-''grid-template-rows/repeat(auto-fit)'' behaves as ''grid-template-rows/repeat(auto-fill)'' when the other axis is a [=masonry axis=].  The reason for this is that ''grid-row/auto''-placed items depend on the layout size of its siblings.  Removing empty tracks after layout wouldn't be possible in most cases since it might affect any intrinsic track sizes.  Even if all track sizes are definite the containing block size could change for grid-aligned abs.pos. descendants.  This makes ''grid-template-rows/repeat(auto-fit)'' impossible to support in a grid container with masonry layout.
-
 <h2 id="#implicit-grid">
 The Implicit Grid
 </h2>
-The <dfn>implicit grid</dfn> is formed in the same way as for a <a href="https://drafts.csswg.org/css-grid/#implicit-grids">regular grid container</a>.  However, it's only used in the [=grid axis=].  The flow axis specified by ''grid-auto-flow'' is ignored &mdash; items are always placed by filling the [=grid axis=] (note that the ''grid-auto-flow/dense'' keyword does have an effect though in determining which items end up at line 1 in the [=masonry axis=], in [[#grid-item-placement]] step 1).  ''direction:rtl'' reverses the grid if the inline-axis is the [=grid axis=] (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the [=masonry axis=].
+The [=implicit grid=] is formed in the same way as for a regular grid container.  However, it's only used in the [=grid axis=].  The flow axis specified by ''grid-auto-flow'' is ignored &mdash; items are always placed by filling the [=grid axis=] (note that the ''grid-auto-flow/dense'' keyword does have an effect though in determining which items end up at line 1 in the [=masonry axis=], in [[#grid-item-placement]] step 1).  ''direction:rtl'' reverses the grid if the inline-axis is the [=grid axis=] (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the [=masonry axis=].
 
 
 <div class="example">
@@ -465,7 +467,7 @@ ISSUE: this needs more details about edge cases, caveat about misalignment in st
 
 Advisement: Authors are advised to be careful with using alignment values other than ''align-tracks/start'' when some items span more than one track, because it's easy to cause items to unintentionally overlap in this case.
 
-ISSUE: can we make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?
+ISSUE: maybe we can make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?
 
 <h2 id="pagination">
 Fragmentation</h2>
@@ -567,7 +569,7 @@ Absolute Positioning</h2>
 
 <a href="https://drafts.csswg.org/css-grid/#abspos-items">Grid-aligned absolute-positioned descendants</a> are supported.  In the [=masonry axis=] all [=grid positions=] except line 1 are treated as 'auto'. Line 1 in the [=masonry axis=] corresponds to the start of the [=masonry box=] (the content-box start edge usually) and 'auto' uses the [=grid container=] padding edge as usual. The [=containing block=] is the extent of the tracks the item spans in the [=grid axis=] and the position of line 1 and the padding-box edge in the [=masonry axis=].
 
-ISSUE: It might be useful to define a static position in the [=masonry axis=] though, given that we only have a one line in that axis to align to. Maybe it could defined as the max (or min?) current [=running position=] of the [=grid-axis=] tracks at that point?
+ISSUE: It might be useful to define a static position in the [=masonry axis=]. Maybe it could defined as the max (or min?) current [=running position=] of the [=grid-axis=] tracks at that point?  Or the end of the item before it?
 
 ISSUE: It would also be useful to be able to align the [=masonry box=] end edge somehow, but for that we need a way to address the <a href="https://github.com/w3c/csswg-drafts/issues/2402">end line in an implicit grid</a>, or could we just use any non-auto line number other than 1 to indicate the end line given that we don't really have any lines in this axis other than line 1?
 
