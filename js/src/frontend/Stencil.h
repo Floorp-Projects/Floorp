@@ -244,7 +244,7 @@ class ScopeStencil {
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  AbstractScopePtr enclosing(CompilationInfo& compilationInfo);
+  AbstractScopePtr enclosing(CompilationInfo& compilationInfo) const;
 
   ScopeKind kind() const { return kind_; }
 
@@ -258,7 +258,7 @@ class ScopeStencil {
   bool isArrow() const { return isArrow_; }
 
   Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo,
-                     CompilationGCOutput& gcOutput);
+                     CompilationGCOutput& gcOutput) const;
 
   uint32_t nextFrameSlot() const;
 
@@ -284,7 +284,7 @@ class ScopeStencil {
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::Data> createSpecificScopeData(
       JSContext* cx, CompilationInfo& compilationInfo,
-      CompilationGCOutput& gcOutput);
+      CompilationGCOutput& gcOutput) const;
 
   template <typename SpecificScopeType>
   uint32_t nextFrameSlot() const {
@@ -296,11 +296,11 @@ class ScopeStencil {
   template <typename SpecificEnvironmentType>
   MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
                                         BaseScopeData* scopeData,
-                                        MutableHandleShape shape);
+                                        MutableHandleShape shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo,
-                             CompilationGCOutput& gcOutput);
+                             CompilationGCOutput& gcOutput) const;
 };
 
 // As an alternative to a ScopeIndex (which references a ScopeStencil), we may
