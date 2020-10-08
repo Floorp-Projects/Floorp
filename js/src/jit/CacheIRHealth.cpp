@@ -139,7 +139,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
 }
 
 void CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
-  jit::JitScript* jitScript = script->jitScript();
+  jit::JitScript* jitScript = script->maybeJitScript();
   if (!jitScript) {
     return;
   }
