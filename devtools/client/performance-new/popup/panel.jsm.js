@@ -95,11 +95,17 @@ function selectElementsInPanelview(panelview) {
 function createViewControllers(state, elements) {
   return {
     updateInfoCollapse() {
-      const { header, info, infoButton } = elements;
+      const { header, info, infoButton, panelview } = elements;
       header.setAttribute(
         "isinfocollapsed",
         state.isInfoCollapsed ? "true" : "false"
       );
+      panelview
+        .closest("panel")
+        .setAttribute(
+          "isinfoexpanded",
+          state.isInfoCollapsed ? "false" : "true"
+        );
       infoButton.checked = !state.isInfoCollapsed;
 
       if (state.isInfoCollapsed) {
@@ -213,6 +219,7 @@ function createViewControllers(state, elements) {
       if (!panel) {
         throw new Error("Could not find the panel from the panelview.");
       }
+      panel.removeAttribute("isinfoexpanded");
       /** @type {any} */ (panel).hidePopup();
     },
   };
