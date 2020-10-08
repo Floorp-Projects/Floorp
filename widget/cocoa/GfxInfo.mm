@@ -122,7 +122,10 @@ void GfxInfo::GetDeviceInfo() {
   }
   IOObjectRelease(io_iter);
 
+#if defined(__x86_64__)
+  // Until we support GPU detection for ARM hardware, skip this assert.
   MOZ_DIAGNOSTIC_ASSERT(mNumGPUsDetected > 0, "Failed to detect any GPUs");
+#endif
 }
 
 nsresult GfxInfo::Init() {
