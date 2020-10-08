@@ -290,7 +290,7 @@ class AudioTrackEncoder : public TrackEncoder {
    * frame size required by audio encoder, and listeners will be notified when
    * at least this much data has been added to mOutgoingBuffer.
    */
-  virtual int GetPacketDuration() { return 0; }
+  virtual int NumInputFramesPerPacket() const { return 0; }
 
   /**
    * Initializes the audio encoder. The call of this method is delayed until we

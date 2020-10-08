@@ -40,15 +40,25 @@ class OpusTrackEncoder : public AudioTrackEncoder {
   media::TimeUnit GetCodecDelay() const { return mCodecDelay; }
 
  protected:
-  int GetPacketDuration() override;
+  /**
+   * The number of frames, in the input rate mTrackRate, needed to fill an
+   * encoded opus packet. A frame is a sample per channel.
+   */
+  int NumInputFramesPerPacket() const override;
 
   nsresult Init(int aChannels) override;
+
+  /**
+   * The number of frames, in the output rate (see GetOutputSampleRate), needed
+   * to fill an encoded opus packet. A frame is a sample per channel.
+   */
+  int NumOutputFramesPerPacket() const;
 
   /**
    * Get the samplerate of the data to be fed to the Opus encoder. This might be
    * different from the input samplerate if resampling occurs.
    */
-  int GetOutputSampleRate();
+  int GetOutputSampleRate() const;
 
  private:
   /**
