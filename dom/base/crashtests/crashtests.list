@@ -257,3 +257,4 @@ load 1291535.html
 skip-if(!isDebugBuild||xulRuntime.OS!="Linux") load 1611853.html
 load 1619322.html
 load 1656925.html
+skip-if(Android) load 1665792.html # Print preview on android doesn't fly
