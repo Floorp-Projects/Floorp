@@ -356,3 +356,25 @@ add_task(async function testChangingBetweenMargins() {
     is(marginsPicker.value, "default", "Default preset is selected again");
   });
 });
+
+add_task(async function testChangeHonoredInPrint() {
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await helper.startPrint();
+    await helper.setupMockPrint();
+
+    helper.mockFilePicker("changedMargin.pdf");
+
+    await helper.openMoreSettings();
+    helper.assertSettingsMatch({ marginRight: 0.5 });
+    this.changeDefaultToCustom(helper);
+
+    await helper.withClosingFn(async () => {
+      await helper.text(helper.get("custom-margin-right"), "1");
+      EventUtils.sendKey("return", helper.win);
+      helper.resolvePrint();
+    });
+    helper.assertPrintedWithSettings({ marginRight: 1 });
+  });
+});
