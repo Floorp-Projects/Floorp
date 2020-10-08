@@ -20,15 +20,18 @@ const ECHO_BODY = String.raw`
   import struct
   import sys
 
-  while True:
-      rawlen = sys.stdin.read(4)
-      if len(rawlen) == 0:
-          sys.exit(0)
-      msglen = struct.unpack('@I', rawlen)[0]
-      msg = sys.stdin.read(msglen)
+  stdin = getattr(sys.stdin, 'buffer', sys.stdin)
+  stdout = getattr(sys.stdout, 'buffer', sys.stdout)
 
-      sys.stdout.write(struct.pack('@I', msglen))
-      sys.stdout.write(msg)
+  while True:
+    rawlen = stdin.read(4)
+    if len(rawlen) == 0:
+      sys.exit(0)
+    msglen = struct.unpack('@I', rawlen)[0]
+    msg = stdin.read(msglen)
+
+    stdout.write(struct.pack('@I', msglen))
+    stdout.write(msg)
 `;
 
 const INFO_BODY = String.raw`
@@ -38,7 +41,10 @@ const INFO_BODY = String.raw`
   import sys
 
   msg = json.dumps({"args": sys.argv, "cwd": os.getcwd()})
-  sys.stdout.write(struct.pack('@I', len(msg)))
+  if sys.version_info >= (3,):
+    sys.stdout.buffer.write(struct.pack('@I', len(msg)))
+  else:
+    sys.stdout.write(struct.pack('@I', len(msg)))
   sys.stdout.write(msg)
   sys.exit(0)
 `;
