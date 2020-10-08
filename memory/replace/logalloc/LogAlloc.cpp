@@ -123,9 +123,10 @@ static void* replace_valloc(size_t aSize) {
   return ptr;
 }
 
-static void replace_jemalloc_stats(jemalloc_stats_t* aStats) {
+static void replace_jemalloc_stats(jemalloc_stats_t* aStats,
+                                   jemalloc_bin_stats_t* aBinStats) {
   MutexAutoLock lock(sMutex);
-  sFuncs.jemalloc_stats(aStats);
+  sFuncs.jemalloc_stats_internal(aStats, aBinStats);
   FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }
 
@@ -192,7 +193,7 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #define MALLOC_DECL(name, ...) aTable->name = replace_##name;
 #include "malloc_decls.h"
-  aTable->jemalloc_stats = replace_jemalloc_stats;
+  aTable->jemalloc_stats_internal = replace_jemalloc_stats;
   if (!getenv("MALLOC_LOG_MINIMAL")) {
     aTable->posix_memalign = replace_posix_memalign;
     aTable->aligned_alloc = replace_aligned_alloc;
