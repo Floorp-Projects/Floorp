@@ -7110,7 +7110,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-09-17T17:33:58Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-10-06T17:44:42Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -10241,9 +10241,6 @@ weber
 // website : 2014-04-03 DotWebsite Inc.
 website
 
-// wed : 2013-10-01 Atgron, Inc.
-wed
-
 // wedding : 2014-04-24 Minds + Machines Group Limited
 wedding
 
@@ -12279,6 +12276,10 @@ members.linode.com
 // LiquidNet Ltd : http://www.liquidnetlimited.com/
 // Submitted by Victor Velchev <admin@liquidnetlimited.com>
 we.bs
+
+// localzone.xyz
+// Submitted by Kenny Niehage <hello@yahe.sh>
+localzone.xyz
 
 // Log'in Line : https://www.loginline.com/
 // Submitted by Rémi Mach <remi.mach@loginline.com>
