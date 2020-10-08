@@ -106,6 +106,26 @@ var AttributionCode = {
   },
 
   /**
+   * Returns a string serializing the given attribution data.
+   *
+   * It is expected that the given values are already URL-encoded.
+   */
+  serializeAttributionData(data) {
+    // Iterating in this way makes the order deterministic.
+    let s = "";
+    for (let key of ATTR_CODE_KEYS) {
+      if (key in data) {
+        let value = data[key];
+        if (s) {
+          s += ATTR_CODE_FIELD_SEPARATOR; // URL-encoded &
+        }
+        s += `${key}${ATTR_CODE_KEY_VALUE_SEPARATOR}${value}`; // URL-encoded =
+      }
+    }
+    return s;
+  },
+
+  /**
    * Reads the attribution code, either from disk or a cached version.
    * Returns a promise that fulfills with an object containing the parsed
    * attribution data if the code could be read and is valid,
