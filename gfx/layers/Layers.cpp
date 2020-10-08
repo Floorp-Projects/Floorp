@@ -2060,7 +2060,7 @@ CanvasLayer::~CanvasLayer() = default;
 void CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
   if (mSamplingFilter != SamplingFilter::GOOD) {
-    AppendToString(aStream, mSamplingFilter, " [filter=", "]");
+    aStream << " [filter=" << mSamplingFilter << "]";
   }
 }
 
@@ -2107,7 +2107,7 @@ RefPtr<CanvasRenderer> CanvasLayer::CreateOrGetCanvasRenderer() {
 void ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
   if (mSamplingFilter != SamplingFilter::GOOD) {
-    AppendToString(aStream, mSamplingFilter, " [filter=", "]");
+    aStream << " [filter=" << mSamplingFilter << "]";
   }
 }
 

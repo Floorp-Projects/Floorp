@@ -11,7 +11,7 @@
 #include "mozilla/gfx/Matrix.h"       // for Matrix4x4
 #include "mozilla/gfx/Point.h"        // for IntSize, etc
 #include "mozilla/gfx/TiledRegion.h"  // for TiledRegion
-#include "mozilla/gfx/Types.h"        // for SamplingFilter, SurfaceFormat
+#include "mozilla/gfx/Types.h"        // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
 #include "nsAString.h"
 #include "nsPrintfCString.h"  // for nsPrintfCString
@@ -30,10 +30,6 @@ struct RectTyped;
 enum class ImageFormat;
 
 namespace layers {
-
-void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::SamplingFilter samplingFilter,
-                    const char* pfx = "", const char* sfx = "");
 
 void AppendToString(std::stringstream& aStream,
                     mozilla::layers::TextureFlags flags, const char* pfx = "",
