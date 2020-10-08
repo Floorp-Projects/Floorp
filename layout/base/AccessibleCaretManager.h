@@ -213,7 +213,7 @@ class AccessibleCaretManager {
       nsIContent** aOutContent = nullptr,
       int32_t* aOutContentOffset = nullptr) const;
 
-  MOZ_CAN_RUN_SCRIPT nsresult DragCaretInternal(const nsPoint& aPoint);
+  nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
 
   // Start the selection scroll timer if the caret is being dragged out of

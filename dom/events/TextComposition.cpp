@@ -807,8 +807,6 @@ TextComposition::CompositionEventDispatcher::Run() {
   }
 
   RefPtr<nsPresContext> presContext = mTextComposition->mPresContext;
-  nsCOMPtr<nsINode> eventTarget = mEventTarget;
-  RefPtr<BrowserParent> browserParent = mTextComposition->mBrowserParent;
   nsEventStatus status = nsEventStatus_eIgnore;
   switch (mEventMessage) {
     case eCompositionStart: {
@@ -822,8 +820,8 @@ TextComposition::CompositionEventDispatcher::Run() {
       compStart.mFlags.mIsSynthesizedForTests =
           mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(
-          eventTarget, presContext, browserParent, &compStart, &status, nullptr,
-          mIsSynthesizedEvent);
+          mEventTarget, presContext, mTextComposition->mBrowserParent,
+          &compStart, &status, nullptr, mIsSynthesizedEvent);
       break;
     }
     case eCompositionChange:
@@ -837,8 +835,8 @@ TextComposition::CompositionEventDispatcher::Run() {
       compEvent.mFlags.mIsSynthesizedForTests =
           mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(
-          eventTarget, presContext, browserParent, &compEvent, &status, nullptr,
-          mIsSynthesizedEvent);
+          mEventTarget, presContext, mTextComposition->mBrowserParent,
+          &compEvent, &status, nullptr, mIsSynthesizedEvent);
       break;
     }
     default:
