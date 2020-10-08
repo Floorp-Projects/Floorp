@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.feature.search.middleware.SearchMiddleware
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
@@ -21,14 +22,14 @@ internal const val SEARCH_DIR_NAME = "search-engines"
  * A storage implementation for organizing [SearchEngine]s. Its primary use case is for persisting
  * custom search engines added by users.
  */
-internal class SearchEngineStorage(
+internal class CustomSearchEngineStorage(
     private val context: Context,
     private val coroutineContext: CoroutineContext = Dispatchers.IO
-) {
+) : SearchMiddleware.CustomStorage {
     private val reader = SearchEngineReader()
     private val writer = SearchEngineWriter()
 
-    suspend fun loadSearchEngineList(): List<SearchEngine> = withContext(coroutineContext) {
+    override suspend fun loadSearchEngineList(): List<SearchEngine> = withContext(coroutineContext) {
         val searchEngineList = mutableListOf<SearchEngine>()
         getFileDirectory().listFiles()?.forEach {
             val filename = it.name.removeSuffix(SEARCH_FILE_EXTENSION)
@@ -42,11 +43,11 @@ internal class SearchEngineStorage(
         reader.loadFile(identifier, getSearchFile(identifier))
     }
 
-    suspend fun saveSearchEngine(searchEngine: SearchEngine): Boolean = withContext(coroutineContext) {
+    override suspend fun saveSearchEngine(searchEngine: SearchEngine): Boolean = withContext(coroutineContext) {
         writer.saveSearchEngineXML(searchEngine, getSearchFile(searchEngine.id))
     }
 
-    suspend fun removeSearchEngine(identifier: String) = withContext(coroutineContext) {
+    override suspend fun removeSearchEngine(identifier: String) = withContext(coroutineContext) {
         getSearchFile(identifier).delete()
     }
 
@@ -62,11 +63,4 @@ internal class SearchEngineStorage(
                 it.mkdirs()
             }
         }
-
-    companion object {
-        internal const val URL_TYPE_SUGGEST_JSON = "application/x-suggestions+json"
-        internal const val URL_TYPE_SEARCH_HTML = "text/html"
-        internal const val URL_REL_MOBILE = "mobile"
-        internal const val IMAGE_URI_PREFIX = "data:image/png;base64,"
-    }
 }

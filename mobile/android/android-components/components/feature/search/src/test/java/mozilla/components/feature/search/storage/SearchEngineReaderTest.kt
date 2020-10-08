@@ -27,7 +27,7 @@ class SearchEngineReaderTest {
             resultUrls = listOf("https://www.example.com/search")
         )
 
-        val storage = SearchEngineStorage(testContext)
+        val storage = CustomSearchEngineStorage(testContext)
         val writer = SearchEngineWriter()
         val reader = SearchEngineReader()
         val file = storage.getSearchFile(searchEngine.id)

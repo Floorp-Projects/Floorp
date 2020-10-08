@@ -7,9 +7,6 @@ package mozilla.components.feature.search.storage
 import android.util.AtomicFile
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.IMAGE_URI_PREFIX
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SEARCH_HTML
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SUGGEST_JSON
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -168,7 +165,7 @@ class SearchEngineWriterTest {
 
     @Test
     fun `saveSearchEngineXML returns false when there's DOMException while generating XML doc`() {
-        val storage = SearchEngineStorage(testContext)
+        val storage = CustomSearchEngineStorage(testContext)
         val writer = spy(SearchEngineWriter())
         val searchEngine = SearchEngine(
             id = "id1",

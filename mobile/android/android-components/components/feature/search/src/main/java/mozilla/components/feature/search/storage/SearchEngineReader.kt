@@ -10,10 +10,6 @@ import android.net.Uri
 import android.util.AtomicFile
 import android.util.Base64
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.IMAGE_URI_PREFIX
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_REL_MOBILE
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SEARCH_HTML
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SUGGEST_JSON
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
@@ -21,6 +17,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
+
+internal const val URL_TYPE_SUGGEST_JSON = "application/x-suggestions+json"
+internal const val URL_TYPE_SEARCH_HTML = "text/html"
+internal const val URL_REL_MOBILE = "mobile"
+internal const val IMAGE_URI_PREFIX = "data:image/png;base64,"
 
 /**
  * A simple XML reader for search engine plugins.

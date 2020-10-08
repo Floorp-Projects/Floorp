@@ -19,6 +19,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    sourceSets {
+        test {
+            resources {
+                // We want to access the assets from unit tests. With this configuration we can just
+                // read the files directly and do not need to rely on Robolectric.
+                srcDir "${rootDir}/components/browser/search/src/main/assets/"
+            }
+        }
+    }
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -34,8 +44,9 @@ dependencies {
 
     implementation project(':browser-session')
     implementation project(':concept-engine')
-    implementation project(':support-utils')
     implementation project(':service-location')
+    implementation project(':support-utils')
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
 

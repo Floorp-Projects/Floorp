@@ -16,7 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class SearchEngineStorageTest {
+class CustomSearchEngineStorageTest {
     @Test
     fun `saveSearchEngine successfully saves`() = runBlockingTest {
         val searchEngine = SearchEngine(
@@ -27,7 +27,7 @@ class SearchEngineStorageTest {
             resultUrls = listOf("https://www.example.com/search")
         )
 
-        val storage = SearchEngineStorage(testContext, coroutineContext)
+        val storage = CustomSearchEngineStorage(testContext, coroutineContext)
         assertTrue(storage.saveSearchEngine(searchEngine))
         assertTrue(storage.getSearchFile(searchEngine.id).baseFile.exists())
     }
@@ -42,7 +42,7 @@ class SearchEngineStorageTest {
             resultUrls = listOf("https://www.example.com/search")
         )
 
-        val storage = SearchEngineStorage(testContext, coroutineContext)
+        val storage = CustomSearchEngineStorage(testContext, coroutineContext)
         assertTrue(storage.saveSearchEngine(searchEngine))
 
         val storedSearchEngine = storage.loadSearchEngine(searchEngine.id)
@@ -70,7 +70,7 @@ class SearchEngineStorageTest {
             resultUrls = listOf("https://www.searchtwo.com/search")
         )
 
-        val storage = SearchEngineStorage(testContext, coroutineContext)
+        val storage = CustomSearchEngineStorage(testContext, coroutineContext)
         assertTrue(storage.saveSearchEngine(searchEngine))
         assertTrue(storage.saveSearchEngine(searchEngineTwo))
 
@@ -96,7 +96,7 @@ class SearchEngineStorageTest {
             resultUrls = listOf("https://www.example.com/search")
         )
 
-        val storage = SearchEngineStorage(testContext, coroutineContext)
+        val storage = CustomSearchEngineStorage(testContext, coroutineContext)
         assertTrue(storage.saveSearchEngine(searchEngine))
 
         storage.removeSearchEngine(searchEngine.id)

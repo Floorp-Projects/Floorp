@@ -9,8 +9,6 @@ import android.util.AtomicFile
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SEARCH_HTML
-import mozilla.components.feature.search.storage.SearchEngineStorage.Companion.URL_TYPE_SUGGEST_JSON
 import org.w3c.dom.DOMException
 import org.w3c.dom.Document
 import java.io.ByteArrayOutputStream
