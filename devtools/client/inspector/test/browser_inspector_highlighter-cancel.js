@@ -21,7 +21,9 @@ add_task(async function() {
     "The currently selected node is on the screen."
   );
 
-  await startPicker(toolbox);
+  // Start the picker but skip focusing manually focusing on the target, let the element
+  // picker do the focusing.
+  await startPicker(toolbox, true);
   await hoverElement(inspector, "#zoom-here");
   ok(
     !isSelectedMarkupNodeInView(),

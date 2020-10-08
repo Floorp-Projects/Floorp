@@ -5,7 +5,6 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-const { TargetList } = require("devtools/shared/resources/target-list");
 
 /**
  * Client-side NodePicker module.
@@ -27,22 +26,13 @@ class NodePicker extends EventEmitter {
     super();
 
     this.targetList = targetList;
+    this.selection = selection;
 
     // Whether or not the node picker is active.
     this.isPicking = false;
-    // Whether to focus the top-level frame before picking nodes.
-    this.doFocus = false;
 
-    // The set of inspector fronts corresponding to the targets where picking happens.
-    this._currentInspectorFronts = new Set();
-
-    this._onInspectorFrontAvailable = this._onInspectorFrontAvailable.bind(
-      this
-    );
-    this._onInspectorFrontDestroyed = this._onInspectorFrontDestroyed.bind(
-      this
-    );
-    this._onTargetAvailable = this._onTargetAvailable.bind(this);
+    // The list of inspector fronts corresponding to the frames where picking happens.
+    this._currentInspectorFronts = [];
 
     this.cancel = this.cancel.bind(this);
     this.start = this.start.bind(this);
@@ -70,70 +60,11 @@ class NodePicker extends EventEmitter {
   }
 
   /**
-   * Tell the walker front corresponding to the given inspector front to enter node
-   * picking mode (listen for mouse movements over its nodes) and set event listeners
-   * associated with node picking: hover node, pick node, preview, cancel. See WalkerSpec.
-   *
-   * @param {InspectorFront} inspectorFront
-   * @return {Promise}
-   */
-  async _onInspectorFrontAvailable(inspectorFront) {
-    this._currentInspectorFronts.add(inspectorFront);
-    // watchFront may notify us about inspector fronts that aren't initialized yet,
-    // so ensure waiting for initialization in order to have a defined `walker` attribute.
-    await inspectorFront.initialize();
-    const { walker } = inspectorFront;
-    walker.on("picker-node-hovered", this._onHovered);
-    walker.on("picker-node-picked", this._onPicked);
-    walker.on("picker-node-previewed", this._onPreviewed);
-    walker.on("picker-node-canceled", this._onCanceled);
-    await walker.pick(this.doFocus);
-  }
-
-  /**
-   * Tell the walker front corresponding to the given inspector front to exit the node
-   * picking mode and remove all event listeners associated with node picking.
-   *
-   * @param {InspectorFront} inspectorFront
-   * @return {Promise}
-   */
-  async _onInspectorFrontDestroyed(inspectorFront) {
-    this._currentInspectorFronts.delete(inspectorFront);
-
-    const { walker } = inspectorFront;
-    if (!walker) {
-      return;
-    }
-
-    walker.off("picker-node-hovered", this._onHovered);
-    walker.off("picker-node-picked", this._onPicked);
-    walker.off("picker-node-previewed", this._onPreviewed);
-    walker.off("picker-node-canceled", this._onCanceled);
-    await walker.cancelPick();
-  }
-
-  /**
-   * While node picking, we want each target's walker fronts to listen for mouse
-   * movements over their nodes and emit events. Walker fronts are obtained from
-   * inspector fronts so we watch for the creation and destruction of inspector fronts
-   * in order to add or remove the necessary event listeners.
-   *
-   * @param {TargetFront} targetFront
-   * @return {Promise}
-   */
-  async _onTargetAvailable({ targetFront }) {
-    targetFront.watchFronts(
-      "inspector",
-      this._onInspectorFrontAvailable,
-      this._onInspectorFrontDestroyed
-    );
-  }
-
-  /**
-   * Start the element picker.
-   * This will instruct walker fronts of all available targets (and those of targets
-   * created while node picking is active) to listen for mouse movements over their nodes
-   * and trigger events when a node is hovered or picked.
+   * Start the element picker on the debuggee target.
+   * This will request the inspector actor to start listening for mouse events
+   * on the target page to highlight the hovered/picked element.
+   * Depending on the server-side capabilities, this may fire events when nodes
+   * are hovered.
    *
    * @param {Boolean} doFocus
    *        Optionally focus the content area once the picker is activated.
@@ -143,11 +74,23 @@ class NodePicker extends EventEmitter {
       return;
     }
     this.isPicking = true;
-    this.doFocus = doFocus;
 
     this.emit("picker-starting");
 
-    this.targetList.watchTargets(TargetList.ALL_TYPES, this._onTargetAvailable);
+    // Get all the inspector fronts where the picker should start, and cache them locally
+    // so we can stop the picker when needed for the same list of inspector fronts.
+    this._currentInspectorFronts = await this.targetList.getAllFronts(
+      this.targetList.TYPES.FRAME,
+      "inspector"
+    );
+
+    for (const { walker } of this._currentInspectorFronts) {
+      walker.on("picker-node-hovered", this._onHovered);
+      walker.on("picker-node-picked", this._onPicked);
+      walker.on("picker-node-previewed", this._onPreviewed);
+      walker.on("picker-node-canceled", this._onCanceled);
+      await walker.pick(doFocus);
+    }
 
     this.emit("picker-started");
   }
@@ -161,18 +104,16 @@ class NodePicker extends EventEmitter {
       return;
     }
     this.isPicking = false;
-    this.doFocus = false;
 
-    this.targetList.unwatchTargets(
-      TargetList.ALL_TYPES,
-      this._onTargetAvailable
-    );
-
-    for (const inspectorFront of this._currentInspectorFronts) {
-      await this._onInspectorFrontDestroyed(inspectorFront);
+    for (const { walker } of this._currentInspectorFronts) {
+      walker.off("picker-node-hovered", this._onHovered);
+      walker.off("picker-node-picked", this._onPicked);
+      walker.off("picker-node-previewed", this._onPreviewed);
+      walker.off("picker-node-canceled", this._onCanceled);
+      await walker.cancelPick();
     }
 
-    this._currentInspectorFronts.clear();
+    this._currentInspectorFronts = [];
 
     this.emit("picker-stopped");
   }

@@ -1704,9 +1704,9 @@ class HighlightersOverlay {
       this.extraGridHighlighterPool.push(highlighter);
     }
 
-    // Hide any visible highlighters and clear any timers set to autohide highlighters.
+    // Destroy all highlighters and clear any timers set to autohide highlighters.
     for (const { highlighter, timer } of this._activeHighlighters.values()) {
-      await highlighter.hide();
+      highlighter.finalize();
       clearTimeout(timer);
     }
 
