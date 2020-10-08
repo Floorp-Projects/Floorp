@@ -1,7 +1,8 @@
 {
     "parameters": {
         "optimize_target_tasks": true,
-        "target_tasks_method": "nightly"
+        "target_tasks_method": "nightly",
+        "tasks_for": "cron"
     },
     "version": 2
 }
