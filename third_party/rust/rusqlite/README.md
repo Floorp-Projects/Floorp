@@ -5,6 +5,7 @@
 [![Build Status](https://github.com/rusqlite/rusqlite/workflows/CI/badge.svg)](https://github.com/rusqlite/rusqlite/actions)
 [![dependency status](https://deps.rs/repo/github/rusqlite/rusqlite/status.svg)](https://deps.rs/repo/github/rusqlite/rusqlite)
 [![Latest Version](https://img.shields.io/crates/v/rusqlite.svg)](https://crates.io/crates/rusqlite)
+[![Gitter](https://badges.gitter.im/rusqlite.svg)](https://gitter.im/rusqlite/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Docs](https://docs.rs/rusqlite/badge.svg)](https://docs.rs/rusqlite)
 [![codecov](https://codecov.io/gh/rusqlite/rusqlite/branch/master/graph/badge.svg)](https://codecov.io/gh/rusqlite/rusqlite)
 
@@ -90,6 +91,9 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 * `serde_json` implements [`FromSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.FromSql.html)
   and [`ToSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.ToSql.html) for the
   `Value` type from the [`serde_json` crate](https://crates.io/crates/serde_json).
+* `time` implements [`FromSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.FromSql.html)
+   and [`ToSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.ToSql.html) for the
+   `time::OffsetDateTime` type from the [`time` crate](https://crates.io/crates/time).
 * `url` implements [`FromSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.FromSql.html)
   and [`ToSql`](https://docs.rs/rusqlite/~0/rusqlite/types/trait.ToSql.html) for the
   `Url` type from the [`url` crate](https://crates.io/crates/url).
@@ -97,7 +101,7 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 * `sqlcipher` looks for the SQLCipher library to link against instead of SQLite. This feature is mutually exclusive with `bundled`.
 * `hooks` for [Commit, Rollback](http://sqlite.org/c3ref/commit_hook.html) and [Data Change](http://sqlite.org/c3ref/update_hook.html) notification callbacks.
 * `unlock_notify` for [Unlock](https://sqlite.org/unlock_notify.html) notification.
-* `vtab` for [virtual table](https://sqlite.org/vtab.html) support (allows you to write virtual table implemntations in Rust). Currently, only read-only virtual tables are supported.
+* `vtab` for [virtual table](https://sqlite.org/vtab.html) support (allows you to write virtual table implementations in Rust). Currently, only read-only virtual tables are supported.
 * [`csvtab`](https://sqlite.org/csv.html), CSV virtual table written in Rust.
 * [`array`](https://sqlite.org/carray.html), The `rarray()` Table-Valued Function.
 * `i128_blob` allows storing values of type `i128` type in SQLite databases. Internally, the data is stored as a 16 byte big-endian blob, with the most significant bit flipped, which allows ordering and comparison between different blobs storing i128s to work as expected.
@@ -108,18 +112,18 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 
 `libsqlite3-sys` is a separate crate from `rusqlite` that provides the Rust
 declarations for SQLite's C API. By default, `libsqlite3-sys` attempts to find a SQLite library that already exists on your system using pkg-config, or a
-[Vcpkg](https://github.com/Microsoft/vcpkg) installation for MSVC ABI builds. 
+[Vcpkg](https://github.com/Microsoft/vcpkg) installation for MSVC ABI builds.
 
 You can adjust this behavior in a number of ways:
 
 * If you use the `bundled` feature, `libsqlite3-sys` will use the
   [cc](https://crates.io/crates/cc) crate to compile SQLite from source and
   link against that. This source is embedded in the `libsqlite3-sys` crate and
-  is currently SQLite 3.30.1 (as of `rusqlite` 0.21.0 / `libsqlite3-sys`
-  0.17.0).  This is probably the simplest solution to any build problems. You can enable this by adding the following in your `Cargo.toml` file:
+  is currently SQLite 3.33.0 (as of `rusqlite` 0.24.1 / `libsqlite3-sys`
+  0.20.0).  This is probably the simplest solution to any build problems. You can enable this by adding the following in your `Cargo.toml` file:
   ```toml
   [dependencies.rusqlite]
-  version = "0.21.0"
+  version = "0.24.1"
   features = ["bundled"]
   ```
 * You can set the `SQLITE3_LIB_DIR` to point to directory containing the SQLite
@@ -130,7 +134,7 @@ You can adjust this behavior in a number of ways:
   options. The default when using vcpkg is to dynamically link,
   which must be enabled by setting `VCPKGRS_DYNAMIC=1` environment variable before build.
   `vcpkg install sqlite3:x64-windows` will install the required library.
-  
+
 ### Binding generation
 
 We use [bindgen](https://crates.io/crates/bindgen) to generate the Rust
@@ -191,6 +195,10 @@ instead.
 
 Rusqlite is the product of hard work by a number of people. A list is available
 here: https://github.com/rusqlite/rusqlite/graphs/contributors
+
+## Community
+
+Currently there's a gitter channel set up for rusqlite [here](https://gitter.im/rusqlite/community).
 
 ## License
 

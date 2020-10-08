@@ -27,6 +27,7 @@
 //! ```
 
 use std::default::Default;
+use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int, c_void};
 use std::rc::Rc;
 
@@ -46,6 +47,7 @@ pub(crate) unsafe extern "C" fn free_array(p: *mut c_void) {
     let _: Array = Rc::from_raw(p as *const Vec<Value>);
 }
 
+/// Array parameter / pointer
 pub type Array = Rc<Vec<Value>>;
 
 impl ToSql for Array {
@@ -71,9 +73,9 @@ struct ArrayTab {
     base: ffi::sqlite3_vtab,
 }
 
-unsafe impl VTab for ArrayTab {
+unsafe impl<'vtab> VTab<'vtab> for ArrayTab {
     type Aux = ();
-    type Cursor = ArrayTabCursor;
+    type Cursor = ArrayTabCursor<'vtab>;
 
     fn connect(
         _: &mut VTabConnection,
@@ -117,28 +119,30 @@ unsafe impl VTab for ArrayTab {
         Ok(())
     }
 
-    fn open(&self) -> Result<ArrayTabCursor> {
+    fn open(&self) -> Result<ArrayTabCursor<'_>> {
         Ok(ArrayTabCursor::new())
     }
 }
 
 /// A cursor for the Array virtual table
 #[repr(C)]
-struct ArrayTabCursor {
+struct ArrayTabCursor<'vtab> {
     /// Base class. Must be first
     base: ffi::sqlite3_vtab_cursor,
     /// The rowid
     row_id: i64,
     /// Pointer to the array of values ("pointer")
     ptr: Option<Array>,
+    phantom: PhantomData<&'vtab ArrayTab>,
 }
 
-impl ArrayTabCursor {
-    fn new() -> ArrayTabCursor {
+impl ArrayTabCursor<'_> {
+    fn new<'vtab>() -> ArrayTabCursor<'vtab> {
         ArrayTabCursor {
             base: ffi::sqlite3_vtab_cursor::default(),
             row_id: 0,
             ptr: None,
+            phantom: PhantomData,
         }
     }
 
@@ -149,7 +153,7 @@ impl ArrayTabCursor {
         }
     }
 }
-unsafe impl VTabCursor for ArrayTabCursor {
+unsafe impl VTabCursor for ArrayTabCursor<'_> {
     fn filter(&mut self, idx_num: c_int, _idx_str: Option<&str>, args: &Values<'_>) -> Result<()> {
         if idx_num > 0 {
             self.ptr = args.get_array(0)?;

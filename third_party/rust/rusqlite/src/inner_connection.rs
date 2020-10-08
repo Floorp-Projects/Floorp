@@ -106,15 +106,16 @@ impl InnerConnection {
 
                 return Err(e);
             }
+
+            // attempt to turn on extended results code; don't fail if we can't.
+            ffi::sqlite3_extended_result_codes(db, 1);
+
             let r = ffi::sqlite3_busy_timeout(db, 5000);
             if r != ffi::SQLITE_OK {
                 let e = error_from_handle(db, r);
                 ffi::sqlite3_close(db);
                 return Err(e);
             }
-
-            // attempt to turn on extended results code; don't fail if we can't.
-            ffi::sqlite3_extended_result_codes(db, 1);
 
             Ok(InnerConnection::new(db, true))
         }
@@ -167,21 +168,6 @@ impl InnerConnection {
     pub fn get_interrupt_handle(&self) -> InterruptHandle {
         InterruptHandle {
             db_lock: Arc::clone(&self.interrupt_lock),
-        }
-    }
-
-    pub fn execute_batch(&mut self, sql: &str) -> Result<()> {
-        // use CString instead of SmallCString because it's probably big.
-        let c_sql = std::ffi::CString::new(sql)?;
-        unsafe {
-            let r = ffi::sqlite3_exec(
-                self.db(),
-                c_sql.as_ptr(),
-                None,
-                ptr::null_mut(),
-                ptr::null_mut(),
-            );
-            self.decode_result(r)
         }
     }
 
@@ -261,8 +247,17 @@ impl InnerConnection {
         // comment) then *ppStmt is set to NULL.
         let c_stmt: *mut ffi::sqlite3_stmt = c_stmt;
         let c_tail: *const c_char = c_tail;
-        // TODO ignore spaces, comments, ... at the end
-        let tail = !c_tail.is_null() && unsafe { c_tail != c_sql.offset(len as isize) };
+        let tail = if c_tail.is_null() {
+            0
+        } else {
+            // TODO nightly feature ptr_offset_from #41079
+            let n = (c_tail as isize) - (c_sql as isize);
+            if n <= 0 || n >= len as isize {
+                0
+            } else {
+                n as usize
+            }
+        };
         Ok(Statement::new(conn, unsafe {
             RawStatement::new(c_stmt, tail)
         }))

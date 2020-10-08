@@ -2,8 +2,7 @@ memchr
 ======
 The `memchr` crate provides heavily optimized routines for searching bytes.
 
-[![Build status](https://api.travis-ci.org/BurntSushi/rust-memchr.png)](https://travis-ci.org/BurntSushi/rust-memchr)
-[![Build status](https://ci.appveyor.com/api/projects/status/8i9484t8l4w7uql0/branch/master?svg=true)](https://ci.appveyor.com/project/BurntSushi/rust-memchr/branch/master)
+[![Build status](https://github.com/BurntSushi/rust-memchr/workflows/ci/badge.svg)](https://github.com/BurntSushi/rust-memchr/actions)
 [![](http://meritbadge.herokuapp.com/memchr)](https://crates.io/crates/memchr)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
@@ -16,8 +15,8 @@ Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 ### Overview
 
-The `memchr` function is traditionally provided by libc, however, the
-performance of `memchr` can vary significantly depending on the specific
+The `memchr` function is traditionally provided by libc, but its
+performance can vary significantly depending on the specific
 implementation of libc that is used. They can range from manually tuned
 Assembly implementations (like that found in GNU's libc) all the way to
 non-vectorized C implementations (like that found in MUSL).
@@ -31,22 +30,22 @@ Assembler.
 Additionally, GNU libc also provides an extension, `memrchr`. This crate
 provides its own implementation of `memrchr` as well, on top of `memchr2`,
 `memchr3`, `memrchr2` and `memrchr3`. The difference between `memchr` and
-`memchr2` is that that `memchr2` permits finding all occurrences of two bytes
+`memchr2` is that `memchr2` permits finding all occurrences of two bytes
 instead of one. Similarly for `memchr3`.
 
 ### Compiling without the standard library
 
 memchr links to the standard library by default, but you can disable the
-`use_std` feature if you want to use it in a `#![no_std]` crate:
+`std` feature if you want to use it in a `#![no_std]` crate:
 
 ```toml
 [dependencies]
 memchr = { version = "2", default-features = false }
 ```
 
-On x86 platforms, when the `use_std` feature is disabled, the SSE2
+On x86 platforms, when the `std` feature is disabled, the SSE2
 implementation of memchr will be used in compilers that support it. When
-`use_std` is enabled, the AVX implementation of memchr will be used if the CPU
+`std` is enabled, the AVX implementation of memchr will be used if the CPU
 is determined to support it at runtime.
 
 ### Using libc
@@ -64,3 +63,17 @@ a standard part of libc, so they will always use the implementations in this
 crate. One exception to this is `memrchr`, which is an extension commonly found
 on Linux. On Linux, `memrchr` is used in precisely the same scenario as
 `memchr`, as described above.
+
+
+### Minimum Rust version policy
+
+This crate's minimum supported `rustc` version is `1.28.0`.
+
+The current policy is that the minimum Rust version required to use this crate
+can be increased in minor version updates. For example, if `crate 1.0` requires
+Rust 1.20.0, then `crate 1.0.z` for all values of `z` will also require Rust
+1.20.0 or newer. However, `crate 1.y` for `y > 0` may require a newer minimum
+version of Rust.
+
+In general, this crate will be conservative with respect to the minimum
+supported version of Rust.

@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "ahash"
-version = "0.3.2"
+version = "0.4.5"
 authors = ["Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"]
-description = "A non-cryprographic hash function using AES-NI for high performance"
+description = "A non-cryptographic hash function using AES-NI for high performance"
 documentation = "https://docs.rs/ahash"
 readme = "README.md"
 keywords = ["hash", "hashmap", "aes", "aes-ni", "no-std"]
@@ -41,6 +41,7 @@ debug-assertions = false
 
 [profile.test]
 opt-level = 2
+lto = "fat"
 
 [lib]
 name = "ahash"
@@ -63,8 +64,7 @@ harness = false
 version = "0.1.6"
 optional = true
 [dev-dependencies.criterion]
-version = "0.3.0"
-features = ["real_blackbox"]
+version = "0.3.2"
 
 [dev-dependencies.fnv]
 version = "1.0.5"
@@ -87,4 +87,5 @@ version = "3.0.5"
 [features]
 compile-time-rng = ["const-random"]
 default = ["compile-time-rng", "std"]
+specialize = []
 std = []

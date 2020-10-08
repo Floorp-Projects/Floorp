@@ -60,7 +60,7 @@ fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" 
 # version less than or equal to what we link to. This isn't a problem because we
 # tend to keep this up to date, but it needs to be taken into consideration when
 # changing this version.
-rusqlite = { version = "0.23.1", features = ["modern_sqlite", "in_gecko"] }
+rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.13.1", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
@@ -70,7 +70,7 @@ processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms" }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "9ba519a5739b1976f1d333923d34b7f4916b9e26"}
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "641353a8648602ce17d23c89b88e2a22d108fb03"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 [build-dependencies]

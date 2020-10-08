@@ -160,8 +160,9 @@ quickcheck! {
 // Return a vector with the concatenation of the fronts and the reverse of the
 // backs.
 fn double_ended_take<I, J>(mut iter: I, take_side: J) -> Vec<I::Item>
-    where I: DoubleEndedIterator,
-          J: Iterator<Item=bool>,
+where
+    I: DoubleEndedIterator,
+    J: Iterator<Item = bool>,
 {
     let mut found_front = Vec::new();
     let mut found_back = Vec::new();
@@ -191,7 +192,7 @@ fn double_ended_take<I, J>(mut iter: I, take_side: J) -> Vec<I::Item>
 fn positions1<'a>(
     n1: u8,
     haystack: &'a [u8],
-) -> Box<DoubleEndedIterator<Item=usize> + 'a> {
+) -> Box<dyn DoubleEndedIterator<Item = usize> + 'a> {
     let it = haystack
         .iter()
         .enumerate()
@@ -204,7 +205,7 @@ fn positions2<'a>(
     n1: u8,
     n2: u8,
     haystack: &'a [u8],
-) -> Box<DoubleEndedIterator<Item=usize> + 'a> {
+) -> Box<dyn DoubleEndedIterator<Item = usize> + 'a> {
     let it = haystack
         .iter()
         .enumerate()
@@ -218,7 +219,7 @@ fn positions3<'a>(
     n2: u8,
     n3: u8,
     haystack: &'a [u8],
-) -> Box<DoubleEndedIterator<Item=usize> + 'a> {
+) -> Box<dyn DoubleEndedIterator<Item = usize> + 'a> {
     let it = haystack
         .iter()
         .enumerate()

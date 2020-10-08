@@ -86,6 +86,7 @@ pub type FromSqlResult<T> = Result<T, FromSqlError>;
 /// fetching values as i64 and then doing the interpretation themselves or by
 /// defining a newtype and implementing `FromSql`/`ToSql` for it.
 pub trait FromSql: Sized {
+    /// Converts SQLite value into Rust value.
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self>;
 }
 
@@ -142,10 +143,7 @@ impl FromSql for f64 {
 
 impl FromSql for bool {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        i64::column_result(value).map(|i| match i {
-            0 => false,
-            _ => true,
-        })
+        i64::column_result(value).map(|i| !matches!(i, 0))
     }
 }
 
