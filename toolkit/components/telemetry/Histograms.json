@@ -17,7 +17,7 @@
     "n_values": 11,
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1382820, 1462238],
-    "description": "A list of known accessibility clients that inject into Firefox process space (see https://dxr.mozilla.org/mozilla-central/source/accessible/windows/msaa/Compatibility.h).",
+    "description": "A list of known accessibility clients that inject into Firefox process space (see https://searchfox.org/mozilla-central/source/accessible/windows/msaa/Compatibility.h).",
     "alert_emails": ["accessibility@mozilla.com", "jteh@mozilla.com"]
   },
   "A11Y_ISIMPLEDOM_USAGE_FLAG": {
@@ -207,7 +207,7 @@
     "expires_in_version": "70",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
+    "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://searchfox.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
     "releaseChannelCollection": "opt-out"
   },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
@@ -11708,7 +11708,7 @@
     "n_values": 256,
     "bug_numbers": [1320567],
     "releaseChannelCollection": "opt-out",
-    "description": "Number of successfully established TLS connections compliant with the Certificate Transparency Policy, by CA. See https://dxr.mozilla.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
+    "description": "Number of successfully established TLS connections compliant with the Certificate Transparency Policy, by CA. See https://searchfox.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
   },
   "SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA": {
     "record_in_processes": ["main", "content"],
@@ -11719,7 +11719,7 @@
     "n_values": 256,
     "bug_numbers": [1320567],
     "releaseChannelCollection": "opt-out",
-    "description": "Number of successfully established TLS connections NOT compliant with the Certificate Transparency Policy, by CA. See https://dxr.mozilla.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
+    "description": "Number of successfully established TLS connections NOT compliant with the Certificate Transparency Policy, by CA. See https://searchfox.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
   },
   "SSL_PERMANENT_CERT_ERROR_OVERRIDES": {
     "record_in_processes": ["main", "content"],
@@ -13507,7 +13507,7 @@
     "n_values": 50,
     "bug_numbers": [1368600],
     "operating_systems": ["windows"],
-    "description": "Error code when a Windows sandboxed process fails to launch, keyed by process type and Windows error code. See https://dxr.mozilla.org/mozilla-central/search?q=ResultCode++path%3Asandbox_types.h&redirect=true for definitions of the error codes."
+    "description": "Error code when a Windows sandboxed process fails to launch, keyed by process type and Windows error code. See https://searchfox.org/mozilla-central/search?q=ResultCode++path%3Asandbox_types.h&redirect=true for definitions of the error codes."
   },
   "SYNC_WORKER_OPERATION": {
     "record_in_processes": ["main", "content"],

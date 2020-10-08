@@ -2632,7 +2632,7 @@ devtools.tool:
       Recorded on enable tool checkbox check/uncheck in Developer Tools options
       panel. Boolean stating if the tool was enabled or disabled by the user.
       Keyed by tool id. Current default tools with their id's are defined in
-      https://dxr.mozilla.org/mozilla-central/source/devtools/client/definitions.js
+      https://searchfox.org/mozilla-central/source/devtools/client/definitions.js
     expires: never
     kind: boolean
     keyed: true

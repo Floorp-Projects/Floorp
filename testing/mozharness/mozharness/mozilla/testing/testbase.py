@@ -35,7 +35,7 @@ INSTALLER_SUFFIXES = ('.apk',  # Android
                       '.installer-stub.exe', '.installer.exe', '.exe', '.zip',  # Windows
                       )
 
-# https://dxr.mozilla.org/mozilla-central/source/testing/config/tooltool-manifests
+# https://searchfox.org/mozilla-central/source/testing/config/tooltool-manifests
 TOOLTOOL_PLATFORM_DIR = {
     'linux':   'linux32',
     'linux64': 'linux64',

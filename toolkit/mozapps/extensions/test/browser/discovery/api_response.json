@@ -228,8 +228,7 @@
                      "is_mozilla_signed_extension" : false,
                      "permissions" : [
                         "tabs",
-                        "https://addons-internal.prod.mozaws.net/*",
-                        "https://dxr.mozilla.org/addons/*"
+                        "https://addons-internal.prod.mozaws.net/*"
                      ],
                      "hash" : "sha256:cd28c841a6daf8a2e3c94b0773b373fec0213404b70074309326cfc75e6725d3",
                      "platform" : "all",

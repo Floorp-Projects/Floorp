@@ -4,8 +4,8 @@
 
 # Required Plugins:
 # AppAssocReg http://nsis.sourceforge.net/Application_Association_Registration_plug-in
-# BitsUtils   http://dxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/BitsUtils
-# CityHash    http://dxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
+# BitsUtils   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/BitsUtils
+# CityHash    http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
 # ShellLink   http://nsis.sourceforge.net/ShellLink_plug-in
 # UAC         http://nsis.sourceforge.net/UAC_plug-in
 

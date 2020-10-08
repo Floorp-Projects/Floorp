@@ -1,7 +1,5 @@
 /**
- * Adapted from https://dxr.mozilla.org/mozilla-central/rev/
- * 4e883591bb5dff021c108d3e30198a99547eed1e/layout/reftests/backgrounds/
- * delay-image-response.sjs
+ * Adapted from https://searchfox.org/mozilla-central/source/layout/reftests/backgrounds/delay-image-response.sjs
  */
 "use strict";
 

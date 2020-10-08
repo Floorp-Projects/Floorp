@@ -293,7 +293,7 @@ typedef PlatformSpecificStateBase
  * The points (x1, y1) and (x2, y2) used as the two intermediate control points
  * in the cubic bezier curve; the first and last points are (0,0) and (1,1).\n
  * Some example values for these prefs can be found at\n
- * https://dxr.mozilla.org/mozilla-central/rev/70e05c6832e831374604ac3ce7433971368dffe0/layout/style/nsStyleStruct.cpp#2729
+ * https://searchfox.org/mozilla-central/rev/f82d5c549f046cb64ce5602bfd894b7ae807c8f8/dom/animation/ComputedTimingFunction.cpp#27-33
  *
  * \li\b apz.fling_friction
  * Amount of friction applied during flings. This is used in the following
