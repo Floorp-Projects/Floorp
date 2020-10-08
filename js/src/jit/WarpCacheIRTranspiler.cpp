@@ -38,6 +38,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const uint8_t* stubData_;
 
   // Vector mapping OperandId to corresponding MDefinition.
+  using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
   MDefinitionStackVector operands_;
 
   CallInfo* callInfo_;
@@ -217,11 +218,12 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
         stubData_(cacheIRSnapshot->stubData()),
         callInfo_(callInfo) {}
 
-  MOZ_MUST_USE bool transpile(const MDefinitionStackVector& inputs);
+  MOZ_MUST_USE bool transpile(std::initializer_list<MDefinition*> inputs);
 };
 
-bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
-  if (!operands_.appendAll(inputs)) {
+bool WarpCacheIRTranspiler::transpile(
+    std::initializer_list<MDefinition*> inputs) {
+  if (!operands_.append(inputs.begin(), inputs.end())) {
     return false;
   }
 
@@ -4000,7 +4002,7 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
 
 bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
                                 const WarpCacheIR* cacheIRSnapshot,
-                                const MDefinitionStackVector& inputs,
+                                std::initializer_list<MDefinition*> inputs,
                                 CallInfo* maybeCallInfo) {
   uint32_t numInstructionIdsBefore =
       builder->mirGen().graph().getNumInstructionIds();
