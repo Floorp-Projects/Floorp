@@ -24,8 +24,10 @@
 
 #ifdef _WIN32
 #  define ALWAYS_INLINE __forceinline
+#  define NO_INLINE __declspec(noinline)
 #else
 #  define ALWAYS_INLINE __attribute__((always_inline)) inline
+#  define NO_INLINE __attribute__((noinline))
 #endif
 
 #define UNREACHABLE __builtin_unreachable()
