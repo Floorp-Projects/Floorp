@@ -1198,7 +1198,7 @@ Possible extra rowspan handling
 	ul.index ul,
 	ul.index dl { font-size: smaller; }
 	@media not print {
-		ul.index li span {
+		ul.index li span:not(.dfn-paneled) {
 			white-space: nowrap;
 			color: transparent; }
 		ul.index li a:hover + span,
@@ -1546,7 +1546,7 @@ figcaption:not(.no-marker)::before {
 .dfn-panel:not(.on) { display: none; }
 .dfn-panel * { margin: 0; padding: 0; text-indent: 0; }
 .dfn-panel > b { display: block; }
-.dfn-panel a { color: black; }
+.dfn-panel a { color: var(--dfnpanel-text); }
 .dfn-panel a:not(:hover) { text-decoration: none !important; border-bottom: none !important; }
 .dfn-panel > b + b { margin-top: 0.25em; }
 .dfn-panel ul { padding: 0; }
@@ -1786,6 +1786,9 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
 
         --editedrec-bg: darkorange;
     }
+    /* In case a transparent-bg image doesn't expect to be on a dark bg,
+       which is quite common in practice... */
+    img { background: white; }
 }
 @media (prefers-color-scheme: dark) {
     :root {
@@ -1868,7 +1871,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">CSS Masonry Layout Module</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Living Standard, <time class="dt-updated" datetime="2020-09-23">23 September 2020</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Living Standard, <time class="dt-updated" datetime="2020-10-08">8 October 2020</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1882,7 +1885,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
    <div data-fill-with="warning"></div>
    <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" src="https://licensebuttons.net/p/zero/1.0/80x15.png"></a> To the extent possible under law, the editors have waived all copyright
 and related or neighboring rights to this work.
-In addition, as of 23 September 2020,
+In addition, as of 8 October 2020,
 the editors have made this specification available under the <a href="http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
 which is available at http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
 Parts of this work may be from another specification document.  If so, those parts are instead covered by the license of that specification document. </p>
@@ -1907,35 +1910,36 @@ Parts of this work may be from another specification document.  If so, those par
      <ol class="toc">
       <li><a href="#line-name-resolution"><span class="secno">2.1</span> <span class="content"> Line Name Resolution</span></a>
       <li><a href="#grid-item-placement"><span class="secno">2.2</span> <span class="content"> Grid Item Placement</span></a>
-      <li><a href="#masonry-layout-algorithm"><span class="secno">2.3</span> <span class="content"> Masonry Layout Algorithm</span></a>
+      <li>
+       <a href="#track-sizing"><span class="secno">2.3</span> <span class="content"> Grid Axis Track Sizing</span></a>
+       <ol class="toc">
+        <li><a href="#repeat-auto-fit"><span class="secno">2.3.1</span> <span class="content"> repeat(auto-fit)</span></a>
+       </ol>
+      <li><a href="#masonry-layout-algorithm"><span class="secno">2.4</span> <span class="content"> Masonry Layout Algorithm</span></a>
+      <li><a href="#masonry-auto-flow"><span class="secno">2.5</span> <span class="content"> The <span class="css">masonry-auto-flow</span> Property</span></a>
      </ol>
     <li><a href="#containing-block"><span class="secno">3</span> <span class="content"> Containing Block</span></a>
+    <li><a href="##implicit-grid"><span class="secno">4</span> <span class="content"> The Implicit Grid </span></a>
+    <li><a href="#intrinsic-sizes"><span class="secno">5</span> <span class="content"> Sizing Grid Containers</span></a>
     <li>
-     <a href="#track-sizing"><span class="secno">4</span> <span class="content"> Track sizing</span></a>
+     <a href="#alignment"><span class="secno">6</span> <span class="content"> Alignment and Spacing</span></a>
      <ol class="toc">
-      <li><a href="#repeat-auto-fit"><span class="secno">4.1</span> <span class="content"> repeat(auto-fit)</span></a>
-     </ol>
-    <li><a href="##implicit-grid"><span class="secno">5</span> <span class="content"> The Implicit Grid </span></a>
-    <li><a href="#intrinsic-sizes"><span class="secno">6</span> <span class="content"> Sizing Grid Containers</span></a>
-    <li>
-     <a href="#alignment"><span class="secno">7</span> <span class="content"> Alignment and Spacing</span></a>
-     <ol class="toc">
-      <li><a href="#tracks-alignment"><span class="secno">7.1</span> <span class="content"> The align-tracks and justify-tracks Properties </span></a>
-      <li><a href="#masonry-axis-stretch-alignment"><span class="secno">7.2</span> <span class="content"> Stretch Alignment in the Masonry Axis</span></a>
-      <li><a href="#masonry-axis-alignment"><span class="secno">7.3</span> <span class="content"> Individual Track Alignment in the Masonry Axis</span></a>
-      <li><a href="#masonry-axis-baseline-alignment"><span class="secno">7.4</span> <span class="content"> Baseline Alignment in the Masonry Axis</span></a>
+      <li><a href="#tracks-alignment"><span class="secno">6.1</span> <span class="content"> The align-tracks and justify-tracks Properties </span></a>
+      <li><a href="#masonry-axis-stretch-alignment"><span class="secno">6.2</span> <span class="content"> Stretch Alignment in the Masonry Axis</span></a>
+      <li><a href="#masonry-axis-alignment"><span class="secno">6.3</span> <span class="content"> Individual Track Alignment in the Masonry Axis</span></a>
+      <li><a href="#masonry-axis-baseline-alignment"><span class="secno">6.4</span> <span class="content"> Baseline Alignment in the Masonry Axis</span></a>
      </ol>
     <li>
-     <a href="#pagination"><span class="secno">8</span> <span class="content"> Fragmentation</span></a>
+     <a href="#pagination"><span class="secno">7</span> <span class="content"> Fragmentation</span></a>
      <ol class="toc">
-      <li><a href="#masonry-axis-pagination"><span class="secno">8.1</span> <span class="content"> Fragmentation in the Masonry Axis</span></a>
-      <li><a href="#grid-axis-pagination"><span class="secno">8.2</span> <span class="content"> Fragmentation in the Grid Axis</span></a>
+      <li><a href="#masonry-axis-pagination"><span class="secno">7.1</span> <span class="content"> Fragmentation in the Masonry Axis</span></a>
+      <li><a href="#grid-axis-pagination"><span class="secno">7.2</span> <span class="content"> Fragmentation in the Grid Axis</span></a>
      </ol>
-    <li><a href="#subgrids"><span class="secno">9</span> <span class="content"> Subgrids</span></a>
-    <li><a href="#abspos"><span class="secno">10</span> <span class="content"> Absolute Positioning</span></a>
-    <li><a href="#performance-notes"><span class="secno">11</span> <span class="content"> Performance Notes</span></a>
-    <li><a href="#graceful-degradation"><span class="secno">12</span> <span class="content"> Graceful Degradation</span></a>
-    <li><a href="#acknowledgements"><span class="secno">13</span> <span class="content"> Acknowledgements</span></a>
+    <li><a href="#subgrids"><span class="secno">8</span> <span class="content"> Subgrids</span></a>
+    <li><a href="#abspos"><span class="secno">9</span> <span class="content"> Absolute Positioning</span></a>
+    <li><a href="#performance-notes"><span class="secno">10</span> <span class="content"> Performance Notes</span></a>
+    <li><a href="#graceful-degradation"><span class="secno">11</span> <span class="content"> Graceful Degradation</span></a>
+    <li><a href="#acknowledgements"><span class="secno">12</span> <span class="content"> Acknowledgements</span></a>
     <li><a href="#conformance"><span class="secno"></span> <span class="content"> Conformance</span></a>
     <li>
      <a href="#index"><span class="secno"></span> <span class="content">Index</span></a>
@@ -1984,7 +1988,7 @@ Parts of this work may be from another specification document.  If so, those par
 	Combination with other CSS modules may expand the definitions of these value types.</p>
    <p>In addition to the property-specific values listed in their definitions,
 	all properties defined in this specification
-	also accept the <a data-link-type="dfn" href="https://drafts.csswg.org/css-values-4/#css-wide-keywords" id="ref-for-css-wide-keywords">CSS-wide keywords</a> keywords as their property value.
+	also accept the <a data-link-type="dfn" href="https://drafts.csswg.org/css-values-4/#css-wide-keywords" id="ref-for-css-wide-keywords">CSS-wide keywords</a> as their property value.
 	For readability they have not been repeated explicitly.</p>
    <h2 class="heading settled" data-level="2" id="masonry-layout"><span class="secno">2. </span><span class="content"> Masonry Layout</span><a class="self-link" href="#masonry-layout"></a></h2>
    <p>Masonry layout is supported for <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container">grid containers</a> by specifying the value <span class="css">masonry</span> for one of its axes.  This axis is called the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="masonry-axis">masonry axis</dfn>, and the other axis is called the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="grid-axis">grid axis</dfn>.</p>
@@ -1994,8 +1998,8 @@ Parts of this work may be from another specification document.  If so, those par
       <th>Name:
       <td><a class="css" data-link-type="property" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-template-columns" id="ref-for-propdef-grid-template-columns">grid-template-columns</a>, <a class="css" data-link-type="property" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-template-rows" id="ref-for-propdef-grid-template-rows">grid-template-rows</a>
      <tr class="value">
-      <th><a href="https://www.w3.org/TR/css-values/#value-defs">Value:</a>
-      <td class="prod">none <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-grid-2/#typedef-track-list" id="ref-for-typedef-track-list">&lt;track-list></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-grid-2/#typedef-auto-track-list" id="ref-for-typedef-auto-track-list">&lt;auto-track-list></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one②">|</a> subgrid <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-grid-2/#typedef-line-name-list" id="ref-for-typedef-line-name-list">&lt;line-name-list></a><a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-opt" id="ref-for-mult-opt">?</a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one③">|</a> masonry
+      <th><a href="https://www.w3.org/TR/css-values/#value-defs">New values:</a>
+      <td class="prod">masonry
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
       <td>none
@@ -2015,7 +2019,7 @@ Parts of this work may be from another specification document.  If so, those par
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see <a href="https://drafts.csswg.org/css-grid-2/#propdef-grid-template-columns" id="termref-for-">CSS Grid</a>
    </table>
-   <p>This allows us to use the full power of <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis">grid axis</a>.  Line names and track sizes can be specified and <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item">grid items</a> can be placed into the tracks and span them using <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-column" id="ref-for-propdef-grid-column">grid-column</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-row" id="ref-for-propdef-grid-row">grid-row</a> as usual.  The <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> properties works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container②">grid container</a> in this axis.  In the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis">masonry axis</a> however, items are laid out one after another using the <a href="#masonry-layout-algorithm">§ 2.3 Masonry Layout Algorithm</a>.</p>
+   <p>This allows us to use the full power of <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis">grid axis</a>.  Line names and track sizes can be specified and <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item">grid items</a> can be placed into the tracks and span them using <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-column" id="ref-for-propdef-grid-column">grid-column</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-row" id="ref-for-propdef-grid-row">grid-row</a> as usual.  The <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> properties works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container②">grid container</a> in this axis.  In the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis">masonry axis</a> however, items are laid out one after another using the <a href="#masonry-layout-algorithm">§ 2.4 Masonry Layout Algorithm</a>.</p>
    <div class="example" id="example-1f001e34">
     <a class="self-link" href="#example-1f001e34"></a> Here’s a masonry layout <a href="examples/pinterest-with-span.html">example</a> demonstrating placed and spanning items: 
     <figure>
@@ -2023,42 +2027,47 @@ Parts of this work may be from another specification document.  If so, those par
      <figcaption>Rendering of the example above.</figcaption>
     </figure>
    </div>
-   <p>Subgrid <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item①">grid items</a> are supported but subgridding only occurs in the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container③">grid container’s</a> <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①">grid axis</a>, see <a href="#subgrids">§ 9 Subgrids</a> for details.</p>
+   <p>Subgrid <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item①">grid items</a> are supported but subgridding only occurs in the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container③">grid container’s</a> <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①">grid axis</a>, see <a href="#subgrids">§ 8 Subgrids</a> for details.</p>
    <p>If <span class="css">masonry</span> is specified in both axes then the inline-axis will behave as <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none" id="ref-for-valdef-grid-template-rows-none①">none</a> and it will thus be the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②">grid axis</a>.</p>
    <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item②">Grid items</a> are formed and <a data-link-type="dfn" href="https://drafts.csswg.org/css-display-3/#blockify" id="ref-for-blockify">blockified</a> exactly the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container④">grid container</a>.</p>
-   <p>All CSS properties works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑤">grid container</a> unless otherwise specified by this specification.  For example, <a href="https://www.w3.org/TR/css-grid/#order-accessibility">order</a><a data-link-type="dfn"> can be used to specify a different layout order for the items.</a></p>
-   <a data-link-type="dfn"> <h3 class="heading settled" data-level="2.1" id="line-name-resolution"><span class="secno">2.1. </span><span class="content"> Line Name Resolution</span><a class="self-link" href="#line-name-resolution"></a></h3> </a>
-   <p><a data-link-type="dfn" href="#running-position" id="ref-for-running-position"></a><a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item③">Grid item</a> line name resolution works the same as if <span class="css">masonry</span> were replaced with <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none" id="ref-for-valdef-grid-template-rows-none②">none</a>, i.e. line names are resolved <em>in both axes</em>.  The <a href="https://drafts.csswg.org/css-grid-2/#line-placement">line name resolution</a> works exactly is in <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a>.</p>
+   <p>All CSS properties works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑤">grid container</a> unless otherwise specified by this specification.  For example, <span class="css">order</span> can be used to specify a different layout order for the items.</p>
+   <h3 class="heading settled" data-level="2.1" id="line-name-resolution"><span class="secno">2.1. </span><span class="content"> Line Name Resolution</span><a class="self-link" href="#line-name-resolution"></a></h3>
+   <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item③">Grid item</a> line name resolution works the same as if <span class="css">masonry</span> were replaced with <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none" id="ref-for-valdef-grid-template-rows-none②">none</a>, i.e. line names are resolved <em>in both axes</em>.  The <a href="https://drafts.csswg.org/css-grid-2/#line-placement">line name resolution</a> works exactly is in <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a>.</p>
    <h3 class="heading settled" data-level="2.2" id="grid-item-placement"><span class="secno">2.2. </span><span class="content"> Grid Item Placement</span><a class="self-link" href="#grid-item-placement"></a></h3>
    <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item④">Grid items</a> are placed using these steps:</p>
    <ol>
     <li>Place the items as if the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①">masonry axis</a> had <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none" id="ref-for-valdef-grid-template-rows-none③">none</a> specified in that axis. 
-    <li>Items that were placed at the first (hypothetical) implicit track in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②">masonry axis</a> after step 1 keep their placement in both axes as their final placement. They will be laid out first in each <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③">grid axis</a> track and their <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis④">grid axis</a> placement is considered definite henceforth. All other items ignore their placement from step 1.  Any item with with a specified definite placement in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③">masonry axis</a> that doesn’t result in it being placed at the first implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis④">masonry axis</a> will be treated as having <a class="property" data-link-type="propdesc">auto</a>-placement in that axis. 
+    <li>Items that were placed at the first (hypothetical) implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②">masonry axis</a> after step 1 keep their placement in both axes as their final placement. They will be laid out first in each <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③">grid axis</a> track and their <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis④">grid axis</a> placement is considered definite henceforth. All other items ignore their placement from step 1.  Any item with with a specified definite placement in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③">masonry axis</a> that doesn’t result in it being placed at the first implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis④">masonry axis</a> will be treated as having <a class="property" data-link-type="propdesc">auto</a>-placement in that axis. 
     <li>Place items using the <a href="#masonry-layout-algorithm">Masonry layout algorithm</a> below. 
    </ol>
-   <p>(The reason for step 1 above is to determine which items contribute to intrinsic track sizing in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑤">grid axis</a>, see <a href="#track-sizing">Track sizing</a> below.)</p>
-   <h3 class="heading settled" data-level="2.3" id="masonry-layout-algorithm"><span class="secno">2.3. </span><span class="content"> Masonry Layout Algorithm</span><a class="self-link" href="#masonry-layout-algorithm"></a></h3>
-   <p>Items are placed in <a href="https://drafts.csswg.org/css-flexbox-1/#order-modified-document-order">order-modifed document order</a> but items with a definite placement are placed before items with an indefinite position (as in regular grid layout). For each of the tracks in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑥">grid axis</a>, keep a <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="running-position">running position</dfn> initialized to zero. For each item that was placed at line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑤">masonry axis</a> in <a href="#grid-item-placement">Grid Item Placement</a> step 1 above:</p>
+   <p>(The reason for step 1 above is to determine which items contribute to intrinsic track sizing in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑤">grid axis</a>, see <a href="#track-sizing">§ 2.3 Grid Axis Track Sizing</a> below.)</p>
+   <h3 class="heading settled" data-level="2.3" id="track-sizing"><span class="secno">2.3. </span><span class="content"> Grid Axis Track Sizing</span><a class="self-link" href="#track-sizing"></a></h3>
+   <p>Track sizing works the same as in <a href="https://drafts.csswg.org/css-grid-2/#algo-track-sizing">CSS Grid</a>, except that that the algorithm is run only with the subset of items that has a known grid axis placement.  This subset is the items placed at the first implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑤">masonry axis</a> in <a href="#grid-item-placement">Grid Item Placement</a> above, plus the items that have a specified definite placement in the grid axis, plus the items that span all grid axis tracks (which obviously will be placed at the first implicit line since there is no other way to place them).  Other items will be placed in the grid axis by the <a href="#masonry-layout-algorithm">§ 2.4 Masonry Layout Algorithm</a> below and don’t contribute to intrinsic track sizing (because that would create circular dependencies).</p>
+   <h4 class="heading settled" data-level="2.3.1" id="repeat-auto-fit"><span class="secno">2.3.1. </span><span class="content"> repeat(auto-fit)</span><a class="self-link" href="#repeat-auto-fit"></a></h4>
+   <p><span class="css">repeat(auto-fit)</span> behaves as <span class="css">repeat(auto-fill)</span> when the other axis is a <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑥">masonry axis</a>.  The reason for this is that <span class="css">auto</span>-placed items depend on the layout size of its siblings.  Removing empty tracks after layout wouldn’t be possible in most cases since it might affect any intrinsic track sizes.  Even if all track sizes are definite the containing block size could change for grid-aligned abs.pos. descendants.  This makes <span class="css">repeat(auto-fit)</span> impossible to support in a grid container with masonry layout.</p>
+   <h3 class="heading settled" data-level="2.4" id="masonry-layout-algorithm"><span class="secno">2.4. </span><span class="content"> Masonry Layout Algorithm</span><a class="self-link" href="#masonry-layout-algorithm"></a></h3>
+   <p>Items are placed in <a href="https://drafts.csswg.org/css-flexbox-1/#order-modified-document-order">order-modifed document order</a> but items with a definite placement are placed before items with an indefinite position (as in regular grid layout). For each of the tracks in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑥">grid axis</a>, keep a <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="running-position">running position</dfn> initialized to zero. For each item placed at the first implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑦">masonry axis</a> in <a href="#grid-item-placement">Grid Item Placement</a> step 1 above:</p>
    <ol>
-    <li>position the item at the content edge of the grid container in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑥">masonry axis</a> and at its start track in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑦">grid axis</a>
-    <li>calculate the size of the <a href="#containing-block">containing block</a> and then layout the item.  Then calculate its resulting margin-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑦">masonry axis</a>. Set the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position①">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑧">grid axis</a> tracks the item spans to the maximum of <code>margin-box-end + grid-gap</code> and the current <a data-link-type="dfn" href="#running-position" id="ref-for-running-position②">running position</a> of those tracks. 
+    <li>position the item at the content edge of the grid container in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑧">masonry axis</a> and at its start track in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑦">grid axis</a>
+    <li>calculate the size of the <a href="#containing-block">containing block</a> and then layout the item.  Then calculate its resulting margin-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑨">masonry axis</a>. Set the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑧">grid axis</a> tracks the item spans to the maximum of <code>margin-box-end + grid-gap</code> and the current <a data-link-type="dfn" href="#running-position" id="ref-for-running-position①">running position</a> of those tracks. 
    </ol>
-   <p class="note" role="note"><span>Note:</span> This means that items with a definite placement at line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑧">masonry axis</a> by <a href="#grid-item-placement">Grid Item Placement</a> step 1 can be made to intentionally overlap.</p>
+   <p class="note" role="note"><span>Note:</span> This means that items with a definite placement at line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⓪">masonry axis</a> by <a href="#grid-item-placement">Grid Item Placement</a> step 1 can be made to intentionally overlap.</p>
    <p>The remaining items get their final placement using the following steps:</p>
    <ol>
     <li>
      If the item has an indefinite placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis⑨">grid axis</a> then resolve its definite placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⓪">grid axis</a> using these substeps: 
      <ol>
       <li>starting at the first <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①①">grid axis</a> line in the implicit grid...
-      <li>find the largest <a data-link-type="dfn" href="#running-position" id="ref-for-running-position③">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①②">grid axis</a> tracks that the item would span if it were placed at this line, call this position <code>max_pos</code>
+      <li>find the largest <a data-link-type="dfn" href="#running-position" id="ref-for-running-position②">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①②">grid axis</a> tracks that the item would span if it were placed at this line, call this position <code>max_pos</code>
       <li>increment the line number and repeat step 2 until the item would no longer fit inside the grid
       <li>pick the line that resulted in the smallest <code>max_pos</code> as the item’s definite placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①③">grid axis</a>
      </ol>
       Otherwise, a definite placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①④">grid axis</a> is honored the same as in a regular grid. 
-    <li>position the item at its <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑤">grid axis</a> start track and the maximum of the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position④">running position</a>s of the tracks it spans 
-    <li>calculate the size of the item’s <a href="#containing-block">containing block</a> and then layout the item. Then calculate its resulting margin-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis⑨">masonry axis</a>. Set the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position⑤">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑥">grid axis</a> tracks the item spans to <code>max_pos + margin-box-end + grid-gap</code>. 
+    <li>position the item at its <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑤">grid axis</a> start track and the maximum of the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position③">running position</a>s of the tracks it spans 
+    <li>calculate the size of the item’s <a href="#containing-block">containing block</a> and then layout the item. Then calculate its resulting margin-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①①">masonry axis</a>. Set the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position④">running position</a> of the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑥">grid axis</a> tracks the item spans to <code>max_pos + margin-box-end + grid-gap</code>. 
    </ol>
-   <p>The Masonry Layout Algorithm above can be modified in two ways, using the new <a class="property" data-link-type="propdesc" href="#propdef-masonry-auto-flow" id="ref-for-propdef-masonry-auto-flow">masonry-auto-flow</a> property:</p>
+   <h3 class="heading settled" data-level="2.5" id="masonry-auto-flow"><span class="secno">2.5. </span><span class="content"> The <span class="css">masonry-auto-flow</span> Property</span><a class="self-link" href="#masonry-auto-flow"></a></h3>
+   <p>The <a href="#masonry-layout-algorithm">§ 2.4 Masonry Layout Algorithm</a> above can be modified in two ways, using the new <a class="property" data-link-type="propdesc" href="#propdef-masonry-auto-flow" id="ref-for-propdef-masonry-auto-flow">masonry-auto-flow</a> property:</p>
    <table class="def propdef" data-link-for-hint="masonry-auto-flow">
     <tbody>
      <tr>
@@ -2066,7 +2075,7 @@ Parts of this work may be from another specification document.  If so, those par
       <td><dfn class="dfn-paneled css" data-dfn-type="property" data-export id="propdef-masonry-auto-flow">masonry-auto-flow</dfn>
      <tr class="value">
       <th><a href="https://www.w3.org/TR/css-values/#value-defs">Value:</a>
-      <td class="prod">[ pack <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one④">|</a> next ] <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-any" id="ref-for-comb-any">||</a> [definite-first <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑤">|</a> ordered ]
+      <td class="prod">[ pack <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one">|</a> next ] <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-any" id="ref-for-comb-any">||</a> [definite-first <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①">|</a> ordered ]
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
       <td>pack
@@ -2121,15 +2130,11 @@ item<c- nf>:nth-child</c-><c- p>(</c-><c- m>2</c-><c- k>n</c-><c- m>+1</c-><c- p
     <p>(Without <a class="css" data-link-type="propdesc" href="#propdef-masonry-auto-flow" id="ref-for-propdef-masonry-auto-flow②">masonry-auto-flow: next</a>, item 4 would be placed below item 2.)</p>
    </div>
    <h2 class="heading settled" data-level="3" id="containing-block"><span class="secno">3. </span><span class="content"> Containing Block</span><a class="self-link" href="#containing-block"></a></h2>
-   <p>The <a data-link-type="dfn" href="https://drafts.csswg.org/css-display-3/#containing-block" id="ref-for-containing-block">containing block</a> for a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item⑤">grid item</a> is formed by its <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-area" id="ref-for-grid-area">grid area</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑧">grid axis</a> and the grid container’s content-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⓪">masonry axis</a>.</p>
-   <h2 class="heading settled" data-level="4" id="track-sizing"><span class="secno">4. </span><span class="content"> Track sizing</span><a class="self-link" href="#track-sizing"></a></h2>
-   <p>The <a href="https://drafts.csswg.org/css-grid-2/#algo-track-sizing">Track Sizing Algorithm</a> works as usual in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑨">grid axis</a>, except only the subset of items with a definite placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⓪">grid axis</a>, or which span all tracks, contribute to the intrinsic sizing.  This makes the first implicit line in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①①">masonry axis</a> special since those items will contribute to the intrinsic sizing even if they were <a class="property" data-link-type="propdesc">auto</a>-placed in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②①">grid axis</a>.  Other <a class="property" data-link-type="propdesc">auto</a>-placed items don’t contribute since which track they end up in depends on layout results; unless they span all tracks in which case there is only one possible placement and thus its placement is independent of layout results.</p>
-   <h3 class="heading settled" data-level="4.1" id="repeat-auto-fit"><span class="secno">4.1. </span><span class="content"> repeat(auto-fit)</span><a class="self-link" href="#repeat-auto-fit"></a></h3>
-   <p><span class="css">repeat(auto-fit)</span> behaves as <span class="css">repeat(auto-fill)</span> when the other axis is a <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①②">masonry axis</a>.  The reason for this is that <span class="css">auto</span>-placed items depend on the layout size of its siblings.  Removing empty tracks after layout wouldn’t be possible in most cases since it might affect any intrinsic track sizes.  Even if all track sizes are definite the containing block size could change for grid-aligned abs.pos. descendants.  This makes <span class="css">repeat(auto-fit)</span> impossible to support in a grid container with masonry layout.</p>
-   <h2 class="heading settled" data-level="5" id="#implicit-grid"><span class="secno">5. </span><span class="content"> The Implicit Grid </span><a class="self-link" href="#%23implicit-grid"></a></h2>
-    The <dfn data-dfn-type="dfn" data-noexport id="implicit-grid">implicit grid<a class="self-link" href="#implicit-grid"></a></dfn> is formed in the same way as for a <a href="https://drafts.csswg.org/css-grid/#implicit-grids">regular grid container</a>.  However, it’s only used in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②②">grid axis</a>.  The flow axis specified by <span class="css">grid-auto-flow</span> is ignored — items are always placed by filling the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②③">grid axis</a> (note that the <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-auto-flow-dense" id="ref-for-valdef-grid-auto-flow-dense">dense</a> keyword does have an effect though in determining which items end up at line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①③">masonry axis</a>, in <a href="#grid-item-placement">§ 2.2 Grid Item Placement</a> step 1). <span class="css">direction:rtl</span> reverses the grid if the inline-axis is the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②④">grid axis</a> (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①④">masonry axis</a>. 
+   <p>The <a data-link-type="dfn" href="https://drafts.csswg.org/css-display-3/#containing-block" id="ref-for-containing-block">containing block</a> for a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item⑤">grid item</a> is formed by its <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-area" id="ref-for-grid-area">grid area</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑧">grid axis</a> and the grid container’s content-box in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①②">masonry axis</a>.</p>
+   <h2 class="heading settled" data-level="4" id="#implicit-grid"><span class="secno">4. </span><span class="content"> The Implicit Grid </span><a class="self-link" href="#%23implicit-grid"></a></h2>
+    The <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#implicit-grid" id="ref-for-implicit-grid">implicit grid</a> is formed in the same way as for a regular grid container.  However, it’s only used in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis①⑨">grid axis</a>.  The flow axis specified by <span class="css">grid-auto-flow</span> is ignored — items are always placed by filling the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⓪">grid axis</a> (note that the <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-grid-2/#valdef-grid-auto-flow-dense" id="ref-for-valdef-grid-auto-flow-dense">dense</a> keyword does have an effect though in determining which items end up at line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①③">masonry axis</a>, in <a href="#grid-item-placement">§ 2.2 Grid Item Placement</a> step 1). <span class="css">direction:rtl</span> reverses the grid if the inline-axis is the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②①">grid axis</a> (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①④">masonry axis</a>. 
    <div class="example" id="example-de83ba08">
-    <a class="self-link" href="#example-de83ba08"></a> Here’s a simple <a href="examples/rtl-grid-axis.html">example</a> using <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-writing-modes-3/#propdef-direction" id="ref-for-propdef-direction">direction: rtl</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑤">grid axis</a>: 
+    <a class="self-link" href="#example-de83ba08"></a> Here’s a simple <a href="examples/rtl-grid-axis.html">example</a> using <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-writing-modes-3/#propdef-direction" id="ref-for-propdef-direction">direction: rtl</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②②">grid axis</a>: 
 <pre class="language-css highlight">&lt;style>
 .grid <c- p>{</c->
   <c- k>display</c-><c- p>:</c-> inline-grid<c- p>;</c->
@@ -2188,7 +2193,7 @@ item<c- nf>:nth-child</c-><c- p>(</c-><c- m>2</c-><c- k>n</c-><c- m>+1</c-><c- p
      <figcaption>Rendering of the <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-writing-modes-3/#propdef-direction" id="ref-for-propdef-direction③">direction: rtl</a> example above.</figcaption>
     </figure>
    </div>
-   <h2 class="heading settled" data-level="6" id="intrinsic-sizes"><span class="secno">6. </span><span class="content"> Sizing Grid Containers</span><a class="self-link" href="#intrinsic-sizes"></a></h2>
+   <h2 class="heading settled" data-level="5" id="intrinsic-sizes"><span class="secno">5. </span><span class="content"> Sizing Grid Containers</span><a class="self-link" href="#intrinsic-sizes"></a></h2>
    <p><a href="https://drafts.csswg.org/css-grid-2/#intrinsic-sizes">Sizing Grid Containers</a> works the same as for regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑦">grid containers</a> but with the following addendum for the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⑥">masonry axis</a>: The <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#max-content" id="ref-for-max-content">max-content size</a> (<a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#min-content" id="ref-for-min-content">min-content size</a>) of a grid container in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⑦">masonry axis</a> is the largest distance between the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑧">grid container’s</a> content-box start edge and the maximum margin-box end of all the items, when sized under a <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#max-content-constraint" id="ref-for-max-content-constraint">max-content constraint</a> (<a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#min-content-constraint" id="ref-for-min-content-constraint">min-content constraint</a>).</p>
    <div class="example" id="example-759140be">
     <a class="self-link" href="#example-759140be"></a> Here’s a simple <a href="examples/grid-intrinsic-sizing-example-1.html">example</a>: 
@@ -2216,9 +2221,9 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption>Rendering of the grid container intrinsic sizing example above.</figcaption>
     </figure>
    </div>
-   <h2 class="heading settled" data-level="7" id="alignment"><span class="secno">7. </span><span class="content"> Alignment and Spacing</span><a class="self-link" href="#alignment"></a></h2>
+   <h2 class="heading settled" data-level="6" id="alignment"><span class="secno">6. </span><span class="content"> Alignment and Spacing</span><a class="self-link" href="#alignment"></a></h2>
    <p><a href="https://www.w3.org/TR/css-grid-2/#gutters">Gutters</a> are supported in both axes. In the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⑧">masonry axis</a> the gap is applied between each pair of adjacent items margin-box.  Margins do not collapse in either axis.</p>
-   <p><a href="https://drafts.csswg.org/css-grid-2/#alignment">Alignment</a> works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑨">grid container</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑥">grid axis</a>.</p>
+   <p><a href="https://drafts.csswg.org/css-grid-2/#alignment">Alignment</a> works the same as in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑨">grid container</a> in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②③">grid axis</a>.</p>
    <p><a href="https://drafts.csswg.org/css-align/#content-distribution">Content Distribution</a> in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis①⑨">masonry axis</a> is applied to the content as a whole, same as for block containers.  More specifically, the <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#alignment-subject" id="ref-for-alignment-subject">alignment subject</a> is the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="masonry-box">masonry box</dfn>, which is the area formed by the content-box edge of the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⓪">grid container</a> to the margin-box end edge of the item that is the furthest away in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②⓪">masonry axis</a>, as indicated by the dashed border here:</p>
    <figure>
      <img src="images/masonry-box.png"> 
@@ -2226,8 +2231,8 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
 		(Note that item 1 has a 5px bottom margin here.) </figcaption>
    </figure>
    <p>Note that there is only ever one <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#alignment-subject" id="ref-for-alignment-subject①">alignment subject</a> for these properties in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②①">masonry axis</a>, so the unique <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-align-content" id="ref-for-propdef-align-content">align-content</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-justify-content" id="ref-for-propdef-justify-content">justify-content</a> values boil down to <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-self-position-start" id="ref-for-valdef-self-position-start">start</a>, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-self-position-center" id="ref-for-valdef-self-position-center">center</a>, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-self-position-end" id="ref-for-valdef-self-position-end">end</a>, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-align-content-stretch" id="ref-for-valdef-align-content-stretch">stretch</a> and <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#baseline-alignment" id="ref-for-baseline-alignment">baseline alignment</a>. (<a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-justify-content-normal" id="ref-for-valdef-justify-content-normal">normal</a> behaves as <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-align-content-stretch" id="ref-for-valdef-align-content-stretch①">stretch</a> as usual for <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①①">grid containers</a>).  In the figure above the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①②">grid container</a> has <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-align-content" id="ref-for-propdef-align-content①">align-content: start</a>.  By default, the <a data-link-type="dfn" href="#masonry-box" id="ref-for-masonry-box①">masonry box</a> is the same as the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①③">grid container</a>'s content-box due to being stretched.</p>
-   <h3 class="heading settled" data-level="7.1" id="tracks-alignment"><span class="secno">7.1. </span><span class="content"> The align-tracks and justify-tracks Properties </span><a class="self-link" href="#tracks-alignment"></a></h3>
-   <p>This specification adds two new properties to align the items in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②②">masonry axis</a> for each individual <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑦">grid axis</a> track:</p>
+   <h3 class="heading settled" data-level="6.1" id="tracks-alignment"><span class="secno">6.1. </span><span class="content"> The align-tracks and justify-tracks Properties </span><a class="self-link" href="#tracks-alignment"></a></h3>
+   <p>This specification adds two new properties to align the items in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②②">masonry axis</a> for each individual <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②④">grid axis</a> track:</p>
    <table class="def propdef" data-link-for-hint="align-tracks">
     <tbody>
      <tr>
@@ -2235,7 +2240,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
       <td><dfn class="dfn-paneled css" data-dfn-type="property" data-export id="propdef-align-tracks">align-tracks</dfn>
      <tr class="value">
       <th><a href="https://www.w3.org/TR/css-values/#value-defs">Value:</a>
-      <td class="prod">[normal <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑥">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-baseline-position" id="ref-for-typedef-baseline-position" title="Expands to: baseline | first | last">&lt;baseline-position></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑦">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution" id="ref-for-typedef-content-distribution" title="Expands to: space-around | space-between | space-evenly | stretch">&lt;content-distribution></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑧">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-overflow-position" id="ref-for-typedef-overflow-position" title="Expands to: safe | unsafe">&lt;overflow-position></a><a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-opt" id="ref-for-mult-opt①">?</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-position" id="ref-for-typedef-content-position" title="Expands to: center | end | flex-end | flex-start | start">&lt;content-position></a>]<a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-comma" id="ref-for-mult-comma">#</a>
+      <td class="prod">[normal <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one②">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-baseline-position" id="ref-for-typedef-baseline-position" title="Expands to: baseline | first | last">&lt;baseline-position></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one③">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution" id="ref-for-typedef-content-distribution" title="Expands to: space-around | space-between | space-evenly | stretch">&lt;content-distribution></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one④">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-overflow-position" id="ref-for-typedef-overflow-position" title="Expands to: safe | unsafe">&lt;overflow-position></a><a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-opt" id="ref-for-mult-opt">?</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-position" id="ref-for-typedef-content-position" title="Expands to: center | end | flex-end | flex-start | start">&lt;content-position></a>]<a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-comma" id="ref-for-mult-comma">#</a>
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
       <td>normal
@@ -2265,7 +2270,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
       <td><dfn class="dfn-paneled css" data-dfn-type="property" data-export id="propdef-justify-tracks">justify-tracks</dfn>
      <tr class="value">
       <th><a href="https://www.w3.org/TR/css-values/#value-defs">Value:</a>
-      <td class="prod">[normal <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑨">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution" id="ref-for-typedef-content-distribution①" title="Expands to: space-around | space-between | space-evenly | stretch">&lt;content-distribution></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①⓪">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-overflow-position" id="ref-for-typedef-overflow-position①" title="Expands to: safe | unsafe">&lt;overflow-position></a><a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-opt" id="ref-for-mult-opt②">?</a> [ <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-position" id="ref-for-typedef-content-position①" title="Expands to: center | end | flex-end | flex-start | start">&lt;content-position></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①①">|</a> left <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①②">|</a> right ] ]<a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-comma" id="ref-for-mult-comma①">#</a>
+      <td class="prod">[normal <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑤">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution" id="ref-for-typedef-content-distribution①" title="Expands to: space-around | space-between | space-evenly | stretch">&lt;content-distribution></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑥">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-overflow-position" id="ref-for-typedef-overflow-position①" title="Expands to: safe | unsafe">&lt;overflow-position></a><a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-opt" id="ref-for-mult-opt①">?</a> [ <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-position" id="ref-for-typedef-content-position①" title="Expands to: center | end | flex-end | flex-start | start">&lt;content-position></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑦">|</a> left <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one⑧">|</a> right ] ]<a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-comma" id="ref-for-mult-comma①">#</a>
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
       <td>normal
@@ -2289,7 +2294,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
       <td>discrete
    </table>
    <p class="note" role="note"><span>Note:</span> These values are the same as for <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-align-content" id="ref-for-propdef-align-content②">align-content</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-justify-content" id="ref-for-propdef-justify-content①">justify-content</a>, but here we accept multiple values in a comma-separated list.</p>
-   <p>Unlike <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-align-content" id="ref-for-propdef-align-content③">align-content</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-justify-content" id="ref-for-propdef-justify-content②">justify-content</a>, <span class="css">normal</span> behaves as <span class="css">start</span> for these properties.  So the default rendering is the expected packed masonry layout as shown in the top left corner in the example below.  When multiple values are specified the first track in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑧">grid axis</a> uses the first value, the second track uses the second value, etc.  If there are fewer values than tracks then the last value is used for the remaining tracks.  If there are more values than tracks then the remaining values have no effect on the rendering.</p>
+   <p>Unlike <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-align-content" id="ref-for-propdef-align-content③">align-content</a> / <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-align-3/#propdef-justify-content" id="ref-for-propdef-justify-content②">justify-content</a>, <span class="css">normal</span> behaves as <span class="css">start</span> for these properties.  So the default rendering is the expected packed masonry layout as shown in the top left corner in the example below.  When multiple values are specified the first track in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑤">grid axis</a> uses the first value, the second track uses the second value, etc.  If there are fewer values than tracks then the last value is used for the remaining tracks.  If there are more values than tracks then the remaining values have no effect on the rendering.</p>
    <div class="example" id="example-9dcbe46d">
     <a class="self-link" href="#example-9dcbe46d"></a> Here’s a <a href="examples/align-tracks-example-1.html">testcase</a> that demonstrates a few <a class="property" data-link-type="propdesc" href="#propdef-align-tracks" id="ref-for-propdef-align-tracks">align-tracks</a> alignment possibilities. 
     <figure>
@@ -2297,7 +2302,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption> The rendering of the <span class="css">align-tracks</span> example above. </figcaption>
     </figure>
    </div>
-   <h3 class="heading settled" data-level="7.2" id="masonry-axis-stretch-alignment"><span class="secno">7.2. </span><span class="content"> Stretch Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-stretch-alignment"></a></h3>
+   <h3 class="heading settled" data-level="6.2" id="masonry-axis-stretch-alignment"><span class="secno">6.2. </span><span class="content"> Stretch Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-stretch-alignment"></a></h3>
    <p><span class="css">stretch</span> will stretch the items in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②③">masonry axis</a> for each track separately to fill the content-box.  Any item can opt out from stretching by setting <span class="css">align-self</span> / <span class="css">justify-self</span> to something other than <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-align-self-normal" id="ref-for-valdef-align-self-normal">normal</a> or <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-align-self-stretch" id="ref-for-valdef-align-self-stretch">stretch</a> in the relevant axis.  Items with a <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#definite" id="ref-for-definite">definite size</a> don’t stretch and items with an <span class="css">auto</span> margin in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②④">masonry axis</a> stretch by increasing its margin(s) instead of its content-box size.  An item only grows up to its <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#max-width" id="ref-for-max-width">max size</a>.</p>
    <div class="example" id="example-86b8c3a5">
     <a class="self-link" href="#example-86b8c3a5"></a> Here’s a <a href="examples/align-tracks-example-2.html">testcase</a> that demonstrates stretching items in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②⑤">masonry axis</a>. 
@@ -2314,17 +2319,17 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption> Visualization of the <a class="css" data-link-type="propdesc" href="#propdef-justify-tracks" id="ref-for-propdef-justify-tracks">justify-tracks: stretch</a> example above. </figcaption>
     </figure>
    </div>
-   <h3 class="heading settled" data-level="7.3" id="masonry-axis-alignment"><span class="secno">7.3. </span><span class="content"> Individual Track Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-alignment"></a></h3>
+   <h3 class="heading settled" data-level="6.3" id="masonry-axis-alignment"><span class="secno">6.3. </span><span class="content"> Individual Track Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-alignment"></a></h3>
    <p><span class="css">align-tracks</span> / <span class="css">justify-tracks</span> values can be specified per track.</p>
    <div class="example" id="example-970a421a">
-    <a class="self-link" href="#example-970a421a"></a> Here’s an <a href="examples/masonry-axis-alignment-1.html">example</a> to illustrate this. Note that the <a class="property" data-link-type="propdesc" href="#propdef-align-tracks" id="ref-for-propdef-align-tracks②">align-tracks</a> value intentionally has one value less than the number of tracks to illustrate that the remaining track(s) use the last value (i.e. the right-most track also uses <span class="css">space-evenly</span>). (<span class="css">baseline</span> values are also supported but excluded in this test, see <a href="#masonry-axis-baseline-alignment">§ 7.4 Baseline Alignment in the Masonry Axis</a> for a description how that works with examples.) 
+    <a class="self-link" href="#example-970a421a"></a> Here’s an <a href="examples/masonry-axis-alignment-1.html">example</a> to illustrate this. Note that the <a class="property" data-link-type="propdesc" href="#propdef-align-tracks" id="ref-for-propdef-align-tracks②">align-tracks</a> value intentionally has one value less than the number of tracks to illustrate that the remaining track(s) use the last value (i.e. the right-most track also uses <span class="css">space-evenly</span>). (<span class="css">baseline</span> values are also supported but excluded in this test, see <a href="#masonry-axis-baseline-alignment">§ 6.4 Baseline Alignment in the Masonry Axis</a> for a description how that works with examples.) 
     <figure>
       <img src="images/masonry-axis-alignment-1.png"> 
      <figcaption> Rendering of the <span class="css">align-tracks</span> alignment example above. </figcaption>
     </figure>
    </div>
-   <h3 class="heading settled" data-level="7.4" id="masonry-axis-baseline-alignment"><span class="secno">7.4. </span><span class="content"> Baseline Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-baseline-alignment"></a></h3>
-   <p>Item <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#baseline-alignment" id="ref-for-baseline-alignment①">baseline alignment</a> inside the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑨">grid axis</a> tracks works as usual for a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⑥">grid container</a>, and the grid container’s baseline is determined the same as for a regular grid container in that axis.</p>
+   <h3 class="heading settled" data-level="6.4" id="masonry-axis-baseline-alignment"><span class="secno">6.4. </span><span class="content"> Baseline Alignment in the Masonry Axis</span><a class="self-link" href="#masonry-axis-baseline-alignment"></a></h3>
+   <p>Item <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#baseline-alignment" id="ref-for-baseline-alignment①">baseline alignment</a> inside the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑥">grid axis</a> tracks works as usual for a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⑥">grid container</a>, and the grid container’s baseline is determined the same as for a regular grid container in that axis.</p>
    <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#baseline-alignment" id="ref-for-baseline-alignment②">Baseline alignment</a> is supported also in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②⑥">masonry axis</a>, on the first and last item in each track (but not on items "in the middle" of the track). Only tracks with the <a class="property" data-link-type="propdesc" href="#propdef-align-tracks" id="ref-for-propdef-align-tracks③">align-tracks</a> / <a class="property" data-link-type="propdesc" href="#propdef-justify-tracks" id="ref-for-propdef-justify-tracks①">justify-tracks</a> values <span class="css">start</span>, <span class="css">end</span> or <span class="css">stretch</span>, support baseline alignment. There are four different sets of <a data-link-type="dfn" href="https://drafts.csswg.org/css-align-3/#baseline-sharing-group" id="ref-for-baseline-sharing-group">baseline-sharing groups</a>:</p>
    <ol>
     <li>the first item in each <span class="css">start</span> track + the first item in each <span class="css">stretch</span> track 
@@ -2344,10 +2349,10 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
    </div>
    <p class="issue" id="issue-7304afcc"><a class="self-link" href="#issue-7304afcc"></a> this needs more details about edge cases, caveat about misalignment in stretch, etc</p>
    <p><strong class="advisement"> Authors are advised to be careful with using alignment values other than <span class="css">start</span> when some items span more than one track, because it’s easy to cause items to unintentionally overlap in this case.</strong></p>
-   <p class="issue" id="issue-3a363cba"><a class="self-link" href="#issue-3a363cba"></a> can we make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?</p>
-   <h2 class="heading settled" data-level="8" id="pagination"><span class="secno">8. </span><span class="content"> Fragmentation</span><a class="self-link" href="#pagination"></a></h2>
-   <h3 class="heading settled" data-level="8.1" id="masonry-axis-pagination"><span class="secno">8.1. </span><span class="content"> Fragmentation in the Masonry Axis</span><a class="self-link" href="#masonry-axis-pagination"></a></h3>
-   <p>Each <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③⓪">grid axis</a> track is fragmented independently in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②⑨">masonry axis</a>.  If a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item⑥">grid item</a> is fragmented, or has a <a data-link-type="dfn" href="https://drafts.csswg.org/css-break-4/#forced-break" id="ref-for-forced-break">forced break</a> before/after it, then the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position⑥">running position</a> for the tracks that it spans in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③①">grid axis</a> are set to the size of the <a data-link-type="dfn" href="https://drafts.csswg.org/css-break-4/#fragmentainer" id="ref-for-fragmentainer">fragmentainer</a> so that no further items will be placed in those tracks.  An item that is split into multiple fragments retains its placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③②">grid axis</a> for all its fragments.  A grid item that is pushed however, is placed again by the next grid container fragment.  Placement continues until all items are placed or pushed to a new fragment.</p>
+   <p class="issue" id="issue-2abb2fa3"><a class="self-link" href="#issue-2abb2fa3"></a> maybe we can make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?</p>
+   <h2 class="heading settled" data-level="7" id="pagination"><span class="secno">7. </span><span class="content"> Fragmentation</span><a class="self-link" href="#pagination"></a></h2>
+   <h3 class="heading settled" data-level="7.1" id="masonry-axis-pagination"><span class="secno">7.1. </span><span class="content"> Fragmentation in the Masonry Axis</span><a class="self-link" href="#masonry-axis-pagination"></a></h3>
+   <p>Each <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑦">grid axis</a> track is fragmented independently in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis②⑨">masonry axis</a>.  If a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-item" id="ref-for-grid-item⑥">grid item</a> is fragmented, or has a <a data-link-type="dfn" href="https://drafts.csswg.org/css-break-4/#forced-break" id="ref-for-forced-break">forced break</a> before/after it, then the <a data-link-type="dfn" href="#running-position" id="ref-for-running-position⑤">running position</a> for the tracks that it spans in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑧">grid axis</a> are set to the size of the <a data-link-type="dfn" href="https://drafts.csswg.org/css-break-4/#fragmentainer" id="ref-for-fragmentainer">fragmentainer</a> so that no further items will be placed in those tracks.  An item that is split into multiple fragments retains its placement in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis②⑨">grid axis</a> for all its fragments.  A grid item that is pushed however, is placed again by the next grid container fragment.  Placement continues until all items are placed or pushed to a new fragment.</p>
    <div class="example" id="example-b489c79e">
     <a class="self-link" href="#example-b489c79e"></a> Here’s an <a href="examples/fragmentation-block-axis-example.html">example</a> illustrating fragmentation of a grid with masonry layout in its block-axis. It renders like this: 
     <figure style="max-width:100%">
@@ -2355,8 +2360,8 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption> Visualization of fragmentation in a block-axis masonry layout. </figcaption>
     </figure>
    </div>
-   <h3 class="heading settled" data-level="8.2" id="grid-axis-pagination"><span class="secno">8.2. </span><span class="content"> Fragmentation in the Grid Axis</span><a class="self-link" href="#grid-axis-pagination"></a></h3>
-   <p>Fragmentation in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③③">grid axis</a> with masonry layout in the other axis is also supported. In this case the fragmentation behaves more like in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⑧">grid container</a>, however which <a data-link-type="dfn">grid-axis</a> track each item is placed into occurs as a separate step upfront before fragmentation occurs.</p>
+   <h3 class="heading settled" data-level="7.2" id="grid-axis-pagination"><span class="secno">7.2. </span><span class="content"> Fragmentation in the Grid Axis</span><a class="self-link" href="#grid-axis-pagination"></a></h3>
+   <p>Fragmentation in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③⓪">grid axis</a> with masonry layout in the other axis is also supported. In this case the fragmentation behaves more like in a regular <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⑧">grid container</a>, however which <a data-link-type="dfn">grid-axis</a> track each item is placed into occurs as a separate step upfront before fragmentation occurs.</p>
    <div class="example" id="example-740b4428">
     <a class="self-link" href="#example-740b4428"></a> Here’s an <a href="examples/fragmentation-inline-axis-example.html">example</a> illustrating fragmentation of a grid with masonry layout in its inline-axis. In this case the breaks occurs between the <a data-link-type="dfn">grid-axis</a> rows.  It renders like this: 
     <figure style="max-width:100%">
@@ -2364,7 +2369,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption> Visualization of fragmentation in the block-axis with inline-axis masonry layout. </figcaption>
     </figure>
    </div>
-   <h2 class="heading settled" data-level="9" id="subgrids"><span class="secno">9. </span><span class="content"> Subgrids</span><a class="self-link" href="#subgrids"></a></h2>
+   <h2 class="heading settled" data-level="8" id="subgrids"><span class="secno">8. </span><span class="content"> Subgrids</span><a class="self-link" href="#subgrids"></a></h2>
    <p>Masonry layout is supported also in <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#subgrid" id="ref-for-subgrid">subgrids</a> (e.g. <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid" id="ref-for-propdef-grid">grid: subgrid / masonry</a>).  However, only a parent grid axis can be subgridded in the normal sense.  A subgrid axis with a parent <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⓪">masonry axis</a> will behave as <span class="css">masonry</span>, unless the subgrid’s other axis is also <span class="css">masonry</span> in which case it behaves as <span class="css">none</span> (a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⑨">grid container</a> can only have one <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③①">masonry axis</a>). <span class="css">auto</span>-placed subgrids don’t inherit any line names from their parent grid because that would make the placement of the subgrid’s grid items dependent on layout results, but subgrid’s tracks are aligned to the parent’s tracks as usual.  Here’s a subgrid <a href="examples/subgrid-example-1.html">example</a>:</p>
    <div class="example" id="example-5da4ab29">
     <a class="self-link" href="#example-5da4ab29"></a> 
@@ -2415,14 +2420,14 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
     </figure>
     <p>Note how the subgrid’s first item ("subgrid.1") contributes to the intrinsic size of the 2nd row in the parent grid.  This is possible since the subgrid specified a definite placement so we know which tracks it will occupy.  Note also that trying to subgrid the parent’s <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③②">masonry axis</a> results in the subgrid getting masonry layout in its inline-axis.</p>
    </div>
-   <h2 class="heading settled" data-level="10" id="abspos"><span class="secno">10. </span><span class="content"> Absolute Positioning</span><a class="self-link" href="#abspos"></a></h2>
-   <p><a href="https://drafts.csswg.org/css-grid/#abspos-items">Grid-aligned absolute-positioned descendants</a> are supported.  In the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③③">masonry axis</a> all <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-position" id="ref-for-grid-position">grid positions</a> except line 1 are treated as <a class="property" data-link-type="propdesc">auto</a>. Line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③④">masonry axis</a> corresponds to the start of the <a data-link-type="dfn" href="#masonry-box" id="ref-for-masonry-box③">masonry box</a> (the content-box start edge usually) and <a class="property" data-link-type="propdesc">auto</a> uses the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container②⓪">grid container</a> padding edge as usual. The <a data-link-type="dfn" href="https://drafts.csswg.org/css-display-3/#containing-block" id="ref-for-containing-block①">containing block</a> is the extent of the tracks the item spans in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③④">grid axis</a> and the position of line 1 and the padding-box edge in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑤">masonry axis</a>.</p>
-   <p class="issue" id="issue-973214f0"><a class="self-link" href="#issue-973214f0"></a> It might be useful to define a static position in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑥">masonry axis</a> though, given that we only have a one line in that axis to align to. Maybe it could defined as the max (or min?) current <a data-link-type="dfn" href="#running-position" id="ref-for-running-position⑦">running position</a> of the <a data-link-type="dfn">grid-axis</a> tracks at that point?</p>
+   <h2 class="heading settled" data-level="9" id="abspos"><span class="secno">9. </span><span class="content"> Absolute Positioning</span><a class="self-link" href="#abspos"></a></h2>
+   <p><a href="https://drafts.csswg.org/css-grid/#abspos-items">Grid-aligned absolute-positioned descendants</a> are supported.  In the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③③">masonry axis</a> all <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-position" id="ref-for-grid-position">grid positions</a> except line 1 are treated as <a class="property" data-link-type="propdesc">auto</a>. Line 1 in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③④">masonry axis</a> corresponds to the start of the <a data-link-type="dfn" href="#masonry-box" id="ref-for-masonry-box③">masonry box</a> (the content-box start edge usually) and <a class="property" data-link-type="propdesc">auto</a> uses the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container②⓪">grid container</a> padding edge as usual. The <a data-link-type="dfn" href="https://drafts.csswg.org/css-display-3/#containing-block" id="ref-for-containing-block①">containing block</a> is the extent of the tracks the item spans in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③①">grid axis</a> and the position of line 1 and the padding-box edge in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑤">masonry axis</a>.</p>
+   <p class="issue" id="issue-7bbe63a7"><a class="self-link" href="#issue-7bbe63a7"></a> It might be useful to define a static position in the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑥">masonry axis</a>. Maybe it could defined as the max (or min?) current <a data-link-type="dfn" href="#running-position" id="ref-for-running-position⑥">running position</a> of the <a data-link-type="dfn">grid-axis</a> tracks at that point?  Or the end of the item before it?</p>
    <p class="issue" id="issue-b2e5048b"><a class="self-link" href="#issue-b2e5048b"></a> It would also be useful to be able to align the <a data-link-type="dfn" href="#masonry-box" id="ref-for-masonry-box④">masonry box</a> end edge somehow, but for that we need a way to address the <a href="https://github.com/w3c/csswg-drafts/issues/2402">end line in an implicit grid</a>, or could we just use any non-auto line number other than 1 to indicate the end line given that we don’t really have any lines in this axis other than line 1?</p>
-   <h2 class="heading settled" data-level="11" id="performance-notes"><span class="secno">11. </span><span class="content"> Performance Notes</span><a class="self-link" href="#performance-notes"></a></h2>
-   <p>In general, masonry layout should have significantly better performance than the equivalent regular (2-axis) grid layout, particularly when the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑦">masonry axis</a> is the block-axis since the intrinsic sizing of grid rows is typically quite expensive. Any intrinsic track sizing in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③⑤">grid axis</a> should be cheaper too, because, typically, only a subset of items contribute to the intrinsic sizing in a masonry layout, contrary to a 2-axis grid where all items spanning an intrinsically-sized track contribute. That said, <span class="css">align-tracks: stretch</span> specifically adds a cost proportionate to the number of items that are resized. (Note that <span class="css">stretch</span> isn’t the default value for these properties though.) Stretched items do a second layout with the new size (when it actually changed) so this can be costly if there are a huge amount of stretched items that each contains a lot of content. Especially nested stretched masonry layouts should be avoided unless they are small/trivial.</p>
+   <h2 class="heading settled" data-level="10" id="performance-notes"><span class="secno">10. </span><span class="content"> Performance Notes</span><a class="self-link" href="#performance-notes"></a></h2>
+   <p>In general, masonry layout should have significantly better performance than the equivalent regular (2-axis) grid layout, particularly when the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑦">masonry axis</a> is the block-axis since the intrinsic sizing of grid rows is typically quite expensive. Any intrinsic track sizing in the <a data-link-type="dfn" href="#grid-axis" id="ref-for-grid-axis③②">grid axis</a> should be cheaper too, because, typically, only a subset of items contribute to the intrinsic sizing in a masonry layout, contrary to a 2-axis grid where all items spanning an intrinsically-sized track contribute. That said, <span class="css">align-tracks: stretch</span> specifically adds a cost proportionate to the number of items that are resized. (Note that <span class="css">stretch</span> isn’t the default value for these properties though.) Stretched items do a second layout with the new size (when it actually changed) so this can be costly if there are a huge amount of stretched items that each contains a lot of content. Especially nested stretched masonry layouts should be avoided unless they are small/trivial.</p>
    <p><strong class="advisement"> This can be ameliorated by the author by opting out from the stretching on most items though, e.g. specifying <span class="css">align-items:start</span> and then opting in for just a few items with <span class="css">align-self:stretch</span> to let those items fill the <a data-link-type="dfn" href="#masonry-axis" id="ref-for-masonry-axis③⑧">masonry axis</a>. Other <a class="property" data-link-type="propdesc" href="#propdef-justify-tracks" id="ref-for-propdef-justify-tracks②">justify-tracks</a> / <a class="property" data-link-type="propdesc" href="#propdef-align-tracks" id="ref-for-propdef-align-tracks④">align-tracks</a> values such as <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-self-position-center" id="ref-for-valdef-self-position-center①">center</a>, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-self-position-end" id="ref-for-valdef-self-position-end①">end</a> and '<a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution" id="ref-for-typedef-content-distribution②" title="Expands to: space-around | space-between | space-evenly | stretch">&lt;content-distribution></a>' (other than <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-align-3/#valdef-align-self-stretch" id="ref-for-valdef-align-self-stretch①">stretch</a>) shouldn’t be a problem though since they just reposition the items which is fast. (This performance analysis is from a Gecko perspective, but I suspect there’s some truth to it for other layout engines as well.)</strong></p>
-   <h2 class="heading settled" data-level="12" id="graceful-degradation"><span class="secno">12. </span><span class="content"> Graceful Degradation</span><a class="self-link" href="#graceful-degradation"></a></h2>
+   <h2 class="heading settled" data-level="11" id="graceful-degradation"><span class="secno">11. </span><span class="content"> Graceful Degradation</span><a class="self-link" href="#graceful-degradation"></a></h2>
    <p>Typically, a masonry design can be expected to degrade quite nicely in a UA that supports Grid layout but not masonry layout if the <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid" id="ref-for-propdef-grid①">grid</a>/<a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-grid-2/#propdef-grid-template" id="ref-for-propdef-grid-template">grid-template</a> shorthands are avoided and the longhands are used instead. e.g.</p>
 <pre class="language-css highlight">  <c- k>grid-template-rows</c-><c- p>:</c-> masonry<c- p>;</c-> <c- c>/* ignored by UAs that don’t support it */</c->
   grid-template-columns: <c- m>150</c-><c- k>px</c-> <c- m>100</c-><c- k>px</c-> <c- m>50</c-><c- k>px</c-><c- p>;</c->
@@ -2434,7 +2439,7 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
      <figcaption> Rendering of the example in a UA with Masonry support. </figcaption>
     </figure>
    </div>
-   <h2 class="heading settled" data-level="13" id="acknowledgements"><span class="secno">13. </span><span class="content"> Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
+   <h2 class="heading settled" data-level="12" id="acknowledgements"><span class="secno">12. </span><span class="content"> Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
    <p>Thanks goes to Cameron McCormack who wrote a masonry layout explainer document (from which I lifted the Background chapter) and presented it to the CSSWG.  Thanks also to everyone who provided feedback on the <a href="https://github.com/w3c/csswg-drafts/issues/4650">initial proposal</a> for this feature.</p>
   </main>
   <div data-fill-with="conformance">
@@ -2586,170 +2591,169 @@ item <c- p>{</c-> <c- k>background</c-><c- p>:</c-> silver<c- p>;</c-> <c- k>mar
   <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
-   <li><a href="#propdef-align-tracks">align-tracks</a><span>, in §7.1</span>
+   <li><a href="#propdef-align-tracks">align-tracks</a><span>, in §6.1</span>
    <li><a href="#grid-axis">grid axis</a><span>, in §2</span>
-   <li><a href="#implicit-grid">implicit grid</a><span>, in §5</span>
-   <li><a href="#propdef-justify-tracks">justify-tracks</a><span>, in §7.1</span>
-   <li><a href="#propdef-masonry-auto-flow">masonry-auto-flow</a><span>, in §2.3</span>
+   <li><a href="#propdef-justify-tracks">justify-tracks</a><span>, in §6.1</span>
+   <li><a href="#propdef-masonry-auto-flow">masonry-auto-flow</a><span>, in §2.5</span>
    <li><a href="#masonry-axis">masonry axis</a><span>, in §2</span>
-   <li><a href="#masonry-box">masonry box</a><span>, in §7</span>
-   <li><a href="#running-position">running position</a><span>, in §2.3</span>
+   <li><a href="#masonry-box">masonry box</a><span>, in §6</span>
+   <li><a href="#running-position">running position</a><span>, in §2.4</span>
   </ul>
   <aside class="dfn-panel" data-for="term-for-typedef-baseline-position">
    <a href="https://drafts.csswg.org/css-align-3/#typedef-baseline-position">https://drafts.csswg.org/css-align-3/#typedef-baseline-position</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-typedef-baseline-position">7.1. 
+    <li><a href="#ref-for-typedef-baseline-position">6.1. 
 The align-tracks and justify-tracks Properties </a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-typedef-content-distribution">
    <a href="https://drafts.csswg.org/css-align-3/#typedef-content-distribution">https://drafts.csswg.org/css-align-3/#typedef-content-distribution</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-typedef-content-distribution">7.1. 
+    <li><a href="#ref-for-typedef-content-distribution">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-typedef-content-distribution①">(2)</a>
-    <li><a href="#ref-for-typedef-content-distribution②">11. 
+    <li><a href="#ref-for-typedef-content-distribution②">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-typedef-content-position">
    <a href="https://drafts.csswg.org/css-align-3/#typedef-content-position">https://drafts.csswg.org/css-align-3/#typedef-content-position</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-typedef-content-position">7.1. 
+    <li><a href="#ref-for-typedef-content-position">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-typedef-content-position①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-typedef-overflow-position">
    <a href="https://drafts.csswg.org/css-align-3/#typedef-overflow-position">https://drafts.csswg.org/css-align-3/#typedef-overflow-position</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-typedef-overflow-position">7.1. 
+    <li><a href="#ref-for-typedef-overflow-position">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-typedef-overflow-position①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-align-content">
    <a href="https://drafts.csswg.org/css-align-3/#propdef-align-content">https://drafts.csswg.org/css-align-3/#propdef-align-content</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-align-content">7. 
+    <li><a href="#ref-for-propdef-align-content">6. 
 Alignment and Spacing</a> <a href="#ref-for-propdef-align-content①">(2)</a>
-    <li><a href="#ref-for-propdef-align-content②">7.1. 
+    <li><a href="#ref-for-propdef-align-content②">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-propdef-align-content③">(2)</a>
-    <li><a href="#ref-for-propdef-align-content④">7.4. 
+    <li><a href="#ref-for-propdef-align-content④">6.4. 
 Baseline Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-align-self">
    <a href="https://drafts.csswg.org/css-align-3/#propdef-align-self">https://drafts.csswg.org/css-align-3/#propdef-align-self</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-align-self">7.2. 
+    <li><a href="#ref-for-propdef-align-self">6.2. 
 Stretch Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-align-self①">7.4. 
+    <li><a href="#ref-for-propdef-align-self①">6.4. 
 Baseline Alignment in the Masonry Axis</a> <a href="#ref-for-propdef-align-self②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-alignment-subject">
    <a href="https://drafts.csswg.org/css-align-3/#alignment-subject">https://drafts.csswg.org/css-align-3/#alignment-subject</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-alignment-subject">7. 
+    <li><a href="#ref-for-alignment-subject">6. 
 Alignment and Spacing</a> <a href="#ref-for-alignment-subject①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-baseline-alignment">
    <a href="https://drafts.csswg.org/css-align-3/#baseline-alignment">https://drafts.csswg.org/css-align-3/#baseline-alignment</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-baseline-alignment">7. 
+    <li><a href="#ref-for-baseline-alignment">6. 
 Alignment and Spacing</a>
-    <li><a href="#ref-for-baseline-alignment①">7.4. 
+    <li><a href="#ref-for-baseline-alignment①">6.4. 
 Baseline Alignment in the Masonry Axis</a> <a href="#ref-for-baseline-alignment②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-baseline-sharing-group">
    <a href="https://drafts.csswg.org/css-align-3/#baseline-sharing-group">https://drafts.csswg.org/css-align-3/#baseline-sharing-group</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-baseline-sharing-group">7.4. 
+    <li><a href="#ref-for-baseline-sharing-group">6.4. 
 Baseline Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-self-position-center">
    <a href="https://drafts.csswg.org/css-align-3/#valdef-self-position-center">https://drafts.csswg.org/css-align-3/#valdef-self-position-center</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-self-position-center">7. 
+    <li><a href="#ref-for-valdef-self-position-center">6. 
 Alignment and Spacing</a>
-    <li><a href="#ref-for-valdef-self-position-center①">11. 
+    <li><a href="#ref-for-valdef-self-position-center①">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-self-position-end">
    <a href="https://drafts.csswg.org/css-align-3/#valdef-self-position-end">https://drafts.csswg.org/css-align-3/#valdef-self-position-end</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-self-position-end">7. 
+    <li><a href="#ref-for-valdef-self-position-end">6. 
 Alignment and Spacing</a>
-    <li><a href="#ref-for-valdef-self-position-end①">11. 
+    <li><a href="#ref-for-valdef-self-position-end①">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-first-baseline-set">
    <a href="https://drafts.csswg.org/css-align-3/#first-baseline-set">https://drafts.csswg.org/css-align-3/#first-baseline-set</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-first-baseline-set">7.4. 
+    <li><a href="#ref-for-first-baseline-set">6.4. 
 Baseline Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-justify-content">
    <a href="https://drafts.csswg.org/css-align-3/#propdef-justify-content">https://drafts.csswg.org/css-align-3/#propdef-justify-content</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-justify-content">7. 
+    <li><a href="#ref-for-propdef-justify-content">6. 
 Alignment and Spacing</a>
-    <li><a href="#ref-for-propdef-justify-content①">7.1. 
+    <li><a href="#ref-for-propdef-justify-content①">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-propdef-justify-content②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-last-baseline-set">
    <a href="https://drafts.csswg.org/css-align-3/#last-baseline-set">https://drafts.csswg.org/css-align-3/#last-baseline-set</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-last-baseline-set">7.4. 
+    <li><a href="#ref-for-last-baseline-set">6.4. 
 Baseline Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-justify-content-normal">
    <a href="https://drafts.csswg.org/css-align-3/#valdef-justify-content-normal">https://drafts.csswg.org/css-align-3/#valdef-justify-content-normal</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-justify-content-normal">7. 
+    <li><a href="#ref-for-valdef-justify-content-normal">6. 
 Alignment and Spacing</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-self-position-start">
    <a href="https://drafts.csswg.org/css-align-3/#valdef-self-position-start">https://drafts.csswg.org/css-align-3/#valdef-self-position-start</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-self-position-start">7. 
+    <li><a href="#ref-for-valdef-self-position-start">6. 
 Alignment and Spacing</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-align-self-stretch">
    <a href="https://drafts.csswg.org/css-align-3/#valdef-align-self-stretch">https://drafts.csswg.org/css-align-3/#valdef-align-self-stretch</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-align-self-stretch">7.2. 
+    <li><a href="#ref-for-valdef-align-self-stretch">6.2. 
 Stretch Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-valdef-align-self-stretch①">11. 
+    <li><a href="#ref-for-valdef-align-self-stretch①">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-margin-top">
    <a href="https://drafts.csswg.org/css-box-4/#propdef-margin-top">https://drafts.csswg.org/css-box-4/#propdef-margin-top</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-margin-top">7.2. 
+    <li><a href="#ref-for-propdef-margin-top">6.2. 
 Stretch Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-forced-break">
    <a href="https://drafts.csswg.org/css-break-4/#forced-break">https://drafts.csswg.org/css-break-4/#forced-break</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-forced-break">8.1. 
+    <li><a href="#ref-for-forced-break">7.1. 
 Fragmentation in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-fragmentainer">
    <a href="https://drafts.csswg.org/css-break-4/#fragmentainer">https://drafts.csswg.org/css-break-4/#fragmentainer</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-fragmentainer">8.1. 
+    <li><a href="#ref-for-fragmentainer">7.1. 
 Fragmentation in the Masonry Axis</a>
    </ul>
   </aside>
@@ -2765,44 +2769,23 @@ Masonry Layout</a>
    <ul>
     <li><a href="#ref-for-containing-block">3. 
 Containing Block</a>
-    <li><a href="#ref-for-containing-block①">10. 
+    <li><a href="#ref-for-containing-block①">9. 
 Absolute Positioning</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="term-for-typedef-auto-track-list">
-   <a href="https://drafts.csswg.org/css-grid-2/#typedef-auto-track-list">https://drafts.csswg.org/css-grid-2/#typedef-auto-track-list</a><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-typedef-auto-track-list">2. 
-Masonry Layout</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="term-for-typedef-line-name-list">
-   <a href="https://drafts.csswg.org/css-grid-2/#typedef-line-name-list">https://drafts.csswg.org/css-grid-2/#typedef-line-name-list</a><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-typedef-line-name-list">2. 
-Masonry Layout</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="term-for-typedef-track-list">
-   <a href="https://drafts.csswg.org/css-grid-2/#typedef-track-list">https://drafts.csswg.org/css-grid-2/#typedef-track-list</a><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-typedef-track-list">2. 
-Masonry Layout</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-grid-auto-flow-dense">
    <a href="https://drafts.csswg.org/css-grid-2/#valdef-grid-auto-flow-dense">https://drafts.csswg.org/css-grid-2/#valdef-grid-auto-flow-dense</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-grid-auto-flow-dense">5. 
+    <li><a href="#ref-for-valdef-grid-auto-flow-dense">4. 
 The Implicit Grid </a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-grid">
    <a href="https://drafts.csswg.org/css-grid-2/#propdef-grid">https://drafts.csswg.org/css-grid-2/#propdef-grid</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-grid">9. 
+    <li><a href="#ref-for-propdef-grid">8. 
 Subgrids</a>
-    <li><a href="#ref-for-propdef-grid①">12. 
+    <li><a href="#ref-for-propdef-grid①">11. 
 Graceful Degradation</a>
    </ul>
   </aside>
@@ -2818,21 +2801,21 @@ Containing Block</a>
    <ul>
     <li><a href="#ref-for-grid-container">2. 
 Masonry Layout</a> <a href="#ref-for-grid-container①">(2)</a> <a href="#ref-for-grid-container②">(3)</a> <a href="#ref-for-grid-container③">(4)</a> <a href="#ref-for-grid-container④">(5)</a> <a href="#ref-for-grid-container⑤">(6)</a>
-    <li><a href="#ref-for-grid-container⑥">2.3. 
-Masonry Layout Algorithm</a>
-    <li><a href="#ref-for-grid-container⑦">6. 
+    <li><a href="#ref-for-grid-container⑥">2.5. 
+The masonry-auto-flow Property</a>
+    <li><a href="#ref-for-grid-container⑦">5. 
 Sizing Grid Containers</a> <a href="#ref-for-grid-container⑧">(2)</a>
-    <li><a href="#ref-for-grid-container⑨">7. 
+    <li><a href="#ref-for-grid-container⑨">6. 
 Alignment and Spacing</a> <a href="#ref-for-grid-container①⓪">(2)</a> <a href="#ref-for-grid-container①①">(3)</a> <a href="#ref-for-grid-container①②">(4)</a> <a href="#ref-for-grid-container①③">(5)</a>
-    <li><a href="#ref-for-grid-container①④">7.1. 
+    <li><a href="#ref-for-grid-container①④">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-grid-container①⑤">(2)</a>
-    <li><a href="#ref-for-grid-container①⑥">7.4. 
+    <li><a href="#ref-for-grid-container①⑥">6.4. 
 Baseline Alignment in the Masonry Axis</a> <a href="#ref-for-grid-container①⑦">(2)</a>
-    <li><a href="#ref-for-grid-container①⑧">8.2. 
+    <li><a href="#ref-for-grid-container①⑧">7.2. 
 Fragmentation in the Grid Axis</a>
-    <li><a href="#ref-for-grid-container①⑨">9. 
+    <li><a href="#ref-for-grid-container①⑨">8. 
 Subgrids</a>
-    <li><a href="#ref-for-grid-container②⓪">10. 
+    <li><a href="#ref-for-grid-container②⓪">9. 
 Absolute Positioning</a>
    </ul>
   </aside>
@@ -2840,19 +2823,21 @@ Absolute Positioning</a>
    <a href="https://drafts.csswg.org/css-grid-2/#grid-item">https://drafts.csswg.org/css-grid-2/#grid-item</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-grid-item">2. 
-Masonry Layout</a> <a href="#ref-for-grid-item①">(2)</a> <a href="#ref-for-grid-item②">(3)</a> <a href="#ref-for-grid-item③">(4)</a>
+Masonry Layout</a> <a href="#ref-for-grid-item①">(2)</a> <a href="#ref-for-grid-item②">(3)</a>
+    <li><a href="#ref-for-grid-item③">2.1. 
+Line Name Resolution</a>
     <li><a href="#ref-for-grid-item④">2.2. 
 Grid Item Placement</a>
     <li><a href="#ref-for-grid-item⑤">3. 
 Containing Block</a>
-    <li><a href="#ref-for-grid-item⑥">8.1. 
+    <li><a href="#ref-for-grid-item⑥">7.1. 
 Fragmentation in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-grid-position">
    <a href="https://drafts.csswg.org/css-grid-2/#grid-position">https://drafts.csswg.org/css-grid-2/#grid-position</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-grid-position">10. 
+    <li><a href="#ref-for-grid-position">9. 
 Absolute Positioning</a>
    </ul>
   </aside>
@@ -2873,7 +2858,7 @@ Masonry Layout</a>
   <aside class="dfn-panel" data-for="term-for-propdef-grid-template">
    <a href="https://drafts.csswg.org/css-grid-2/#propdef-grid-template">https://drafts.csswg.org/css-grid-2/#propdef-grid-template</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-grid-template">12. 
+    <li><a href="#ref-for-propdef-grid-template">11. 
 Graceful Degradation</a>
    </ul>
   </aside>
@@ -2891,11 +2876,20 @@ Masonry Layout</a> <a href="#termref-for-">(2)</a>
 Masonry Layout</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-implicit-grid">
+   <a href="https://drafts.csswg.org/css-grid-2/#implicit-grid">https://drafts.csswg.org/css-grid-2/#implicit-grid</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-implicit-grid">4. 
+The Implicit Grid </a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-grid-template-rows-none">
    <a href="https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none">https://drafts.csswg.org/css-grid-2/#valdef-grid-template-rows-none</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-valdef-grid-template-rows-none">2. 
-Masonry Layout</a> <a href="#ref-for-valdef-grid-template-rows-none①">(2)</a> <a href="#ref-for-valdef-grid-template-rows-none②">(3)</a>
+Masonry Layout</a> <a href="#ref-for-valdef-grid-template-rows-none①">(2)</a>
+    <li><a href="#ref-for-valdef-grid-template-rows-none②">2.1. 
+Line Name Resolution</a>
     <li><a href="#ref-for-valdef-grid-template-rows-none③">2.2. 
 Grid Item Placement</a>
    </ul>
@@ -2903,80 +2897,78 @@ Grid Item Placement</a>
   <aside class="dfn-panel" data-for="term-for-subgrid">
    <a href="https://drafts.csswg.org/css-grid-2/#subgrid">https://drafts.csswg.org/css-grid-2/#subgrid</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-subgrid">9. 
+    <li><a href="#ref-for-subgrid">8. 
 Subgrids</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-valdef-width-auto">
    <a href="https://drafts.csswg.org/css-sizing-3/#valdef-width-auto">https://drafts.csswg.org/css-sizing-3/#valdef-width-auto</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-width-auto">7.2. 
+    <li><a href="#ref-for-valdef-width-auto">6.2. 
 Stretch Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-definite">
    <a href="https://drafts.csswg.org/css-sizing-3/#definite">https://drafts.csswg.org/css-sizing-3/#definite</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-definite">7.2. 
+    <li><a href="#ref-for-definite">6.2. 
 Stretch Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-max-width">
    <a href="https://drafts.csswg.org/css-sizing-3/#max-width">https://drafts.csswg.org/css-sizing-3/#max-width</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-max-width">7.2. 
+    <li><a href="#ref-for-max-width">6.2. 
 Stretch Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-max-content-constraint">
    <a href="https://drafts.csswg.org/css-sizing-3/#max-content-constraint">https://drafts.csswg.org/css-sizing-3/#max-content-constraint</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-max-content-constraint">6. 
+    <li><a href="#ref-for-max-content-constraint">5. 
 Sizing Grid Containers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-max-content">
    <a href="https://drafts.csswg.org/css-sizing-3/#max-content">https://drafts.csswg.org/css-sizing-3/#max-content</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-max-content">6. 
+    <li><a href="#ref-for-max-content">5. 
 Sizing Grid Containers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-max-height">
    <a href="https://drafts.csswg.org/css-sizing-3/#propdef-max-height">https://drafts.csswg.org/css-sizing-3/#propdef-max-height</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-max-height">7.2. 
+    <li><a href="#ref-for-propdef-max-height">6.2. 
 Stretch Alignment in the Masonry Axis</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-min-content-constraint">
    <a href="https://drafts.csswg.org/css-sizing-3/#min-content-constraint">https://drafts.csswg.org/css-sizing-3/#min-content-constraint</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-min-content-constraint">6. 
+    <li><a href="#ref-for-min-content-constraint">5. 
 Sizing Grid Containers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-min-content">
    <a href="https://drafts.csswg.org/css-sizing-3/#min-content">https://drafts.csswg.org/css-sizing-3/#min-content</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-min-content">6. 
+    <li><a href="#ref-for-min-content">5. 
 Sizing Grid Containers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-mult-comma">
    <a href="https://drafts.csswg.org/css-values-4/#mult-comma">https://drafts.csswg.org/css-values-4/#mult-comma</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-mult-comma">7.1. 
+    <li><a href="#ref-for-mult-comma">6.1. 
 The align-tracks and justify-tracks Properties </a> <a href="#ref-for-mult-comma①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-mult-opt">
    <a href="https://drafts.csswg.org/css-values-4/#mult-opt">https://drafts.csswg.org/css-values-4/#mult-opt</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-mult-opt">2. 
-Masonry Layout</a>
-    <li><a href="#ref-for-mult-opt①">7.1. 
-The align-tracks and justify-tracks Properties </a> <a href="#ref-for-mult-opt②">(2)</a>
+    <li><a href="#ref-for-mult-opt">6.1. 
+The align-tracks and justify-tracks Properties </a> <a href="#ref-for-mult-opt①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-css-wide-keywords">
@@ -2989,25 +2981,23 @@ Value Definitions</a>
   <aside class="dfn-panel" data-for="term-for-comb-one">
    <a href="https://drafts.csswg.org/css-values-4/#comb-one">https://drafts.csswg.org/css-values-4/#comb-one</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-comb-one">2. 
-Masonry Layout</a> <a href="#ref-for-comb-one①">(2)</a> <a href="#ref-for-comb-one②">(3)</a> <a href="#ref-for-comb-one③">(4)</a>
-    <li><a href="#ref-for-comb-one④">2.3. 
-Masonry Layout Algorithm</a> <a href="#ref-for-comb-one⑤">(2)</a>
-    <li><a href="#ref-for-comb-one⑥">7.1. 
-The align-tracks and justify-tracks Properties </a> <a href="#ref-for-comb-one⑦">(2)</a> <a href="#ref-for-comb-one⑧">(3)</a> <a href="#ref-for-comb-one⑨">(4)</a> <a href="#ref-for-comb-one①⓪">(5)</a> <a href="#ref-for-comb-one①①">(6)</a> <a href="#ref-for-comb-one①②">(7)</a>
+    <li><a href="#ref-for-comb-one">2.5. 
+The masonry-auto-flow Property</a> <a href="#ref-for-comb-one①">(2)</a>
+    <li><a href="#ref-for-comb-one②">6.1. 
+The align-tracks and justify-tracks Properties </a> <a href="#ref-for-comb-one③">(2)</a> <a href="#ref-for-comb-one④">(3)</a> <a href="#ref-for-comb-one⑤">(4)</a> <a href="#ref-for-comb-one⑥">(5)</a> <a href="#ref-for-comb-one⑦">(6)</a> <a href="#ref-for-comb-one⑧">(7)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-comb-any">
    <a href="https://drafts.csswg.org/css-values-4/#comb-any">https://drafts.csswg.org/css-values-4/#comb-any</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-comb-any">2.3. 
-Masonry Layout Algorithm</a>
+    <li><a href="#ref-for-comb-any">2.5. 
+The masonry-auto-flow Property</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-direction">
    <a href="https://drafts.csswg.org/css-writing-modes-3/#propdef-direction">https://drafts.csswg.org/css-writing-modes-3/#propdef-direction</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-direction">5. 
+    <li><a href="#ref-for-propdef-direction">4. 
 The Implicit Grid </a> <a href="#ref-for-propdef-direction①">(2)</a> <a href="#ref-for-propdef-direction②">(3)</a> <a href="#ref-for-propdef-direction③">(4)</a>
    </ul>
   </aside>
@@ -3016,86 +3006,84 @@ The Implicit Grid </a> <a href="#ref-for-propdef-direction①">(2)</a> <a href="
    <li>
     <a data-link-type="biblio">[css-align-3]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-typedef-baseline-position" style="color:initial">&lt;baseline-position></span>
-     <li><span class="dfn-paneled" id="term-for-typedef-content-distribution" style="color:initial">&lt;content-distribution></span>
-     <li><span class="dfn-paneled" id="term-for-typedef-content-position" style="color:initial">&lt;content-position></span>
-     <li><span class="dfn-paneled" id="term-for-typedef-overflow-position" style="color:initial">&lt;overflow-position></span>
-     <li><span class="dfn-paneled" id="term-for-propdef-align-content" style="color:initial">align-content</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-align-self" style="color:initial">align-self</span>
-     <li><span class="dfn-paneled" id="term-for-alignment-subject" style="color:initial">alignment subject</span>
-     <li><span class="dfn-paneled" id="term-for-baseline-alignment" style="color:initial">baseline alignment</span>
-     <li><span class="dfn-paneled" id="term-for-baseline-sharing-group" style="color:initial">baseline-sharing group</span>
-     <li><span class="dfn-paneled" id="term-for-valdef-self-position-center" style="color:initial">center</span>
-     <li><span class="dfn-paneled" id="term-for-valdef-self-position-end" style="color:initial">end</span>
-     <li><span class="dfn-paneled" id="term-for-first-baseline-set" style="color:initial">first baseline set</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-justify-content" style="color:initial">justify-content</span>
-     <li><span class="dfn-paneled" id="term-for-last-baseline-set" style="color:initial">last baseline set</span>
-     <li><span class="dfn-paneled" id="term-for-valdef-justify-content-normal" style="color:initial">normal <small>(for justify-content)</small></span>
-     <li><span class="dfn-paneled" id="term-for-valdef-self-position-start" style="color:initial">start</span>
-     <li><span class="dfn-paneled" id="term-for-valdef-align-self-stretch" style="color:initial">stretch <small>(for align-self)</small></span>
+     <li><span class="dfn-paneled" id="term-for-typedef-baseline-position">&lt;baseline-position></span>
+     <li><span class="dfn-paneled" id="term-for-typedef-content-distribution">&lt;content-distribution></span>
+     <li><span class="dfn-paneled" id="term-for-typedef-content-position">&lt;content-position></span>
+     <li><span class="dfn-paneled" id="term-for-typedef-overflow-position">&lt;overflow-position></span>
+     <li><span class="dfn-paneled" id="term-for-propdef-align-content">align-content</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-align-self">align-self</span>
+     <li><span class="dfn-paneled" id="term-for-alignment-subject">alignment subject</span>
+     <li><span class="dfn-paneled" id="term-for-baseline-alignment">baseline alignment</span>
+     <li><span class="dfn-paneled" id="term-for-baseline-sharing-group">baseline-sharing group</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-self-position-center">center</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-self-position-end">end</span>
+     <li><span class="dfn-paneled" id="term-for-first-baseline-set">first baseline set</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-justify-content">justify-content</span>
+     <li><span class="dfn-paneled" id="term-for-last-baseline-set">last baseline set</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-justify-content-normal">normal <small>(for justify-content)</small></span>
+     <li><span class="dfn-paneled" id="term-for-valdef-self-position-start">start</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-align-self-stretch">stretch <small>(for align-self)</small></span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-box-4]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-propdef-margin-top" style="color:initial">margin-top</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-margin-top">margin-top</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-break-4]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-forced-break" style="color:initial">forced break</span>
-     <li><span class="dfn-paneled" id="term-for-fragmentainer" style="color:initial">fragmentainer</span>
+     <li><span class="dfn-paneled" id="term-for-forced-break">forced break</span>
+     <li><span class="dfn-paneled" id="term-for-fragmentainer">fragmentainer</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-display-3]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-blockify" style="color:initial">blockify</span>
-     <li><span class="dfn-paneled" id="term-for-containing-block" style="color:initial">containing block</span>
+     <li><span class="dfn-paneled" id="term-for-blockify">blockify</span>
+     <li><span class="dfn-paneled" id="term-for-containing-block">containing block</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-grid-2]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-typedef-auto-track-list" style="color:initial">&lt;auto-track-list></span>
-     <li><span class="dfn-paneled" id="term-for-typedef-line-name-list" style="color:initial">&lt;line-name-list></span>
-     <li><span class="dfn-paneled" id="term-for-typedef-track-list" style="color:initial">&lt;track-list></span>
-     <li><span class="dfn-paneled" id="term-for-valdef-grid-auto-flow-dense" style="color:initial">dense</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid" style="color:initial">grid</span>
-     <li><span class="dfn-paneled" id="term-for-grid-area" style="color:initial">grid area</span>
-     <li><span class="dfn-paneled" id="term-for-grid-container" style="color:initial">grid container</span>
-     <li><span class="dfn-paneled" id="term-for-grid-item" style="color:initial">grid item</span>
-     <li><span class="dfn-paneled" id="term-for-grid-position" style="color:initial">grid position</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid-column" style="color:initial">grid-column</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid-row" style="color:initial">grid-row</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid-template" style="color:initial">grid-template</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid-template-columns" style="color:initial">grid-template-columns</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-grid-template-rows" style="color:initial">grid-template-rows</span>
-     <li><span class="dfn-paneled" id="term-for-valdef-grid-template-rows-none" style="color:initial">none</span>
-     <li><span class="dfn-paneled" id="term-for-subgrid" style="color:initial">subgrid</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-grid-auto-flow-dense">dense</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid">grid</span>
+     <li><span class="dfn-paneled" id="term-for-grid-area">grid area</span>
+     <li><span class="dfn-paneled" id="term-for-grid-container">grid container</span>
+     <li><span class="dfn-paneled" id="term-for-grid-item">grid item</span>
+     <li><span class="dfn-paneled" id="term-for-grid-position">grid position</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid-column">grid-column</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid-row">grid-row</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid-template">grid-template</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid-template-columns">grid-template-columns</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-grid-template-rows">grid-template-rows</span>
+     <li><span class="dfn-paneled" id="term-for-implicit-grid">implicit grid</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-grid-template-rows-none">none</span>
+     <li><span class="dfn-paneled" id="term-for-subgrid">subgrid</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-sizing-3]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-valdef-width-auto" style="color:initial">auto</span>
-     <li><span class="dfn-paneled" id="term-for-definite" style="color:initial">definite size</span>
-     <li><span class="dfn-paneled" id="term-for-max-width" style="color:initial">max size</span>
-     <li><span class="dfn-paneled" id="term-for-max-content-constraint" style="color:initial">max-content constraint</span>
-     <li><span class="dfn-paneled" id="term-for-max-content" style="color:initial">max-content size</span>
-     <li><span class="dfn-paneled" id="term-for-propdef-max-height" style="color:initial">max-height</span>
-     <li><span class="dfn-paneled" id="term-for-min-content-constraint" style="color:initial">min-content constraint</span>
-     <li><span class="dfn-paneled" id="term-for-min-content" style="color:initial">min-content size</span>
+     <li><span class="dfn-paneled" id="term-for-valdef-width-auto">auto</span>
+     <li><span class="dfn-paneled" id="term-for-definite">definite size</span>
+     <li><span class="dfn-paneled" id="term-for-max-width">max size</span>
+     <li><span class="dfn-paneled" id="term-for-max-content-constraint">max-content constraint</span>
+     <li><span class="dfn-paneled" id="term-for-max-content">max-content size</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-max-height">max-height</span>
+     <li><span class="dfn-paneled" id="term-for-min-content-constraint">min-content constraint</span>
+     <li><span class="dfn-paneled" id="term-for-min-content">min-content size</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-values-4]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-mult-comma" style="color:initial">#</span>
-     <li><span class="dfn-paneled" id="term-for-mult-opt" style="color:initial">?</span>
-     <li><span class="dfn-paneled" id="term-for-css-wide-keywords" style="color:initial">css-wide keywords</span>
-     <li><span class="dfn-paneled" id="term-for-comb-one" style="color:initial">|</span>
-     <li><span class="dfn-paneled" id="term-for-comb-any" style="color:initial">||</span>
+     <li><span class="dfn-paneled" id="term-for-mult-comma">#</span>
+     <li><span class="dfn-paneled" id="term-for-mult-opt">?</span>
+     <li><span class="dfn-paneled" id="term-for-css-wide-keywords">css-wide keywords</span>
+     <li><span class="dfn-paneled" id="term-for-comb-one">|</span>
+     <li><span class="dfn-paneled" id="term-for-comb-any">||</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-writing-modes-3]</a> defines the following terms:
     <ul>
-     <li><span class="dfn-paneled" id="term-for-propdef-direction" style="color:initial">direction</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-direction">direction</span>
     </ul>
   </ul>
   <h2 class="no-num no-ref heading settled" id="references"><span class="content">References</span><a class="self-link" href="#references"></a></h2>
@@ -3178,8 +3166,8 @@ The Implicit Grid </a> <a href="#ref-for-propdef-direction①">(2)</a> <a href="
   <div style="counter-reset:issue">
    <div class="issue"> specify how the grid container’s first(last) baseline in the <a data-link-type="dfn" href="#masonry-axis">masonry axis</a> is determined<a href="#issue-0877829d"> ↵ </a></div>
    <div class="issue"> this needs more details about edge cases, caveat about misalignment in stretch, etc<a href="#issue-7304afcc"> ↵ </a></div>
-   <div class="issue"> can we make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?<a href="#issue-3a363cba"> ↵ </a></div>
-   <div class="issue"> It might be useful to define a static position in the <a data-link-type="dfn" href="#masonry-axis">masonry axis</a> though, given that we only have a one line in that axis to align to. Maybe it could defined as the max (or min?) current <a data-link-type="dfn" href="#running-position">running position</a> of the <a data-link-type="dfn">grid-axis</a> tracks at that point?<a href="#issue-973214f0"> ↵ </a></div>
+   <div class="issue"> maybe we can make stretch alignment (at least) smarter so that we avoid overlapping spanning items in a few more cases that would be useful to authors?<a href="#issue-2abb2fa3"> ↵ </a></div>
+   <div class="issue"> It might be useful to define a static position in the <a data-link-type="dfn" href="#masonry-axis">masonry axis</a>. Maybe it could defined as the max (or min?) current <a data-link-type="dfn" href="#running-position">running position</a> of the <a data-link-type="dfn">grid-axis</a> tracks at that point?  Or the end of the item before it?<a href="#issue-7bbe63a7"> ↵ </a></div>
    <div class="issue"> It would also be useful to be able to align the <a data-link-type="dfn" href="#masonry-box">masonry box</a> end edge somehow, but for that we need a way to address the <a href="https://github.com/w3c/csswg-drafts/issues/2402">end line in an implicit grid</a>, or could we just use any non-auto line number other than 1 to indicate the end line given that we don’t really have any lines in this axis other than line 1?<a href="#issue-b2e5048b"> ↵ </a></div>
   </div>
   <aside class="dfn-panel" data-for="masonry-axis">
@@ -3190,32 +3178,32 @@ Masonry Layout</a>
     <li><a href="#ref-for-masonry-axis①">2.2. 
 Grid Item Placement</a> <a href="#ref-for-masonry-axis②">(2)</a> <a href="#ref-for-masonry-axis③">(3)</a> <a href="#ref-for-masonry-axis④">(4)</a>
     <li><a href="#ref-for-masonry-axis⑤">2.3. 
-Masonry Layout Algorithm</a> <a href="#ref-for-masonry-axis⑥">(2)</a> <a href="#ref-for-masonry-axis⑦">(3)</a> <a href="#ref-for-masonry-axis⑧">(4)</a> <a href="#ref-for-masonry-axis⑨">(5)</a>
-    <li><a href="#ref-for-masonry-axis①⓪">3. 
-Containing Block</a>
-    <li><a href="#ref-for-masonry-axis①①">4. 
-Track sizing</a>
-    <li><a href="#ref-for-masonry-axis①②">4.1. 
+Grid Axis Track Sizing</a>
+    <li><a href="#ref-for-masonry-axis⑥">2.3.1. 
 repeat(auto-fit)</a>
-    <li><a href="#ref-for-masonry-axis①③">5. 
+    <li><a href="#ref-for-masonry-axis⑦">2.4. 
+Masonry Layout Algorithm</a> <a href="#ref-for-masonry-axis⑧">(2)</a> <a href="#ref-for-masonry-axis⑨">(3)</a> <a href="#ref-for-masonry-axis①⓪">(4)</a> <a href="#ref-for-masonry-axis①①">(5)</a>
+    <li><a href="#ref-for-masonry-axis①②">3. 
+Containing Block</a>
+    <li><a href="#ref-for-masonry-axis①③">4. 
 The Implicit Grid </a> <a href="#ref-for-masonry-axis①④">(2)</a> <a href="#ref-for-masonry-axis①⑤">(3)</a>
-    <li><a href="#ref-for-masonry-axis①⑥">6. 
+    <li><a href="#ref-for-masonry-axis①⑥">5. 
 Sizing Grid Containers</a> <a href="#ref-for-masonry-axis①⑦">(2)</a>
-    <li><a href="#ref-for-masonry-axis①⑧">7. 
+    <li><a href="#ref-for-masonry-axis①⑧">6. 
 Alignment and Spacing</a> <a href="#ref-for-masonry-axis①⑨">(2)</a> <a href="#ref-for-masonry-axis②⓪">(3)</a> <a href="#ref-for-masonry-axis②①">(4)</a>
-    <li><a href="#ref-for-masonry-axis②②">7.1. 
+    <li><a href="#ref-for-masonry-axis②②">6.1. 
 The align-tracks and justify-tracks Properties </a>
-    <li><a href="#ref-for-masonry-axis②③">7.2. 
+    <li><a href="#ref-for-masonry-axis②③">6.2. 
 Stretch Alignment in the Masonry Axis</a> <a href="#ref-for-masonry-axis②④">(2)</a> <a href="#ref-for-masonry-axis②⑤">(3)</a>
-    <li><a href="#ref-for-masonry-axis②⑥">7.4. 
+    <li><a href="#ref-for-masonry-axis②⑥">6.4. 
 Baseline Alignment in the Masonry Axis</a> <a href="#ref-for-masonry-axis②⑦">(2)</a> <a href="#ref-for-masonry-axis②⑧">(3)</a>
-    <li><a href="#ref-for-masonry-axis②⑨">8.1. 
+    <li><a href="#ref-for-masonry-axis②⑨">7.1. 
 Fragmentation in the Masonry Axis</a>
-    <li><a href="#ref-for-masonry-axis③⓪">9. 
+    <li><a href="#ref-for-masonry-axis③⓪">8. 
 Subgrids</a> <a href="#ref-for-masonry-axis③①">(2)</a> <a href="#ref-for-masonry-axis③②">(3)</a>
-    <li><a href="#ref-for-masonry-axis③③">10. 
+    <li><a href="#ref-for-masonry-axis③③">9. 
 Absolute Positioning</a> <a href="#ref-for-masonry-axis③④">(2)</a> <a href="#ref-for-masonry-axis③⑤">(3)</a> <a href="#ref-for-masonry-axis③⑥">(4)</a>
-    <li><a href="#ref-for-masonry-axis③⑦">11. 
+    <li><a href="#ref-for-masonry-axis③⑦">10. 
 Performance Notes</a> <a href="#ref-for-masonry-axis③⑧">(2)</a>
    </ul>
   </aside>
@@ -3226,84 +3214,82 @@ Performance Notes</a> <a href="#ref-for-masonry-axis③⑧">(2)</a>
 Masonry Layout</a> <a href="#ref-for-grid-axis①">(2)</a> <a href="#ref-for-grid-axis②">(3)</a>
     <li><a href="#ref-for-grid-axis③">2.2. 
 Grid Item Placement</a> <a href="#ref-for-grid-axis④">(2)</a> <a href="#ref-for-grid-axis⑤">(3)</a>
-    <li><a href="#ref-for-grid-axis⑥">2.3. 
-Masonry Layout Algorithm</a> <a href="#ref-for-grid-axis⑦">(2)</a> <a href="#ref-for-grid-axis⑧">(3)</a> <a href="#ref-for-grid-axis⑨">(4)</a> <a href="#ref-for-grid-axis①⓪">(5)</a> <a href="#ref-for-grid-axis①①">(6)</a> <a href="#ref-for-grid-axis①②">(7)</a> <a href="#ref-for-grid-axis①③">(8)</a> <a href="#ref-for-grid-axis①④">(9)</a> <a href="#ref-for-grid-axis①⑤">(10)</a> <a href="#ref-for-grid-axis①⑥">(11)</a> <a href="#ref-for-grid-axis①⑦">(12)</a>
+    <li><a href="#ref-for-grid-axis⑥">2.4. 
+Masonry Layout Algorithm</a> <a href="#ref-for-grid-axis⑦">(2)</a> <a href="#ref-for-grid-axis⑧">(3)</a> <a href="#ref-for-grid-axis⑨">(4)</a> <a href="#ref-for-grid-axis①⓪">(5)</a> <a href="#ref-for-grid-axis①①">(6)</a> <a href="#ref-for-grid-axis①②">(7)</a> <a href="#ref-for-grid-axis①③">(8)</a> <a href="#ref-for-grid-axis①④">(9)</a> <a href="#ref-for-grid-axis①⑤">(10)</a> <a href="#ref-for-grid-axis①⑥">(11)</a>
+    <li><a href="#ref-for-grid-axis①⑦">2.5. 
+The masonry-auto-flow Property</a>
     <li><a href="#ref-for-grid-axis①⑧">3. 
 Containing Block</a>
     <li><a href="#ref-for-grid-axis①⑨">4. 
-Track sizing</a> <a href="#ref-for-grid-axis②⓪">(2)</a> <a href="#ref-for-grid-axis②①">(3)</a>
-    <li><a href="#ref-for-grid-axis②②">5. 
-The Implicit Grid </a> <a href="#ref-for-grid-axis②③">(2)</a> <a href="#ref-for-grid-axis②④">(3)</a> <a href="#ref-for-grid-axis②⑤">(4)</a>
-    <li><a href="#ref-for-grid-axis②⑥">7. 
+The Implicit Grid </a> <a href="#ref-for-grid-axis②⓪">(2)</a> <a href="#ref-for-grid-axis②①">(3)</a> <a href="#ref-for-grid-axis②②">(4)</a>
+    <li><a href="#ref-for-grid-axis②③">6. 
 Alignment and Spacing</a>
-    <li><a href="#ref-for-grid-axis②⑦">7.1. 
-The align-tracks and justify-tracks Properties </a> <a href="#ref-for-grid-axis②⑧">(2)</a>
-    <li><a href="#ref-for-grid-axis②⑨">7.4. 
+    <li><a href="#ref-for-grid-axis②④">6.1. 
+The align-tracks and justify-tracks Properties </a> <a href="#ref-for-grid-axis②⑤">(2)</a>
+    <li><a href="#ref-for-grid-axis②⑥">6.4. 
 Baseline Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-grid-axis③⓪">8.1. 
-Fragmentation in the Masonry Axis</a> <a href="#ref-for-grid-axis③①">(2)</a> <a href="#ref-for-grid-axis③②">(3)</a>
-    <li><a href="#ref-for-grid-axis③③">8.2. 
+    <li><a href="#ref-for-grid-axis②⑦">7.1. 
+Fragmentation in the Masonry Axis</a> <a href="#ref-for-grid-axis②⑧">(2)</a> <a href="#ref-for-grid-axis②⑨">(3)</a>
+    <li><a href="#ref-for-grid-axis③⓪">7.2. 
 Fragmentation in the Grid Axis</a>
-    <li><a href="#ref-for-grid-axis③④">10. 
+    <li><a href="#ref-for-grid-axis③①">9. 
 Absolute Positioning</a>
-    <li><a href="#ref-for-grid-axis③⑤">11. 
+    <li><a href="#ref-for-grid-axis③②">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="running-position">
    <b><a href="#running-position">#running-position</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-running-position">2. 
-Masonry Layout</a>
-    <li><a href="#ref-for-running-position①">2.3. 
-Masonry Layout Algorithm</a> <a href="#ref-for-running-position②">(2)</a> <a href="#ref-for-running-position③">(3)</a> <a href="#ref-for-running-position④">(4)</a> <a href="#ref-for-running-position⑤">(5)</a>
-    <li><a href="#ref-for-running-position⑥">8.1. 
+    <li><a href="#ref-for-running-position">2.4. 
+Masonry Layout Algorithm</a> <a href="#ref-for-running-position①">(2)</a> <a href="#ref-for-running-position②">(3)</a> <a href="#ref-for-running-position③">(4)</a> <a href="#ref-for-running-position④">(5)</a>
+    <li><a href="#ref-for-running-position⑤">7.1. 
 Fragmentation in the Masonry Axis</a>
-    <li><a href="#ref-for-running-position⑦">10. 
+    <li><a href="#ref-for-running-position⑥">9. 
 Absolute Positioning</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-masonry-auto-flow">
    <b><a href="#propdef-masonry-auto-flow">#propdef-masonry-auto-flow</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-masonry-auto-flow">2.3. 
-Masonry Layout Algorithm</a> <a href="#ref-for-propdef-masonry-auto-flow①">(2)</a> <a href="#ref-for-propdef-masonry-auto-flow②">(3)</a>
+    <li><a href="#ref-for-propdef-masonry-auto-flow">2.5. 
+The masonry-auto-flow Property</a> <a href="#ref-for-propdef-masonry-auto-flow①">(2)</a> <a href="#ref-for-propdef-masonry-auto-flow②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="masonry-box">
    <b><a href="#masonry-box">#masonry-box</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-masonry-box">7. 
+    <li><a href="#ref-for-masonry-box">6. 
 Alignment and Spacing</a> <a href="#ref-for-masonry-box①">(2)</a>
-    <li><a href="#ref-for-masonry-box②">7.4. 
+    <li><a href="#ref-for-masonry-box②">6.4. 
 Baseline Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-masonry-box③">10. 
+    <li><a href="#ref-for-masonry-box③">9. 
 Absolute Positioning</a> <a href="#ref-for-masonry-box④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-align-tracks">
    <b><a href="#propdef-align-tracks">#propdef-align-tracks</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-align-tracks">7.1. 
+    <li><a href="#ref-for-propdef-align-tracks">6.1. 
 The align-tracks and justify-tracks Properties </a>
-    <li><a href="#ref-for-propdef-align-tracks①">7.2. 
+    <li><a href="#ref-for-propdef-align-tracks①">6.2. 
 Stretch Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-align-tracks②">7.3. 
+    <li><a href="#ref-for-propdef-align-tracks②">6.3. 
 Individual Track Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-align-tracks③">7.4. 
+    <li><a href="#ref-for-propdef-align-tracks③">6.4. 
 Baseline Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-align-tracks④">11. 
+    <li><a href="#ref-for-propdef-align-tracks④">10. 
 Performance Notes</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-justify-tracks">
    <b><a href="#propdef-justify-tracks">#propdef-justify-tracks</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-justify-tracks">7.2. 
+    <li><a href="#ref-for-propdef-justify-tracks">6.2. 
 Stretch Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-justify-tracks①">7.4. 
+    <li><a href="#ref-for-propdef-justify-tracks①">6.4. 
 Baseline Alignment in the Masonry Axis</a>
-    <li><a href="#ref-for-propdef-justify-tracks②">11. 
+    <li><a href="#ref-for-propdef-justify-tracks②">10. 
 Performance Notes</a>
    </ul>
   </aside>
