@@ -327,7 +327,7 @@ let JSWINDOWACTORS = {
     },
   },
 
-  PictureInPicture: {
+  PictureInPictureLauncher: {
     parent: {
       moduleURI: "resource://gre/modules/PictureInPicture.jsm",
     },
@@ -335,6 +335,19 @@ let JSWINDOWACTORS = {
       moduleURI: "resource://gre/actors/PictureInPictureChild.jsm",
       events: {
         MozTogglePictureInPicture: { capture: true },
+      },
+    },
+
+    allFrames: true,
+  },
+
+  PictureInPicture: {
+    parent: {
+      moduleURI: "resource://gre/modules/PictureInPicture.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/PictureInPictureChild.jsm",
+      events: {
         MozStopPictureInPicture: { capture: true },
       },
     },

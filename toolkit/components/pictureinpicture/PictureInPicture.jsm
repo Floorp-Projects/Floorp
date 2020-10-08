@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = [
   "PictureInPicture",
   "PictureInPictureParent",
   "PictureInPictureToggleParent",
+  "PictureInPictureLauncherParent",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -41,6 +42,18 @@ let gCloseReasons = new WeakMap();
  */
 let gNextWindowID = 0;
 
+class PictureInPictureLauncherParent extends JSWindowActorParent {
+  receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "PictureInPicture:Request": {
+        let videoData = aMessage.data;
+        PictureInPicture.handlePictureInPictureRequest(this.manager, videoData);
+        break;
+      }
+    }
+  }
+}
+
 class PictureInPictureToggleParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     let browsingContext = aMessage.target.browsingContext;
@@ -63,11 +76,6 @@ class PictureInPictureToggleParent extends JSWindowActorParent {
 class PictureInPictureParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
-      case "PictureInPicture:Request": {
-        let videoData = aMessage.data;
-        PictureInPicture.handlePictureInPictureRequest(this.manager, videoData);
-        break;
-      }
       case "PictureInPicture:Resize": {
         let videoData = aMessage.data;
         PictureInPicture.resizePictureInPictureWindow(videoData);
@@ -159,7 +167,7 @@ var PictureInPicture = {
     let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
     let actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "PictureInPicture"
+      "PictureInPictureLauncher"
     );
     actor.sendAsyncMessage("PictureInPicture:KeyToggle");
   },
@@ -238,7 +246,7 @@ var PictureInPicture = {
     let tab = parentWin.gBrowser.getTabForBrowser(browser);
     tab.setAttribute("pictureinpicture", true);
 
-    win.setupPlayer(gNextWindowID.toString(), wgp);
+    win.setupPlayer(gNextWindowID.toString(), wgp, videoData.videoRef);
     gNextWindowID++;
 
     Services.prefs.setBoolPref(
