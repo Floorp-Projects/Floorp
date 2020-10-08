@@ -39,5 +39,13 @@ void DrawEventRecorderPRFileDesc::Close() {
   mOutputStream.Close();
 }
 
+void DrawEventRecorderPRFileDesc::AddDependentSurface(uint64_t aDependencyId) {
+  mDependentSurfaces.AppendElement(aDependencyId);
+}
+
+nsTArray<uint64_t>&& DrawEventRecorderPRFileDesc::TakeDependentSurfaces() {
+  return std::move(mDependentSurfaces);
+}
+
 }  // namespace layout
 }  // namespace mozilla
