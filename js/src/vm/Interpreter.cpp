@@ -443,14 +443,25 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 
   GeckoProfilerEntryMarker marker(cx, state.script());
 
-#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
   bool measuringTime = !cx->isMeasuringExecutionTime();
-  int64_t startTime = 0;
+  mozilla::TimeStamp startTime;
   if (measuringTime) {
     cx->setIsMeasuringExecutionTime(true);
-    startTime = PRMJ_Now();
+    startTime = ReallyNow();
   }
+  auto timerEnd = mozilla::MakeScopeExit([&]() {
+    if (measuringTime) {
+      mozilla::TimeDuration delta = ReallyNow() - startTime;
+      cx->realm()->timers.executionTime += delta;
+
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+      int64_t runtimeMicros = delta.ToMicroseconds();
+      cx->runtime()->addTelemetry(JS_TELEMETRY_RUN_TIME_US, runtimeMicros);
 #endif
+
+      cx->setIsMeasuringExecutionTime(false);
+    }
+  });
 
   jit::EnterJitStatus status = jit::MaybeEnterJit(cx, state);
   switch (status) {
@@ -468,15 +479,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   }
 
   bool ok = Interpret(cx, state);
-
-#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
-  if (measuringTime) {
-    int64_t endTime = PRMJ_Now();
-    int64_t runtimeMicros = endTime - startTime;
-    cx->runtime()->addTelemetry(JS_TELEMETRY_RUN_TIME_US, runtimeMicros);
-    cx->setIsMeasuringExecutionTime(false);
-  }
-#endif
 
   return ok;
 }

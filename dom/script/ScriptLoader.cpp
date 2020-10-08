@@ -3140,6 +3140,8 @@ void ScriptLoader::EncodeBytecode() {
     return;
   }
 
+  TimeStamp startTime = TimeStamp::Now();
+
   AutoEntryScript aes(globalObject, "encode bytecode", true);
   RefPtr<ScriptLoadRequest> request;
   while (!mBytecodeEncodingQueue.isEmpty()) {
@@ -3148,6 +3150,10 @@ void ScriptLoader::EncodeBytecode() {
     request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
   }
+
+  TimeDuration delta = TimeStamp::Now() - startTime;
+  Telemetry::Accumulate(Telemetry::JS_BYTECODE_CACHING_TIME,
+                        static_cast<uint32_t>(delta.ToMilliseconds()));
 }
 
 void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
