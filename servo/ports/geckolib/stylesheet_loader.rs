@@ -138,7 +138,7 @@ impl AsyncStylesheetParser {
             None,
             self.quirks_mode.into(),
             self.line_number_offset,
-            use_counters.as_ref().map(|c| &**c),
+            use_counters.as_deref(),
             self.allow_import_rules,
             /* sanitized_output = */ None,
         ));
