@@ -48,31 +48,24 @@ pub struct Lexer<'a> {
 /// whitespace. For most cases you'll probably ignore these and simply look at
 /// tokens.
 #[derive(Debug, PartialEq)]
-pub enum Source<'a> {
-    /// A fragment of source that is a comment, either a line or a block
-    /// comment.
-    Comment(Comment<'a>),
+pub enum Token<'a> {
+    /// A line comment, preceded with `;;`
+    LineComment(&'a str),
+
+    /// A block comment, surrounded by `(;` and `;)`. Note that these can be
+    /// nested.
+    BlockComment(&'a str),
+
     /// A fragment of source that represents whitespace.
     Whitespace(&'a str),
-    /// A fragment of source that represents an actual s-expression token.
-    Token(Token<'a>),
-}
 
-/// The kinds of tokens that can be lexed for WAT s-expressions.
-#[derive(Debug, PartialEq)]
-pub enum Token<'a> {
     /// A left-parenthesis, including the source text for where it comes from.
     LParen(&'a str),
     /// A right-parenthesis, including the source text for where it comes from.
     RParen(&'a str),
 
     /// A string literal, which is actually a list of bytes.
-    String {
-        /// The list of bytes that this string literal represents.
-        val: Cow<'a, [u8]>,
-        /// The original source text of this string literal.
-        src: &'a str,
-    },
+    String(WasmString<'a>),
 
     /// An identifier (like `$foo`).
     ///
@@ -94,21 +87,6 @@ pub enum Token<'a> {
 
     /// A float.
     Float(Float<'a>),
-}
-
-/// The types of comments that can be lexed from WAT source text, including the
-/// original text of the comment itself.
-///
-/// Note that the original text here includes the symbols for the comment
-/// itself.
-#[derive(Debug, PartialEq)]
-pub enum Comment<'a> {
-    /// A line comment, preceded with `;;`
-    Line(&'a str),
-
-    /// A block comment, surrounded by `(;` and `;)`. Note that these can be
-    /// nested.
-    Block(&'a str),
 }
 
 /// Errors that can be generated while lexing.
@@ -166,11 +144,24 @@ pub enum LexError {
     __Nonexhaustive,
 }
 
+/// A sign token for an integer.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SignToken {
+    /// Plus sign: "+",
+    Plus,
+    /// Minus sign: "-",
+    Minus,
+}
+
 /// A parsed integer, signed or unsigned.
 ///
 /// Methods can be use to access the value of the integer.
 #[derive(Debug, PartialEq)]
-pub struct Integer<'a> {
+pub struct Integer<'a>(Box<IntegerInner<'a>>);
+
+#[derive(Debug, PartialEq)]
+struct IntegerInner<'a> {
+    sign: Option<SignToken>,
     src: &'a str,
     val: Cow<'a, str>,
     hex: bool,
@@ -180,9 +171,22 @@ pub struct Integer<'a> {
 ///
 /// Methods can be use to access the value of the float.
 #[derive(Debug, PartialEq)]
-pub struct Float<'a> {
+pub struct Float<'a>(Box<FloatInner<'a>>);
+
+#[derive(Debug, PartialEq)]
+struct FloatInner<'a> {
     src: &'a str,
     val: FloatVal<'a>,
+}
+
+/// A parsed string.
+#[derive(Debug, PartialEq)]
+pub struct WasmString<'a>(Box<WasmStringInner<'a>>);
+
+#[derive(Debug, PartialEq)]
+struct WasmStringInner<'a> {
+    src: &'a str,
+    val: Cow<'a, [u8]>,
 }
 
 /// Possible parsed float values
@@ -236,15 +240,15 @@ impl<'a> Lexer<'a> {
     /// # Errors
     ///
     /// Returns an error if the input is malformed.
-    pub fn parse(&mut self) -> Result<Option<Source<'a>>, Error> {
+    pub fn parse(&mut self) -> Result<Option<Token<'a>>, Error> {
         if let Some(ws) = self.ws() {
-            return Ok(Some(Source::Whitespace(ws)));
+            return Ok(Some(Token::Whitespace(ws)));
         }
         if let Some(comment) = self.comment()? {
-            return Ok(Some(Source::Comment(comment)));
+            return Ok(Some(comment));
         }
         if let Some(token) = self.token()? {
-            return Ok(Some(Source::Token(token)));
+            return Ok(Some(token));
         }
         match self.it.next() {
             Some((i, ch)) => Err(self.error(i, LexError::Unexpected(ch))),
@@ -265,7 +269,10 @@ impl<'a> Lexer<'a> {
         if let Some(pos) = self.eat_char('"') {
             let val = self.string()?;
             let src = &self.input[pos..self.cur()];
-            return Ok(Some(Token::String { val, src }));
+            return Ok(Some(Token::String(WasmString(Box::new(WasmStringInner {
+                val,
+                src,
+            })))));
         }
 
         let (start, prefix) = match self.it.peek().cloned() {
@@ -299,28 +306,30 @@ impl<'a> Lexer<'a> {
     }
 
     fn number(&self, src: &'a str) -> Option<Token<'a>> {
-        let (negative, num) = if src.starts_with('+') {
-            (false, &src[1..])
+        let (sign, num) = if src.starts_with('+') {
+            (Some(SignToken::Plus), &src[1..])
         } else if src.starts_with('-') {
-            (true, &src[1..])
+            (Some(SignToken::Minus), &src[1..])
         } else {
-            (false, src)
+            (None, src)
         };
+
+        let negative = sign == Some(SignToken::Minus);
 
         // Handle `inf` and `nan` which are special numbers here
         if num == "inf" {
-            return Some(Token::Float(Float {
+            return Some(Token::Float(Float(Box::new(FloatInner {
                 src,
                 val: FloatVal::Inf { negative },
-            }));
+            }))));
         } else if num == "nan" {
-            return Some(Token::Float(Float {
+            return Some(Token::Float(Float(Box::new(FloatInner {
                 src,
                 val: FloatVal::Nan {
                     val: None,
                     negative,
                 },
-            }));
+            }))));
         } else if num.starts_with("nan:0x") {
             let mut it = num[6..].chars();
             let to_parse = skip_undescores(&mut it, false, char::is_ascii_hexdigit)?;
@@ -328,13 +337,13 @@ impl<'a> Lexer<'a> {
                 return None;
             }
             let n = u64::from_str_radix(&to_parse, 16).ok()?;
-            return Some(Token::Float(Float {
+            return Some(Token::Float(Float(Box::new(FloatInner {
                 src,
                 val: FloatVal::Nan {
                     val: Some(n),
                     negative,
                 },
-            }));
+            }))));
         }
 
         // Figure out if we're a hex number or not
@@ -360,7 +369,14 @@ impl<'a> Lexer<'a> {
             Some(_) => {}
 
             // Otherwise this is a valid integer literal!
-            None => return Some(Token::Integer(Integer { src, val, hex })),
+            None => {
+                return Some(Token::Integer(Integer(Box::new(IntegerInner {
+                    sign,
+                    src,
+                    val,
+                    hex,
+                }))))
+            }
         }
 
         // A number can optionally be after the decimal so only actually try to
@@ -402,7 +418,7 @@ impl<'a> Lexer<'a> {
             return None;
         }
 
-        return Some(Token::Float(Float {
+        return Some(Token::Float(Float(Box::new(FloatInner {
             src,
             val: FloatVal::Val {
                 hex,
@@ -410,7 +426,7 @@ impl<'a> Lexer<'a> {
                 exponent,
                 decimal,
             },
-        }));
+        }))));
 
         fn skip_undescores<'a>(
             it: &mut str::Chars<'a>,
@@ -486,7 +502,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Attempts to read a comment from the input stream
-    fn comment(&mut self) -> Result<Option<Comment<'a>>, Error> {
+    fn comment(&mut self) -> Result<Option<Token<'a>>, Error> {
         if let Some(start) = self.eat_str(";;") {
             loop {
                 match self.it.peek() {
@@ -495,7 +511,7 @@ impl<'a> Lexer<'a> {
                 }
             }
             let end = self.cur();
-            return Ok(Some(Comment::Line(&self.input[start..end])));
+            return Ok(Some(Token::LineComment(&self.input[start..end])));
         }
         if let Some(start) = self.eat_str("(;") {
             let mut level = 1;
@@ -507,7 +523,7 @@ impl<'a> Lexer<'a> {
                     level -= 1;
                     if level == 0 {
                         let end = self.cur();
-                        return Ok(Some(Comment::Block(&self.input[start..end])));
+                        return Ok(Some(Token::BlockComment(&self.input[start..end])));
                     }
                 }
             }
@@ -680,31 +696,10 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Result<Source<'a>, Error>;
+    type Item = Result<Token<'a>, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.parse().transpose()
-    }
-}
-
-impl<'a> Source<'a> {
-    /// Returns the original source text for this token.
-    pub fn src(&self) -> &'a str {
-        match self {
-            Source::Comment(c) => c.src(),
-            Source::Whitespace(s) => s,
-            Source::Token(t) => t.src(),
-        }
-    }
-}
-
-impl<'a> Comment<'a> {
-    /// Returns the original source text for this comment.
-    pub fn src(&self) -> &'a str {
-        match self {
-            Comment::Line(s) => s,
-            Comment::Block(s) => s,
-        }
     }
 }
 
@@ -712,9 +707,12 @@ impl<'a> Token<'a> {
     /// Returns the original source text for this token.
     pub fn src(&self) -> &'a str {
         match self {
+            Token::Whitespace(s) => s,
+            Token::BlockComment(s) => s,
+            Token::LineComment(s) => s,
             Token::LParen(s) => s,
             Token::RParen(s) => s,
-            Token::String { src, .. } => src,
+            Token::String(s) => s.src(),
             Token::Id(s) => s,
             Token::Keyword(s) => s,
             Token::Reserved(s) => s,
@@ -725,28 +723,45 @@ impl<'a> Token<'a> {
 }
 
 impl<'a> Integer<'a> {
+    /// Returns the sign token for this integer.
+    pub fn sign(&self) -> Option<SignToken> {
+        self.0.sign
+    }
+
     /// Returns the original source text for this integer.
     pub fn src(&self) -> &'a str {
-        self.src
+        self.0.src
     }
 
     /// Returns the value string that can be parsed for this integer, as well as
     /// the base that it should be parsed in
     pub fn val(&self) -> (&str, u32) {
-        (&self.val, if self.hex { 16 } else { 10 })
+        (&self.0.val, if self.0.hex { 16 } else { 10 })
     }
 }
 
 impl<'a> Float<'a> {
     /// Returns the original source text for this integer.
     pub fn src(&self) -> &'a str {
-        self.src
+        self.0.src
     }
 
     /// Returns a parsed value of this float with all of the components still
     /// listed as strings.
     pub fn val(&self) -> &FloatVal<'a> {
-        &self.val
+        &self.0.val
+    }
+}
+
+impl<'a> WasmString<'a> {
+    /// Returns the original source text for this string.
+    pub fn src(&self) -> &'a str {
+        self.0.src
+    }
+
+    /// Returns a parsed value, as a list of bytes, for this string.
+    pub fn val(&self) -> &[u8] {
+        &self.0.val
     }
 }
 
@@ -826,7 +841,7 @@ mod tests {
     fn ws_smoke() {
         fn get_whitespace(input: &str) -> &str {
             match Lexer::new(input).parse().expect("no first token") {
-                Some(Source::Whitespace(s)) => s,
+                Some(Token::Whitespace(s)) => s,
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -841,7 +856,7 @@ mod tests {
     fn line_comment_smoke() {
         fn get_line_comment(input: &str) -> &str {
             match Lexer::new(input).parse().expect("no first token") {
-                Some(Source::Comment(Comment::Line(s))) => s,
+                Some(Token::LineComment(s)) => s,
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -856,7 +871,7 @@ mod tests {
     fn block_comment_smoke() {
         fn get_block_comment(input: &str) -> &str {
             match Lexer::new(input).parse().expect("no first token") {
-                Some(Source::Comment(Comment::Block(s))) => s,
+                Some(Token::BlockComment(s)) => s,
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -866,10 +881,10 @@ mod tests {
     }
 
     fn get_token(input: &str) -> Token<'_> {
-        match Lexer::new(input).parse().expect("no first token") {
-            Some(Source::Token(t)) => t,
-            other => panic!("unexpected {:?}", other),
-        }
+        Lexer::new(input)
+            .parse()
+            .expect("no first token")
+            .expect("no token")
     }
 
     #[test]
@@ -884,11 +899,11 @@ mod tests {
 
     #[test]
     fn strings() {
-        fn get_string(input: &str) -> Cow<'_, [u8]> {
+        fn get_string(input: &str) -> Vec<u8> {
             match get_token(input) {
-                Token::String { val, src } => {
-                    assert_eq!(input, src);
-                    val
+                Token::String(s) => {
+                    assert_eq!(input, s.src());
+                    s.val().to_vec()
                 }
                 other => panic!("not string {:?}", other),
             }
@@ -964,11 +979,11 @@ mod tests {
 
     #[test]
     fn integer() {
-        fn get_integer(input: &str) -> Cow<'_, str> {
+        fn get_integer(input: &str) -> String {
             match get_token(input) {
                 Token::Integer(i) => {
                     assert_eq!(input, i.src());
-                    i.val
+                    i.val().0.to_string()
                 }
                 other => panic!("not integer {:?}", other),
             }
@@ -990,7 +1005,7 @@ mod tests {
             match get_token(input) {
                 Token::Float(i) => {
                     assert_eq!(input, i.src());
-                    i.val
+                    i.0.val
                 }
                 other => panic!("not reserved {:?}", other),
             }

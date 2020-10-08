@@ -851,6 +851,12 @@ impl Encode for LetType<'_> {
     }
 }
 
+impl Encode for LaneArg {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.lane.encode(e);
+    }
+}
+
 impl Encode for MemArg<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         match self.memory {
@@ -1070,7 +1076,7 @@ impl Encode for V128Const {
     }
 }
 
-impl Encode for V8x16Shuffle {
+impl Encode for I8x16Shuffle {
     fn encode(&self, dst: &mut Vec<u8>) {
         dst.extend_from_slice(&self.lanes);
     }
