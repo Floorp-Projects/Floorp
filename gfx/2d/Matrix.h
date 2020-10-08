@@ -1843,6 +1843,22 @@ class Matrix5x4 {
     return *this;
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const Matrix5x4& aMatrix) {
+    const Float* f = &aMatrix._11;
+    aStream << "[ " << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
+    f += 4;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
+    f += 4;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
+    f += 4;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3] << ';';
+    f += 4;
+    aStream << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << ' ' << f[3]
+            << "; ]";
+    return aStream;
+  }
+
   union {
     struct {
       Float _11, _12, _13, _14;
