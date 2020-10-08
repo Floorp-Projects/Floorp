@@ -20,8 +20,7 @@ nsWebSocketConnection::nsWebSocketConnection(
       mSocketIn(aInputStream),
       mSocketOut(aOutputStream),
       mWriteOffset(0),
-      mStartReadingCalled(false),
-      mOutputStreamBlocked(false) {
+      mStartReadingCalled(false) {
   LOG(("nsWebSocketConnection ctor %p\n", this));
 }
 
@@ -80,12 +79,12 @@ nsWebSocketConnection::Close() {
 nsresult nsWebSocketConnection::EnqueueOutputData(nsTArray<uint8_t>&& aData) {
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
-  mOutputQueue.emplace_back(std::move(aData));
-
-  if (mSocketOut) {
-    mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
+  if (!mSocketOut) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
+  mOutputQueue.emplace_back(std::move(aData));
+  OnOutputStreamReady(mSocketOut);
   return NS_OK;
 }
 
@@ -97,19 +96,16 @@ nsWebSocketConnection::EnqueueOutputData(const uint8_t* aHdrBuf,
   LOG(("nsWebSocketConnection::EnqueueOutputData %p\n", this));
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
+  if (!mSocketOut) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsTArray<uint8_t> data;
   data.AppendElements(aHdrBuf, aHdrBufLength);
   data.AppendElements(aPayloadBuf, aPayloadBufLength);
   mOutputQueue.emplace_back(std::move(data));
 
-  if (mSocketOut) {
-    mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
-  }
-
-  if (mOutputStreamBlocked) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
-
+  OnOutputStreamReady(mSocketOut);
   return NS_OK;
 }
 
@@ -220,8 +216,6 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
     return NS_OK;
   }
 
-  mOutputStreamBlocked = false;
-
   while (!mOutputQueue.empty()) {
     const OutputData& data = mOutputQueue.front();
 
@@ -237,7 +231,6 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
-      mOutputStreamBlocked = true;
       return NS_OK;
     }
 
@@ -253,10 +246,12 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
     if (toWrite == wrote) {
       mWriteOffset = 0;
       mOutputQueue.pop_front();
+      Unused << mListener->OnDataSent();
+    } else {
+      mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
+      return NS_OK;
     }
   }
-
-  Unused << mListener->OnReadyToSendData();
 
   return NS_OK;
 }
