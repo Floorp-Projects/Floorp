@@ -26,6 +26,7 @@ bool WarpBuilderShared::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
   // exception is MInt64ToBigInt, it's used to convert the result of a call into
   // Wasm code so we attach the resume point to that instead of to the call.
   MOZ_ASSERT(ins->isEffectful() || ins->isInt64ToBigInt());
+  MOZ_ASSERT(!ins->isMovable());
 
   MResumePoint* resumePoint = MResumePoint::New(
       alloc(), ins->block(), loc.toRawBytecode(), MResumePoint::ResumeAfter);
