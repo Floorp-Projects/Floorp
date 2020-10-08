@@ -28,6 +28,9 @@ const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
   "toggleMessagesTruncation.title"
 );
 const CONNECTION_CLOSED_TEXT = L10N.getStr("netmonitor.ws.connection.closed");
+const {
+  MESSAGE_HEADERS,
+} = require("devtools/client/netmonitor/src/constants.js");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 
 const {
@@ -258,9 +261,9 @@ class MessageListContent extends Component {
       );
     }
 
-    const visibleColumns = Object.entries(columns)
-      .filter(([name, isVisible]) => isVisible)
-      .map(([name]) => name);
+    const visibleColumns = MESSAGE_HEADERS.filter(
+      header => columns[header.name]
+    ).map(col => col.name);
 
     let displayedMessages;
     let MESSAGES_TRUNCATED;
