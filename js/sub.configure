@@ -4,23 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@depends(host_for_sub_configure, target_for_sub_configure, check_build_environment,
-         js_configure_args, prepare_mozconfig, old_configure,
-         old_configure_assignments, '--cache-file')
-@imports('errno')
+@depends(check_build_environment)
 @imports('logging')
-@imports('os')
-@imports('pickle')
-@imports('sys')
-@imports(_from='__main__', _import='config_status')
-@imports(_from='__builtin__', _import='OSError')
-@imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='object')
-@imports(_from='mozbuild.configure', _import='ConfigureSandbox')
 @imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
-def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
-                    old_configure, old_configure_assignments, cache_file):
-
+def old_js_configure(build_env):
     class PrefixOutput(object):
         def __init__(self, prefix, fh):
             self._fh = fh
@@ -44,48 +32,28 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
         handler.setFormatter(formatter)
         if isinstance(handler, ConfigureOutputHandler):
             handler._stdout = PrefixOutput('js/src> ', handler._stdout)
+    return os.path.join(build_env.topsrcdir, 'js', 'src', 'old-configure')
 
-    substs = dict(old_configure['substs'])
-    assignments = dict(old_configure_assignments)
-    environ = dict(os.environ)
 
-    options = [host, target] +  js_configure_args
-
-    options.append('--prefix=%s/dist' % build_env.topobjdir)
-
-    if substs.get('ZLIB_IN_MOZGLUE'):
-        substs['MOZ_ZLIB_LIBS'] = ''
-
-    environ['MOZILLA_CENTRAL_PATH'] = build_env.topsrcdir
-    if 'MOZ_BUILD_APP' in environ:
-        del environ['MOZ_BUILD_APP']
-
+@depends(old_configure.substs, mozconfig)
+def old_js_configure_env(substs, mozconfig):
+    substs = dict(substs)
     # Here, we mimic what we used to do from old-configure, which makes this
     # all awkward.
-
-    # The following variables were saved at the beginning of old-configure,
-    # and restored before invoking the subconfigure. Which means their value
-    # should be taken from the old_configure_assignments or mozconfig.
-    from_assignment = set(
-        ('CC', 'CXX', 'CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'HOST_CC',
-         'HOST_CXXFLAGS', 'HOST_LDFLAGS'))
 
     # Variables that were explicitly exported from old-configure, and those
     # explicitly set in the environment when invoking old-configure, were
     # automatically inherited from subconfigure. We assume the relevant ones
     # have a corresponding AC_SUBST in old-configure, making them available
     # in `substs`.
+    extra_env = {}
+
     for var in (
-        'MOZ_SYSTEM_ZLIB', 'MOZ_ZLIB_CFLAGS', 'MOZ_ZLIB_LIBS',
-        'MOZ_DEV_EDITION', 'STLPORT_LIBS', 'DIST', 'MOZ_LINKER',
-        'ZLIB_IN_MOZGLUE', 'RANLIB', 'AR', 'CPP', 'CC', 'CXX', 'CPPFLAGS',
-        'CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'HOST_CC', 'HOST_CXX', 'HOST_CPPFLAGS',
-        'HOST_CXXFLAGS', 'HOST_LDFLAGS'
+        'MOZ_DEV_EDITION', 'STLPORT_LIBS', 'MOZ_LINKER', 'ZLIB_IN_MOZGLUE',
+        'RANLIB',
     ):
-        if var not in from_assignment and var in substs:
+        if var in substs:
             value = substs[var]
-        elif var in assignments:
-            value = assignments[var]
         elif mozconfig and var in mozconfig and \
                 not mozconfig[var][1].startswith('removed'):
             value = mozconfig[var][0]
@@ -93,80 +61,25 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
             continue
         if isinstance(value, list):
             value = ' '.join(value)
-        environ[var] = value
+        extra_env[var] = value
 
-    options.append('JS_STANDALONE=')
+    return extra_env
 
-    srcdir = os.path.join(build_env.topsrcdir, 'js', 'src')
-    objdir = os.path.join(build_env.topobjdir, 'js', 'src')
 
-    data_file = os.path.join(objdir, 'configure.pkl')
-    previous_args = None
-    if os.path.exists(data_file):
-        with open(data_file, 'rb') as f:
-            previous_args = pickle.load(f)
+old_js_configure = old_configure_for(old_js_configure, extra_env=old_js_configure_env)
+set_config('OLD_JS_CONFIGURE_SUBSTS', old_js_configure.substs)
+set_config('OLD_JS_CONFIGURE_DEFINES', old_js_configure.defines)
 
-    cache_file = cache_file[0] if cache_file else './config.cache'
-    cache_file = os.path.join(build_env.topobjdir, cache_file)
 
-    try:
-        os.makedirs(objdir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-    with open(data_file, 'wb') as f:
-        pickle.dump(options, f)
-
-    # Only run configure if one of the following is true:
-    # - config.status doesn't exist
-    # - config.status is older than an input to configure
-    # - the configure arguments changed
-    configure = os.path.join(srcdir, 'old-configure')
-    config_status_path = os.path.join(objdir, 'config.status')
-    skip_configure = True
-    if not os.path.exists(config_status_path):
-        skip_configure = False
-    else:
-        config_status_deps = os.path.join(objdir, 'config_status_deps.in')
-        if not os.path.exists(config_status_deps):
-            skip_configure = False
-        else:
-            with open(config_status_deps, 'r') as fh:
-                dep_files = fh.read().splitlines() + [configure]
-            if (any(not os.path.exists(f) or
-                    (os.path.getmtime(config_status_path) < os.path.getmtime(f))
-                    for f in dep_files) or
-                ((previous_args or options) != options)):
-                skip_configure = False
-
-    ret = 0
-    if not skip_configure:
-        oldpwd = os.getcwd()
-        os.chdir(objdir)
-        command = [
-            os.path.join(build_env.topsrcdir, 'configure.py'),
-            '--enable-project=js',
-        ]
-        environ['OLD_CONFIGURE'] = os.path.join(
-            os.path.dirname(configure), 'old-configure')
-        command += options
-        command += ['--cache-file=%s' % cache_file]
-
-        log.info('configuring')
-        log.info('running %s' % ' '.join(command[:-1]))
-        config = {}
-        sandbox = ConfigureSandbox(config, environ, command, logger=logger)
-        sandbox.run(os.path.join(build_env.topsrcdir, 'moz.configure'))
-        ret = config_status(config)
-        os.chdir(oldpwd)
-
+@dependable
+@imports('logging')
+@imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
+def post_old_js_configure():
     # Restore unprefixed logging.
     formatter = logging.Formatter('%(levelname)s: %(message)s')
+    logger = logging.getLogger('moz.configure')
     for handler in logger.handlers:
         handler.setFormatter(formatter)
         if isinstance(handler, ConfigureOutputHandler):
             handler._stdout.flush()
             handler._stdout = handler._stdout._fh
-
-    return ret

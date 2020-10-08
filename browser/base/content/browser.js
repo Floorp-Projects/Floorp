@@ -5083,6 +5083,7 @@ var XULBrowserWindow = {
     return (this._elementsForTextBasedTypes = [
       document.getElementById("pageStyleMenu"),
       document.getElementById("context-viewpartialsource-selection"),
+      document.getElementById("context-print-selection"),
     ]);
   },
   get _elementsForFind() {

@@ -105,7 +105,7 @@ impl Window {
             DeviceIntSize::new(size.width as i32, size.height as i32)
         };
         let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
-        let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None, device_size).unwrap();
+        let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None).unwrap();
         let mut api = sender.create_api();
         let document_id = api.add_document(device_size, 0);
 

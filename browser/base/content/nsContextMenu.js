@@ -487,6 +487,11 @@ class nsContextMenu {
       !this.inAboutDevtoolsToolbox && this.isContentSelected
     );
 
+    this.showItem(
+      "context-print-selection",
+      !this.inAboutDevtoolsToolbox && this.isContentSelected
+    );
+
     var shouldShow = !(
       this.isContentSelected ||
       this.onImage ||
@@ -1886,6 +1891,14 @@ class nsContextMenu {
 
   printFrame() {
     PrintUtils.startPrintWindow(this.actor.browsingContext);
+  }
+
+  printSelection() {
+    PrintUtils.startPrintWindow(
+      this.actor.browsingContext,
+      /* aOpenWindowInfo = */ null,
+      /* aPrintSelectionOnly = */ true
+    );
   }
 
   switchPageDirection() {

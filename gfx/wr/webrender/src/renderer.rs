@@ -2410,7 +2410,6 @@ impl Renderer {
         notifier: Box<dyn RenderNotifier>,
         mut options: RendererOptions,
         shaders: Option<&mut WrShaders>,
-        start_size: DeviceIntSize,
     ) -> Result<(Self, RenderApiSender), RendererError> {
         if !wr_has_been_initialized() {
             // If the profiler feature is enabled, try to load the profiler shared library
@@ -2796,22 +2795,10 @@ impl Renderer {
                 thread_listener.thread_started(&rb_thread_name);
             }
 
-            let prealloc_sizes = [
-                picture_tile_size,
-                picture::TILE_SIZE_SCROLLBAR_HORIZONTAL,
-                picture::TILE_SIZE_SCROLLBAR_VERTICAL,
-            ];
-
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
-                match (config.global_enable_picture_caching, config.testing) {
-                    (true, false) => &prealloc_sizes,
-                    (true, true) => &picture::TILE_SIZE_FOR_TESTS,
-                    _ => &[],
-                },
                 picture_tile_size,
-                start_size,
                 color_cache_formats,
                 swizzle_settings,
             );

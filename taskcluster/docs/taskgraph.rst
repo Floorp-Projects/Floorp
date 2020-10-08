@@ -221,7 +221,7 @@ There are several configuration settings that are pertain to the entire
 taskgraph. These are specified in :file:`config.yml` at the root of the
 taskgraph configuration (typically :file:`taskcluster/ci/`). The available
 settings are documented inline in `taskcluster/taskgraph/config.py
-<https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/config.py>`_.
+<https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/config.py>`_.
 
 .. _taskgraph-trust-domain:
 

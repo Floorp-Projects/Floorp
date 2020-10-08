@@ -341,7 +341,7 @@ Debugging JavaScript
 Use `Venkman <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Venkman>`__, the JavaScript Debugger for Mozilla.
 
 You can use helper functions from
-`nsXPConnect.cpp <https://dxr.mozilla.org/mozilla-central/source/js/src/xpconnect/src/nsXPConnect.cpp#1395>`__
+`nsXPConnect.cpp <https://searchfox.org/mozilla-central/source/js/xpconnect/src/nsXPConnect.cpp>`__
 to inspect and modify the state of JavaScript code from the MSVS
 debugger.
 

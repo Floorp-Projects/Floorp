@@ -1707,7 +1707,7 @@ fn audiounit_get_devices_of_type(devtype: DeviceType) -> Vec<AudioObjectID> {
     });
 
     // Expected sorted but did not find anything in the docs.
-    devices.sort();
+    devices.sort_unstable();
     if devtype.contains(DeviceType::INPUT | DeviceType::OUTPUT) {
         return devices;
     }

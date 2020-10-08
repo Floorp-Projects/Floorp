@@ -605,14 +605,14 @@ for ( let [op, memtype, rop, resultmemtype] of
        ['i16x8.sub', Int16Array, sub(16)],
        ['i32x4.sub', Int32Array, sub(32)],
        ['i64x2.sub', BigInt64Array, sub64],
-       ['i8x16.add_saturate_s', Int8Array, add_sat_s(8)],
-       ['i8x16.add_saturate_u', Uint8Array, add_sat_u(8)],
-       ['i16x8.add_saturate_s', Int16Array, add_sat_s(16)],
-       ['i16x8.add_saturate_u', Uint16Array, add_sat_u(16)],
-       ['i8x16.sub_saturate_s', Int8Array, sub_sat_s(8)],
-       ['i8x16.sub_saturate_u', Uint8Array, sub_sat_u(8)],
-       ['i16x8.sub_saturate_s', Int16Array, sub_sat_s(16)],
-       ['i16x8.sub_saturate_u', Uint16Array, sub_sat_u(16)],
+       ['i8x16.add_sat_s', Int8Array, add_sat_s(8)],
+       ['i8x16.add_sat_u', Uint8Array, add_sat_u(8)],
+       ['i16x8.add_sat_s', Int16Array, add_sat_s(16)],
+       ['i16x8.add_sat_u', Uint16Array, add_sat_u(16)],
+       ['i8x16.sub_sat_s', Int8Array, sub_sat_s(8)],
+       ['i8x16.sub_sat_u', Uint8Array, sub_sat_u(8)],
+       ['i16x8.sub_sat_s', Int16Array, sub_sat_s(16)],
+       ['i16x8.sub_sat_u', Uint16Array, sub_sat_u(16)],
        ['i16x8.mul', Int16Array, mul(16)],
        ['i32x4.mul', Int32Array, mul(32)],
        ['i64x2.mul', BigInt64Array, mul(64)],
@@ -1625,13 +1625,13 @@ var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
     (func (export "load_splat_v8x16") (param $addr i32)
-      (v128.store (i32.const 0) (v8x16.load_splat (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load8_splat (local.get $addr))))
     (func (export "load_splat_v16x8") (param $addr i32)
-      (v128.store (i32.const 0) (v16x8.load_splat (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load16_splat (local.get $addr))))
     (func (export "load_splat_v32x4") (param $addr i32)
-      (v128.store (i32.const 0) (v32x4.load_splat (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load32_splat (local.get $addr))))
     (func (export "load_splat_v64x2") (param $addr i32)
-      (v128.store (i32.const 0) (v64x2.load_splat (local.get $addr)))))`);
+      (v128.store (i32.const 0) (v128.load64_splat (local.get $addr)))))`);
 
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
 mem8[37] = 42;
@@ -1662,17 +1662,17 @@ var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
     (func (export "load8x8_s") (param $addr i32)
-      (v128.store (i32.const 0) (i16x8.load8x8_s (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load8x8_s (local.get $addr))))
     (func (export "load8x8_u") (param $addr i32)
-      (v128.store (i32.const 0) (i16x8.load8x8_u (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load8x8_u (local.get $addr))))
     (func (export "load16x4_s") (param $addr i32)
-      (v128.store (i32.const 0) (i32x4.load16x4_s (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load16x4_s (local.get $addr))))
     (func (export "load16x4_u") (param $addr i32)
-      (v128.store (i32.const 0) (i32x4.load16x4_u (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load16x4_u (local.get $addr))))
     (func (export "load32x2_s") (param $addr i32)
-      (v128.store (i32.const 0) (i64x2.load32x2_s (local.get $addr))))
+      (v128.store (i32.const 0) (v128.load32x2_s (local.get $addr))))
     (func (export "load32x2_u") (param $addr i32)
-      (v128.store (i32.const 0) (i64x2.load32x2_u (local.get $addr)))))`);
+      (v128.store (i32.const 0) (v128.load32x2_u (local.get $addr)))))`);
 
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
 var mem16s = new Int16Array(ins.exports.mem.buffer);
@@ -1743,13 +1743,13 @@ var ins = wasmEvalText(`
     ;; the result interleaves the low eight bytes of the inputs
     (func (export "shuffle1")
       (v128.store (i32.const 0)
-        (v8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 23
+        (i8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 23
            (v128.load (i32.const 16))
            (v128.load (i32.const 32)))))
     ;; ditto the high eight bytes
     (func (export "shuffle2")
       (v128.store (i32.const 0)
-        (v8x16.shuffle 8 24 9 25 10 26 11 27 12 28 13 29 14 30 15 31
+        (i8x16.shuffle 8 24 9 25 10 26 11 27 12 28 13 29 14 30 15 31
            (v128.load (i32.const 16))
            (v128.load (i32.const 32))))))`);
 
@@ -1774,7 +1774,7 @@ var ins = wasmEvalText(`
     (memory (export "mem") 1 1)
     (func (export "swizzle")
       (v128.store (i32.const 0)
-        (v8x16.swizzle (v128.load (i32.const 16)) (v128.load (i32.const 32))))))`);
+        (i8x16.swizzle (v128.load (i32.const 16)) (v128.load (i32.const 32))))))`);
 
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
 

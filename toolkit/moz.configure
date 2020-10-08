@@ -1610,7 +1610,7 @@ with only_when(compile_environment | artifact_builds):
         enable = flac_only = use_yasm = False
         flags = []
         if target.cpu in ('x86', 'x86_64') or \
-                target.cpu == 'aarch64' and target.kernel == 'WINNT':
+                target.cpu == 'aarch64' and target.kernel in ('WINNT', 'Darwin'):
             enable = True
             if libav_fft and libav_fft.flags:
                 use_yasm = True
