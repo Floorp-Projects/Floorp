@@ -1092,10 +1092,12 @@ void nsWindow::Show(bool aState) {
 
 void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
                          bool aRepaint) {
-  LOG(("nsWindow::ResizeInt [%p] %d %d -> %d %d repaint %d\n", (void*)this, aX,
-       aY, aWidth, aHeight, aRepaint));
+  LOG(("nsWindow::ResizeInt [%p] x:%d y:%d -> w:%d h:%d repaint %d aMove %d\n",
+       (void*)this, aX, aY, aWidth, aHeight, aRepaint, aMove));
 
   ConstrainSize(&aWidth, &aHeight);
+
+  LOG(("  ConstrainSize: w:%d h;%d\n", aWidth, aHeight));
 
   // If we used to have insane bounds, we may have skipped actually positioning
   // the widget in NativeMoveResizeWaylandPopup, in which case we need to
@@ -1141,8 +1143,7 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
 }
 
 void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  LOG(("nsWindow::Resize [%p] %d %d\n", (void*)this, (int)aWidth,
-       (int)aHeight));
+  LOG(("nsWindow::Resize [%p] %f %f\n", (void*)this, aWidth, aHeight));
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
@@ -1154,8 +1155,8 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
 void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) {
-  LOG(("nsWindow::Resize [%p] %d %d repaint %d\n", (void*)this, (int)aWidth,
-       (int)aHeight, aRepaint));
+  LOG(("nsWindow::Resize [%p] %f %f repaint %d\n", (void*)this, aWidth, aHeight,
+       aRepaint));
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
@@ -1478,13 +1479,14 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
 
   newBounds.x = GdkCoordToDevicePixels(newBounds.x);
   newBounds.y = GdkCoordToDevicePixels(newBounds.y);
-  LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
-       newBounds.y, newBounds.width, newBounds.height));
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   int32_t newWidth = NSToIntRound(scale * newBounds.width);
   int32_t newHeight = NSToIntRound(scale * newBounds.height);
+
+  LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
+       newBounds.y, newWidth, newHeight));
 
   bool needsPositionUpdate =
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
@@ -1493,6 +1495,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   // Update view
 
   if (needsSizeUpdate) {
+    LOG(("  needSizeUpdate\n"));
     int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
     mPreferredPopupRect = nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
                                  NSIntPixelsToAppUnits(newBounds.y, p2a),
@@ -1511,6 +1514,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   }
 
   if (needsPositionUpdate) {
+    LOG(("  needPositionUpdate\n"));
     // The newBounds are in coordinates relative to the parent window/popup.
     // The NotifyWindowMoved requires the coordinates relative to the toplevel.
     // We use the gdk_window_get_origin to get correct coordinates.
@@ -4249,6 +4253,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   // save our bounds
   mBounds = aRect;
+  LOG(("  mBounds: x:%d y:%d w:%d h:%d\n", mBounds.x, mBounds.y, mBounds.width,
+       mBounds.height));
 
   mPreferredPopupRectFlushed = false;
 
@@ -5087,13 +5093,16 @@ void nsWindow::NativeShow(bool aAction) {
         }
       }
 
+      LOG(("  calling gtk_widget_show(mShell)\n"));
       gtk_widget_show(mShell);
       if (!mIsX11Display) {
         WaylandStartVsync();
       }
     } else if (mContainer) {
+      LOG(("  calling gtk_widget_show(mContainer)\n"));
       gtk_widget_show(GTK_WIDGET(mContainer));
     } else if (mGdkWindow) {
+      LOG(("  calling gdk_window_show_unraised\n"));
       gdk_window_show_unraised(mGdkWindow);
     }
   } else {
