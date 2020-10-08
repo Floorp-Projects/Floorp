@@ -15,6 +15,7 @@ import six
 import sys
 
 from six.moves.urllib.parse import quote, urlencode, urlunparse
+from six.moves.collections_abc import Mapping
 
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
@@ -280,21 +281,43 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name, args):
     return writer.hexdigest()
 
 
-@memoize
-def image_paths():
-    """Return a map of image name to paths containing their Dockerfile.
+class ImagePathsMap(Mapping):
+    """ImagePathsMap contains the mapping of Docker image names to their
+    context location in the filesystem. The register function allows Thunderbird
+    to define additional images under comm/taskcluster.
     """
-    config = load_yaml(GECKO, 'taskcluster', 'ci', 'docker-image', 'kind.yml')
-    return {
-        k: os.path.join(IMAGE_DIR, v.get('definition', k))
-        for k, v in config['jobs'].items()
-    }
+    def __init__(self, config_path, image_dir=IMAGE_DIR):
+        config = load_yaml(GECKO, config_path)
+        self.__update_image_paths(config['jobs'], image_dir)
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __update_image_paths(self, jobs, image_dir):
+        self.__dict__.update({
+            k: os.path.join(image_dir, v.get('definition', k))
+            for k, v in jobs.items()
+        })
+
+    def register(self, jobs_config_path, image_dir):
+        """Register additional image_paths. In this case, there is no 'jobs'
+        key in the loaded YAML as this file is loaded via jobs-from in kind.yml."""
+        jobs = load_yaml(GECKO, jobs_config_path)
+        self.__update_image_paths(jobs, image_dir)
+
+
+image_paths = ImagePathsMap('taskcluster/ci/docker-image/kind.yml')
 
 
 def image_path(name):
-    paths = image_paths()
-    if name in paths:
-        return paths[name]
+    if name in image_paths:
+        return image_paths[name]
     return os.path.join(IMAGE_DIR, name)
 
 
