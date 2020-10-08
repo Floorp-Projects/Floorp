@@ -179,10 +179,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   MOZ_ASSERT(trc);
   MOZ_ASSERT(thing);
 
-  if (!trc->checkEdges()) {
-    return;
-  }
-
   if (IsForwarded(thing)) {
     MOZ_ASSERT(IsTracerKind(trc, JS::TracerKind::Moving) ||
                trc->isTenuringTracer());
