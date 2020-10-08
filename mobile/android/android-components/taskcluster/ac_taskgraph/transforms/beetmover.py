@@ -58,3 +58,10 @@ def set_artifact_map(config, tasks):
         } for dep in deps]
 
         yield task
+
+
+@transforms.add
+def add_version(config, tasks):
+    for task in tasks:
+        task["worker"]["version"] = get_version()
+        yield task
