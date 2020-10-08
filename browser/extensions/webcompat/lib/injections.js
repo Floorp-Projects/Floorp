@@ -4,11 +4,7 @@
 
 "use strict";
 
-/* globals browser, global, module, promiseConsoleWarningScript, require */
-
-if (typeof promiseConsoleWarningScript === "undefined") {
-  global.promiseConsoleWarningScript = require("./console_warning_helper");
-}
+/* globals browser, module */
 
 class Injections {
   constructor(availableInjections, customFunctions) {
@@ -82,18 +78,6 @@ class Injections {
     return finalConfig;
   }
 
-  async getContentScriptsIncludingConsoleWarning(injection) {
-    const finalScripts = Object.assign(
-      {},
-      this.assignContentScriptDefaults(injection.contentScripts)
-    );
-    if (!finalScripts.js) {
-      finalScripts.js = [];
-    }
-    finalScripts.js.push(await promiseConsoleWarningScript(injection.domain));
-    return finalScripts;
-  }
-
   async enableInjection(injection) {
     if (injection.active) {
       return undefined;
@@ -120,7 +104,7 @@ class Injections {
   async enableContentScripts(injection) {
     try {
       const handle = await browser.contentScripts.register(
-        await this.getContentScriptsIncludingConsoleWarning(injection)
+        this.assignContentScriptDefaults(injection.contentScripts)
       );
       this._activeInjections.set(injection, handle);
       injection.active = true;

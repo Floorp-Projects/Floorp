@@ -1,0 +1,12 @@
+/**
+ * www.cracked.com - text and images don't reflow to fit screen width
+ * Bug #1609991 - https://bugzilla.mozilla.org/show_bug.cgi?id=1609991
+ * WebCompat issue #18218 - https://webcompat.com/issues/18218
+ *
+ * Text and images don't fit screen width due to
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1316534. Adding flex-basis: auto;
+ * to the affected element fixes the issue
+ */
+.col-12 {
+  flex-basis: auto;
+}
