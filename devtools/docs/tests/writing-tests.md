@@ -106,7 +106,7 @@ For example, the head.js files in the `markupview` and `styleinspector` test fol
 
 ## Shared head.js file
 
-A [shared-head.js](https://dxr.mozilla.org/mozilla-central/source/devtools/client/shared/test/shared-head.js) file has been introduced to avoid duplicating code in various `head.js` files.
+A [shared-head.js](https://searchfox.org/mozilla-central/source/devtools/client/shared/test/shared-head.js) file has been introduced to avoid duplicating code in various `head.js` files.
 
 It's important to know whether or not the `shared.js` in your test directory already imports `shared-head.js` (look for a <code>Services.scriptloader.loadSubScript</code> call), as common helpers in `shared-head.js` might be useful for your test.
 
@@ -122,7 +122,7 @@ One of the direct consequences of E10S on tests is that you cannot retrieve and 
 
 So when creating a new test, if this test needs to access the content page in any way, you can use [the message manager](https://developer.mozilla.org/en-US/docs/The_message_manager) to communicate with a script loaded in the content process to do things for you instead of accessing objects in the page directly.
 
-You can use the helper `ContentTask.spawn()` for this. See [this list of DevTools tests that use that helper for examples](https://dxr.mozilla.org/mozilla-central/search?q=ContentTask.spawn%28+path%3Adevtools%2Fclient&redirect=false&case=false).
+You can use the helper `ContentTask.spawn()` for this. See [this list of DevTools tests that use that helper for examples](https://searchfox.org/mozilla-central/search?q=ContentTask.spawn%28&path=devtools%2Fclient).
 
 Note that a lot of tests only need to access the DevTools UI anyway, and don't need to interact with the content process at all. Since the UI lives in the same process as the test, you won't need to use the message manager to access it.
 
