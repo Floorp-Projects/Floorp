@@ -21,25 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << "{ [metrics=" << m.GetMetrics()
-          << "] [color=" << m.GetBackgroundColor();
-  if (m.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
-    aStream << "] [scrollParent=" << m.GetScrollParentId();
-  }
-  if (m.HasScrollClip()) {
-    aStream << "] [clip=" << m.ScrollClip().GetClipRect();
-  }
-  if (m.HasMaskLayer()) {
-    aStream << "] [mask=" << m.ScrollClip().GetMaskLayerIndex().value();
-  }
-  aStream << "] [overscroll=" << m.GetOverscrollBehavior() << "] ["
-          << m.GetScrollUpdates().Length() << " scrollupdates"
-          << "] }" << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
                     const char* pfx, const char* sfx) {
   aStream << pfx
