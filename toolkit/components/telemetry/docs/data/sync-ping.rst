@@ -6,7 +6,7 @@ This is an aggregated format that contains information about each sync that occu
 
 Each item in the ``syncs`` property is generated after a sync is completed, for both successful and failed syncs, and contains measurements pertaining to sync performance and error information.
 
-A JSON-schema document describing the exact format of the ping's payload property can be found at `services/sync/tests/unit/sync\_ping\_schema.json <https://dxr.mozilla.org/mozilla-central/source/services/sync/tests/unit/sync_ping_schema.json>`_.
+A JSON-schema document describing the exact format of the ping's payload property can be found at `services/sync/tests/unit/sync\_ping\_schema.json <https://searchfox.org/mozilla-central/source/services/sync/tests/unit/sync_ping_schema.json>`_.
 
 Structure:
 
@@ -171,7 +171,7 @@ One of the following values:
 syncs.status
 ~~~~~~~~~~~~
 
-The ``engine.status``, ``payload.status.sync``, and ``payload.status.service`` properties are sync error codes, which are listed in `services/sync/modules/constants.js <https://dxr.mozilla.org/mozilla-central/source/services/sync/modules/constants.js>`_, and success values are not reported.
+The ``engine.status``, ``payload.status.sync``, and ``payload.status.service`` properties are sync error codes, which are listed in `services/sync/modules/constants.js <https://searchfox.org/mozilla-central/source/services/sync/modules/constants.js>`_, and success values are not reported.
 
 syncs.failureReason
 ~~~~~~~~~~~~~~~~~~~
@@ -192,7 +192,7 @@ Stores error information, if any is present. Always contains the "name" property
 
     - ``from``: Where the authentication error occurred, one of the following values: ``tokenserver``, ``fxaccounts``, or ``hawkclient``.
 
-- ``othererror``: Indicates that it is a sync error code that we are unable to give more specific information on. As with the ``syncStatus`` property, it is a sync error code, which are listed in `services/sync/modules/constants.js <https://dxr.mozilla.org/mozilla-central/source/services/sync/modules/constants.js>`_.
+- ``othererror``: Indicates that it is a sync error code that we are unable to give more specific information on. As with the ``syncStatus`` property, it is a sync error code, which are listed in `services/sync/modules/constants.js <https://searchfox.org/mozilla-central/source/services/sync/modules/constants.js>`_.
 
     - ``error``: String identifying which error was present.
 
@@ -212,7 +212,7 @@ Third-party engines are not reported, so only the following values are allowed: 
 syncs.engine.validation.problems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For engines that can run validation on themselves, an array of objects describing validation errors that have occurred. Items that would have a count of 0 are excluded. Each engine will have its own set of items that it might put in the ``name`` field, but there are a finite number. See ``BookmarkProblemData.getSummary`` in `services/sync/modules/bookmark\_validator.js <https://dxr.mozilla.org/mozilla-central/source/services/sync/modules/bookmark_validator.js>`_ for an example.
+For engines that can run validation on themselves, an array of objects describing validation errors that have occurred. Items that would have a count of 0 are excluded. Each engine will have its own set of items that it might put in the ``name`` field, but there are a finite number. See ``BookmarkProblemData.getSummary`` in `services/sync/modules/bookmark\_validator.js <https://searchfox.org/mozilla-central/source/services/sync/modules/bookmark_validator.js>`_ for an example.
 
 syncs.devices
 ~~~~~~~~~~~~~
