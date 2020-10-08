@@ -273,21 +273,12 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     // re-sampled frames left last time which didn't fit into an Opus packet
     // duration.
     const int framesLeft = mResampledLeftover.Length() / mChannels;
-    // When framesLeft is 0, (NumOutputFramesPerPacket() - framesLeft) is a
-    // multiple of kOpusSamplingRate. There is not precision loss in the integer
-    // division in computing framesToFetch. If frameLeft > 0, we need to add 1
-    // to framesToFetch to ensure there will be at least n frames after
-    // re-sampling.
-    const int frameRoundUp = framesLeft ? 1 : 0;
-
     MOZ_ASSERT(NumOutputFramesPerPacket() >= framesLeft);
-    // Try to fetch m frames such that there will be n frames
-    // where (n + frameLeft) >= NumOutputFramesPerPacket() after re-sampling.
-    const int framesToFetch = !mResampler
-                                  ? NumOutputFramesPerPacket()
-                                  : (NumOutputFramesPerPacket() - framesLeft) *
-                                            mTrackRate / kOpusSamplingRate +
-                                        frameRoundUp;
+    // Fetch input frames such that there will be n frames where (n +
+    // framesLeft) >= NumOutputFramesPerPacket() after re-sampling.
+    const int framesToFetch = NumInputFramesPerPacket() -
+                              (framesLeft * mTrackRate / kOpusSamplingRate) +
+                              (NeedsResampler() ? 1 : 0);
 
     if (!mEndOfStream && mSourceSegment.GetDuration() < framesToFetch) {
       // Not enough raw data
