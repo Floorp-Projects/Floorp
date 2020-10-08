@@ -22,47 +22,51 @@ add_task(async function() {
   const { autocompletePopup } = jsterm;
 
   const testActor = await getTestActor(toolbox);
-  const inspectorFront = await toolbox.target.getFront("inspector");
+  const highlighter = toolbox.getHighlighter();
+  let onHighlighterShown;
+  let onHighlighterHidden;
+  let data;
 
   ok(!autocompletePopup.isOpen, "popup is not open");
   const onPopupOpen = autocompletePopup.once("popup-opened");
-  let onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onHighlighterShown = highlighter.waitForHighlighterShown();
   EventUtils.sendString("x.");
   await onPopupOpen;
 
   await waitForEagerEvaluationResult(hud, `<h1 class="title">`);
-  await onNodeHighlight;
-  let nodeFront = await onNodeHighlight;
-  is(nodeFront.displayName, "h1", "The correct node was highlighted");
+  data = await onHighlighterShown;
+  is(data.nodeFront.displayName, "h1", "The correct node was highlighted");
   isVisible = await testActor.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
-  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onHighlighterShown = highlighter.waitForHighlighterShown();
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await waitForEagerEvaluationResult(hud, `<div id="mydiv">`);
-  await onNodeHighlight;
-  nodeFront = await onNodeHighlight;
-  is(nodeFront.displayName, "div", "The correct node was highlighted");
+  data = await onHighlighterShown;
+  is(data.nodeFront.displayName, "div", "The correct node was highlighted");
   isVisible = await testActor.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
-  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
+  onHighlighterHidden = highlighter.waitForHighlighterHidden();
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await waitForEagerEvaluationResult(hud, `<hr>`);
-  await onNodeUnhighlight;
+  await onHighlighterHidden;
   ok(true, "The highlighter isn't displayed on a non-connected element");
 
   info("Test that text nodes are highlighted");
-  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onHighlighterShown = highlighter.waitForHighlighterShown();
   EventUtils.sendString("b.firstChild");
   await waitForEagerEvaluationResult(hud, `#text "mydivtext"`);
-  await onNodeHighlight;
-  nodeFront = await onNodeHighlight;
-  is(nodeFront.displayName, "#text", "The correct text node was highlighted");
+  data = await onHighlighterShown;
+  is(
+    data.nodeFront.displayName,
+    "#text",
+    "The correct text node was highlighted"
+  );
   isVisible = await testActor.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
-  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
+  onHighlighterHidden = highlighter.waitForHighlighterHidden();
   EventUtils.synthesizeKey("KEY_Enter");
   await waitFor(() => findMessage(hud, `#text "mydivtext"`, ".result"));
   await waitForNoEagerEvaluationResult(hud);

@@ -89,24 +89,19 @@ add_task(async function() {
   // Loading the inspector panel at first, to make it possible to listen for
   // new node selections
   await toolbox.loadTool("inspector");
+  const highlighter = toolbox.getHighlighter();
 
   const elementNode = oi3.querySelector(".objectBox-node");
   ok(elementNode !== null, "Node was logged as expected");
   const view = node.ownerDocument.defaultView;
 
   info("Highlight the node by moving the cursor on it");
-  // the inspector should be initialized first and then the node should
-  // highlight after the hover effect.
-  const objectFront = hud.currentTarget.client.getFrontByID(
-    elementNode.getAttribute("data-link-actor-id")
-  );
-  const inspectorFront = await objectFront.targetFront.getFront("inspector");
-  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  const onNodeHighlight = highlighter.waitForHighlighterShown();
 
   EventUtils.synthesizeMouseAtCenter(elementNode, { type: "mousemove" }, view);
 
-  await onNodeHighlight;
-  ok(true, "Highlighter is displayed");
+  const { highlighter: activeHighlighter } = await onNodeHighlight;
+  ok(activeHighlighter, "Highlighter is displayed");
   // Move the mouse out of the node to prevent failure when test is run multiple times.
   EventUtils.synthesizeMouseAtCenter(oi1, { type: "mousemove" }, view);
 
