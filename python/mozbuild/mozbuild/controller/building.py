@@ -1366,7 +1366,10 @@ class BuildDriver(MozbuildObject):
         if long_build:
             output.on_line(
                 'We know it took a while, but your build finally finished successfully!')
-            output.on_line('If you are building Firefox often, SCCache can save you a lot of time. You can learn more here: https://firefox-source-docs.mozilla.org/build/buildsystem/sccache-dist.html')  # noqa
+            output.on_line(
+                'If you are building Firefox often, SCCache can save you a lot '
+                'of time. You can learn more here: '
+                'https://github.com/mozilla/sccache')
         else:
             output.on_line('Your build was successful!')
 
