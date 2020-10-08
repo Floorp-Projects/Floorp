@@ -604,7 +604,7 @@ void leaky::generateReportHTML(FILE* fp, int* countArray, int count,
   // does
   fprintf(fp,
           "<h2><A NAME=hier_%d></A><center><a "
-          "href=\"http://dxr.mozilla.org/mozilla-central/source/tools/jprof/"
+          "href=\"http://searchfox.org/mozilla-central/source/tools/jprof/"
           "README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n",
           thread);
   fprintf(fp, "<pre>\n");
@@ -674,7 +674,7 @@ void leaky::generateReportHTML(FILE* fp, int* countArray, int count,
 
   fprintf(fp,
           "<h2><A NAME=flat_%d></A><center><a "
-          "href=\"http://dxr.mozilla.org/mozilla-central/source/tools/jprof/"
+          "href=\"http://searchfox.org/mozilla-central/source/tools/jprof/"
           "README.html#flat\">Flat Profile</a></center></h2><br>\n",
           thread);
   fprintf(fp, "<pre>\n");

@@ -20,7 +20,7 @@ def main(output, bookmarks_html_in, bookmarks_inc, locale=None):
     CONFIG = buildconfig.substs
 
     # Based on
-    # https://dxr.mozilla.org/l10n-central/search?q=path%3Abookmarks.inc+%23if&redirect=true,
+    # https://searchfox.org/l10n-central/search?q=path%3Abookmarks.inc+%23if&redirect=true,
     # no localized input uses the preprocessor conditional #if (really,
     # anything but #define), so it's safe to restrict the set of defines to
     # what's used in mozilla-central directly.

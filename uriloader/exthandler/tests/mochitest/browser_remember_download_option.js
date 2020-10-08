@@ -25,7 +25,7 @@ add_task(async function() {
   let dialogClosedPromise = BrowserTestUtils.windowClosed(dlg);
   // Make sure the ok button is enabled, since the ok button might be disabled by
   // EnableDelayHelper mechanism. Please refer the detailed
-  // https://dxr.mozilla.org/mozilla-central/source/toolkit/components/prompts/src/SharedPromptUtils.jsm#53
+  // https://searchfox.org/mozilla-central/source/toolkit/components/prompts/src/SharedPromptUtils.jsm#53
   dialogElement.getButton("accept").disabled = false;
   dialogElement.acceptDialog();
   await dialogClosedPromise;

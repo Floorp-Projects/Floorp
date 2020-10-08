@@ -154,7 +154,7 @@ class ServerLocations(object):
         :param check_for_primary: if True, a ``MissingPrimaryLocationError`` exception is raised
           if no primary is found
 
-        .. _server-locations.txt: http://dxr.mozilla.org/mozilla-central/source/build/pgo/server-locations.txt # noqa
+        .. _server-locations.txt: http://searchfox.org/mozilla-central/source/build/pgo/server-locations.txt # noqa
 
         The only exception is that the port, if not defined, defaults to 80 or 443.
 
@@ -237,7 +237,7 @@ class Permissions(object):
         cursor = permDB.cursor()
 
         # SQL copied from
-        # http://dxr.mozilla.org/mozilla-central/source/extensions/permissions/PermissionManager.cpp
+        # http://searchfox.org/mozilla-central/source/extensions/permissions/PermissionManager.cpp
         cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
               id INTEGER PRIMARY KEY
              ,origin TEXT
@@ -321,8 +321,7 @@ class Permissions(object):
 
     def pac_prefs(self, user_proxy=None):
         """
-        return preferences for Proxy Auto Config. originally taken from
-        http://dxr.mozilla.org/mozilla-central/source/build/automation.py.in
+        return preferences for Proxy Auto Config.
         """
         proxy = DEFAULT_PORTS.copy()
 
