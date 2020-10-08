@@ -28,10 +28,12 @@ rename_args = "GeckoCase"
 [struct]
 associated_constants_in_body = true
 derive_eq = true
+derive_ostream = true
 
 [enum]
 add_sentinel = true
 derive_helper_methods = true
+derive_ostream = true
 
 [macro_expansion]
 bitflags = true

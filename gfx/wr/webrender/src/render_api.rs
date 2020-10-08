@@ -1460,6 +1460,7 @@ fn window_size_sanity_check(size: DeviceIntSize) {
 
 /// Collection of heap sizes, in bytes.
 /// cbindgen:derive-eq=false
+/// cbindgen:derive-ostream=false
 #[repr(C)]
 #[allow(missing_docs)]
 #[derive(AddAssign, Clone, Debug, Default)]
