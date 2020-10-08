@@ -21,38 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const wr::ColorF& c,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("rgba(%d, %d, %d, %f)", uint8_t(c.r * 255.f),
-                             uint8_t(c.g * 255.f), uint8_t(c.b * 255.f), c.a)
-                 .get();
-  aStream << sfx;
-}
-
-void AppendToString(std::stringstream& aStream, const wr::LayoutRect& r,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("(x=%f, y=%f, w=%f, h=%f)", r.origin.x, r.origin.y,
-                             r.size.width, r.size.height)
-                 .get();
-  aStream << sfx;
-}
-
-void AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("(w=%f, h=%f)", s.width, s.height).get();
-  aStream << sfx;
-}
-
-void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("(min=%f max=%f)", s.min, s.max).get();
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
