@@ -25,13 +25,12 @@ class CSS {
   CSS() = delete;
 
  public:
-  static bool Supports(const GlobalObject& aGlobal, const nsAString& aProperty,
-                       const nsAString& aValue, ErrorResult& aRv);
+  static bool Supports(const GlobalObject&, const nsACString& aProperty,
+                       const nsACString& aValue);
 
-  static bool Supports(const GlobalObject& aGlobal,
-                       const nsAString& aDeclaration, ErrorResult& aRv);
+  static bool Supports(const GlobalObject&, const nsACString& aDeclaration);
 
-  static void Escape(const GlobalObject& aGlobal, const nsAString& aIdent,
+  static void Escape(const GlobalObject&, const nsAString& aIdent,
                      nsAString& aReturn);
 };
 
