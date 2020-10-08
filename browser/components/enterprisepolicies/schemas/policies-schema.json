@@ -683,7 +683,7 @@
         },
         "type": "object"
       },
-      "type": ["array", "JSON"]
+      "type": ["JSON", "array"]
     },
 
     "NetworkPrediction": {
