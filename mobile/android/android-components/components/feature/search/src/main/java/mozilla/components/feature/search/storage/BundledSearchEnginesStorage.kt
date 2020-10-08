@@ -28,7 +28,7 @@ internal class BundledSearchEnginesStorage(
     private val context: Context
 ) : SearchMiddleware.BundleStorage {
     /**
-     * Load the [SearchEngineBundle] for the given [region] and [locale].
+     * Load the [SearchMiddleware.BundleStorage.Bundle] for the given [region] and [locale].
      */
     override suspend fun load(
         region: RegionState,
@@ -150,8 +150,8 @@ private fun getArrayFromBlock(
 
 /**
  * This looks for a JSONObject in the config blocks it is passed that is able to be transformed
- * into a value. It tries the permutations of locale and region specific from most specific to
- * least specific.
+ * into a value. It tries the permutations of locale and region from most specific to least
+ * specific.
  *
  * This has to be done on a value basis, not a configBlock basis, as the configuration for a
  * given locale/region is not grouped into one object, but spread across the json file,

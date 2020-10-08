@@ -76,7 +76,7 @@ class SearchActionTest {
     }
 
     @Test
-    fun `SetCustomSearchEngineAction sets a new custom search engine`() {
+    fun `UpdateCustomSearchEngineAction sets a new custom search engine`() {
         val store = BrowserStore(BrowserState())
 
         assertTrue(store.state.search.customSearchEngines.isEmpty())

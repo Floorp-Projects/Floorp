@@ -52,22 +52,17 @@ private fun BrowserState.setRegion(
 private fun BrowserState.updateCustomSearchEngine(
     action: SearchAction.UpdateCustomSearchEngineAction
 ): BrowserState {
-    var updated = false
-    val searchEngines = search.customSearchEngines.map {
-        if (it.id == action.searchEngine.id) {
-            updated = true
-            action.searchEngine
-        } else {
-            it
-        }
+    val searchEngines = search.customSearchEngines
+    val index = searchEngines.indexOfFirst { searchEngine -> searchEngine.id == action.searchEngine.id }
+
+    val updatedSearchEngines = if (index != -1) {
+        searchEngines.subList(0, index) + action.searchEngine + searchEngines.subList(index + 1, searchEngines.size)
+    } else {
+        searchEngines + action.searchEngine
     }
 
     return copy(search = search.copy(
-        customSearchEngines = if (updated) {
-            searchEngines
-        } else {
-            searchEngines + action.searchEngine
-        }
+        customSearchEngines = updatedSearchEngines
     ))
 }
 

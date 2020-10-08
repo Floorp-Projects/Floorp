@@ -74,6 +74,9 @@ import mozilla.components.lib.nearby.NearbyConnection
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.feature.search.middleware.SearchMiddleware
+import mozilla.components.feature.search.region.RegionMiddleware
+import mozilla.components.service.location.LocationService
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
@@ -127,13 +130,29 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 
+    val locationService by lazy {
+        // Just a dummy provider here. In a production app we may want to use MozillaLocationService.
+        object : LocationService {
+            override suspend fun fetchRegion(readFromCache: Boolean): LocationService.Region? {
+                return LocationService.Region("US", "The United States of America")
+            }
+
+            override fun hasRegionCached(): Boolean = true
+        }
+    }
+
     val store by lazy {
         BrowserStore(middleware = listOf(
             MediaMiddleware(applicationContext, MediaService::class.java),
             DownloadMiddleware(applicationContext, DownloadService::class.java),
             ReaderViewMiddleware(),
             ThumbnailsMiddleware(thumbnailStorage),
-            UndoMiddleware(::sessionManagerLookup)
+            UndoMiddleware(::sessionManagerLookup),
+            RegionMiddleware(
+                applicationContext,
+                locationService
+            ),
+            SearchMiddleware(applicationContext)
         ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 

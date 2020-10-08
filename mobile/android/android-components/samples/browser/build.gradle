@@ -95,6 +95,7 @@ dependencies {
     implementation project(':feature-app-links')
     implementation project(':feature-contextmenu')
     implementation project(':feature-customtabs')
+    implementation project(':feature-downloads')
     implementation project(':feature-intent')
     implementation project(':feature-media')
     implementation project(':feature-readerview')
@@ -119,11 +120,10 @@ dependencies {
     // for engineers that want to test Gecko metrics exfiltrated via the Glean
     // SDK. See bug 1592935 for more context.
     implementation project(':service-glean')
-
+    implementation project(':service-location')
     implementation project(':service-digitalassetlinks')
 
     implementation project(':support-utils')
-    implementation project(':feature-downloads')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')

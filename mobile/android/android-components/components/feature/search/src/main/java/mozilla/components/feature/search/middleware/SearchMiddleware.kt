@@ -70,9 +70,11 @@ class SearchMiddleware(
     ) = GlobalScope.launch(ioDispatcher) {
         val searchEngines = customStorage.loadSearchEngineList()
 
-        store.dispatch(SearchAction.SetCustomSearchEngines(
-            searchEngines
-        ))
+        if (searchEngines.isNotEmpty()) {
+            store.dispatch(SearchAction.SetCustomSearchEngines(
+                searchEngines
+            ))
+        }
     }
 
     private fun loadRegionSearchEngines(
