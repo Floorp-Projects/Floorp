@@ -11149,13 +11149,19 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     }
   } else if (mozilla::SessionHistoryInParent()) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("nsDocShell %p UpdateActiveEntry (replacing)", this));
+            ("nsDocShell %p UpdateActiveEntry (replacing) mActiveEntry %p",
+             this, mActiveEntry.get()));
     // Setting the resultPrincipalURI to nullptr is fine here: it will cause
     // NS_GetFinalChannelURI to use the originalURI as the URI, which is aNewURI
     // in our case.  We could also set it to aNewURI, with the same result.
+    // We don't use aTitle here, see bug 544535.
+    nsString title;
+    if (mActiveEntry) {
+      title = mActiveEntry->GetTitle();
+    }
     UpdateActiveEntry(
         true, /* aPreviousScrollPos = */ Nothing(), aNewURI, aNewURI,
-        aDocument->NodePrincipal(), aDocument->GetCsp(), u""_ns,
+        aDocument->NodePrincipal(), aDocument->GetCsp(), title,
         /* aScrollRestorationIsManual = */ Nothing(), aData, uriWasModified);
   } else {
     // Step 3.
