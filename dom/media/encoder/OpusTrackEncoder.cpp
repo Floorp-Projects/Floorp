@@ -130,6 +130,7 @@ OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
                                                           : kOpusSamplingRate),
       mEncoder(nullptr),
       mLookahead(0),
+      mLookaheadWritten(0),
       mResampler(nullptr),
       mNumOutputFrames(0) {}
 
@@ -194,6 +195,10 @@ nsresult OpusTrackEncoder::Init(int aChannels) {
   SetInitialized();
 
   return NS_OK;
+}
+
+int OpusTrackEncoder::GetLookahead() const {
+  return mLookahead * kOpusSamplingRate / mOutputSampleRate;
 }
 
 int OpusTrackEncoder::NumInputFramesPerPacket() const {
@@ -289,13 +294,6 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
       return NS_OK;
     }
 
-    // Pad |mLookahead| samples to the end of source track to prevent lost of
-    // original data, the pcm duration will be calculated at rate 48K later.
-    if (mEndOfStream && !mEosSetInEncoder) {
-      mEosSetInEncoder = true;
-      mSourceSegment.AppendNullData(mLookahead);
-    }
-
     // Start encoding data.
     AutoTArray<AudioDataValue, 9600> pcm;
     pcm.SetLength(NumOutputFramesPerPacket() * mChannels);
@@ -343,15 +341,14 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     MOZ_ASSERT(frameCopied <= 3844, "frameCopied exceeded expected range");
 
     int framesInPCM = frameCopied;
-    uint64_t duration;
     if (mResampler) {
       AutoTArray<AudioDataValue, 9600> resamplingDest;
+      uint32_t inframes = frameCopied;
+      uint32_t outframes = inframes * kOpusSamplingRate / mTrackRate + 1;
+
       // We want to consume all the input data, so we slightly oversize the
       // resampled data buffer so we can fit the output data in. We cannot
       // really predict the output frame count at each call.
-      uint32_t outframes = frameCopied * kOpusSamplingRate / mTrackRate + 1;
-      uint32_t inframes = frameCopied;
-
       resamplingDest.SetLength(outframes * mChannels);
 
 #if MOZ_SAMPLE_TYPE_S16
@@ -385,10 +382,6 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
               mResampledLeftover.Length());
       // This is always at 48000Hz.
       framesInPCM = framesLeft + outframesToCopy;
-      duration = framesInPCM;
-    } else {
-      // Ogg and Webm timestamps are always sampled at 48k for Opus.
-      duration = frameCopied * (kOpusSamplingRate / mTrackRate);
     }
 
     // Remove the raw data which has been pulled to pcm buffer.
@@ -398,16 +391,27 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 
     // Has reached the end of input stream and all queued data has pulled for
     // encoding.
-    if (mSourceSegment.GetDuration() == 0 && mEosSetInEncoder) {
-      mEncodingComplete = true;
-      LOG("[Opus] Done encoding.");
+    if (mSourceSegment.GetDuration() == 0 && mEndOfStream &&
+        framesInPCM < NumOutputFramesPerPacket()) {
+      // Pad |mLookahead| samples to the end of the track to prevent loss of
+      // original data.
+      const int toWrite = std::min(mLookahead - mLookaheadWritten,
+                                   NumOutputFramesPerPacket() - framesInPCM);
+      PodZero(pcm.Elements() + framesInPCM * mChannels, toWrite * mChannels);
+      mLookaheadWritten += toWrite;
+      framesInPCM += toWrite;
+      if (mLookaheadWritten == mLookahead) {
+        mEncodingComplete = true;
+        LOG("[Opus] Done encoding.");
+      }
     }
 
-    MOZ_ASSERT(mEosSetInEncoder || framesInPCM == NumOutputFramesPerPacket());
+    MOZ_ASSERT_IF(!mEncodingComplete,
+                  framesInPCM == NumOutputFramesPerPacket());
 
     // Append null data to pcm buffer if the leftover data is not enough for
     // opus encoder.
-    if (framesInPCM < NumOutputFramesPerPacket() && mEosSetInEncoder) {
+    if (framesInPCM < NumOutputFramesPerPacket() && mEncodingComplete) {
       PodZero(pcm.Elements() + framesInPCM * mChannels,
               (NumOutputFramesPerPacket() - framesInPCM) * mChannels);
     }
@@ -441,7 +445,9 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     // timestamp should be the time of the first sample
     aData.AppendElement(MakeRefPtr<EncodedFrame>(
         FramesToTimeUnit(mNumOutputFrames + mLookahead, mOutputSampleRate),
-        duration, kOpusSamplingRate, EncodedFrame::OPUS_AUDIO_FRAME,
+        static_cast<uint64_t>(framesInPCM) * kOpusSamplingRate /
+            mOutputSampleRate,
+        kOpusSamplingRate, EncodedFrame::OPUS_AUDIO_FRAME,
         std::move(frameData)));
 
     mNumOutputFrames += NumOutputFramesPerPacket();
