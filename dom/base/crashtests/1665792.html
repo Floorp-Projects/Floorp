@@ -1,0 +1,13 @@
+<html class="reftest-wait">
+<script>
+window.onload = () => {
+  window[0].stop()
+  window[0].onpagehide = document.createElement("frameset").onload
+  a.src = ""
+  setTimeout(function() {
+    SpecialPowers.wrap(window).printPreview()?.close()
+    document.documentElement.className = "";
+  }, 0);
+}
+</script>
+<iframe id="a"></iframe>
