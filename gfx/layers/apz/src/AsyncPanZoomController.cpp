@@ -102,12 +102,11 @@ static mozilla::LazyLogModule sApzCtlLog("apz.controller");
 #define APZC_LOG(...) MOZ_LOG(sApzCtlLog, LogLevel::Debug, (__VA_ARGS__))
 #define APZC_LOGV(...) MOZ_LOG(sApzCtlLog, LogLevel::Verbose, (__VA_ARGS__))
 
-#define APZC_LOG_FM_COMMON(fm, prefix, level, ...)          \
-  if (MOZ_LOG_TEST(sApzCtlLog, level)) {                    \
-    std::stringstream ss;                                   \
-    ss << nsPrintfCString(prefix, __VA_ARGS__).get();       \
-    AppendToString(ss, fm, ":", "", true);                  \
-    MOZ_LOG(sApzCtlLog, level, ("%s\n", ss.str().c_str())); \
+#define APZC_LOG_FM_COMMON(fm, prefix, level, ...)                 \
+  if (MOZ_LOG_TEST(sApzCtlLog, level)) {                           \
+    std::stringstream ss;                                          \
+    ss << nsPrintfCString(prefix, __VA_ARGS__).get() << ":" << fm; \
+    MOZ_LOG(sApzCtlLog, level, ("%s\n", ss.str().c_str()));        \
   }
 #define APZC_LOG_FM(fm, prefix, ...) \
   APZC_LOG_FM_COMMON(fm, prefix, LogLevel::Debug, __VA_ARGS__)

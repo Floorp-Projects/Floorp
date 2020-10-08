@@ -24,8 +24,8 @@ namespace layers {
 void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
-  AppendToString(aStream, m.GetMetrics(), "{ [metrics=");
-  aStream << "] [color=" << m.GetBackgroundColor();
+  aStream << "{ [metrics=" << m.GetMetrics()
+          << "] [color=" << m.GetBackgroundColor();
   if (m.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     aStream << "] [scrollParent=" << m.GetScrollParentId();
   }
@@ -38,44 +38,6 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   aStream << "] [overscroll=" << m.GetOverscrollBehavior() << "] ["
           << m.GetScrollUpdates().Length() << " scrollupdates"
           << "] }" << sfx;
-}
-
-void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
-                    const char* pfx, const char* sfx, bool detailed) {
-  aStream << pfx;
-  aStream << "{ [cb=" << m.GetCompositionBounds()
-          << "] [sr=" << m.GetScrollableRect()
-          << "] [s=" << m.GetVisualScrollOffset();
-  if (m.GetVisualScrollUpdateType() != FrameMetrics::eNone) {
-    aStream << "] [vd=" << m.GetVisualDestination();
-  }
-  aStream << "] [dp=" << m.GetDisplayPort()
-          << "] [cdp=" << m.GetCriticalDisplayPort();
-  if (!detailed) {
-    aStream << "] [scrollId=" << m.GetScrollId();
-    if (m.IsRootContent()) {
-      aStream << "] [rcd";
-    }
-    aStream << "] [z=" << m.GetZoom() << "] }";
-  } else {
-    aStream << "] [rcs=" << m.GetRootCompositionSize()
-            << "] [v=" << m.GetLayoutViewport()
-            << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
-                               m.GetDevPixelsPerCSSPixel().scale,
-                               m.GetPresShellResolution())
-                   .get()
-            << " cr=" << m.GetCumulativeResolution() << " z=" << m.GetZoom()
-            << " er=" << m.GetExtraResolution()
-            << nsPrintfCString(")] [u=(%d %" PRIu32 ")",
-                               m.GetVisualScrollUpdateType(),
-                               m.GetScrollGeneration())
-                   .get()
-            << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
-                               m.GetPresShellId(), m.GetScrollId(),
-                               m.IsRootContent())
-                   .get();
-  }
-  aStream << sfx;
 }
 
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
