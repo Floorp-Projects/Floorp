@@ -509,7 +509,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   CompositionOpportunityId mCompositionOpportunityId;
   nsCString mInitError;
 
-  VsyncId mSkippedCompositeId;
   TimeStamp mMostRecentComposite;
 
 #if defined(MOZ_WIDGET_ANDROID)

@@ -1971,7 +1971,7 @@ void WebRenderBridgeParent::SetOMTASampleTime() {
 void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
-    CompositeToTarget(mSkippedCompositeId, nullptr, nullptr);
+    mCompositorScheduler->ScheduleComposition();
   }
 }
 
@@ -1999,7 +1999,6 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
       wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
     // Render thread is busy, try next time.
     mSkippedComposite = true;
-    mSkippedCompositeId = aId;
     ResetPreviousSampleTime();
 
     // Record that we skipped presenting a frame for
