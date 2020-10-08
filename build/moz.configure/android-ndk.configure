@@ -14,12 +14,12 @@ def default_android_ndk_root(mozbuild_state_path, _):
         return path
 
 
-js_option('--with-android-ndk', nargs=1,
-          default=default_android_ndk_root,
-          help='location where the Android NDK can be found{|}')
+option('--with-android-ndk', nargs=1,
+       default=default_android_ndk_root,
+       help='location where the Android NDK can be found{|}')
 
-js_option('--with-android-toolchain', nargs=1,
-          help='location of the Android toolchain')
+option('--with-android-toolchain', nargs=1,
+       help='location of the Android toolchain')
 
 option('--with-android-googlevr-sdk', nargs=1,
        help='location of the Android GoogleVR SDK')
@@ -33,10 +33,10 @@ def min_android_version(target):
     return '16'
 
 
-js_option('--with-android-version',
-          nargs=1,
-          help='android platform version{|}',
-          default=min_android_version)
+option('--with-android-version',
+       nargs=1,
+       help='android platform version{|}',
+       default=min_android_version)
 
 
 @depends('--with-android-version', min_android_version)
@@ -244,9 +244,9 @@ def android_toolchain_prefix_base(target):
     return target.toolchain
 
 
-js_option(env='STLPORT_CPPFLAGS',
-          nargs=1,
-          help='Options compiler should pass for standard C++ library')
+option(env='STLPORT_CPPFLAGS',
+       nargs=1,
+       help='Options compiler should pass for standard C++ library')
 
 
 @depends('STLPORT_CPPFLAGS', ndk)

@@ -26,10 +26,10 @@ def arm_option_defaults(os, _):
 # default is always returned. The lint is fooled by this file being
 # conditional. If it weren't conditional, the lint wouldn't ask for '{|}' to
 # be there.
-js_option('--with-arch', nargs=1,
-          default=arm_option_defaults.arch,
-          help='{Use specific CPU features (-march=type). Resets thumb, fpu, '
-               'float-abi, etc. defaults when set|}')
+option('--with-arch', nargs=1,
+       default=arm_option_defaults.arch,
+       help='{Use specific CPU features (-march=type). Resets thumb, fpu, '
+            'float-abi, etc. defaults when set|}')
 
 
 @depends('--with-arch')
@@ -40,9 +40,9 @@ def arch_option(value):
     return []
 
 
-js_option('--with-thumb', choices=('yes', 'no', 'toolchain-default'),
-          default=arm_option_defaults.thumb,
-          nargs='?', help='{Use Thumb instruction set (-mthumb)|}')
+option('--with-thumb', choices=('yes', 'no', 'toolchain-default'),
+       default=arm_option_defaults.thumb,
+       nargs='?', help='{Use Thumb instruction set (-mthumb)|}')
 
 
 def normalize_arm_option(value):
@@ -67,9 +67,9 @@ def thumb_option(value):
     return []
 
 
-js_option('--with-thumb-interwork', choices=('yes', 'no', 'toolchain-default'),
-          default='toolchain-default',
-          nargs='?', help='Use Thumb/ARM instuctions interwork (-mthumb-interwork)')
+option('--with-thumb-interwork', choices=('yes', 'no', 'toolchain-default'),
+       default='toolchain-default',
+       nargs='?', help='Use Thumb/ARM instuctions interwork (-mthumb-interwork)')
 
 
 @depends('--with-thumb-interwork')
@@ -82,9 +82,9 @@ def thumb_interwork_option(value):
     return []
 
 
-js_option('--with-fpu', nargs=1,
-          default=arm_option_defaults.fpu,
-          help='{Use specific FPU type (-mfpu=type)|}')
+option('--with-fpu', nargs=1,
+       default=arm_option_defaults.fpu,
+       help='{Use specific FPU type (-mfpu=type)|}')
 
 
 @depends('--with-fpu')
@@ -95,9 +95,9 @@ def fpu_option(value):
     return []
 
 
-js_option('--with-float-abi', nargs=1,
-          default=arm_option_defaults.float_abi,
-          help='{Use specific arm float ABI (-mfloat-abi=type)|}')
+option('--with-float-abi', nargs=1,
+       default=arm_option_defaults.float_abi,
+       help='{Use specific arm float ABI (-mfloat-abi=type)|}')
 
 
 @depends('--with-float-abi')
@@ -108,9 +108,9 @@ def float_abi_option(value):
     return []
 
 
-js_option('--with-soft-float', choices=('yes', 'no', 'toolchain-default'),
-          default='toolchain-default',
-          nargs='?', help='Use soft float library (-msoft-float)')
+option('--with-soft-float', choices=('yes', 'no', 'toolchain-default'),
+       default='toolchain-default',
+       nargs='?', help='Use soft float library (-msoft-float)')
 
 
 @depends('--with-soft-float')

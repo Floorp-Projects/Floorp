@@ -6,15 +6,15 @@
 
 # Top-level configure defaults to building NSPR from source. Standalone JS
 # doesn't.
-js_option('--enable-nspr-build', when=js_standalone,
-          help='{Build|Do not build} NSPR from source tree')
+option('--enable-nspr-build', when=js_standalone,
+       help='{Build|Do not build} NSPR from source tree')
 
 @depends('--enable-nspr-build', when=js_standalone)
 def enable_nspr_build(enable):
     if enable:
         return enable
 
-js_option('--with-system-nspr', help='Use system NSPR')
+option('--with-system-nspr', help='Use system NSPR')
 
 @depends(enable_nspr_build, '--with-system-nspr', js_standalone)
 def build_nspr(nspr_build, system_nspr, js_standalone):

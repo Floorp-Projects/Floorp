@@ -10,8 +10,8 @@ def jemalloc_default(target):
     return target.kernel in ('Darwin', 'Linux', 'WINNT')
 
 
-js_option('--enable-jemalloc', env='MOZ_MEMORY', default=jemalloc_default,
-          help='{Replace|Do not replace} memory allocator with jemalloc')
+option('--enable-jemalloc', env='MOZ_MEMORY', default=jemalloc_default,
+       help='{Replace|Do not replace} memory allocator with jemalloc')
 
 
 set_config('MOZ_MEMORY', True, when='--enable-jemalloc')
@@ -27,9 +27,9 @@ def replace_malloc_default(milestone, build_project):
         return True
 
 
-js_option('--enable-replace-malloc', default=replace_malloc_default,
-          when='--enable-jemalloc',
-          help='{Enable|Disable} ability to dynamically replace the malloc implementation')
+option('--enable-replace-malloc', default=replace_malloc_default,
+       when='--enable-jemalloc',
+       help='{Enable|Disable} ability to dynamically replace the malloc implementation')
 
 
 set_config('MOZ_REPLACE_MALLOC', True, when='--enable-replace-malloc')

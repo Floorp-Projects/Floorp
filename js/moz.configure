@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# /!\ Use js_option() instead of option() in this file. /!\
-# =========================================================
-
 @depends(build_project)
 def js_standalone(build_project):
     if build_project == 'js':
@@ -14,9 +11,9 @@ def js_standalone(build_project):
 
 # Branding
 # ==============================================================
-js_option('--with-app-name', env='MOZ_APP_NAME', nargs=1,
-          help='Used for e.g. the binary program file name. If not set, '
-          'defaults to a lowercase form of MOZ_APP_BASENAME.')
+option('--with-app-name', env='MOZ_APP_NAME', nargs=1,
+       help='Used for e.g. the binary program file name. If not set, '
+       'defaults to a lowercase form of MOZ_APP_BASENAME.')
 
 @depends('--with-app-name', js_standalone, moz_app_basename)
 def moz_app_name(value, js_standalone, moz_app_basename):
@@ -32,8 +29,8 @@ set_config('MOZ_APP_NAME', moz_app_name)
 # ==================================================
 
 # Define here in order to use the option from bindgen.configure.
-js_option('--enable-smoosh', default=False,
-          help='Enable SmooshMonkey (new JS engine frontend)')
+option('--enable-smoosh', default=False,
+       help='Enable SmooshMonkey (new JS engine frontend)')
 
 @depends('--enable-smoosh')
 def enable_smoosh(value):
@@ -53,8 +50,8 @@ include('../build/moz.configure/bindgen.configure',
 set_config('JS_STANDALONE', js_standalone)
 set_define('JS_STANDALONE', js_standalone)
 add_old_configure_assignment('JS_STANDALONE', js_standalone)
-js_option('--enable-js-shell', default=js_standalone,
-          help='{Build|Do not build} the JS shell')
+option('--enable-js-shell', default=js_standalone,
+       help='{Build|Do not build} the JS shell')
 
 @depends('--enable-js-shell')
 def js_disable_shell(value):
@@ -71,11 +68,11 @@ set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
 
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
-js_option('--disable-shared-js', when=js_standalone,
-          help='{Create|Do not create} a shared library')
+option('--disable-shared-js', when=js_standalone,
+       help='{Create|Do not create} a shared library')
 
-js_option('--disable-export-js', when=js_standalone,
-          help='{Mark|Do not mark} JS symbols as DLL exported/visible')
+option('--disable-export-js', when=js_standalone,
+       help='{Mark|Do not mark} JS symbols as DLL exported/visible')
 
 @depends('--disable-shared-js', '--disable-export-js', when=js_standalone)
 def shared_js(shared_js, export_js):
@@ -109,8 +106,8 @@ def static_js(value):
 set_define('MOZ_STATIC_JS', static_js)
 
 
-js_option(env='NO_RUST_PANIC_HOOK', when=js_standalone,
-          help='Disable rust panic hook')
+option(env='NO_RUST_PANIC_HOOK', when=js_standalone,
+       help='Disable rust panic hook')
 
 set_define('NO_RUST_PANIC_HOOK', True, when='NO_RUST_PANIC_HOOK')
 
@@ -123,9 +120,9 @@ def jit_default(target):
         return True
     return False
 
-js_option('--enable-jit',
-          default=jit_default,
-          help='{Enable|Disable} use of the JITs')
+option('--enable-jit',
+       default=jit_default,
+       help='{Enable|Disable} use of the JITs')
 
 @deprecated_option('--enable-ion')
 def report_deprecated(value):
@@ -136,9 +133,9 @@ def report_deprecated(value):
 
 # JIT code simulator for cross compiles
 # =======================================================
-js_option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
-          nargs=1,
-          help='Enable a JIT code simulator for the specified architecture')
+option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
+       nargs=1,
+       help='Enable a JIT code simulator for the specified architecture')
 
 @depends('--enable-jit', '--enable-simulator', target, '--help')
 def simulator(jit_enabled, simulator_enabled, target, _):
@@ -200,8 +197,8 @@ set_define('JS_CODEGEN_X64', jit_codegen.x64)
 
 # Profiling
 # =======================================================
-js_option('--enable-instruments', env='MOZ_INSTRUMENTS',
-          help='Enable instruments remote profiling')
+option('--enable-instruments', env='MOZ_INSTRUMENTS',
+       help='Enable instruments remote profiling')
 
 @depends('--enable-instruments', target)
 def instruments(value, target):
@@ -216,8 +213,8 @@ set_define('MOZ_INSTRUMENTS', instruments)
 add_old_configure_assignment('MOZ_INSTRUMENTS', instruments)
 imply_option('--enable-profiling', instruments, reason='--enable-instruments')
 
-js_option('--enable-callgrind', env='MOZ_CALLGRIND',
-          help='Enable callgrind profiling')
+option('--enable-callgrind', env='MOZ_CALLGRIND',
+       help='Enable callgrind profiling')
 
 @depends('--enable-callgrind')
 def callgrind(value):
@@ -231,9 +228,9 @@ imply_option('--enable-profiling', callgrind)
 def enable_profiling(milestone):
     return milestone.is_nightly
 
-js_option('--enable-profiling', env='MOZ_PROFILING', default=enable_profiling,
-          help='{Set|Do not set} compile flags necessary for using sampling '
-                'profilers (e.g. shark, perf)')
+option('--enable-profiling', env='MOZ_PROFILING', default=enable_profiling,
+       help='{Set|Do not set} compile flags necessary for using sampling '
+             'profilers (e.g. shark, perf)')
 
 @depends('--enable-profiling')
 def profiling(value):
@@ -260,7 +257,7 @@ set_define('MOZ_PROFILING', profiling)
 imply_option('--enable-vtune', imply_vtune, reason='--enable-profiling')
 
 
-js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable VTune profiling')
+option('--enable-vtune', env='MOZ_VTUNE', help='Enable VTune profiling')
 
 @depends('--enable-vtune')
 def vtune(value):
@@ -271,8 +268,8 @@ set_config('MOZ_VTUNE', vtune)
 set_define('MOZ_VTUNE', vtune)
 
 
-js_option('--enable-gc-probes', env='JS_GC_PROBES',
-          help='Turn on probes for allocation and finalization')
+option('--enable-gc-probes', env='JS_GC_PROBES',
+       help='Turn on probes for allocation and finalization')
 
 @depends('--enable-gc-probes')
 def gc_probes(value):
@@ -282,9 +279,9 @@ def gc_probes(value):
 set_define('JS_GC_PROBES', gc_probes)
 
 
-js_option('--enable-gczeal',
-          default=depends(when=moz_debug)(lambda: True),
-          help='{Enable|Disable} zealous GCing')
+option('--enable-gczeal',
+       default=depends(when=moz_debug)(lambda: True),
+       help='{Enable|Disable} zealous GCing')
 
 set_define('JS_GC_ZEAL',
            depends_if('--enable-gczeal')(lambda _: True))
@@ -294,8 +291,8 @@ set_define('JS_GC_ZEAL',
 # ========================================================
 # Use large (1MB) chunks by default.  This option can be used to give
 # smaller (currently 256K) chunks.
-js_option('--enable-small-chunk-size',
-          help='Allocate memory for JS GC things in smaller chunks')
+option('--enable-small-chunk-size',
+       help='Allocate memory for JS GC things in smaller chunks')
 
 set_define('JS_GC_SMALL_CHUNK_SIZE',
            depends(when='--enable-small-chunk-size')(lambda: True))
@@ -308,9 +305,9 @@ def default_trace_logging(milestone):
     return milestone.is_nightly
 
 
-js_option('--enable-trace-logging',
-          default=default_trace_logging,
-          help='{Enable|Disable} trace logging')
+option('--enable-trace-logging',
+       default=default_trace_logging,
+       help='{Enable|Disable} trace logging')
 
 set_config('ENABLE_TRACE_LOGGING',
            depends_if('--enable-trace-logging')(lambda x: True))
@@ -320,15 +317,15 @@ set_define('JS_TRACE_LOGGING',
 
 # Enable breakpoint for artificial OOMs
 # =======================================================
-js_option('--enable-oom-breakpoint',
-          help='Enable a breakpoint function for artificial OOMs')
+option('--enable-oom-breakpoint',
+       help='Enable a breakpoint function for artificial OOMs')
 
 set_define('JS_OOM_BREAKPOINT',
            depends_if('--enable-oom-breakpoint')(lambda _: True))
 
 
-js_option('--enable-perf', env='JS_ION_PERF',
-          help='Enable Linux perf integration')
+option('--enable-perf', env='JS_ION_PERF',
+       help='Enable Linux perf integration')
 
 @depends('--enable-perf')
 def ion_perf(value):
@@ -338,10 +335,10 @@ def ion_perf(value):
 set_define('JS_ION_PERF', ion_perf)
 
 
-js_option('--enable-jitspew',
-          default=depends(when=moz_debug)(lambda: True),
-          help='{Enable|Disable} the Jit spew and IONFLAGS environment '
-               'variable')
+option('--enable-jitspew',
+       default=depends(when=moz_debug)(lambda: True),
+       help='{Enable|Disable} the Jit spew and IONFLAGS environment '
+            'variable')
 
 set_define('JS_JITSPEW',
            depends_if('--enable-jitspew')(lambda _: True))
@@ -388,17 +385,17 @@ set_define('JS_DISASM_ARM64', jit_disasm_arm64)
 # assertions in the generated code. This option is worth disabling when you
 # have to track mutated values through the generated code, to avoid constantly
 # dumping registers on and off the stack.
-js_option('--enable-masm-verbose',
-          default=depends(when=moz_debug)(lambda: True),
-          help='{Enable|Disable} MacroAssembler verbosity of generated code.')
+option('--enable-masm-verbose',
+       default=depends(when=moz_debug)(lambda: True),
+       help='{Enable|Disable} MacroAssembler verbosity of generated code.')
 set_define('JS_MASM_VERBOSE',
            depends_if('--enable-masm-verbose')(lambda _: True))
 set_config('JS_MASM_VERBOSE',
            depends_if('--enable-masm-verbose')(lambda _: True))
 
 
-js_option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',
-          help='Enable changes that make the shell more deterministic')
+option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',
+       help='Enable changes that make the shell more deterministic')
 
 @depends('--enable-more-deterministic')
 def more_deterministic(value):
@@ -414,9 +411,9 @@ set_define('JS_MORE_DETERMINISTIC', more_deterministic)
 def ctypes_default(js_standalone):
     return not js_standalone
 
-js_option('--enable-ctypes',
-          default=ctypes_default,
-          help='{Enable|Disable} js-ctypes')
+option('--enable-ctypes',
+       default=ctypes_default,
+       help='{Enable|Disable} js-ctypes')
 
 build_ctypes = depends_if('--enable-ctypes')(lambda _: True)
 
@@ -435,7 +432,7 @@ include('ffi.configure', when=ctypes_and_compile_environment)
 
 # Enable pipeline operator
 # ===================================================
-js_option('--enable-pipeline-operator', default=False, help='Enable pipeline operator')
+option('--enable-pipeline-operator', default=False, help='Enable pipeline operator')
 
 @depends('--enable-pipeline-operator')
 def enable_pipeline_operator(value):
@@ -449,8 +446,8 @@ set_define('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
 # SIMD acceleration for encoding_rs
 # ==============================================================
 
-js_option('--enable-rust-simd', env='MOZ_RUST_SIMD',
-          help='Enable explicit SIMD in Rust code.')
+option('--enable-rust-simd', env='MOZ_RUST_SIMD',
+       help='Enable explicit SIMD in Rust code.')
 
 @depends('--enable-rust-simd', target)
 def rust_simd(value, target):
@@ -471,9 +468,9 @@ def cranelift_default(is_nightly, target):
     if is_nightly and (target.cpu == 'aarch64' or target.cpu == 'x86_64'):
         return True
 
-js_option('--enable-cranelift',
-          default=cranelift_default,
-          help='{Enable|Disable} Cranelift code generator for wasm')
+option('--enable-cranelift',
+       default=cranelift_default,
+       help='{Enable|Disable} Cranelift code generator for wasm')
 
 set_config('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
 set_define('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
@@ -481,18 +478,18 @@ set_define('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: T
 # Telemetry to measure compile time and generated-code runtime
 # ============================================================
 
-js_option('--enable-spidermonkey-telemetry',
-          default=milestone.is_nightly,
-          help='{Enable|Disable} performance telemetry for SpiderMonkey (e.g. compile and run times)')
+option('--enable-spidermonkey-telemetry',
+       default=milestone.is_nightly,
+       help='{Enable|Disable} performance telemetry for SpiderMonkey (e.g. compile and run times)')
 
 set_define('ENABLE_SPIDERMONKEY_TELEMETRY', depends_if('--enable-spidermonkey-telemetry')(lambda x: True))
 
 # Support for debugging code generated by wasm backends
 # =====================================================
 
-js_option('--enable-wasm-codegen-debug',
-          default=depends(when=moz_debug)(lambda: True),
-          help='{Enable|Disable} debugging for wasm codegen')
+option('--enable-wasm-codegen-debug',
+       default=depends(when=moz_debug)(lambda: True),
+       help='{Enable|Disable} debugging for wasm codegen')
 
 set_config('WASM_CODEGEN_DEBUG', depends_if('--enable-wasm-codegen-debug')(lambda x: True))
 set_define('WASM_CODEGEN_DEBUG', depends_if('--enable-wasm-codegen-debug')(lambda x: True))
@@ -505,9 +502,9 @@ set_define('WASM_CODEGEN_DEBUG', depends_if('--enable-wasm-codegen-debug')(lambd
 def default_typed_objects(is_nightly):
     return is_nightly
 
-js_option('--enable-typed-objects',
-          default=default_typed_objects,
-          help='{Enable|Disable} typed objects')
+option('--enable-typed-objects',
+       default=default_typed_objects,
+       help='{Enable|Disable} typed objects')
 
 set_config('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
 set_define('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
@@ -516,8 +513,8 @@ set_define('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x
 # Support for WebAssembly reference types.
 # =====================================================
 
-js_option('--disable-wasm-reftypes',
-          help='Disable WebAssembly reference types')
+option('--disable-wasm-reftypes',
+       help='Disable WebAssembly reference types')
 
 @depends('--disable-wasm-reftypes')
 def enable_wasm_reftypes(value):
@@ -535,9 +532,9 @@ def default_wasm_function_references(is_nightly, reftypes):
     if is_nightly and reftypes:
         return True
 
-js_option('--enable-wasm-function-references',
-          default=default_wasm_function_references,
-          help='{Enable|Disable} WebAssembly function-references')
+option('--enable-wasm-function-references',
+       default=default_wasm_function_references,
+       help='{Enable|Disable} WebAssembly function-references')
 
 @depends('--enable-wasm-function-references', '--disable-wasm-reftypes')
 def wasm_function_references(value, reftypes):
@@ -560,9 +557,9 @@ def default_wasm_gc(is_nightly, function_references, typed_objects):
     if is_nightly and function_references and typed_objects:
         return True
 
-js_option('--enable-wasm-gc',
-          default=default_wasm_gc,
-          help='{Enable|Disable} WebAssembly GC')
+option('--enable-wasm-gc',
+       default=default_wasm_gc,
+       help='{Enable|Disable} WebAssembly GC')
 
 @depends('--enable-wasm-gc', '--enable-wasm-function-references', '--enable-typed-objects')
 def wasm_gc(value, function_references, typed_objects):
@@ -588,9 +585,9 @@ def default_wasm_private_reftypes(is_nightly, gc):
     if gc and is_nightly:
         return True
 
-js_option('--enable-wasm-private-reftypes',
-          default=default_wasm_private_reftypes,
-          help='{Enable|Disable} WebAssembly private reference types')
+option('--enable-wasm-private-reftypes',
+       default=default_wasm_private_reftypes,
+       help='{Enable|Disable} WebAssembly private reference types')
 
 set_config('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
 set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
@@ -600,8 +597,8 @@ set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')
 # Do not remove until Cranelift supports multi-value.
 # =====================================================
 
-js_option('--disable-wasm-multi-value',
-          help='Disable WebAssembly multi-value blocks and function calls')
+option('--disable-wasm-multi-value',
+       help='Disable WebAssembly multi-value blocks and function calls')
 
 @depends('--disable-wasm-multi-value')
 def enable_wasm_multi_value(value):
@@ -619,7 +616,7 @@ set_define('ENABLE_WASM_MULTI_VALUE', enable_wasm_multi_value)
 # and atomics it can go away.
 # =====================================================
 
-js_option('--disable-shared-memory', help='Disable JS/WebAssembly shared memory and atomics')
+option('--disable-shared-memory', help='Disable JS/WebAssembly shared memory and atomics')
 
 @depends('--disable-shared-memory')
 def enable_shared_memory(value):
@@ -645,9 +642,9 @@ def default_wasm_simd(jit_enabled, simulator, target):
     if target.cpu in ('x86_64', 'x86'):
         return True
 
-js_option('--enable-wasm-simd',
-          default=default_wasm_simd,
-          help='{Enable|Disable} WebAssembly SIMD')
+option('--enable-wasm-simd',
+       default=default_wasm_simd,
+       help='{Enable|Disable} WebAssembly SIMD')
 
 @depends('--enable-wasm-simd', '--enable-jit', '--enable-simulator', target)
 def wasm_simd(value, jit_enabled, simulator, target):
@@ -673,9 +670,9 @@ def default_wasm_simd_experimental(is_nightly, wasm_simd):
     if is_nightly and wasm_simd:
         return True
 
-js_option('--enable-wasm-simd-experimental',
-          default=default_wasm_simd_experimental,
-          help='{Enable|Disable} WebAssembly SIMD experimental opcodes')
+option('--enable-wasm-simd-experimental',
+       default=default_wasm_simd_experimental,
+       help='{Enable|Disable} WebAssembly SIMD experimental opcodes')
 
 @depends('--enable-wasm-simd-experimental', '--enable-wasm-simd')
 def wasm_simd_experimental(value, wasm_simd):
@@ -692,17 +689,17 @@ set_define('ENABLE_WASM_SIMD_EXPERIMENTAL', wasm_simd_experimental)
 
 # Options for generating the shell as a script
 # ============================================
-js_option('--with-qemu-exe', nargs=1, help='Use path as an arm emulator on host platforms')
+option('--with-qemu-exe', nargs=1, help='Use path as an arm emulator on host platforms')
 set_config('QEMU_EXE', depends_if('--with-qemu-exe')(lambda x: x))
 
-js_option('--with-cross-lib', nargs=1, default=depends(target.alias)(lambda x: '/usr/%s' % x),
-          help='Use dir as the location for arm libraries')
+option('--with-cross-lib', nargs=1, default=depends(target.alias)(lambda x: '/usr/%s' % x),
+       help='Use dir as the location for arm libraries')
 set_config('CROSS_LIB', depends_if('--with-cross-lib')(lambda x: x))
 
 # Enable static checking using sixgill
 # ====================================
 
-js_option('--with-sixgill', nargs=1, help='Enable static checking of code using sixgill')
+option('--with-sixgill', nargs=1, help='Enable static checking of code using sixgill')
 
 @depends_if('--with-sixgill')
 @imports('os')
@@ -721,8 +718,8 @@ set_config('SIXGILL_PATH', sixgill)
 def editline(js_shell, is_windows, compile_environment):
     return js_shell and not is_windows and compile_environment
 
-js_option('--enable-readline', help='Link js shell to system readline library',
-          when=editline)
+option('--enable-readline', help='Link js shell to system readline library',
+       when=editline)
 
 has_readline = check_symbol('readline', flags=['-lreadline'], when='--enable-readline',
                             onerror=lambda: die('No system readline library found'))
@@ -741,10 +738,10 @@ set_define('EDITLINE', True, when=editline)
 # JIT observers
 # =============
 
-js_option('--with-jitreport-granularity', default='3', choices=('0', '1', '2', '3'),
-          help='Default granularity at which to report JIT code to external tools '
-               '(0 - no info, 1 - code ranges for while functions only, '
-               '2 - per-line information, 3 - per-op information)')
+option('--with-jitreport-granularity', default='3', choices=('0', '1', '2', '3'),
+       help='Default granularity at which to report JIT code to external tools '
+            '(0 - no info, 1 - code ranges for while functions only, '
+            '2 - per-line information, 3 - per-op information)')
 
 set_define('JS_DEFAULT_JITREPORT_GRANULARITY',
            depends_if('--with-jitreport-granularity')(lambda value: value[0]))
@@ -752,14 +749,14 @@ set_define('JS_DEFAULT_JITREPORT_GRANULARITY',
 
 # ECMAScript Internationalization API Support (uses ICU)
 # ======================================================
-js_option('--with-system-icu', help='Use system ICU')
+option('--with-system-icu', help='Use system ICU')
 
 system_icu = pkg_check_modules('MOZ_ICU', 'icu-i18n >= 67.1', when='--with-system-icu')
 
 set_config('MOZ_SYSTEM_ICU', True, when=system_icu)
 set_define('MOZ_SYSTEM_ICU', True, when=system_icu)
 
-js_option('--without-intl-api', help='Disable ECMAScript Internationalization API')
+option('--without-intl-api', help='Disable ECMAScript Internationalization API')
 
 @depends('--with-intl-api', js_standalone)
 def check_intl_api(enabled, js_standalone):
@@ -810,9 +807,9 @@ def can_build_data_file(yasm, gnu_as, target, compile_environment):
 def default_wasm_type_reflections(is_nightly):
     return is_nightly
 
-js_option('--enable-wasm-type-reflections',
-          default=default_wasm_type_reflections,
-          help='{Enable|Disable} type reflection in WASM JS-API')
+option('--enable-wasm-type-reflections',
+       default=default_wasm_type_reflections,
+       help='{Enable|Disable} type reflection in WASM JS-API')
 
 set_config('ENABLE_WASM_TYPE_REFLECTIONS', depends_if('--enable-wasm-type-reflections')(lambda x: True))
 set_define('ENABLE_WASM_TYPE_REFLECTIONS', depends_if('--enable-wasm-type-reflections')(lambda x: True))
