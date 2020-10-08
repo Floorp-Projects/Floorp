@@ -17,7 +17,6 @@
 #include "prenv.h"
 #include "nsPrintfCString.h"
 #include "nsWhitespaceTokenizer.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Telemetry.h"
 
 #include "GfxInfoX11.h"
@@ -250,10 +249,6 @@ void GfxInfo::GetData() {
   // We need to use custom driver vendor IDs for mesa so we can treat them
   // differently than the proprietary drivers.
   if (mIsMesa) {
-    // Allow using GLX features until they got propper EGL replacements -
-    // this works fine on MESA while failing on NVIDIA
-    gfx::gfxVars::SetAllowGLXOnEGL(true);
-
     mIsAccelerated = !mesaAccelerated.Equals("FALSE");
     // Process software rasterizers before the DRI driver string; we may be
     // forcing software rasterization on a DRI-accelerated X server by using

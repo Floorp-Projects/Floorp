@@ -74,8 +74,7 @@ class gfxVarReceiver;
   _(FxREmbedded, bool, false)                                      \
   _(UseAHardwareBufferContent, bool, false)                        \
   _(UseAHardwareBufferSharedSurface, bool, false)                  \
-  _(UseEGL, bool, false)                                           \
-  _(AllowGLXOnEGL, bool, false)
+  _(UseEGL, bool, false)
 
 /* Add new entries above this line. */
 
