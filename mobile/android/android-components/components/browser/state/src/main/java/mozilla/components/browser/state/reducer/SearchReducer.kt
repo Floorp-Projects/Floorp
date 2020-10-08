@@ -5,8 +5,6 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.SearchAction
-import mozilla.components.browser.state.search.RegionState
-import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
 
@@ -16,61 +14,77 @@ internal object SearchReducer {
      */
     fun reduce(state: BrowserState, action: SearchAction): BrowserState {
         return when (action) {
-            is SearchAction.SetRegionAction -> state.setRegion(action.regionState)
-            is SearchAction.AddSearchEngineListAction -> {
-                state.addSearchEnginesMap(action.searchEngineList)
-            }
-            is SearchAction.SetCustomSearchEngineAction -> {
-                state.setSearchEngine(action.searchEngine)
-            }
-            is SearchAction.RemoveCustomSearchEngineAction -> {
-                state.removeSearchEngine(action.searchEngineId)
-            }
-            is SearchAction.SetDefaultSearchEngineAction -> {
-                state.setDefaultSearchEngineAction(action.searchEngineId)
-            }
+            is SearchAction.SetRegionAction -> state.setRegion(action)
+            is SearchAction.SetRegionSearchEngines -> state.setRegionSearchEngines(action)
+            is SearchAction.SetCustomSearchEngines -> state.setCustomSearchEngines(action)
+            is SearchAction.UpdateCustomSearchEngineAction -> state.updateCustomSearchEngine(action)
+            is SearchAction.RemoveCustomSearchEngineAction -> state.removeSearchEngine(action)
+            is SearchAction.SetDefaultSearchEngineAction -> state.setDefaultSearchEngineAction(action)
         }
     }
 }
 
-private fun BrowserState.setRegion(regionState: RegionState): BrowserState {
+private fun BrowserState.setRegionSearchEngines(
+    action: SearchAction.SetRegionSearchEngines
+): BrowserState {
     return copy(search = search.copy(
-        region = regionState
+        regionSearchEngines = action.searchEngines,
+        regionDefaultSearchEngineId = action.regionDefaultSearchEngineId
     ))
 }
 
-private fun BrowserState.addSearchEnginesMap(
-    searchEngineList: List<SearchEngine>
+private fun BrowserState.setCustomSearchEngines(
+    action: SearchAction.SetCustomSearchEngines
 ): BrowserState {
     return copy(search = search.copy(
-        searchEngines = searchEngineList.map { it.id to it }.toMap()
+        customSearchEngines = action.searchEngines
     ))
 }
 
-private fun BrowserState.setSearchEngine(
-    searchEngine: SearchEngine
+private fun BrowserState.setRegion(
+    action: SearchAction.SetRegionAction
 ): BrowserState {
     return copy(search = search.copy(
-        searchEngines = search.searchEngines + (searchEngine.id to searchEngine)
+        region = action.regionState
+    ))
+}
+
+private fun BrowserState.updateCustomSearchEngine(
+    action: SearchAction.UpdateCustomSearchEngineAction
+): BrowserState {
+    var updated = false
+    val searchEngines = search.customSearchEngines.map {
+        if (it.id == action.searchEngine.id) {
+            updated = true
+            action.searchEngine
+        } else {
+            it
+        }
+    }
+
+    return copy(search = search.copy(
+        customSearchEngines = if (updated) {
+            searchEngines
+        } else {
+            searchEngines + action.searchEngine
+        }
     ))
 }
 
 private fun BrowserState.removeSearchEngine(
-    searchEngineId: String
+    action: SearchAction.RemoveCustomSearchEngineAction
 ): BrowserState {
     return copy(search = search.copy(
-        searchEngines = search.searchEngines - searchEngineId
+        customSearchEngines = search.customSearchEngines.filter { it.id != action.searchEngineId }
     ))
 }
 
 private fun BrowserState.setDefaultSearchEngineAction(
-    searchEngineId: String
+    action: SearchAction.SetDefaultSearchEngineAction
 ): BrowserState {
-    return if (search.searchEngines.containsKey(searchEngineId)) {
-        copy(search = search.copy(
-            defaultSearchEngineId = searchEngineId
-        ))
-    } else {
-        this
-    }
+    // We allow setting an ID of a search engine that is not in the state since loading the search
+    // engines may happen asynchronously and the search engine may not be loaded yet at this point.
+    return copy(search = search.copy(
+        defaultSearchEngineId = action.searchEngineId
+    ))
 }
