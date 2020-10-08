@@ -17,28 +17,16 @@ function f()
     window.addEventListener("popstate", spin);
     window.close();
     window.location = "#c";
-    finish();
-}
-
-function init()
-{
-  SpecialPowers.pushPrefEnv({"set": [
-    ["security.data_uri.unique_opaque_origin", false],
-    ["security.data_uri.block_toplevel_data_uri_navigations", false],
-  ]}, start);
+    document.documentElement.removeAttribute("class");
 }
 
 function start()
 {
-    var html = "<script>" + f + "<\/script><body onload=f()>";
-    var win = window.open("data:text/html," + encodeURIComponent(html), null, "width=300,height=300");
-    win.finish = function() {
-      SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
-      document.documentElement.removeAttribute("class");
-    };
+    var win = window.open("javascript:'<html><body>dummy</body></html>';", null, "width=300,height=300");
+    win.onload = f;
 }
 
 </script>
 </head>
-<body onload="init();"></body>
+<body onload="start();"></body>
 </html>

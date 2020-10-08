@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Helper file for test_resize_move_windows.html</title>
+<script>
+function check(next) {
+  var is_range = function(aTest, aValue, aRange, aMsg) {
+    ok(aTest < aValue + aRange && aTest > aValue - aRange, aMsg);
+  };
+  is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');
+  is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');
+  is_range(window.screenX, 25, 5, 'parameter screenX should be taken into account');
+  is_range(window.screenY, 25, 5, 'parameter screenY should be taken into account');
+}
+</script>
+</head>
+<body onload="console.log('load')">
+</body>
+</html>

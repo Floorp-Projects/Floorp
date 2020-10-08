@@ -1368,7 +1368,7 @@ var gDeactiveWindowTests = [
 ];
 
 function runDeactiveWindowTests() {
-  gOtherWindow = window.open("data:text/html,", "_blank",
+  gOtherWindow = window.open("window_mouse_scroll_win_2.html", "_blank",
                              "chrome,width=100,height=100,top=700,left=700");
 
   window.arguments[0].SimpleTest.waitForFocus(function() {
