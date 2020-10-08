@@ -13,6 +13,7 @@
 #include "SourceSurfaceCapture.h"
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceDual.h"
+#include "ConicGradientEffectD2D1.h"
 #include "RadialGradientEffectD2D1.h"
 #include "PathCapture.h"
 
@@ -1340,6 +1341,7 @@ RefPtr<ID2D1Factory1> DrawTargetD2D1::factory() {
   mFactory = factory1;
 
   ExtendInputEffectD2D1::Register(mFactory);
+  ConicGradientEffectD2D1::Register(mFactory);
   RadialGradientEffectD2D1::Register(mFactory);
 
   return mFactory;
@@ -1351,6 +1353,7 @@ void DrawTargetD2D1::CleanupD2D() {
 
   if (mFactory) {
     RadialGradientEffectD2D1::Unregister(mFactory);
+    ConicGradientEffectD2D1::Unregister(mFactory);
     ExtendInputEffectD2D1::Unregister(mFactory);
     mFactory = nullptr;
   }
@@ -1654,6 +1657,45 @@ void DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp,
     mComplexBlendsWithListInList++;
     return;
   }
+
+  if (aPattern.GetType() == PatternType::CONIC_GRADIENT) {
+    const ConicGradientPattern* pat =
+        static_cast<const ConicGradientPattern*>(&aPattern);
+
+    if (!pat->mStops) {
+      // Draw nothing because of no color stops
+      return;
+    }
+    RefPtr<ID2D1Effect> conicGradientEffect;
+
+    HRESULT hr = mDC->CreateEffect(CLSID_ConicGradientEffect,
+                                   getter_AddRefs(conicGradientEffect));
+    if (FAILED(hr) || !conicGradientEffect) {
+      gfxWarning() << "Failed to create conic gradient effect. Code: "
+                   << hexa(hr);
+      return;
+    }
+
+    conicGradientEffect->SetValue(
+        CONIC_PROP_STOP_COLLECTION,
+        static_cast<const GradientStopsD2D*>(pat->mStops.get())
+            ->mStopCollection);
+    conicGradientEffect->SetValue(
+        CONIC_PROP_CENTER, D2D1::Vector2F(pat->mCenter.x, pat->mCenter.y));
+    conicGradientEffect->SetValue(CONIC_PROP_ANGLE, pat->mAngle);
+    conicGradientEffect->SetValue(CONIC_PROP_START_OFFSET, pat->mStartOffset);
+    conicGradientEffect->SetValue(CONIC_PROP_END_OFFSET, pat->mEndOffset);
+    conicGradientEffect->SetValue(CONIC_PROP_TRANSFORM,
+                                  D2DMatrix(pat->mMatrix * mTransform));
+    conicGradientEffect->SetInput(0, source);
+
+    mDC->DrawImage(conicGradientEffect,
+                   D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+                   D2DCompositionMode(aOp));
+    return;
+  }
+
+  MOZ_ASSERT(aPattern.GetType() == PatternType::RADIAL_GRADIENT);
 
   const RadialGradientPattern* pat =
       static_cast<const RadialGradientPattern*>(&aPattern);
