@@ -65,6 +65,7 @@ function serializeSettings(settings, logPrefix) {
   return nameValues;
 }
 
+let printPending = false;
 let deferredTasks = [];
 function createDeferredTask(fn, timeout) {
   let task = new DeferredTask(fn, timeout);
@@ -76,7 +77,14 @@ function cancelDeferredTasks() {
   for (let task of deferredTasks) {
     task.disarm();
   }
+  PrintEventHandler._updatePrintPreviewTask?.disarm();
   deferredTasks = [];
+}
+
+async function finalizeDeferredTasks() {
+  await Promise.all(deferredTasks.map(task => task.finalize()));
+  printPending = true;
+  await PrintEventHandler._updatePrintPreviewTask.finalize();
 }
 
 document.addEventListener(
@@ -260,7 +268,7 @@ var PrintEventHandler = {
 
     // Use a DeferredTask for updating the preview. This will ensure that we
     // only have one update running at a time.
-    this._updatePrintPreviewTask = createDeferredTask(async () => {
+    this._updatePrintPreviewTask = new DeferredTask(async () => {
       await initialPreviewDone;
       await this._updatePrintPreview();
       document.dispatchEvent(new CustomEvent("preview-updated"));
@@ -348,6 +356,8 @@ var PrintEventHandler = {
     }
 
     await window._initialized;
+
+    await finalizeDeferredTasks();
 
     // This seems like it should be handled automatically but it isn't.
     Services.prefs.setStringPref("print_printer", settings.printerName);
@@ -510,7 +520,10 @@ var PrintEventHandler = {
       changedSettings,
       !!changedSettings.printerName
     );
-    if (shouldPreviewUpdate) {
+
+    if (shouldPreviewUpdate && !printPending) {
+      // We do not need to arm the preview task if the user has already printed
+      // and finalized any deferred tasks.
       this.updatePrintPreview();
     }
     document.dispatchEvent(
@@ -1552,6 +1565,17 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     this._percentScale.addEventListener("keypress", this);
     this._percentScale.addEventListener("paste", this);
     this.addEventListener("input", this);
+
+    this._updateScaleTask = createDeferredTask(
+      () => this.updateScale(),
+      INPUT_DELAY_MS
+    );
+  }
+
+  updateScale() {
+    this.dispatchSettingsChange({
+      scaling: Number(this._percentScale.value / 100),
+    });
   }
 
   update(settings) {
@@ -1573,6 +1597,11 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
+    if (e.type == "change") {
+      // We listen to input events, no need for change too.
+      return;
+    }
+
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
@@ -1581,6 +1610,8 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     if (e.type === "paste") {
       this.handlePaste(e);
     }
+
+    this._updateScaleTask.disarm();
 
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
       if (!this._percentScale.checkValidity()) {
@@ -1596,14 +1627,8 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
       });
       this._scaleError.hidden = true;
     } else if (e.type == "input") {
-      window.clearTimeout(this.updateSettingsTimeoutId);
-
       if (this._percentScale.checkValidity()) {
-        this.updateSettingsTimeoutId = window.setTimeout(() => {
-          this.dispatchSettingsChange({
-            scaling: Number(this._percentScale.value / 100),
-          });
-        }, INPUT_DELAY_MS);
+        this._updateScaleTask.arm();
       }
     }
 
