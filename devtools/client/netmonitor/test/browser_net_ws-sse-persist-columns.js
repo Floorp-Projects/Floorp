@@ -7,7 +7,22 @@
  * Test columns' state for WS and SSE connection.
  */
 
-function shallowEqual(obj1, obj2) {
+function shallowArrayEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (
+      (arr2[i] instanceof RegExp && !arr2[i].test(arr1[i])) ||
+      (typeof arr2[i] === "string" && arr2[i] !== arr1[i])
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function shallowObjectEqual(obj1, obj2) {
   const k1 = Object.keys(obj1);
   const k2 = Object.keys(obj2);
 
@@ -22,6 +37,13 @@ function shallowEqual(obj1, obj2) {
   }
 
   return true;
+}
+
+function shallowEqual(obj1, obj2) {
+  if (Array.isArray(obj1) && Array.isArray(obj2)) {
+    return shallowArrayEqual(obj1, obj2);
+  }
+  return shallowObjectEqual(obj1, obj2);
 }
 
 add_task(async function() {
@@ -65,6 +87,60 @@ add_task(async function() {
   store.dispatch(Actions.toggleMessageColumn("opCode"));
   store.dispatch(Actions.toggleMessageColumn("maskBit"));
   store.dispatch(Actions.toggleMessageColumn("finBit"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
+
+  // Get all messages present in the "Response" panel
+  const frames = document.querySelectorAll(
+    "#messages-view .message-list-table .message-list-item"
+  );
+
+  // Check expected results
+  is(frames.length, 2, "There should be two frames");
+
+  let columnHeaders = Array.prototype.map.call(
+    document.querySelectorAll(
+      "#messages-view .message-list-headers .button-text"
+    ),
+    node => node.textContent
+  );
+
+  is(
+    shallowEqual(columnHeaders, [
+      "Data",
+      "Size",
+      "OpCode",
+      "MaskBit",
+      "FinBit",
+      "Time",
+    ]),
+    true,
+    "WS Column headers are in correct order"
+  );
+
+  // Get column values of first row for WS.
+  let columnValues = Array.prototype.map.call(frames, frame =>
+    Array.prototype.map.call(
+      frame.querySelectorAll(".message-list-column"),
+      column => column.textContent.trim()
+    )
+  )[0];
+
+  is(
+    shallowEqual(columnValues, [
+      "Payload 0",
+      "9 B",
+      "1",
+      "true",
+      "true",
+      // Time format is "hh:mm:ss.mmm".
+      /\d+:\d+:\d+\.\d+/,
+    ]),
+    true,
+    "WS Column values are in correct order"
+  );
 
   // Select the SSE request.
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
@@ -72,6 +148,45 @@ add_task(async function() {
   store.dispatch(Actions.toggleMessageColumn("lastEventId"));
   store.dispatch(Actions.toggleMessageColumn("eventName"));
   store.dispatch(Actions.toggleMessageColumn("retry"));
+
+  columnHeaders = Array.prototype.map.call(
+    document.querySelectorAll(
+      "#messages-view .message-list-headers .button-text"
+    ),
+    node => node.textContent
+  );
+
+  is(
+    shallowEqual(columnHeaders, [
+      "Data",
+      "Time",
+      "Event Name",
+      "Last Event ID",
+      "Retry",
+    ]),
+    true,
+    "SSE Column headers are in correct order"
+  );
+
+  // Get column values of first row for SSE.
+  columnValues = Array.prototype.map.call(frames, frame =>
+    Array.prototype.map.call(
+      frame.querySelectorAll(".message-list-column"),
+      column => column.textContent.trim()
+    )
+  )[0];
+
+  is(
+    shallowEqual(columnValues, [
+      "Why so serious?",
+      /\d+:\d+:\d+\.\d+/,
+      "message",
+      "",
+      "5000",
+    ]),
+    true,
+    "SSE Column values are in correct order"
+  );
 
   // Select the WS request again.
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
