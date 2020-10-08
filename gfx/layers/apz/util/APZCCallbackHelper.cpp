@@ -158,15 +158,12 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
-        if (RefPtr<PresShell> presShell = GetPresShell(aContent)) {
-          APZCCH_LOG("Setting VV offset to %s on presShell %p\n",
-                     ToString(aRequest.GetVisualScrollOffset()).c_str(),
-                     presShell.get());
-          if (presShell->SetVisualViewportOffset(
-                  CSSPoint::ToAppUnits(aRequest.GetVisualScrollOffset()),
-                  presShell->GetLayoutViewportOffset())) {
-            sf->MarkEverScrolled();
-          }
+        APZCCH_LOG("Setting VV offset to %s\n",
+                   ToString(aRequest.GetVisualScrollOffset()).c_str());
+        if (sf->SetVisualViewportOffset(
+                CSSPoint::ToAppUnits(aRequest.GetVisualScrollOffset()),
+                /* aRepaint = */ false)) {
+          sf->MarkEverScrolled();
         }
       }
     }

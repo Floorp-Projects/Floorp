@@ -177,6 +177,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetVisualViewportSize() const;
   nsPoint GetVisualViewportOffset() const;
+  bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint);
   nsRect GetVisualScrollRange() const;
   nsRect GetScrollRangeForUserInputEvents() const;
 
@@ -933,6 +934,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsPoint GetVisualViewportOffset() const final {
     return mHelper.GetVisualViewportOffset();
   }
+  bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint) final {
+    return mHelper.SetVisualViewportOffset(aOffset, aRepaint);
+  }
   nsRect GetVisualScrollRange() const final {
     return mHelper.GetVisualScrollRange();
   }
@@ -1408,6 +1412,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   nsPoint GetVisualViewportOffset() const final {
     return mHelper.GetVisualViewportOffset();
+  }
+  bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint) final {
+    return mHelper.SetVisualViewportOffset(aOffset, aRepaint);
   }
   nsRect GetVisualScrollRange() const final {
     return mHelper.GetVisualScrollRange();

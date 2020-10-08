@@ -207,6 +207,17 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual nsPoint GetVisualViewportOffset() const = 0;
   /**
+   * Set the visual viewport offset associated with a root scroll frame. This is
+   * only valid when called on a root scroll frame and will assert otherwise.
+   * aRepaint indicates if we need to ask for a main thread paint if this
+   * changes scrollbar positions or not. For example, if the compositor has
+   * already put the scrollbars at this position then they don't need to move so
+   * we can skip the repaint. Returns true if the offset changed and the scroll
+   * frame is still alive after this call.
+   */
+  virtual bool SetVisualViewportOffset(const nsPoint& aOffset,
+                                       bool aRepaint) = 0;
+  /**
    * Get the area that must contain the visual viewport offset.
    */
   virtual nsRect GetVisualScrollRange() const = 0;

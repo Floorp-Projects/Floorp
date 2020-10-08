@@ -4481,6 +4481,21 @@ nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
   return GetScrollPosition();
 }
 
+bool ScrollFrameHelper::SetVisualViewportOffset(const nsPoint& aOffset,
+                                                bool aRepaint) {
+  MOZ_ASSERT(mIsRoot);
+  AutoWeakFrame weakFrame(mOuter);
+  AutoScrollbarRepaintSuppression repaintSuppression(this, weakFrame,
+                                                     !aRepaint);
+
+  bool retVal = mOuter->PresShell()->SetVisualViewportOffset(
+      aOffset, GetScrollPosition());
+  if (!weakFrame.IsAlive()) {
+    return false;
+  }
+  return retVal;
+}
+
 nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
   PresShell* presShell = mOuter->PresShell();
   nsRect rect = mScrollPort;
