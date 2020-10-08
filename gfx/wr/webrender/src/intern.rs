@@ -418,6 +418,7 @@ enumerate_interners!(declare_interning_memory_report);
 
 /// Memory report for interning-related data structures.
 /// cbindgen:derive-eq=false
+/// cbindgen:derive-ostream=false
 #[repr(C)]
 #[derive(Clone, Debug, Default)]
 pub struct InterningMemoryReport {
