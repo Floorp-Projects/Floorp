@@ -21,27 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const SamplingFilter filter,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-
-  switch (filter) {
-    case SamplingFilter::GOOD:
-      aStream << "SamplingFilter::GOOD";
-      break;
-    case SamplingFilter::LINEAR:
-      aStream << "SamplingFilter::LINEAR";
-      break;
-    case SamplingFilter::POINT:
-      aStream << "SamplingFilter::POINT";
-      break;
-    default:
-      NS_ERROR("unknown SamplingFilter type");
-      aStream << "???";
-  }
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, TextureFlags flags,
                     const char* pfx, const char* sfx) {
   aStream << pfx;

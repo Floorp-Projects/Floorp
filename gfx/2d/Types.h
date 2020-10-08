@@ -414,6 +414,8 @@ enum class SamplingFilter : int8_t {
   SENTINEL  // one past the last valid value
 };
 
+std::ostream& operator<<(std::ostream& aOut, const SamplingFilter& aFilter);
+
 // clang-format off
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(PatternType, int8_t, (
   COLOR,
