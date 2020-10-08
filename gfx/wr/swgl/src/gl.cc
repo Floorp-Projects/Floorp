@@ -2549,13 +2549,24 @@ using HalfRGBA8 = V8<uint16_t>;
 
 static inline WideRGBA8 unpack(PackedRGBA8 p) { return CONVERT(p, WideRGBA8); }
 
+template <int N>
+UNUSED static ALWAYS_INLINE VectorType<uint8_t, N> genericPackWide(
+    VectorType<uint16_t, N> p) {
+  typedef VectorType<uint8_t, N> packed_type;
+  // Generic conversions only mask off the low byte without actually clamping
+  // like a real pack. First force the word to all 1s if it overflows, and then
+  // add on the sign bit to cause it to roll over to 0 if it was negative.
+  p = (p | (p > 255)) + (p >> 15);
+  return CONVERT(p, packed_type);
+}
+
 static inline PackedRGBA8 pack(WideRGBA8 p) {
 #if USE_SSE2
   return _mm_packus_epi16(lowHalf(p), highHalf(p));
 #elif USE_NEON
   return vcombine_u8(vqmovn_u16(lowHalf(p)), vqmovn_u16(highHalf(p)));
 #else
-  return CONVERT(p, PackedRGBA8);
+  return genericPackWide(p);
 #endif
 }
 
@@ -2592,7 +2603,7 @@ static inline PackedR8 pack(WideR8 p) {
 #elif USE_NEON
   return lowHalf(bit_cast<V8<uint8_t>>(vqmovn_u16(expand(p))));
 #else
-  return CONVERT(p, PackedR8);
+  return genericPackWide(p);
 #endif
 }
 
@@ -2605,7 +2616,7 @@ static inline PackedRG8 pack(WideRG8 p) {
 #elif USE_NEON
   return bit_cast<V8<uint8_t>>(vqmovn_u16(p));
 #else
-  return CONVERT(p, PackedRG8);
+  return genericPackWide(p);
 #endif
 }
 
