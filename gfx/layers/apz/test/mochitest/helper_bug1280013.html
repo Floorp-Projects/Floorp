@@ -42,8 +42,9 @@ function* test(testDriver) {
   // Remove the observer, we don't need it any more.
   SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
 
-  // Flush any pending paints
-  yield flushApzRepaints(testDriver);
+  // Flush any pending paints on the APZ side, and wait for the main thread
+  // to process them all so that we get the correct test data
+  yield waitForApzFlushedRepaints(testDriver);
 
   // get the displayport for the subframe
   var utils = SpecialPowers.getDOMWindowUtils(window);
