@@ -1803,8 +1803,7 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   }
   for (uint32_t i = 0; i < mScrollMetadata.Length(); i++) {
     if (!mScrollMetadata[i].IsDefault()) {
-      aStream << nsPrintfCString(" [metrics%d=", i).get();
-      AppendToString(aStream, mScrollMetadata[i], "", "]");
+      aStream << " [metrics" << i << "=" << mScrollMetadata[i] << "]";
     }
   }
   // FIXME: On the compositor thread, we don't set mAnimationInfo::mAnimations,

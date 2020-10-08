@@ -266,6 +266,25 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const ScrollMetadata& aMetadata) {
+  aStream << "{ [metrics=" << aMetadata.GetMetrics()
+          << "] [color=" << aMetadata.GetBackgroundColor();
+  if (aMetadata.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
+    aStream << "] [scrollParent=" << aMetadata.GetScrollParentId();
+  }
+  if (aMetadata.HasScrollClip()) {
+    aStream << "] [clip=" << aMetadata.ScrollClip().GetClipRect();
+  }
+  if (aMetadata.HasMaskLayer()) {
+    aStream << "] [mask=" << aMetadata.ScrollClip().GetMaskLayerIndex().value();
+  }
+  aStream << "] [overscroll=" << aMetadata.GetOverscrollBehavior() << "] ["
+          << aMetadata.GetScrollUpdates().Length() << " scrollupdates"
+          << "] }";
+  return aStream;
+}
+
 void ScrollMetadata::SetBackgroundColor(
     const gfx::sRGBColor& aBackgroundColor) {
   mBackgroundColor = gfx::ToDeviceColor(aBackgroundColor);

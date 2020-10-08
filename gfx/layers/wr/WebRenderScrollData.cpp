@@ -121,7 +121,7 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
   printf_stderr("LayerScrollData(%p) descendants %d\n", this, mDescendantCount);
   for (size_t i : mScrollIds) {
     printf_stderr("  metadata: %s\n",
-                  Stringify(aOwner.GetScrollMetadata(i)).c_str());
+                  ToString(aOwner.GetScrollMetadata(i)).c_str());
   }
   printf_stderr("  ancestor transform: %s\n",
                 ToString(mAncestorTransform).c_str());
