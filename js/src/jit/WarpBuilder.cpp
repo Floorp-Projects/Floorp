@@ -1774,12 +1774,7 @@ bool WarpBuilder::transpileCall(BytecodeLocation loc,
   auto* argc = MConstant::New(alloc(), Int32Value(callInfo->argc()));
   current->add(argc);
 
-  MDefinitionStackVector inputs;
-  if (!inputs.append(argc)) {
-    return false;
-  }
-
-  return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, inputs, callInfo);
+  return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, {argc}, callInfo);
 }
 
 bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
@@ -2932,11 +2927,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
   MOZ_ASSERT(numInputs == NumInputsForCacheKind(kind));
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
-    MDefinitionStackVector inputs_;
-    if (!inputs_.append(inputs.begin(), inputs.end())) {
-      return false;
-    }
-    return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, inputs_);
+    return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, inputs);
   }
 
   if (getOpSnapshot<WarpBailout>(loc)) {
@@ -2953,12 +2944,8 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     CallInfo callInfo(alloc(), pc, /*constructing =*/false, ignoresRval);
     callInfo.markAsInlined();
 
-    MDefinitionStackVector inputs_;
-    if (!inputs_.append(inputs.begin(), inputs.end())) {
-      return false;
-    }
     if (!TranspileCacheIRToMIR(this, loc, inliningSnapshot->cacheIRSnapshot(),
-                               inputs_, &callInfo)) {
+                               inputs, &callInfo)) {
       return false;
     }
     return buildInlinedCall(loc, inliningSnapshot, callInfo);
