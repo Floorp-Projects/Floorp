@@ -1,10 +1,10 @@
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "i8x16.add_saturate_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_saturate_s ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.add_saturate_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_saturate_u ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.sub_saturate_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_saturate_s ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.sub_saturate_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_saturate_u ( local.get 0 ) ( local.get 1 ) ) ) )
+( module ( func ( export "i8x16.add_sat_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_sat_s ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.add_sat_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_sat_u ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.sub_sat_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_sat_s ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16.sub_sat_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_sat_u ( local.get 0 ) ( local.get 1 ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -21,7 +21,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -38,7 +38,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -55,7 +55,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -72,7 +72,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -89,7 +89,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -106,7 +106,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -123,7 +123,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -140,7 +140,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -157,7 +157,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -174,7 +174,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -191,7 +191,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -208,7 +208,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -225,7 +225,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -242,7 +242,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -259,7 +259,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -276,7 +276,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -293,7 +293,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -310,7 +310,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -327,7 +327,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -344,7 +344,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -361,7 +361,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -378,7 +378,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -395,7 +395,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -412,7 +412,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -429,7 +429,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -446,7 +446,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -463,7 +463,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -480,7 +480,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -497,7 +497,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -514,7 +514,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -531,7 +531,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -548,7 +548,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -565,7 +565,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -582,7 +582,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -599,7 +599,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -616,7 +616,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -633,7 +633,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -650,7 +650,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -667,7 +667,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -684,7 +684,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -701,7 +701,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -718,7 +718,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -735,7 +735,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -752,7 +752,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -769,7 +769,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -786,7 +786,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -803,7 +803,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -820,7 +820,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -837,7 +837,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -854,7 +854,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -871,7 +871,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -888,7 +888,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -905,7 +905,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -922,7 +922,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -939,7 +939,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -956,7 +956,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -973,7 +973,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -990,7 +990,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1007,7 +1007,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1024,7 +1024,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1041,7 +1041,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1058,7 +1058,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1075,7 +1075,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1092,7 +1092,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1109,7 +1109,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1126,7 +1126,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1143,7 +1143,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1160,7 +1160,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1177,7 +1177,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1194,7 +1194,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1211,7 +1211,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1228,7 +1228,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1245,7 +1245,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1262,7 +1262,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1279,7 +1279,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1296,7 +1296,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1313,7 +1313,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1330,7 +1330,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1347,7 +1347,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1364,7 +1364,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1381,7 +1381,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1398,7 +1398,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1415,7 +1415,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1432,7 +1432,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1449,7 +1449,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1466,7 +1466,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1483,7 +1483,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1500,7 +1500,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1517,7 +1517,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.add_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.add_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1534,7 +1534,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1551,7 +1551,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1568,7 +1568,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1585,7 +1585,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1602,7 +1602,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1619,7 +1619,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1636,7 +1636,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1653,7 +1653,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1670,7 +1670,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1687,7 +1687,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1704,7 +1704,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1721,7 +1721,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1738,7 +1738,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1755,7 +1755,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1772,7 +1772,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1789,7 +1789,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1806,7 +1806,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1823,7 +1823,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1840,7 +1840,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1857,7 +1857,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1874,7 +1874,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1891,7 +1891,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1908,7 +1908,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1925,7 +1925,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1942,7 +1942,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1959,7 +1959,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1976,7 +1976,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1993,7 +1993,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2010,7 +2010,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2027,7 +2027,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2044,7 +2044,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2061,7 +2061,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2078,7 +2078,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2095,7 +2095,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2112,7 +2112,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2129,7 +2129,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2146,7 +2146,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2163,7 +2163,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2180,7 +2180,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2197,7 +2197,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2214,7 +2214,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2231,7 +2231,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2248,7 +2248,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2265,7 +2265,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2282,7 +2282,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_s" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_s" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2299,7 +2299,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2316,7 +2316,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2333,7 +2333,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2350,7 +2350,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2367,7 +2367,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2384,7 +2384,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2401,7 +2401,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2418,7 +2418,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2435,7 +2435,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2452,7 +2452,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2469,7 +2469,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2486,7 +2486,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2503,7 +2503,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2520,7 +2520,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2537,7 +2537,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2554,7 +2554,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2571,7 +2571,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2588,7 +2588,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2605,7 +2605,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2622,7 +2622,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2639,7 +2639,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2656,7 +2656,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2673,7 +2673,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2690,7 +2690,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2707,7 +2707,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2724,7 +2724,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2741,7 +2741,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2758,7 +2758,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2775,7 +2775,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2792,7 +2792,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2809,7 +2809,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2826,7 +2826,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2843,7 +2843,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2860,7 +2860,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2877,7 +2877,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2894,7 +2894,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2911,7 +2911,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2928,7 +2928,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2945,7 +2945,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2962,7 +2962,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2979,7 +2979,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -2996,7 +2996,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -3013,7 +3013,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -3030,7 +3030,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -3047,7 +3047,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i8x16.sub_saturate_u" (func $f (param v128 v128) (result v128)))
+  (import "" "i8x16.sub_sat_u" (func $f (param v128 v128) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -3097,7 +3097,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (i32x4.add_saturate_s (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
+(func (result v128) (i32x4.add_sat_s (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3105,7 +3105,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (i32x4.add_saturate_u (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
+(func (result v128) (i32x4.add_sat_u (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3113,7 +3113,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (i32x4.sub_saturate_s (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
+(func (result v128) (i32x4.sub_sat_s (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3121,7 +3121,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (i32x4.sub_saturate_u (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
+(func (result v128) (i32x4.sub_sat_u (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3129,7 +3129,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (f32x4.add_saturate_s (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
+(func (result v128) (f32x4.add_sat_s (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3137,7 +3137,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (f32x4.add_saturate_u (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
+(func (result v128) (f32x4.add_sat_u (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3145,7 +3145,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (f32x4.sub_saturate_s (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
+(func (result v128) (f32x4.sub_sat_s (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -3153,14 +3153,14 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func (result v128) (f32x4.sub_saturate_u (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
+(func (result v128) (f32x4.sub_sat_u (v128.const f32x4 0 0 0 0) (v128.const f32x4 0 0 0 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( i8x16.add_saturate_s ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.add_sat_s ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3169,7 +3169,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( i8x16.add_saturate_u ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.add_sat_u ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3178,7 +3178,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( i8x16.sub_saturate_s ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.sub_sat_s ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3187,7 +3187,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( i8x16.sub_saturate_u ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.sub_sat_u ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3196,7 +3196,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.add_saturate_s-1st-arg-empty ( result v128 ) ( i8x16.add_saturate_s ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
+( module ( func $i8x16.add_sat_s-1st-arg-empty ( result v128 ) ( i8x16.add_sat_s ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3205,7 +3205,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.add_saturate_s-arg-empty ( result v128 ) ( i8x16.add_saturate_s ) ) )
+( module ( func $i8x16.add_sat_s-arg-empty ( result v128 ) ( i8x16.add_sat_s ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3214,7 +3214,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.add_saturate_u-1st-arg-empty ( result v128 ) ( i8x16.add_saturate_u ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
+( module ( func $i8x16.add_sat_u-1st-arg-empty ( result v128 ) ( i8x16.add_sat_u ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3223,7 +3223,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.add_saturate_u-arg-empty ( result v128 ) ( i8x16.add_saturate_u ) ) )
+( module ( func $i8x16.add_sat_u-arg-empty ( result v128 ) ( i8x16.add_sat_u ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3232,7 +3232,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.sub_saturate_s-1st-arg-empty ( result v128 ) ( i8x16.sub_saturate_s ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
+( module ( func $i8x16.sub_sat_s-1st-arg-empty ( result v128 ) ( i8x16.sub_sat_s ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3241,7 +3241,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.sub_saturate_s-arg-empty ( result v128 ) ( i8x16.sub_saturate_s ) ) )
+( module ( func $i8x16.sub_sat_s-arg-empty ( result v128 ) ( i8x16.sub_sat_s ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3250,7 +3250,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.sub_saturate_u-1st-arg-empty ( result v128 ) ( i8x16.sub_saturate_u ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
+( module ( func $i8x16.sub_sat_u-1st-arg-empty ( result v128 ) ( i8x16.sub_sat_u ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -3259,14 +3259,14 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $i8x16.sub_saturate_u-arg-empty ( result v128 ) ( i8x16.sub_saturate_u ) ) )
+( module ( func $i8x16.sub_sat_u-arg-empty ( result v128 ) ( i8x16.sub_sat_u ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof WebAssembly.CompileError, true)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "sat-add_s-sub_s" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_saturate_s ( i8x16.sub_saturate_s ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_s-sub_u" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_saturate_s ( i8x16.sub_saturate_u ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_u-sub_s" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_saturate_u ( i8x16.sub_saturate_s ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_u-sub_u" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_saturate_u ( i8x16.sub_saturate_u ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_s-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_saturate_s ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-add_u-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_saturate_u ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-sub_s-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_saturate_s ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-sub_u-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_saturate_u ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) )
+( module ( func ( export "sat-add_s-sub_s" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_sat_s ( i8x16.sub_sat_s ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_s-sub_u" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_sat_s ( i8x16.sub_sat_u ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_u-sub_s" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_sat_u ( i8x16.sub_sat_s ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_u-sub_u" ) ( param v128 v128 v128 ) ( result v128 ) ( i8x16.add_sat_u ( i8x16.sub_sat_u ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "sat-add_s-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_sat_s ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-add_u-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.add_sat_u ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-sub_s-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_sat_s ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) ( func ( export "sat-sub_u-neg" ) ( param v128 v128 ) ( result v128 ) ( i8x16.sub_sat_u ( i8x16.neg ( local.get 0 ) ) ( local.get 1 ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 

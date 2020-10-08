@@ -1,10 +1,10 @@
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( data ( i32.const 0 ) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( data ( i32.const 65520 ) "\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( func ( export "i16x8.load8x8_s" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_s_const0" ) ( result v128 ) ( i16x8.load8x8_s ( i32.const 0 ) ) ) ( func ( export "i16x8.load8x8_u_const8" ) ( result v128 ) ( i16x8.load8x8_u ( i32.const 8 ) ) ) ( func ( export "i32x4.load16x4_s_const10" ) ( result v128 ) ( i32x4.load16x4_s ( i32.const 10 ) ) ) ( func ( export "i32x4.load16x4_u_const20" ) ( result v128 ) ( i32x4.load16x4_u ( i32.const 20 ) ) ) ( func ( export "i64x2.load32x2_s_const65520" ) ( result v128 ) ( i64x2.load32x2_s ( i32.const 65520 ) ) ) ( func ( export "i64x2.load32x2_u_const65526" ) ( result v128 ) ( i64x2.load32x2_u ( i32.const 65526 ) ) ) ( func ( export "i16x8.load8x8_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s offset=0 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_s_align1" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s align=1 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u offset=0 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u_align1" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u align=1 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i16x8.load8x8_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i16x8.load8x8_u offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s offset=0 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s_align1" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s align=1 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u offset=0 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u_align1" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u align=1 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i32x4.load16x4_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i32x4.load16x4_u offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s offset=0 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s_align1" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s align=1 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u offset=0 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u_align1" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u align=1 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "i64x2.load32x2_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( i64x2.load32x2_u offset=20 align=8 ( local.get $0 ) ) ) )
+( module ( memory 1 ) ( data ( i32.const 0 ) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( data ( i32.const 65520 ) "\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( func ( export "v128.load8x8_s" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u ( local.get $0 ) ) ) ( func ( export "v128.load8x8_s_const0" ) ( result v128 ) ( v128.load8x8_s ( i32.const 0 ) ) ) ( func ( export "v128.load8x8_u_const8" ) ( result v128 ) ( v128.load8x8_u ( i32.const 8 ) ) ) ( func ( export "v128.load16x4_s_const10" ) ( result v128 ) ( v128.load16x4_s ( i32.const 10 ) ) ) ( func ( export "v128.load16x4_u_const20" ) ( result v128 ) ( v128.load16x4_u ( i32.const 20 ) ) ) ( func ( export "v128.load32x2_s_const65520" ) ( result v128 ) ( v128.load32x2_s ( i32.const 65520 ) ) ) ( func ( export "v128.load32x2_u_const65526" ) ( result v128 ) ( v128.load32x2_u ( i32.const 65526 ) ) ) ( func ( export "v128.load8x8_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_s_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s align=1 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u align=1 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load8x8_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load8x8_u offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s align=1 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u align=1 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load16x4_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load16x4_u offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s align=1 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_s_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_s offset=20 align=8 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u_offset0" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u offset=0 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u align=1 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u_offset0_align1" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u offset=0 align=1 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u_offset10_align4" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u offset=10 align=4 ( local.get $0 ) ) ) ( func ( export "v128.load32x2_u_offset20_align8" ) ( param $0 i32 ) ( result v128 ) ( v128.load32x2_u offset=20 align=8 ( local.get $0 ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -21,7 +21,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -38,7 +38,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -55,7 +55,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -72,7 +72,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -89,7 +89,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -106,7 +106,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -123,7 +123,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -140,7 +140,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -157,7 +157,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -174,7 +174,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -191,7 +191,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -208,7 +208,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -225,7 +225,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -242,7 +242,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -259,7 +259,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -276,7 +276,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -293,7 +293,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -310,7 +310,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_const0" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_s_const0" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -327,7 +327,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_const8" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_u_const8" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -344,7 +344,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_const10" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_s_const10" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -361,7 +361,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_const20" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_u_const20" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -378,7 +378,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_const65520" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_s_const65520" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -395,7 +395,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_const65526" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_u_const65526" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -412,7 +412,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -429,7 +429,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -446,7 +446,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -463,7 +463,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -480,7 +480,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_s_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -497,7 +497,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -514,7 +514,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -531,7 +531,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -548,7 +548,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -565,7 +565,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load8x8_u_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -582,7 +582,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -599,7 +599,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -616,7 +616,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -633,7 +633,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -650,7 +650,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_s_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -667,7 +667,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -684,7 +684,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -701,7 +701,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -718,7 +718,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -735,7 +735,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load16x4_u_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -752,7 +752,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -769,7 +769,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -786,7 +786,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -803,7 +803,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -820,7 +820,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_s_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -837,7 +837,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_offset0" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u_offset0" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -854,7 +854,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -871,7 +871,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_offset0_align1" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u_offset0_align1" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -888,7 +888,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_offset10_align4" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u_offset10_align4" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -905,7 +905,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u_offset20_align8" (func $f (param i32) (result v128)))
+  (import "" "v128.load32x2_u_offset20_align8" (func $f (param i32) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -922,7 +922,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s" (func $f (param $0 i32)
+  (import "" "v128.load8x8_s" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const -1 ))
@@ -935,7 +935,7 @@ if (!thrown) throw 'Error: expected exception';
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u" (func $f (param $0 i32)
+  (import "" "v128.load8x8_u" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const -1 ))
@@ -948,7 +948,7 @@ if (!thrown) throw 'Error: expected exception';
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s" (func $f (param $0 i32)
+  (import "" "v128.load16x4_s" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const 65536 ))
@@ -961,7 +961,7 @@ if (!thrown) throw 'Error: expected exception';
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u" (func $f (param $0 i32)
+  (import "" "v128.load16x4_u" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const 65536 ))
@@ -974,7 +974,7 @@ if (!thrown) throw 'Error: expected exception';
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s" (func $f (param $0 i32)
+  (import "" "v128.load32x2_s" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const 65529 ))
@@ -987,7 +987,7 @@ if (!thrown) throw 'Error: expected exception';
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u" (func $f (param $0 i32)
+  (import "" "v128.load32x2_u" (func $f (param $0 i32)
                                  (result v128)))
   (func (export "run")
     (call $f ( i32.const 65529 ))
@@ -1000,7 +1000,7 @@ if (!thrown) throw 'Error: expected exception';
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i16x8.load8x8_s ( f32.const 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load8x8_s ( f32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1009,7 +1009,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i16x8.load8x8_u ( f32.const 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load8x8_u ( f32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1018,7 +1018,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i32x4.load16x4_s ( f64.const 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load16x4_s ( f64.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1027,7 +1027,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i32x4.load16x4_u ( f64.const 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load16x4_u ( f64.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1036,7 +1036,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i64x2.load32x2_s ( v128.const i32x4 0 0 0 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load32x2_s ( v128.const i32x4 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1045,7 +1045,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func ( result v128 ) ( i64x2.load32x2_u ( v128.const i32x4 0 0 0 0 ) ) ) )
+( module ( memory 0 ) ( func ( result v128 ) ( v128.load32x2_u ( v128.const i32x4 0 0 0 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1054,7 +1054,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i16x8.load8x8_s-arg-empty ( result v128 ) ( i16x8.load8x8_s ) ) )
+( module ( memory 0 ) ( func $v128.load8x8_s-arg-empty ( result v128 ) ( v128.load8x8_s ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1063,7 +1063,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i16x8.load8x8_u-arg-empty ( result v128 ) ( i16x8.load8x8_u ) ) )
+( module ( memory 0 ) ( func $v128.load8x8_u-arg-empty ( result v128 ) ( v128.load8x8_u ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1072,7 +1072,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i32x4.load16x4_s-arg-empty ( result v128 ) ( i32x4.load16x4_s ) ) )
+( module ( memory 0 ) ( func $v128.load16x4_s-arg-empty ( result v128 ) ( v128.load16x4_s ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1081,7 +1081,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i32x4.load16x4_u-arg-empty ( result v128 ) ( i32x4.load16x4_u ) ) )
+( module ( memory 0 ) ( func $v128.load16x4_u-arg-empty ( result v128 ) ( v128.load16x4_u ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1090,7 +1090,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i64x2.load32x2_s-arg-empty ( result v128 ) ( i64x2.load32x2_s ) ) )
+( module ( memory 0 ) ( func $v128.load32x2_s-arg-empty ( result v128 ) ( v128.load32x2_s ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1099,7 +1099,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 0 ) ( func $i64x2.load32x2_u-arg-empty ( result v128 ) ( i64x2.load32x2_u ) ) )
+( module ( memory 0 ) ( func $v128.load32x2_u-arg-empty ( result v128 ) ( v128.load32x2_u ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -1154,12 +1154,12 @@ try { wasmTextToBinary(`
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( data ( i32.const 0 ) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( func ( export "i16x8.load8x8_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i16x8.load8x8_s ( i32.const 0 ) ) ) ) ) ( func ( export "i16x8.load8x8_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i16x8.load8x8_u ( i32.const 1 ) ) ) ) ) ( func ( export "i32x4.load16x4_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i32x4.load16x4_s ( i32.const 2 ) ) ) ) ) ( func ( export "i32x4.load16x4_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i32x4.load16x4_u ( i32.const 3 ) ) ) ) ) ( func ( export "i64x2.load32x2_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i64x2.load32x2_s ( i32.const 4 ) ) ) ) ) ( func ( export "i64x2.load32x2_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( i64x2.load32x2_u ( i32.const 5 ) ) ) ) ) ( func ( export "i16x8.load8x8_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i16x8.load8x8_s ( i32.const 6 ) ) ) ) ) ( func ( export "i16x8.load8x8_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i16x8.load8x8_u ( i32.const 7 ) ) ) ) ) ( func ( export "i32x4.load16x4_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i32x4.load16x4_s ( i32.const 8 ) ) ) ) ) ( func ( export "i32x4.load16x4_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i32x4.load16x4_u ( i32.const 9 ) ) ) ) ) ( func ( export "i64x2.load32x2_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i64x2.load32x2_s ( i32.const 10 ) ) ) ) ) ( func ( export "i64x2.load32x2_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( i64x2.load32x2_u ( i32.const 11 ) ) ) ) ) ( func ( export "i16x8.load8x8_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i16x8.load8x8_s ( i32.const 12 ) ) ) ) ( func ( export "i16x8.load8x8_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i16x8.load8x8_u ( i32.const 13 ) ) ) ) ( func ( export "i32x4.load16x4_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i32x4.load16x4_s ( i32.const 14 ) ) ) ) ( func ( export "i32x4.load16x4_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i32x4.load16x4_u ( i32.const 15 ) ) ) ) ( func ( export "i64x2.load32x2_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i64x2.load32x2_s ( i32.const 16 ) ) ) ) ( func ( export "i64x2.load32x2_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( i64x2.load32x2_u ( i32.const 17 ) ) ) ) )
+( module ( memory 1 ) ( data ( i32.const 0 ) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0A\\0B\\0C\\0D\\0E\\0F\\80\\81\\82\\83\\84\\85\\86\\87\\88\\89" ) ( func ( export "v128.load8x8_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load8x8_s ( i32.const 0 ) ) ) ) ) ( func ( export "v128.load8x8_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load8x8_u ( i32.const 1 ) ) ) ) ) ( func ( export "v128.load16x4_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load16x4_s ( i32.const 2 ) ) ) ) ) ( func ( export "v128.load16x4_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load16x4_u ( i32.const 3 ) ) ) ) ) ( func ( export "v128.load32x2_s-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load32x2_s ( i32.const 4 ) ) ) ) ) ( func ( export "v128.load32x2_u-in-block" ) ( result v128 ) ( block ( result v128 ) ( block ( result v128 ) ( v128.load32x2_u ( i32.const 5 ) ) ) ) ) ( func ( export "v128.load8x8_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load8x8_s ( i32.const 6 ) ) ) ) ) ( func ( export "v128.load8x8_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load8x8_u ( i32.const 7 ) ) ) ) ) ( func ( export "v128.load16x4_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load16x4_s ( i32.const 8 ) ) ) ) ) ( func ( export "v128.load16x4_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load16x4_u ( i32.const 9 ) ) ) ) ) ( func ( export "v128.load32x2_s-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load32x2_s ( i32.const 10 ) ) ) ) ) ( func ( export "v128.load32x2_u-as-br-value" ) ( result v128 ) ( block ( result v128 ) ( br 0 ( v128.load32x2_u ( i32.const 11 ) ) ) ) ) ( func ( export "v128.load8x8_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load8x8_s ( i32.const 12 ) ) ) ) ( func ( export "v128.load8x8_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load8x8_u ( i32.const 13 ) ) ) ) ( func ( export "v128.load16x4_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load16x4_s ( i32.const 14 ) ) ) ) ( func ( export "v128.load16x4_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load16x4_u ( i32.const 15 ) ) ) ) ( func ( export "v128.load32x2_s-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load32x2_s ( i32.const 16 ) ) ) ) ( func ( export "v128.load32x2_u-extract_lane_s-operand" ) ( result i32 ) ( i8x16.extract_lane_s 0 ( v128.load32x2_u ( i32.const 17 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_s-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1176,7 +1176,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_u-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1193,7 +1193,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_s-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1210,7 +1210,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_u-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1227,7 +1227,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_s-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1244,7 +1244,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u-in-block" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_u-in-block" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1261,7 +1261,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_s-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1278,7 +1278,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load8x8_u-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1295,7 +1295,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_s-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1312,7 +1312,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load16x4_u-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1329,7 +1329,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_s-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1346,7 +1346,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u-as-br-value" (func $f (param ) (result v128)))
+  (import "" "v128.load32x2_u-as-br-value" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)
@@ -1363,7 +1363,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_s-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load8x8_s-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1380,7 +1380,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i16x8.load8x8_u-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load8x8_u-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1397,7 +1397,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_s-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load16x4_s-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1414,7 +1414,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i32x4.load16x4_u-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load16x4_u-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1431,7 +1431,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_s-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load32x2_s-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
@@ -1448,7 +1448,7 @@ assertEq(run.exports.run(), 1)
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "i64x2.load32x2_u-extract_lane_s-operand" (func $f (param ) (result i32)))
+  (import "" "v128.load32x2_u-extract_lane_s-operand" (func $f (param ) (result i32)))
   (func (export "run") (result i32) 
 (local $result i32)
 (local $expected i32)
