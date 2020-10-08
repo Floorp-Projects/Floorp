@@ -13,7 +13,6 @@
 #include "mozilla/gfx/TiledRegion.h"  // for TiledRegion
 #include "mozilla/gfx/Types.h"        // for SamplingFilter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
-#include "mozilla/layers/ZoomConstraints.h"
 #include "nsAString.h"
 #include "nsPrintfCString.h"  // for nsPrintfCString
 #include "nsRegion.h"         // for nsRegion, nsIntRegion
@@ -31,10 +30,6 @@ struct RectTyped;
 enum class ImageFormat;
 
 namespace layers {
-struct ZoomConstraints;
-
-void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
-                    const char* pfx = "", const char* sfx = "");
 
 void AppendToString(std::stringstream& aStream,
                     const mozilla::gfx::Matrix5x4& m, const char* pfx = "",

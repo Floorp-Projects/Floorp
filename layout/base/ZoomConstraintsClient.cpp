@@ -254,6 +254,6 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
   }
   mGuid = Some(newGuid);
   ZCC_LOG("Sending constraints %s in %p for { %u, %" PRIu64 " }\n",
-          Stringify(mZoomConstraints).c_str(), this, presShellId, viewId);
+          ToString(mZoomConstraints).c_str(), this, presShellId, viewId);
   widget->UpdateZoomConstraints(presShellId, viewId, Some(mZoomConstraints));
 }
