@@ -150,6 +150,18 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
   }
 
  public:
+#if defined(NIGHTLY_BUILD)
+  Maybe<DetourError> mLastError;
+  const Maybe<DetourError>& GetLastError() const { return mLastError; }
+  template <typename... Args>
+  void SetLastError(Args&&... aArgs) {
+    mLastError = Some(DetourError(std::forward<Args>(aArgs)...));
+  }
+#else
+  template <typename... Args>
+  void SetLastError(Args&&... aArgs) {}
+#endif  // defined(NIGHTLY_BUILD)
+
   DWORD ComputeAllocationSize(const uint32_t aRequestedSize) const {
     MOZ_ASSERT(aRequestedSize);
     DWORD result = aRequestedSize;
@@ -297,15 +309,17 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
    * large.
    */
   PVOID FindRegion(HANDLE aProcess, const size_t aDesiredBytesLen,
-                   const uint8_t* aRangeMin, const uint8_t* aRangeMax) const {
+                   const uint8_t* aRangeMin, const uint8_t* aRangeMax) {
     const DWORD kGranularity = GetAllocGranularity();
     MOZ_ASSERT(aDesiredBytesLen >= kGranularity);
     if (!aDesiredBytesLen) {
+      SetLastError(MMPOLICY_RESERVE_FINDREGION_INVALIDLEN);
       return nullptr;
     }
 
     MOZ_ASSERT(aRangeMin < aRangeMax);
     if (aRangeMin >= aRangeMax) {
+      SetLastError(MMPOLICY_RESERVE_FINDREGION_INVALIDRANGE);
       return nullptr;
     }
 
@@ -341,6 +355,8 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
           reinterpret_cast<const uint8_t*>(mbi.BaseAddress) + mbi.RegionSize;
     }
 
+    SetLastError(MMPOLICY_RESERVE_FINDREGION_VIRTUALQUERY_ERROR,
+                 ::GetLastError());
     return nullptr;
   }
 
@@ -363,10 +379,14 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
   PVOID Reserve(HANDLE aProcess, const uint32_t aSize,
                 const ReserveFnT& aReserveFn,
                 const ReserveRangeFnT& aReserveRangeFn,
-                const Maybe<Span<const uint8_t>>& aBounds) const {
+                const Maybe<Span<const uint8_t>>& aBounds) {
     if (!aBounds) {
       // No restrictions, let the OS choose the base address
-      return aReserveFn(aProcess, nullptr, aSize);
+      PVOID ret = aReserveFn(aProcess, nullptr, aSize);
+      if (!ret) {
+        SetLastError(MMPOLICY_RESERVE_NOBOUND_RESERVE_ERROR, ::GetLastError());
+      }
+      return ret;
     }
 
     const uint8_t* lowerBound = GetLowerBound(aBounds.ref());
@@ -404,8 +424,11 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyBase {
     // If we run out of attempts, we fall through to the default case where
     // the system chooses any base address it wants. In that case, the hook
     // will be set on a best-effort basis.
-
-    return aReserveFn(aProcess, nullptr, aSize);
+    PVOID ret = aReserveFn(aProcess, nullptr, aSize);
+    if (!ret) {
+      SetLastError(MMPOLICY_RESERVE_FINAL_RESERVE_ERROR, ::GetLastError());
+    }
+    return ret;
   }
 };
 
@@ -802,11 +825,13 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
   uint32_t Reserve(const uint32_t aSize,
                    const Maybe<Span<const uint8_t>>& aBounds) {
     if (!aSize || !mProcess) {
+      SetLastError(MMPOLICY_RESERVE_INVALIDARG);
       return 0;
     }
 
     if (mRemoteView) {
       MOZ_ASSERT(mReservationSize >= aSize);
+      SetLastError(MMPOLICY_RESERVE_ZERO_RESERVATIONSIZE);
       return mReservationSize;
     }
 
@@ -816,12 +841,14 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
                                    PAGE_EXECUTE_READWRITE | SEC_RESERVE, 0,
                                    mReservationSize, nullptr);
     if (!mMapping) {
+      SetLastError(MMPOLICY_RESERVE_CREATEFILEMAPPING, ::GetLastError());
       return 0;
     }
 
     mLocalView = static_cast<uint8_t*>(
         ::MapViewOfFile(mMapping, FILE_MAP_WRITE, 0, 0, 0));
     if (!mLocalView) {
+      SetLastError(MMPOLICY_RESERVE_MAPVIEWOFFILE, ::GetLastError());
       return 0;
     }
 
