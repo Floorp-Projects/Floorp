@@ -10,6 +10,10 @@
 
 /* globals exportFunction */
 
+console.info(
+  "window.PDFJS.disableWorker has been set to true for compatibility reasons. See https://webcompat.com/issues/39057 for details."
+);
+
 let globals = {};
 
 Object.defineProperty(window.wrappedJSObject, "PDFJS", {

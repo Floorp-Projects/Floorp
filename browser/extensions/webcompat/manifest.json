@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Web Compatibility Interventions",
+  "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "16.0.0",
+  "version": "15.1.0",
 
   "applications": {
     "gecko": {
@@ -114,7 +114,6 @@
       "data/shims.js",
       "data/ua_overrides.js",
       "lib/about_compat_broker.js",
-      "lib/console_warning_helper.js",
       "lib/custom_functions.js",
       "lib/injections.js",
       "lib/picture_in_picture_overrides.js",
