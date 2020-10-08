@@ -13,34 +13,56 @@ from mach.decorators import (
     CommandArgument,
 )
 from mozbuild.base import MachCommandBase
+from mozbuild.util import memoize, memoized_property
 
 
 @CommandProvider
 class BuiltinCommands(MachCommandBase):
 
     @property
-    def command_keys(self):
-        return (k for k, v in
-                self._mach_context.commands.command_handlers.items())
+    def command_handlers(self):
+        """A dictionary of command handlers keyed by command name."""
+        return self._mach_context.commands.command_handlers
+
+    @memoized_property
+    def commands(self):
+        """A sorted list of all command names."""
+        return sorted(self.command_handlers)
+
+    @memoize
+    def get_handler_options(self, handler):
+        """Given a command handler, return all available options."""
+        targets = []
+
+        # The 'option_strings' are of the form [('-f', '--foo'), ('-b', '--bar'), ...].
+        option_strings = [item[0] for item in handler.arguments]
+        # Filter out positional arguments (we don't want to complete their metavar).
+        option_strings = [opt for opt in option_strings if opt[0].startswith('-')]
+        targets.extend(chain(*option_strings))
+
+        # If the command uses its own ArgumentParser, extract options from there as well.
+        if handler.parser:
+            targets.extend(chain(*[action.option_strings
+                                   for action in handler.parser._actions]))
+
+        return targets
 
     @Command('mach-commands', category='misc',
              description='List all mach commands.')
-    def commands(self):
-        print("\n".join(sorted(self.command_keys)))
+    def run_commands(self):
+        print("\n".join(self.commands))
 
     @Command('mach-debug-commands', category='misc',
              description='Show info about available mach commands.')
     @CommandArgument('match', metavar='MATCH', default=None, nargs='?',
                      help='Only display commands containing given substring.')
-    def debug_commands(self, match=None):
+    def run_debug_commands(self, match=None):
         import inspect
 
-        handlers = self._mach_context.commands.command_handlers
-        for command in sorted(self.command_keys):
+        for command, handler in self.command_handlers.items():
             if match and match not in command:
                 continue
 
-            handler = handlers[command]
             cls = handler.cls
             method = getattr(cls, getattr(handler, 'method'))
 
@@ -56,26 +78,25 @@ class BuiltinCommands(MachCommandBase):
              description='Prints a list of completion strings for the specified command.')
     @CommandArgument('args', default=None, nargs=argparse.REMAINDER,
                      help="Command to complete.")
-    def completion(self, args):
-        all_commands = sorted(self.command_keys)
+    def run_completion(self, args):
         if not args:
-            print("\n".join(all_commands))
+            print("\n".join(self.commands))
             return
 
         is_help = 'help' in args
         command = None
         for i, arg in enumerate(args):
-            if arg in all_commands:
+            if arg in self.commands:
                 command = arg
                 args = args[i+1:]
                 break
 
         # If no command is typed yet, just offer the commands.
         if not command:
-            print("\n".join(all_commands))
+            print("\n".join(self.commands))
             return
 
-        handler = self._mach_context.commands.command_handlers[command]
+        handler = self.command_handlers[command]
         # If a subcommand was typed, update the handler.
         for arg in args:
             if arg in handler.subcommand_handlers:
@@ -88,16 +109,5 @@ class BuiltinCommands(MachCommandBase):
             return
 
         targets.append('help')
-
-        # The 'option_strings' are of the form [('-f', '--foo'), ('-b', '--bar'), ...].
-        option_strings = [item[0] for item in handler.arguments]
-        # Filter out positional arguments (we don't want to complete their metavar).
-        option_strings = [opt for opt in option_strings if opt[0].startswith('-')]
-        targets.extend(chain(*option_strings))
-
-        # If the command uses its own ArgumentParser, extract options from there as well.
-        if handler.parser:
-            targets.extend(chain(*[action.option_strings
-                                   for action in handler.parser._actions]))
-
+        targets.extend(self.get_handler_options(handler))
         print("\n".join(targets))
