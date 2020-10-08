@@ -58,6 +58,6 @@ void EffectBlendMode::PrintInfo(std::stringstream& aStream,
 void EffectColorMatrix::PrintInfo(std::stringstream& aStream,
                                   const char* aPrefix) {
   aStream << aPrefix;
-  aStream << nsPrintfCString("EffectColorMatrix (0x%p)", this).get();
-  AppendToString(aStream, mColorMatrix, " [matrix=", "]");
+  aStream << nsPrintfCString("EffectColorMatrix (0x%p)", this).get()
+          << " [matrix=" << mColorMatrix << "]";
 }
