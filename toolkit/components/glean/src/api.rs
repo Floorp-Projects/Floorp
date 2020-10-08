@@ -71,10 +71,30 @@ where
 pub fn initialize(cfg: Configuration, client_info: ClientInfo) -> Result<()> {
     STATE
         .get_or_try_init(|| {
-            let glean = Glean::new(cfg)?;
+            let mut glean = Glean::new(cfg)?;
 
             // First initialize core metrics
             initialize_core_metrics(&glean, &client_info);
+
+            // Then register builtin pings.
+            // Borrowed from glean-core's internal_pings.rs.
+            let mping = glean_core::metrics::PingType::new(
+                "metrics",
+                true,
+                false,
+                vec![
+                    "overdue".to_string(),
+                    "reschedule".to_string(),
+                    "today".to_string(),
+                    "tomorrow".to_string(),
+                    "upgrade".to_string(),
+                ],
+            );
+            glean.register_ping_type(&mping);
+            let bping = glean_core::metrics::PingType::new("baseline", true, false, vec![]);
+            glean.register_ping_type(&bping);
+            let eping = glean_core::metrics::PingType::new("events", true, false, vec![]);
+            glean.register_ping_type(&eping);
 
             // Now make this the global object available to others.
             setup_glean(glean)?;
