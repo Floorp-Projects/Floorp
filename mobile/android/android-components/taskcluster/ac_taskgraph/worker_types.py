@@ -65,6 +65,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
     "scriptworker-beetmover",
     schema={
         Required("action"): text_type,
+        Required("version"): text_type,
         Required("artifact-map"): [{
             Required("paths"): {
                 Any(text_type): {
