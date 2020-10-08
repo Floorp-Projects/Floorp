@@ -109,28 +109,60 @@ nsresult RemotePrintJobParent::PrepareNextPageFD(FileDescriptor* aFd) {
   return NS_OK;
 }
 
-mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage() {
+mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
+    nsTArray<uint64_t>&& aDeps) {
   if (!mCurrentPageStream.IsOpen()) {
     Unused << SendAbortPrint(NS_ERROR_FAILURE);
     return IPC_OK();
   }
   mCurrentPageStream.Seek(0, PR_SEEK_SET);
-  nsresult rv = PrintPage(mCurrentPageStream);
+
+  if (aDeps.IsEmpty()) {
+    FinishProcessingPage();
+    return IPC_OK();
+  }
+
+  nsTHashtable<nsUint64HashKey> deps;
+  for (auto i : aDeps) {
+    deps.PutEntry(i);
+  }
+
+  gfx::CrossProcessPaint::Start(std::move(deps))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}](
+              gfx::CrossProcessPaint::ResolvedFragmentMap&& aFragments) {
+            self->FinishProcessingPage(&aFragments);
+          },
+          [self = RefPtr{this}](const nsresult& aRv) {
+            self->FinishProcessingPage();
+          });
+
+  return IPC_OK();
+}
+
+void RemotePrintJobParent::FinishProcessingPage(
+    gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments) {
+  nsresult rv = PrintPage(mCurrentPageStream, aFragments);
+
   mCurrentPageStream.Close();
 
   if (mPrintDeviceContext->IsSyncPagePrinting()) {
     PageDone(rv);
   }
-
-  return IPC_OK();
 }
 
-nsresult RemotePrintJobParent::PrintPage(PRFileDescStream& aRecording) {
+nsresult RemotePrintJobParent::PrintPage(
+    PRFileDescStream& aRecording,
+    gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments) {
   MOZ_ASSERT(mPrintDeviceContext);
 
   nsresult rv = mPrintDeviceContext->BeginPage();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+  if (aFragments) {
+    mPrintTranslator->SetDependentSurfaces(std::move(*aFragments));
   }
   if (!mPrintTranslator->TranslateRecording(aRecording)) {
     return NS_ERROR_FAILURE;
