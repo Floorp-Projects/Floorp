@@ -1491,12 +1491,13 @@ impl Device {
         info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}, depth {:?}",
             color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage, depth_format);
 
-        // On Mali devices glCopyImageSubData appears to stall the pipeline until any pending
+        // On Mali-T devices glCopyImageSubData appears to stall the pipeline until any pending
         // renders to the source texture have completed. Using an alternative such as
         // glBlitFramebuffer is preferable on such devices, so pretend we don't support
-        // glCopyImageSubData. This was observed on a Mali-T830, but as a precaution we avoid this
-        // on Mali-G too. See bug 1669494.
-        let supports_copy_image_sub_data = if renderer_name.starts_with("Mali") {
+        // glCopyImageSubData. See bug 1669494.
+        // We cannot do the same on Mali-G devices, because glBlitFramebuffer can cause corruption.
+        // See bug 1669960.
+        let supports_copy_image_sub_data = if renderer_name.starts_with("Mali-T") {
             false
         } else {
             supports_extension(&extensions, "GL_EXT_copy_image") ||
