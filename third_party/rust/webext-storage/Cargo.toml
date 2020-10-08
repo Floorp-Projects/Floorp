@@ -24,8 +24,8 @@ sync-guid = { path = "../support/guid", features = ["rusqlite_support", "random"
 url = { version = "2.1", features = ["serde"] }
 
 [dependencies.rusqlite]
-version = "0.23.1"
-features = ["functions", "bundled", "serde_json"]
+version = "0.24.1"
+features = ["functions", "bundled", "serde_json", "column_decltype"]
 
 [dev-dependencies]
 env_logger = "0.7"
@@ -35,7 +35,7 @@ tempfile = "3"
 # A *direct* dep on the -sys crate is required for our build.rs
 # to see the DEP_SQLITE3_LINK_TARGET env var that cargo sets
 # on its behalf.
-libsqlite3-sys = "0.18.0"
+libsqlite3-sys = "0.20.1"
 
 [build-dependencies]
 nss_build_common = { path = "../support/rc_crypto/nss/nss_build_common" }

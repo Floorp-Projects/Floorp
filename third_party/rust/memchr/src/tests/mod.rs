@@ -44,61 +44,21 @@ fn memchr_tests() -> Vec<MemchrTest> {
 /// in the tests by varying the starting point of the slice.
 const MEMCHR_TESTS: &[MemchrTestStatic] = &[
     // one needle (applied to memchr + memchr2 + memchr3)
-    MemchrTestStatic {
-        corpus: "a",
-        needles: &[b'a'],
-        positions: &[0],
-    },
-    MemchrTestStatic {
-        corpus: "aa",
-        needles: &[b'a'],
-        positions: &[0, 1],
-    },
+    MemchrTestStatic { corpus: "a", needles: &[b'a'], positions: &[0] },
+    MemchrTestStatic { corpus: "aa", needles: &[b'a'], positions: &[0, 1] },
     MemchrTestStatic {
         corpus: "aaa",
         needles: &[b'a'],
         positions: &[0, 1, 2],
     },
-    MemchrTestStatic {
-        corpus: "",
-        needles: &[b'a'],
-        positions: &[],
-    },
-    MemchrTestStatic {
-        corpus: "z",
-        needles: &[b'a'],
-        positions: &[],
-    },
-    MemchrTestStatic {
-        corpus: "zz",
-        needles: &[b'a'],
-        positions: &[],
-    },
-    MemchrTestStatic {
-        corpus: "zza",
-        needles: &[b'a'],
-        positions: &[2],
-    },
-    MemchrTestStatic {
-        corpus: "zaza",
-        needles: &[b'a'],
-        positions: &[1, 3],
-    },
-    MemchrTestStatic {
-        corpus: "zzza",
-        needles: &[b'a'],
-        positions: &[3],
-    },
-    MemchrTestStatic {
-        corpus: "\x00a",
-        needles: &[b'a'],
-        positions: &[1],
-    },
-    MemchrTestStatic {
-        corpus: "\x00",
-        needles: &[b'\x00'],
-        positions: &[0],
-    },
+    MemchrTestStatic { corpus: "", needles: &[b'a'], positions: &[] },
+    MemchrTestStatic { corpus: "z", needles: &[b'a'], positions: &[] },
+    MemchrTestStatic { corpus: "zz", needles: &[b'a'], positions: &[] },
+    MemchrTestStatic { corpus: "zza", needles: &[b'a'], positions: &[2] },
+    MemchrTestStatic { corpus: "zaza", needles: &[b'a'], positions: &[1, 3] },
+    MemchrTestStatic { corpus: "zzza", needles: &[b'a'], positions: &[3] },
+    MemchrTestStatic { corpus: "\x00a", needles: &[b'a'], positions: &[1] },
+    MemchrTestStatic { corpus: "\x00", needles: &[b'\x00'], positions: &[0] },
     MemchrTestStatic {
         corpus: "\x00\x00",
         needles: &[b'\x00'],
@@ -119,7 +79,6 @@ const MEMCHR_TESTS: &[MemchrTestStatic] = &[
         needles: &[b'a'],
         positions: &[32],
     },
-
     // two needles (applied to memchr2 + memchr3)
     MemchrTestStatic {
         corpus: "az",
@@ -131,21 +90,9 @@ const MEMCHR_TESTS: &[MemchrTestStatic] = &[
         needles: &[b'a', b'z'],
         positions: &[0, 1],
     },
-    MemchrTestStatic {
-        corpus: "az",
-        needles: &[b'x', b'y'],
-        positions: &[],
-    },
-    MemchrTestStatic {
-        corpus: "az",
-        needles: &[b'a', b'y'],
-        positions: &[0],
-    },
-    MemchrTestStatic {
-        corpus: "az",
-        needles: &[b'x', b'z'],
-        positions: &[1],
-    },
+    MemchrTestStatic { corpus: "az", needles: &[b'x', b'y'], positions: &[] },
+    MemchrTestStatic { corpus: "az", needles: &[b'a', b'y'], positions: &[0] },
+    MemchrTestStatic { corpus: "az", needles: &[b'x', b'z'], positions: &[1] },
     MemchrTestStatic {
         corpus: "yyyyaz",
         needles: &[b'a', b'z'],
@@ -156,7 +103,6 @@ const MEMCHR_TESTS: &[MemchrTestStatic] = &[
         needles: &[b'z', b'a'],
         positions: &[4, 5],
     },
-
     // three needles (applied to memchr3)
     MemchrTestStatic {
         corpus: "xyz",
@@ -217,11 +163,7 @@ struct MemchrTestStatic {
 }
 
 impl MemchrTest {
-    fn one<F: Fn(u8, &[u8]) -> Option<usize>>(
-        &self,
-        reverse: bool,
-        f: F,
-    ) {
+    fn one<F: Fn(u8, &[u8]) -> Option<usize>>(&self, reverse: bool, f: F) {
         let needles = match self.needles(1) {
             None => return,
             Some(needles) => needles,
@@ -248,11 +190,7 @@ impl MemchrTest {
         }
     }
 
-    fn two<F: Fn(u8, u8, &[u8]) -> Option<usize>>(
-        &self,
-        reverse: bool,
-        f: F,
-    ) {
+    fn two<F: Fn(u8, u8, &[u8]) -> Option<usize>>(&self, reverse: bool, f: F) {
         let needles = match self.needles(2) {
             None => return,
             Some(needles) => needles,
@@ -300,8 +238,9 @@ impl MemchrTest {
     }
 
     fn iter_one<'a, I, F>(&'a self, reverse: bool, f: F)
-    where F: FnOnce(u8, &'a [u8]) -> I,
-          I: Iterator<Item=usize>
+    where
+        F: FnOnce(u8, &'a [u8]) -> I,
+        I: Iterator<Item = usize>,
     {
         if let Some(ns) = self.needles(1) {
             self.iter(reverse, f(ns[0], self.corpus.as_bytes()));
@@ -309,8 +248,9 @@ impl MemchrTest {
     }
 
     fn iter_two<'a, I, F>(&'a self, reverse: bool, f: F)
-    where F: FnOnce(u8, u8, &'a [u8]) -> I,
-          I: Iterator<Item=usize>
+    where
+        F: FnOnce(u8, u8, &'a [u8]) -> I,
+        I: Iterator<Item = usize>,
     {
         if let Some(ns) = self.needles(2) {
             self.iter(reverse, f(ns[0], ns[1], self.corpus.as_bytes()));
@@ -318,8 +258,9 @@ impl MemchrTest {
     }
 
     fn iter_three<'a, I, F>(&'a self, reverse: bool, f: F)
-    where F: FnOnce(u8, u8, u8, &'a [u8]) -> I,
-          I: Iterator<Item=usize>
+    where
+        F: FnOnce(u8, u8, u8, &'a [u8]) -> I,
+        I: Iterator<Item = usize>,
     {
         if let Some(ns) = self.needles(3) {
             self.iter(reverse, f(ns[0], ns[1], ns[2], self.corpus.as_bytes()));
@@ -329,7 +270,7 @@ impl MemchrTest {
     /// Test that the positions yielded by the given iterator match the
     /// positions in this test. If reverse is true, then reverse the positions
     /// before comparing them.
-    fn iter<I: Iterator<Item=usize>>(&self, reverse: bool, it: I) {
+    fn iter<I: Iterator<Item = usize>>(&self, reverse: bool, it: I) {
         assert_eq!(
             self.positions(0, reverse),
             it.collect::<Vec<usize>>(),
@@ -365,7 +306,7 @@ impl MemchrTest {
         // Add bytes to the end of the corpus.
         for i in 1..515 {
             let mut t = self.clone();
-            let mut padding: String = repeat('%').take(i).collect();
+            let padding: String = repeat('%').take(i).collect();
             t.corpus.push_str(&padding);
             more.push(t);
         }
@@ -405,14 +346,13 @@ impl MemchrTest {
     /// alignment are offset by the alignment. Positions less than the
     /// alignment are dropped.
     fn positions(&self, align: usize, reverse: bool) -> Vec<usize> {
-        let positions =
-            if reverse {
-                let mut positions = self.positions.to_vec();
-                positions.reverse();
-                positions
-            } else {
-                self.positions.to_vec()
-            };
+        let positions = if reverse {
+            let mut positions = self.positions.to_vec();
+            positions.reverse();
+            positions
+        } else {
+            self.positions.to_vec()
+        };
         positions
             .into_iter()
             .filter(|&p| p >= align)

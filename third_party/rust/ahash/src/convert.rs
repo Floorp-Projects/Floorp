@@ -1,42 +1,40 @@
-use core::mem::transmute;
-
 pub(crate) trait Convert<To> {
     fn convert(self) -> To;
-    fn convert_ref(&self) -> &To;
-    fn convert_mut_ref(&mut self) -> &mut To;
 }
+
 macro_rules! convert {
-    ($from:ty, $to:ty) => {
-        impl Convert<$to> for $from {
+    ($a:ty, $b:ty) => {
+        impl Convert<$b> for $a {
             #[inline(always)]
-            fn convert(self) -> $to {
-                unsafe { transmute(self) }
-            }
-            #[inline(always)]
-            fn convert_ref(&self) -> &$to {
-                unsafe { &*(self as *const $from as *const $to) }
-            }
-            #[inline(always)]
-            fn convert_mut_ref(&mut self) -> &mut $to {
-                unsafe { &mut *(self as *mut $from as *mut $to) }
+            fn convert(self) -> $b {
+                unsafe {
+                    let mut result: $b = core::mem::zeroed();
+                    core::ptr::copy_nonoverlapping(
+                        &self as *const $a as *const u8,
+                        &mut result as *mut $b as *mut u8,
+                        core::mem::size_of::<$b>(),
+                    );
+                    return result;
+                }
             }
         }
-        impl Convert<$from> for $to {
+        impl Convert<$a> for $b {
             #[inline(always)]
-            fn convert(self) -> $from {
-                unsafe { transmute(self) }
-            }
-            #[inline(always)]
-            fn convert_ref(&self) -> &$from {
-                unsafe { &*(self as *const $to as *const $from) }
-            }
-            #[inline(always)]
-            fn convert_mut_ref(&mut self) -> &mut $from {
-                unsafe { &mut *(self as *mut $to as *mut $from) }
+            fn convert(self) -> $a {
+                unsafe {
+                    let mut result: $a = core::mem::zeroed();
+                    core::ptr::copy_nonoverlapping(
+                        &self as *const $b as *const u8,
+                        &mut result as *mut $a as *mut u8,
+                        core::mem::size_of::<$a>(),
+                    );
+                    return result;
+                }
             }
         }
     };
 }
+
 convert!([u128; 4], [u64; 8]);
 convert!([u128; 4], [u32; 16]);
 convert!([u128; 4], [u16; 32]);

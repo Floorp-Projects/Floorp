@@ -12,7 +12,7 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct RawStatement {
     ptr: *mut ffi::sqlite3_stmt,
-    tail: bool,
+    tail: usize,
     // Cached indices of named parameters, computed on the fly.
     cache: crate::util::ParamIndexCache,
     // Cached SQL (trimmed) that we use as the key when we're in the statement
@@ -29,7 +29,7 @@ pub struct RawStatement {
 }
 
 impl RawStatement {
-    pub unsafe fn new(stmt: *mut ffi::sqlite3_stmt, tail: bool) -> RawStatement {
+    pub unsafe fn new(stmt: *mut ffi::sqlite3_stmt, tail: usize) -> RawStatement {
         RawStatement {
             ptr: stmt,
             tail,
@@ -63,6 +63,7 @@ impl RawStatement {
         unsafe { ffi::sqlite3_column_type(self.ptr, idx as c_int) }
     }
 
+    #[cfg(feature = "column_decltype")]
     pub fn column_decltype(&self, idx: usize) -> Option<&CStr> {
         unsafe {
             let decltype = ffi::sqlite3_column_decltype(self.ptr, idx as c_int);
@@ -152,7 +153,7 @@ impl RawStatement {
         r
     }
 
-    #[cfg(feature = "modern_sqlite")] // 3.7.4
+    #[cfg(all(feature = "extra_check", feature = "modern_sqlite"))] // 3.7.4
     pub fn readonly(&self) -> bool {
         unsafe { ffi::sqlite3_stmt_readonly(self.ptr) != 0 }
     }
@@ -167,7 +168,12 @@ impl RawStatement {
         unsafe { ffi::sqlite3_stmt_status(self.ptr, status as i32, reset as i32) }
     }
 
+    #[cfg(feature = "extra_check")]
     pub fn has_tail(&self) -> bool {
+        self.tail != 0
+    }
+
+    pub fn tail(&self) -> usize {
         self.tail
     }
 }

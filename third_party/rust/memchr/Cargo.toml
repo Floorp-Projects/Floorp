@@ -12,7 +12,7 @@
 
 [package]
 name = "memchr"
-version = "2.2.1"
+version = "2.3.3"
 authors = ["Andrew Gallant <jamslam@gmail.com>", "bluss"]
 exclude = ["/ci/*", "/.travis.yml", "/Makefile", "/appveyor.yml"]
 description = "Safe interface to memchr."
@@ -33,14 +33,10 @@ version = "0.2.18"
 optional = true
 default-features = false
 [dev-dependencies.quickcheck]
-version = "0.8"
+version = "0.9"
 default-features = false
 
 [features]
-default = ["use_std"]
-use_std = []
-[badges.appveyor]
-repository = "BurntSushi/rust-memchr"
-
-[badges.travis-ci]
-repository = "BurntSushi/rust-memchr"
+default = ["std"]
+std = []
+use_std = ["std"]

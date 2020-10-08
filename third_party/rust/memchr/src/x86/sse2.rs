@@ -26,6 +26,8 @@ pub unsafe fn memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     // and can be expressed straight-forwardly in pseudo code:
     //
     //     needle = (n1 << 15) | (n1 << 14) | ... | (n1 << 1) | n1
+    //     // Note: shift amount in bytes
+    //
     //     while i <= haystack.len() - 16:
     //       // A 16 byte vector. Each byte in chunk corresponds to a byte in
     //       // the haystack.
@@ -257,8 +259,10 @@ pub unsafe fn memchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
 
 #[target_feature(enable = "sse2")]
 pub unsafe fn memchr3(
-    n1: u8, n2: u8, n3: u8,
-    haystack: &[u8]
+    n1: u8,
+    n2: u8,
+    n3: u8,
+    haystack: &[u8],
 ) -> Option<usize> {
     let vn1 = _mm_set1_epi8(n1 as i8);
     let vn2 = _mm_set1_epi8(n2 as i8);
@@ -314,20 +318,14 @@ pub unsafe fn memchr3(
             let mask1 = _mm_movemask_epi8(eqb1);
             let mask2 = _mm_movemask_epi8(eqb2);
             let mask3 = _mm_movemask_epi8(eqb3);
-            if mask1 != 0 || mask2 != 0 || mask3 != 0 {
-                return Some(at + forward_pos3(mask1, mask2, mask3));
-            }
-
-            at += VECTOR_SIZE;
-            let mask1 = _mm_movemask_epi8(eqb1);
-            let mask2 = _mm_movemask_epi8(eqb2);
-            let mask3 = _mm_movemask_epi8(eqb3);
             return Some(at + forward_pos3(mask1, mask2, mask3));
         }
         ptr = ptr.add(loop_size);
     }
     while ptr <= end_ptr.sub(VECTOR_SIZE) {
-        if let Some(i) = forward_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3) {
+        if let Some(i) =
+            forward_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3)
+        {
             return Some(i);
         }
         ptr = ptr.add(VECTOR_SIZE);
@@ -490,7 +488,9 @@ pub unsafe fn memrchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
 
 #[target_feature(enable = "sse2")]
 pub unsafe fn memrchr3(
-    n1: u8, n2: u8, n3: u8,
+    n1: u8,
+    n2: u8,
+    n3: u8,
     haystack: &[u8],
 ) -> Option<usize> {
     let vn1 = _mm_set1_epi8(n1 as i8);
@@ -554,7 +554,9 @@ pub unsafe fn memrchr3(
     }
     while ptr >= start_ptr.add(VECTOR_SIZE) {
         ptr = ptr.sub(VECTOR_SIZE);
-        if let Some(i) = reverse_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3) {
+        if let Some(i) =
+            reverse_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3)
+        {
             return Some(i);
         }
     }

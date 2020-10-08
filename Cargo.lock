@@ -13,6 +13,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0989268a37e128d4d7a8028f1c60099430113fdbc70419010601ce51a228e4fe"
 
 [[package]]
+name = "ahash"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0adac150c2dd5a9c864d054e07bda5e6bc010cd10036ea5f17e82a2f5867f735"
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1318,7 +1324,7 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "failure",
 ]
@@ -1384,7 +1390,7 @@ version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba3301bcde54d3fc19c626ff4bf962630fe1f94cb6cdc3f18a26727a2d1f4a67"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.7.2",
 ]
 
 [[package]]
@@ -1681,7 +1687,7 @@ dependencies = [
 [[package]]
 name = "fxa-client"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "base64 0.12.0",
  "byteorder",
@@ -2168,8 +2174,17 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96282e96bfcd3da0d3aa9938bedf1e50df3269b6db08b4876d2da0bb1a0841cf"
 dependencies = [
- "ahash",
+ "ahash 0.3.2",
  "autocfg 1.0.0",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
+dependencies = [
+ "ahash 0.4.5",
 ]
 
 [[package]]
@@ -2177,6 +2192,15 @@ name = "hashglobe"
 version = "0.1.0"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "hashlink"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d99cf782f0dc4372d26846bec3de7804ceb5df083c2d4462c0b8d2330e894fa8"
+dependencies = [
+ "hashbrown 0.9.1",
 ]
 
 [[package]]
@@ -2383,7 +2407,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 
 [[package]]
 name = "intl-memoizer"
@@ -2657,9 +2681,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.18.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e704a02bcaecd4a08b93a23f6be59d0bd79cd161e0963e9499165a0a35df7bd"
+checksum = "64d31059f22935e6c31830db5249ba2b7ecd54fd73a9909286f0a67aa55c2fbd"
 dependencies = [
  "cc",
  "pkg-config",
@@ -2750,15 +2774,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14b6052be84e6b71ab17edffc2eeabf5c2c3ae1fdb464aae35ac50c67a44e1f7"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "lru-cache"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31e24f1ad8321ca0e8a1e0ac13f23cb668e6f5466c2c57319f6a5cf1cc8e3b1c"
-dependencies = [
- "linked-hash-map",
 ]
 
 [[package]]
@@ -2916,9 +2931,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.2.1"
+version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88579771288728879b57485cc7d6b07d648c9f0141eb955f8ab7f9d45394468e"
+checksum = "3728d817d99e5ac407411fa471ff9800a778d88a24685968b36824eaf4bee400"
 
 [[package]]
 name = "memmap"
@@ -3157,7 +3172,7 @@ dependencies = [
  "bitreader",
  "byteorder",
  "fallible_collections",
- "hashbrown",
+ "hashbrown 0.7.2",
  "log",
  "num-traits",
  "static_assertions",
@@ -3358,7 +3373,7 @@ dependencies = [
 [[package]]
 name = "nss"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "base64 0.12.0",
  "error-support",
@@ -3372,12 +3387,12 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 
 [[package]]
 name = "nss_sys"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "nss_build_common",
 ]
@@ -4055,7 +4070,7 @@ dependencies = [
 [[package]]
 name = "rc_crypto"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "base64 0.12.0",
  "ece",
@@ -4256,19 +4271,18 @@ checksum = "5d79b4b604167921892e84afbbaad9d5ad74e091bf6c511d9dbfb0593f09fabd"
 
 [[package]]
 name = "rusqlite"
-version = "0.23.1"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45d0fd62e1df63d254714e6cb40d0a0e82e7a1623e7a27f679d851af092ae58b"
+checksum = "7e3d4791ab5517217f51216a84a688b53c1ebf7988736469c538d02f46ddba68"
 dependencies = [
  "bitflags",
  "fallible-iterator",
  "fallible-streaming-iterator",
+ "hashlink",
  "libsqlite3-sys",
- "lru-cache",
  "memchr",
  "serde_json",
  "smallvec",
- "time",
 ]
 
 [[package]]
@@ -4611,9 +4625,9 @@ checksum = "797a4eaffb90d896f29698d45676f9f940a71936d7574996a7df54593ba209fa"
 
 [[package]]
 name = "smallvec"
-version = "1.3.0"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05720e22615919e4734f6a99ceae50d00226c3c5aca406e102ebc33298214e0a"
+checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 dependencies = [
  "serde",
 ]
@@ -4669,7 +4683,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4745,7 +4759,7 @@ dependencies = [
  "euclid",
  "fallible",
  "fxhash",
- "hashbrown",
+ "hashbrown 0.7.2",
  "hashglobe",
  "indexmap",
  "itertools 0.8.0",
@@ -4867,7 +4881,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "base64 0.12.0",
  "rand",
@@ -4878,7 +4892,7 @@ dependencies = [
 [[package]]
 name = "sync15"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "base16",
  "base64 0.12.0",
@@ -4901,7 +4915,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "failure",
  "ffi-support",
@@ -5483,7 +5497,7 @@ checksum = "078775d0255232fb988e6fccf26ddc9d1ac274299aaedcedce21c6f72cc533ce"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "failure",
  "failure_derive",
@@ -5605,7 +5619,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=9ba519a5739b1976f1d333923d34b7f4916b9e26#9ba519a5739b1976f1d333923d34b7f4916b9e26"
+source = "git+https://github.com/mozilla/application-services?rev=641353a8648602ce17d23c89b88e2a22d108fb03#641353a8648602ce17d23c89b88e2a22d108fb03"
 dependencies = [
  "error-support",
  "failure",
