@@ -280,12 +280,12 @@ class ScriptStencilIterable {
  public:
   class ScriptAndFunction {
    public:
-    ScriptStencil& script;
+    const ScriptStencil& script;
     HandleFunction function;
     FunctionIndex functionIndex;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(ScriptStencil& script, HandleFunction function,
+    ScriptAndFunction(const ScriptStencil& script, HandleFunction function,
                       FunctionIndex functionIndex)
         : script(script), function(function), functionIndex(functionIndex) {}
   };
@@ -335,7 +335,7 @@ class ScriptStencilIterable {
     }
 
     ScriptAndFunction operator*() {
-      ScriptStencil& script = stencil_.scriptData[index_];
+      const ScriptStencil& script = stencil_.scriptData[index_];
 
       FunctionIndex functionIndex = FunctionIndex(index_);
       return ScriptAndFunction(script, gcOutput_.functions[functionIndex],
