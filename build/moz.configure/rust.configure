@@ -7,8 +7,8 @@
 
 # Rust is required by `rust_compiler` below. We allow_missing here
 # to propagate failures to the better error message there.
-js_option(env='RUSTC', nargs=1, help='Path to the rust compiler')
-js_option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
+option(env='RUSTC', nargs=1, help='Path to the rust compiler')
+option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
 
 rustc = check_prog('_RUSTC', ['rustc'], what='rustc',
                    paths=toolchain_search_path, input='RUSTC',
@@ -435,7 +435,7 @@ set_config('RUST_HOST_TARGET', rust_host_triple)
 set_config('RUSTC_COMMIT', depends(rustc_info)(lambda i: i.commit))
 
 # Rustdoc is required by Rust tests below.
-js_option(env='RUSTDOC', nargs=1, help='Path to the rustdoc program')
+option(env='RUSTDOC', nargs=1, help='Path to the rustdoc program')
 
 rustdoc = check_prog('RUSTDOC', ['rustdoc'], paths=toolchain_search_path,
                      input='RUSTDOC', allow_missing=True)

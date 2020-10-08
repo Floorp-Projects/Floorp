@@ -7,10 +7,10 @@
 imply_option('--enable-release', mozilla_official)
 imply_option('--enable-release', depends_if('MOZ_AUTOMATION')(lambda x: True))
 
-js_option('--enable-release',
-          default=milestone.is_release_or_beta,
-          help='{Build|Do not build} with more conservative, release '
-               'engineering-oriented options.{ This may slow down builds.|}')
+option('--enable-release',
+       default=milestone.is_release_or_beta,
+       help='{Build|Do not build} with more conservative, release '
+            'engineering-oriented options.{ This may slow down builds.|}')
 
 
 @depends('--enable-release')
@@ -25,9 +25,9 @@ set_config('DEVELOPER_OPTIONS', developer_options)
 # Code optimization
 # ==============================================================
 
-js_option('--disable-optimize',
-          nargs='?',
-          help='Disable optimizations via compiler flags')
+option('--disable-optimize',
+       nargs='?',
+       help='Disable optimizations via compiler flags')
 
 
 @depends('--enable-optimize', '--help')
@@ -133,7 +133,7 @@ def host_is_osx(host):
 with only_when(host_is_osx | target_is_osx):
     # MacOS SDK
     # =========
-    js_option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
+    option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
            help='Location of platform SDK to use')
 
     @depends('--with-macos-sdk', host)
@@ -204,15 +204,11 @@ with only_when(target_is_osx):
 
 # Compiler wrappers
 # ==============================================================
-# Normally, we'd use js_option and automatically have those variables
-# propagated to js/src, but things are complicated by possible additional
-# wrappers in CC/CXX, and by other subconfigures that do not handle those
-# options and do need CC/CXX altered.
 option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
        help='Enable compiling with wrappers such as distcc and ccache')
 
-js_option('--with-ccache', env='CCACHE', nargs='?',
-          help='Enable compiling with ccache')
+option('--with-ccache', env='CCACHE', nargs='?',
+       help='Enable compiling with ccache')
 
 
 @depends_if('--with-ccache')
@@ -226,9 +222,9 @@ def ccache(value):
 
 ccache = check_prog('CCACHE', progs=(), input=ccache)
 
-js_option(env='CCACHE_PREFIX',
-          nargs=1,
-          help='Compiler prefix to use when using ccache')
+option(env='CCACHE_PREFIX',
+       nargs=1,
+       help='Compiler prefix to use when using ccache')
 
 ccache_prefix = depends_if('CCACHE_PREFIX')(lambda prefix: prefix[0])
 set_config('CCACHE_PREFIX', ccache_prefix)
@@ -250,8 +246,8 @@ def using_ccache(ccache, ccache_is_sccache):
 def using_sccache(ccache, ccache_is_sccache):
     return ccache and ccache_is_sccache
 
-js_option(env='RUSTC_WRAPPER', nargs=1,
-          help='Wrap rust compilation with given tool')
+option(env='RUSTC_WRAPPER', nargs=1,
+       help='Wrap rust compilation with given tool')
 
 @depends(ccache, ccache_is_sccache, 'RUSTC_WRAPPER')
 @imports(_from='textwrap', _import='dedent')
@@ -338,8 +334,8 @@ set_config('MOZ_HAZARD', hazard_analysis)
 
 # Cross-compilation related things.
 # ==============================================================
-js_option('--with-toolchain-prefix', env='TOOLCHAIN_PREFIX', nargs=1,
-          help='Prefix for the target toolchain')
+option('--with-toolchain-prefix', env='TOOLCHAIN_PREFIX', nargs=1,
+       help='Prefix for the target toolchain')
 
 
 @depends('--with-toolchain-prefix', target, cross_compiling)
@@ -615,9 +611,9 @@ def host_is_windows(host):
         return True
 
 
-js_option('--with-visual-studio-version', nargs=1,
-          choices=('2017',), when=host_is_windows,
-          help='Select a specific Visual Studio version to use')
+option('--with-visual-studio-version', nargs=1,
+       choices=('2017',), when=host_is_windows,
+       help='Select a specific Visual Studio version to use')
 
 
 @depends('--with-visual-studio-version', when=host_is_windows)
@@ -626,8 +622,8 @@ def vs_major_version(value):
         return {'2017': 15}[value[0]]
 
 
-js_option(env='VC_PATH', nargs=1, when=host_is_windows,
-          help='Path to the Microsoft Visual C/C++ compiler')
+option(env='VC_PATH', nargs=1, when=host_is_windows,
+       help='Path to the Microsoft Visual C/C++ compiler')
 
 
 @depends(host, vs_major_version, check_build_environment, 'VC_PATH',
@@ -1298,9 +1294,9 @@ option(env='MOZ_DEBUG_FLAGS',
 imply_option('--enable-debug-symbols',
              depends_if('--enable-debug')(lambda v: v))
 
-js_option('--disable-debug-symbols',
-          nargs='?',
-          help='Disable debug symbols using the given compiler flags')
+option('--disable-debug-symbols',
+       nargs='?',
+       help='Disable debug symbols using the given compiler flags')
 
 set_config('MOZ_DEBUG_SYMBOLS',
            depends_if('--enable-debug-symbols')(lambda _: True))
@@ -1498,7 +1494,7 @@ set_config('PPC_VSX3_FLAGS',
 # ASAN
 # ==============================================================
 
-js_option('--enable-address-sanitizer', help='Enable Address Sanitizer')
+option('--enable-address-sanitizer', help='Enable Address Sanitizer')
 
 
 @depends(when='--enable-address-sanitizer')
@@ -1511,7 +1507,7 @@ add_old_configure_assignment('MOZ_ASAN', asan)
 # MSAN
 # ==============================================================
 
-js_option('--enable-memory-sanitizer', help='Enable Memory Sanitizer')
+option('--enable-memory-sanitizer', help='Enable Memory Sanitizer')
 
 
 @depends(when='--enable-memory-sanitizer')
@@ -1524,7 +1520,7 @@ add_old_configure_assignment('MOZ_MSAN', msan)
 # TSAN
 # ==============================================================
 
-js_option('--enable-thread-sanitizer', help='Enable Thread Sanitizer')
+option('--enable-thread-sanitizer', help='Enable Thread Sanitizer')
 
 
 @depends(when='--enable-thread-sanitizer')
@@ -1537,9 +1533,9 @@ add_old_configure_assignment('MOZ_TSAN', tsan)
 # UBSAN
 # ==============================================================
 
-js_option('--enable-undefined-sanitizer',
-          nargs='*',
-          help='Enable UndefinedBehavior Sanitizer')
+option('--enable-undefined-sanitizer',
+       nargs='*',
+       help='Enable UndefinedBehavior Sanitizer')
 
 @depends_if('--enable-undefined-sanitizer')
 def ubsan(options):
@@ -1561,8 +1557,8 @@ def ubsan(options):
 add_old_configure_assignment('MOZ_UBSAN_CHECKS', ubsan)
 
 
-js_option('--enable-signed-overflow-sanitizer',
-          help='Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts)')
+option('--enable-signed-overflow-sanitizer',
+       help='Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts)')
 
 
 @depends(when='--enable-signed-overflow-sanitizer')
@@ -1573,8 +1569,8 @@ def ub_signed_overflow_san():
 add_old_configure_assignment('MOZ_SIGNED_OVERFLOW_SANITIZE', ub_signed_overflow_san)
 
 
-js_option('--enable-unsigned-overflow-sanitizer',
-          help='Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts)')
+option('--enable-unsigned-overflow-sanitizer',
+       help='Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts)')
 
 
 @depends(when='--enable-unsigned-overflow-sanitizer')
@@ -1724,8 +1720,8 @@ def frame_pointer_default(optimize, debug, target, msan, asan, ubsan):
         (target.os == 'WINNT' and target.cpu in ('x86', 'aarch64')))
 
 
-js_option('--enable-frame-pointers', default=frame_pointer_default,
-          help='{Enable|Disable} frame pointers')
+option('--enable-frame-pointers', default=frame_pointer_default,
+       help='{Enable|Disable} frame pointers')
 
 
 @depends('--enable-frame-pointers', frame_pointer_flags)
@@ -1811,8 +1807,8 @@ add_old_configure_assignment('YASM', have_yasm)
 # Code Coverage
 # ==============================================================
 
-js_option('--enable-coverage', env='MOZ_CODE_COVERAGE',
-          help='Enable code coverage')
+option('--enable-coverage', env='MOZ_CODE_COVERAGE',
+       help='Enable code coverage')
 
 
 @depends('--enable-coverage')
@@ -1869,9 +1865,9 @@ set_config('RUSTFLAGS', depends('RUSTFLAGS')(lambda flags: flags))
 # Rust compiler flags
 # ==============================================================
 
-js_option(env='RUSTC_OPT_LEVEL',
-          nargs=1,
-          help='Rust compiler optimization level (-C opt-level=%s)')
+option(env='RUSTC_OPT_LEVEL',
+       nargs=1,
+       help='Rust compiler optimization level (-C opt-level=%s)')
 
 # --enable-release kicks in full optimizations.
 imply_option('RUSTC_OPT_LEVEL', '2', when='--enable-release')
@@ -1933,8 +1929,8 @@ def rust_compile_flags(opt_level, debug_rust, debug_symbols, frame_pointers):
 # ==============================================================
 
 
-js_option('--disable-cargo-incremental',
-          help='Disable incremental rust compilation.')
+option('--disable-cargo-incremental',
+       help='Disable incremental rust compilation.')
 
 @depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION', code_coverage,
          '--disable-cargo-incremental', using_sccache, 'RUSTC_WRAPPER')
@@ -2025,10 +2021,10 @@ def enable_linker_default(target, developer_options):
         return 'lld' if developer_options else 'bfd'
 
 
-js_option('--enable-linker', nargs=1,
-          help='Select the linker {bfd, gold, ld64, lld, lld-*}{|}',
-          default=enable_linker_default,
-          when=is_linker_option_enabled)
+option('--enable-linker', nargs=1,
+       help='Select the linker {bfd, gold, ld64, lld, lld-*}{|}',
+       default=enable_linker_default,
+       when=is_linker_option_enabled)
 
 
 # No-op to enable depending on --enable-linker from default_elfhack in
@@ -2178,7 +2174,7 @@ add_old_configure_assignment('GCC_USE_GNU_LD', gcc_use_gnu_ld)
 # Assembler detection
 # ==============================================================
 
-js_option(env='AS', nargs=1, help='Path to the assembler')
+option(env='AS', nargs=1, help='Path to the assembler')
 
 @depends(target, c_compiler)
 def as_info(target, c_compiler):
@@ -2280,8 +2276,8 @@ set_config('ASOUTOPTION', as_outoption)
 # clang plugin handling
 # ==============================================================
 
-js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
-          help="Enable building with the Clang plugin (gecko specific static analyzers)")
+option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
+       help="Enable building with the Clang plugin (gecko specific static analyzers)")
 
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
                              depends_if('--enable-clang-plugin')(lambda _: True))
@@ -2314,8 +2310,8 @@ llvm_config = check_prog('LLVM_CONFIG', llvm_config, what='llvm-config',
 add_old_configure_assignment('LLVM_CONFIG', llvm_config)
 
 
-js_option('--enable-clang-plugin-alpha', env='ENABLE_CLANG_PLUGIN_ALPHA',
-            help='Enable static analysis with clang-plugin alpha checks.')
+option('--enable-clang-plugin-alpha', env='ENABLE_CLANG_PLUGIN_ALPHA',
+       help='Enable static analysis with clang-plugin alpha checks.')
 
 @depends('--enable-clang-plugin', '--enable-clang-plugin-alpha')
 def check_clang_plugin_alpha(enable_clang_plugin, enable_clang_plugin_alpha):
@@ -2327,8 +2323,8 @@ def check_clang_plugin_alpha(enable_clang_plugin, enable_clang_plugin_alpha):
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
 set_define('MOZ_CLANG_PLUGIN_ALPHA', check_clang_plugin_alpha)
 
-js_option('--enable-mozsearch-plugin', env='ENABLE_MOZSEARCH_PLUGIN',
-          help="Enable building with the mozsearch indexer plugin")
+option('--enable-mozsearch-plugin', env='ENABLE_MOZSEARCH_PLUGIN',
+       help="Enable building with the mozsearch indexer plugin")
 
 add_old_configure_assignment('ENABLE_MOZSEARCH_PLUGIN',
                              depends_if('--enable-mozsearch-plugin')(lambda _: True))
@@ -2336,8 +2332,8 @@ add_old_configure_assignment('ENABLE_MOZSEARCH_PLUGIN',
 # Libstdc++ compatibility hacks
 # ==============================================================
 #
-js_option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
-          help='Enable compatibility with older libstdc++')
+option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
+       help='Enable compatibility with older libstdc++')
 
 
 @template
@@ -2374,7 +2370,7 @@ add_gcc_flag(
 
 # Support various fuzzing options
 # ==============================================================
-js_option('--enable-fuzzing', help='Enable fuzzing support')
+option('--enable-fuzzing', help='Enable fuzzing support')
 
 @depends('--enable-fuzzing')
 def enable_fuzzing(value):
@@ -2538,6 +2534,6 @@ add_old_configure_assignment('AR', ar)
 set_config('AR_FLAGS', ar_config.flags)
 
 
-js_option('--enable-cpp-rtti', help='Enable C++ RTTI')
+option('--enable-cpp-rtti', help='Enable C++ RTTI')
 
 add_old_configure_assignment('_MOZ_USE_RTTI', '1', when='--enable-cpp-rtti')
