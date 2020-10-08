@@ -544,6 +544,26 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
   prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
+#ifdef MOZ_WAYLAND
+  static bool inWayland = gdk_display_get_default() &&
+                          !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#else
+  static bool inWayland = false;
+#endif
+  if (inWayland) {
+    // If prefSize it is not a whole number in css pixels we need round it up
+    // to avoid reflow of the tooltips/popups and putting the text on two lines
+    // (usually happens with 200% scale factor and font scale factor <> 1)
+    // because GTK thrown away the decimals.
+    int32_t appPerCSS = AppUnitsPerCSSPixel();
+    if (prefSize.width % appPerCSS > 0) {
+      prefSize.width += appPerCSS;
+    }
+    if (prefSize.height % appPerCSS > 0) {
+      prefSize.height += appPerCSS;
+    }
+  }
+
   bool sizeChanged = (mPrefSize != prefSize);
   // if the size changed then set the bounds to be the preferred size
   if (sizeChanged) {
