@@ -65,7 +65,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
     "scriptworker-beetmover",
     schema={
         Required("action"): text_type,
-        Required("version"): text_type,
+        Required("version"): str,
         Required("artifact-map"): [{
             Required("paths"): {
                 Any(text_type): {
@@ -83,7 +83,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
         }],
     },
 )
-def build_scriptworker_signing_payload(config, task, task_def):
+def build_scriptworker_beetmover_payload(config, task, task_def):
     worker = task["worker"]
 
     task_def["tags"]["worker-implementation"] = "scriptworker"
@@ -98,6 +98,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
         "artifactMap": worker["artifact-map"],
         "releaseProperties": {"appName": worker.pop("beetmover-application-name")},
         "upstreamArtifacts": worker["upstream-artifacts"],
+        "version": worker["version"]
     }
 
     scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
