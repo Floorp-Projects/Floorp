@@ -414,14 +414,7 @@ def vcs_checkout(source_repo, dest, store_path,
         print('revision is not specified for checkout')
         sys.exit(1)
 
-    if IS_MACOSX:
-        release = platform.mac_ver()
-        versionNums = release[0].split('.')[:2]
-        os_version = "%s.%s" % (versionNums[0], versionNums[1])
-        hg_bin = '/tools/python27-mercurial/bin/hg'
-        if os_version == "10.14":
-            hg_bin = 'hg'
-    elif IS_POSIX:
+    if IS_MACOSX or IS_POSIX:
         hg_bin = 'hg'
     elif IS_WINDOWS:
         # This is where OCC installs it in the AMIs.
