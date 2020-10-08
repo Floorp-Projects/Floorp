@@ -612,6 +612,10 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
 
 void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
     SessionHistoryInfo* aInfo) {
+  if (!mActiveEntry) {
+    return;
+  }
+
   mActiveEntry->SetInfo(aInfo);
   // Notify children of the update
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
