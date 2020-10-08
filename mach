@@ -61,7 +61,7 @@ run_py() {
     # Try to run a specific Python interpreter.
     py_executable="$1"
     shift
-    if which "$py_executable" > /dev/null
+    if command -v "$py_executable" > /dev/null
     then
         exec "$py_executable" "$0" "$@"
     else
