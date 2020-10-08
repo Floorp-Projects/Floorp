@@ -6,13 +6,106 @@ package mozilla.components.service.fxa
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.observer.ObserverRegistry
+import java.lang.ref.WeakReference
 
 const val FXA_STATE_PREFS_KEY = "fxaAppState"
 const val FXA_STATE_KEY = "fxaState"
+
+/**
+ * Represents state of our account on disk - is it new, or restored?
+ */
+internal sealed class AccountOnDisk : WithAccount {
+    data class Restored(val account: OAuthAccount) : AccountOnDisk() {
+        override fun account() = account
+    }
+    data class New(val account: OAuthAccount) : AccountOnDisk() {
+        override fun account() = account
+    }
+}
+
+internal interface WithAccount {
+    fun account(): OAuthAccount
+}
+
+/**
+ * Knows how to read account from disk (or creating a new instance if there's no account),
+ * registering necessary watchers.
+ */
+open class StorageWrapper(
+    private val accountManager: FxaAccountManager,
+    accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
+    private val serverConfig: ServerConfig,
+    private val crashReporter: CrashReporting? = null
+) {
+    private class PersistenceCallback(
+        private val accountManager: WeakReference<FxaAccountManager>
+    ) : StatePersistenceCallback {
+        private val logger = Logger("FxaStatePersistenceCallback")
+
+        override fun persist(data: String) {
+            val storage = accountManager.get()?.getAccountStorage()
+            logger.debug("Persisting account state into $storage")
+            storage?.write(data)
+        }
+    }
+
+    private val statePersistenceCallback = PersistenceCallback(WeakReference(accountManager))
+    private val accountEventsIntegration = AccountEventsIntegration(accountEventObserverRegistry)
+
+    internal fun account(): AccountOnDisk {
+        return try {
+            when (val account = accountManager.getAccountStorage().read()) {
+                null -> AccountOnDisk.New(obtainAccount())
+                else -> AccountOnDisk.Restored(account)
+            }
+        } catch (e: FxaPanicException) {
+            // Don't swallow panics from the underlying library.
+            throw e
+        } catch (e: FxaException) {
+            // Locally corrupt accounts are simply treated as 'absent'.
+            AccountOnDisk.New(obtainAccount())
+        }.also {
+            watchAccount(it.account())
+        }
+    }
+
+    private fun watchAccount(account: OAuthAccount) {
+        account.registerPersistenceCallback(statePersistenceCallback)
+        account.deviceConstellation().register(accountEventsIntegration)
+    }
+
+    /**
+     * Exists strictly for testing purposes, allowing tests to specify their own implementation of [OAuthAccount].
+     */
+    @VisibleForTesting
+    open fun obtainAccount(): OAuthAccount = FirefoxAccount(serverConfig, crashReporter)
+}
+
+/**
+ * In the future, this could be an internal account-related events processing layer.
+ * E.g., once we grow events such as "please logout".
+ * For now, we just pass everything downstream as-is.
+ */
+internal class AccountEventsIntegration(
+    private val listenerRegistry: ObserverRegistry<AccountEventsObserver>
+) : AccountEventsObserver {
+    private val logger = Logger("AccountEventsIntegration")
+
+    override fun onEvents(events: List<AccountEvent>) {
+        logger.info("Received events, notifying listeners")
+        listenerRegistry.notifyObservers { onEvents(events) }
+    }
+}
 
 internal interface AccountStorage {
     @Throws(Exception::class)

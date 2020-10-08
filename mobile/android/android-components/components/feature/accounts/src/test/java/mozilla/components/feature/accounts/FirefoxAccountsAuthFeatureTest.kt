@@ -22,17 +22,33 @@ import org.mockito.Mockito.`when`
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.Server
+import mozilla.components.service.fxa.StorageWrapper
+import mozilla.components.support.base.observer.ObserverRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.annotation.Config
 import kotlin.coroutines.CoroutineContext
+
+internal class TestableStorageWrapper(
+    manager: FxaAccountManager,
+    accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
+    serverConfig: ServerConfig,
+    private val block: () -> OAuthAccount = {
+        val account: OAuthAccount = mock()
+        `when`(account.deviceConstellation()).thenReturn(mock())
+        account
+    }
+) : StorageWrapper(manager, accountEventObserverRegistry, serverConfig) {
+    override fun obtainAccount(): OAuthAccount = block()
+}
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -43,10 +59,11 @@ class TestableFxaAccountManager(
     config: ServerConfig,
     scopes: Set<String>,
     coroutineContext: CoroutineContext,
-    val block: () -> OAuthAccount = { mock() }
+    block: () -> OAuthAccount = { mock() }
 ) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.MOBILE, setOf()), null, scopes, null, coroutineContext) {
-    override fun obtainAccount(config: ServerConfig): OAuthAccount {
-        return block()
+    private val testableStorageWrapper = TestableStorageWrapper(this, accountEventObserverRegistry, serverConfig, block)
+    override fun getStorageWrapper(): StorageWrapper {
+        return testableStorageWrapper
     }
 }
 

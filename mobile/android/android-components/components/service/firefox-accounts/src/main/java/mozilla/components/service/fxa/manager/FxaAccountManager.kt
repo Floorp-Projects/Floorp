@@ -18,21 +18,16 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
-import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
-import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.service.fxa.AccountManagerException
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
-import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
-import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.FxaPanicException
 import mozilla.components.service.fxa.SecureAbove22AccountStorage
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SharedPrefAccountStorage
@@ -49,7 +44,9 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 import mozilla.components.service.fxa.sync.clearSyncState
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.service.fxa.AccountOnDisk
 import mozilla.components.service.fxa.Result
+import mozilla.components.service.fxa.StorageWrapper
 import mozilla.components.service.fxa.asAuthFlowUrl
 import mozilla.components.service.fxa.withRetries
 import mozilla.components.service.fxa.withServiceRetries
@@ -60,7 +57,6 @@ import org.json.JSONObject
 import java.io.Closeable
 import java.lang.Exception
 import java.lang.IllegalArgumentException
-import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
@@ -125,7 +121,7 @@ enum class MigrationResult {
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 open class FxaAccountManager(
     private val context: Context,
-    private val serverConfig: ServerConfig,
+    @VisibleForTesting val serverConfig: ServerConfig,
     private val deviceConfig: DeviceConfig,
     private val syncConfig: SyncConfig?,
     private val applicationScopes: Set<String> = emptySet(),
@@ -143,7 +139,7 @@ open class FxaAccountManager(
     private interface OAuthObserver {
         /**
          * Account manager is requesting for an OAUTH flow to begin.
-         * @param authUrl Starting point for the OAUTH flow.
+         * @param authFlowUrl Starting point for the OAUTH flow.
          */
         fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl)
 
@@ -162,26 +158,13 @@ open class FxaAccountManager(
         GlobalAccountManager.setInstance(this)
     }
 
-    private class FxaStatePersistenceCallback(
-        private val accountManager: WeakReference<FxaAccountManager>
-    ) : StatePersistenceCallback {
-        private val logger = Logger("FxaStatePersistenceCallback")
+    private val accountOnDisk by lazy { getStorageWrapper().account() }
+    private val account by lazy { accountOnDisk.account() }
 
-        override fun persist(data: String) {
-            val manager = accountManager.get()
-            logger.debug("Persisting account state into ${manager?.getAccountStorage()}")
-            manager?.getAccountStorage()?.write(data)
-        }
-    }
-
-    private lateinit var statePersistenceCallback: FxaStatePersistenceCallback
-
-    // 'account' is initialized during processing of an 'Init' event.
     // Note on threading: we use a single-threaded executor, so there's no concurrent access possible.
     // However, that executor doesn't guarantee that it'll always use the same thread, and so vars
     // are marked as volatile for across-thread visibility. Similarly, event queue uses a concurrent
     // list, although that's probably an overkill.
-    @Volatile private lateinit var account: OAuthAccount
     @Volatile private var profile: Profile? = null
 
     // We'd like to persist this state, so that we can short-circuit transition to AuthenticationProblem on
@@ -190,9 +173,8 @@ open class FxaAccountManager(
     @Volatile private var state: State = State.Idle(AccountState.NotAuthenticated)
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
-    private val accountEventObserverRegistry = ObserverRegistry<AccountEventsObserver>()
-    private val accountEventsIntegration = AccountEventsIntegration(accountEventObserverRegistry)
-
+    @VisibleForTesting
+    val accountEventObserverRegistry = ObserverRegistry<AccountEventsObserver>()
     private val syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
 
     // We always obtain a "profile" scope, as that's assumed to be needed for any application integration.
@@ -335,7 +317,6 @@ open class FxaAccountManager(
      * Call this after registering your observers, and before interacting with this class.
      */
     suspend fun start() = withContext(coroutineContext) {
-        statePersistenceCallback = FxaStatePersistenceCallback(WeakReference(this@FxaAccountManager))
         processQueue(Event.Account.Start)
     }
 
@@ -565,30 +546,14 @@ open class FxaAccountManager(
         via: Event
     ): Event? = when (forState.progressState) {
         ProgressState.Initializing -> {
-            // Locally corrupt accounts are simply treated as 'absent'.
-            val hydratedAccount = try {
-                getAccountStorage().read()
-            } catch (e: FxaPanicException) {
-                // Don't swallow panics from the underlying library.
-                throw e
-            } catch (e: FxaException) {
-                logger.error("Failed to load saved account. Re-initializing...", e)
-                null
-            }
-
-            if (hydratedAccount == null) {
-                account = createAccount(serverConfig)
-                Event.Progress.AccountNotFound
-            } else {
-                account = hydratedAccount
-                account.registerPersistenceCallback(statePersistenceCallback)
-                account.deviceConstellation().register(accountEventsIntegration)
-                // We may have attempted a migration previously, which failed in a way that allows
-                // us to retry it (e.g. a migration could have hit
-                when (account.isInMigrationState()) {
-                    null -> Event.Progress.AccountRestored
-                    InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.Progress.IncompleteMigration(true)
-                    InFlightMigrationState.COPY_SESSION_TOKEN -> Event.Progress.IncompleteMigration(false)
+            when (accountOnDisk) {
+                is AccountOnDisk.New -> Event.Progress.AccountNotFound
+                is AccountOnDisk.Restored -> {
+                    when (account.isInMigrationState()) {
+                        null -> Event.Progress.AccountRestored
+                        InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.Progress.IncompleteMigration(true)
+                        InFlightMigrationState.COPY_SESSION_TOKEN -> Event.Progress.IncompleteMigration(false)
+                    }
                 }
             }
         }
@@ -810,7 +775,6 @@ open class FxaAccountManager(
 
         // Clean up resources.
         profile = null
-        account.close()
         // Delete persisted state.
         getAccountStorage().clear()
         // Even though we might not have Sync enabled, clear out sync-related storage
@@ -819,10 +783,6 @@ open class FxaAccountManager(
         SyncAuthInfoCache(context).clear()
         SyncEnginesStorage(context).clear()
         clearSyncState(context)
-        // Re-initialize account.
-        // In theory, .disconnect call above should ensure that we don't need to re-initialize the account.
-        // See https://github.com/mozilla-mobile/android-components/issues/8195
-        account = createAccount(serverConfig)
     }
 
     private suspend fun maybeUpdateSyncAuthInfoCache() {
@@ -900,19 +860,12 @@ open class FxaAccountManager(
         }
     }
 
-    private fun createAccount(config: ServerConfig): OAuthAccount {
-        return obtainAccount(config).also {
-            it.registerPersistenceCallback(statePersistenceCallback)
-            it.deviceConstellation().register(accountEventsIntegration)
-        }
-    }
-
     /**
      * Exists strictly for testing purposes, allowing tests to specify their own implementation of [OAuthAccount].
      */
     @VisibleForTesting
-    open fun obtainAccount(config: ServerConfig): OAuthAccount {
-        return FirefoxAccount(config, crashReporter)
+    open fun getStorageWrapper(): StorageWrapper {
+        return StorageWrapper(this, accountEventObserverRegistry, serverConfig, crashReporter)
     }
 
     @VisibleForTesting
@@ -920,28 +873,11 @@ open class FxaAccountManager(
         return WorkManagerSyncManager(context, config)
     }
 
-    @VisibleForTesting
     internal open fun getAccountStorage(): AccountStorage {
         return if (deviceConfig.secureStateAtRest) {
             SecureAbove22AccountStorage(context, crashReporter)
         } else {
             SharedPrefAccountStorage(context, crashReporter)
-        }
-    }
-
-    /**
-     * In the future, this could be an internal account-related events processing layer.
-     * E.g., once we grow events such as "please logout".
-     * For now, we just pass everything downstream as-is.
-     */
-    private class AccountEventsIntegration(
-        private val listenerRegistry: ObserverRegistry<AccountEventsObserver>
-    ) : AccountEventsObserver {
-        private val logger = Logger("AccountEventsIntegration")
-
-        override fun onEvents(events: List<AccountEvent>) {
-            logger.info("Received events, notifying listeners")
-            listenerRegistry.notifyObservers { onEvents(events) }
         }
     }
 

@@ -35,6 +35,7 @@ import mozilla.components.service.fxa.sync.SyncDispatcher
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -67,6 +68,19 @@ import java.lang.Exception
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
+internal class TestableStorageWrapper(
+    manager: FxaAccountManager,
+    accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
+    serverConfig: ServerConfig,
+    private val block: () -> OAuthAccount = {
+        val account: OAuthAccount = mock()
+        `when`(account.deviceConstellation()).thenReturn(mock())
+        account
+    }
+) : StorageWrapper(manager, accountEventObserverRegistry, serverConfig) {
+    override fun obtainAccount(): OAuthAccount = block()
+}
+
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
 // within the test environment) we can't use fxaclient supplied implementation of FirefoxAccountShaped.
@@ -79,14 +93,15 @@ internal open class TestableFxaAccountManager(
     syncConfig: SyncConfig? = null,
     coroutineContext: CoroutineContext,
     crashReporter: CrashReporting? = null,
-    private val block: () -> OAuthAccount = {
+    block: () -> OAuthAccount = {
         val account: OAuthAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
     }
 ) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.UNKNOWN, capabilities), syncConfig, emptySet(), crashReporter, coroutineContext) {
-    override fun obtainAccount(config: ServerConfig): OAuthAccount {
-        return block()
+    private val testableStorageWrapper = TestableStorageWrapper(this, accountEventObserverRegistry, serverConfig, block)
+    override fun getStorageWrapper(): StorageWrapper {
+        return testableStorageWrapper
     }
 
     override fun getAccountStorage(): AccountStorage {
