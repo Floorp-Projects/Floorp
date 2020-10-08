@@ -356,6 +356,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Уведомления</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Собственная коллекция дополнений</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Отмена</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Имя коллекции</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Владелец коллекции (ID пользователя)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Коллекция дополнений была изменена. Закрываем приложение, чтобы применить изменения…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронизировать</string>
@@ -657,6 +671,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Удалить %1$d элемент(а)</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Сегодня</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Вчера</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Последние 24 часа</string>
     <!-- Text for the header that groups the history the past 7 days -->

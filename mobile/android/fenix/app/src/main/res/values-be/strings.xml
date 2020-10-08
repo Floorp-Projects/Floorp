@@ -749,6 +749,8 @@
     <string name="bookmark_deletion_snackbar_message">%1$s выдалена</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Закладкі выдалены</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Выдаленне абраных папак</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">АДМЯНІЦЬ</string>
 
@@ -1017,6 +1019,8 @@
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Гэта выдаліць усе дадзеныя вашага аглядання.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s выдаліць выбраныя дадзеныя аглядання.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Адмена</string>
     <!-- Text for the allow button for the data deletion dialog -->

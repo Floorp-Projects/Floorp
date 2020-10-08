@@ -1035,6 +1035,10 @@
     <string name="onboarding_tracking_protection_strict_button">Ҷиддӣ (тавсия дода мешавад)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ҷиддӣ</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Интихоб кунед</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Реҷаи тамошои махфӣ</string>
     <!-- text for the private browsing onboarding card description
@@ -1074,6 +1078,8 @@
     <string name="sync_sent_tab_error_snackbar">Ирсол ғайриимкон аст</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">АЗ НАВ КӮШИШ КАРДАН</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Дар компютери худ Firefox-ро кушоед ва ба <b>https://firefox.com/pair</b> гузаред]]></string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Ворид шудан ба воситаи камера</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1255,6 +1261,8 @@
     <string name="saved_login_reveal_password">Нишон додани ниҳонвожа</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Пинҳон кардани ниҳонвожа</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Воридшавиҳо ва ниҳонвожаҳои худро муҳофизат намоед</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Дертар</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1268,6 +1276,9 @@
 
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Истифодашудаи охирин</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Мураттаб кардани менюи воридшавиҳо</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Илова кардани низоми ҷустуҷӯӣ</string>
@@ -1288,11 +1299,19 @@
     <string name="search_add_custom_engine_name_hint">Ном</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Сатри ҷустуҷӯ барои истифода</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Сатри дархостро бо “%s” иваз намоед. Масалан:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Маълумоти бештар</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Тафсилот дар бораи низоми ҷустуҷӯии фармоишӣ</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Пайванди «Маълумоти бештар»</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Номи низоми ҷустуҷӯиро ворид намоед</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Низоми ҷустуҷӯӣ бо номи “%s” аллакай вуҷуд дорад.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Сатри ҷустуҷӯро ворид кунед</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
@@ -1353,6 +1372,12 @@
     <string name="dialog_delete_positive">Нест кардан</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Имконоти воридшавӣ</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Майдони матни таҳриршаванда барои нишонии сомонаи воридшавӣ.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Майдони матни таҳриршаванда барои номи корбарии воридшавӣ.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Майдони матни таҳриршаванда барои ниҳонвожаи воридшавӣ.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Нигоҳ доштани тағйирот барои воридшавӣ</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1378,6 +1403,10 @@
     <string name="synced_tabs_reauth">Лутфан, санҷиши ҳаққониятро аз нав такрор кунед</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Лутфан ҳамоҳангсозии варақаҳоро фаъол кунед.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Шумо дар дастгоҳҳои дигари худ дар Firefox ягон варақаи кушодашуда надоред.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Дидани рӯйхати варақаҳо аз дастгоҳҳои дигар.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Барои ҳамоҳангсозӣ ворид шавед</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
