@@ -11,7 +11,11 @@ from os.path import expanduser
 import sentry_sdk
 from mozboot.util import get_state_dir
 from mach.telemetry import is_telemetry_enabled
-from mozversioncontrol import get_repository_object, InvalidRepoPath
+from mozversioncontrol import (
+    get_repository_object,
+    InvalidRepoPath,
+    MissingVCSTool,
+)
 from six import string_types
 
 # The following developers frequently modify mach code, and testing will commonly cause
@@ -58,7 +62,7 @@ def register_sentry(argv, settings, topsrcdir=None):
             email = repo.get_user_email()
             if email in _DEVELOPER_BLOCKLIST:
                 return NoopErrorReporter()
-        except InvalidRepoPath:
+        except (InvalidRepoPath, MissingVCSTool):
             pass
 
     sentry_sdk.init(_SENTRY_DSN,
