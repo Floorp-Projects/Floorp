@@ -121,8 +121,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   LogicalSides GetLogicalSkipSides(
       const ReflowInput* aReflowInput = nullptr) const final;
 
-  nsresult GetIntrinsicImageSize(nsSize& aSize);
-
   static void ReleaseGlobals() {
     if (gIconLoad) {
       gIconLoad->Shutdown();
