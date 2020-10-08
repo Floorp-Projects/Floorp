@@ -311,6 +311,10 @@ static inline D2D1_PRIMITIVE_BLEND D2DPrimitiveBlendMode(CompositionOp aOp) {
 }
 
 static inline bool IsPatternSupportedByD2D(const Pattern& aPattern) {
+  if (aPattern.GetType() == PatternType::CONIC_GRADIENT) {
+    return false;
+  }
+
   if (aPattern.GetType() != PatternType::RADIAL_GRADIENT) {
     return true;
   }

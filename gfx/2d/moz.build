@@ -80,6 +80,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'UnscaledFontGDI.h',
     ]
     SOURCES += [
+        'ConicGradientEffectD2D1.cpp',
         'DrawTargetD2D1.cpp',
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
