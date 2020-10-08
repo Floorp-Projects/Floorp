@@ -77,7 +77,7 @@ jobs:
                 - linux64-geckodriver
         run:
             command: >-
-                virtualenv/virtualenv.py -p python3.7 . &&
+                python3.7 virtualenv/virtualenv.py . &&
                 bin/python3.7 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin
@@ -142,7 +142,7 @@ jobs:
             run-as-root: true
             command: >-
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
@@ -176,7 +176,7 @@ jobs:
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.armeabi-v7a/artifacts/public/build/armeabi-v7a/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
@@ -209,7 +209,7 @@ jobs:
             command: >-
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-api-16-release-opt/artifacts/public/build/target.apk &&
                 adb install -r target.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
@@ -243,7 +243,7 @@ jobs:
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.arm64-v8a/artifacts/public/build/arm64-v8a/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
@@ -277,7 +277,7 @@ jobs:
             run-as-root: true
             command: >-
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
@@ -311,7 +311,7 @@ jobs:
                 curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-aarch64-release-opt/artifacts/public/build/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
