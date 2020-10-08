@@ -107,7 +107,10 @@ class OpusTrackEncoder : public AudioTrackEncoder {
    */
   nsTArray<AudioDataValue> mResampledLeftover;
 
-  media::TimeUnit mOutputTimeStamp;
+  /**
+   * Number of audio frames encoded, in kOpusSamplingRate.
+   */
+  uint64_t mNumOutputFrames;
 };
 
 }  // namespace mozilla
