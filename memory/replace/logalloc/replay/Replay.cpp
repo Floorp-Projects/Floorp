@@ -21,6 +21,7 @@ typedef intptr_t ssize_t;
 #include <cstring>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MathAlgorithms.h"
 #include "FdPrintf.h"
 
 static void die(const char* message) {
@@ -549,11 +550,80 @@ class Replay {
     FdPrintf(mStdErr, "%5s %8zu %9zu %6zu%%\n", "huge", huge_slop, huge_used,
              percent(huge_slop, huge_used));
 
+    unsigned last_size = 0;
+    for (auto& bin : bin_stats) {
+      if (bin.size == 0) {
+        break;
+      }
+
+      if (bin.size <= 16) {
+        // 1 byte buckets.
+        print_distribution(bin.size, last_size, 1);
+      } else if (bin.size <= stats.quantum_max) {
+        // 4 buckets, (4 bytes per bucket with a 16 byte quantum).
+        print_distribution(bin.size, last_size, stats.quantum / 4);
+      } else {
+        // 16 buckets.
+        print_distribution(bin.size, last_size, (bin.size - last_size) / 16);
+      }
+
+      last_size = bin.size;
+    }
+
+    // 16 buckets.
+    print_distribution(stats.page_size, last_size,
+                       (stats.page_size - last_size) / 16);
+
+    // Buckets are 1/4 of the page size (12 buckets).
+    print_distribution(stats.page_size * 4, stats.page_size,
+                       stats.page_size / 4);
+
     /* TODO: Add more data, like actual RSS as measured by OS, but compensated
      * for the replay internal data. */
   }
 
  private:
+  const size_t MAX_NUM_BUCKETS = 16;
+
+  /*
+   * Create and print frequency distributions of memory requests.
+   */
+  void print_distribution(size_t size, size_t next_smallest,
+                          size_t bucket_size) {
+    unsigned shift = mozilla::CeilingLog2(bucket_size);
+
+    // The number of slots.
+    const unsigned array_slots = (size - next_smallest) >> shift;
+
+    // The translation to turn a slot index into a memory request size.
+    const unsigned array_offset = 1 + next_smallest;
+    const size_t array_offset_add = (1 << shift) + next_smallest;
+
+    // Avoid a variable length array.
+    MOZ_RELEASE_ASSERT(array_slots <= MAX_NUM_BUCKETS);
+    size_t requests[MAX_NUM_BUCKETS];
+    memset(requests, 0, sizeof(size_t) * array_slots);
+    size_t total_requests = 0;
+
+    for (size_t slot_id = 0; slot_id < mNumUsedSlots; slot_id++) {
+      MemSlot& slot = mSlots[slot_id];
+      if (slot.mPtr && slot.mRequest > next_smallest && slot.mRequest <= size) {
+        requests[(slot.mRequest - array_offset) >> shift]++;
+        total_requests++;
+      }
+    }
+
+    FdPrintf(mStdErr, "\n%zu-bin Distribution:\n", size);
+    FdPrintf(mStdErr, "   request   :  count percent\n");
+    size_t range_start = next_smallest + 1;
+    for (size_t j = 0; j < array_slots; j++) {
+      size_t range_end = (j << shift) + array_offset_add;
+      FdPrintf(mStdErr, "%5zu - %5zu: %6zu %6zu%%\n", range_start, range_end,
+               requests[j], percent(requests[j], total_requests));
+      range_start = range_end + 1;
+    }
+  }
+
   static size_t percent(size_t a, size_t b) {
     if (!b) {
       return 0;
