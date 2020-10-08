@@ -2419,14 +2419,14 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     if (stub->stubInfo() != stubInfo) {
       continue;
     }
-    bool updated = false;
-    if (!writer.stubDataEqualsMaybeUpdate(stub->stubDataStart(), &updated)) {
+    if (!writer.stubDataEquals(stub->stubDataStart())) {
       continue;
     }
-    if (updated || (typeCheckInfo && typeCheckInfo->needsTypeBarrier())) {
-      // We updated a stub or have a stub that requires property type
-      // checks. In this case the stub will likely handle more cases in
-      // the future and we shouldn't deoptimize.
+    if (typeCheckInfo && typeCheckInfo->needsTypeBarrier()) {
+      // We have a stub that requires property type checks. In this case the
+      // stub will likely handle more cases in the future and we shouldn't
+      // deoptimize.
+      MOZ_ASSERT(IsTypeInferenceEnabled());
       *attached = true;
     }
     return;

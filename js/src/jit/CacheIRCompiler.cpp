@@ -1210,19 +1210,10 @@ template void jit::TraceCacheIRStub(JSTracer* trc, ICStub* stub,
 template void jit::TraceCacheIRStub(JSTracer* trc, IonICStub* stub,
                                     const CacheIRStubInfo* stubInfo);
 
-bool CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData,
-                                              bool* updated) const {
+bool CacheIRWriter::stubDataEquals(const uint8_t* stubData) const {
   MOZ_ASSERT(!failed());
 
-  *updated = false;
   const uintptr_t* stubDataWords = reinterpret_cast<const uintptr_t*>(stubData);
-
-  // If DOMExpandoGeneration fields are different but all other stub fields
-  // are exactly the same, we overwrite the old stub data instead of attaching
-  // a new stub, as the old stub is never going to succeed. This works because
-  // even Ion stubs read the DOMExpandoGeneration field from the stub instead
-  // of baking it in.
-  bool expandoGenerationIsDifferent = false;
 
   for (const StubField& field : stubFields_) {
     if (field.sizeIsWord()) {
@@ -1234,17 +1225,9 @@ bool CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData,
     }
 
     if (field.asInt64() != *reinterpret_cast<const uint64_t*>(stubDataWords)) {
-      if (field.type() != StubField::Type::DOMExpandoGeneration) {
-        return false;
-      }
-      expandoGenerationIsDifferent = true;
+      return false;
     }
     stubDataWords += sizeof(uint64_t) / sizeof(uintptr_t);
-  }
-
-  if (expandoGenerationIsDifferent) {
-    copyStubData(stubData);
-    *updated = true;
   }
 
   return true;
