@@ -11,6 +11,7 @@
 #else
 #  include <unistd.h>
 #endif
+#include <cmath>
 #include <cstring>
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
@@ -35,12 +36,57 @@ class CheckedIncrement {
     return mValue;
   }
 
+  void advance(T end) {
+    // Only makes sense if T is a pointer type.
+    size_t diff = end - mValue;
+    if (diff > mMaxIncrement) {
+      MOZ_CRASH("overflow detected");
+    }
+    mMaxIncrement -= diff;
+    mValue = end;
+  };
+
+  void rewind(T pos) {
+    size_t diff = mValue - pos;
+    mMaxIncrement += diff;
+    mValue = pos;
+  }
+
   operator T() { return mValue; }
+  T value() { return mValue; }
 
  private:
   T mValue;
   size_t mMaxIncrement;
 };
+
+template <typename T>
+static unsigned NumDigits(T n) {
+  if (n < 1) {
+    // We want one digit, it will be 0.
+    return 1;
+  }
+
+  double l = log10(n);
+  double cl = ceil(l);
+  return l == cl ? unsigned(cl) + 1 : unsigned(cl);
+}
+
+static void LeftPad(CheckedIncrement<char*>& b, size_t pad) {
+  while (pad-- > 0) {
+    *(b++) = ' ';
+  }
+}
+
+// Write the digits into the buffer.
+static void WriteDigits(CheckedIncrement<char*>& b, size_t i,
+                        size_t num_digits) {
+  size_t x = pow(10, double(num_digits - 1));
+  do {
+    *(b++) = "0123456789"[(i / x) % 10];
+    x /= 10;
+  } while (x > 0);
+}
 
 void FdPrintf(intptr_t aFd, const char* aFormat, ...) {
   if (aFd == 0) {
@@ -56,26 +102,33 @@ void FdPrintf(intptr_t aFd, const char* aFormat, ...) {
       case '\0':
         goto out;
 
-      case '%':
-        switch (*++f) {
+      case '%': {
+        // The start of the format specifier is used if this specifier is
+        // invalid.
+        const char* start = f;
+
+        // Read the field width
+        f++;
+        char* end = nullptr;
+        size_t width = strtoul(f, &end, 10);
+        // If strtol can't find a number that's okay, that means 0 in our
+        // case, but we must advance f).
+        f.advance(end);
+
+        switch (*f) {
           case 'z': {
             if (*(++f) == 'u') {
               size_t i = va_arg(ap, size_t);
-              size_t x = 1;
-              // Compute the number of digits.
-              while (x <= i / 10) {
-                x *= 10;
-              }
-              // Write the digits into the buffer.
-              do {
-                *(b++) = "0123456789"[(i / x) % 10];
-                x /= 10;
-              } while (x > 0);
+
+              size_t num_digits = NumDigits(i);
+              LeftPad(b, width > num_digits ? width - num_digits : 0);
+              WriteDigits(b, i, num_digits);
             } else {
-              // Write out the format specifier if it's unknown.
+              // If the format specifier is unknown then write out '%' and
+              // rewind to the beginning of the specifier causing it to be
+              // printed normally.
               *(b++) = '%';
-              *(b++) = 'z';
-              *(b++) = *f;
+              f.rewind(start);
             }
             break;
           }
@@ -100,14 +153,34 @@ void FdPrintf(intptr_t aFd, const char* aFormat, ...) {
             break;
           }
 
-          default:
-            // Write out the format specifier if it's unknown.
+          case 's': {
+            const char* str = va_arg(ap, const char*);
+            size_t len = strlen(str);
+
+            LeftPad(b, width > len ? width - len : 0);
+
+            while (*str) {
+              *(b++) = *(str++);
+            }
+
+            break;
+          }
+
+          case '%':
+            // Print a single raw '%'.
             *(b++) = '%';
-            *(b++) = *f;
+            break;
+
+          default:
+            // If the format specifier is unknown then write out '%' and
+            // rewind to the beginning of the specifier causing it to be
+            // printed normally.
+            *(b++) = '%';
+            f.rewind(start);
             break;
         }
         break;
-
+      }
       default:
         *(b++) = *f;
         break;
