@@ -1573,12 +1573,6 @@ nsMemoryReporterManager::Init() {
   }
   isInited = true;
 
-#if defined(HAVE_JEMALLOC_STATS) && defined(MOZ_GLUE_IN_PROGRAM)
-  if (!jemalloc_stats) {
-    return NS_ERROR_FAILURE;
-  }
-#endif
-
 #ifdef HAVE_JEMALLOC_STATS
   RegisterStrongReporter(new JemallocHeapReporter());
 #endif

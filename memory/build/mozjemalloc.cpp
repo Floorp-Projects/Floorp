@@ -3883,6 +3883,8 @@ static bool malloc_init_hard() {
   DefineGlobals();
 #endif
 
+  MOZ_RELEASE_ASSERT(JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES);
+
   // Get runtime configuration.
   if ((opts = getenv("MALLOC_OPTIONS"))) {
     for (i = 0; opts[i] != '\0'; i++) {
@@ -4226,7 +4228,8 @@ inline size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
 }
 
 template <>
-inline void MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats) {
+inline void MozJemalloc::jemalloc_stats_internal(
+    jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   size_t non_arena_mapped, chunk_header_size;
 
   if (!aStats) {
@@ -4235,6 +4238,12 @@ inline void MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats) {
   if (!malloc_init()) {
     memset(aStats, 0, sizeof(*aStats));
     return;
+  }
+  if (aBinStats) {
+    // An assertion in malloc_init_hard will guarantee that
+    // JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES.
+    memset(aBinStats, 0,
+           sizeof(jemalloc_bin_stats_t) * JEMALLOC_MAX_STATS_BINS);
   }
 
   // Gather runtime settings.
@@ -4279,7 +4288,6 @@ inline void MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats) {
   for (auto arena : gArenas.iter()) {
     size_t arena_mapped, arena_allocated, arena_committed, arena_dirty, j,
         arena_unused, arena_headers;
-    arena_run_t* run;
 
     arena_headers = 0;
     arena_unused = 0;
@@ -4300,18 +4308,29 @@ inline void MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats) {
       for (j = 0; j < NUM_SMALL_CLASSES; j++) {
         arena_bin_t* bin = &arena->mBins[j];
         size_t bin_unused = 0;
+        size_t num_non_full_runs = 0;
 
         for (auto mapelm : bin->mNonFullRuns.iter()) {
-          run = (arena_run_t*)(mapelm->bits & ~gPageSizeMask);
+          arena_run_t* run = (arena_run_t*)(mapelm->bits & ~gPageSizeMask);
           bin_unused += run->mNumFree * bin->mSizeClass;
+          num_non_full_runs++;
         }
 
         if (bin->mCurrentRun) {
           bin_unused += bin->mCurrentRun->mNumFree * bin->mSizeClass;
+          num_non_full_runs++;
         }
 
         arena_unused += bin_unused;
         arena_headers += bin->mNumRuns * bin->mRunFirstRegionOffset;
+        if (aBinStats) {
+          aBinStats[j].size = bin->mSizeClass;
+          aBinStats[j].num_non_full_runs += num_non_full_runs;
+          aBinStats[j].num_runs += bin->mNumRuns;
+          aBinStats[j].bytes_unused += bin_unused;
+          aBinStats[j].bytes_total +=
+              bin->mNumRuns * (bin->mRunSize - bin->mRunFirstRegionOffset);
+        }
       }
     }
 

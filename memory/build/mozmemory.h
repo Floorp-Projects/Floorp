@@ -48,7 +48,18 @@ static inline size_t _malloc_good_size(size_t size) {
 #  define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #  include "malloc_decls.h"
 
-#endif
+#  ifdef __cplusplus
+static inline void jemalloc_stats(jemalloc_stats_t* aStats,
+                                  jemalloc_bin_stats_t* aBinStats = nullptr) {
+  jemalloc_stats_internal(aStats, aBinStats);
+}
+#  else
+static inline void jemalloc_stats(jemalloc_stats_t* aStats) {
+  jemalloc_stats_internal(aStats, NULL);
+}
+#  endif
+
+#endif  // MOZ_MEMORY
 
 #define NOTHROW_MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name(__VA_ARGS__) noexcept(true);

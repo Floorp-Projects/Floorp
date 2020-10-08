@@ -98,6 +98,18 @@ typedef struct {
   size_t bin_unused;   // Bytes committed to a bin but currently unused.
 } jemalloc_stats_t;
 
+typedef struct {
+  size_t size;               // The size of objects in this bin, zero if this
+                             // bin stats array entry is unused (no more bins).
+  size_t num_non_full_runs;  // The number of non-full runs
+  size_t num_runs;           // The number of runs in this bin
+  size_t bytes_unused;       // The unallocated bytes across all these bins
+  size_t bytes_total;        // The total storage area for runs in this bin,
+                             // excluding headers..
+} jemalloc_bin_stats_t;
+
+#define JEMALLOC_MAX_STATS_BINS 40
+
 enum PtrInfoTag {
   // The pointer is not currently known to the allocator.
   // 'addr', 'size', and 'arenaId' are always 0.
