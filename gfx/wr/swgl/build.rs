@@ -112,7 +112,8 @@ fn main() {
 
     let shader_flags =
         ShaderFeatureFlags::GL |
-        ShaderFeatureFlags::DUAL_SOURCE_BLENDING;
+        ShaderFeatureFlags::DUAL_SOURCE_BLENDING |
+        ShaderFeatureFlags::DEBUG;
     let mut shaders: Vec<String> = Vec::new();
     for (name, features) in get_shader_features(shader_flags) {
         shaders.extend(features.iter().map(|f| {
