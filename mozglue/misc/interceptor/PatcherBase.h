@@ -121,6 +121,16 @@ class WindowsDllPatcherBase {
     return mVMPolicy.IsPageAccessible(aAddress);
   }
 
+#if defined(NIGHTLY_BUILD)
+  const Maybe<DetourError>& GetLastError() const {
+    return mVMPolicy.GetLastError();
+  }
+#endif  // defined(NIGHTLY_BUILD)
+  template <typename... Args>
+  void SetLastError(Args&&... aArgs) {
+    mVMPolicy.SetLastError(std::forward<Args>(aArgs)...);
+  }
+
  protected:
   VMPolicy mVMPolicy;
 };
