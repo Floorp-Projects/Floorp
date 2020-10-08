@@ -35,7 +35,7 @@ class RemotePrintJobChild final : public PRemotePrintJobChild,
   mozilla::ipc::IPCResult RecvPrintInitializationResult(
       const nsresult& aRv, const FileDescriptor& aFd) final;
 
-  void ProcessPage();
+  void ProcessPage(nsTArray<uint64_t>&& aDeps);
 
   mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd) final;
 

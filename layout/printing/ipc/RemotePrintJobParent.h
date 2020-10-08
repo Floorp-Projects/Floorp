@@ -15,6 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/RecordedEvent.h"
+#include "mozilla/gfx/CrossProcessPaint.h"
 
 class nsDeviceContext;
 class nsIPrintSettings;
@@ -38,7 +39,7 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
                                               const int32_t& aStartPage,
                                               const int32_t& aEndPage) final;
 
-  mozilla::ipc::IPCResult RecvProcessPage() final;
+  mozilla::ipc::IPCResult RecvProcessPage(nsTArray<uint64_t>&& aDeps) final;
 
   mozilla::ipc::IPCResult RecvFinalizePrint() final;
 
@@ -75,7 +76,11 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
 
   nsresult PrepareNextPageFD(FileDescriptor* aFd);
 
-  nsresult PrintPage(PRFileDescStream& aRecording);
+  nsresult PrintPage(
+      PRFileDescStream& aRecording,
+      gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments = nullptr);
+  void FinishProcessingPage(
+      gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments = nullptr);
 
   /**
    * Called to notify our corresponding RemotePrintJobChild once we've

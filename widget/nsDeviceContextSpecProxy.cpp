@@ -176,7 +176,7 @@ NS_IMETHODIMP
 nsDeviceContextSpecProxy::EndPage() {
   // Send the page recording to the parent.
   mRecorder->Close();
-  mRemotePrintJob->ProcessPage();
+  mRemotePrintJob->ProcessPage(std::move(mRecorder->TakeDependentSurfaces()));
 
   return NS_OK;
 }
