@@ -364,16 +364,19 @@ import sys
 
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
+stdin = getattr(sys.stdin, 'buffer', sys.stdin)
+stdout = getattr(sys.stdout, 'buffer', sys.stdout)
+
 while True:
-    rawlen = sys.stdin.read(4)
+    rawlen = stdin.read(4)
     if len(rawlen) == 0:
         signal.pause()
     msglen = struct.unpack('@I', rawlen)[0]
-    msg = sys.stdin.read(msglen)
+    msg = stdin.read(msglen)
 
-    sys.stdout.write(struct.pack('@I', msglen))
-    sys.stdout.write(msg)
-  `;
+    stdout.write(struct.pack('@I', msglen))
+    stdout.write(msg)
+`;
 
   let scriptPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.py");
   let manifestPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.json");
