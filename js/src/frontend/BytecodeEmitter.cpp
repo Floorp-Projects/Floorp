@@ -11259,11 +11259,6 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* script) {
     return false;
   }
 
-  // De-duplicate the bytecode within the runtime.
-  if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData)) {
-    return false;
-  }
-
   // Update flags specific to functions.
   if (sc->isFunctionBox()) {
     FunctionBox* funbox = sc->asFunctionBox();
