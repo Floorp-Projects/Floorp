@@ -29,106 +29,106 @@ var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( memory 1 ) ( func ( v128.store align=16 ( i32.const 0 ) ( v128.const i32x4 0 1 2 3 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_s align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_s align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_s align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_s align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_s align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_s align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_s align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_s align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_u align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_u align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_u align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_u align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_u align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_u align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i16x8.load8x8_u align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8x8_u align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_s align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_s align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_s align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_s align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_s align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_s align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_s align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_s align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_u align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_u align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_u align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_u align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_u align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_u align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i32x4.load16x4_u align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16x4_u align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_s align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_s align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_s align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_s align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_s align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_s align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_s align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_s align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_u align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_u align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_u align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_u align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_u align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_u align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( i64x2.load32x2_u align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32x2_u align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v8x16.load_splat align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load8_splat align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v16x8.load_splat align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16_splat align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v16x8.load_splat align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load16_splat align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v32x4.load_splat align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32_splat align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v32x4.load_splat align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32_splat align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v32x4.load_splat align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load32_splat align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v64x2.load_splat align=1 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load64_splat align=1 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v64x2.load_splat align=2 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load64_splat align=2 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v64x2.load_splat align=4 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load64_splat align=4 ( i32.const 0 ) ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( func ( drop ( v64x2.load_splat align=8 ( i32.const 0 ) ) ) ) )
+( module ( memory 1 ) ( func ( drop ( v128.load64_splat align=8 ( i32.const 0 ) ) ) ) )
 `)));
 var thrown = false;
 var saved;
@@ -151,7 +151,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i16x8.load8x8_s align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load8x8_s align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -160,7 +160,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i16x8.load8x8_u align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load8x8_u align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -169,7 +169,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i32x4.load16x4_s align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load16x4_s align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -178,7 +178,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i32x4.load16x4_u align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load16x4_u align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -187,7 +187,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i64x2.load32x2_s align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load32x2_s align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -196,7 +196,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( i64x2.load32x2_u align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load32x2_u align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -205,7 +205,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( v8x16.load_splat align=2 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load8_splat align=2 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -214,7 +214,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( v16x8.load_splat align=4 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load16_splat align=4 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -223,7 +223,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( v32x4.load_splat align=8 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load32_splat align=8 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -232,7 +232,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( memory 1 ) ( func ( result v128 ) ( v64x2.load_splat align=16 ( i32.const 0 ) ) ) )
+( module ( memory 1 ) ( func ( result v128 ) ( v128.load64_splat align=16 ( i32.const 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -290,7 +290,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_s align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_s align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -298,7 +298,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_s align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_s align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -306,7 +306,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_s align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_s align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -314,7 +314,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_u align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_u align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -322,7 +322,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_u align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_u align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -330,7 +330,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i16x8.load8x8_u align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8x8_u align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -338,7 +338,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_s align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_s align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -346,7 +346,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_s align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_s align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -354,7 +354,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_s align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_s align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -362,7 +362,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_u align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_u align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -370,7 +370,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_u align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_u align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -378,7 +378,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i32x4.load16x4_u align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16x4_u align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -386,7 +386,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_s align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_s align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -394,7 +394,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_s align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_s align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -402,7 +402,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_s align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_s align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -410,7 +410,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_u align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_u align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -418,7 +418,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_u align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_u align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -426,7 +426,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (i64x2.load32x2_u align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32x2_u align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -434,7 +434,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v8x16.load_splat align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8_splat align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -442,7 +442,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v8x16.load_splat align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load8_splat align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -450,7 +450,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v16x8.load_splat align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16_splat align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -458,7 +458,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v16x8.load_splat align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load16_splat align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -466,7 +466,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v32x4.load_splat align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32_splat align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -474,7 +474,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v32x4.load_splat align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32_splat align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -482,7 +482,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v32x4.load_splat align=3 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load32_splat align=3 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -490,7 +490,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v64x2.load_splat align=-1 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load64_splat align=-1 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -498,7 +498,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v64x2.load_splat align=0 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load64_splat align=0 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -506,7 +506,7 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(memory 1) (func (result v128) (v64x2.load_splat align=7 (i32.const 0))))
+(memory 1) (func (result v128) (v128.load64_splat align=7 (i32.const 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
