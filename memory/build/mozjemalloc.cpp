@@ -524,6 +524,10 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 // Return the smallest pagesize multiple that is >= s.
 #define PAGE_CEILING(s) (((s) + gPageSizeMask) & ~gPageSizeMask)
 
+// Number of all the small-allocated classes
+#define NUM_SMALL_CLASSES \
+  (kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses)
+
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
 #if defined(MALLOC_DECOMMIT) && defined(MALLOC_DOUBLE_PURGE)
@@ -1443,9 +1447,7 @@ arena_t* TypedBaseAlloc<arena_t>::sFirstFree = nullptr;
 template <>
 size_t TypedBaseAlloc<arena_t>::size_of() {
   // Allocate enough space for trailing bins.
-  return sizeof(arena_t) +
-         (sizeof(arena_bin_t) *
-          (kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses - 1));
+  return sizeof(arena_t) + (sizeof(arena_bin_t) * (NUM_SMALL_CLASSES - 1));
 }
 
 template <typename T>
@@ -3562,8 +3564,7 @@ arena_t::arena_t(arena_params_t* aParams) {
     }
     sizeClass = sizeClass.Next();
   }
-  MOZ_ASSERT(i ==
-             kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses - 1);
+  MOZ_ASSERT(i == NUM_SMALL_CLASSES - 1);
 
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mMagic = ARENA_MAGIC;
@@ -3580,8 +3581,7 @@ arena_t::~arena_t() {
   if (mSpare) {
     chunk_dealloc(mSpare, kChunkSize, ARENA_CHUNK);
   }
-  for (i = 0; i < kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses;
-       i++) {
+  for (i = 0; i < NUM_SMALL_CLASSES; i++) {
     MOZ_RELEASE_ASSERT(!mBins[i].mNonFullRuns.First(), "Bin is not empty");
   }
 #ifdef MOZ_DEBUG
@@ -4297,8 +4297,7 @@ inline void MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats) {
 
       arena_dirty = arena->mNumDirty << gPageSize2Pow;
 
-      for (j = 0; j < kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses;
-           j++) {
+      for (j = 0; j < NUM_SMALL_CLASSES; j++) {
         arena_bin_t* bin = &arena->mBins[j];
         size_t bin_unused = 0;
 
