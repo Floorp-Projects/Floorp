@@ -16,5 +16,5 @@ interrupt-support = { path = "../interrupt" }
 ffi-support = "0.4"
 
 [dependencies.rusqlite]
-version = "0.23.1"
-features = ["functions", "limits", "bundled"]
+version = "0.24.1"
+features = ["functions", "limits", "bundled", "unlock_notify"]

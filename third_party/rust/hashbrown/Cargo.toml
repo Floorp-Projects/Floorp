@@ -13,9 +13,8 @@
 [package]
 edition = "2018"
 name = "hashbrown"
-version = "0.7.2"
+version = "0.9.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
-build = "build.rs"
 exclude = [".travis.yml", "bors.toml", "/ci/*"]
 description = "A Rust port of Google's SwissTable hash map"
 readme = "README.md"
@@ -26,7 +25,7 @@ repository = "https://github.com/rust-lang/hashbrown"
 [package.metadata.docs.rs]
 features = ["nightly", "rayon", "serde", "raw"]
 [dependencies.ahash]
-version = "0.3.2"
+version = "0.4.4"
 optional = true
 default-features = false
 
@@ -70,8 +69,6 @@ version = "=1.0"
 
 [dev-dependencies.serde_test]
 version = "1.0"
-[build-dependencies.autocfg]
-version = "1"
 
 [features]
 ahash-compile-time-rng = ["ahash/compile-time-rng"]

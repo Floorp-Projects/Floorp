@@ -17,7 +17,7 @@ macro_rules! iter_next {
             $self_.position = found_position + 1;
             found_position
         })
-    }
+    };
 }
 
 macro_rules! iter_next_back {
@@ -27,7 +27,7 @@ macro_rules! iter_next_back {
             $self_.haystack = $self_.haystack.split_at(index).0;
             $self_.position + index
         })
-    }
+    };
 }
 
 /// An iterator for `memchr`.
@@ -43,11 +43,7 @@ impl<'a> Memchr<'a> {
     /// Creates a new iterator that yields all positions of needle in haystack.
     #[inline]
     pub fn new(needle: u8, haystack: &[u8]) -> Memchr {
-        Memchr {
-            needle: needle,
-            haystack: haystack,
-            position: 0,
-        }
+        Memchr { needle: needle, haystack: haystack, position: 0 }
     }
 }
 

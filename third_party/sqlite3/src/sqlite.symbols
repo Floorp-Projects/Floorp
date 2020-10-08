@@ -61,6 +61,7 @@ sqlite3_errmsg
 sqlite3_errmsg16
 sqlite3_exec
 sqlite3_expanded_sql
+sqlite3_extended_errcode
 sqlite3_extended_result_codes
 sqlite3_file_control
 sqlite3_finalize

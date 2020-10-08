@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(deprecated)]
 
 #[macro_use]
 extern crate smallvec;

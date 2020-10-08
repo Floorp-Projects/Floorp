@@ -58,7 +58,8 @@ mod build_bundled {
             fs::copy("sqlite3/bindgen_bundled_version.rs", out_path)
                 .expect("Could not copy bindings to output directory");
         }
-
+        println!("cargo:rerun-if-changed=sqlite3/sqlite3.c");
+        println!("cargo:rerun-if-changed=sqlite3/wasm32-wasi-vfs.c");
         let mut cfg = cc::Build::new();
         cfg.file("sqlite3/sqlite3.c")
             .flag("-DSQLITE_CORE")
@@ -79,6 +80,7 @@ mod build_bundled {
             .flag("-DSQLITE_THREADSAFE=1")
             .flag("-DSQLITE_USE_URI")
             .flag("-DHAVE_USLEEP=1")
+            .flag("-D_POSIX_THREAD_SAFE_FUNCTIONS") // cross compile with MinGW
             .warnings(false);
 
         if cfg!(feature = "with-asan") {
@@ -99,10 +101,22 @@ mod build_bundled {
                 Err(_msg) => false,
             };
             if vs_has_nan {
-                cfg.flag("-DSQLITE_HAVE_ISNAN");
+                cfg.flag("-DHAVE_ISNAN");
             }
         } else {
-            cfg.flag("-DSQLITE_HAVE_ISNAN");
+            cfg.flag("-DHAVE_ISNAN");
+        }
+        if cfg!(not(target_os = "windows")) {
+            cfg.flag("-DHAVE_LOCALTIME_R");
+        }
+        // Target wasm32-wasi can't compile the default VFS
+        if env::var("TARGET") == Ok("wasm32-wasi".to_string()) {
+            cfg.flag("-DSQLITE_OS_OTHER")
+                // https://github.com/rust-lang/rust/issues/74393
+                .flag("-DLONGDOUBLE_TYPE=double");
+            if cfg!(feature = "wasm32-wasi-vfs") {
+                cfg.file("sqlite3/wasm32-wasi-vfs.c");
+            }
         }
         if cfg!(feature = "unlock_notify") {
             cfg.flag("-DSQLITE_ENABLE_UNLOCK_NOTIFY");
@@ -123,6 +137,19 @@ mod build_bundled {
             cfg.flag(&format!("-DSQLITE_MAX_EXPR_DEPTH={}", limit));
         }
         println!("cargo:rerun-if-env-changed=SQLITE_MAX_EXPR_DEPTH");
+
+        if let Ok(extras) = env::var("LIBSQLITE3_FLAGS") {
+            for extra in extras.split_whitespace() {
+                if extra.starts_with("-D") || extra.starts_with("-U") {
+                    cfg.flag(extra);
+                } else if extra.starts_with("SQLITE_") {
+                    cfg.flag(&format!("-D{}", extra));
+                } else {
+                    panic!("Don't understand {} in LIBSQLITE3_FLAGS", extra);
+                }
+            }
+        }
+        println!("cargo:rerun-if-env-changed=LIBSQLITE3_FLAGS");
 
         cfg.compile("libsqlite3.a");
 
@@ -194,7 +221,7 @@ mod build_linked {
     }
 
     fn find_link_mode() -> &'static str {
-        // If the user specifies SQLITE_STATIC (or SQLCIPHER_STATIC), do static
+        // If the user specifies SQLITE3_STATIC (or SQLCIPHER_STATIC), do static
         // linking, unless it's explicitly set to 0.
         match &env::var(format!("{}_STATIC", env_prefix())) {
             Ok(v) if v != "0" => "static",
@@ -217,6 +244,11 @@ mod build_linked {
         // useful if you need to ensure whatever crypto library sqlcipher relies
         // on is available, for example.
         println!("cargo:link-target={}", link_lib);
+
+        if cfg!(all(windows, feature = "winsqlite3")) {
+            println!("cargo:rustc-link-lib=dylib={}", link_lib);
+            return HeaderLocation::Wrapper;
+        }
 
         // Allow users to specify where to find SQLite.
         if let Ok(dir) = env::var(format!("{}_LIB_DIR", env_prefix())) {
@@ -279,6 +311,8 @@ mod build_linked {
     fn link_lib() -> &'static str {
         if cfg!(feature = "sqlcipher") {
             "sqlcipher"
+        } else if cfg!(all(windows, feature = "winsqlite3")) {
+            "winsqlite3"
         } else {
             "sqlite3"
         }
@@ -358,6 +392,36 @@ mod bindings {
         }
         if cfg!(feature = "session") {
             bindings = bindings.clang_arg("-DSQLITE_ENABLE_SESSION");
+        }
+        if cfg!(all(windows, feature = "winsqlite3")) {
+            bindings = bindings
+                .clang_arg("-DBINDGEN_USE_WINSQLITE3")
+                .blacklist_item("NTDDI_.+")
+                .blacklist_item("WINAPI_FAMILY.*")
+                .blacklist_item("_WIN32_.+")
+                .blacklist_item("_VCRT_COMPILER_PREPROCESSOR")
+                .blacklist_item("_SAL_VERSION")
+                .blacklist_item("__SAL_H_VERSION")
+                .blacklist_item("_USE_DECLSPECS_FOR_SAL")
+                .blacklist_item("_USE_ATTRIBUTES_FOR_SAL")
+                .blacklist_item("_CRT_PACKING")
+                .blacklist_item("_HAS_EXCEPTIONS")
+                .blacklist_item("_STL_LANG")
+                .blacklist_item("_HAS_CXX17")
+                .blacklist_item("_HAS_CXX20")
+                .blacklist_item("_HAS_NODISCARD")
+                .blacklist_item("WDK_NTDDI_VERSION")
+                .blacklist_item("OSVERSION_MASK")
+                .blacklist_item("SPVERSION_MASK")
+                .blacklist_item("SUBVERSION_MASK")
+                .blacklist_item("WINVER")
+                .blacklist_item("__security_cookie")
+                .blacklist_type("size_t")
+                .blacklist_type("__vcrt_bool")
+                .blacklist_type("wchar_t")
+                .blacklist_function("__security_init_cookie")
+                .blacklist_function("__report_gsfailure")
+                .blacklist_function("__va_start");
         }
 
         // When cross compiling unless effort is taken to fix the issue, bindgen
