@@ -1873,6 +1873,83 @@ void Document::ConstructUbiNode(void* storage) {
   JS::ubi::Concrete<Document>::construct(storage, this);
 }
 
+void Document::LoadEventFired() {
+  // Accumulate timing data located in each document's realm and report to
+  // telemetry.
+  AccumulateJSTelemetry();
+
+  // Release the JS bytecode cache from its wait on the load event, and
+  // potentially dispatch the encoding of the bytecode.
+  if (ScriptLoader()) {
+    ScriptLoader()->LoadEventFired();
+  }
+}
+
+static uint32_t CalcPercentage(TimeDuration aSubTimer,
+                               TimeDuration aTotalTimer) {
+  return static_cast<uint32_t>(100.0 * aSubTimer.ToMilliseconds() /
+                               aTotalTimer.ToMilliseconds());
+}
+
+void Document::AccumulateJSTelemetry() {
+  if (!IsTopLevelContentDocument()) {
+    return;
+  }
+
+  // Try to only measure real websites
+  if (!(GetDocumentURI()->SchemeIs("http") ||
+        GetDocumentURI()->SchemeIs("https"))) {
+    return;
+  }
+
+  if (!GetScopeObject() || !GetScopeObject()->GetGlobalJSObject()) {
+    return;
+  }
+
+  AutoJSContext cx;
+  JSObject* globalObject = GetScopeObject()->GetGlobalJSObject();
+  JSAutoRealm ar(cx, globalObject);
+  JS::JSTimers timers = JS::GetJSTimers(cx);
+
+  TimeDuration totalExecutionTime = timers.executionTime;
+  TimeDuration totalDelazificationTime = timers.delazificationTime;
+  TimeDuration totalXDREncodingTime = timers.xdrEncodingTime;
+  TimeDuration totalBaselineCompileTime = timers.baselineCompileTime;
+
+  if (totalExecutionTime.IsZero()) {
+    return;
+  }
+
+  if (!totalDelazificationTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_DELAZIFICATION_PROPORTION,
+        CalcPercentage(totalDelazificationTime, totalExecutionTime));
+  }
+
+  if (!totalXDREncodingTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_XDR_ENCODING_PROPORTION,
+        CalcPercentage(totalXDREncodingTime, totalExecutionTime));
+  }
+
+  if (!totalBaselineCompileTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_BASELINE_COMPILE_PROPORTION,
+        CalcPercentage(totalBaselineCompileTime, totalExecutionTime));
+  }
+
+  TimeStamp loadEventStart =
+      GetNavigationTiming()->GetLoadEventStartTimeStamp();
+  TimeStamp navigationStart =
+      GetNavigationTiming()->GetNavigationStartTimeStamp();
+
+  if (loadEventStart && navigationStart) {
+    TimeDuration pageLoadTime = loadEventStart - navigationStart;
+    Telemetry::Accumulate(Telemetry::JS_EXECUTION_PROPORTION,
+                          CalcPercentage(totalExecutionTime, pageLoadTime));
+  }
+}
+
 Document::~Document() {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p destroyed", this));
   MOZ_ASSERT(!IsTopLevelContentDocument() || !IsResourceDoc(),

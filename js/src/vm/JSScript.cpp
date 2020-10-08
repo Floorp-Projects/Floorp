@@ -2676,6 +2676,8 @@ bool ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script) {
   }
 
   MOZ_ASSERT(hasEncoder());
+  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
+
   auto failureCase =
       mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
@@ -2709,6 +2711,7 @@ bool ScriptSource::xdrEncodeInitialStencil(
     return false;
   }
 
+  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
   auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder.reset(nullptr); });
 
   XDRResult res = xdrEncoder->codeStencil(compilationInfo);
@@ -2751,6 +2754,8 @@ bool ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
                                      HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(sourceObject->source() == this);
   MOZ_ASSERT(hasEncoder());
+  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
+
   auto failureCase =
       mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
@@ -2772,6 +2777,7 @@ bool ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
 bool ScriptSource::xdrEncodeFunctionStencil(
     JSContext* cx, frontend::CompilationStencil& stencil) {
   MOZ_ASSERT(hasEncoder());
+  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
   return xdrEncodeFunctionStencilWith(cx, stencil, xdrEncoder_);
 }
 

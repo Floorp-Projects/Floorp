@@ -385,6 +385,10 @@ class JS::Realm : public JS::shadow::Realm {
   unsigned enterRealmDepthIgnoringJit_ = 0;
 
  public:
+  // Various timers for collecting time spent delazifying, jit compiling,
+  // executing, etc
+  JS::JSTimers timers;
+
   struct DebuggerVectorEntry {
     // The debugger relies on iterating through the DebuggerVector to know what
     // debuggers to notify about certain actions, which it does using this

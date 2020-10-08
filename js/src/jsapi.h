@@ -16,6 +16,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
@@ -189,6 +190,17 @@ extern JS_PUBLIC_API JSType JS_TypeOfValue(JSContext* cx,
 namespace JS {
 
 extern JS_PUBLIC_API const char* InformalValueTypeName(const JS::Value& v);
+
+/** Timing information for telemetry purposes **/
+struct JSTimers {
+  mozilla::TimeDuration executionTime;       // Total time spent executing
+  mozilla::TimeDuration delazificationTime;  // Total time spent delazifying
+  mozilla::TimeDuration xdrEncodingTime;     // Total time spent XDR encoding
+  mozilla::TimeDuration
+      baselineCompileTime;  // Total time spent in baseline compiler
+};
+
+extern JS_PUBLIC_API JSTimers GetJSTimers(JSContext* cx);
 
 } /* namespace JS */
 

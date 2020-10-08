@@ -5951,6 +5951,10 @@ JS_PUBLIC_API js::StackFormat js::GetStackFormat(JSContext* cx) {
   return cx->runtime()->stackFormat();
 }
 
+JS_PUBLIC_API JS::JSTimers JS::GetJSTimers(JSContext* cx) {
+  return cx->realm()->timers;
+}
+
 namespace js {
 
 JS_PUBLIC_API void NoteIntentionalCrash() {

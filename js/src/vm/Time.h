@@ -159,6 +159,22 @@ static inline mozilla::TimeStamp ReallyNow() {
   return mozilla::TimeStamp::NowUnfuzzed();
 }
 
+class MOZ_RAII AutoIncrementalTimer {
+  mozilla::TimeStamp startTime;
+  mozilla::TimeDuration& output;
+
+ public:
+  AutoIncrementalTimer(const AutoIncrementalTimer&) = delete;
+  AutoIncrementalTimer& operator=(const AutoIncrementalTimer&) = delete;
+
+  explicit AutoIncrementalTimer(mozilla::TimeDuration& output_)
+      : output(output_) {
+    startTime = ReallyNow();
+  }
+
+  ~AutoIncrementalTimer() { output += ReallyNow() - startTime; }
+};
+
 }  // namespace js
 
 #endif /* vm_Time_h */

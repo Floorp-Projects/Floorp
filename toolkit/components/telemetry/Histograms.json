@@ -13276,6 +13276,66 @@
     "releaseChannelCollection": "opt-out",
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   },
+  "JS_EXECUTION_PROPORTION" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["dpalmeiro@mozilla.com","perfteam@mozilla.com"],
+    "expires_in_version": "89",
+    "releaseChannelCollection": "opt-out",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1664475],
+    "description": "Percentage of page load time spent executing Javascript."
+  },
+  "JS_DELAZIFICATION_PROPORTION" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["dpalmeiro@mozilla.com","perfteam@mozilla.com"],
+    "expires_in_version": "89",
+    "releaseChannelCollection": "opt-out",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1664475],
+    "description": "Percentage of execution time spent during delazification for JS scripts up until the page load event fires."
+  },
+  "JS_XDR_ENCODING_PROPORTION" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["dpalmeiro@mozilla.com","perfteam@mozilla.com"],
+    "expires_in_version": "89",
+    "releaseChannelCollection": "opt-out",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1664475],
+    "description": "Percentage of execution time spent during XDR encoding for JS scripts up until the page load event fires."
+  },
+  "JS_BASELINE_COMPILE_PROPORTION" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["dpalmeiro@mozilla.com","perfteam@mozilla.com"],
+    "expires_in_version": "89",
+    "releaseChannelCollection": "opt-out",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1664475],
+    "description": "Percentage of execution time spent during Baseline compilation for JS scripts up until the page load event fires."
+  },
+  "JS_BYTECODE_CACHING_TIME" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["dpalmeiro@mozilla.com","perfteam@mozilla.com"],
+    "expires_in_version": "89",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1664475],
+    "description": "Time in milliseconds spent caching JS bytecode for scripts executed during a page load."
+  },
   "DOM_SCRIPT_KIND": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

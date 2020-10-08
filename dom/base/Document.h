@@ -5089,6 +5089,9 @@ class Document : public nsINode,
   // Scope preloads per document.  This is used by speculative loading as well.
   PreloadService mPreloadService;
 
+  // Accumulate JS telemetry collected
+  void AccumulateJSTelemetry();
+
  public:
   // Needs to be public because the bindings code pokes at it.
   JS::ExpandoAndGeneration mExpandoAndGeneration;
@@ -5104,6 +5107,8 @@ class Document : public nsINode,
   void SetSavedResolutionBeforeMVM(float aResolution) {
     mSavedResolutionBeforeMVM = aResolution;
   }
+
+  void LoadEventFired();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)

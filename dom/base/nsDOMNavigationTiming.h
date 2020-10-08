@@ -59,6 +59,10 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
     return mNavigationStart;
   }
 
+  mozilla::TimeStamp GetLoadEventStartTimeStamp() const {
+    return mLoadEventStart;
+  }
+
   DOMTimeMilliSec GetUnloadEventStart() {
     return TimeStampToDOM(GetUnloadEventStartTimeStamp());
   }

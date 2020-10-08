@@ -198,6 +198,7 @@ MethodStatus BaselineCompiler::compile() {
   JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u:%u",
           script->filename(), script->lineno(), script->column());
 
+  AutoIncrementalTimer timer(cx->realm()->timers.baselineCompileTime);
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLoggerEvent scriptEvent(TraceLogger_AnnotateScripts, script);
   AutoTraceLog logScript(logger, scriptEvent);
