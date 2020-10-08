@@ -1826,7 +1826,7 @@ nsresult WhiteSpaceVisibilityKeeper::
   }
 
   EditorDOMRange rangeToDelete(aRangeToDelete);
-  bool mayBecomeUnexpectedDOMTree = aHTMLEditor.MaybeHasMutationEventListeners(
+  bool mayBecomeUnexpectedDOMTree = aHTMLEditor.MayHaveMutationEventListeners(
       NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
       NS_EVENT_BITS_MUTATION_NODEREMOVED |
       NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |

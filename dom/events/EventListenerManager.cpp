@@ -382,6 +382,10 @@ void EventListenerManager::AddEventListenerInternal(
         doc->SetUseCounter(eUseCounter_custom_onfinish);
       }
     }
+  } else if (aTypeAtom == nsGkAtoms::onbeforeinput) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      window->SetHasBeforeInputEventListenersForTelemetry();
+    }
   }
 
   if (IsApzAwareListener(listener)) {

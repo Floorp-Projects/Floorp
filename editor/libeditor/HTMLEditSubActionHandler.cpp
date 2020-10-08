@@ -3785,7 +3785,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                 "invalid");
             return EditActionHandled(NS_ERROR_FAILURE);
           }
-          if (aHTMLEditor.MaybeHasMutationEventListeners(
+          if (aHTMLEditor.MayHaveMutationEventListeners(
                   NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
                   NS_EVENT_BITS_MUTATION_NODEREMOVED |
                   NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT)) {
@@ -4241,7 +4241,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
         "failed");
     return EditActionResult(rv);
   }
-  if (aHTMLEditor.MaybeHasMutationEventListeners(
+  if (aHTMLEditor.MayHaveMutationEventListeners(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
           NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
           NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
@@ -5871,7 +5871,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
 
   // If we have mutation event listeners, the next point is now outside of
   // editing host or editing hos has been changed.
-  if (aHTMLEditor.MaybeHasMutationEventListeners(
+  if (aHTMLEditor.MayHaveMutationEventListeners(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
           NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
           NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
@@ -6534,7 +6534,7 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
           break;  // There is no more text which we need to delete.
         }
       }
-      if (MaybeHasMutationEventListeners(
+      if (MayHaveMutationEventListeners(
               NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
           (NS_WARN_IF(!trackingEndToDelete.IsSetAndValid()) ||
            NS_WARN_IF(!trackingEndToDelete.IsInTextNode()))) {
@@ -6547,7 +6547,7 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       // we should stop handling the deletion.
       startToDelete =
           EditorDOMPointInText::AtEndOf(*startToDelete.ContainerAsText());
-      if (MaybeHasMutationEventListeners(
+      if (MayHaveMutationEventListeners(
               NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
           NS_WARN_IF(!startToDelete.IsBefore(endToDelete))) {
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -6574,7 +6574,7 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
         if (normalizedWhiteSpacesInLastNode.IsEmpty()) {
           break;  // There is no more text which we need to delete.
         }
-        if (MaybeHasMutationEventListeners(
+        if (MayHaveMutationEventListeners(
                 NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED |
                 NS_EVENT_BITS_MUTATION_NODEREMOVED |
                 NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
@@ -7264,7 +7264,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
           NS_SUCCEEDED(rvIgnored),
           "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
       result.MarkAsHandled();
-      if (MaybeHasMutationEventListeners()) {
+      if (MayHaveMutationEventListeners()) {
         // Mutation event listener may make `offset` value invalid with
         // removing some previous children while we call
         // `DeleteNodeWithTransaction()` so that we should adjust it here.
@@ -7351,7 +7351,7 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
     return MoveNodeResult(rv);
   }
-  if (MaybeHasMutationEventListeners()) {
+  if (MayHaveMutationEventListeners()) {
     // Mutation event listener may make `offset` value invalid with
     // removing some previous children while we call
     // `DeleteNodeWithTransaction()` so that we should adjust it here.
