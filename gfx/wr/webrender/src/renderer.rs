@@ -3557,7 +3557,7 @@ impl Renderer {
                 // When native compositing, clear the debug overlay each frame.
                 self.device.clear_target(
                     Some([0.0, 0.0, 0.0, 0.0]),
-                    Some(1.0),
+                    None, // debug renderer does not use depth
                     None,
                 );
             }

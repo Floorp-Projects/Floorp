@@ -1082,7 +1082,11 @@ impl ProfileGraph {
             let x1 = bx1 - index as f32 * w;
             let x0 = x1 - w;
 
-            let y0 = by1 - (sample / stats.max_value) as f32 * h;
+            let y0 = if stats.max_value != 0.0 {
+                by1 - (sample / stats.max_value) as f32 * h
+            } else {
+                by1
+            };
             let y1 = by1;
 
             let (color_top, color_bottom) = if sample < 1000.0 / 60.0 {
@@ -1408,7 +1412,12 @@ impl Profiler {
         let height = debug_renderer.line_height();
         let width = (self.draw_state.x_right - 30.0 - x_base).max(0.0);
         let total_value = counters.last().unwrap().1.get();
-        let scale = width / total_value as f32;
+        let scale = if total_value != 0 {
+            width / total_value as f32
+        } else {
+            0.0
+        };
+
         let mut x_current = x_base;
 
         for &(color, counter) in counters {
