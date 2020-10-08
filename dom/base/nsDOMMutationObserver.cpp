@@ -593,7 +593,7 @@ void nsDOMMutationObserver::RescheduleForRun() {
 
 void nsDOMMutationObserver::Observe(
     nsINode& aTarget, const mozilla::dom::MutationObserverInit& aOptions,
-    mozilla::ErrorResult& aRv) {
+    nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aRv) {
   bool childList = aOptions.mChildList;
   bool attributes =
       aOptions.mAttributes.WasPassed() && aOptions.mAttributes.Value();
@@ -672,6 +672,13 @@ void nsDOMMutationObserver::Observe(
   r->SetAllAttributes(allAttrs);
   r->SetAnimations(animations);
   r->RemoveClones();
+
+  if (!aSubjectPrincipal.IsSystemPrincipal() &&
+      !aSubjectPrincipal.GetIsAddonOrExpandedAddonPrincipal()) {
+    if (nsPIDOMWindowInner* window = aTarget.OwnerDoc()->GetInnerWindow()) {
+      window->SetMutationObserverHasObservedNodeForTelemetry();
+    }
+  }
 
 #ifdef DEBUG
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
