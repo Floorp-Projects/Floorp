@@ -1752,7 +1752,9 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
     // Temporarily inform the framescript of the current browsing context to
     // allow sending the correct page load events. This has to be done until
     // the web progress listener is used (bug 1664165).
-    await this.listener.setBrowsingContextId(browsingContext.id);
+    if (this.context == Context.Content) {
+      await this.listener.setBrowsingContextId(browsingContext.id);
+    }
 
     return;
   }
@@ -1804,7 +1806,9 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     // Temporarily inform the framescript of the current browsing context to
     // allow sending the correct page load events. This has to be done until
     // the web progress listener is used (bug 1664165).
-    await this.listener.setBrowsingContextId(browsingContext.id);
+    if (this.context == Context.Content) {
+      await this.listener.setBrowsingContextId(browsingContext.id);
+    }
 
     return;
   }
