@@ -224,6 +224,24 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
     mMayHavePointerEnterLeaveEventListener = true;
   }
 
+  /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a beforeinput event listener.
+   * Returing false may be wrong if some nodes have come from another document
+   * with `Document.adoptNode`.
+   */
+  bool HasBeforeInputEventListenersForTelemetry() const {
+    return mMayHaveBeforeInputEventListenerForTelemetry;
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a beforeinput event listener.
+   */
+  void SetHasBeforeInputEventListenersForTelemetry() {
+    mMayHaveBeforeInputEventListenerForTelemetry = true;
+  }
+
   // Sets the event for window.event. Does NOT take ownership, so
   // the caller is responsible for clearing the event before the
   // event gets deallocated. Pass nullptr to set window.event to
@@ -588,6 +606,9 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   bool mMayHaveSelectionChangeEventListener;
   bool mMayHaveMouseEnterLeaveEventListener;
   bool mMayHavePointerEnterLeaveEventListener;
+  // Only used for telemetry probes.  This may be wrong if some nodes have
+  // come from another document with `Document.adoptNode`.
+  bool mMayHaveBeforeInputEventListenerForTelemetry;
 
   // Our inner window's outer window.
   nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
