@@ -391,7 +391,7 @@ class Replay {
     }
     mOps++;
     jemalloc_stats_t stats;
-    ::jemalloc_stats(&stats);
+    ::jemalloc_stats_internal(&stats, nullptr);
     FdPrintf(mStdErr,
              "#%zu mapped: %zu; allocated: %zu; waste: %zu; dirty: %zu; "
              "bookkeep: %zu; binunused: %zu\n",
