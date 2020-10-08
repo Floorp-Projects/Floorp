@@ -1045,19 +1045,40 @@ void load_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
     attrib = T(load_attrib_scalar<scalar_type>(va, src));
   } else {
     // Specialized for WR's primitive vertex order/winding.
-    // Triangles must be indexed at offsets 0, 1, 2.
-    // Quads must be successive triangles indexed at offsets 0, 1, 2, 2, 1, 3.
-    // Triangle vertexes fill vertex shader SIMD lanes as 0, 1, 2, 2.
-    // Quad vertexes fill vertex shader SIMD lanes as 0, 1, 3, 2, so that the
-    // points form a convex path that can be traversed by the rasterizer.
     if (!count) return;
-    assert(count == 3 || count == 4);
+    assert(count >= 2 && count <= 4);
     char* src = (char*)va.buf + va.stride * start + va.offset;
-    attrib = (T){load_attrib_scalar<scalar_type>(va, src),
-                 load_attrib_scalar<scalar_type>(va, src + va.stride),
-                 load_attrib_scalar<scalar_type>(
-                     va, src + va.stride * 2 + (count > 3 ? va.stride : 0)),
-                 load_attrib_scalar<scalar_type>(va, src + va.stride * 2)};
+    switch (count) {
+      case 2: {
+        // Lines must be indexed at offsets 0, 1.
+        // Line vertexes fill vertex shader SIMD lanes as 0, 1, 1, 0.
+        scalar_type lanes[2] = {
+            load_attrib_scalar<scalar_type>(va, src),
+            load_attrib_scalar<scalar_type>(va, src + va.stride)};
+        attrib = (T){lanes[0], lanes[1], lanes[1], lanes[0]};
+        break;
+      }
+      case 3: {
+        // Triangles must be indexed at offsets 0, 1, 2.
+        // Triangle vertexes fill vertex shader SIMD lanes as 0, 1, 2, 2.
+        scalar_type lanes[3] = {
+            load_attrib_scalar<scalar_type>(va, src),
+            load_attrib_scalar<scalar_type>(va, src + va.stride),
+            load_attrib_scalar<scalar_type>(va, src + va.stride * 2)};
+        attrib = (T){lanes[0], lanes[1], lanes[2], lanes[2]};
+        break;
+      }
+      default:
+        // Quads must be successive triangles indexed at offsets 0, 1, 2, 2,
+        // 1, 3. Quad vertexes fill vertex shader SIMD lanes as 0, 1, 3, 2, so
+        // that the points form a convex path that can be traversed by the
+        // rasterizer.
+        attrib = (T){load_attrib_scalar<scalar_type>(va, src),
+                     load_attrib_scalar<scalar_type>(va, src + va.stride),
+                     load_attrib_scalar<scalar_type>(va, src + va.stride * 3),
+                     load_attrib_scalar<scalar_type>(va, src + va.stride * 2)};
+        break;
+    }
   }
 }
 
@@ -3749,6 +3770,8 @@ static inline void draw_perspective_clipped(int nump, Point3D* p_clip,
 // batches that are known ahead of time to not need perspective-correction.
 static void draw_perspective(int nump, Interpolants interp_outs[4],
                              Texture& colortex, int layer, Texture& depthtex) {
+  // Lines are not supported with perspective.
+  assert(nump >= 3);
   // Convert output of vertex shader to screen space.
   vec4 pos = vertex_shader->gl_Position;
   vec3_scalar scale =
@@ -3863,6 +3886,31 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   fragment_shader->gl_FragCoord.z = screenZ;
   fragment_shader->gl_FragCoord.w = w;
 
+  // If supplied a line, adjust it so that it is a quad at least 1 pixel thick.
+  // Assume that for a line that all 4 SIMD lanes were actually filled with
+  // vertexes 0, 1, 1, 0.
+  if (nump == 2) {
+    // Nudge Y height to span at least 1 pixel by advancing to next pixel
+    // boundary so that we step at least 1 row when drawing spans.
+    if (int(p[0].y + 0.5f) == int(p[1].y + 0.5f)) {
+      p[2].y = 1 + int(p[1].y + 0.5f);
+      p[3].y = p[2].y;
+      // Nudge X width to span at least 1 pixel so that rounded coords fall on
+      // separate pixels.
+      if (int(p[0].x + 0.5f) == int(p[1].x + 0.5f)) {
+        p[1].x += 1.0f;
+        p[2].x += 1.0f;
+      }
+    } else {
+      // If the line already spans at least 1 row, then assume line is vertical
+      // or diagonal and just needs to be dilated horizontally.
+      p[2].x += 1.0f;
+      p[3].x += 1.0f;
+    }
+    // Pretend that it's a quad now...
+    nump = 4;
+  }
+
   // Finally draw 2D spans for the quad. Currently only supports drawing to
   // RGBA8 and R8 color buffers.
   if (colortex.internal_format == GL_RGBA8) {
@@ -3895,9 +3943,13 @@ void VertexArray::validate() {
 
 template <typename INDEX>
 static inline void draw_elements(GLsizei count, GLsizei instancecount,
-                                 Buffer& indices_buf, size_t offset,
-                                 VertexArray& v, Texture& colortex, int layer,
+                                 size_t offset, VertexArray& v,
+                                 Texture& colortex, int layer,
                                  Texture& depthtex) {
+  Buffer& indices_buf = ctx->buffers[ctx->element_array_buffer_binding];
+  if (!indices_buf.buf || offset >= indices_buf.size) {
+    return;
+  }
   assert((offset & (sizeof(INDEX) - 1)) == 0);
   INDEX* indices = (INDEX*)(indices_buf.buf + offset);
   count = min(count, (GLsizei)((indices_buf.size - offset) / sizeof(INDEX)));
@@ -3922,15 +3974,16 @@ static inline void draw_elements(GLsizei count, GLsizei instancecount,
             indices[i + 2] != indices[i] + 2) {
           continue;
         }
-        int nump = 3;
         if (i + 6 <= count && indices[i + 5] == indices[i] + 3) {
           assert(indices[i + 3] == indices[i] + 2 &&
                  indices[i + 4] == indices[i] + 1);
-          nump = 4;
+          vertex_shader->load_attribs(v.attribs, indices[i], instance, 4);
+          draw_quad(4, colortex, layer, depthtex);
           i += 3;
+        } else {
+          vertex_shader->load_attribs(v.attribs, indices[i], instance, 3);
+          draw_quad(3, colortex, layer, depthtex);
         }
-        vertex_shader->load_attribs(v.attribs, indices[i], instance, nump);
-        draw_quad(nump, colortex, layer, depthtex);
       }
     }
   }
@@ -3939,10 +3992,8 @@ static inline void draw_elements(GLsizei count, GLsizei instancecount,
 extern "C" {
 
 void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
-                           void* indicesptr, GLsizei instancecount) {
-  assert(mode == GL_TRIANGLES);
-  assert(type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT);
-  if (count <= 0 || instancecount <= 0) {
+                           GLintptr offset, GLsizei instancecount) {
+  if (offset < 0 || count <= 0 || instancecount <= 0) {
     return;
   }
 
@@ -3959,12 +4010,6 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     assert(depthtex.internal_format == GL_DEPTH_COMPONENT16);
     assert(colortex.width == depthtex.width &&
            colortex.height == depthtex.height);
-  }
-
-  Buffer& indices_buf = ctx->buffers[ctx->element_array_buffer_binding];
-  size_t offset = (size_t)indicesptr;
-  if (!indices_buf.buf || offset >= indices_buf.size) {
-    return;
   }
 
   // debugf("current_vertex_array %d\n", ctx->current_vertex_array);
@@ -3984,14 +4029,43 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
 
   vertex_shader->init_batch();
 
-  if (type == GL_UNSIGNED_SHORT) {
-    draw_elements<uint16_t>(count, instancecount, indices_buf, offset, v,
-                            colortex, fb.layer, depthtex);
-  } else if (type == GL_UNSIGNED_INT) {
-    draw_elements<uint32_t>(count, instancecount, indices_buf, offset, v,
-                            colortex, fb.layer, depthtex);
-  } else {
-    assert(false);
+  switch (type) {
+    case GL_UNSIGNED_SHORT:
+      assert(mode == GL_TRIANGLES);
+      draw_elements<uint16_t>(count, instancecount, offset, v, colortex,
+                              fb.layer, depthtex);
+      break;
+    case GL_UNSIGNED_INT:
+      assert(mode == GL_TRIANGLES);
+      draw_elements<uint32_t>(count, instancecount, offset, v, colortex,
+                              fb.layer, depthtex);
+      break;
+    case GL_NONE:
+      // Non-standard GL extension - if element type is GL_NONE, then we don't
+      // use any element buffer and behave as if DrawArrays was called instead.
+      for (GLsizei instance = 0; instance < instancecount; instance++) {
+        switch (mode) {
+          case GL_LINES:
+            for (GLsizei i = 0; i + 2 <= count; i += 2) {
+              vertex_shader->load_attribs(v.attribs, offset + i, instance, 2);
+              draw_quad(2, colortex, fb.layer, depthtex);
+            }
+            break;
+          case GL_TRIANGLES:
+            for (GLsizei i = 0; i + 3 <= count; i += 3) {
+              vertex_shader->load_attribs(v.attribs, offset + i, instance, 3);
+              draw_quad(3, colortex, fb.layer, depthtex);
+            }
+            break;
+          default:
+            assert(false);
+            break;
+        }
+      }
+      break;
+    default:
+      assert(false);
+      break;
   }
 
   if (ctx->samples_passed_query) {
