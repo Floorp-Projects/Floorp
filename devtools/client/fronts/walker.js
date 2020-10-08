@@ -10,7 +10,6 @@ const {
   registerFront,
 } = require("devtools/shared/protocol.js");
 const { walkerSpec } = require("devtools/shared/specs/walker");
-const { safeAsyncMethod } = require("devtools/shared/async-utils");
 
 loader.lazyRequireGetter(
   this,
@@ -37,12 +36,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
     this._onRootNodeAvailable = this._onRootNodeAvailable.bind(this);
     this._onRootNodeDestroyed = this._onRootNodeDestroyed.bind(this);
-
-    // pick/cancelPick requests can be triggered while the Walker is being destroyed.
-    this.pick = safeAsyncMethod(this.pick.bind(this), () => this.isDestroyed());
-    this.cancelPick = safeAsyncMethod(this.cancelPick.bind(this), () =>
-      this.isDestroyed()
-    );
 
     this.before("new-mutations", this.onMutations.bind(this));
 
