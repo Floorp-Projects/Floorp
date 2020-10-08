@@ -744,13 +744,12 @@ bool EditorEventListener::NotifyIMEOfMouseButtonEvent(
     return false;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
+  nsPresContext* presContext = GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
-  nsCOMPtr<nsIContent> focusedRootContent = GetFocusedRootContent();
   return IMEStateManager::OnMouseButtonEventInEditor(
-      presContext, focusedRootContent, aMouseEvent);
+      presContext, GetFocusedRootContent(), aMouseEvent);
 }
 
 nsresult EditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
@@ -1102,7 +1101,9 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
 
   // Spell check a textarea the first time that it is focused.
   SpellCheckIfNeeded();
-  if (DetachedFromEditor()) {
+  if (!editorBase) {
+    // In e10s, this can cause us to flush notifications, which can destroy
+    // the node we're about to focus.
     return NS_OK;
   }
 
@@ -1159,7 +1160,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     return NS_OK;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
+  nsPresContext* presContext = GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return NS_OK;
   }
