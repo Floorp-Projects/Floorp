@@ -154,10 +154,7 @@ class PrintHelper {
 
     // Mock PrintEventHandler with our Promises.
     this.win.PrintEventHandler._showPrintDialog = () => showSystemDialogPromise;
-    this.win.PrintEventHandler._doPrint = (bc, settings) => {
-      this._printedSettings = settings;
-      return printPromise;
-    };
+    this.win.PrintEventHandler._doPrint = () => printPromise;
   }
 
   addMockPrinter(name = "Mock Printer") {
@@ -282,17 +279,6 @@ class PrintHelper {
     let { settings } = this;
     for (let [setting, value] of Object.entries(expected)) {
       is(settings[setting], value, `${setting} matches`);
-    }
-  }
-
-  assertPrintedWithSettings(expected) {
-    ok(this._printedSettings, "Printed settings have been recorded");
-    for (let [setting, value] of Object.entries(expected)) {
-      is(
-        this._printedSettings[setting],
-        value,
-        `${setting} matches printed setting`
-      );
     }
   }
 
