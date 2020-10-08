@@ -10,7 +10,7 @@ use std::mem;
 #[derive(Debug)]
 #[allow(missing_docs)]
 pub struct Expression<'a> {
-    pub instrs: Vec<Instruction<'a>>,
+    pub instrs: Box<[Instruction<'a>]>,
 }
 
 impl<'a> Parse<'a> for Expression<'a> {
@@ -111,7 +111,6 @@ impl<'a> ExpressionParser<'a> {
                 }
             }
 
-
             match self.paren(parser)? {
                 // No parenthesis seen? Then we just parse the next instruction
                 // and move on.
@@ -207,7 +206,7 @@ impl<'a> ExpressionParser<'a> {
         }
 
         Ok(Expression {
-            instrs: self.instrs,
+            instrs: self.instrs.into(),
         })
     }
 
@@ -789,21 +788,21 @@ instructions! {
 
         // proposal: simd
         V128Load(MemArg<16>) : [0xfd, 0x00] : "v128.load",
-        I16x8Load8x8S(MemArg<8>) : [0xfd, 0x01] : "i16x8.load8x8_s",
-        I16x8Load8x8U(MemArg<8>) : [0xfd, 0x02] : "i16x8.load8x8_u",
-        I32x4Load16x4S(MemArg<8>) : [0xfd, 0x03] : "i32x4.load16x4_s",
-        I32x4Load16x4U(MemArg<8>) : [0xfd, 0x04] : "i32x4.load16x4_u",
-        I64x2Load32x2S(MemArg<8>) : [0xfd, 0x05] : "i64x2.load32x2_s",
-        I64x2Load32x2U(MemArg<8>) : [0xfd, 0x06] : "i64x2.load32x2_u",
-        V8x16LoadSplat(MemArg<1>) : [0xfd, 0x07] : "v8x16.load_splat",
-        V16x8LoadSplat(MemArg<2>) : [0xfd, 0x08] : "v16x8.load_splat",
-        V32x4LoadSplat(MemArg<4>) : [0xfd, 0x09] : "v32x4.load_splat",
-        V64x2LoadSplat(MemArg<8>) : [0xfd, 0x0a] : "v64x2.load_splat",
+        V128Load8x8S(MemArg<8>) : [0xfd, 0x01] : "v128.load8x8_s",
+        V128Load8x8U(MemArg<8>) : [0xfd, 0x02] : "v128.load8x8_u",
+        V128Load16x4S(MemArg<8>) : [0xfd, 0x03] : "v128.load16x4_s",
+        V128Load16x4U(MemArg<8>) : [0xfd, 0x04] : "v128.load16x4_u",
+        V128Load32x2S(MemArg<8>) : [0xfd, 0x05] : "v128.load32x2_s",
+        V128Load32x2U(MemArg<8>) : [0xfd, 0x06] : "v128.load32x2_u",
+        V128Load8Splat(MemArg<1>) : [0xfd, 0x07] : "v128.load8_splat",
+        V128Load16Splat(MemArg<2>) : [0xfd, 0x08] : "v128.load16_splat",
+        V128Load32Splat(MemArg<4>) : [0xfd, 0x09] : "v128.load32_splat",
+        V128Load64Splat(MemArg<8>) : [0xfd, 0x0a] : "v128.load64_splat",
         V128Store(MemArg<16>) : [0xfd, 0x0b] : "v128.store",
 
         V128Const(V128Const) : [0xfd, 0x0c] : "v128.const",
-        V8x16Shuffle(V8x16Shuffle) : [0xfd, 0x0d] : "v8x16.shuffle",
-        V8x16Swizzle : [0xfd, 0x0e] : "v8x16.swizzle",
+        I8x16Shuffle(I8x16Shuffle) : [0xfd, 0x0d] : "i8x16.shuffle",
+        I8x16Swizzle : [0xfd, 0x0e] : "i8x16.swizzle",
 
         I8x16Splat : [0xfd, 0x0f] : "i8x16.splat",
         I16x8Splat : [0xfd, 0x10] : "i16x8.splat",
@@ -812,20 +811,20 @@ instructions! {
         F32x4Splat : [0xfd, 0x13] : "f32x4.splat",
         F64x2Splat : [0xfd, 0x14] : "f64x2.splat",
 
-        I8x16ExtractLaneS(u8) : [0xfd, 0x15] : "i8x16.extract_lane_s",
-        I8x16ExtractLaneU(u8) : [0xfd, 0x16] : "i8x16.extract_lane_u",
-        I8x16ReplaceLane(u8) : [0xfd, 0x17] : "i8x16.replace_lane",
-        I16x8ExtractLaneS(u8) : [0xfd, 0x18] : "i16x8.extract_lane_s",
-        I16x8ExtractLaneU(u8) : [0xfd, 0x19] : "i16x8.extract_lane_u",
-        I16x8ReplaceLane(u8) : [0xfd, 0x1a] : "i16x8.replace_lane",
-        I32x4ExtractLane(u8) : [0xfd, 0x1b] : "i32x4.extract_lane",
-        I32x4ReplaceLane(u8) : [0xfd, 0x1c] : "i32x4.replace_lane",
-        I64x2ExtractLane(u8) : [0xfd, 0x1d] : "i64x2.extract_lane",
-        I64x2ReplaceLane(u8) : [0xfd, 0x1e] : "i64x2.replace_lane",
-        F32x4ExtractLane(u8) : [0xfd, 0x1f] : "f32x4.extract_lane",
-        F32x4ReplaceLane(u8) : [0xfd, 0x20] : "f32x4.replace_lane",
-        F64x2ExtractLane(u8) : [0xfd, 0x21] : "f64x2.extract_lane",
-        F64x2ReplaceLane(u8) : [0xfd, 0x22] : "f64x2.replace_lane",
+        I8x16ExtractLaneS(LaneArg) : [0xfd, 0x15] : "i8x16.extract_lane_s",
+        I8x16ExtractLaneU(LaneArg) : [0xfd, 0x16] : "i8x16.extract_lane_u",
+        I8x16ReplaceLane(LaneArg) : [0xfd, 0x17] : "i8x16.replace_lane",
+        I16x8ExtractLaneS(LaneArg) : [0xfd, 0x18] : "i16x8.extract_lane_s",
+        I16x8ExtractLaneU(LaneArg) : [0xfd, 0x19] : "i16x8.extract_lane_u",
+        I16x8ReplaceLane(LaneArg) : [0xfd, 0x1a] : "i16x8.replace_lane",
+        I32x4ExtractLane(LaneArg) : [0xfd, 0x1b] : "i32x4.extract_lane",
+        I32x4ReplaceLane(LaneArg) : [0xfd, 0x1c] : "i32x4.replace_lane",
+        I64x2ExtractLane(LaneArg) : [0xfd, 0x1d] : "i64x2.extract_lane",
+        I64x2ReplaceLane(LaneArg) : [0xfd, 0x1e] : "i64x2.replace_lane",
+        F32x4ExtractLane(LaneArg) : [0xfd, 0x1f] : "f32x4.extract_lane",
+        F32x4ReplaceLane(LaneArg) : [0xfd, 0x20] : "f32x4.replace_lane",
+        F64x2ExtractLane(LaneArg) : [0xfd, 0x21] : "f64x2.extract_lane",
+        F64x2ReplaceLane(LaneArg) : [0xfd, 0x22] : "f64x2.replace_lane",
 
         I8x16Eq : [0xfd, 0x23] : "i8x16.eq",
         I8x16Ne : [0xfd, 0x24] : "i8x16.ne",
@@ -889,11 +888,11 @@ instructions! {
         I8x16ShrS : [0xfd, 0x6c] : "i8x16.shr_s",
         I8x16ShrU : [0xfd, 0x6d] : "i8x16.shr_u",
         I8x16Add : [0xfd, 0x6e] : "i8x16.add",
-        I8x16AddSaturateS : [0xfd, 0x6f] : "i8x16.add_saturate_s",
-        I8x16AddSaturateU : [0xfd, 0x70] : "i8x16.add_saturate_u",
+        I8x16AddSatS : [0xfd, 0x6f] : "i8x16.add_sat_s",
+        I8x16AddSatU : [0xfd, 0x70] : "i8x16.add_sat_u",
         I8x16Sub : [0xfd, 0x71] : "i8x16.sub",
-        I8x16SubSaturateS : [0xfd, 0x72] : "i8x16.sub_saturate_s",
-        I8x16SubSaturateU : [0xfd, 0x73] : "i8x16.sub_saturate_u",
+        I8x16SubSatS : [0xfd, 0x72] : "i8x16.sub_sat_s",
+        I8x16SubSatU : [0xfd, 0x73] : "i8x16.sub_sat_u",
         I8x16MinS : [0xfd, 0x76] : "i8x16.min_s",
         I8x16MinU : [0xfd, 0x77] : "i8x16.min_u",
         I8x16MaxS : [0xfd, 0x78] : "i8x16.max_s",
@@ -915,11 +914,11 @@ instructions! {
         I16x8ShrS : [0xfd, 0x8c] : "i16x8.shr_s",
         I16x8ShrU : [0xfd, 0x8d] : "i16x8.shr_u",
         I16x8Add : [0xfd, 0x8e] : "i16x8.add",
-        I16x8AddSaturateS : [0xfd, 0x8f] : "i16x8.add_saturate_s",
-        I16x8AddSaturateU : [0xfd, 0x90] : "i16x8.add_saturate_u",
+        I16x8AddSatS : [0xfd, 0x8f] : "i16x8.add_sat_s",
+        I16x8AddSatU : [0xfd, 0x90] : "i16x8.add_sat_u",
         I16x8Sub : [0xfd, 0x91] : "i16x8.sub",
-        I16x8SubSaturateS : [0xfd, 0x92] : "i16x8.sub_saturate_s",
-        I16x8SubSaturateU : [0xfd, 0x93] : "i16x8.sub_saturate_u",
+        I16x8SubSatS : [0xfd, 0x92] : "i16x8.sub_sat_s",
+        I16x8SubSatU : [0xfd, 0x93] : "i16x8.sub_sat_u",
         I16x8Mul : [0xfd, 0x95] : "i16x8.mul",
         I16x8MinS : [0xfd, 0x96] : "i16x8.min_s",
         I16x8MinU : [0xfd, 0x97] : "i16x8.min_u",
@@ -941,12 +940,12 @@ instructions! {
         I32x4ShrU : [0xfd, 0xad] : "i32x4.shr_u",
         I32x4Add : [0xfd, 0xae] : "i32x4.add",
         I32x4Sub : [0xfd, 0xb1] : "i32x4.sub",
-        I32x4DotI16x8S : [0xfd, 0xb4] : "i32x4.dot_i8x16_s",
         I32x4Mul : [0xfd, 0xb5] : "i32x4.mul",
         I32x4MinS : [0xfd, 0xb6] : "i32x4.min_s",
         I32x4MinU : [0xfd, 0xb7] : "i32x4.min_u",
         I32x4MaxS : [0xfd, 0xb8] : "i32x4.max_s",
         I32x4MaxU : [0xfd, 0xb9] : "i32x4.max_u",
+        I32x4DotI16x8S : [0xfd, 0xba] : "i32x4.dot_i8x16_s",
 
         I64x2Neg : [0xfd, 0xc1] : "i64x2.neg",
         I64x2Shl : [0xfd, 0xcb] : "i64x2.shl",
@@ -955,6 +954,15 @@ instructions! {
         I64x2Add : [0xfd, 0xce] : "i64x2.add",
         I64x2Sub : [0xfd, 0xd1] : "i64x2.sub",
         I64x2Mul : [0xfd, 0xd5] : "i64x2.mul",
+
+        F32x4Ceil : [0xfd, 0xd8] : "f32x4.ceil",
+        F32x4Floor : [0xfd, 0xd9] : "f32x4.floor",
+        F32x4Trunc : [0xfd, 0xda] : "f32x4.trunc",
+        F32x4Nearest : [0xfd, 0xdb] : "f32x4.nearest",
+        F64x2Ceil : [0xfd, 0xdc] : "f64x2.ceil",
+        F64x2Floor : [0xfd, 0xdd] : "f64x2.floor",
+        F64x2Trunc : [0xfd, 0xde] : "f64x2.trunc",
+        F64x2Nearest : [0xfd, 0xdf] : "f64x2.nearest",
 
         F32x4Abs : [0xfd, 0xe0] : "f32x4.abs",
         F32x4Neg : [0xfd, 0xe1] : "f32x4.neg",
@@ -965,6 +973,8 @@ instructions! {
         F32x4Div : [0xfd, 0xe7] : "f32x4.div",
         F32x4Min : [0xfd, 0xe8] : "f32x4.min",
         F32x4Max : [0xfd, 0xe9] : "f32x4.max",
+        F32x4PMin : [0xfd, 0xea] : "f32x4.pmin",
+        F32x4PMax : [0xfd, 0xeb] : "f32x4.pmax",
 
         F64x2Abs : [0xfd, 0xec] : "f64x2.abs",
         F64x2Neg : [0xfd, 0xed] : "f64x2.neg",
@@ -975,6 +985,8 @@ instructions! {
         F64x2Div : [0xfd, 0xf3] : "f64x2.div",
         F64x2Min : [0xfd, 0xf4] : "f64x2.min",
         F64x2Max : [0xfd, 0xf5] : "f64x2.max",
+        F64x2PMin : [0xfd, 0xf6] : "f64x2.pmin",
+        F64x2PMax : [0xfd, 0xf7] : "f64x2.pmax",
 
         I32x4TruncSatF32x4S : [0xfd, 0xf8] : "i32x4.trunc_sat_f32x4_s",
         I32x4TruncSatF32x4U : [0xfd, 0xf9] : "i32x4.trunc_sat_f32x4_u",
@@ -1063,6 +1075,33 @@ impl<'a> Parse<'a> for BrTableIndices<'a> {
         }
         let default = labels.pop().unwrap();
         Ok(BrTableIndices { labels, default })
+    }
+}
+
+/// Payload for lane-related instructions. Unsigned with no + prefix.
+#[derive(Debug)]
+pub struct LaneArg {
+    /// The lane argument.
+    pub lane: u8,
+}
+
+impl<'a> Parse<'a> for LaneArg {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let lane = parser.step(|c| {
+            if let Some((i, rest)) = c.integer() {
+                if i.sign() == None {
+                    let (src, radix) = i.val();
+                    let val = u8::from_str_radix(src, radix)
+                        .map_err(|_| c.error("malformed lane index"))?;
+                    Ok((val, rest))
+                } else {
+                    Err(c.error("unexpected token"))
+                }
+            } else {
+                Err(c.error("expected a lane index"))
+            }
+        })?;
+        Ok(LaneArg { lane })
     }
 }
 
@@ -1480,16 +1519,16 @@ impl<'a> Parse<'a> for V128Const {
     }
 }
 
-/// Lanes being shuffled in the `v8x16.shuffle` instruction
+/// Lanes being shuffled in the `i8x16.shuffle` instruction
 #[derive(Debug)]
-pub struct V8x16Shuffle {
+pub struct I8x16Shuffle {
     #[allow(missing_docs)]
     pub lanes: [u8; 16],
 }
 
-impl<'a> Parse<'a> for V8x16Shuffle {
+impl<'a> Parse<'a> for I8x16Shuffle {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        Ok(V8x16Shuffle {
+        Ok(I8x16Shuffle {
             lanes: [
                 parser.parse()?,
                 parser.parse()?,

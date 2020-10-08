@@ -1,5 +1,6 @@
 use crate::ast::{self, kw};
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
+use std::mem;
 
 /// The value types for a wasm module.
 #[allow(missing_docs)]
@@ -411,22 +412,26 @@ impl<'a> Parse<'a> for MemoryType {
 pub struct FunctionType<'a> {
     /// The parameters of a function, optionally each having an identifier for
     /// name resolution and a name for the custom `name` section.
-    pub params: Vec<(
-        Option<ast::Id<'a>>,
-        Option<ast::NameAnnotation<'a>>,
-        ValType<'a>,
-    )>,
+    pub params: Box<
+        [(
+            Option<ast::Id<'a>>,
+            Option<ast::NameAnnotation<'a>>,
+            ValType<'a>,
+        )],
+    >,
     /// The results types of a function.
-    pub results: Vec<ValType<'a>>,
+    pub results: Box<[ValType<'a>]>,
 }
 
 impl<'a> FunctionType<'a> {
     fn finish_parse(&mut self, allow_names: bool, parser: Parser<'a>) -> Result<()> {
+        let mut params = Vec::from(mem::take(&mut self.params));
+        let mut results = Vec::from(mem::take(&mut self.results));
         while parser.peek2::<kw::param>() || parser.peek2::<kw::result>() {
             parser.parens(|p| {
                 let mut l = p.lookahead1();
                 if l.peek::<kw::param>() {
-                    if self.results.len() > 0 {
+                    if results.len() > 0 {
                         return Err(p.error(
                             "result before parameter (or unexpected token): \
                              cannot list params after results",
@@ -443,14 +448,14 @@ impl<'a> FunctionType<'a> {
                     };
                     let parse_more = id.is_none() && name.is_none();
                     let ty = p.parse()?;
-                    self.params.push((id, name, ty));
+                    params.push((id, name, ty));
                     while parse_more && !p.is_empty() {
-                        self.params.push((None, None, p.parse()?));
+                        params.push((None, None, p.parse()?));
                     }
                 } else if l.peek::<kw::result>() {
                     p.parse::<kw::result>()?;
                     while !p.is_empty() {
-                        self.results.push(p.parse()?);
+                        results.push(p.parse()?);
                     }
                 } else {
                     return Err(l.error());
@@ -458,6 +463,8 @@ impl<'a> FunctionType<'a> {
                 Ok(())
             })?;
         }
+        self.params = params.into();
+        self.results = results.into();
         Ok(())
     }
 }
@@ -465,8 +472,8 @@ impl<'a> FunctionType<'a> {
 impl<'a> Parse<'a> for FunctionType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut ret = FunctionType {
-            params: Vec::new(),
-            results: Vec::new(),
+            params: Box::new([]),
+            results: Box::new([]),
         };
         ret.finish_parse(true, parser)?;
         Ok(ret)
@@ -497,8 +504,8 @@ pub struct FunctionTypeNoNames<'a>(pub FunctionType<'a>);
 impl<'a> Parse<'a> for FunctionTypeNoNames<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut ret = FunctionType {
-            params: Vec::new(),
-            results: Vec::new(),
+            params: Box::new([]),
+            results: Box::new([]),
         };
         ret.finish_parse(false, parser)?;
         Ok(FunctionTypeNoNames(ret))
