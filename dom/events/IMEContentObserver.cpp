@@ -242,7 +242,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  PresShell* presShell = aPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = aPresContext->GetPresShell();
 
   // get selection and root content
   nsCOMPtr<nsISelectionController> selCon;
@@ -272,10 +272,11 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
       return false;
     }
 
-    mRootContent =
-        selRange->GetStartContainer()->GetSelectionRootContent(presShell);
+    nsCOMPtr<nsINode> startContainer = selRange->GetStartContainer();
+    mRootContent = startContainer->GetSelectionRootContent(presShell);
   } else {
-    mRootContent = mEditableNode->GetSelectionRootContent(presShell);
+    nsCOMPtr<nsINode> editableNode = mEditableNode;
+    mRootContent = editableNode->GetSelectionRootContent(presShell);
   }
   if (!mRootContent && mEditableNode->IsDocument()) {
     // The document node is editable, but there are no contents, this document

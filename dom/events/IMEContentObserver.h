@@ -67,10 +67,11 @@ class IMEContentObserver final : public nsStubMutationObserver,
    */
   void OnSelectionChange(dom::Selection& aSelection);
 
-  bool OnMouseButtonEvent(nsPresContext* aPresContext,
-                          WidgetMouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT bool OnMouseButtonEvent(nsPresContext* aPresContext,
+                                             WidgetMouseEvent* aMouseEvent);
 
-  nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
   /**
    * Init() initializes the instance, i.e., retrieving necessary objects and
@@ -90,8 +91,8 @@ class IMEContentObserver final : public nsStubMutationObserver,
    *                        Otherwise, i.e., this will observe a plugin content,
    *                        should be nullptr.
    */
-  void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
-            nsIContent* aContent, EditorBase* aEditorBase);
+  MOZ_CAN_RUN_SCRIPT void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
+                               nsIContent* aContent, EditorBase* aEditorBase);
 
   /**
    * Destroy() finalizes the instance, i.e., stops observing contents and
@@ -124,8 +125,10 @@ class IMEContentObserver final : public nsStubMutationObserver,
    * @return            Returns true if the instance is managing the content.
    *                    Otherwise, false.
    */
-  bool MaybeReinitialize(nsIWidget* aWidget, nsPresContext* aPresContext,
-                         nsIContent* aContent, EditorBase* aEditorBase);
+  MOZ_CAN_RUN_SCRIPT bool MaybeReinitialize(nsIWidget* aWidget,
+                                            nsPresContext* aPresContext,
+                                            nsIContent* aContent,
+                                            EditorBase* aEditorBase);
 
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
@@ -179,8 +182,9 @@ class IMEContentObserver final : public nsStubMutationObserver,
     eState_Observing
   };
   State GetState() const;
-  bool InitWithEditor(nsPresContext* aPresContext, nsIContent* aContent,
-                      EditorBase* aEditorBase);
+  MOZ_CAN_RUN_SCRIPT bool InitWithEditor(nsPresContext* aPresContext,
+                                         nsIContent* aContent,
+                                         EditorBase* aEditorBase);
   bool InitWithPlugin(nsPresContext* aPresContext, nsIContent* aContent);
   bool IsInitializedWithPlugin() const { return !mEditorBase; }
   void OnIMEReceivedFocus();
@@ -292,7 +296,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
    *
    * Note that this does nothing if WasInitializedWithPlugin() returns true.
    */
-  bool UpdateSelectionCache(bool aRequireFlush = true);
+  MOZ_CAN_RUN_SCRIPT bool UpdateSelectionCache(bool aRequireFlush = true);
 
   nsCOMPtr<nsIWidget> mWidget;
   // mFocusedWidget has the editor observed by the instance.  E.g., if the
@@ -351,13 +355,13 @@ class IMEContentObserver final : public nsStubMutationObserver,
     explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
         : AChangeEvent("IMENotificationSender", aIMEContentObserver),
           mIsRunning(false) {}
-    NS_IMETHOD Run() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
 
     void Dispatch(nsIDocShell* aDocShell);
 
    private:
-    void SendFocusSet();
-    void SendSelectionChange();
+    MOZ_CAN_RUN_SCRIPT void SendFocusSet();
+    MOZ_CAN_RUN_SCRIPT void SendSelectionChange();
     void SendTextChange();
     void SendPositionChange();
     void SendCompositionEventHandled();

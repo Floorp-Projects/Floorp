@@ -1081,7 +1081,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   void ReleaseCurrentIMEContentObserver();
 
-  void HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT void HandleQueryContentEvent(
+      WidgetQueryContentEvent* aEvent);
 
  private:
   // Removes a node from the :hover / :active chain if needed, notifying if the
