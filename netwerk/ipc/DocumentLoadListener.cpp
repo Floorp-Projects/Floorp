@@ -97,10 +97,8 @@ static auto SecurityFlagsForLoadInfo(nsDocShellLoadState* aLoadState)
         true,  // aInheritForAboutBlank
         isSrcdoc);
 
-    bool isURIUniqueOrigin =
-        StaticPrefs::security_data_uri_unique_opaque_origin() &&
-        SchemeIsData(aLoadState->URI());
-    if (inheritAttrs && !isURIUniqueOrigin) {
+    bool isData = SchemeIsData(aLoadState->URI());
+    if (inheritAttrs && !isData) {
       securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
     }
   }

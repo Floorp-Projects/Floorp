@@ -313,9 +313,7 @@ function checkChangeIsEnabled(aWindow, aNext)
 }
 
 SpecialPowers.pushPrefEnv({
-  "set": [["dom.disable_window_move_resize", false],
-          ["security.data_uri.unique_opaque_origin", false],
-          ["security.data_uri.block_toplevel_data_uri_navigations", false],]},
+  "set": [["dom.disable_window_move_resize", false]]},
                           function() {
 SimpleTest.waitForFocus(function() {
   if (screen.width <= 200 || screen.height <= 200) {
@@ -330,17 +328,7 @@ SimpleTest.waitForFocus(function() {
   checkChangeIsDisabled(window).then(function() {
     // We create a window and check that it can change its own size and position.
     // However, passing size/position parameters to window.open should work.
-    var w = window.open("data:text/html,<script>" +
-      "function check(next) {" +
-      "  var is_range = function(aTest, aValue, aRange, aMsg) {" +
-      "    window.opener.ok(aTest < aValue + aRange && aTest > aValue - aRange, aMsg);" +
-      "  };" +
-      "  is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');" +
-      "  is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');" +
-      "  is_range(window.screenX, 65, 5, 'parameter screenX should be taken into account');" +
-      "  is_range(window.screenY, 65, 5, 'parameter screenY should be taken into account');" +
-      "  window.opener.checkChangeIsEnabled(window, next);" +
-      "} <\/script>", '',
+    var w = window.open("file_resize_move_windows_1.html", '',
       'width=170,height=170,screenX=65,screenY=65');
 
     SimpleTest.waitForFocus(function() {
@@ -352,11 +340,7 @@ SimpleTest.waitForFocus(function() {
           // If we call window.open with an empty string as a third parameter,
           // by default, it will create a new tab instead of a new window.
           // In that case, we shouldn't allow the caller to change the size/position.
-          w = window.open("data:text/html,<script>" +
-            "function check(next) {" +
-            "  window.opener.checkChangeIsDisabled(window).then(next);" +
-            "} <\/script>", '', '');
-
+          w = window.open("file_resize_move_windows_2.html", '', '');
           SimpleTest.waitForFocus(function() {
             w.check(function() {
 

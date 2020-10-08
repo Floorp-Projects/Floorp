@@ -5,9 +5,6 @@ const gTestRoot = rootDir.replace(
 );
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.data_uri.unique_opaque_origin", true]],
-  });
   is(
     navigator.plugins.length,
     0,
