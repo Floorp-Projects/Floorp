@@ -743,9 +743,6 @@ with Files("tests/webrtc-identity/**"):
 with Files("tests/webrtc-insertable-streams/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
-with Files("tests/webrtc-quic/**"):
-    BUG_COMPONENT = ("Core", "WebRTC")
-
 with Files("tests/webrtc-stats/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
