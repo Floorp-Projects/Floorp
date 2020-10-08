@@ -11173,11 +11173,11 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     // document, even if they are only paused.
     MOZ_ASSERT(!clone->GetNavigationTiming(),
                "Navigation time was already set?");
-    if (mTiming) {
-      RefPtr<nsDOMNavigationTiming> timing =
-          mTiming->CloneNavigationTime(nsDocShell::Cast(clone->GetDocShell()));
-      clone->SetNavigationTiming(timing);
-    }
+    MOZ_ASSERT(mTiming,
+               "Timing should have been setup before making a static clone");
+    RefPtr<nsDOMNavigationTiming> timing =
+        mTiming->CloneNavigationTime(nsDocShell::Cast(clone->GetDocShell()));
+    clone->SetNavigationTiming(timing);
     clone->SetCsp(mCSP);
   }
 
