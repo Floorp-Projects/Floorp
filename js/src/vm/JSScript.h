@@ -2016,15 +2016,14 @@ class JSScript : public js::BaseScript {
   static bool fullyInitFromStencil(
       JSContext* cx, js::frontend::CompilationInfo& compilationInfo,
       js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
-      const js::frontend::ScriptStencil& scriptStencil,
-      js::HandleFunction function);
+      js::frontend::ScriptStencil& scriptStencil, js::HandleFunction function);
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
   static JSScript* fromStencil(JSContext* cx,
                                js::frontend::CompilationInfo& compilationInfo,
                                js::frontend::CompilationGCOutput& gcOutput,
-                               const js::frontend::ScriptStencil& scriptStencil,
+                               js::frontend::ScriptStencil& scriptStencil,
                                js::HandleFunction function);
 
 #ifdef DEBUG

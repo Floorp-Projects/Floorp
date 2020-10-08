@@ -138,13 +138,13 @@ class BigIntStencil {
     return buf_ != nullptr;
   }
 
-  BigInt* createBigInt(JSContext* cx) const {
+  BigInt* createBigInt(JSContext* cx) {
     mozilla::Range<const char16_t> source(buf_.get(), length_);
 
     return js::ParseBigIntLiteral(cx, source);
   }
 
-  bool isZero() const {
+  bool isZero() {
     mozilla::Range<const char16_t> source(buf_.get(), length_);
     return js::BigIntLiteralIsZero(source);
   }
@@ -244,7 +244,7 @@ class ScopeStencil {
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  AbstractScopePtr enclosing(CompilationInfo& compilationInfo) const;
+  AbstractScopePtr enclosing(CompilationInfo& compilationInfo);
 
   ScopeKind kind() const { return kind_; }
 
@@ -258,7 +258,7 @@ class ScopeStencil {
   bool isArrow() const { return isArrow_; }
 
   Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo,
-                     CompilationGCOutput& gcOutput) const;
+                     CompilationGCOutput& gcOutput);
 
   uint32_t nextFrameSlot() const;
 
@@ -284,7 +284,7 @@ class ScopeStencil {
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::Data> createSpecificScopeData(
       JSContext* cx, CompilationInfo& compilationInfo,
-      CompilationGCOutput& gcOutput) const;
+      CompilationGCOutput& gcOutput);
 
   template <typename SpecificScopeType>
   uint32_t nextFrameSlot() const {
@@ -296,11 +296,11 @@ class ScopeStencil {
   template <typename SpecificEnvironmentType>
   MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
                                         BaseScopeData* scopeData,
-                                        MutableHandleShape shape) const;
+                                        MutableHandleShape shape);
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo,
-                             CompilationGCOutput& gcOutput) const;
+                             CompilationGCOutput& gcOutput);
 };
 
 // As an alternative to a ScopeIndex (which references a ScopeStencil), we may
@@ -409,7 +409,7 @@ class StencilModuleMetadata {
   StencilModuleMetadata() = default;
 
   bool initModule(JSContext* cx, CompilationInfo& compilationInfo,
-                  JS::Handle<ModuleObject*> module) const;
+                  JS::Handle<ModuleObject*> module);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
