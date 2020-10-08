@@ -1593,7 +1593,14 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   // Get anchor rectangle
   LayoutDeviceIntRect anchorRect(0, 0, 0, 0);
   nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-  int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
+
+  int32_t p2a;
+  double devPixelsPerCSSPixel = StaticPrefs::layout_css_devPixelsPerPx();
+  if (devPixelsPerCSSPixel > 0.0) {
+    p2a = AppUnitsPerCSSPixel() / devPixelsPerCSSPixel * GdkScaleFactor();
+  } else {
+    p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
+  }
   if (popupFrame) {
 #ifdef MOZ_WAYLAND
     anchorRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
