@@ -1134,14 +1134,21 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
            Stringify(aBounds).c_str(), Stringify(clip).c_str(),
            Stringify(aColor).c_str());
 
-  AutoTArray<wr::ComplexClipRegion, 1> clips;
-  clips.AppendElement(wr::SimpleRadii(aBounds, aBounds.size.width / 2));
-  // TODO: use `mCurrentSpaceAndClipChain.clip_chain` as a parent?
-  auto clipId = DefineClip(Nothing(), aBounds, &clips);
-  auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
+  // Draw the rounded rectangle as a border with rounded corners. We could also
+  // draw this as a rectangle clipped to a rounded rectangle, but:
+  // - clips are not cached; borders are
+  // - a simple border like this will be drawn as an image
+  // - Processing lots of clips is not WebRender's strong point.
+  wr::BorderSide side = {aColor, wr::BorderStyle::Solid};
+  float h = aBounds.size.width / 2;
+  float v = aBounds.size.height / 2;
+  wr::LayoutSideOffsets widths = {v, h, v, h};
+  wr::BorderRadius radii = {{h, v}, {h, v}, {h, v}, {h, v}};
 
-  wr_dp_push_rect_with_parent_clip(mWrState, aBounds, clip, aIsBackfaceVisible,
-                                   &spaceAndClip, aColor);
+  // Anti-aliased borders are required for rounded borders.
+  wr_dp_push_border(mWrState, aBounds, clip, aIsBackfaceVisible,
+                    &mCurrentSpaceAndClipChain, wr::AntialiasBorder::Yes,
+                    widths, side, side, side, side, radii);
 }
 
 void DisplayListBuilder::PushHitTest(
