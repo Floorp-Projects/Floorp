@@ -735,7 +735,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=91a7bb50198a9b7578d98d56e9fd32f257abb41f#91a7bb50198a9b7578d98d56e9fd32f257abb41f"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=08a2b75285732a2e1a389bc4ab02518c74a8a9c5#08a2b75285732a2e1a389bc4ab02518c74a8a9c5"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -984,7 +984,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=91a7bb50198a9b7578d98d56e9fd32f257abb41f#91a7bb50198a9b7578d98d56e9fd32f257abb41f"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=08a2b75285732a2e1a389bc4ab02518c74a8a9c5#08a2b75285732a2e1a389bc4ab02518c74a8a9c5"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -5567,18 +5567,18 @@ checksum = "57da5d7300428d75d8b3cdfb736e41ee6af8926d69c1de2f201a1a22f234b7b5"
 
 [[package]]
 name = "wast"
-version = "23.0.0"
+version = "25.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26b080a48623c1b15193eac2e28c7b8d0e6b2e1c6c67ed46ddcd86063e78e504"
+checksum = "94c7c4b9eeb5c233b89385147dd3ea5bb89988a3a8d256f116cf1db40e5ff43e"
 dependencies = [
  "leb128",
 ]
 
 [[package]]
 name = "wat"
-version = "1.0.24"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c350d7431aa486488d28cdf75b57d59c02fab9cde20d93c52424510afe18ecc"
+checksum = "4766d466249e23279e92c52033429eb91141c5efea1c4478138fa6f6ef4efe3e"
 dependencies = [
  "wast",
 ]

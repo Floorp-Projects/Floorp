@@ -58,6 +58,7 @@ let gContainersManager = {
   },
 
   init(aParams) {
+    this._dialog = document.querySelector("dialog");
     this.userContextId = aParams.userContextId || null;
     this.identity = aParams.identity;
 
@@ -73,6 +74,8 @@ let gContainersManager = {
       this.checkForm();
     }
 
+    document.addEventListener("dialogaccept", () => this.onApplyChanges());
+
     // This is to prevent layout jank caused by the svgs and outlines rendering at different times
     document.getElementById("containers-content").removeAttribute("hidden");
   },
@@ -82,12 +85,7 @@ let gContainersManager = {
   // Check if name is provided to determine if the form can be submitted
   checkForm() {
     const name = document.getElementById("name");
-    let btnApplyChanges = document.getElementById("btnApplyChanges");
-    if (!name.value) {
-      btnApplyChanges.setAttribute("disabled", true);
-    } else {
-      btnApplyChanges.removeAttribute("disabled");
-    }
+    this._dialog.setAttribute("buttondisabledaccept", !name.value);
   },
 
   createIconButtons(defaultIcon) {
@@ -165,11 +163,5 @@ let gContainersManager = {
       ContextualIdentityService.create(name, icon, color);
     }
     window.parent.location.reload();
-  },
-
-  onWindowKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      window.close();
-    }
   },
 };

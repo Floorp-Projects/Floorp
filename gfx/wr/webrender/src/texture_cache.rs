@@ -29,7 +29,7 @@ use std::rc::Rc;
 /// The size of each region/layer in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
 
-const PICTURE_TEXTURE_ADD_SLICES: usize = 4;
+const PICTURE_TEXTURE_SLICE_COUNT: usize = 8;
 
 /// The chosen image format for picture tiles.
 const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
@@ -309,48 +309,10 @@ struct PictureTextures {
 
 impl PictureTextures {
     fn new(
-        initial_window_size: DeviceIntSize,
-        picture_tile_sizes: &[DeviceIntSize],
         default_tile_size: DeviceIntSize,
-        next_texture_id: &mut CacheTextureId,
-        pending_updates: &mut TextureUpdateList,
     ) -> Self {
-        let mut textures = Vec::new();
-        for tile_size in picture_tile_sizes {
-            // TODO(gw): The way initial size is used here may allocate a lot of memory once
-            //           we are using multiple slice sizes. Do some measurements once we
-            //           have multiple slices here and adjust the calculations as required.
-            let num_x = (initial_window_size.width + tile_size.width - 1) / tile_size.width;
-            let num_y = (initial_window_size.height + tile_size.height - 1) / tile_size.height;
-            let mut slice_count = (num_x * num_y).max(1).min(16) as usize;
-            if slice_count < 4 {
-                // On some platforms we get bogus (1x1) initial window size. The first real frame will then
-                // reallocate many more picture cache slices. Don't bother preallocating in that case.
-                slice_count = 0;
-            }
-
-            if slice_count == 0 {
-                continue;
-            }
-
-            let texture = WholeTextureArray {
-                size: *tile_size,
-                filter: TextureFilter::Nearest,
-                format: PICTURE_TILE_FORMAT,
-                texture_id: *next_texture_id,
-                slices: vec![WholeTextureSlice { uv_rect_handle: None }; slice_count],
-                has_depth: true,
-            };
-
-            next_texture_id.0 += 1;
-
-            pending_updates.push_alloc(texture.texture_id, texture.to_info());
-
-            textures.push(texture);
-        }
-
         PictureTextures {
-            textures,
+            textures: Vec::new(),
             default_tile_size,
         }
     }
@@ -362,42 +324,46 @@ impl PictureTextures {
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
     ) -> CacheEntry {
-        let texture_index = self.textures
-            .iter()
-            .position(|texture| { texture.size == tile_size })
-            .unwrap_or(self.textures.len());
-
-        if texture_index == self.textures.len() {
-            self.textures.push(WholeTextureArray {
-                size: tile_size,
-                filter: TextureFilter::Nearest,
-                format: PICTURE_TILE_FORMAT,
-                texture_id: *next_texture_id,
-                slices: Vec::new(),
-                has_depth: true,
-            });
-            next_texture_id.0 += 1;
+        // Attempt to find an existing texture with matching tile size and
+        // and available slice.
+        for (i, texture) in self.textures.iter_mut().enumerate() {
+            if texture.size == tile_size {
+                if let Some(layer_index) = texture.find_free() {
+                    return texture.occupy(i, layer_index, now);
+                }
+            }
         }
 
-        let texture = &mut self.textures[texture_index];
-
-        let layer_index = match texture.find_free() {
-            Some(index) => index,
-            None => {
-                let was_empty = texture.slices.is_empty();
-                let index = texture.grow(PICTURE_TEXTURE_ADD_SLICES);
-                let info = texture.to_info();
-                if was_empty {
-                    pending_updates.push_alloc(texture.texture_id, info);
-                } else {
-                    pending_updates.push_realloc(texture.texture_id, info);
-                }
-
-                index
-            },
+        // Allocate a new texture with fixed number of slices.
+        let mut slices = Vec::new();
+        for _ in 0 .. PICTURE_TEXTURE_SLICE_COUNT {
+            slices.push(WholeTextureSlice {
+                uv_rect_handle: None,
+            });
+        }
+        let mut texture = WholeTextureArray {
+            size: tile_size,
+            filter: TextureFilter::Nearest,
+            format: PICTURE_TILE_FORMAT,
+            texture_id: *next_texture_id,
+            slices,
+            has_depth: true,
         };
+        next_texture_id.0 += 1;
 
-        texture.occupy(texture_index, layer_index, now)
+        // Occupy the first slice of the new texture
+        let entry = texture.occupy(
+            self.textures.len(),
+            0,
+            now,
+        );
+
+        // Push the alloc to render thread pending updates
+        let info = texture.to_info();
+        pending_updates.push_alloc(texture.texture_id, info);
+        self.textures.push(texture);
+
+        entry
     }
 
     fn get(&mut self, index: usize) -> &mut WholeTextureArray {
@@ -405,14 +371,8 @@ impl PictureTextures {
     }
 
     fn clear(&mut self, pending_updates: &mut TextureUpdateList) {
-        for texture in &mut self.textures {
-            if texture.slices.is_empty() {
-                continue;
-            }
-
-            if let Some(texture_id) = texture.reset(PICTURE_TEXTURE_ADD_SLICES) {
-                pending_updates.push_reset(texture_id, texture.to_info());
-            }
+        for texture in self.textures.drain(..) {
+            pending_updates.push_free(texture.texture_id);
         }
     }
 
@@ -426,11 +386,6 @@ impl PictureTextures {
             picture_bytes += texture.size_in_bytes();
         }
         profile.set(picture_slices, picture_bytes);
-    }
-
-    #[cfg(feature = "replay")]
-    fn tile_sizes(&self) -> Vec<DeviceIntSize> {
-        self.textures.iter().map(|pt| pt.size).collect()
     }
 }
 
@@ -527,9 +482,7 @@ impl TextureCache {
     pub fn new(
         max_texture_size: i32,
         mut max_texture_layers: usize,
-        picture_tile_sizes: &[DeviceIntSize],
         default_picture_tile_size: DeviceIntSize,
-        initial_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
     ) -> Self {
@@ -561,7 +514,7 @@ impl TextureCache {
         //     start to introduce performance issues.
         max_texture_layers = max_texture_layers.min(16);
 
-        let mut pending_updates = TextureUpdateList::new();
+        let pending_updates = TextureUpdateList::new();
 
         // Shared texture cache controls swizzling on a per-entry basis, assuming that
         // the texture as a whole doesn't need to be swizzled (but only some entries do).
@@ -570,16 +523,12 @@ impl TextureCache {
             swizzle.map_or(true, |s| s.bgra8_sampling_swizzle == Swizzle::default())
         );
 
-        let mut next_texture_id = CacheTextureId(1);
+        let next_texture_id = CacheTextureId(1);
 
         TextureCache {
             shared_textures: SharedTextures::new(color_formats),
             picture_textures: PictureTextures::new(
-                initial_size,
-                picture_tile_sizes,
                 default_picture_tile_size,
-                &mut next_texture_id,
-                &mut pending_updates,
             ),
             max_texture_size,
             max_texture_layers,
@@ -608,9 +557,7 @@ impl TextureCache {
         let mut cache = Self::new(
             max_texture_size,
             max_texture_layers,
-            &[],
             crate::picture::TILE_SIZE_DEFAULT,
-            DeviceIntSize::zero(),
             TextureFormatPair::from(image_format),
             None,
         );
@@ -731,11 +678,6 @@ impl TextureCache {
     #[cfg(feature = "replay")]
     pub fn max_texture_layers(&self) -> usize {
         self.max_texture_layers
-    }
-
-    #[cfg(feature = "replay")]
-    pub fn picture_tile_sizes(&self) -> Vec<DeviceIntSize> {
-        self.picture_textures.tile_sizes()
     }
 
     #[cfg(feature = "replay")]
@@ -1638,17 +1580,6 @@ impl WholeTextureArray {
         self.slices.iter().position(|slice| slice.uv_rect_handle.is_none())
     }
 
-    /// Grow the array by the specified number of slices
-    fn grow(&mut self, count: usize) -> LayerIndex {
-        let index = self.slices.len();
-        for _ in 0 .. count {
-            self.slices.push(WholeTextureSlice {
-                uv_rect_handle: None,
-            });
-        }
-        index
-    }
-
     fn cache_entry_impl(
         &self,
         texture_index: usize,
@@ -1692,18 +1623,6 @@ impl WholeTextureArray {
             uv_rect_handle,
             self.texture_id,
         )
-    }
-
-    /// Reset the texture array to the specified number of slices, if it's larger.
-    fn reset(
-        &mut self, num_slices: usize
-    ) -> Option<CacheTextureId> {
-        if self.slices.len() <= num_slices {
-            None
-        } else {
-            self.slices.truncate(num_slices);
-            Some(self.texture_id)
-        }
     }
 }
 

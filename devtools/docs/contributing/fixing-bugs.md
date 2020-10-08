@@ -12,8 +12,7 @@ If you're not yet familiar with the codebase, the [files and directories overvie
 
 If you know what you're looking for (e.g. a string that has a typo and needs correcting, or a function name that needs modifying), you can use a source code search engine:
 
-* [Searchfox](http://searchfox.org/mozilla-central/source) (updated most frequently)
-* [DXR](http://dxr.mozilla.org/mozilla-central/source/) (less often)
+* [Searchfox](http://searchfox.org/mozilla-central/source)
 
 It is a good idea to [add smart keyword searches](https://support.mozilla.org/en-US/kb/how-search-from-address-bar) for Searchfox or DXR to search faster.
 

@@ -35,8 +35,8 @@ For details about the rules, please see the [firefox documentation page](http://
 
 The sources can be found at:
 
-* Code: https://dxr.mozilla.org/mozilla-central/source/tools/lint/eslint/eslint-plugin-mozilla
-* Documentation: https://dxr.mozilla.org/mozilla-central/source/tools/lint/docs/linters
+* Code: https://searchfox.org/mozilla-central/source/tools/lint/eslint/eslint-plugin-mozilla
+* Documentation: https://searchfox.org/mozilla-central/source/docs/code-quality/lint/linters
 
 ## Bugs
 

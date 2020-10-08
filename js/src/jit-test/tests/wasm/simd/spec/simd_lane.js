@@ -1,5 +1,5 @@
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "i8x16_extract_lane_s-first" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_s-last" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_s 15 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_u-first" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_u 0 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_u-last" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_u 15 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_s-first" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_s 0 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_s-last" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_s 7 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_u-first" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_u-last" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_u 7 ( local.get 0 ) ) ) ( func ( export "i32x4_extract_lane-first" ) ( param v128 ) ( result i32 ) ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "i32x4_extract_lane-last" ) ( param v128 ) ( result i32 ) ( i32x4.extract_lane 3 ( local.get 0 ) ) ) ( func ( export "f32x4_extract_lane-first" ) ( param v128 ) ( result f32 ) ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "f32x4_extract_lane-last" ) ( param v128 ) ( result f32 ) ( f32x4.extract_lane 3 ( local.get 0 ) ) ) ( func ( export "i8x16_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i16x8_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i16x8_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i32x4_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i32x4_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f32x4_replace_lane-first" ) ( param v128 f32 ) ( result v128 ) ( f32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f32x4_replace_lane-last" ) ( param v128 f32 ) ( result v128 ) ( f32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i64x2_extract_lane-first" ) ( param v128 ) ( result i64 ) ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "i64x2_extract_lane-last" ) ( param v128 ) ( result i64 ) ( i64x2.extract_lane 1 ( local.get 0 ) ) ) ( func ( export "f64x2_extract_lane-first" ) ( param v128 ) ( result f64 ) ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "f64x2_extract_lane-last" ) ( param v128 ) ( result f64 ) ( f64x2.extract_lane 1 ( local.get 0 ) ) ) ( func ( export "i64x2_replace_lane-first" ) ( param v128 i64 ) ( result v128 ) ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i64x2_replace_lane-last" ) ( param v128 i64 ) ( result v128 ) ( i64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f64x2_replace_lane-first" ) ( param v128 f64 ) ( result v128 ) ( f64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f64x2_replace_lane-last" ) ( param v128 f64 ) ( result v128 ) ( f64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_swizzle" ) ( param v128 v128 ) ( result v128 ) ( v8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-1" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-2" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-3" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-4" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-5" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-6" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-7" ) ( param v128 v128 ) ( result v128 ) ( v8x16.shuffle 0 0 0 0 0 0 0 0 16 16 16 16 16 16 16 16 ( local.get 0 ) ( local.get 1 ) ) ) )
+( module ( func ( export "i8x16_extract_lane_s-first" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_s-last" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_s 15 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_u-first" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_u 0 ( local.get 0 ) ) ) ( func ( export "i8x16_extract_lane_u-last" ) ( param v128 ) ( result i32 ) ( i8x16.extract_lane_u 15 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_s-first" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_s 0 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_s-last" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_s 7 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_u-first" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ( func ( export "i16x8_extract_lane_u-last" ) ( param v128 ) ( result i32 ) ( i16x8.extract_lane_u 7 ( local.get 0 ) ) ) ( func ( export "i32x4_extract_lane-first" ) ( param v128 ) ( result i32 ) ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "i32x4_extract_lane-last" ) ( param v128 ) ( result i32 ) ( i32x4.extract_lane 3 ( local.get 0 ) ) ) ( func ( export "f32x4_extract_lane-first" ) ( param v128 ) ( result f32 ) ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "f32x4_extract_lane-last" ) ( param v128 ) ( result f32 ) ( f32x4.extract_lane 3 ( local.get 0 ) ) ) ( func ( export "i8x16_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i8x16_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i16x8_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i16x8_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i32x4_replace_lane-first" ) ( param v128 i32 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i32x4_replace_lane-last" ) ( param v128 i32 ) ( result v128 ) ( i32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f32x4_replace_lane-first" ) ( param v128 f32 ) ( result v128 ) ( f32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f32x4_replace_lane-last" ) ( param v128 f32 ) ( result v128 ) ( f32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i64x2_extract_lane-first" ) ( param v128 ) ( result i64 ) ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "i64x2_extract_lane-last" ) ( param v128 ) ( result i64 ) ( i64x2.extract_lane 1 ( local.get 0 ) ) ) ( func ( export "f64x2_extract_lane-first" ) ( param v128 ) ( result f64 ) ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ( func ( export "f64x2_extract_lane-last" ) ( param v128 ) ( result f64 ) ( f64x2.extract_lane 1 ( local.get 0 ) ) ) ( func ( export "i64x2_replace_lane-first" ) ( param v128 i64 ) ( result v128 ) ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "i64x2_replace_lane-last" ) ( param v128 i64 ) ( result v128 ) ( i64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f64x2_replace_lane-first" ) ( param v128 f64 ) ( result v128 ) ( f64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "f64x2_replace_lane-last" ) ( param v128 f64 ) ( result v128 ) ( f64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_swizzle" ) ( param v128 v128 ) ( result v128 ) ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-1" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-2" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-3" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-4" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-5" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-6" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 ( local.get 0 ) ( local.get 1 ) ) ) ( func ( export "v8x16_shuffle-7" ) ( param v128 v128 ) ( result v128 ) ( i8x16.shuffle 0 0 0 0 0 0 0 0 16 16 16 16 16 16 16 16 ( local.get 0 ) ( local.get 1 ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -4586,7 +4586,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.swizzle ( i32.const 1 ) ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.swizzle ( i32.const 1 ) ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4595,7 +4595,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.swizzle ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( i32.const 2 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.swizzle ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( i32.const 2 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4604,7 +4604,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( f32.const 3.0 ) ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( f32.const 3.0 ) ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4613,7 +4613,7 @@ assertEq(saved instanceof WebAssembly.CompileError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( f32.const 4.0 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( f32.const 4.0 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4626,7 +4626,7 @@ try { wasmTextToBinary(`
 (func (param v128) (result v128)
 local.get 0
 local.get 0
-v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -4637,7 +4637,7 @@ try { wasmTextToBinary(`
 (func (param v128) (result v128)
 local.get 0
 local.get 0
-v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
@@ -4646,7 +4646,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128)
-(v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 -1
+(i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 -1
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0)
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -4657,7 +4657,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128)
-(v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 256
+(i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 256
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0)
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -4666,7 +4666,7 @@ assertEq(saved instanceof SyntaxError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 255 ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 255 ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -4725,7 +4725,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle1 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
+(i8x16.shuffle1 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
@@ -4735,7 +4735,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle2_imm  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 
+(i8x16.shuffle2_imm  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -4746,7 +4746,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(i8x16.swizzle (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
+(v8x16.swizzle (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
@@ -4756,7 +4756,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(i8x16.shuffle  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 
+(v8x16.shuffle  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -4847,7 +4847,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (param v128) (result v128) 
-(v8x16.shuffle (local.get 0) 
+(i8x16.shuffle (local.get 0) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5002,7 +5002,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle (v128.const i8x16 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31) 
+(i8x16.shuffle (v128.const i8x16 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5013,7 +5013,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15.0) 
+(i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15.0) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5024,7 +5024,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle 0.5 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
+(i8x16.shuffle 0.5 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5035,7 +5035,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle -inf 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
+(i8x16.shuffle -inf 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5046,7 +5046,7 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 inf) 
+(i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 inf) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
@@ -5057,14 +5057,14 @@ var saved;
 try { wasmTextToBinary(`
 (module 
 (func (result v128) 
-(v8x16.shuffle nan 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
+(i8x16.shuffle nan 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) 
 (v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0) 
 (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "i8x16_extract_lane_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( i8x16.extract_lane_s 0 ( local.get 1 ) ) ) ) ( func ( export "i8x16_extract_lane_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( i8x16.extract_lane_u 0 ( local.get 1 ) ) ) ) ( func ( export "i16x8_extract_lane_s" ) ( param v128 v128 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( i16x8.extract_lane_s 0 ( local.get 1 ) ) ) ) ( func ( export "i16x8_extract_lane_u" ) ( param v128 v128 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( i16x8.extract_lane_u 0 ( local.get 1 ) ) ) ) ( func ( export "i32x4_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( i32x4.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "f32x4_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( i32x4.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "i64x2_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i64x2.replace_lane 0 ( local.get 0 ) ( i64x2.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "f64x2_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( f64x2.replace_lane 0 ( local.get 0 ) ( f64x2.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "i8x16_replace_lane-s" ) ( param v128 i32 ) ( result i32 ) ( i8x16.extract_lane_s 15 ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i8x16_replace_lane-u" ) ( param v128 i32 ) ( result i32 ) ( i8x16.extract_lane_u 15 ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i16x8_replace_lane-s" ) ( param v128 i32 ) ( result i32 ) ( i16x8.extract_lane_s 7 ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i16x8_replace_lane-u" ) ( param v128 i32 ) ( result i32 ) ( i16x8.extract_lane_u 7 ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i32x4_replace_lane" ) ( param v128 i32 ) ( result i32 ) ( i32x4.extract_lane 3 ( i32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "f32x4_replace_lane" ) ( param v128 f32 ) ( result f32 ) ( f32x4.extract_lane 3 ( f32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i64x2_replace_lane" ) ( param v128 i64 ) ( result i64 ) ( i64x2.extract_lane 1 ( i64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "f64x2_replace_lane" ) ( param v128 f64 ) ( result f64 ) ( f64x2.extract_lane 1 ( f64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-v8x16_swizzle-operand" ) ( param v128 i32 v128 ) ( result v128 ) ( v8x16.swizzle ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "as-v8x16_shuffle-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( v8x16.shuffle 16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15 ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) )
+( module ( func ( export "i8x16_extract_lane_s" ) ( param v128 v128 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( i8x16.extract_lane_s 0 ( local.get 1 ) ) ) ) ( func ( export "i8x16_extract_lane_u" ) ( param v128 v128 ) ( result v128 ) ( i8x16.replace_lane 0 ( local.get 0 ) ( i8x16.extract_lane_u 0 ( local.get 1 ) ) ) ) ( func ( export "i16x8_extract_lane_s" ) ( param v128 v128 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( i16x8.extract_lane_s 0 ( local.get 1 ) ) ) ) ( func ( export "i16x8_extract_lane_u" ) ( param v128 v128 ) ( result v128 ) ( i16x8.replace_lane 0 ( local.get 0 ) ( i16x8.extract_lane_u 0 ( local.get 1 ) ) ) ) ( func ( export "i32x4_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( i32x4.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "f32x4_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i32x4.replace_lane 0 ( local.get 0 ) ( i32x4.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "i64x2_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( i64x2.replace_lane 0 ( local.get 0 ) ( i64x2.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "f64x2_extract_lane" ) ( param v128 v128 ) ( result v128 ) ( f64x2.replace_lane 0 ( local.get 0 ) ( f64x2.extract_lane 0 ( local.get 1 ) ) ) ) ( func ( export "i8x16_replace_lane-s" ) ( param v128 i32 ) ( result i32 ) ( i8x16.extract_lane_s 15 ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i8x16_replace_lane-u" ) ( param v128 i32 ) ( result i32 ) ( i8x16.extract_lane_u 15 ( i8x16.replace_lane 15 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i16x8_replace_lane-s" ) ( param v128 i32 ) ( result i32 ) ( i16x8.extract_lane_s 7 ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i16x8_replace_lane-u" ) ( param v128 i32 ) ( result i32 ) ( i16x8.extract_lane_u 7 ( i16x8.replace_lane 7 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i32x4_replace_lane" ) ( param v128 i32 ) ( result i32 ) ( i32x4.extract_lane 3 ( i32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "f32x4_replace_lane" ) ( param v128 f32 ) ( result f32 ) ( f32x4.extract_lane 3 ( f32x4.replace_lane 3 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "i64x2_replace_lane" ) ( param v128 i64 ) ( result i64 ) ( i64x2.extract_lane 1 ( i64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "f64x2_replace_lane" ) ( param v128 f64 ) ( result f64 ) ( f64x2.extract_lane 1 ( f64x2.replace_lane 1 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-v8x16_swizzle-operand" ) ( param v128 i32 v128 ) ( result v128 ) ( i8x16.swizzle ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( local.get 2 ) ) ) ( func ( export "as-v8x16_shuffle-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i8x16.shuffle 16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15 ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -5373,7 +5373,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( export "as-i8x16_splat-operand" ) ( param v128 ) ( result v128 ) ( i8x16.splat ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ) ( func ( export "as-i16x8_splat-operand" ) ( param v128 ) ( result v128 ) ( i16x8.splat ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ) ( func ( export "as-i32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( i32x4.splat ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( f32x4.splat ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( i64x2.splat ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( f64x2.splat ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i8x16_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i8x16.add ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i16x8_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i16x8.add ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i16x8.replace_lane 7 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i32x4_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i32x4.add ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i32x4.replace_lane 3 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i64x2_add-operands" ) ( param v128 i64 v128 i64 ) ( result v128 ) ( i64x2.add ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i64x2.replace_lane 1 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "swizzle-as-i8x16_add-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.add ( v8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ( v8x16.swizzle ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "shuffle-as-i8x16_sub-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.sub ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ( v8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i8x16_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i8x16.any_true ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i16x8_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i16x8.any_true ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand1" ) ( param v128 i32 ) ( result i32 ) ( i32x4.any_true ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand2" ) ( param v128 i64 ) ( result i32 ) ( i32x4.any_true ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "swizzle-as-i8x16_all_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.all_true ( v8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "shuffle-as-i8x16_any_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.any_true ( v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ) )
+( module ( func ( export "as-i8x16_splat-operand" ) ( param v128 ) ( result v128 ) ( i8x16.splat ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ) ) ( func ( export "as-i16x8_splat-operand" ) ( param v128 ) ( result v128 ) ( i16x8.splat ( i16x8.extract_lane_u 0 ( local.get 0 ) ) ) ) ( func ( export "as-i32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( i32x4.splat ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f32x4_splat-operand" ) ( param v128 ) ( result v128 ) ( f32x4.splat ( f32x4.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( i64x2.splat ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-f64x2_splat-operand" ) ( param v128 ) ( result v128 ) ( f64x2.splat ( f64x2.extract_lane 0 ( local.get 0 ) ) ) ) ( func ( export "as-i8x16_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i8x16.add ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.replace_lane 15 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i16x8_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i16x8.add ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i16x8.replace_lane 7 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i32x4_add-operands" ) ( param v128 i32 v128 i32 ) ( result v128 ) ( i32x4.add ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i32x4.replace_lane 3 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i64x2_add-operands" ) ( param v128 i64 v128 i64 ) ( result v128 ) ( i64x2.add ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ( i64x2.replace_lane 1 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "swizzle-as-i8x16_add-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.add ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ( i8x16.swizzle ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "shuffle-as-i8x16_sub-operands" ) ( param v128 v128 v128 v128 ) ( result v128 ) ( i8x16.sub ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ( i8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ( local.get 2 ) ( local.get 3 ) ) ) ) ( func ( export "as-i8x16_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i8x16.any_true ( i8x16.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i16x8_any_true-operand" ) ( param v128 i32 ) ( result i32 ) ( i16x8.any_true ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand1" ) ( param v128 i32 ) ( result i32 ) ( i32x4.any_true ( i32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-i32x4_any_true-operand2" ) ( param v128 i64 ) ( result i32 ) ( i32x4.any_true ( i64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "swizzle-as-i8x16_all_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.all_true ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "shuffle-as-i8x16_any_true-operands" ) ( param v128 v128 ) ( result i32 ) ( i8x16.any_true ( i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ( local.get 0 ) ( local.get 1 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -5804,7 +5804,7 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( global $g ( mut v128 ) ( v128.const f32x4 0.0 0.0 0.0 0.0 ) ) ( global $h ( mut v128 ) ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ( func ( export "as-if-condition-value" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ( then ( i32.const 0xff ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "as-return-value-1" ) ( param v128 i32 ) ( result v128 ) ( return ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-local_set-value" ) ( param v128 ) ( result i32 ) ( local i32 ) ( local.set 1 ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ( return ( local.get 1 ) ) ) ( func ( export "as-global_set-value-1" ) ( param v128 f32 ) ( result v128 ) ( global.set $g ( f32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $g ) ) ) ( func ( export "as-return-value-2" ) ( param v128 v128 ) ( result v128 ) ( return ( v8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-global_set-value-2" ) ( param v128 v128 ) ( result v128 ) ( global.set $h ( v8x16.shuffle 0 1 2 3 4 5 6 7 24 25 26 27 28 29 30 31 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $h ) ) ) ( func ( export "as-local_set-value-1" ) ( param v128 ) ( result i64 ) ( local i64 ) ( local.set 1 ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ( return ( local.get 1 ) ) ) ( func ( export "as-global_set-value-3" ) ( param v128 f64 ) ( result v128 ) ( global.set $g ( f64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $g ) ) ) )
+( module ( global $g ( mut v128 ) ( v128.const f32x4 0.0 0.0 0.0 0.0 ) ) ( global $h ( mut v128 ) ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ( func ( export "as-if-condition-value" ) ( param v128 ) ( result i32 ) ( if ( result i32 ) ( i8x16.extract_lane_s 0 ( local.get 0 ) ) ( then ( i32.const 0xff ) ) ( else ( i32.const 0 ) ) ) ) ( func ( export "as-return-value-1" ) ( param v128 i32 ) ( result v128 ) ( return ( i16x8.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-local_set-value" ) ( param v128 ) ( result i32 ) ( local i32 ) ( local.set 1 ( i32x4.extract_lane 0 ( local.get 0 ) ) ) ( return ( local.get 1 ) ) ) ( func ( export "as-global_set-value-1" ) ( param v128 f32 ) ( result v128 ) ( global.set $g ( f32x4.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $g ) ) ) ( func ( export "as-return-value-2" ) ( param v128 v128 ) ( result v128 ) ( return ( i8x16.swizzle ( local.get 0 ) ( local.get 1 ) ) ) ) ( func ( export "as-global_set-value-2" ) ( param v128 v128 ) ( result v128 ) ( global.set $h ( i8x16.shuffle 0 1 2 3 4 5 6 7 24 25 26 27 28 29 30 31 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $h ) ) ) ( func ( export "as-local_set-value-1" ) ( param v128 ) ( result i64 ) ( local i64 ) ( local.set 1 ( i64x2.extract_lane 0 ( local.get 0 ) ) ) ( return ( local.get 1 ) ) ) ( func ( export "as-global_set-value-3" ) ( param v128 f64 ) ( result v128 ) ( global.set $g ( f64x2.replace_lane 0 ( local.get 0 ) ( local.get 1 ) ) ) ( return ( global.get $g ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
@@ -5946,9 +5946,6 @@ var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result i32 ) ( i8x16.extract_lane_s 0x0f ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result i32 ) ( i8x16.extract_lane_u +0x0f ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result i32 ) ( i16x8.extract_lane_s 0x07 ( v128.const i16x8 0 0 0 0 0 0 0 0 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
@@ -5958,22 +5955,7 @@ var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result i32 ) ( i32x4.extract_lane 03 ( v128.const i32x4 0 0 0 0 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result f32 ) ( f32x4.extract_lane +03 ( v128.const f32x4 0 0 0 0 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result i64 ) ( i64x2.extract_lane +1 ( v128.const i64x2 0 0 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result f64 ) ( f64x2.extract_lane 0x1 ( v128.const f64x2 0 0 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result v128 ) ( i8x16.replace_lane +015 ( v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ) ( i32.const 1 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result v128 ) ( i16x8.replace_lane +0x7 ( v128.const i16x8 0 0 0 0 0 0 0 0 ) ( i32.const 1 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result v128 ) ( i32x4.replace_lane +3 ( v128.const i32x4 0 0 0 0 ) ( i32.const 1 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result v128 ) ( f32x4.replace_lane 0x3 ( v128.const f32x4 0 0 0 0 ) ( f32.const 1.0 ) ) ) )
@@ -5982,10 +5964,7 @@ var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 ( module ( func ( result v128 ) ( i64x2.replace_lane 01 ( v128.const i64x2 0 0 ) ( i64.const 1 ) ) ) )
 `)));
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result v128 ) ( f64x2.replace_lane +0x01 ( v128.const f64x2 0 0 ) ( f64.const 1.0 ) ) ) )
-`)));
-var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( func ( result v128 ) ( v8x16.shuffle 0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x18 0x19 0x1a 0x1b 0x1c 0x1d 0x1e 0x1f ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ) ) ) )
+( module ( func ( result v128 ) ( i8x16.shuffle 0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x18 0x19 0x1a 0x1b 0x1c 0x1d 0x1e 0x1f ( v128.const i8x16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 ) ( v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ) ) ) )
 `)));
 var thrown = false;
 var saved;
@@ -6401,8 +6380,8 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func $v8x16.shuffle-1st-arg-empty (result v128)
-  (v8x16.shuffle
+(func $i8x16.shuffle-1st-arg-empty (result v128)
+  (i8x16.shuffle
     (v128.const i8x16 0 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15)
     (v128.const i8x16 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15 16)
   )
@@ -6413,7 +6392,7 @@ assertEq(saved instanceof SyntaxError, true)
 var thrown = false;
 var saved;
 var bin = wasmTextToBinary(`
-( module ( func $v8x16.shuffle-2nd-arg-empty ( result v128 ) ( v8x16.shuffle 0 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15 ( v128.const i8x16 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15 16 ) ) ) )
+( module ( func $i8x16.shuffle-2nd-arg-empty ( result v128 ) ( i8x16.shuffle 0 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15 ( v128.const i8x16 1 2 3 5 6 6 7 8 9 10 11 12 13 14 15 16 ) ) ) )
 `);
 assertEq(WebAssembly.validate(bin), false);
 try { new WebAssembly.Module(bin) } catch (e) { thrown = true; saved = e; }
@@ -6423,8 +6402,8 @@ var thrown = false;
 var saved;
 try { wasmTextToBinary(`
 (module 
-(func $v8x16.shuffle-arg-empty (result v128)
-  (v8x16.shuffle)
+(func $i8x16.shuffle-arg-empty (result v128)
+  (i8x16.shuffle)
 ))
 `) } catch (e) { thrown = true; saved = e; }
 assertEq(thrown, true)

@@ -431,16 +431,6 @@ clang-11:
         repo: https://github.com/llvm/llvm-project
         revision: 8aca41f39c207b6f9efe2e448986d109892072ad
 
-civet-source:
-    description: Repository for external static analysis checks
-    artifact-prefix: project/civet
-    fetch:
-        type: git
-        repo: git@github.com:mozilla-services/civet.git
-        revision: 1a7a27f0a3bede8f94ac1e7c73f400de797296b5
-        ssh-key: project/civet/github-deploy-key
-        artifact-name: civet-source.tar.zst
-
 wasi-sdk:
     description: wasi-sdk source code
     fetch:

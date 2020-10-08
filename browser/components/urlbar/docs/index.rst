@@ -13,8 +13,8 @@ several different sources, including:
   * WebExtensions
   * Open tabs
 
-Most of the address bar code lives in `browser/components/urlbar <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/>`_.
-A separate and important back-end piece currently is `toolkit/components/places/UnifiedComplete.jsm <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/places/UnifiedComplete.jsm>`_, which was carried over from awesomebar and has not yet been rewritten for quantumbar.
+Most of the address bar code lives in `browser/components/urlbar <https://searchfox.org/mozilla-central/source/browser/components/urlbar/>`_.
+A separate and important back-end piece currently is `toolkit/components/places/UnifiedComplete.jsm <https://searchfox.org/mozilla-central/source/toolkit/components/places/UnifiedComplete.jsm>`_, which was carried over from awesomebar and has not yet been rewritten for quantumbar.
 
 .. toctree::
 

@@ -140,6 +140,11 @@ impl Error {
         }
     }
 
+    /// Return the `Span` for this error.
+    pub fn span(&self) -> Span {
+        self.inner.span
+    }
+
     /// To provide a more useful error this function can be used to extract
     /// relevant textual information about this error into the error itself.
     ///
@@ -170,6 +175,14 @@ impl Error {
         match &self.inner.kind {
             ErrorKind::Lex(e) => Some(e),
             _ => None,
+        }
+    }
+
+    /// Returns the underlying message, if any, that describes this error.
+    pub fn message(&self) -> String {
+        match &self.inner.kind {
+            ErrorKind::Lex(e) => e.to_string(),
+            ErrorKind::Custom(e) => e.clone(),
         }
     }
 }

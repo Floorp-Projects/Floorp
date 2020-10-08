@@ -17,7 +17,6 @@ from subprocess import PIPE
 import mozinfo
 from mozprocess import ProcessHandler
 from mozproxy.backends.base import Playback
-from mozproxy.recordings import RecordingFile
 from mozproxy.utils import (
     transform_platform,
     tooltool_download,
@@ -91,7 +90,6 @@ class Mitmproxy(Playback):
         self.port = None
         self.mitmproxy_proc = None
         self.mitmdump_path = None
-        self.recordings = []
 
         self.browser_path = ""
         if config.get("binary", None):
@@ -110,7 +108,12 @@ class Mitmproxy(Playback):
             )
             self.config["playback_version"] = "4.0.4"
 
-        self.config["playback_binary_manifest"] = (
+        if self.config.get("playback_binary_manifest") is None:
+            LOG.info(
+                "mitmproxy was not provided with a 'playback_binary_manifest' "
+                "Using default playback_binary_manifest"
+            )
+            self.config["playback_binary_manifest"] = (
                 "mitmproxy-rel-bin-%s-{platform}.manifest"
                 % self.config["playback_version"]
             )
@@ -145,10 +148,6 @@ class Mitmproxy(Playback):
         # go ahead and download and setup mitmproxy
         self.download()
 
-        # load any playback file added by playback_files argument
-        for playback_file in self.config.get("playback_files", []):
-            self.recordings.append(RecordingFile(playback_file))
-
         # mitmproxy must be started before setup, so that the CA cert is available
         self.start_mitmproxy_playback(self.mitmdump_path, self.browser_path)
 
@@ -158,13 +157,6 @@ class Mitmproxy(Playback):
         except Exception:
             self.stop()
             raise
-
-    def get_recordings_from_manifest(self, manifest_path, download_path):
-        with open(manifest_path) as manifest_file:
-            manifest = json.load(manifest_file)
-            for file in manifest:
-                self.recordings.append(RecordingFile(os.path.join(download_path,
-                                                                  file["filename"])))
 
     def download(self):
         """Download and unpack mitmproxy binary and pageset using tooltool"""
@@ -205,12 +197,24 @@ class Mitmproxy(Playback):
             transformed_manifest = transform_platform(
                 _manifest, self.config["platform"]
             )
-
             tooltool_download(
                 transformed_manifest, self.config["run_local"], self.mozproxy_dir
             )
 
-            self.get_recordings_from_manifest(_manifest, self.mozproxy_dir)
+        if "playback_artifacts" in self.config:
+            artifacts = self.config["playback_artifacts"].split(",")
+            for artifact in artifacts:
+                artifact = artifact.strip()
+                if not artifact:
+                    continue
+                artifact_name = artifact.split("/")[-1]
+                if artifact_name.endswith(".manifest"):
+                    tooltool_download(
+                        artifact, self.config["run_local"], self.mozproxy_dir
+                    )
+                else:
+                    dest = os.path.join(self.mozproxy_dir, artifact_name)
+                    download_file_from_url(artifact, dest, extract=True)
 
     def stop(self):
         self.stop_mitmproxy_playback()
@@ -245,14 +249,14 @@ class Mitmproxy(Playback):
             command.extend(self.config["playback_tool_args"])
         elif self.config.get("playback_record"):
             command.extend(["-w", self.config.get("playback_record")])
-        elif len(self.recordings) > 0:
+        elif self.config.get("playback_files"):
             script = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "scripts",
                 "alternate-server-replay.py",
             )
-            self.recording_paths = [normalize_path(recording.recording_path)
-                                    for recording in self.recordings]
+            self.recording_paths = [normalize_path(recording_path)
+                                    for recording_path in self.config["playback_files"]]
 
             if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
                 args = [
@@ -358,7 +362,7 @@ class Mitmproxy(Playback):
     def confidence(self):
         file_name = "mitm_netlocs_%s.json" % os.path.splitext(
             os.path.basename(
-                self.recordings[0].recording_path
+                self.recording_paths[0]
             )
         )[0]
         path = os.path.normpath(os.path.join(self.upload_dir,

@@ -383,7 +383,6 @@ fn main() {
         notifier,
         opts,
         None,
-        device_size,
     ).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(device_size, 0);

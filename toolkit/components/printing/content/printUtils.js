@@ -166,13 +166,17 @@ var PrintUtils = {
    *        The time the print was initiated (typically by the user) as obtained
    *        from `Date.now()`.  That is, the initiation time as the number of
    *        milliseconds since January 1, 1970.
+   * @param aPrintSelectionOnly
+   *        Whether to print only the active selection of the given browsing
+   *        context.
    * @return promise resolving when the dialog is open, rejected if the preview
    *         fails.
    */
   async _openTabModalPrint(
     aBrowsingContext,
     aExistingPreviewBrowser,
-    aPrintInitiationTime
+    aPrintInitiationTime,
+    aPrintSelectionOnly
   ) {
     let sourceBrowser = aBrowsingContext.top.embedderElement;
     let previewBrowser = this.getPreviewBrowser(sourceBrowser);
@@ -191,6 +195,7 @@ var PrintUtils = {
     // Create a preview browser.
     let args = PromptUtils.objectToPropBag({
       previewBrowser: aExistingPreviewBrowser,
+      printSelectionOnly: !!aPrintSelectionOnly,
     });
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
     return dialogBox.open(
@@ -213,7 +218,7 @@ var PrintUtils = {
    *        nsIOpenWindowInfo object that has to be passed down to
    *        createBrowser in order for the child process to clone into it.
    */
-  startPrintWindow(aBrowsingContext, aOpenWindowInfo) {
+  startPrintWindow(aBrowsingContext, aOpenWindowInfo, aPrintSelectionOnly) {
     const printInitiationTime = Date.now();
     let browser = null;
     if (aOpenWindowInfo) {
@@ -248,7 +253,8 @@ var PrintUtils = {
       this._openTabModalPrint(
         aBrowsingContext,
         browser,
-        printInitiationTime
+        printInitiationTime,
+        aPrintSelectionOnly
       ).catch(() => {});
       return browser;
     }
@@ -259,7 +265,9 @@ var PrintUtils = {
       return browser;
     }
 
-    this.printWindow(aBrowsingContext, null);
+    let settings = this.getPrintSettings();
+    settings.printSelectionOnly = aPrintSelectionOnly;
+    this.printWindow(aBrowsingContext, settings);
     return null;
   },
 

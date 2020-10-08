@@ -68,16 +68,16 @@ def cbindgen(cbindgen_override, toolchain_search_path):
 set_config('CBINDGEN', cbindgen)
 
 # Bindgen can use rustfmt to format Rust file, but it's not required.
-js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
+option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
 
 rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
                      input='RUSTFMT', allow_missing=True)
 
 
-js_option('--with-libclang-path', nargs=1,
-          help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
-js_option('--with-clang-path', nargs=1,
-          help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
+option('--with-libclang-path', nargs=1,
+       help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
+option('--with-clang-path', nargs=1,
+       help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
 
 
 @depends('--with-clang-path', c_compiler, cxx_compiler, toolchain_search_path,
@@ -289,9 +289,9 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
     return args + (clang_flags or [])
 
 
-js_option(env='BINDGEN_CFLAGS',
-          nargs=1,
-          help='Options bindgen should pass to the C/C++ parser')
+option(env='BINDGEN_CFLAGS',
+       nargs=1,
+       help='Options bindgen should pass to the C/C++ parser')
 
 
 @depends(basic_bindgen_cflags, 'BINDGEN_CFLAGS')

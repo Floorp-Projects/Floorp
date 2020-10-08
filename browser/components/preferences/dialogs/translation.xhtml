@@ -15,8 +15,12 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         onload="gTranslationExceptions.onLoad();"
         onunload="gTranslationExceptions.uninit();"
-        persist="screenX screenY width height"
-        onkeypress="gTranslationExceptions.onWindowKeyPress(event);">
+        persist="screenX screenY width height">
+
+  <dialog
+    buttons="accept"
+    data-l10n-id="translation-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/translation.ftl"/>
@@ -79,7 +83,6 @@
             data-l10n-id="translation-sites-button-remove-all"
             oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
     <spacer flex="1"/>
-    <button oncommand="window.close();"
-            data-l10n-id="translation-button-close"/>
   </hbox>
+  </dialog>
 </window>

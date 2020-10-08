@@ -290,12 +290,12 @@ var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 `)), {'':ins.exports});
 assertEq(run.exports.run(), 1)
 var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
-( module ( memory 1 ) ( data ( offset ( i32.const 0 ) ) "\\64\\65\\66\\67\\68\\69\\6a\\6b\\6c\\6d\\6e\\6f\\70\\71\\72\\73" ) ( data ( offset ( i32.const 16 ) ) "\\0f\\0e\\0d\\0c\\0b\\0a\\09\\08\\07\\06\\05\\04\\03\\02\\01\\00" ) ( func ( export "as-v8x16.swizzle-operand" ) ( result v128 ) ( v8x16.swizzle ( v128.load ( i32.const 0 ) ) ( v128.load offset=15 ( i32.const 1 ) ) ) ) )
+( module ( memory 1 ) ( data ( offset ( i32.const 0 ) ) "\\64\\65\\66\\67\\68\\69\\6a\\6b\\6c\\6d\\6e\\6f\\70\\71\\72\\73" ) ( data ( offset ( i32.const 16 ) ) "\\0f\\0e\\0d\\0c\\0b\\0a\\09\\08\\07\\06\\05\\04\\03\\02\\01\\00" ) ( func ( export "as-i8x16.swizzle-operand" ) ( result v128 ) ( i8x16.swizzle ( v128.load ( i32.const 0 ) ) ( v128.load offset=15 ( i32.const 1 ) ) ) ) )
 `)));
 var run = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
 (module
-  (import "" "as-v8x16.swizzle-operand" (func $f (param ) (result v128)))
+  (import "" "as-i8x16.swizzle-operand" (func $f (param ) (result v128)))
   (func (export "run") (result i32) 
 (local $result v128)
 (local $expected v128)

@@ -676,9 +676,7 @@ void ExternMozLog(const char* aModule, mozilla::LogLevel aLevel,
 
   LogModule* m = sLogModuleManager->CreateOrGetModule(aModule);
   if (MOZ_LOG_TEST(m, aLevel)) {
-    va_list va;
-    empty_va(&va);
-    m->Printv(aLevel, aMsg, va);
+    mozilla::detail::log_print(m, aLevel, "%s", aMsg);
   }
 }
 

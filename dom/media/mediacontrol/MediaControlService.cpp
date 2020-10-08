@@ -109,8 +109,6 @@ MediaControlService::MediaControlService() {
 void MediaControlService::Init() {
   mMediaKeysHandler = new MediaControlKeyHandler();
   mMediaControlKeyManager = new MediaControlKeyManager();
-  mMediaControlKeyManager->Open();
-  MOZ_ASSERT(mMediaControlKeyManager->IsOpened());
   mMediaControlKeyManager->AddListener(mMediaKeysHandler.get());
   mControllerManager = MakeUnique<ControllerManager>(this);
 
@@ -170,7 +168,6 @@ bool MediaControlService::RegisterActiveMediaController(
   }
   LOG("Register media controller %" PRId64 ", currentNum=%" PRId64,
       aController->Id(), GetActiveControllersNum());
-  mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "media-controller-amount-changed", nullptr);
@@ -189,7 +186,6 @@ bool MediaControlService::UnregisterActiveMediaController(
   }
   LOG("Unregister media controller %" PRId64 ", currentNum=%" PRId64,
       aController->Id(), GetActiveControllersNum());
-  mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "media-controller-amount-changed", nullptr);
@@ -407,15 +403,20 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
 
   if (!mMainController) {
     LOG_MAINCONTROLLER_INFO("Clear main controller");
-    mSource->SetControlledTabBrowsingContextId(Nothing());
-    mSource->SetPlaybackState(MediaSessionPlaybackState::None);
-    mSource->SetMediaMetadata(MediaMetadataBase::EmptyData());
-    mSource->SetSupportedMediaKeys(MediaKeysArray());
+    mSource->Close();
     DisconnectMainControllerEvents();
   } else {
     LOG_MAINCONTROLLER_INFO("Set controller %" PRId64 " as main controller",
                             mMainController->Id());
-    mSource->SetControlledTabBrowsingContextId(Some(mMainController->Id()));
+    if (!mSource->Open()) {
+      LOG("Failed to open source for monitoring media keys");
+    }
+    // We would still update those status to the event source even if it failed
+    // to open, because it would save the result and set them to the real
+    // source when it opens. In addition, another benefit to do that is to
+    // prevent testing from affecting by platform specific issues, because our
+    // testing events rely on those status changes and they are all platform
+    // independent.
     mSource->SetPlaybackState(mMainController->PlaybackState());
     mSource->SetMediaMetadata(mMainController->GetCurrentMediaMetadata());
     mSource->SetSupportedMediaKeys(mMainController->GetSupportedMediaKeys());

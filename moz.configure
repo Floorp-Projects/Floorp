@@ -68,8 +68,8 @@ def compile_environment(compile_env):
 set_config('COMPILE_ENVIRONMENT', compile_environment)
 add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
 
-js_option('--disable-tests',
-          help='Do not build test libraries & programs')
+option('--disable-tests',
+       help='Do not build test libraries & programs')
 
 @depends('--disable-tests')
 def enable_tests(value):
@@ -100,10 +100,10 @@ set_define('GTEST_USE_OWN_TR1_TUPLE',
 set_define('GTEST_HAS_CLONE',
            linux_gtest_defines.has_clone)
 
-js_option('--enable-debug',
-          nargs='?',
-          help='Enable building with developer debug info '
-               '(using the given compiler flags).')
+option('--enable-debug',
+       nargs='?',
+       help='Enable building with developer debug info '
+            '(using the given compiler flags).')
 
 @depends('--enable-debug')
 def moz_debug(debug):
@@ -117,8 +117,8 @@ set_define('MOZ_DEBUG', moz_debug)
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda x: bool(x)))
 
-js_option('--with-debug-label', nargs='+',
-          help='Debug DEBUG_<value> for each comma-separated value given')
+option('--with-debug-label', nargs='+',
+       help='Debug DEBUG_<value> for each comma-separated value given')
 
 @depends(moz_debug, '--with-debug-label')
 def debug_defines(debug, labels):
@@ -128,10 +128,10 @@ def debug_defines(debug, labels):
 
 set_config('MOZ_DEBUG_DEFINES', debug_defines)
 
-js_option('--enable-rust-debug',
-          default=depends(when='--enable-debug')(lambda: True),
-          help='{Build|Do not build} Rust code with debug assertions turned '
-               'on.')
+option('--enable-rust-debug',
+       default=depends(when='--enable-debug')(lambda: True),
+       help='{Build|Do not build} Rust code with debug assertions turned '
+            'on.')
 
 @depends(when='--enable-rust-debug')
 def debug_rust():
@@ -140,7 +140,7 @@ def debug_rust():
 set_config('MOZ_DEBUG_RUST', debug_rust)
 set_define('MOZ_DEBUG_RUST', debug_rust)
 
-js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
+option(env='MOZ_PGO', help='Build with profile guided optimizations')
 
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 
@@ -172,8 +172,8 @@ include('build/moz.configure/flags.configure',
         when='--enable-compile-environment')
 # rust.configure is included by js/moz.configure.
 
-js_option('--enable-valgrind',
-          help='Enable Valgrind integration hooks')
+option('--enable-valgrind',
+       help='Enable Valgrind integration hooks')
 
 valgrind_h = check_header('valgrind/valgrind.h', when='--enable-valgrind')
 
@@ -656,7 +656,7 @@ llvm_objdump = check_prog('LLVM_OBJDUMP', llvm_objdump, what='llvm-objdump',
 add_old_configure_assignment('LLVM_OBJDUMP', llvm_objdump)
 
 
-js_option('--enable-dtrace', help='Build with dtrace support')
+option('--enable-dtrace', help='Build with dtrace support')
 
 dtrace = check_header('sys/sdt.h', when='--enable-dtrace',
                       onerror=lambda: die('dtrace enabled but sys/sdt.h not found'))
@@ -666,14 +666,14 @@ set_define('INCLUDE_MOZILLA_DTRACE', True, when=dtrace)
 add_old_configure_assignment('enable_dtrace', 'yes', when=dtrace)
 
 
-js_option('--disable-icf', help='Disable Identical Code Folding')
+option('--disable-icf', help='Disable Identical Code Folding')
 
 add_old_configure_assignment(
     'MOZ_DISABLE_ICF', '1', when=depends('--enable-icf')(lambda x: not x))
 
 
-js_option('--enable-strip', when=compile_environment,
-          help='Enable stripping of libs & executables')
+option('--enable-strip', when=compile_environment,
+       help='Enable stripping of libs & executables')
 
 # This should be handled as a `when` once bug 1617793 is fixed.
 @depends('--enable-strip', c_compiler, when=compile_environment)
@@ -683,8 +683,8 @@ def enable_strip(strip, c_compiler):
 
 set_config('ENABLE_STRIP', enable_strip)
 
-js_option('--disable-install-strip', when=compile_environment,
-          help='Enable stripping of libs & executables when packaging')
+option('--disable-install-strip', when=compile_environment,
+       help='Enable stripping of libs & executables when packaging')
 
 # This should be handled as a `when` once bug 1617793 is fixed.
 @depends('--enable-install-strip', c_compiler, when=compile_environment)
@@ -699,7 +699,7 @@ set_config('PKG_STRIP', enable_install_strip)
 def strip(strip, install_strip):
     return strip or install_strip
 
-js_option(env='STRIP_FLAGS', nargs=1, when=strip, help='Flags for the strip command')
+option(env='STRIP_FLAGS', nargs=1, when=strip, help='Flags for the strip command')
 
 @depends('STRIP_FLAGS', target, when=strip)
 def strip_flags(flags, target):
@@ -717,8 +717,8 @@ set_config('STRIP_FLAGS', strip_flags)
 def system_zlib_default(js_standalone, target):
     return js_standalone and target.kernel != 'WINNT'
 
-js_option('--with-system-zlib', nargs='?', default=system_zlib_default,
-          help='{Use|Do not use} system libz')
+option('--with-system-zlib', nargs='?', default=system_zlib_default,
+       help='{Use|Do not use} system libz')
 
 @depends('--with-system-zlib')
 def deprecated_system_zlib_path(value):

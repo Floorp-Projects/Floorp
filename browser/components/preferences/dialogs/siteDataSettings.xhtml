@@ -19,6 +19,11 @@
         onkeypress="gSiteDataSettings.onKeyPress(event);"
         persist="screenX screenY width height">
 
+<dialog
+  buttons="accept,cancel"
+  data-l10n-id="site-data-settings-dialog"
+  data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
+
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
@@ -51,12 +56,5 @@
     <button id="removeSelected" data-l10n-id="site-data-remove-selected"/>
     <button id="removeAll"/>
   </hbox>
-
-  <vbox align="end">
-    <hbox>
-        <button id="cancel" data-l10n-id="site-data-button-cancel"/>
-        <button id="save" data-l10n-id="site-data-button-save"/>
-    </hbox>
-  </vbox>
-
+  </dialog>
 </window>

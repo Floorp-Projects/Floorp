@@ -4,8 +4,7 @@
 
 /* import-globals-from ../main.js */
 
-var gAddEngineDialog = {
-  _addButton: null,
+let gAddEngineDialog = {
   _form: null,
   _name: null,
   _alias: null,
@@ -15,15 +14,16 @@ var gAddEngineDialog = {
   },
 
   async init() {
-    this._addButton = document.getElementById("addButton");
+    this._dialog = document.querySelector("dialog");
     this._form = document.getElementById("addEngineForm");
     this._name = document.getElementById("engineName");
     this._alias = document.getElementById("engineAlias");
 
-    this._addButton.addEventListener("command", this.onAddEngine.bind(this));
     this._name.addEventListener("input", this.onNameInput.bind(this));
     this._alias.addEventListener("input", this.onAliasInput.bind(this));
     this._form.addEventListener("input", this.onFormInput.bind(this));
+
+    document.addEventListener("dialogaccept", this.onAddEngine.bind(this));
   },
 
   async onAddEngine(event) {
@@ -35,7 +35,6 @@ var gAddEngineDialog = {
       url,
       this._alias.value
     );
-    window.close();
   },
 
   async onNameInput() {
@@ -59,8 +58,11 @@ var gAddEngineDialog = {
     this._alias.setCustomValidity(validity);
   },
 
-  async onFormInput(event) {
-    this._addButton.setAttribute("disabled", !this._form.checkValidity());
+  async onFormInput() {
+    this._dialog.setAttribute(
+      "buttondisabledaccept",
+      !this._form.checkValidity()
+    );
   },
 };
 

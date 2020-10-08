@@ -113,6 +113,8 @@ exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 exports.SCOPE_PROFILE = "profile";
 exports.SCOPE_PROFILE_WRITE = "profile:write";
 exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
+exports.SCOPE_ECOSYSTEM_TELEMETRY =
+  "https://identity.mozilla.com/ids/ecosystem_telemetry";
 // This scope and its associated key material are used by the old Kinto webextension
 // storage backend. We plan to remove that at some point (ref Bug 1637465) and when
 // we do, all uses of this legacy scope can be removed.
@@ -291,6 +293,7 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set([
   "authAt",
   "sessionToken",
   "uid",
+  "ecosystemAnonId",
   "ecosystemUserId",
   "oauthTokens",
   "profile",

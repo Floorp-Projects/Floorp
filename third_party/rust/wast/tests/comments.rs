@@ -1,4 +1,3 @@
-use wast::lexer::Comment;
 use wast::parser::{self, Parse, ParseBuffer, Parser, Result};
 
 pub struct Comments<'a> {
@@ -15,9 +14,10 @@ impl<'a> Parse<'a> for Comments<'a> {
                     None => break,
                 };
                 cursor = c;
-                comments.push(match comment {
-                    Comment::Block(s) => &s[2..s.len() - 2],
-                    Comment::Line(s) => &s[2..],
+                comments.push(if comment.starts_with(";;") {
+                    &comment[2..]
+                } else {
+                    &comment[2..comment.len() - 2]
                 });
             }
             Ok((comments, cursor))

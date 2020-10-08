@@ -43,14 +43,12 @@ namespace jit {
 // IonCacheIRCompiler compiles CacheIR to IonIC native code.
 IonCacheIRCompiler::IonCacheIRCompiler(
     JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript,
-    IonICStub* stub, const PropertyTypeCheckInfo* typeCheckInfo,
-    uint32_t stubDataOffset)
+    const PropertyTypeCheckInfo* typeCheckInfo, uint32_t stubDataOffset)
     : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Ion,
                       StubFieldPolicy::Constant),
       writer_(writer),
       ic_(ic),
       ionScript_(ionScript),
-      stub_(stub),
       typeCheckInfo_(typeCheckInfo),
       savedLiveRegs_(false) {
   MOZ_ASSERT(ic_);
@@ -67,14 +65,6 @@ template <typename T>
 T IonCacheIRCompiler::rawInt64StubField(uint32_t offset) {
   static_assert(sizeof(T) == sizeof(int64_t), "T musthave int64 size");
   return (T)readStubInt64(offset, StubField::Type::RawInt64);
-}
-
-uint64_t* IonCacheIRCompiler::expandoGenerationStubFieldPtr(uint32_t offset) {
-  DebugOnly<uint64_t> generation =
-      readStubInt64(offset, StubField::Type::DOMExpandoGeneration);
-  uint64_t* ptr = reinterpret_cast<uint64_t*>(stub_->stubDataStart() + offset);
-  MOZ_ASSERT(*ptr == generation);
-  return ptr;
 }
 
 template <typename Fn, Fn fn>
@@ -555,7 +545,7 @@ bool IonCacheIRCompiler::init() {
   return true;
 }
 
-JitCode* IonCacheIRCompiler::compile() {
+JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
   masm.setFramePushed(ionScript_->frameSize());
   if (cx_->runtime()->geckoProfiler().enabled()) {
     masm.enableProfilingInstrumentation();
@@ -603,7 +593,7 @@ JitCode* IonCacheIRCompiler::compile() {
 
   for (CodeOffset offset : nextCodeOffsets_) {
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(newStubCode, offset),
-                                       ImmPtr(stub_->nextCodeRawPtr()),
+                                       ImmPtr(stub->nextCodeRawPtr()),
                                        ImmPtr((void*)-1));
   }
   if (stubJitCodeOffset_) {
@@ -2327,11 +2317,9 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
   Register obj = allocator.useRegister(masm, objId);
   ExpandoAndGeneration* expandoAndGeneration =
       rawPointerStubField<ExpandoAndGeneration*>(expandoAndGenerationOffset);
-  uint64_t* generationFieldPtr =
-      expandoGenerationStubFieldPtr(generationOffset);
+  uint64_t generation = rawInt64StubField<uint64_t>(generationOffset);
 
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
   ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
   FailurePath* failure;
@@ -2339,8 +2327,8 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
     return false;
   }
 
-  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch1);
-  Address expandoAddr(scratch1,
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
+  Address expandoAddr(scratch,
                       js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
   // Guard the ExpandoAndGeneration* matches the proxy's ExpandoAndGeneration.
@@ -2350,11 +2338,10 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
 
   // Guard expandoAndGeneration->generation matches the expected generation.
   masm.movePtr(ImmPtr(expandoAndGeneration), output.scratchReg());
-  masm.movePtr(ImmPtr(generationFieldPtr), scratch1);
   masm.branch64(
       Assembler::NotEqual,
       Address(output.scratchReg(), ExpandoAndGeneration::offsetOfGeneration()),
-      Address(scratch1, 0), scratch2, failure->label());
+      Imm64(generation), failure->label());
 
   // Load expandoAndGeneration->expando into the output Value register.
   masm.loadValue(
@@ -2419,14 +2406,14 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     if (stub->stubInfo() != stubInfo) {
       continue;
     }
-    bool updated = false;
-    if (!writer.stubDataEqualsMaybeUpdate(stub->stubDataStart(), &updated)) {
+    if (!writer.stubDataEquals(stub->stubDataStart())) {
       continue;
     }
-    if (updated || (typeCheckInfo && typeCheckInfo->needsTypeBarrier())) {
-      // We updated a stub or have a stub that requires property type
-      // checks. In this case the stub will likely handle more cases in
-      // the future and we shouldn't deoptimize.
+    if (typeCheckInfo && typeCheckInfo->needsTypeBarrier()) {
+      // We have a stub that requires property type checks. In this case the
+      // stub will likely handle more cases in the future and we shouldn't
+      // deoptimize.
+      MOZ_ASSERT(IsTypeInferenceEnabled());
       *attached = true;
     }
     return;
@@ -2450,13 +2437,13 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
   writer.copyStubData(newStub->stubDataStart());
 
   JitContext jctx(cx, nullptr);
-  IonCacheIRCompiler compiler(cx, writer, this, ionScript, newStub,
-                              typeCheckInfo, stubDataOffset);
+  IonCacheIRCompiler compiler(cx, writer, this, ionScript, typeCheckInfo,
+                              stubDataOffset);
   if (!compiler.init()) {
     return;
   }
 
-  JitCode* code = compiler.compile();
+  JitCode* code = compiler.compile(newStub);
   if (!code) {
     return;
   }

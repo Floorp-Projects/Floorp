@@ -6,17 +6,17 @@
 
 # Top-level configure defaults to building NSPR from source. Standalone JS
 # doesn't.
-js_option('--enable-nspr-build', when=building_js,
-          help='{Build|Do not build} NSPR from source tree')
+option('--enable-nspr-build', when=js_standalone,
+       help='{Build|Do not build} NSPR from source tree')
 
-@depends('--enable-nspr-build', when=building_js)
+@depends('--enable-nspr-build', when=js_standalone)
 def enable_nspr_build(enable):
     if enable:
         return enable
 
-js_option('--with-system-nspr', help='Use system NSPR')
+option('--with-system-nspr', help='Use system NSPR')
 
-@depends(enable_nspr_build, '--with-system-nspr', 'JS_STANDALONE')
+@depends(enable_nspr_build, '--with-system-nspr', js_standalone)
 def build_nspr(nspr_build, system_nspr, js_standalone):
     if nspr_build is not None and nspr_build.origin != 'default':
         if nspr_build and system_nspr:
@@ -28,17 +28,17 @@ def build_nspr(nspr_build, system_nspr, js_standalone):
 set_config('MOZ_BUILD_NSPR', True, when=build_nspr)
 set_config('MOZ_SYSTEM_NSPR', True, when='--with-system-nspr')
 
-@depends(build_nspr, '--with-system-nspr', building_js)
-def js_without_nspr(build_nspr, system_nspr, building_js):
-    if building_js:
+@depends(build_nspr, '--with-system-nspr', js_standalone)
+def js_without_nspr(build_nspr, system_nspr, js_standalone):
+    if js_standalone:
         return not build_nspr and not system_nspr
 
 set_config('JS_WITHOUT_NSPR', True, when=js_without_nspr)
 set_define('JS_WITHOUT_NSPR', True, when=js_without_nspr)
 
-@depends(building_js)
-def nspr_minver(building_js):
-    if building_js:
+@depends(js_standalone)
+def nspr_minver(js_standalone):
+    if js_standalone:
         return 'nspr >= 4.10'
     return 'nspr >= 4.26'
 

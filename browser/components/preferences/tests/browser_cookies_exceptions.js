@@ -529,7 +529,7 @@ async function runTest(test, getObservances) {
     allow: Ci.nsIPermissionManager.ALLOW_ACTION,
     deny: Ci.nsIPermissionManager.DENY_ACTION,
   };
-  let btnApplyChanges = doc.getElementById("btnApplyChanges");
+  let btnApplyChanges = doc.querySelector("dialog").getButton("accept");
   let observances = getObservances(params);
   let observeAllPromise = createObserveAllPromise(observances);
 

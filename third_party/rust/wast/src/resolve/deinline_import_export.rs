@@ -90,11 +90,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             kind: DataKind::Active {
                                 memory: Index::Id(id),
                                 offset: Expression {
-                                    instrs: vec![if is_32 {
+                                    instrs: Box::new([if is_32 {
                                         Instruction::I32Const(0)
                                     } else {
                                         Instruction::I64Const(0)
-                                    }],
+                                    }]),
                                 },
                             },
                             data,
@@ -153,7 +153,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             kind: ElemKind::Active {
                                 table: Index::Id(id),
                                 offset: Expression {
-                                    instrs: vec![Instruction::I32Const(0)],
+                                    instrs: Box::new([Instruction::I32Const(0)]),
                                 },
                             },
                             payload,

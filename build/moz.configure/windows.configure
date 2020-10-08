@@ -457,12 +457,12 @@ def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     return result
 
 
-js_option(env='LINKER', nargs=1, when=target_is_windows, help='Path to the linker')
+option(env='LINKER', nargs=1, when=target_is_windows, help='Path to the linker')
 
 link = check_prog('LINKER', ('lld-link',), input='LINKER',
                   when=target_is_windows, paths=toolchain_search_path)
 
-js_option(env='HOST_LINKER', nargs=1, when=host_is_windows, help='Path to the host linker')
+option(env='HOST_LINKER', nargs=1, when=host_is_windows, help='Path to the host linker')
 
 host_link = check_prog('HOST_LINKER', ('lld-link',), input='HOST_LINKER',
                        when=host_is_windows, paths=host_toolchain_search_path)

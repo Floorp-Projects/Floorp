@@ -10,11 +10,11 @@ llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
                            allow_missing=True,
                            paths=toolchain_search_path)
 
-js_option('--enable-profile-generate',
-          env='MOZ_PROFILE_GENERATE',
-          nargs='?',
-          choices=('cross',),
-          help='Build a PGO instrumented binary')
+option('--enable-profile-generate',
+       env='MOZ_PROFILE_GENERATE',
+       nargs='?',
+       choices=('cross',),
+       help='Build a PGO instrumented binary')
 
 imply_option('MOZ_PGO',
              depends_if('--enable-profile-generate')(lambda _: True))
@@ -28,15 +28,15 @@ set_define('MOZ_PROFILE_GENERATE',
 add_old_configure_assignment('MOZ_PROFILE_GENERATE', 1,
                              when='--enable-profile-generate')
 
-js_option('--enable-profile-use',
-          env='MOZ_PROFILE_USE',
-          nargs='?',
-          choices=('cross',),
-          help='Use a generated profile during the build')
+option('--enable-profile-use',
+       env='MOZ_PROFILE_USE',
+       nargs='?',
+       choices=('cross',),
+       help='Use a generated profile during the build')
 
-js_option('--with-pgo-profile-path',
-          help='Path to the directory with unmerged profile data to use during the build',
-          nargs=1)
+option('--with-pgo-profile-path',
+       help='Path to the directory with unmerged profile data to use during the build',
+       nargs=1)
 
 imply_option('MOZ_PGO',
              depends_if('--enable-profile-use')(lambda _: True))
@@ -148,15 +148,15 @@ set_config('MOZ_PGO_RUST', moz_pgo_rust)
 # LTO
 # ==============================================================
 
-js_option('--enable-lto',
-          env='MOZ_LTO',
-          nargs='?',
-          choices=('full', 'thin', 'cross'),
-          help='Enable LTO')
+option('--enable-lto',
+       env='MOZ_LTO',
+       nargs='?',
+       choices=('full', 'thin', 'cross'),
+       help='Enable LTO')
 
-js_option(env='MOZ_LD64_KNOWN_GOOD',
-          nargs=1,
-          help='Indicate that ld64 is free of symbol aliasing bugs.')
+option(env='MOZ_LD64_KNOWN_GOOD',
+       nargs=1,
+       help='Indicate that ld64 is free of symbol aliasing bugs.')
 
 imply_option('MOZ_LD64_KNOWN_GOOD', depends_if('MOZ_AUTOMATION')(lambda _: True))
 

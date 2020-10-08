@@ -73,5 +73,5 @@ define(MOZ_ARG_HEADER, [# $1])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN([MOZ_READ_MOZCONFIG],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-. ./old-configure.vars
+. $OLD_CONFIGURE_VARS
 ])

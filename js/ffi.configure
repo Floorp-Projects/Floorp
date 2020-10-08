@@ -12,8 +12,8 @@ def force_system_ffi(target):
 
 imply_option('--with-system-ffi', force_system_ffi, "target")
 
-js_option('--with-system-ffi',
-          help='Use system libffi (located with pkgconfig)')
+option('--with-system-ffi',
+       help='Use system libffi (located with pkgconfig)')
 
 use_system_ffi = depends_if('--with-system-ffi')(lambda _: True)
 

@@ -60,16 +60,9 @@ var gBlocklistManager = {
     },
   },
 
-  onWindowKeyPress(event) {
-    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      window.close();
-    } else if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
-      gBlocklistManager.onApplyChanges();
-    }
-  },
-
   onLoad() {
     this.init();
+    document.addEventListener("dialogaccept", () => this.onApplyChanges());
   },
 
   init() {
@@ -124,8 +117,6 @@ var gBlocklistManager = {
         listmanager.forceUpdates(trackingTable);
       }
     }
-
-    window.close();
   },
 
   async _loadBlockLists() {

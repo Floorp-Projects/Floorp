@@ -251,12 +251,6 @@ var gTranslationExceptions = {
     }
   },
 
-  onWindowKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      window.close();
-    }
-  },
-
   uninit() {
     Services.obs.removeObserver(this, "perm-changed");
     Services.prefs.removeObserver(kLanguagesPref, this);

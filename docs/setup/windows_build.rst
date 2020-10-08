@@ -1,4 +1,4 @@
-Building Firefox On Windows
+﻿Building Firefox On Windows
 ===========================
 
 Thank you for helping us build the world's best browser on the world's
@@ -158,7 +158,7 @@ source directory as before and type
 
 The ``./mach bootstrap`` step is a catch-all for any dependencies not
 covered in this documentation. Note that, bootstrap works **only with
-the Mercuial repo of the source**, not with source tar balls, nor the
+the Mercurial repo of the source**, not with source tar balls, nor the
 github mirror. If you are working on Firefox or Firefox for Android
 frontends or building Firefox without any changes, select :ref:`Artifact Builds
 <Understanding Artifact Builds>` in

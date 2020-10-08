@@ -293,7 +293,6 @@ impl Wrench {
             notifier,
             opts,
             None,
-            size,
         ).unwrap();
 
         let api = sender.create_api();
