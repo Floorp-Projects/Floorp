@@ -82,6 +82,7 @@ TEST_HARNESS_FILES.gtest += [
     'invalid-truncated-metadata.bmp',
     'large.avif',
     'large.webp',
+    'multilayer.avif',
     'no-frame-delay.gif',
     'perf_cmyk.jpg',
     'perf_gray.jpg',
