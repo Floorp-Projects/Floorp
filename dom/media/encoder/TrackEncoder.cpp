@@ -142,7 +142,8 @@ void AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment) {
     mOutgoingBuffer.AppendFrom(&aSegment);
   }
 
-  if (mInitialized && mOutgoingBuffer.GetDuration() >= GetPacketDuration()) {
+  if (mInitialized &&
+      mOutgoingBuffer.GetDuration() >= NumInputFramesPerPacket()) {
     OnDataAvailable();
   }
 }
