@@ -630,6 +630,8 @@ struct Texture {
 struct VertexArray {
   VertexAttrib attribs[MAX_ATTRIBS];
   int max_attrib = -1;
+  // The GL spec defines element array buffer binding to be part of VAO state.
+  GLuint element_array_buffer_binding = 0;
 
   void validate();
 };
@@ -819,7 +821,6 @@ struct Context {
   GLuint pixel_pack_buffer_binding = 0;
   GLuint pixel_unpack_buffer_binding = 0;
   GLuint array_buffer_binding = 0;
-  GLuint element_array_buffer_binding = 0;
   GLuint time_elapsed_query = 0;
   GLuint samples_passed_query = 0;
   GLuint renderbuffer_binding = 0;
@@ -836,7 +837,7 @@ struct Context {
       case GL_ARRAY_BUFFER:
         return array_buffer_binding;
       case GL_ELEMENT_ARRAY_BUFFER:
-        return element_array_buffer_binding;
+        return vertex_arrays[current_vertex_array].element_array_buffer_binding;
       case GL_TEXTURE_2D:
         return texture_units[active_texture_unit].texture_2d_binding;
       case GL_TEXTURE_2D_ARRAY:
@@ -1397,7 +1398,6 @@ void DeleteBuffer(GLuint n) {
     unlink(ctx->pixel_pack_buffer_binding, n);
     unlink(ctx->pixel_unpack_buffer_binding, n);
     unlink(ctx->array_buffer_binding, n);
-    unlink(ctx->element_array_buffer_binding, n);
   }
 }
 
@@ -3946,7 +3946,7 @@ static inline void draw_elements(GLsizei count, GLsizei instancecount,
                                  size_t offset, VertexArray& v,
                                  Texture& colortex, int layer,
                                  Texture& depthtex) {
-  Buffer& indices_buf = ctx->buffers[ctx->element_array_buffer_binding];
+  Buffer& indices_buf = ctx->buffers[v.element_array_buffer_binding];
   if (!indices_buf.buf || offset >= indices_buf.size) {
     return;
   }
