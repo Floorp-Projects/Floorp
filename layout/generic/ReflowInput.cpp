@@ -1080,10 +1080,10 @@ static bool GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize,
   // XXX We should add back the GetReflowOutput() function and one of the
   // things should be the intrinsic size...
   if (aFrameType == LayoutFrameType::Image) {
-    nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
-
-    if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(aIntrinsicSize))) {
-      success = (aIntrinsicSize != nsSize(0, 0));
+    Maybe<nsSize> size = aFrame->GetIntrinsicSize().ToSize();
+    if (size) {
+      aIntrinsicSize = *size;
+      success = true;
     }
   }
   return success;

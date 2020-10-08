@@ -630,12 +630,7 @@ nscoord nsVideoFrame::GetPrefISize(gfxContext* aRenderingContext) {
 Maybe<nsSize> nsVideoFrame::PosterImageSize() const {
   // Use the poster image frame's size.
   nsIFrame* child = GetPosterImage()->GetPrimaryFrame();
-  nsImageFrame* imageFrame = do_QueryFrame(child);
-  nsSize imgSize;
-  if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgSize))) {
-    return Some(imgSize);
-  }
-  return Nothing();
+  return child->GetIntrinsicSize().ToSize();
 }
 
 AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
