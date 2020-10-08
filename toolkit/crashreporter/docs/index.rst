@@ -263,3 +263,11 @@ Environment variables used internally
   reporter client can restart the application.
 - ``MOZ_CRASHREPORTER_STRINGS_OVERRIDE`` - Overrides the path used to load the
   .ini file holding the strings used in the crash reporter client UI.
+
+Other topics
+============
+
+.. toctree::
+   :titlesonly:
+
+   Using_the_Mozilla_symbol_server
