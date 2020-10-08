@@ -164,15 +164,19 @@ class IMEStateManager {
   // isn't changed by the new state, this method does nothing.
   // Note that this method changes the IME state of the active element in the
   // widget.  So, the caller must have focus.
-  static void UpdateIMEState(const IMEState& aNewIMEState, nsIContent* aContent,
-                             EditorBase* aEditorBase);
+  // XXX Changing this to MOZ_CAN_RUN_SCRIPT requires too many callers to be
+  //     marked too.  Probably, we should initialize IMEContentObserver
+  //     asynchronously.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void UpdateIMEState(
+      const IMEState& aNewIMEState, nsIContent* aContent,
+      EditorBase* aEditorBase);
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.
   // Returns true if IME consumes the event.  Otherwise, false.
-  static bool OnMouseButtonEventInEditor(nsPresContext* aPresContext,
-                                         nsIContent* aContent,
-                                         WidgetMouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT static bool OnMouseButtonEventInEditor(
+      nsPresContext* aPresContext, nsIContent* aContent,
+      WidgetMouseEvent* aMouseEvent);
 
   // This method is called when user clicked in an editor.
   // aContent must be:
@@ -203,7 +207,7 @@ class IMEStateManager {
    * events must be fired the stored target.  If the stored composition event
    * target is destroying, this removes the stored composition automatically.
    */
-  static void DispatchCompositionEvent(
+  MOZ_CAN_RUN_SCRIPT static void DispatchCompositionEvent(
       nsINode* aEventTargetNode, nsPresContext* aPresContext,
       BrowserParent* aBrowserParent, WidgetCompositionEvent* aCompositionEvent,
       nsEventStatus* aStatus, EventDispatchingCallback* aCallBack,
@@ -282,7 +286,13 @@ class IMEStateManager {
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
-  static void CreateIMEContentObserver(EditorBase* aEditorBase);
+
+  // XXX Changing this to MOZ_CAN_RUN_SCRIPT requires too many callers to be
+  //     marked too.  Probably, we should initialize IMEContentObserver
+  //     asynchronously.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void CreateIMEContentObserver(
+      EditorBase* aEditorBase);
+
   static void DestroyIMEContentObserver();
 
   static bool IsEditable(nsINode* node);

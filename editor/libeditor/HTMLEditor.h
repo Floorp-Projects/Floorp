@@ -143,7 +143,7 @@ class HTMLEditor final : public TextEditor,
                                            uint32_t aFlags,
                                            const nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD BeginningOfDocument() override;
-  NS_IMETHOD SetFlags(uint32_t aFlags) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
   /**
    * IsEmpty() checks whether the editor is empty.  If editor has only padding

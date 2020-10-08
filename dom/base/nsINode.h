@@ -1446,7 +1446,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * node. Be aware that if this node and the computed selection limiter are
    * not in same subtree, this returns the root content of the closeset subtree.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsIContent* GetSelectionRootContent(
+  MOZ_CAN_RUN_SCRIPT nsIContent* GetSelectionRootContent(
       mozilla::PresShell* aPresShell);
 
   nsINodeList* ChildNodes();

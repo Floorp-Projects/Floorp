@@ -530,17 +530,18 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   //
 
   NS_ENSURE_STATE(mPresShell);
-  nsIContent* anchorRoot = anchorContent->GetSelectionRootContent(mPresShell);
+  RefPtr<PresShell> presShell = mPresShell;
+  nsIContent* anchorRoot = anchorContent->GetSelectionRootContent(presShell);
   NS_ENSURE_TRUE(anchorRoot, NS_ERROR_UNEXPECTED);
 
   //
   // Now find the root of the subtree containing aFrame's content.
   //
 
-  nsIContent* content = aFrame->GetContent();
+  nsCOMPtr<nsIContent> content = aFrame->GetContent();
 
   if (content) {
-    nsIContent* contentRoot = content->GetSelectionRootContent(mPresShell);
+    nsIContent* contentRoot = content->GetSelectionRootContent(presShell);
     NS_ENSURE_TRUE(contentRoot, NS_ERROR_UNEXPECTED);
 
     if (anchorRoot == contentRoot) {
@@ -554,18 +555,18 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
       // Find the frame under the mouse cursor with the root frame.
       // At this time, don't use the anchor's frame because it may not have
       // fixed positioned frames.
-      nsIFrame* rootFrame = mPresShell->GetRootFrame();
+      nsIFrame* rootFrame = presShell->GetRootFrame();
       nsPoint ptInRoot = aPoint + aFrame->GetOffsetTo(rootFrame);
       nsIFrame* cursorFrame =
           nsLayoutUtils::GetFrameForPoint(RelativeTo{rootFrame}, ptInRoot);
 
       // If the mouse cursor in on a frame which is descendant of same
       // selection root, we can expand the selection to the frame.
-      if (cursorFrame && cursorFrame->PresShell() == mPresShell) {
-        nsIContent* cursorContent = cursorFrame->GetContent();
+      if (cursorFrame && cursorFrame->PresShell() == presShell) {
+        nsCOMPtr<nsIContent> cursorContent = cursorFrame->GetContent();
         NS_ENSURE_TRUE(cursorContent, NS_ERROR_FAILURE);
         nsIContent* cursorContentRoot =
-            cursorContent->GetSelectionRootContent(mPresShell);
+            cursorContent->GetSelectionRootContent(presShell);
         NS_ENSURE_TRUE(cursorContentRoot, NS_ERROR_UNEXPECTED);
         if (cursorContentRoot == anchorRoot) {
           *aRetFrame = cursorFrame;

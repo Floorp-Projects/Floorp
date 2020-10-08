@@ -109,7 +109,7 @@ interface nsIEditor  : nsISupports
                                    in boolean aSuppressTransaction);
 
   /** edit flags for this editor.  May be set at any time. */
-  attribute unsigned long flags;
+  [setter_can_run_script] attribute unsigned long flags;
 
   /**
    * the MimeType of the document
