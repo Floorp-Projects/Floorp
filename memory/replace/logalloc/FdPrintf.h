@@ -8,8 +8,9 @@
 #define __FdPrintf_h__
 
 /* We can't use libc's (f)printf because it would reenter in replace_malloc,
- * So use a custom and simplified version.
- * Only %p and %z are supported.
+ * So use a custom and simplified version.  Only %p, %zu, %s and %% are
+ * supported, %zu, %s, support width specifiers.
+ *
  * /!\ This function used a fixed-size internal buffer. The caller is
  * expected to not use a format string that may overflow.
  * The aFd argument is a file descriptor on UNIX and a native win32 file
