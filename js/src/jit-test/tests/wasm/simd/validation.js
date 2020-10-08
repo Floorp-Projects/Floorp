@@ -117,21 +117,21 @@ for (let op of [
     'i8x16.avgr_u',
     'i16x8.avgr_u',
     'i8x16.add',
-    'i8x16.add_saturate_s',
-    'i8x16.add_saturate_u',
+    'i8x16.add_sat_s',
+    'i8x16.add_sat_u',
     'i8x16.sub',
-    'i8x16.sub_saturate_s',
-    'i8x16.sub_saturate_u',
+    'i8x16.sub_sat_s',
+    'i8x16.sub_sat_u',
     'i8x16.min_s',
     'i8x16.max_s',
     'i8x16.min_u',
     'i8x16.max_u',
     'i16x8.add',
-    'i16x8.add_saturate_s',
-    'i16x8.add_saturate_u',
+    'i16x8.add_sat_s',
+    'i16x8.add_sat_u',
     'i16x8.sub',
-    'i16x8.sub_saturate_s',
-    'i16x8.sub_saturate_u',
+    'i16x8.sub_sat_s',
+    'i16x8.sub_sat_u',
     'i16x8.mul',
     'i16x8.min_s',
     'i16x8.max_s',
@@ -163,7 +163,7 @@ for (let op of [
     'i8x16.narrow_i16x8_u',
     'i16x8.narrow_i32x4_s',
     'i16x8.narrow_i32x4_u',
-    'v8x16.swizzle'])
+    'i8x16.swizzle'])
 {
     testValid(`(module
                  (func (param v128) (param v128) (result v128)
@@ -172,12 +172,12 @@ for (let op of [
 
 testValid(`(module
              (func (param v128) (param v128) (result v128)
-               (v8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 23 (local.get 0) (local.get 1))))`);
+               (i8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 23 (local.get 0) (local.get 1))))`);
 
 assertErrorMessage(() => testValid(
     `(module
        (func (param v128) (param v128) (result v128)
-         (v8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 (local.get 0) (local.get 1))))`),
+         (i8x16.shuffle 0 16 1 17 2 18 3 19 4 20 5 21 6 22 7 (local.get 0) (local.get 1))))`),
                    SyntaxError,
                    /expected a u8/);
 
@@ -239,16 +239,16 @@ for (let [op, input] of [
 
 for (let op of [
     'v128.load',
-    'v8x16.load_splat',
-    'v16x8.load_splat',
-    'v32x4.load_splat',
-    'v64x2.load_splat',
-    'i16x8.load8x8_s',
-    'i16x8.load8x8_u',
-    'i32x4.load16x4_s',
-    'i32x4.load16x4_u',
-    'i64x2.load32x2_s',
-    'i64x2.load32x2_u'])
+    'v128.load8_splat',
+    'v128.load16_splat',
+    'v128.load32_splat',
+    'v128.load64_splat',
+    'v128.load8x8_s',
+    'v128.load8x8_u',
+    'v128.load16x4_s',
+    'v128.load16x4_u',
+    'v128.load32x2_s',
+    'v128.load32x2_u'])
 {
     testValid(`(module
                  (memory 1 1)

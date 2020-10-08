@@ -5,7 +5,7 @@
 //
 // In DEBUG builds, the testing function wasmSimdAnalysis() returns a string
 // describing the last decision made by the SIMD lowering code: to perform an
-// optimized lowering or the default byte shuffle+blend for v8x16.shuffle; to
+// optimized lowering or the default byte shuffle+blend for i8x16.shuffle; to
 // shift by a constant or a variable for the various shifts; and so on.
 //
 // We test that the expected transformation applies, and that the machine code
@@ -22,7 +22,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -40,7 +40,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${perm32x4_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${perm32x4_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -59,7 +59,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${perm32x4_pattern.map(x => x+16).join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${perm32x4_pattern.map(x => x+16).join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -80,7 +80,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 swap high low");
 
@@ -100,7 +100,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 high low");
 
@@ -120,7 +120,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 low");
 
@@ -140,7 +140,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 high");
 
@@ -160,7 +160,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${rot8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${rot8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> rotate-right 8x16");
 
@@ -180,7 +180,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${perm8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${perm8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 8x16");
 
@@ -200,7 +200,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
+    (i8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shift-left 8x16");
 
@@ -220,7 +220,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${shift8x16_pattern.join(' ')} (v128.const i32x4 0 0 0 0) (local.get 0))))`);
+    (i8x16.shuffle ${shift8x16_pattern.join(' ')} (v128.const i32x4 0 0 0 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shift-left 8x16");
 
@@ -241,7 +241,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
+    (i8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shuffle+blend 8x16");
 
@@ -261,7 +261,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
+    (i8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shift-right 8x16");
 
@@ -282,7 +282,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
+    (i8x16.shuffle ${shift8x16_pattern.join(' ')} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shuffle+blend 8x16");
 
@@ -301,7 +301,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${concat8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${concat8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> concat+shift-right 8x16");
 
@@ -321,7 +321,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${concat8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${concat8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> concat+shift-right 8x16");
 
@@ -341,7 +341,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${blend8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${blend8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> blend 8x16");
 
@@ -363,7 +363,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${blend16x8_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${blend16x8_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> blend 16x8");
 
@@ -390,7 +390,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
         assertEq(wasmSimdAnalysis(), expected);
 
@@ -418,7 +418,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
         assertEq(wasmSimdAnalysis(), expected);
 
@@ -446,7 +446,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${interleave_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
         assertEq(wasmSimdAnalysis(), expected);
 
@@ -469,7 +469,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${blend_perm8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${blend_perm8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> shuffle+blend 8x16");
 
@@ -492,7 +492,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${nop8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${nop8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> move");
 
@@ -512,7 +512,7 @@ for ( let [lhs, rhs, expected] of
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)) (v128.load (i32.const 32)))))
   (func $f (param v128) (param v128) (result v128)
-    (v8x16.shuffle ${nop8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
+    (i8x16.shuffle ${nop8x16_pattern.join(' ')} (local.get 0) (local.get 1))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> move");
 
@@ -532,7 +532,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${broadcast8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${broadcast8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> broadcast 8x16");
 
@@ -551,7 +551,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${broadcast16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${broadcast16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> broadcast 16x8");
 
@@ -570,7 +570,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${broadcast16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${broadcast16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> broadcast 16x8");
 
@@ -589,7 +589,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${broadcast32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${broadcast32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -608,7 +608,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${broadcast64x2_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${broadcast64x2_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -627,7 +627,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${rev8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${rev8x16_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 8x16");
 
@@ -646,7 +646,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${rev16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${rev16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 swap high low");
 
@@ -665,7 +665,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${rev32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${rev32x4_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
@@ -684,7 +684,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func (export "run")
     (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
   (func $f (param v128) (result v128)
-    (v8x16.shuffle ${rev64x2_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+    (i8x16.shuffle ${rev64x2_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
     assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 
