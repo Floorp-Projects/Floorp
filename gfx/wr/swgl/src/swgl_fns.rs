@@ -153,12 +153,11 @@ extern "C" {
         transpose: GLboolean,
         value: *const GLfloat,
     );
-
     fn DrawElementsInstanced(
         mode: GLenum,
         count: GLsizei,
         type_: GLenum,
-        indices: *const c_void,
+        indices: GLintptr,
         instancecount: GLsizei,
     );
     fn EnableVertexAttribArray(index: GLuint);
@@ -1528,7 +1527,15 @@ impl Gl for Context {
     }
 
     fn draw_arrays(&self, mode: GLenum, first: GLint, count: GLsizei) {
-        panic!();
+        unsafe {
+            DrawElementsInstanced(
+                mode,
+                count,
+                NONE,
+                first as GLintptr,
+                1,
+            );
+        }
     }
 
     fn draw_arrays_instanced(
@@ -1538,7 +1545,15 @@ impl Gl for Context {
         count: GLsizei,
         primcount: GLsizei,
     ) {
-        panic!();
+        unsafe {
+            DrawElementsInstanced(
+                mode,
+                count,
+                NONE,
+                first as GLintptr,
+                primcount,
+            );
+        }
     }
 
     fn draw_elements(
@@ -1558,7 +1573,7 @@ impl Gl for Context {
                 mode,
                 count,
                 element_type,
-                indices_offset as *const c_void,
+                indices_offset as GLintptr,
                 1,
             );
         }
@@ -1582,7 +1597,7 @@ impl Gl for Context {
                 mode,
                 count,
                 element_type,
-                indices_offset as *const c_void,
+                indices_offset as GLintptr,
                 primcount,
             );
         }

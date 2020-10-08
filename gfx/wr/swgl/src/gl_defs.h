@@ -22,6 +22,11 @@ typedef int32_t GLsizei;
 typedef size_t GLsizeiptr;
 typedef intptr_t GLintptr;
 
+#define GL_FALSE 0
+#define GL_TRUE 1
+
+#define GL_NONE 0
+
 #define GL_NO_ERROR 0
 
 #define GL_RGBA32F 0x8814
