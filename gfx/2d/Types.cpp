@@ -21,5 +21,22 @@ std::ostream& operator<<(std::ostream& aOut, const DeviceColor& aColor) {
   return aOut;
 }
 
+std::ostream& operator<<(std::ostream& aOut, const SamplingFilter& aFilter) {
+  switch (aFilter) {
+    case SamplingFilter::GOOD:
+      aOut << "SamplingFilter::GOOD";
+      break;
+    case SamplingFilter::LINEAR:
+      aOut << "SamplingFilter::LINEAR";
+      break;
+    case SamplingFilter::POINT:
+      aOut << "SamplingFilter::POINT";
+      break;
+    default:
+      aOut << "???";
+  }
+  return aOut;
+}
+
 }  // namespace gfx
 }  // namespace mozilla
