@@ -13,7 +13,6 @@
 #include "mozilla/gfx/TiledRegion.h"  // for TiledRegion
 #include "mozilla/gfx/Types.h"        // for SamplingFilter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
-#include "mozilla/layers/WebRenderLayersLogging.h"
 #include "mozilla/layers/ZoomConstraints.h"
 #include "nsAString.h"
 #include "nsPrintfCString.h"  // for nsPrintfCString
@@ -33,18 +32,6 @@ enum class ImageFormat;
 
 namespace layers {
 struct ZoomConstraints;
-
-void AppendToString(std::stringstream& aStream, const wr::ColorF& c,
-                    const char* pfx = "", const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream, const wr::LayoutRect& r,
-                    const char* pfx = "", const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
-                    const char* pfx = "", const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
-                    const char* pfx = "", const char* sfx = "");
 
 void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                     const char* pfx = "", const char* sfx = "");

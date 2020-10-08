@@ -277,7 +277,6 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderDrawEventRecorder.h',
     'wr/WebRenderImageHost.h',
     'wr/WebRenderLayerManager.h',
-    'wr/WebRenderLayersLogging.h',
     'wr/WebRenderMessageUtils.h',
     'wr/WebRenderScrollData.h',
     'wr/WebRenderScrollDataWrapper.h',
@@ -554,7 +553,6 @@ UNIFIED_SOURCES += [
     'wr/WebRenderDrawEventRecorder.cpp',
     'wr/WebRenderImageHost.cpp',
     'wr/WebRenderLayerManager.cpp',
-    'wr/WebRenderLayersLogging.cpp',
     'wr/WebRenderScrollData.cpp',
     'wr/WebRenderUserData.cpp',
     # XXX here are some unified build error.
