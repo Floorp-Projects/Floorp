@@ -10,6 +10,10 @@
 
 /* globals exportFunction */
 
+console.info(
+  "The user agent has been overridden for compatibility reasons. See https://webcompat.com/issues/40353 for details."
+);
+
 const APP_VERSION = navigator.appVersion + " mobile";
 
 Object.defineProperty(window.navigator.wrappedJSObject, "appVersion", {
