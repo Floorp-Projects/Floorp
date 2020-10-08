@@ -2599,7 +2599,6 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   // conditions.
   for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd();
        iter++) {
-    bool updated = false;
     switch (stubKind) {
       case BaselineCacheIRStubKind::Regular: {
         if (!iter->isCacheIR_Regular()) {
@@ -2609,8 +2608,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
         if (otherStub->stubInfo() != stubInfo) {
           continue;
         }
-        if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(),
-                                              &updated)) {
+        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
           continue;
         }
         break;
@@ -2623,8 +2621,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
         if (otherStub->stubInfo() != stubInfo) {
           continue;
         }
-        if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(),
-                                              &updated)) {
+        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
           continue;
         }
         break;
@@ -2637,8 +2634,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
         if (otherStub->stubInfo() != stubInfo) {
           continue;
         }
-        if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(),
-                                              &updated)) {
+        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
           continue;
         }
         break;
@@ -2648,15 +2644,10 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
     // We found a stub that's exactly the same as the stub we're about to
     // attach. Just return nullptr, the caller should do nothing in this
     // case.
-    if (updated) {
-      stub->maybeInvalidateWarp(cx, invalidationScript);
-      *attached = true;
-    } else {
-      JitSpew(JitSpew_BaselineICFallback,
-              "Tried attaching identical stub for (%s:%u:%u)",
-              outerScript->filename(), outerScript->lineno(),
-              outerScript->column());
-    }
+    JitSpew(JitSpew_BaselineICFallback,
+            "Tried attaching identical stub for (%s:%u:%u)",
+            outerScript->filename(), outerScript->lineno(),
+            outerScript->column());
     return nullptr;
   }
 
