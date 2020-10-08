@@ -167,7 +167,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
 
   // Start wall of code for speculative loading and line numbers
 
-  if (mSpeculativeLoadStage) {
+  if (mSpeculativeLoadStage && mode != IN_TEMPLATE) {
     switch (aNamespace) {
       case kNameSpaceID_XHTML:
         if (nsGkAtoms::img == aName) {
