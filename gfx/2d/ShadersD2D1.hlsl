@@ -8,7 +8,7 @@ SamplerState InputSampler : register(s0);
 Texture2D GradientTexture : register(t1);
 SamplerState GradientSampler : register(s1);
 
-cbuffer constants : register(b0)
+cbuffer radialGradientConstants : register(b0)
 {
     // Precalculate as much as we can!
     float3 diff : packoffset(c0.x);
@@ -25,6 +25,51 @@ cbuffer constants : register(b0)
 
     float3x2 transform : packoffset(c3.x);
 }
+
+cbuffer conicGradientConstants : register(b0)
+{
+    float2 center : packoffset(c0.x);
+    float angle : packoffset(c0.z);
+    float start_offset : packoffset(c0.w);
+    float end_offset : packoffset(c1.x);
+
+    // The next two values are used for a hack to compensate for an apparent
+    // bug in D2D where the GradientSampler SamplerState doesn't get the
+    // correct addressing modes.
+    float repeat_correct_conic : packoffset(c1.y);
+    float allow_odd_conic : packoffset(c1.z);
+
+    float3x2 transform_conic : packoffset(c2.x);
+}
+
+
+static const float M_PI = 3.14159265f;
+
+float4 SampleConicGradientPS(
+    float4 clipSpaceOutput  : SV_POSITION,
+    float4 sceneSpaceOutput : SCENE_POSITION,
+    float4 texelSpaceInput0 : TEXCOORD0
+    ) : SV_Target
+{
+  float2 p = float2(sceneSpaceOutput.x * transform_conic._11 + sceneSpaceOutput.y * transform_conic._21 + transform_conic._31,
+                    sceneSpaceOutput.x * transform_conic._12 + sceneSpaceOutput.y * transform_conic._22 + transform_conic._32);
+  float2 dir = float2(
+    -(center.y - p.y),
+     (center.x - p.x));
+  float vstart = start_offset;
+  float vend = end_offset;
+  float n = 1/(vend-vstart);
+  float current_angle = atan2(dir.y, dir.x)-angle;
+  float lambda = fmod(n*current_angle/M_PI/2+vend-vstart+.5,1);
+  float offset = lambda;
+  float4 output = GradientTexture.Sample(GradientSampler, float2(offset, 0.5));
+  // Premultiply
+  output.rgb *= output.a;
+  // Multiply the output color by the input mask for the operation.
+  output *= InputTexture.Sample(InputSampler, texelSpaceInput0.xy);
+
+  return output;
+};
 
 float4 SampleRadialGradientPS(
     float4 clipSpaceOutput  : SV_POSITION,

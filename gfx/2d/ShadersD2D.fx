@@ -37,6 +37,16 @@ cbuffer cb2
     float sq_radius1;
 }
 
+cbuffer cb3
+{
+    float3x3 DeviceSpaceToUserSpace_cb3;
+    float2 dimensions_cb3;
+    float2 center;
+    float angle;
+    float start_offset;
+    float end_offset;
+}
+
 struct VS_OUTPUT
 {
     float4 Position : SV_Position;
@@ -45,6 +55,13 @@ struct VS_OUTPUT
 };
 
 struct VS_RADIAL_OUTPUT
+{
+    float4 Position : SV_Position;
+    float2 MaskTexCoord : TEXCOORD0;
+    float2 PixelCoord : TEXCOORD1;
+};
+
+struct VS_CONIC_OUTPUT
 {
     float4 Position : SV_Position;
     float2 MaskTexCoord : TEXCOORD0;
@@ -172,6 +189,25 @@ VS_RADIAL_OUTPUT SampleRadialVS(float3 pos : POSITION)
     Output.PixelCoord.x = ((Output.Position.x + 1.0f) / 2.0f) * dimensions.x;
     Output.PixelCoord.y = ((1.0f - Output.Position.y) / 2.0f) * dimensions.y;
     Output.PixelCoord.xy = mul(float3(Output.PixelCoord.x, Output.PixelCoord.y, 1.0f), DeviceSpaceToUserSpace).xy;
+    return Output;
+}
+
+VS_CONIC_OUTPUT SampleConicVS(float3 pos : POSITION)
+{
+    VS_CONIC_OUTPUT Output;
+    Output.Position.w = 1.0f;
+    Output.Position.x = pos.x * QuadDesc.z + QuadDesc.x;
+    Output.Position.y = pos.y * QuadDesc.w + QuadDesc.y;
+    Output.Position.z = 0;
+    Output.MaskTexCoord.x = pos.x * MaskTexCoords.z + MaskTexCoords.x;
+    Output.MaskTexCoord.y = pos.y * MaskTexCoords.w + MaskTexCoords.y;
+
+    // For the conic gradient pixel shader we need to pass in the pixel's
+    // coordinates in user space for the color to be correctly determined.
+
+    Output.PixelCoord.x = ((Output.Position.x + 1.0f) / 2.0f) * dimensions_cb3.x;
+    Output.PixelCoord.y = ((1.0f - Output.Position.y) / 2.0f) * dimensions_cb3.y;
+    Output.PixelCoord.xy = mul(float3(Output.PixelCoord.x, Output.PixelCoord.y, 1.0f), DeviceSpaceToUserSpace_cb3).xy;
     return Output;
 }
 
@@ -521,6 +557,23 @@ float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In, uniform sampler aSampler )
     return output;
 };
 
+float4 SampleConicGradientPS(VS_CONIC_OUTPUT In, uniform sampler aSampler) : SV_Target
+{
+    float2 current_dir = In.PixelCoord - center;
+    float current_angle = atan2(current_dir.y, current_dir.x) + (3.141592 / 2.0 - angle);
+    float offset = fmod(current_angle / (2.0 * 3.141592), 1.0) - start_offset;
+    offset = offset / (end_offset - start_offset);
+
+    float upper_t = lerp(0, 1, offset);
+
+    float4 output = tex.Sample(aSampler, float2(upper_t, 0.5));
+    // Premultiply
+    output.rgb *= output.a;
+    // Multiply the output color by the input mask for the operation.
+    output *= mask.Sample(sMaskSampler, In.MaskTexCoord).a;
+    return output;
+};
+
 float4 SampleShadowHPS( VS_OUTPUT In) : SV_Target
 {
     float outputStrength = 0;
@@ -679,6 +732,31 @@ technique10 SampleRadialGradient
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS( sMirrorSampler )));
+    }
+}
+
+technique10 SampleConicGradient
+{
+    pass APos
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleConicVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleConicGradientPS( sSampler )));
+    }
+    pass APosWrap
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleConicVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleConicGradientPS( sWrapSampler )));
+    }
+    pass APosMirror
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleConicVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleConicGradientPS( sMirrorSampler )));
     }
 }
 

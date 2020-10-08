@@ -7,4 +7,6 @@ fxc ShadersD2D1.hlsl -ESampleRadialGradientPS -nologo -Tps_4_0_level_9_3 -Fhtmpf
 cat tmpfile > ShadersD2D1.h
 fxc ShadersD2D1.hlsl -ESampleRadialGradientA0PS -nologo -Tps_4_0_level_9_3 -Fhtmpfile -VnSampleRadialGradientA0PS
 cat tmpfile >> ShadersD2D1.h
+fxc ShadersD2D1.hlsl -ESampleConicGradientPS -nologo -Tps_4_0_level_9_3 -Fhtmpfile -VnSampleConicGradientPS
+cat tmpfile >> ShadersD2D1.h
 rm tmpfile
