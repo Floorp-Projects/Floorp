@@ -130,6 +130,22 @@ mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnDataReceived(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnDataSent() {
+  LOG(("WebSocketConnectionParent::RecvOnDataSent %p\n", this));
+  MOZ_ASSERT(mEventTarget);
+
+  RefPtr<WebSocketConnectionParent> self = this;
+  auto task = [self{std::move(self)}]() {
+    if (self->mListener) {
+      Unused << self->mListener->OnDataSent();
+    }
+  };
+
+  DispatchHelper(mEventTarget, "WebSocketConnectionParent::RecvOnDataSent",
+                 std::move(task));
+  return IPC_OK();
+}
+
 void WebSocketConnectionParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("WebSocketConnectionParent::ActorDestroy %p aWhy=%d\n", this, aWhy));
   if (!mClosed) {
