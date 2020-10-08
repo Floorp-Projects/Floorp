@@ -15,6 +15,7 @@ bitflags! {
         const PIXEL_LOCAL_STORAGE = 1 << 10;
         const DITHERING = 1 << 11;
         const TEXTURE_EXTERNAL = 1 << 12;
+        const DEBUG = 1 << 13;
     }
 }
 
@@ -199,6 +200,12 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     shaders.insert("ps_split_composite", vec![base_prim_features.finish()]);
 
     shaders.insert("ps_clear", vec![base_prim_features.finish()]);
+
+    if flags.contains(ShaderFeatureFlags::DEBUG) {
+        for name in &["debug_color", "debug_font"] {
+            shaders.insert(name, vec![String::new()]);
+        }
+    }
 
     shaders
 }
