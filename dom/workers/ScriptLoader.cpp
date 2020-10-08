@@ -166,9 +166,7 @@ nsresult ChannelFromScriptURL(
       false /* aForceInherit */);
 
   bool isData = uri->SchemeIs("data");
-  bool isURIUniqueOrigin =
-      StaticPrefs::security_data_uri_unique_opaque_origin() && isData;
-  if (inheritAttrs && !isURIUniqueOrigin) {
+  if (inheritAttrs && !isData) {
     secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 

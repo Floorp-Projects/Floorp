@@ -2360,10 +2360,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       true,                          // aInheritForAboutBlank
       false);                        // aForceInherit
 
-  bool isURIUniqueOrigin =
-      StaticPrefs::security_data_uri_unique_opaque_origin() &&
-      SchemeIsData(mURI);
-  bool inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
+  bool inheritPrincipal = inheritAttrs && !SchemeIsData(mURI);
 
   nsSecurityFlags securityFlags =
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;

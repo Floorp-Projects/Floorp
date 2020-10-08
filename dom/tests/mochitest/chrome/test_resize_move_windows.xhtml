@@ -221,57 +221,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
       if (screen.width <= 200 || screen.height <= 200) {
         todo(false, "The screen is too small to run this test.");
         SimpleTest.finish();
+        return;
       }
 
       backValues();
 
       // We are in a chrome context, we can change the size and position.
-      checkChangeIsEnabled(window.top, function() {
+      checkChangeIsEnabled(window.top, async function() {
         // We create a window and check that the size and position can be set with
         // window.open parameters and can be changed by the created window.
-        var w = window.open("data:text/html,<script>" +
-          "function check(next) {" +
-          "  var is_range = function(aTest, aValue, aRange, aMsg) {" +
-          "    ok(aTest < aValue + aRange && aTest > aValue - aRange, aMsg);" +
-          "  };" +
-          "  is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');" +
-          "  is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');" +
-          "  is_range(window.screenX, 25, 5, 'parameter screenX should be taken into account');" +
-          "  is_range(window.screenY, 25, 5, 'parameter screenY should be taken into account');" +
-          "  checkChangeIsEnabled(window, next);" +
-          "} <\/script>", '',
+        var w = window.open("file_resize_move_windows_1.html", '',
           'width=170,height=170,screenX=25,screenY=25');
 
+        await SimpleTest.promiseWaitForCondition(() => w.document.readyState == "complete");
         SimpleTest.waitForFocus(function() {
           w.wrappedJSObject.ok = SimpleTest.ok;
-          Cu.exportFunction(window.checkChangeIsEnabled, w, {defineAs: "checkChangeIsEnabled"});
-          w.wrappedJSObject.check(function() {
-            // The current window can change the size and position of the created one.
-            checkChangeIsEnabled(w, function() {
-              w.close();
-
-              // If we call window.open with an empty string as a third parameter,
-              // by default, it will create a new tab instead of a new window.
-              // In a chrome context, the size and position can change.
-              w = window.open("data:text/html,<script>" +
-                "function check(next) {" +
-                "  checkChangeIsEnabled(window, next);" +
-                "} <\/script>", '', '');
-
-              SimpleTest.waitForFocus(function() {
-                Cu.exportFunction(window.checkChangeIsEnabled, w, {defineAs: "checkChangeIsEnabled"});
-                w.wrappedJSObject.check(function() {
-                  // The current window can change the size and position of the new tab.
-                  // Because we are in a chrome context.
-                  checkChangeIsEnabled(w, function() {
-                    w.close();
-
-                    restoreValues();
-                    SimpleTest.finish();
-                  });
-                });
-              }, w, false);
-            });
+          w.wrappedJSObject.check();
+          // The current window can change the size and position of the created one.
+          checkChangeIsEnabled(w, async function() {
+            w.close();
+            // If we call window.open with an empty string as a third parameter,
+            // by default, it will create a new tab instead of a new window.
+            // In a chrome context, the size and position can change.
+            w = window.open("file_resize_move_windows_2.html", '', '');
+            await SimpleTest.promiseWaitForCondition(() => w.document.readyState == "complete");
+            SimpleTest.waitForFocus(function() {
+              // The current window can change the size and position of the new tab.
+              // Because we are in a chrome context.
+              checkChangeIsEnabled(w, function() {
+                w.close();
+                restoreValues();
+                SimpleTest.finish();
+              });
+            }, w, false);
           });
         }, w, false);
       });
@@ -279,8 +261,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
   }
 
   addLoadEvent(function onLoad() {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["security.data_uri.unique_opaque_origin", false]]}, test);
+    test();
   });
   ]]>
   </script>

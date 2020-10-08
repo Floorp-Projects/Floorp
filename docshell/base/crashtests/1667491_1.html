@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script>
+  function go() {
+    document.body.appendChild(a)
+    window.frames[0].onbeforeunload = document.createElement("body").onload;
+    window.requestIdleCallback(() => {
+      window.close();
+      finish();
+    });
+  }
+  </script>
+</head>
+<body onload="go()">
+<iframe id="a"></iframe>
+<iframe></iframe>
+</body>
+</html>
+

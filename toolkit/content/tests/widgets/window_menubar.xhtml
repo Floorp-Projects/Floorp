@@ -791,7 +791,7 @@ var popupTests = [
     synthesizeKey("KEY_Tab", {type: "keydown"}); // cancels the Alt key
     var thisWindow = window;
     var newWindow =
-      window.open("data:text/html,", "_blank", "width=100,height=100");
+      window.open("javascript:'<html><body>dummy</body></html>';", "_blank", "width=100,height=100");
     newWindow.addEventListener("focus", function () {
       thisWindow.addEventListener("focus", function () {
         setTimeout(function () {

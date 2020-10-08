@@ -49,13 +49,9 @@ const TEST_URL =
   '<body><div style="background:orange; width:1000px; height:1000px"></div></body>';
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Turn on the prefs that force overlay scrollbars to always be visible, and to allow
-  // data URIs to be considered as same-origin.
+  // Turn on the prefs that force overlay scrollbars to always be visible.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["layout.testing.overlay-scrollbars.always-visible", true],
-      ["security.data_uri.unique_opaque_origin", false],
-    ],
+    set: [["layout.testing.overlay-scrollbars.always-visible", true]],
   });
 
   info("--- Starting viewport test output ---");
