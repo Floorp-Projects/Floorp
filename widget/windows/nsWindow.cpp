@@ -7549,6 +7549,7 @@ void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
 
     Resize(x, y, width, height, true);
   }
+  UpdateNonClientMargins();
   ChangedDPI();
   ResetLayout();
 }
