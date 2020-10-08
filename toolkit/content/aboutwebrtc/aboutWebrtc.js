@@ -438,7 +438,7 @@ function renderBandwidthStats(report) {
       stat.sendBandwidthBps,
       stat.receiveBandwidthBps,
       stat.maxPaddingBps,
-      stat.receiveBandwidthBps,
+      stat.pacerDelayMs,
       stat.rttMs,
     ])
   );
