@@ -48,15 +48,11 @@ add_task(async function test_video_selection() {
         }
       );
 
+      let eventObj = { accelKey: true, shiftKey: true };
       if (AppConstants.platform == "macosx") {
-        EventUtils.synthesizeKey("]", {
-          accelKey: true,
-          shiftKey: true,
-          altKey: true,
-        });
-      } else {
-        EventUtils.synthesizeKey("]", { accelKey: true, shiftKey: true });
+        eventObj.altKey = true;
       }
+      EventUtils.synthesizeKey("]", eventObj, window);
 
       let pipWin = await domWindowOpened;
       await videoReady;
@@ -82,8 +78,12 @@ add_task(async function test_video_selection() {
             longestDuration = video.duration;
           }
         }
+
         return pipVideoID;
       });
+
+      // Next time we want to use a keyboard shortcut with the main window in focus again.
+      await SimpleTest.promiseFocus(browser);
 
       domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
       videoReady = SpecialPowers.spawn(browser, [pipVideoID], async videoID => {
@@ -93,15 +93,7 @@ add_task(async function test_video_selection() {
         }, "Video is being cloned visually.");
       });
 
-      if (AppConstants.platform == "macosx") {
-        EventUtils.synthesizeKey("]", {
-          accelKey: true,
-          shiftKey: true,
-          altKey: true,
-        });
-      } else {
-        EventUtils.synthesizeKey("]", { accelKey: true, shiftKey: true });
-      }
+      EventUtils.synthesizeKey("]", eventObj, window);
 
       pipWin = await domWindowOpened;
       await videoReady;
