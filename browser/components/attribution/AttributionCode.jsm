@@ -133,13 +133,11 @@ var AttributionCode = {
         }
       }
     } else if (AppConstants.platform == "macosx") {
+      const { MacAttribution } = ChromeUtils.import(
+        "resource:///modules/MacAttribution.jsm"
+      );
       try {
-        let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent
-          .path;
-        let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
-          Ci.nsIMacAttributionService
-        );
-        let referrer = attributionSvc.getReferrerUrl(appPath);
+        let referrer = await MacAttribution.getReferrerUrl();
         let params = new URL(referrer).searchParams;
         for (let key of ATTR_CODE_KEYS) {
           // We support the key prefixed with utm_ or not, but intentionally
