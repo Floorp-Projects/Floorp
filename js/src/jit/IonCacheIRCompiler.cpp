@@ -69,14 +69,6 @@ T IonCacheIRCompiler::rawInt64StubField(uint32_t offset) {
   return (T)readStubInt64(offset, StubField::Type::RawInt64);
 }
 
-uint64_t* IonCacheIRCompiler::expandoGenerationStubFieldPtr(uint32_t offset) {
-  DebugOnly<uint64_t> generation =
-      readStubInt64(offset, StubField::Type::DOMExpandoGeneration);
-  uint64_t* ptr = reinterpret_cast<uint64_t*>(stub_->stubDataStart() + offset);
-  MOZ_ASSERT(*ptr == generation);
-  return ptr;
-}
-
 template <typename Fn, Fn fn>
 void IonCacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
@@ -2327,11 +2319,9 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
   Register obj = allocator.useRegister(masm, objId);
   ExpandoAndGeneration* expandoAndGeneration =
       rawPointerStubField<ExpandoAndGeneration*>(expandoAndGenerationOffset);
-  uint64_t* generationFieldPtr =
-      expandoGenerationStubFieldPtr(generationOffset);
+  uint64_t generation = rawInt64StubField<uint64_t>(generationOffset);
 
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
   ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
   FailurePath* failure;
@@ -2339,8 +2329,8 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
     return false;
   }
 
-  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch1);
-  Address expandoAddr(scratch1,
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
+  Address expandoAddr(scratch,
                       js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
   // Guard the ExpandoAndGeneration* matches the proxy's ExpandoAndGeneration.
@@ -2350,11 +2340,10 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration(
 
   // Guard expandoAndGeneration->generation matches the expected generation.
   masm.movePtr(ImmPtr(expandoAndGeneration), output.scratchReg());
-  masm.movePtr(ImmPtr(generationFieldPtr), scratch1);
   masm.branch64(
       Assembler::NotEqual,
       Address(output.scratchReg(), ExpandoAndGeneration::offsetOfGeneration()),
-      Address(scratch1, 0), scratch2, failure->label());
+      Imm64(generation), failure->label());
 
   // Load expandoAndGeneration->expando into the output Value register.
   masm.loadValue(

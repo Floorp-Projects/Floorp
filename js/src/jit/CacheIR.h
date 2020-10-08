@@ -241,7 +241,6 @@ class StubField {
     // These fields take up 64 bits on all platforms.
     RawInt64,
     First64BitType = RawInt64,
-    DOMExpandoGeneration,
     Value,
 
     Limit
@@ -634,8 +633,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeValueField(const Value& val) {
     addStubField(val.asRawBits(), StubField::Type::Value);
   }
-  void writeDOMExpandoGenerationField(uint64_t generation) {
-    addStubField(generation, StubField::Type::DOMExpandoGeneration);
+  void writeRawInt64Field(uint64_t val) {
+    addStubField(val, StubField::Type::RawInt64);
   }
 
   void writeJSOpImm(JSOp op) {
@@ -1224,7 +1223,7 @@ class MOZ_RAII CacheIRCloner {
   const void* getRawPointerField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);
   const Value getValueField(uint32_t stubOffset);
-  uint64_t getDOMExpandoGenerationField(uint32_t stubOffset);
+  uint64_t getRawInt64Field(uint32_t stubOffset);
 };
 
 class MOZ_RAII IRGenerator {

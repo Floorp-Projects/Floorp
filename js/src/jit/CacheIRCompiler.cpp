@@ -1137,7 +1137,6 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
         AsGCPtr<jsid>(destWords)->init(jsid::fromRawBits(field.asWord()));
         break;
       case StubField::Type::RawInt64:
-      case StubField::Type::DOMExpandoGeneration:
         *reinterpret_cast<uint64_t*>(destWords) = field.asInt64();
         break;
       case StubField::Type::Value:
@@ -1162,7 +1161,6 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
-      case StubField::Type::DOMExpandoGeneration:
         break;
       case StubField::Type::Shape:
         TraceEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),

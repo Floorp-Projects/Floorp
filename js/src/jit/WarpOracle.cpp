@@ -1047,7 +1047,6 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
-      case StubField::Type::DOMExpandoGeneration:
         break;
       case StubField::Type::Shape:
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
