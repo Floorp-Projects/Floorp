@@ -89,7 +89,7 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
 
   if (!mPrintDeviceContext->IsSyncPagePrinting()) {
     mPrintDeviceContext->RegisterPageDoneCallback(
-        [this](nsresult aResult) { PageDone(aResult); });
+        [self = RefPtr{this}](nsresult aResult) { self->PageDone(aResult); });
   }
 
   mIsDoingPrinting = true;

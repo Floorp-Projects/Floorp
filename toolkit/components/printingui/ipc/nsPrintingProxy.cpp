@@ -218,15 +218,8 @@ bool nsPrintingProxy::DeallocPPrintSettingsDialogChild(
   return true;
 }
 
-PRemotePrintJobChild* nsPrintingProxy::AllocPRemotePrintJobChild() {
+already_AddRefed<PRemotePrintJobChild>
+nsPrintingProxy::AllocPRemotePrintJobChild() {
   RefPtr<RemotePrintJobChild> remotePrintJob = new RemotePrintJobChild();
-  return remotePrintJob.forget().take();
-}
-
-bool nsPrintingProxy::DeallocPRemotePrintJobChild(
-    PRemotePrintJobChild* aDoomed) {
-  RemotePrintJobChild* remotePrintJob =
-      static_cast<RemotePrintJobChild*>(aDoomed);
-  NS_RELEASE(remotePrintJob);
-  return true;
+  return remotePrintJob.forget();
 }
