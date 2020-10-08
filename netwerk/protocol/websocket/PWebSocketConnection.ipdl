@@ -19,6 +19,7 @@ parent:
   async OnTCPClosed();
   async OnDataReceived(uint8_t[] aData);
   async OnUpgradeFailed(nsresult aReason);
+  async OnDataSent();
 
 child:
   async EnqueueOutgoingData(uint8_t[] aData);
