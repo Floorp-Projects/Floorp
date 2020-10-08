@@ -119,6 +119,12 @@ class SettingsPrivacyTest {
             verifySitePermissionsNotificationSubMenuItems()
         }.goBack {
 
+            // SITE PERMISSIONS PERSISTENT STORAGE
+        }.openPersistentStorage {
+            verifyNavigationToolBarHeader("Persistent Storage")
+            verifySitePermissionsPersistentStorageSubMenuItems()
+        }.goBack {
+
             // SITE PERMISSIONS EXCEPTIONS
         }.openExceptions {
             verifyNavigationToolBarHeader()

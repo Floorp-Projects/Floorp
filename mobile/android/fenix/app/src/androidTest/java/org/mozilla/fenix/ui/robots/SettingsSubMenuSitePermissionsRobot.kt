@@ -118,6 +118,22 @@ class SettingsSubMenuSitePermissionsRobot {
             return SettingsSubMenuSitePermissionsCommonRobot.Transition()
         }
 
+        fun openPersistentStorage(
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+        ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
+
+            onView(withId(R.id.recycler_view)).perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                    hasDescendant(withText("Persistent Storage"))
+                )
+            )
+
+            openPersistentStorage().click()
+
+            SettingsSubMenuSitePermissionsCommonRobot().interact()
+            return SettingsSubMenuSitePermissionsCommonRobot.Transition()
+        }
+
         fun openExceptions(
             interact: SettingsSubMenuSitePermissionsExceptionsRobot.() -> Unit
         ): SettingsSubMenuSitePermissionsExceptionsRobot.Transition {
@@ -176,8 +192,27 @@ class SettingsSubMenuSitePermissionsRobot {
 
         val notificationText =
             "Ask to allow"
-        onView(withText(notificationText))
+
+        onView(withId(R.id.recycler_view)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                allOf(hasDescendant(withText("Notification")), hasDescendant(withText(notificationText)))
+            )
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        onView(withText("Persistent Storage"))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        val persistentStorageText =
+            "Ask to allow"
+
+        onView(withId(R.id.recycler_view)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                allOf(
+                    hasDescendant(withText("Persistent Storage")),
+                    hasDescendant(withText(persistentStorageText))
+                )
+            )
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 }
 
@@ -198,6 +233,9 @@ private fun openMicrophone() =
 
 private fun openNotification() =
     onView(allOf(withText("Notification")))
+
+private fun openPersistentStorage() =
+    onView(allOf(withText("Persistent Storage")))
 
 private fun openExceptions() =
     onView(allOf(withText("Exceptions")))

@@ -75,6 +75,12 @@ class SettingsSubMenuSitePermissionsCommonRobot {
         verifyCheckCommonRadioButtonDefault()
     }
 
+    fun verifySitePermissionsPersistentStorageSubMenuItems() {
+        verifyassertAskToAllowRecommended()
+        verifyassertBlocked()
+        verifyCheckCommonRadioButtonDefault()
+    }
+
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
 
