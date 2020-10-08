@@ -25,6 +25,7 @@ using gfx::FilterNode;
 using gfx::GradientStops;
 using gfx::NativeFontResource;
 using gfx::Path;
+using gfx::RecordedDependentSurface;
 using gfx::ReferencePtr;
 using gfx::ScaledFont;
 using gfx::SourceSurface;
@@ -36,6 +37,12 @@ class PrintTranslator final : public Translator {
   explicit PrintTranslator(nsDeviceContext* aDeviceContext);
 
   bool TranslateRecording(PRFileDescStream& aRecording);
+
+  void SetDependentSurfaces(
+      nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>&&
+          aDependentSurfaces) {
+    mDependentSurfaces = std::move(aDependentSurfaces);
+  }
 
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final {
     DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
@@ -84,6 +91,8 @@ class PrintTranslator final : public Translator {
     MOZ_ASSERT(result);
     return result;
   }
+
+  already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) final;
 
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) final {
     mDrawTargets.Put(aRefPtr, RefPtr{aDT});
@@ -163,6 +172,8 @@ class PrintTranslator final : public Translator {
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
   nsRefPtrHashtable<nsPtrHashKey<void>, UnscaledFont> mUnscaledFonts;
   nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
+  nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>
+      mDependentSurfaces;
 };
 
 }  // namespace layout

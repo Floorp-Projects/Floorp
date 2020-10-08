@@ -11,6 +11,7 @@
 #include "mozilla/gfx/RecordedEvent.h"
 #include "mozilla/gfx/RecordingTypes.h"
 #include "mozilla/UniquePtr.h"
+#include "InlineTranslator.h"
 
 using namespace mozilla::gfx;
 
@@ -79,6 +80,27 @@ already_AddRefed<DrawTarget> PrintTranslator::CreateDrawTarget(
   RefPtr<DrawTarget> drawTarget = context->GetDrawTarget();
   AddDrawTarget(aRefPtr, drawTarget);
   return drawTarget.forget();
+}
+
+already_AddRefed<SourceSurface> PrintTranslator::LookupExternalSurface(
+    uint64_t aKey) {
+  RefPtr<RecordedDependentSurface> surface = mDependentSurfaces.Get(aKey);
+  if (!surface) {
+    return nullptr;
+  }
+
+  RefPtr<DrawTarget> newDT = GetReferenceDrawTarget()->CreateSimilarDrawTarget(
+      surface->mSize, SurfaceFormat::B8G8R8A8);
+
+  InlineTranslator translator(newDT, nullptr);
+  translator.SetDependentSurfaces(&mDependentSurfaces);
+  if (!translator.TranslateRecording((char*)surface->mRecording.mData,
+                                     surface->mRecording.mLen)) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurface> snapshot = newDT->Snapshot();
+  return snapshot.forget();
 }
 
 }  // namespace layout

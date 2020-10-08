@@ -12,6 +12,7 @@
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/RecordingTypes.h"
 #include "prio.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace layout {
@@ -149,10 +150,14 @@ class DrawEventRecorderPRFileDesc final : public gfx::DrawEventRecorderPrivate {
    */
   void Close();
 
+  void AddDependentSurface(uint64_t aDependencyId) override;
+  nsTArray<uint64_t>&& TakeDependentSurfaces();
+
  private:
   void Flush() override;
 
   PRFileDescStream mOutputStream;
+  nsTArray<uint64_t> mDependentSurfaces;
 };
 
 }  // namespace layout

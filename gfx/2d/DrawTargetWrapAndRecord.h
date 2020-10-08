@@ -59,6 +59,11 @@ class DrawTargetWrapAndRecord : public DrawTarget {
       const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
       const DrawOptions& aOptions = DrawOptions()) override;
 
+  virtual void DrawDependentSurface(
+      uint64_t aId, const Rect& aDest,
+      const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
+      const DrawOptions& aOptions = DrawOptions()) override;
+
   virtual void DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
                           const Point& aDestPoint,
                           const DrawOptions& aOptions = DrawOptions()) override;
