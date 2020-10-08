@@ -138,13 +138,13 @@ class BigIntStencil {
     return buf_ != nullptr;
   }
 
-  BigInt* createBigInt(JSContext* cx) {
+  BigInt* createBigInt(JSContext* cx) const {
     mozilla::Range<const char16_t> source(buf_.get(), length_);
 
     return js::ParseBigIntLiteral(cx, source);
   }
 
-  bool isZero() {
+  bool isZero() const {
     mozilla::Range<const char16_t> source(buf_.get(), length_);
     return js::BigIntLiteralIsZero(source);
   }
