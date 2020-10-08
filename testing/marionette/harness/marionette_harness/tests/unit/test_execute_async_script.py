@@ -4,8 +4,11 @@ import os
 
 from marionette_driver.errors import (
     JavascriptException,
+    NoAlertPresentException,
     ScriptTimeoutException,
 )
+from marionette_driver.marionette import Alert
+from marionette_driver.wait import Wait
 
 from marionette_harness import MarionetteTestCase
 
@@ -14,6 +17,23 @@ class TestExecuteAsyncContent(MarionetteTestCase):
     def setUp(self):
         super(TestExecuteAsyncContent, self).setUp()
         self.marionette.timeout.script = 1
+
+    def tearDown(self):
+        if self.alert_present():
+            alert = self.marionette.switch_to_alert()
+            alert.dismiss()
+            self.wait_for_alert_closed()
+
+    def alert_present(self):
+        try:
+            Alert(self.marionette).text
+            return True
+        except NoAlertPresentException:
+            return False
+
+    def wait_for_alert_closed(self, timeout=None):
+        Wait(self.marionette, timeout=timeout).until(
+            lambda _: not self.alert_present())
 
     def test_execute_async_simple(self):
         self.assertEqual(1,
@@ -132,6 +152,10 @@ arguments[0](4);
             "arguments[0].cheese; __webDriverCallback();",
             script_args=[], sandbox=None)
 
+    def test_return_value_on_alert(self):
+        res = self.marionette.execute_async_script("alert()")
+        self.assertIsNone(res)
+
 
 class TestExecuteAsyncChrome(TestExecuteAsyncContent):
     def setUp(self):
@@ -155,3 +179,6 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
                 var callback = arguments[arguments.length - 1];
                 setTimeout(function() { callback(foo()); }, 50);
                 """)
+
+    def test_return_value_on_alert(self):
+        pass

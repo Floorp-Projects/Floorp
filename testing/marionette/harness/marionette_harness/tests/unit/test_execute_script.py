@@ -358,9 +358,8 @@ class TestExecuteContent(MarionetteTestCase):
         self.marionette.execute_script(" // comment ")
 
     def test_return_value_on_alert(self):
-        res = self.marionette._send_message("WebDriver:ExecuteScript", {"script": "alert()"})
-        self.assertIn("value", res)
-        self.assertIsNone(res["value"])
+        res = self.marionette.execute_script("alert()")
+        self.assertIsNone(res)
 
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
