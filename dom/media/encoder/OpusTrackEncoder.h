@@ -36,8 +36,10 @@ class OpusTrackEncoder : public AudioTrackEncoder {
 
   nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) override;
 
-  int GetLookahead() const { return mLookahead; }
-  media::TimeUnit GetCodecDelay() const { return mCodecDelay; }
+  /**
+   * The encoder lookahead at 48k rate.
+   */
+  int GetLookahead() const;
 
  protected:
   /**
@@ -82,18 +84,19 @@ class OpusTrackEncoder : public AudioTrackEncoder {
   AudioSegment mSourceSegment;
 
   /**
-   * Total samples of delay added by codec, can be queried by the encoder. From
-   * the perspective of decoding, real data begins this many samples late, so
-   * the encoder needs to append this many null samples to the end of stream,
-   * in order to align the time of input and output.
+   * Total samples of delay added by codec (in rate mOutputSampleRate), can
+   * be queried by the encoder. From the perspective of decoding, real data
+   * begins this many samples late, so the encoder needs to append this many
+   * null samples to the end of stream, in order to align the time of input and
+   * output.
    */
   int mLookahead;
 
   /**
-   * Codec delay representation in microseconds. See mLookahead which is the
-   * codec delay in output sample rate.
+   * Number of mLookahead samples that has been written. When non-zero and equal
+   * to mLookahead, encoding is complete.
    */
-  media::TimeUnit mCodecDelay;
+  int mLookaheadWritten;
 
   /**
    * If the input sample rate does not divide 48kHz evenly, the input data are

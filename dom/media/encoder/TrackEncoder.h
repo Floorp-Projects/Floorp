@@ -144,12 +144,6 @@ class TrackEncoder {
   bool mEncodingComplete;
 
   /**
-   * True if flag of EOS or any form of indicating EOS has set in the codec-
-   * encoder.
-   */
-  bool mEosSetInEncoder;
-
-  /**
    * True if the track encoder has been initialized successfully.
    */
   bool mInitialized;

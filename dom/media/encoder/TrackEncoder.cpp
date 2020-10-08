@@ -32,7 +32,6 @@ static const unsigned int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
     : mEncodingComplete(false),
-      mEosSetInEncoder(false),
       mInitialized(false),
       mEndOfStream(false),
       mCanceled(false),
