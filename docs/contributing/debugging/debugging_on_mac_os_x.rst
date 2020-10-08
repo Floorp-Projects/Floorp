@@ -189,10 +189,10 @@ Setting up lldb
    lldb <Debugging Firefox with LLDB>`.
 
 The
-`.lldbinit <http://dxr.mozilla.org/mozilla-central/source/.lldbinit>`__
+`.lldbinit <http://searchfox.org/mozilla-central/source/.lldbinit>`__
 file in the source tree imports many useful `Mozilla specific lldb
 settings, commands and
-formatters <https://dxr.mozilla.org/mozilla-central/source/python/lldbutils/README.txt>`__
+formatters <https://searchfox.org/mozilla-central/source/python/lldbutils/README.txt>`__
 into ``lldb``, but you may need to take one of the following steps to
 make sure this file is used.
 

@@ -29,7 +29,7 @@ Example scenarios:
 
 Deprecated DOM operations
 -------------------------
-Use counters for deprecated DOM operations are declared in the `nsDeprecatedOperationList.h <https://dxr.mozilla.org/mozilla-central/source/dom/base/nsDeprecatedOperationList.h>`_ file. The counters are
+Use counters for deprecated DOM operations are declared in the `nsDeprecatedOperationList.h <https://searchfox.org/mozilla-central/source/dom/base/nsDeprecatedOperationList.h>`_ file. The counters are
 registered through the ``DEPRECATED_OPERATION(DeprecationReference)`` macro. The provided
 parameter must have the same value of the deprecation note added to the *IDL* file.
 
@@ -43,7 +43,7 @@ Use counters for CSS properties are generated for every property Gecko supports 
 
 The UseCounters registry
 ------------------------
-Use counters for WebIDL methods/attributes are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
+Use counters for WebIDL methods/attributes are registered in the `UseCounters.conf <https://searchfox.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
 
 1. a blank line
 2. a comment, which is a line that begins with ``//``
@@ -59,7 +59,7 @@ The <description> for custom counters will be appended to "When a document " or 
 
 WebIDL methods and attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Additionally to having a new entry added to the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file, WebIDL methods and attributes must have a ``[UseCounter]`` extended attribute in the Web IDL file in order for the counters to be incremented.
+Additionally to having a new entry added to the `UseCounters.conf <https://searchfox.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file, WebIDL methods and attributes must have a ``[UseCounter]`` extended attribute in the Web IDL file in order for the counters to be incremented.
 
 Both additions are required because generating things from bindings codegen and ensuring all the dependencies are correct would have been rather difficult.
 
@@ -87,7 +87,7 @@ the use counter directly reports if a feature was used but it does not directly 
 it isn't used.
 The values accumulated within a use counter should be considered proportional to
 ``CONTENT_DOCUMENTS_DESTROYED`` and ``TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED`` (see
-`here <https://dxr.mozilla.org/mozilla-central/rev/b056526be38e96b3e381b7e90cd8254ad1d96d9d/dom/base/nsDocument.cpp#13209-13231>`__). The difference between the values of these two histograms
+`here <https://searchfox.org/mozilla-central/rev/1a973762afcbc5066f73f1508b0c846872fe3952/dom/base/Document.cpp#15059-15081>`__). The difference between the values of these two histograms
 and the related use counters below tell us how many pages did *not* use the feature in question.
 For instance, if we see that a given session has destroyed 30 content documents, but a
 particular use counter shows only a count of 5, we can infer that the use counter was *not*

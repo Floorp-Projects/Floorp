@@ -92,11 +92,11 @@ The Payment Request UI uses `Custom Elements <https://developer.mozilla.org/en-U
 
 Some guidelines:
 
-* There are some `mixins <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/mixins/>`_
+* There are some `mixins <https://searchfox.org/mozilla-central/source/browser/components/payments/res/mixins/>`_
   to provide commonly needed functionality to a custom element.
-* `res/containers/ <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/containers/>`_
+* `res/containers/ <https://searchfox.org/mozilla-central/source/browser/components/payments/res/containers/>`_
   contains elements that react to application state changes,
-  `res/components/ <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/components>`_
+  `res/components/ <https://searchfox.org/mozilla-central/source/browser/components/payments/res/components>`_
   contains elements that aren't connected to the state directly.
 * Elements should avoid having their own internal/private state and should react to state changes.
   Containers primarily use the application state (``requestStore``) while components primarily use attributes.
