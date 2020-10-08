@@ -28,14 +28,14 @@ DOM, and monitors the mouse as it moves around the document. Once the mouse inte
 ``PictureInPictureToggleChild`` causes the Picture-in-Picture toggle to appear on that element.
 
 If the user clicks on that toggle, then the ``PictureInPictureToggleChild`` dispatches a chrome-only
-``MozTogglePictureInPicture`` event on the video, which is handled by the ``PictureInPictureChild`` actor
+``MozTogglePictureInPicture`` event on the video, which is handled by the ``PictureInPictureLauncherChild`` actor
 for that document. The reason for the indirection via the event is that the media context menu can also
 trigger Picture-in-Picture by dispatching the same event on the video. Upon handling the event, the
-``PictureInPictureChild`` actor then sends a ``PictureInPicture:Request`` message to the parent process.
+``PictureInPictureLauncherChild`` actor then sends a ``PictureInPicture:Request`` message to the parent process.
 The parent process opens up the always-on-top player window, with a remote ``<xul:browser>`` that runs in
 the same content process as the original ``<video>``. The parent then sends a message to the player
-window's remote ``<xul:browser>`` loaded in the player window. A *second* ``PictureInPictureChild`` actor
-is instantiated, this time for the empty document loaded inside of the player window browser. This second
+window's remote ``<xul:browser>`` loaded in the player window. A ``PictureInPictureChild`` actor
+is instantiated for the empty document loaded inside of the player window browser. This
 ``PictureInPictureChild`` actor constructs its own ``<video>`` element, and then tells Gecko to clone the
 frames from the original ``<video>`` to the newly created ``<video>``.
 
@@ -120,19 +120,22 @@ normal.
 
 If we determine that the click has occurred on the toggle, a ``MozTogglePictureInPicture`` event
 is dispatched on the underlying ``<video>``. This event is handled by the separate
-``PictureInPictureChild`` class.
+``PictureInPictureLauncherChild`` class.
 
+PictureInPictureLauncherChild
+=============================
+
+A small actor class whose only responsibility is to tell the parent process to open an always-on-top-window by sending a ``PictureInPicture:Request`` message to its parent actor.
+
+Currently, this only occurs when a chrome-only ``MozTogglePictureInPicture`` event is dispatched by the ``PictureInPictureToggleChild`` when the user clicks the Picture-in-Picture toggle button.
 
 PictureInPictureChild
 =====================
 
-The ``PictureInPictureChild`` actor class will run in a content process containing a video, and can be instantiated for one of two cases:
-
-1. A ``<video>`` is being opened in Picture-in-Picture, so a ``PictureInPictureChild`` in instantiated to tell the parent to open the always-on-top window.
-2. An always-on-top window has been opened, and a ``PictureInPictureChild`` is instantiated to set up a new ``<video>`` inside of it to clone frames from another ``<video>`` (which will be in the same process, and have its own ``PictureInPictureChild``). This instance will monitor the originating ``<video>`` for changes, and to receive commands from the player window if the user wants to control the ``<video>``.
-
-This distinction is a bit tricky. The diagram tries to make this dual-nature of ``PictureInPictureChild`` clearer. In the future, it might make sense to split ``PictureInPictureChild`` into two separate actors to make it easier to understand.
-
+The ``PictureInPictureChild`` actor class will run in a content process containing a video, and is instantiated when the player window's `player.js` script runs its initialization. A ``PictureInPictureChild`` maps an individual ``<video>``
+to a player window instance. It creates an always-on-top window, and sets up a new ``<video>`` inside of this window to clone frames from another ``<video>``
+(which will be in the same process, and have its own ``PictureInPictureChild``). Creating this window also causes the new ``PictureInPictureChild`` to be created.
+This instance will monitor the originating ``<video>`` for changes, and to receive commands from the player window if the user wants to control the ``<video>``.
 
 PictureInPicture.jsm
 ====================

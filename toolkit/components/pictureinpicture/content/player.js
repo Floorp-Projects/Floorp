@@ -30,9 +30,12 @@ const RESIZE_DEBOUNCE_RATE_MS = 500;
  *   A unique numeric ID for the window, used for Telemetry Events.
  * @param wgp (WindowGlobalParent)
  *   The WindowGlobalParent that is hosting the originating video.
+ * @param videoRef {ContentDOMReference}
+ *    A reference to the video element that a Picture-in-Picture window
+ *    is being created for
  */
-function setupPlayer(id, wgp) {
-  Player.init(id, wgp);
+function setupPlayer(id, wgp, videoRef) {
+  Player.init(id, wgp, videoRef);
 }
 
 /**
@@ -101,8 +104,11 @@ let Player = {
    *   A unique numeric ID for the window, used for Telemetry Events.
    * @param wgp (WindowGlobalParent)
    *   The WindowGlobalParent that is hosting the originating video.
+   * @param videoRef {ContentDOMReference}
+   *    A reference to the video element that a Picture-in-Picture window
+   *    is being created for
    */
-  init(id, wgp) {
+  init(id, wgp, videoRef) {
     this.id = id;
 
     let holder = document.querySelector(".player-holder");
@@ -125,7 +131,9 @@ let Player = {
     this.actor = browser.browsingContext.currentWindowGlobal.getActor(
       "PictureInPicture"
     );
-    this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer");
+    this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer", {
+      videoRef,
+    });
 
     for (let eventType of this.WINDOW_EVENTS) {
       addEventListener(eventType, this);

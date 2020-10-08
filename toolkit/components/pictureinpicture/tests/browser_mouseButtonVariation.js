@@ -79,6 +79,14 @@ add_task(async () => {
 
       let win = await domWindowOpened;
       ok(win, "A Picture-in-Picture window opened.");
+
+      await SpecialPowers.spawn(browser, [videoID], async videoID => {
+        let video = content.document.getElementById(videoID);
+        await ContentTaskUtils.waitForCondition(() => {
+          return video.isCloningElementVisually;
+        }, "Video is being cloned visually.");
+      });
+
       await BrowserTestUtils.closeWindow(win);
       await assertSawMouseEvents(browser, false);
 
