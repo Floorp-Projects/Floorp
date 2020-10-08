@@ -49,10 +49,6 @@ class PrintingParent final : public PPrintingParent {
   bool DeallocPPrintSettingsDialogParent(
       PPrintSettingsDialogParent* aActor) final;
 
-  PRemotePrintJobParent* AllocPRemotePrintJobParent() final;
-
-  bool DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor) final;
-
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
   MOZ_IMPLICIT PrintingParent();

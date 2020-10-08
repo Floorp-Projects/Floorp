@@ -27,6 +27,8 @@ class PrintTranslator;
 
 class RemotePrintJobParent final : public PRemotePrintJobParent {
  public:
+  NS_INLINE_DECL_REFCOUNTING(RemotePrintJobParent);
+
   explicit RemotePrintJobParent(nsIPrintSettings* aPrintSettings);
 
   void ActorDestroy(ActorDestroyReason aWhy) final;

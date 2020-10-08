@@ -46,9 +46,7 @@ class nsPrintingProxy final : public nsIPrintingPromptService,
   bool DeallocPPrintSettingsDialogChild(
       PPrintSettingsDialogChild* aActor) final;
 
-  PRemotePrintJobChild* AllocPRemotePrintJobChild() final;
-
-  bool DeallocPRemotePrintJobChild(PRemotePrintJobChild* aActor) final;
+  already_AddRefed<PRemotePrintJobChild> AllocPRemotePrintJobChild() final;
 
  private:
   nsPrintingProxy();
