@@ -60,6 +60,7 @@ static CSS_PRIM_COUNT: &str              = "fill:#40f0f0;fill-opacity:0.1;";
 static CSS_CONTENT: &str                 = "fill:#f04040;fill-opacity:0.1;";
 static CSS_COMPOSITOR_KIND_CHANGED: &str = "fill:#f0c070;fill-opacity:0.1;";
 static CSS_VALID_RECT_CHANGED: &str      = "fill:#ff00ff;fill-opacity:0.1;";
+static CSS_SCALE_CHANGED: &str           = "fill:#ff80ff;fill-opacity:0.1;";
 
 // parameters to tweak the SVG generation
 struct SvgSettings {
@@ -112,6 +113,7 @@ fn tile_to_svg(key: TileOffset,
             Some(InvalidationReason::CompositorKindChanged) => CSS_COMPOSITOR_KIND_CHANGED.to_string(),
             Some(InvalidationReason::Content { .. } ) => CSS_CONTENT.to_string(),
             Some(InvalidationReason::ValidRectChanged) => CSS_VALID_RECT_CHANGED.to_string(),
+            Some(InvalidationReason::ScaleChanged) => CSS_SCALE_CHANGED.to_string(),
             None => {
                 let mut background = tile.background_color;
                 if background.is_none() {
