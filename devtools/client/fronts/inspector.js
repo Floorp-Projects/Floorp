@@ -42,11 +42,17 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   // async initialization
   async initialize() {
-    await Promise.all([
+    if (this.initialized) {
+      return this.initialized;
+    }
+
+    this.initialized = await Promise.all([
       this._getWalker(),
       this._getHighlighter(),
       this._getPageStyle(),
     ]);
+
+    return this.initialized;
   }
 
   async _getWalker() {
