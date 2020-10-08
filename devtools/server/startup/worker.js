@@ -17,15 +17,17 @@
 // main thread. It is exposed as a built-in global to every module by the
 // worker loader. To make sure the worker loader can access it, it needs to be
 // defined before loading the worker loader script below.
+let nextId = 0;
+const rpcDeferreds = {};
 this.rpc = function(method, ...params) {
   const id = nextId++;
 
   postMessage(
     JSON.stringify({
       type: "rpc",
-      method: method,
-      params: params,
-      id: id,
+      method,
+      params,
+      id,
     })
   );
 
@@ -36,30 +38,35 @@ this.rpc = function(method, ...params) {
 
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
-var defer = worker.require("devtools/shared/defer");
+const defer = worker.require("devtools/shared/defer");
 const { WorkerTargetActor } = worker.require(
   "devtools/server/actors/targets/worker"
 );
-var { DevToolsServer } = worker.require("devtools/server/devtools-server");
+const { DevToolsServer } = worker.require("devtools/server/devtools-server");
 
 DevToolsServer.init();
 DevToolsServer.createRootActor = function() {
   throw new Error("Should never get here!");
 };
 
-var connections = Object.create(null);
-var nextId = 0;
-var rpcDeferreds = [];
+// This file is only instanciated once for a given WorkerDebugger, which means that
+// multiple toolbox could end up using the same instance of this script. In order to handle
+// that, we handle a Map of the different connections, keyed by forwarding prefix.
+const connections = new Map();
 
 this.addEventListener("message", function(event) {
   const packet = JSON.parse(event.data);
   switch (packet.type) {
     case "connect":
+      const { forwardingPrefix } = packet;
+
       // Step 3: Create a connection to the parent.
-      const connection = DevToolsServer.connectToParent(packet.id, this);
+      const connection = DevToolsServer.connectToParent(forwardingPrefix, this);
 
       // Step 4: Create a WorkerTarget actor.
       const workerTargetActor = new WorkerTargetActor(connection, global);
+      // Make the worker manage itself so it is put in a Pool and assigned an actorID.
+      workerTargetActor.manage(workerTargetActor);
 
       workerTargetActor.on(
         "worker-thread-attached",
@@ -71,15 +78,14 @@ this.addEventListener("message", function(event) {
 
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
-      connections[packet.id] = {
+      connections.set(forwardingPrefix, {
         connection,
-        rpcs: [],
-      };
+      });
 
       postMessage(
         JSON.stringify({
           type: "connected",
-          id: packet.id,
+          forwardingPrefix,
           workerTargetForm: workerTargetActor.form(),
         })
       );
@@ -87,7 +93,9 @@ this.addEventListener("message", function(event) {
       break;
 
     case "disconnect":
-      connections[packet.id].connection.close();
+      // This will destroy the associate WorkerTargetActor (and the actors it manages).
+      connections.get(packet.forwardingPrefix).connection.close();
+      connections.delete(packet.forwardingPrefix);
       break;
 
     case "rpc":

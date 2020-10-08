@@ -8,7 +8,6 @@
 # Gecko build performs equivalents elsewhere in its configuration.
 
 USE_LIBS += [
-    'jsrust'
+    'jsrust',
+    'zlib',
 ]
-
-OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']

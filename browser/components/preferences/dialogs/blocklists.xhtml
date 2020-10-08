@@ -15,8 +15,12 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         onload="gBlocklistManager.onLoad();"
         onunload="gBlocklistManager.uninit();"
-        persist="screenX screenY width height"
-        onkeypress="gBlocklistManager.onWindowKeyPress(event);">
+        persist="screenX screenY width height">
+
+  <dialog
+    buttons="accept,cancel"
+    data-l10n-id="blocklist-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
 
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
@@ -46,11 +50,5 @@
       <treechildren/>
     </tree>
   </vbox>
-
-  <hbox class="actionButtons" pack="end">
-    <button oncommand="window.close();"
-            data-l10n-id="blocklist-button-cancel"/>
-    <button id="btnApplyChanges" oncommand="gBlocklistManager.onApplyChanges();"
-            data-l10n-id="blocklist-button-ok"/>
-  </hbox>
+  </dialog>
 </window>

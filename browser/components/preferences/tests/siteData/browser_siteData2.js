@@ -53,7 +53,7 @@ add_task(async function test_selectRemove() {
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  cancelBtn = frameDoc.getElementById("cancel");
+  cancelBtn = frameDoc.querySelector("dialog").getButton("cancel");
   removeAllSitesOneByOne();
   assertAllSitesNotListed(win);
   cancelBtn.doCommand();
@@ -65,8 +65,8 @@ add_task(async function test_selectRemove() {
   let cancelPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel");
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  saveBtn = frameDoc.getElementById("save");
-  cancelBtn = frameDoc.getElementById("cancel");
+  saveBtn = frameDoc.querySelector("dialog").getButton("accept");
+  cancelBtn = frameDoc.querySelector("dialog").getButton("cancel");
   removeAllSitesOneByOne();
   assertAllSitesNotListed(win);
   saveBtn.doCommand();
@@ -81,7 +81,7 @@ add_task(async function test_selectRemove() {
   settingsDialogClosePromise = promiseSettingsDialogClose();
   updatePromise = promiseSiteDataManagerSitesUpdated();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  saveBtn = frameDoc.getElementById("save");
+  saveBtn = frameDoc.querySelector("dialog").getButton("accept");
   removeAllSitesOneByOne();
   assertAllSitesNotListed(win);
   saveBtn.doCommand();
@@ -161,7 +161,7 @@ add_task(async function test_removePartialSites() {
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  cancelBtn = frameDoc.getElementById("cancel");
+  cancelBtn = frameDoc.querySelector("dialog").getButton("cancel");
   await removeSelectedSite(hosts.slice(0, 2));
   assertSitesListed(doc, hosts.slice(2));
   cancelBtn.doCommand();
@@ -176,8 +176,8 @@ add_task(async function test_removePartialSites() {
   );
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  saveBtn = frameDoc.getElementById("save");
-  cancelBtn = frameDoc.getElementById("cancel");
+  saveBtn = frameDoc.querySelector("dialog").getButton("accept");
+  cancelBtn = frameDoc.querySelector("dialog").getButton("cancel");
   await removeSelectedSite(hosts.slice(0, 2));
   assertSitesListed(doc, hosts.slice(2));
   saveBtn.doCommand();
@@ -194,7 +194,7 @@ add_task(async function test_removePartialSites() {
   );
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  saveBtn = frameDoc.getElementById("save");
+  saveBtn = frameDoc.querySelector("dialog").getButton("accept");
   await removeSelectedSite(hosts.slice(0, 2));
   assertSitesListed(doc, hosts.slice(2));
   saveBtn.doCommand();
@@ -290,7 +290,7 @@ add_task(async function() {
   );
   let settingsDialogClosePromise = promiseSettingsDialogClose();
   let removeAllBtn = frameDoc.getElementById("removeAll");
-  let saveBtn = frameDoc.getElementById("save");
+  let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
   removeAllBtn.doCommand();
   saveBtn.doCommand();
   await acceptRemovePromise;
@@ -350,7 +350,7 @@ add_task(async function() {
   let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   let settingsDialogClosePromise = promiseSettingsDialogClose();
   let removeAllBtn = frameDoc.getElementById("removeAll");
-  let saveBtn = frameDoc.getElementById("save");
+  let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
   removeAllBtn.doCommand();
   saveBtn.doCommand();
   await acceptRemovePromise;

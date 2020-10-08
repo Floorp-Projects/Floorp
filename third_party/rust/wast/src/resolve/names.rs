@@ -702,11 +702,11 @@ impl<'a> Resolver<'a> {
                     key.0
                         .iter()
                         .map(|ty| self.copy_valtype_from_module(span, child, *ty))
-                        .collect::<Result<Vec<_>, Error>>()?,
+                        .collect::<Result<Box<[_]>, Error>>()?,
                     key.1
                         .iter()
                         .map(|ty| self.copy_valtype_from_module(span, child, *ty))
-                        .collect::<Result<Vec<_>, Error>>()?,
+                        .collect::<Result<Box<[_]>, Error>>()?,
                 );
                 Ok(Item::Func(self.modules[self.cur].key_to_idx(span, my_key)))
             }
@@ -1883,7 +1883,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             // `End` and `Else` instructions if they have labels listed we
             // verify that they match the label at the beginning of the block.
             Else(_) | End(_) => {
-                let (matching_block, label) = match instr {
+                let (matching_block, label) = match &instr {
                     Else(label) => (self.blocks.last().cloned(), label),
                     End(label) => (self.blocks.pop(), label),
                     _ => unreachable!(),
@@ -1895,7 +1895,9 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
 
                 // Reset the local scopes to before this block was entered
                 if matching_block.pushed_scope {
-                    self.scopes.pop();
+                    if let End(_) = instr {
+                        self.scopes.pop();
+                    }
                 }
 
                 let label = match label {
@@ -2065,16 +2067,16 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             | I64AtomicRmw16CmpxchgU(m)
             | I64AtomicRmw32CmpxchgU(m)
             | V128Load(m)
-            | I16x8Load8x8S(m)
-            | I16x8Load8x8U(m)
-            | I32x4Load16x4S(m)
-            | I32x4Load16x4U(m)
-            | I64x2Load32x2S(m)
-            | I64x2Load32x2U(m)
-            | V8x16LoadSplat(m)
-            | V16x8LoadSplat(m)
-            | V32x4LoadSplat(m)
-            | V64x2LoadSplat(m)
+            | V128Load8x8S(m)
+            | V128Load8x8U(m)
+            | V128Load16x4S(m)
+            | V128Load16x4U(m)
+            | V128Load32x2S(m)
+            | V128Load32x2U(m)
+            | V128Load8Splat(m)
+            | V128Load16Splat(m)
+            | V128Load32Splat(m)
+            | V128Load64Splat(m)
             | V128Store(m)
             | MemoryAtomicNotify(m)
             | MemoryAtomicWait32(m)
@@ -2137,13 +2139,13 @@ trait TypeKey<'a> {
     fn into_info(self, span: Span, cur: usize) -> TypeInfo<'a>;
 }
 
-type FuncKey<'a> = (Vec<ValType<'a>>, Vec<ValType<'a>>);
+type FuncKey<'a> = (Box<[ValType<'a>]>, Box<[ValType<'a>]>);
 
 impl<'a> TypeReference<'a> for FunctionType<'a> {
     type Key = FuncKey<'a>;
 
     fn key(&self) -> Self::Key {
-        let params = self.params.iter().map(|p| p.2).collect::<Vec<_>>();
+        let params = self.params.iter().map(|p| p.2).collect();
         let results = self.results.clone();
         (params, results)
     }
@@ -2196,10 +2198,10 @@ impl<'a> TypeReference<'a> for FunctionType<'a> {
 
     fn resolve(&mut self, cx: &Module<'a>) -> Result<(), Error> {
         // Resolve the (ref T) value types in the final function type
-        for param in &mut self.params {
+        for param in self.params.iter_mut() {
             cx.resolve_valtype(&mut param.2)?;
         }
-        for result in &mut self.results {
+        for result in self.results.iter_mut() {
             cx.resolve_valtype(result)?;
         }
         Ok(())

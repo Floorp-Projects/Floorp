@@ -176,6 +176,8 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
                                bool aSupported) const;
 
   bool EmitPropertiesChangedSignal(GVariant* aParameters) const;
+
+  void ClearMetadata();
 };
 
 }  // namespace widget

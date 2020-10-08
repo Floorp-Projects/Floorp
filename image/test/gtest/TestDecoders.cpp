@@ -704,6 +704,10 @@ TEST_F(ImageDecoders, AVIFSingleChunk) {
   CheckDecoderSingleChunk(GreenAVIFTestCase());
 }
 
+TEST_F(ImageDecoders, AVIFMultiLayerSingleChunk) {
+  CheckDecoderSingleChunk(MultiLayerAVIFTestCase());
+}
+
 // This test must use the decode pool in order to check for regressions
 // of crashing the dav1d decoder when the ImgDecoder threads have a standard-
 // sized stack.

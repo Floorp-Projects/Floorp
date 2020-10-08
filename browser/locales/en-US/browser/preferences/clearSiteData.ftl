@@ -51,10 +51,6 @@ clear-site-data-cache-empty =
 
 clear-site-data-cache-info = Will require websites to reload images and data
 
-clear-site-data-cancel =
-    .label = Cancel
-    .accesskey = C
-
-clear-site-data-clear =
-    .label = Clear
-    .accesskey = l
+clear-site-data-dialog =
+    .buttonlabelaccept = Clear
+    .buttonaccesskeyaccept = l

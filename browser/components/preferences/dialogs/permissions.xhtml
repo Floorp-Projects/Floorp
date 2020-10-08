@@ -18,6 +18,11 @@
         persist="screenX screenY width height"
         onkeypress="gPermissionManager.onWindowKeyPress(event);">
 
+  <dialog
+        buttons="accept,cancel"
+        data-l10n-id="permission-dialog"
+        data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
+
   <linkset>
     <html:link rel="localization" href="browser/preferences/permissions.ftl"/>
   </linkset>
@@ -43,7 +48,7 @@
               oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.DENY_ACTION);"/>
       <button id="btnSession" disabled="true" data-l10n-id="permissions-session"
               oncommand="gPermissionManager.addPermission(Ci.nsICookiePermission.ACCESS_SESSION);"/>
-      <button id="btnAllow" disabled="true" data-l10n-id="permissions-allow" default="true"
+      <button id="btnAllow" disabled="true" data-l10n-id="permissions-allow"
               oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);"/>
     </hbox>
     <separator class="thin"/>
@@ -67,11 +72,5 @@
             data-l10n-id="permissions-remove-all"
             oncommand="gPermissionManager.onAllPermissionsDelete();"/>
   </hbox>
-  <spacer flex="1"/>
-  <hbox class="actionButtons" pack="end">
-    <button oncommand="window.close();"
-            data-l10n-id="permissions-button-cancel" />
-    <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();"
-            data-l10n-id="permissions-button-ok" />
-  </hbox>
+  </dialog>
 </window>

@@ -88,7 +88,7 @@ add_task(async function() {
   assertSitesListed(doc, hosts.slice(4));
 
   updatePromise = promiseSiteDataManagerSitesUpdated();
-  let saveBtn = frameDoc.getElementById("save");
+  let saveBtn = frameDoc.querySelector("dialog").getButton("accept");
   saveBtn.doCommand();
 
   await removeDialogOpenPromise;

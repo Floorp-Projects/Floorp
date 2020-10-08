@@ -17,21 +17,19 @@ async function openCookiesDialog(doc) {
 
 function checkCookiesDialog(dialog) {
   ok(dialog, "dialog loaded");
-  let buttonIds = [
-    "removePermission",
-    "removeAllPermissions",
-    "btnApplyChanges",
-  ];
+  let buttonIds = ["removePermission", "removeAllPermissions"];
 
   for (let buttonId of buttonIds) {
     let button = dialog.document.getElementById(buttonId);
     ok(button, `${buttonId} found`);
   }
 
-  let cancelButton = dialog.document.getElementsByClassName("actionButtons")[1]
-    .children[0];
+  let dialogEl = dialog.document.querySelector("dialog");
+  let acceptBtn = dialogEl.getButton("accept");
+  let cancelBtn = dialogEl.getButton("cancel");
 
-  is(cancelButton.getAttribute("label"), "Cancel", "cancelButton found");
+  ok(!acceptBtn.hidden, "acceptButton found");
+  ok(!cancelBtn.hidden, "cancelButton found");
 }
 
 function addNewPermission(websiteAddress, dialog) {
@@ -86,14 +84,15 @@ function deletePermission(permission, dialog) {
 }
 
 function save(dialog) {
-  let saveButton = dialog.document.getElementById("btnApplyChanges");
+  let saveButton = dialog.document.querySelector("dialog").getButton("accept");
   saveButton.click();
 }
 
 function cancel(dialog) {
-  let cancelButton = dialog.document.getElementsByClassName("actionButtons")[1]
-    .children[0];
-  is(cancelButton.getAttribute("label"), "Cancel", "cancelButton found");
+  let cancelButton = dialog.document
+    .querySelector("dialog")
+    .getButton("cancel");
+  ok(!cancelButton.hidden, "cancelButton found");
   cancelButton.click();
 }
 

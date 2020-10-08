@@ -27,7 +27,7 @@ Granting the privileges
 -----------------------
 For security/privacy reasons `Mozilla.ContentTelemetry` will only work on a list of allowed secure origins.
 The list of allowed origins can be found in
-`browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_ .
+`browser/app/permissions <https://searchfox.org/mozilla-central/source/browser/app/permissions>`_ .
 A host needs to be given the ``hc_telemetry`` permission in order to be allowed to use the API.
 
 Example:
@@ -216,7 +216,7 @@ Example:
 
 The API
 =======
-The hybrid content API is available to the web content through the inclusion of the `HybridContentTelemetry-lib.js <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/hybrid-content/HybridContentTelemetry-lib.js>`_ library.
+The hybrid content API is available to the web content through the inclusion of the `HybridContentTelemetry-lib.js <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/hybrid-content/HybridContentTelemetry-lib.js>`_ library.
 
 The initial implementation of the API allows the registration and the recording of events.
 
@@ -321,7 +321,7 @@ Example:
 Data Review
 ===========
 
-Adding the ``hc_telemetry`` permission for a new domain in `browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_
+Adding the ``hc_telemetry`` permission for a new domain in `browser/app/permissions <https://searchfox.org/mozilla-central/source/browser/app/permissions>`_
 requires `Data Collection Review <https://wiki.mozilla.org/Firefox/Data_Collection>`_ as we are enabling a new method of data collection.
 
 Giving a domain permission to use Hybrid Content Telemetry also gives any Extensions running on this domain permission to use Hybrid Content Telemetry.

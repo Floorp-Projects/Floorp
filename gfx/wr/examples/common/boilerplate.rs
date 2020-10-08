@@ -183,7 +183,6 @@ pub fn main_wrapper<E: Example>(
         notifier,
         opts,
         None,
-        device_size,
     ).unwrap();
     let mut api = sender.create_api();
     let document_id = api.add_document(device_size, 0);

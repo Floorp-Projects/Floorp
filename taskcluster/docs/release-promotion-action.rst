@@ -166,5 +166,5 @@ The ``parameters.yml`` file is downloadable from a previous decision or action t
 .. _Release Promotion Projects: https://searchfox.org/mozilla-central/search?q=RELEASE_PROMOTION_PROJECTS&path=taskcluster/taskgraph/util/attributes.py
 .. _Releaserunner3: https://hg.mozilla.org/build/tools/file/tip/buildfarm/release
 .. _releasewarrior docs: https://github.com/mozilla-releng/releasewarrior-2.0/blob/master/docs/release-promotion/desktop/howto.md#how
-.. _trigger_action.py: https://dxr.mozilla.org/build-central/source/tools/buildfarm/release/trigger_action.py#118
+.. _trigger_action.py: https://searchfox.org/build-central/source/tools/buildfarm/release/trigger_action.py#118
 .. _.taskcluster.yml: https://searchfox.org/mozilla-central/source/.taskcluster.yml

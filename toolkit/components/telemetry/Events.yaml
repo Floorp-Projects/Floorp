@@ -2423,6 +2423,7 @@ slow_script_warning:
   shown:
     bug_numbers:
       - 1652613
+      - 1667245
     description: >
       Recorded when a slow script hang is resolved.
     products:
