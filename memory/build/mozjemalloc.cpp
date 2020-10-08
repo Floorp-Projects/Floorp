@@ -4250,7 +4250,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
   aStats->opt_junk = opt_junk;
   aStats->opt_zero = opt_zero;
   aStats->quantum = kQuantum;
-  aStats->small_max = kMaxQuantumClass;
+  aStats->quantum_max = kMaxQuantumClass;
   aStats->large_max = gMaxLargeClass;
   aStats->chunksize = kChunkSize;
   aStats->page_size = gPageSize;

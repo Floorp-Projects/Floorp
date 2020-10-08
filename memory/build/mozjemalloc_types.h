@@ -75,11 +75,12 @@ typedef struct arena_params_s {
 // file.
 typedef struct {
   // Run-time configuration settings.
-  bool opt_junk;     // Fill allocated memory with kAllocJunk?
-  bool opt_zero;     // Fill allocated memory with 0x0?
-  size_t narenas;    // Number of arenas.
-  size_t quantum;    // Allocation quantum.
-  size_t small_max;  // Max quantum-spaced allocation size.
+  bool opt_junk;       // Fill allocated memory with kAllocJunk?
+  bool opt_zero;       // Fill allocated memory with 0x0?
+  size_t narenas;      // Number of arenas.
+  size_t quantum;      // Allocation quantum.
+  size_t quantum_max;  // Max quantum-spaced allocation size.
+  // The next size class, sub-pagesize's max is always page_size/2.
   size_t large_max;  // Max sub-chunksize allocation size.
   size_t chunksize;  // Size of each virtual memory mapping.
   size_t page_size;  // Size of pages.
