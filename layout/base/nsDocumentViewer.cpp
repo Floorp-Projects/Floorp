@@ -1160,10 +1160,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
     }
   }
-  // Release the JS bytecode cache from its wait on the load event, and
-  // potentially dispatch the encoding of the bytecode.
-  if (mDocument && mDocument->ScriptLoader()) {
-    mDocument->ScriptLoader()->LoadEventFired();
+
+  if (mDocument && !restoring) {
+    mDocument->LoadEventFired();
   }
 
   // It's probably a good idea to GC soon since we have finished loading.
