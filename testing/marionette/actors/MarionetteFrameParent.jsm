@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   Log: "chrome://marionette/content/log.js",
+  modal: "chrome://marionette/content/modal.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -31,7 +32,26 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   actorCreated() {
+    this._resolveDialogOpened = null;
+
+    this.dialogObserver = new modal.DialogObserver();
+    this.dialogObserver.add((action, dialogRef, win) => {
+      if (
+        this._resolveDialogOpened &&
+        action == "opened" &&
+        win == this.browsingContext.topChromeWindow
+      ) {
+        this._resolveDialogOpened({ data: null });
+      }
+    });
+
     logger.trace(`[${this.browsingContext.id}] Parent actor created`);
+  }
+
+  dialogOpenedPromise() {
+    return new Promise(resolve => {
+      this._resolveDialogOpened = resolve;
+    });
   }
 
   async receiveMessage(msg) {
@@ -52,7 +72,14 @@ class MarionetteFrameParent extends JSWindowActorParent {
 
   async sendQuery(name, data) {
     const serializedData = evaluate.toJSON(data, elementIdCache);
-    const result = await super.sendQuery(name, serializedData);
+
+    // return early if a dialog is opened
+    const result = await Promise.race([
+      super.sendQuery(name, serializedData),
+      this.dialogOpenedPromise(),
+    ]).finally(() => {
+      this._resolveDialogOpened = null;
+    });
 
     if ("error" in result) {
       throw error.WebDriverError.fromJSON(result.error);
