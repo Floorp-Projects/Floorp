@@ -26,7 +26,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindContext.h"
@@ -389,37 +388,25 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
   return false;
 }
 
-Element* nsINode::GetAnonymousRootElementOfTextEditor(
-    TextEditor** aTextEditor) {
+nsIContent* nsINode::GetTextEditorRootContent(TextEditor** aTextEditor) {
   if (aTextEditor) {
     *aTextEditor = nullptr;
   }
-  RefPtr<TextControlElement> textControlElement;
-  if (IsInNativeAnonymousSubtree()) {
-    textControlElement = TextControlElement::FromNodeOrNull(
-        GetClosestNativeAnonymousSubtreeRootParent());
-  } else {
-    textControlElement = TextControlElement::FromNode(this);
-  }
-  if (!textControlElement) {
-    return nullptr;
-  }
-  RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor();
-  if (!textEditor) {
-    // The found `TextControlElement` may be an input element which is not a
-    // text control element.  In this case, such element must not be in a
-    // native anonymous tree of a `TextEditor` so this node is not in any
-    // `TextEditor`.
-    return nullptr;
-  }
+  for (auto* element : InclusiveAncestorsOfType<nsGenericHTMLElement>()) {
+    RefPtr<TextEditor> textEditor = element->GetTextEditorInternal();
+    if (!textEditor) {
+      continue;
+    }
 
-  MOZ_ASSERT(!textEditor->IsHTMLEditor(),
-             "If it were an HTML editor, needs to use GetRootElement()");
-  Element* rootElement = textEditor->GetRoot();
-  if (aTextEditor) {
-    textEditor.forget(aTextEditor);
+    MOZ_ASSERT(!textEditor->AsHTMLEditor(),
+               "If it were an HTML editor, needs to use GetRootElement()");
+    Element* rootElement = textEditor->GetRoot();
+    if (aTextEditor) {
+      textEditor.forget(aTextEditor);
+    }
+    return rootElement;
   }
-  return rootElement;
+  return nullptr;
 }
 
 nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions) {
@@ -537,10 +524,8 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
 
   if (AsContent()->HasIndependentSelection()) {
     // This node should be a descendant of input/textarea editor.
-    Element* anonymousDivElement = GetAnonymousRootElementOfTextEditor();
-    if (anonymousDivElement) {
-      return anonymousDivElement;
-    }
+    nsIContent* content = GetTextEditorRootContent();
+    if (content) return content;
   }
 
   nsPresContext* presContext = aPresShell->GetPresContext();

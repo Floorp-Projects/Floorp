@@ -111,8 +111,8 @@ TextControlElement::GetTextControlElementFromEditingHost(nsIContent* aHost) {
 
 using ValueChangeKind = TextControlElement::ValueChangeKind;
 
-MOZ_CAN_RUN_SCRIPT inline nsresult SetEditorFlagsIfNecessary(
-    EditorBase& aEditorBase, uint32_t aFlags) {
+inline nsresult SetEditorFlagsIfNecessary(EditorBase& aEditorBase,
+                                          uint32_t aFlags) {
   if (aEditorBase.Flags() == aFlags) {
     return NS_OK;
   }
@@ -200,7 +200,7 @@ class RestoreSelectionState : public Runnable {
 
 class MOZ_RAII AutoRestoreEditorState final {
  public:
-  MOZ_CAN_RUN_SCRIPT explicit AutoRestoreEditorState(TextEditor* aTextEditor)
+  explicit AutoRestoreEditorState(TextEditor* aTextEditor)
       : mTextEditor(aTextEditor),
         mSavedFlags(mTextEditor->Flags()),
         mSavedMaxLength(mTextEditor->MaxTextLength()) {
@@ -214,18 +214,14 @@ class MOZ_RAII AutoRestoreEditorState final {
     flags &= ~(nsIEditor::eEditorReadonlyMask);
     flags |= nsIEditor::eEditorDontEchoPassword;
     if (mSavedFlags != flags) {
-      // It's aTextEditor and whose lifetime must be guaranteed by the caller.
-      MOZ_KnownLive(mTextEditor)->SetFlags(flags);
+      mTextEditor->SetFlags(flags);
     }
     mTextEditor->SetMaxTextLength(-1);
   }
 
-  MOZ_CAN_RUN_SCRIPT ~AutoRestoreEditorState() {
+  ~AutoRestoreEditorState() {
     mTextEditor->SetMaxTextLength(mSavedMaxLength);
-    // mTextEditor's lifetime must be guaranteed by owner of the instance
-    // since the constructor is marked as `MOZ_CAN_RUN_SCRIPT` and this is
-    // a stack only class.
-    SetEditorFlagsIfNecessary(MOZ_KnownLive(*mTextEditor), mSavedFlags);
+    SetEditorFlagsIfNecessary(*mTextEditor, mSavedFlags);
   }
 
  private:
