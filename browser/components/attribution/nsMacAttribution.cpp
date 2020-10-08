@@ -56,7 +56,9 @@ nsMacAttributionService::SetReferrerUrl(const nsACString& aFilePath,
 
   ::CFRelease(filePath);
   ::CFRelease(referrer);
-  ::CFRelease(referrerURL);
+  if (referrerURL) {
+    ::CFRelease(referrerURL);
+  }
 
   return NS_OK;
 }
