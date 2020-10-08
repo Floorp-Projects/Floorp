@@ -555,6 +555,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderLayerManager.cpp',
     'wr/WebRenderScrollData.cpp',
     'wr/WebRenderUserData.cpp',
+    'ZoomConstraints.cpp',
     # XXX here are some unified build error.
     #'wr/WebRenderTextureHost.cpp'
 ]
