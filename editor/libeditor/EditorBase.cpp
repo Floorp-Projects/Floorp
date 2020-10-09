@@ -5416,6 +5416,9 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     return rv;
   }
   mBeforeInputEventCanceled = status == nsEventStatus_eConsumeNoDefault;
+  if (mBeforeInputEventCanceled && mEditorBase.IsHTMLEditor()) {
+    mEditorBase.AsHTMLEditor()->mHasBeforeInputBeenCanceled = true;
+  }
   return mBeforeInputEventCanceled ? NS_ERROR_EDITOR_ACTION_CANCELED : NS_OK;
 }
 

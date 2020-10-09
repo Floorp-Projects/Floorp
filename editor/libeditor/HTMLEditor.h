@@ -4826,6 +4826,8 @@ class HTMLEditor final : public TextEditor,
   bool mDisabledLinkHandling = false;
   bool mOldLinkHandlingEnabled = false;
 
+  bool mHasBeforeInputBeenCanceled = false;
+
   ParagraphSeparator mDefaultParagraphSeparator;
 
   friend class AlignStateAtSelection;
