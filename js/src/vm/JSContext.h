@@ -1133,7 +1133,7 @@ class MOZ_RAII AutoLockScriptData {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt) ||
                CurrentThreadIsParseThread());
     runtime = rt;
-    if (runtime->hasHelperThreadZones()) {
+    if (runtime->hasParseTasks()) {
       runtime->scriptDataLock.lock();
     } else {
       MOZ_ASSERT(!runtime->activeThreadHasScriptDataAccess);
@@ -1143,7 +1143,7 @@ class MOZ_RAII AutoLockScriptData {
     }
   }
   ~AutoLockScriptData() {
-    if (runtime->hasHelperThreadZones()) {
+    if (runtime->hasParseTasks()) {
       runtime->scriptDataLock.unlock();
     } else {
       MOZ_ASSERT(runtime->activeThreadHasScriptDataAccess);

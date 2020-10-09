@@ -120,6 +120,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
       activeThreadHasScriptDataAccess(false),
 #endif
+      numParseTasks(0),
       numActiveHelperThreadZones(0),
       numRealms(0),
       numDebuggeeRealms_(0),
