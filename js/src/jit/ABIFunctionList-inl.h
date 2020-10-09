@@ -81,6 +81,10 @@ namespace jit {
 #define ABIFUNCTION_AND_TYPE_LIST(_)                       \
   _(JS::ToInt32, int32_t (*)(double))
 
+// List of all ABI function signature which are using a computed function
+// pointer instead of a statically known function pointer.
+#define ABIFUNCTIONSIG_LIST(_)                       \
+
 // GCC warns when the signature does not have matching attributes (for example
 // MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
 #if MOZ_IS_GCC
@@ -104,6 +108,15 @@ ABIFUNCTION_LIST(DEF_TEMPLATE)
     static constexpr bool registered = true;  \
   };
 ABIFUNCTION_AND_TYPE_LIST(DEF_TEMPLATE)
+#undef DEF_TEMPLATE
+
+// Define a known list of function signatures.
+#define DEF_TEMPLATE(...)                        \
+  template <>                                    \
+  struct ABIFunctionSignatureData<__VA_ARGS__> { \
+    static constexpr bool registered = true;     \
+  };
+ABIFUNCTIONSIG_LIST(DEF_TEMPLATE)
 #undef DEF_TEMPLATE
 
 #if MOZ_IS_GCC
