@@ -332,7 +332,7 @@ class ArrayMetaTypeDescr : public NativeObject {
 
  public:
   // This is the function that gets called when the user
-  // does `new ArrayType(elem)`. It produces an array type object.
+  // does `new ArrayType(elem)`. It is currently disallowed.
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 };
 
@@ -376,10 +376,6 @@ class StructTypeDescr;
  * constructor function.
  */
 class StructMetaTypeDescr : public NativeObject {
- private:
-  static JSObject* create(JSContext* cx, HandleObject structTypeGlobal,
-                          HandleObject fields);
-
  public:
   // The prototype cannot be null.
   // The names in `ids` must all be non-numeric.
@@ -389,7 +385,7 @@ class StructMetaTypeDescr : public NativeObject {
       HandleValueVector fieldTypeObjs, Vector<StructFieldProps>& fieldProps);
 
   // This is the function that gets called when the user
-  // does `new StructType(...)`. It produces a struct type object.
+  // does `new StructType(...)`. It is currently disallowed.
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   class Layout {
