@@ -154,9 +154,8 @@ void Thread::ThreadMain() {
   auto loopType = startup_data_->options.message_loop_type;
   if (loopType == MessageLoop::TYPE_MOZILLA_NONMAINTHREAD ||
       loopType == MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD) {
-    auto queue =
-        mozilla::MakeRefPtr<mozilla::ThreadEventQueue<mozilla::EventQueue>>(
-            mozilla::MakeUnique<mozilla::EventQueue>());
+    auto queue = mozilla::MakeRefPtr<mozilla::ThreadEventQueue>(
+        mozilla::MakeUnique<mozilla::EventQueue>());
     xpcomThread = nsThreadManager::get().CreateCurrentThread(
         queue, nsThread::NOT_MAIN_THREAD);
   } else {

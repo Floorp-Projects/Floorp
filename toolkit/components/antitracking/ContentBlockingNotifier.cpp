@@ -8,7 +8,7 @@
 #include "ContentBlockingNotifier.h"
 #include "AntiTrackingUtils.h"
 
-#include "mozilla/AbstractEventQueue.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"

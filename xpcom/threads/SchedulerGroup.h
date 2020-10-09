@@ -7,7 +7,7 @@
 #ifndef mozilla_SchedulerGroup_h
 #define mozilla_SchedulerGroup_h
 
-#include "mozilla/AbstractEventQueue.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Queue.h"

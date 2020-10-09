@@ -426,8 +426,8 @@ void CacheIOThread::ThreadFunc() {
     MOZ_ASSERT(mBlockingIOWatcher);
     mBlockingIOWatcher->InitThread();
 
-    auto queue = MakeRefPtr<ThreadEventQueue<mozilla::EventQueue>>(
-        MakeUnique<mozilla::EventQueue>());
+    auto queue =
+        MakeRefPtr<ThreadEventQueue>(MakeUnique<mozilla::EventQueue>());
     nsCOMPtr<nsIThread> xpcomThread =
         nsThreadManager::get().CreateCurrentThread(queue,
                                                    nsThread::NOT_MAIN_THREAD);

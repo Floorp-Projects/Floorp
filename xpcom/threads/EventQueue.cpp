@@ -15,10 +15,6 @@ using namespace mozilla;
 using namespace mozilla::detail;
 
 template <size_t ItemsPerPage>
-EventQueueInternal<ItemsPerPage>::EventQueueInternal(
-    EventQueuePriority aPriority) {}
-
-template <size_t ItemsPerPage>
 void EventQueueInternal<ItemsPerPage>::PutEvent(
     already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
     const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aDelay) {
@@ -122,4 +118,8 @@ size_t EventQueueInternal<ItemsPerPage>::Count(
 namespace mozilla {
 template class EventQueueSized<16>;  // Used by ThreadEventQueue
 template class EventQueueSized<64>;  // Used by ThrottledEventQueue
+namespace detail {
+template class EventQueueInternal<16>;  // Used by ThreadEventQueue
+template class EventQueueInternal<64>;  // Used by ThrottledEventQueue
+}  // namespace detail
 }  // namespace mozilla
