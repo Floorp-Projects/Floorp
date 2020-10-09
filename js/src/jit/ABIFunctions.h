@@ -34,6 +34,37 @@ struct ABIFunction {
                 "ABI function is not registered.");
 };
 
+template <typename Sig>
+struct ABIFunctionSignatureData {
+  static const bool registered = false;
+};
+
+template <typename Sig>
+struct ABIFunctionSignature {
+  void* address(Sig fun) const { return JS_FUNC_TO_DATA_PTR(void*, fun); }
+
+  // If this assertion fails, you are likely in the context of a
+  // `DynamicFunction<Sig>(fn)` call. This error indicates that
+  // ABIFunctionSignature has not been specialized for `Sig` by the time of this
+  // call.
+  //
+  // This can be fixed by adding the function signature to ABIFUNCTIONSIG_LIST
+  // within `ABIFunctionList-inl.h` and to add an `#include` statement of this
+  // header in the file which is making the call to `DynamicFunction<Sig>(fn)`.
+  static_assert(ABIFunctionSignatureData<Sig>::registered,
+                "ABI function signature is not registered.");
+};
+
+// This is a structure created to ensure that the dynamically computed
+// function pointer is well typed.
+//
+// It is meant to be created only through DynamicFunction function calls. In
+// extremelly rare cases, such as VMFunctions, it might be produced as a result
+// of GetVMFunctionTarget.
+struct DynFn {
+  void* address;
+};
+
 }  // namespace jit
 }  // namespace js
 
