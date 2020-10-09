@@ -20,7 +20,7 @@ pub mod ping_upload;
 pub mod pings;
 pub mod private;
 
-pub(crate) mod dispatcher;
+pub mod dispatcher;
 pub mod ipc;
 
 /// Run a closure with a mutable reference to the locked global Glean object.
