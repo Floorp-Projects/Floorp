@@ -7898,6 +7898,46 @@
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
   },
+  "HTMLEDITORS_WITH_BEFOREINPUT_LISTENERS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["mnakano.birchill@mozilla.com"],
+    "bug_numbers": [1668134, 1665530],
+    "expires_in_version": "90",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose window or a node in it has had beforeinput event listeners"
+  },
+  "HTMLEDITORS_OVERRIDDEN_BY_BEFOREINPUT_LISTENERS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["mnakano.birchill@mozilla.com"],
+    "bug_numbers": [1668134, 1665530],
+    "expires_in_version": "90",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose dispatching beforeinput events are canceled"
+  },
+  "HTMLEDITORS_WITH_MUTATION_LISTENERS_WITHOUT_BEFOREINPUT_LISTENERS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["mnakano.birchill@mozilla.com"],
+    "bug_numbers": [1668134, 1665530],
+    "expires_in_version": "90",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose window or a node in it has had mutation event listeners, but has not had beforeinput event listeners"
+  },
+  "HTMLEDITORS_WITH_MUTATION_OBSERVERS_WITHOUT_BEFOREINPUT_LISTENERS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["mnakano.birchill@mozilla.com"],
+    "bug_numbers": [1668134, 1665530],
+    "expires_in_version": "90",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors a node in the window has been observed by mutation observers, but has not had beforeinput event listeners"
+  },
   "ENCODING_OVERRIDE_SITUATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
