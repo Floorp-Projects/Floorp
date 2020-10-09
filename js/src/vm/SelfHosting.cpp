@@ -2435,31 +2435,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallSetMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
 
-    // See builtin/TypedObject.h for descriptors of the typedobj functions.
-    JS_FN("ClampToUint8", js::ClampToUint8, 1, 0),
-
-    JS_FN("ObjectIsTypeDescr", js::ObjectIsTypeDescr, 1, 0),
-    JS_FN("ObjectIsTypedObject", js::ObjectIsTypedObject, 1, 0),
-
-    JS_FN("IsBoxedWasmAnyRef", js::IsBoxedWasmAnyRef, 1, 0),
-    JS_FN("IsBoxableWasmAnyRef", js::IsBoxableWasmAnyRef, 1, 0),
-    JS_FN("UnboxBoxedWasmAnyRef", js::UnboxBoxedWasmAnyRef, 1, 0),
-
-// clang-format off
-#define LOAD_SCALAR_FN_DECLS(_constant, _type, _name)         \
-    JS_FN("Load_" #_name,  js::LoadScalar##_type::Func, 3, 0),
-    JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(LOAD_SCALAR_FN_DECLS)
-    JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(LOAD_SCALAR_FN_DECLS)
-// clang-format on
-#undef LOAD_SCALAR_FN_DECLS
-
-// clang-format off
-#define LOAD_REFERENCE_FN_DECLS(_constant, _type, _name)      \
-    JS_FN("Load_" #_name,  js::LoadReference##_name::Func, 3, 0),
-    JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_REFERENCE_FN_DECLS)
-// clang-format on
-#undef LOAD_REFERENCE_FN_DECLS
-
 #ifdef JS_HAS_INTL_API
     // See builtin/intl/*.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1, 0),
