@@ -2730,6 +2730,7 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
     uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey) {
   if (XRE_IsContentProcess()) {
+    // XXX Why we update cache key only in content process case?
     if (aUpdatedCacheKey != 0) {
       aInfo->SetCacheKey(aUpdatedCacheKey);
     }
