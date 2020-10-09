@@ -6,6 +6,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { SearchTelemetry } = ChromeUtils.import(
   "resource:///modules/SearchTelemetry.jsm"
 );
+const { SearchUtils } = ChromeUtils.import(
+  "resource://gre/modules/SearchUtils.jsm"
+);
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -195,6 +198,10 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
     );
   }
 }
+
+add_task(async function setup() {
+  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
+});
 
 add_task(async function test_parsing_search_urls() {
   for (const test of TESTS) {
