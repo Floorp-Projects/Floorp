@@ -110,8 +110,11 @@ namespace jit {
   _(js::jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>) \
   _(js::jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>) \
   _(js::jit::CreateMatchResultFallbackFunc)                 \
+  _(js::jit::EqualStringsHelperPure)                        \
   _(js::jit::FinishBailoutToBaseline)                       \
   _(js::jit::GetDynamicNamePure)                            \
+  _(js::jit::GetIndexFromString)                            \
+  _(js::jit::GetInt32FromStringPure)                        \
   _(js::jit::GetNativeDataPropertyByValuePure<false>)       \
   _(js::jit::GetNativeDataPropertyByValuePure<true>)        \
   _(js::jit::GetNativeDataPropertyPure<false>)              \
@@ -133,6 +136,7 @@ namespace jit {
   _(js::jit::Printf1)                                       \
   _(js::jit::SetNativeDataPropertyPure<false>)              \
   _(js::jit::SetNativeDataPropertyPure<true>)               \
+  _(js::jit::StringFromCharCodeNoGC)                        \
   _(js::jit::WrapObjectPure)                                \
   _(js::MapIteratorObject::next)                            \
   _(js::NativeObject::addDenseElementPure)                  \
