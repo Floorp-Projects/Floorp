@@ -621,32 +621,21 @@ extern JS_FRIEND_API uint64_t GetSCOffset(JSStructuredCloneWriter* writer);
 
 namespace js {
 
-static MOZ_ALWAYS_INLINE JS::shadow::Function* FunctionObjectToShadowFunction(
-    JSObject* fun) {
-  MOZ_ASSERT(JS::GetClass(fun) == FunctionClassPtr);
-  return reinterpret_cast<JS::shadow::Function*>(fun);
-}
-
 /* Statically asserted in FunctionFlags.cpp. */
 static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x0060;
-
-// Return whether the given function object is native.
-static MOZ_ALWAYS_INLINE bool FunctionObjectIsNative(JSObject* fun) {
-  return !(FunctionObjectToShadowFunction(fun)->flags &
-           JS_FUNCTION_INTERPRETED_BITS);
-}
-
-static MOZ_ALWAYS_INLINE JSNative GetFunctionObjectNative(JSObject* fun) {
-  MOZ_ASSERT(FunctionObjectIsNative(fun));
-  return FunctionObjectToShadowFunction(fun)->native;
-}
 
 }  // namespace js
 
 static MOZ_ALWAYS_INLINE const JSJitInfo* FUNCTION_VALUE_TO_JITINFO(
     const JS::Value& v) {
-  MOZ_ASSERT(js::FunctionObjectIsNative(&v.toObject()));
-  return js::FunctionObjectToShadowFunction(&v.toObject())->jitinfo;
+  JSObject* obj = &v.toObject();
+  MOZ_ASSERT(JS::GetClass(obj) == js::FunctionClassPtr);
+
+  auto* fun = reinterpret_cast<JS::shadow::Function*>(obj);
+  MOZ_ASSERT(!(fun->flags & js::JS_FUNCTION_INTERPRETED_BITS),
+             "Unexpected non-native function");
+
+  return fun->jitinfo;
 }
 
 static MOZ_ALWAYS_INLINE void SET_JITINFO(JSFunction* func,
