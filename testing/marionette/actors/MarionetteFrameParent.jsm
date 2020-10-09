@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  capture: "chrome://marionette/content/capture.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
@@ -236,5 +237,42 @@ class MarionetteFrameParent extends JSWindowActorParent {
     return {
       browsingContext: BrowsingContext.get(browsingContextId),
     };
+  }
+
+  async takeScreenshot(elem, format, full, scroll) {
+    const rect = await this.sendQuery(
+      "MarionetteFrameParent:getScreenshotRect",
+      {
+        elem,
+        full,
+        scroll,
+      }
+    );
+
+    // If no element has been specified use the top-level browsing context.
+    // Otherwise use the browsing context from the currently selected frame.
+    const browsingContext = elem
+      ? this.browsingContext
+      : this.browsingContext.top;
+
+    let canvas = await capture.canvas(
+      browsingContext.topChromeWindow,
+      browsingContext,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height
+    );
+
+    switch (format) {
+      case capture.Format.Hash:
+        return capture.toHash(canvas);
+
+      case capture.Format.Base64:
+        return capture.toBase64(canvas);
+
+      default:
+        throw new TypeError(`Invalid capture format: ${format}`);
+    }
   }
 }

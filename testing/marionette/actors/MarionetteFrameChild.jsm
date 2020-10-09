@@ -126,6 +126,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getPageSource":
           result = await this.getPageSource();
           break;
+        case "MarionetteFrameParent:getScreenshotRect":
+          result = await this.getScreenshotRect(data);
+          break;
         case "MarionetteFrameParent:isElementDisplayed":
           result = await this.isElementDisplayed(data);
           break;
@@ -335,6 +338,54 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getPageSource() {
     return this.document.documentElement.outerHTML;
+  }
+
+  /**
+   * Returns the rect of the element to screenshot.
+   *
+   * Because the screen capture takes place in the parent process the dimensions
+   * for the screenshot have to be determined in the appropriate child process.
+   *
+   * Also it takes care of scrolling an element into view if requested.
+   *
+   * @param {Object} options
+   * @param {Element} options.elem
+   *     Optional element to take a screenshot of.
+   * @param {boolean=} options.full
+   *     True to take a screenshot of the entire document element.
+   *     Defaults to true.
+   * @param {boolean=} options.scroll
+   *     When <var>elem</var> is given, scroll it into view.
+   *     Defaults to true.
+   *
+   * @return {DOMRect}
+   *     The area to take a snapshot from.
+   */
+  async getScreenshotRect(options = {}) {
+    const { elem, full = true, scroll = true } = options;
+    const win = elem ? this.contentWindow : this.browsingContext.top.window;
+
+    let rect;
+
+    if (elem) {
+      if (scroll) {
+        element.scrollIntoView(elem);
+      }
+      rect = this.getElementRect({ elem });
+    } else if (full) {
+      const docEl = win.document.documentElement;
+      rect = new DOMRect(0, 0, docEl.scrollWidth, docEl.scrollHeight);
+    } else {
+      // viewport
+      rect = new DOMRect(
+        win.pageXOffset,
+        win.pageYOffset,
+        win.innerWidth,
+        win.innerHeight
+      );
+    }
+
+    return rect;
   }
 
   /**
