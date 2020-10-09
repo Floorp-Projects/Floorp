@@ -16,24 +16,30 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadTestChannelParent)
 
-  GamepadTestChannelParent() = default;
-
-  bool Init();
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  static already_AddRefed<GamepadTestChannelParent> Create();
 
   mozilla::ipc::IPCResult RecvGamepadTestEvent(
       const uint32_t& aID, const GamepadChangeEvent& aGamepadEvent);
 
   void OnMonitoringStateChanged(bool aNewState);
 
+  GamepadTestChannelParent(const GamepadTestChannelParent&) = delete;
+  GamepadTestChannelParent(GamepadTestChannelParent&&) = delete;
+  GamepadTestChannelParent& operator=(const GamepadTestChannelParent&) = delete;
+  GamepadTestChannelParent& operator=(GamepadTestChannelParent&&) = delete;
+
  private:
   struct DeferredGamepadAdded {
     uint32_t promiseId;
     GamepadAdded gamepadAdded;
   };
+
+  GamepadTestChannelParent();
+  ~GamepadTestChannelParent();
+
   void AddGamepadToPlatformService(uint32_t aPromiseId,
                                    const GamepadAdded& aGamepadAdded);
-  ~GamepadTestChannelParent() = default;
+
   nsTArray<DeferredGamepadAdded> mDeferredGamepadAdded;
 };
 
