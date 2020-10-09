@@ -368,6 +368,11 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     if not distutils.sysconfig.get_python_lib():
         die('Could not determine python site packages directory')
 
+    # We may have set PYTHONEXECUTABLE above, and that affects python
+    # subprocesses we may invoke as part of configure (e.g. hg), so
+    # unset it.
+    os.environ.pop('PYTHONEXECUTABLE', None)
+
     str_version = '.'.join(str(v) for v in version)
 
     return namespace(
