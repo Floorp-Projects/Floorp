@@ -57,17 +57,12 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
 
 template <size_t ItemsPerPage>
 already_AddRefed<nsIRunnable> EventQueueInternal<ItemsPerPage>::GetEvent(
-    EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
-    mozilla::TimeDuration* aLastEventDelay) {
+    const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aLastEventDelay) {
   if (mQueue.IsEmpty()) {
     if (aLastEventDelay) {
       *aLastEventDelay = TimeDuration();
     }
     return nullptr;
-  }
-
-  if (aPriority) {
-    *aPriority = EventQueuePriority::Normal;
   }
 
 #ifdef MOZ_GECKO_PROFILER

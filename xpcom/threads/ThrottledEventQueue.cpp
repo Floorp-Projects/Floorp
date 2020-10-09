@@ -225,7 +225,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
       // We only dispatch an executor runnable when we know there is something
       // in the queue, so this should never fail.
-      event = mEventQueue.GetEvent(nullptr, lock);
+      event = mEventQueue.GetEvent(lock);
       MOZ_ASSERT(event);
 
       // If there are more events in the queue, then dispatch the next
@@ -283,7 +283,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
   already_AddRefed<nsIRunnable> GetEvent() {
     MutexAutoLock lock(mMutex);
-    return mEventQueue.GetEvent(nullptr, lock);
+    return mEventQueue.GetEvent(lock);
   }
 
   void AwaitIdle() const {

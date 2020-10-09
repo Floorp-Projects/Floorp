@@ -923,7 +923,8 @@ nsThread::HasPendingHighPriorityEvents(bool* aResult) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aResult = mEvents->HasPendingHighPriorityEvents();
+  // This function appears to never be called anymore.
+  *aResult = false;
   return NS_OK;
 }
 
@@ -1080,9 +1081,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
   if (mIsInLocalExecutionMode) {
-    EventQueuePriority priority;
-    if (nsCOMPtr<nsIRunnable> event =
-            mEvents->GetEvent(reallyWait, &priority)) {
+    if (nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait)) {
       *aResult = true;
       LogRunnable::Run log(event);
       event->Run();
@@ -1147,7 +1146,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     if (usingTaskController) {
       event = TaskController::Get()->GetRunnableForMTTask(reallyWait);
     } else {
-      event = mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
+      event = mEvents->GetEvent(reallyWait, &mLastEventDelay);
     }
 
     *aResult = (event.get() != nullptr);

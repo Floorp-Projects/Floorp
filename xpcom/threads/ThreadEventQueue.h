@@ -36,11 +36,9 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
                 EventQueuePriority aPriority) final;
 
   already_AddRefed<nsIRunnable> GetEvent(
-      bool aMayWait, EventQueuePriority* aPriority,
-      mozilla::TimeDuration* aLastEventDelay = nullptr) final;
+      bool aMayWait, mozilla::TimeDuration* aLastEventDelay = nullptr) final;
   void DidRunEvent() final;
   bool HasPendingEvent() final;
-  bool HasPendingHighPriorityEvents() final;
 
   bool ShutdownIfNoPendingEvents() final;
 

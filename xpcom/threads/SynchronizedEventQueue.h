@@ -59,12 +59,9 @@ class ThreadTargetSink {
 class SynchronizedEventQueue : public ThreadTargetSink {
  public:
   virtual already_AddRefed<nsIRunnable> GetEvent(
-      bool aMayWait, EventQueuePriority* aPriority,
-      mozilla::TimeDuration* aLastEventDelay = nullptr) = 0;
+      bool aMayWait, mozilla::TimeDuration* aLastEventDelay = nullptr) = 0;
   virtual void DidRunEvent() = 0;
   virtual bool HasPendingEvent() = 0;
-
-  virtual bool HasPendingHighPriorityEvents() = 0;
 
   // This method atomically checks if there are pending events and, if there are
   // none, forbids future events from being posted. It returns true if there

@@ -228,7 +228,7 @@ nsThreadPool::Run() {
     {
       MutexAutoLock lock(mMutex);
 
-      event = mEvents.GetEvent(nullptr, lock, &delay);
+      event = mEvents.GetEvent(lock, &delay);
       if (!event) {
         TimeStamp now = TimeStamp::Now();
         uint32_t idleTimeoutDivider =
