@@ -20,6 +20,7 @@
 // FIXME: Remove when code gets actually used eventually (by initializing Glean).
 #![allow(dead_code)]
 
+use fog::dispatcher;
 use fog::ping_upload::{self, UploadResult};
 use glean_core::{global_glean, setup_glean, Configuration, Glean, Result};
 use once_cell::sync::OnceCell;
@@ -139,24 +140,26 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfo) {
 /// Set whether upload is enabled or not.
 ///
 /// See `glean_core::Glean.set_upload_enabled`.
-pub fn set_upload_enabled(enabled: bool) -> bool {
-    with_glean_mut(|glean| {
-        let state = global_state();
-        let old_enabled = glean.is_upload_enabled();
-        glean.set_upload_enabled(enabled);
+pub fn set_upload_enabled(enabled: bool) {
+    dispatcher::launch(move || {
+        with_glean_mut(|glean| {
+            let state = global_state();
+            let old_enabled = glean.is_upload_enabled();
+            glean.set_upload_enabled(enabled);
 
-        if !old_enabled && enabled {
-            // If uploading is being re-enabled, we have to restore the
-            // application-lifetime metrics.
-            initialize_core_metrics(&glean, &state.client_info);
-        } else if old_enabled && !enabled {
-            // If upload is being disabled, check for pings to send.
-            ping_upload::check_for_uploads();
-        }
+            if !old_enabled && enabled {
+                // If uploading is being re-enabled, we have to restore the
+                // application-lifetime metrics.
+                initialize_core_metrics(&glean, &state.client_info);
+            } else if old_enabled && !enabled {
+                // If upload is being disabled, check for pings to send.
+                ping_upload::check_for_uploads();
+            }
 
-        enabled
-    })
-    .expect("Setting upload enabled failed!")
+            enabled
+        })
+        .expect("Setting upload enabled failed!");
+    });
 }
 
 fn register_uploader() {
