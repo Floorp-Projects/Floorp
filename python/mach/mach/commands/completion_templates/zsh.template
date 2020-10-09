@@ -1,0 +1,62 @@
+#compdef mach
+_mach_complete()
+{
+    local com coms comsubs cur optkey opts state sub subs
+    cur=${words[${#words[@]}]}
+    typeset -A comsubs
+    comsubs=( %(commands_subcommands)s )
+
+    # lookup for command and subcommand
+    for word in ${words[@]:1}; do
+        if [[ $word == -* ]]; then
+            continue
+        fi
+
+        if [[ -z $com ]]; then
+            com=$word
+        elif [[ ${comsubs[$com]} == *" $word "* ]]; then
+            sub=$word
+            break
+        fi
+    done
+
+    # check for a subcommand
+    if [[ $cur == $com ]]; then
+        state="command"
+        coms=(%(commands)s)
+    elif [[ ${cur} == -* ]]; then
+        state="option"
+        if [[ -z $com ]]; then
+            # no command, use global options
+            opts=(%(globalopts)s)
+        fi
+    fi
+    case $state in
+        (command)
+            _describe 'command' coms
+        ;;
+        (option)
+            if [[ -n $sub ]]; then
+                optkey="$com $sub"
+            else
+                optkey="$com"
+            fi
+            case $optkey in
+%(case_options)s
+            esac
+            _describe 'option' opts
+        ;;
+        *)
+            if [[ -z $sub ]]; then
+                # if we're completing a command with subcommands, add them here
+                case "$com" in
+%(case_subcommands)s
+                esac
+                _describe 'subcommand' subs
+            fi
+            # also fallback to file completion
+            _arguments '*:file:_files'
+    esac
+}
+_mach_complete "$@"
+compdef _mach_complete mach

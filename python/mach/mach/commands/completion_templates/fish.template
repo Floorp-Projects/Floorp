@@ -1,0 +1,64 @@
+function __fish_mach_complete_no_command
+    for i in (commandline -opc)
+        if contains -- $i %(commands)s
+            return 1
+        end
+    end
+    return 0
+end
+
+function __fish_mach_complete_command_matches
+    for i in (commandline -opc)
+        if contains -- $i %(commands)s
+            set com $i
+            break
+        end
+    end
+
+    if not set -q com
+        return 1
+    end
+
+    if test "$com" != "$argv"
+        return 1
+    end
+    return 0
+end
+
+function __fish_mach_complete_command
+    __fish_mach_complete_command_matches $argv[1]
+    if test $status -ne 0
+        return 1
+    end
+
+    # If a subcommand is already entered, don't complete, we should defer to
+    # '__fish_mach_complete_subcommand'.
+    for i in (commandline -opc)
+        if contains -- $i $argv[2..-1]
+            return 1
+        end
+    end
+    return 0
+end
+
+function __fish_mach_complete_subcommand
+    __fish_mach_complete_command_matches $argv[1]
+    if test $status -ne 0
+        return 1
+    end
+
+    # Command matches, now check for subcommand
+    for i in (commandline -opc)
+        if contains -- $i $argv[2]
+            return 0
+        end
+    end
+    return 1
+end
+
+# global options
+%(global_option_completions)s
+# commands
+%(command_completions)s
+# command options
+%(command_option_completions)s

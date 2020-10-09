@@ -400,6 +400,7 @@ To see more help for a specific command, run:
             context = ContextWrapper(context, self.populate_context_handler)
 
         parser = self.get_argument_parser(context)
+        context.global_parser = parser
 
         if not len(argv):
             # We don't register the usage until here because if it is globally
