@@ -16,11 +16,11 @@ const { ADLINK_CHECK_TIMEOUT_MS } = ChromeUtils.import(
 
 const TEST_PROVIDER_INFO = {
   example: {
-    regexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
-    queryParam: "s",
-    codeParam: "abc",
+    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    queryParamName: "s",
+    codeParamName: "abc",
     codePrefixes: ["ff"],
-    followonParams: ["a"],
+    followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
 };
