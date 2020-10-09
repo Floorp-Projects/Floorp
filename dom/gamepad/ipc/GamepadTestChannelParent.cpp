@@ -12,18 +12,21 @@
 namespace mozilla {
 namespace dom {
 
-bool GamepadTestChannelParent::Init() {
+already_AddRefed<GamepadTestChannelParent> GamepadTestChannelParent::Create() {
+  return RefPtr<GamepadTestChannelParent>(new GamepadTestChannelParent())
+      .forget();
+}
+
+GamepadTestChannelParent::GamepadTestChannelParent() {
   AssertIsOnBackgroundThread();
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
 
   service->GetMonitoringState().AddObserver(this);
-
-  return true;
 }
 
-void GamepadTestChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
+GamepadTestChannelParent::~GamepadTestChannelParent() {
   AssertIsOnBackgroundThread();
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
