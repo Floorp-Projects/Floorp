@@ -250,6 +250,7 @@ fn translate_shader(
             write!(state, " return this;\n}}\n");
             write!(state, "FragmentShaderImpl* get_fragment_shader() override {{\n");
             write!(state, " return this;\n}}\n");
+            write!(state, "const char* get_name() const override {{ return \"{}\"; }}\n", name);
             write!(state, "static ProgramImpl* loader() {{ return new {}_program; }}\n", name);
             write!(state, "}};\n\n");
         }
