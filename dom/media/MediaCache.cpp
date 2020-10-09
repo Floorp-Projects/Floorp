@@ -2766,6 +2766,7 @@ void MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal) {
   mCacheSuspended = true;
   mChannelEnded = true;
   mClient->CacheClientSuspend();
+  mMediaCache->QueueSuspendedStatusUpdate(lock, mResourceID);
 
   // Step 5: add the stream to be managed by the cache.
   mMediaCache->OpenStream(lock, this, true /* aIsClone */);
