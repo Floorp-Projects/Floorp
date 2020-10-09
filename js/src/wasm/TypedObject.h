@@ -19,6 +19,11 @@
 
 namespace js {
 
+class WasmNamespaceObject;
+
+extern bool InitTypedObjectNamespace(
+    JSContext* cx, Handle<WasmNamespaceObject*> namespaceObject);
+
 /* The prototype for typed objects. */
 class TypedProto : public NativeObject {
  public:
@@ -342,31 +347,6 @@ class StructTypeDescr : public ComplexTypeDescr {
 };
 
 using HandleStructTypeDescr = Handle<StructTypeDescr*>;
-
-/*
- * This object exists in order to encapsulate the typed object types
- * somewhat, rather than sticking them all into the global object.
- * Eventually it will go away and become a module.
- */
-class TypedObjectModuleObject : public NativeObject {
- public:
-  enum Slot {
-    ArrayTypePrototype,
-    StructTypePrototype,
-    Int32Desc,
-    Int64Desc,
-    Float32Desc,
-    Float64Desc,
-    ObjectDesc,
-    WasmAnyRefDesc,
-    SlotCount
-  };
-
-  static const JSClass class_;
-
- private:
-  static const ClassSpec classSpec_;
-};
 
 /* Base type for typed objects. */
 class TypedObject : public JSObject {

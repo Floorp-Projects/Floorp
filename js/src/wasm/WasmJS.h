@@ -184,10 +184,6 @@ MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
 
 }  // namespace wasm
 
-// The class of the WebAssembly global namespace object.
-
-extern const JSClass WebAssemblyClass;
-
 // The class of WebAssembly.Module. Each WasmModuleObject owns a
 // wasm::Module. These objects are used both as content-facing JS objects and as
 // internal implementation details of asm.js.
@@ -455,6 +451,28 @@ class WasmTableObject : public NativeObject {
                                  mozilla::Maybe<uint32_t> maximumLength,
                                  wasm::RefType tableType, HandleObject proto);
   wasm::Table& table() const;
+};
+
+// The class of the WebAssembly global namespace object.
+
+class WasmNamespaceObject : public NativeObject {
+ public:
+  enum Slot {
+    ArrayTypePrototype,
+    StructTypePrototype,
+    Int32Desc,
+    Int64Desc,
+    Float32Desc,
+    Float64Desc,
+    ObjectDesc,
+    WasmAnyRefDesc,
+    SlotCount
+  };
+
+  static const JSClass class_;
+
+ private:
+  static const ClassSpec classSpec_;
 };
 
 }  // namespace js
