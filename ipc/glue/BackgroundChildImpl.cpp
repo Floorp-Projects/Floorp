@@ -628,7 +628,8 @@ BackgroundChildImpl::AllocPGamepadTestChannelChild() {
 bool BackgroundChildImpl::DeallocPGamepadTestChannelChild(
     PGamepadTestChannelChild* aActor) {
   MOZ_ASSERT(aActor);
-  delete static_cast<dom::GamepadTestChannelChild*>(aActor);
+  RefPtr<dom::GamepadTestChannelChild> child(
+      dont_AddRef(static_cast<dom::GamepadTestChannelChild*>(aActor)));
   return true;
 }
 

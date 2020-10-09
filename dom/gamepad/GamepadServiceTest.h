@@ -70,7 +70,7 @@ class GamepadServiceTest final : public DOMEventTargetHelper {
   // IPDL Channel for us to send test events to GamepadPlatformService, it
   // will only be used in this singleton class and deleted during the IPDL
   // shutdown chain
-  GamepadTestChannelChild* MOZ_NON_OWNING_REF mChild;
+  RefPtr<GamepadTestChannelChild> mChild;
 
   explicit GamepadServiceTest(nsPIDOMWindowInner* aWindow);
   ~GamepadServiceTest();
