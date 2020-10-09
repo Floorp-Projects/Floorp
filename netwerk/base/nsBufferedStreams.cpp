@@ -224,6 +224,13 @@ nsBufferedStream::Seek(int32_t whence, int64_t offset) {
                 .mNewOffset = mBufferStartOffset);
 
   mFillPoint = mCursor = 0;
+
+  // If we seeked back to the start, then don't fill the buffer
+  // right now in case this is a lazily-opened file stream.
+  // We'll fill on the first read, like we did initially.
+  if (whence == nsISeekableStream::NS_SEEK_SET && offset == 0) {
+    return NS_OK;
+  }
   return Fill();
 }
 
