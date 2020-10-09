@@ -3084,6 +3084,10 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   // Only consider full screenshot if no element has been specified
   full = webEl ? false : full;
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().takeScreenshot(webEl, format, full, scroll);
+  }
+
   const win = this.getCurrentWindow();
 
   let rect;
