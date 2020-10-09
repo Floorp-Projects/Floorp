@@ -11,18 +11,9 @@ const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 // A 300ms delay between a `touchend` and `click` event is added whenever double-tap zoom
 // is allowed.
 const DELAY_MIN = 250;
-const NO_DELAY_MAX = 80;
 
 addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnTouchChange(true);
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.reduceTimerPrecision", false],
-      ["privacy.reduceTimerPrecision.unconditional", false],
-      ["privacy.resistFingerprinting", false],
-    ],
-  });
 
   await waitBootstrap(ui);
   await testWithNoTouch(ui);
@@ -32,8 +23,6 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await testWithMetaViewportEnabled(ui);
   await testWithMetaViewportDisabled(ui);
   testTouchButton(ui);
-
-  await SpecialPowers.popPrefEnv();
 
   reloadOnTouchChange(false);
 });
@@ -246,10 +235,10 @@ async function testWithMetaViewportEnabled(ui) {
 
   await SpecialPowers.spawn(
     ui.getViewportBrowser(),
-    [{ delay_min: DELAY_MIN, no_delay_max: NO_DELAY_MAX }],
-    async function({ delay_min, no_delay_max }) {
+    [{ delay_min: DELAY_MIN }],
+    async function({ delay_min }) {
       // A helper for testing the delay between touchend and click events.
-      async function testDelay(mvc, el, shouldDelay = false) {
+      async function testDelay(mvc, el) {
         const touchendPromise = ContentTaskUtils.waitForEvent(el, "touchend");
         const clickPromise = ContentTaskUtils.waitForEvent(el, "click");
         await EventUtils.synthesizeClick(el);
@@ -257,16 +246,11 @@ async function testWithMetaViewportEnabled(ui) {
         const { timeStamp: clickTimeStamp } = await clickPromise;
         const delay = clickTimeStamp - touchendTimestamp;
 
-        const time_target = shouldDelay ? delay_min : no_delay_max;
-        const expected = shouldDelay
-          ? delay >= time_target
-          : delay <= time_target;
+        const expected = delay >= delay_min;
 
         ok(
           expected,
-          `${mvc}: There should be ${
-            shouldDelay ? "greater than" : "less than"
-          } a ${time_target}ms delay between touch events and mouse events. Got delay of ${delay}ms`
+          `${mvc}: There should be greater than a ${delay_min}ms delay between touch events and mouse events. Got delay of ${delay}ms`
         );
       }
 
@@ -288,34 +272,7 @@ async function testWithMetaViewportEnabled(ui) {
       );
       meta.content = "";
       await promiseReflow();
-      await testDelay("(empty)", div, true);
-
-      info(
-        "testWithMetaViewportEnabled: " +
-          "click the div element with " +
-          "<meta name='viewport' content='user-scalable=no'>"
-      );
-      meta.content = "user-scalable=no";
-      await promiseReflow();
-      await testDelay(meta.content, div, false);
-
-      info(
-        "testWithMetaViewportEnabled: " +
-          "click the div element with " +
-          "<meta name='viewport' content='minimum-scale=1,maximum-scale=1'>"
-      );
-      meta.content = "minimum-scale=1,maximum-scale=1";
-      await promiseReflow();
-      await testDelay(meta.content, div, false);
-
-      info(
-        "testWithMetaViewportEnabled: " +
-          "click the div element with " +
-          "<meta name='viewport' content='width=device-width'>"
-      );
-      meta.content = "width=device-width";
-      await promiseReflow();
-      await testDelay(meta.content, div, false);
+      await testDelay("(empty)", div);
     }
   );
 
