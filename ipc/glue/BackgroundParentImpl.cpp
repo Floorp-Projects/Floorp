@@ -1120,9 +1120,30 @@ BackgroundParentImpl::RecvPGamepadEventChannelConstructor(
   return IPC_OK();
 }
 
-already_AddRefed<dom::PGamepadTestChannelParent>
+dom::PGamepadTestChannelParent*
 BackgroundParentImpl::AllocPGamepadTestChannelParent() {
-  return dom::GamepadTestChannelParent::Create();
+  RefPtr<dom::GamepadTestChannelParent> parent =
+      new dom::GamepadTestChannelParent();
+
+  return parent.forget().take();
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPGamepadTestChannelConstructor(
+    PGamepadTestChannelParent* aActor) {
+  MOZ_ASSERT(aActor);
+  if (!static_cast<dom::GamepadTestChannelParent*>(aActor)->Init()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool BackgroundParentImpl::DeallocPGamepadTestChannelParent(
+    dom::PGamepadTestChannelParent* aActor) {
+  MOZ_ASSERT(aActor);
+  RefPtr<dom::GamepadTestChannelParent> parent =
+      dont_AddRef(static_cast<dom::GamepadTestChannelParent*>(aActor));
+  return true;
 }
 
 dom::PWebAuthnTransactionParent*
