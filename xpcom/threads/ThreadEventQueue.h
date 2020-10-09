@@ -44,11 +44,6 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   void Disconnect(const MutexAutoLock& aProofOfLock) final {}
 
-  void EnableInputEventPrioritization() final;
-  void FlushInputEventPrioritization() final;
-  void SuspendInputEventPrioritization() final;
-  void ResumeInputEventPrioritization() final;
-
   already_AddRefed<nsISerialEventTarget> PushEventQueue() final;
   void PopEventQueue(nsIEventTarget* aTarget) final;
 

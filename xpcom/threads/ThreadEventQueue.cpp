@@ -195,26 +195,6 @@ bool ThreadEventQueue::ShutdownIfNoPendingEvents() {
   return false;
 }
 
-void ThreadEventQueue::EnableInputEventPrioritization() {
-  MutexAutoLock lock(mLock);
-  mBaseQueue->EnableInputEventPrioritization(lock);
-}
-
-void ThreadEventQueue::FlushInputEventPrioritization() {
-  MutexAutoLock lock(mLock);
-  mBaseQueue->FlushInputEventPrioritization(lock);
-}
-
-void ThreadEventQueue::SuspendInputEventPrioritization() {
-  MutexAutoLock lock(mLock);
-  mBaseQueue->SuspendInputEventPrioritization(lock);
-}
-
-void ThreadEventQueue::ResumeInputEventPrioritization() {
-  MutexAutoLock lock(mLock);
-  mBaseQueue->ResumeInputEventPrioritization(lock);
-}
-
 already_AddRefed<nsISerialEventTarget> ThreadEventQueue::PushEventQueue() {
   auto queue = MakeUnique<EventQueue>();
   RefPtr<NestedSink> sink = new NestedSink(queue.get(), this);
