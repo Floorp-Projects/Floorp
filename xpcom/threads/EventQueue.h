@@ -53,14 +53,12 @@ class EventQueueInternal {
                 EventQueuePriority aPriority, const MutexAutoLock& aProofOfLock,
                 mozilla::TimeDuration* aDelay = nullptr);
 
-  // Get an event from the front of the queue. aPriority is an out param. If the
-  // implementation supports priorities, then this should be the same priority
-  // that the event was pushed with. aPriority may be null. This should return
-  // null if the queue is non-empty but the event in front is not ready to run.
+  // Get an event from the front of the queue. This should return null if the
+  // queue is non-empty but the event in front is not ready to run.
   // *aLastEventDelay is the time the event spent in queues before being
   // retrieved.
   already_AddRefed<nsIRunnable> GetEvent(
-      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
+      const MutexAutoLock& aProofOfLock,
       mozilla::TimeDuration* aLastEventDelay = nullptr);
 
   void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
@@ -72,10 +70,6 @@ class EventQueueInternal {
   // to run. Implies !IsEmpty(). This should return true iff GetEvent returns a
   // non-null value.
   bool HasReadyEvent(const MutexAutoLock& aProofOfLock);
-  bool HasPendingHighPriorityEvents(const MutexAutoLock& aProofOfLock) {
-    // EventQueueInternal doesn't support any prioritization.
-    return false;
-  }
 
   // Returns the number of events in the queue.
   size_t Count(const MutexAutoLock& aProofOfLock) const;
