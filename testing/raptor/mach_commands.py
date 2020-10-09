@@ -154,7 +154,7 @@ class RaptorRunner(MozbuildObject):
             'base_work_dir': self.mozharness_dir,
             'exes': {
                 'python': self.python,
-                'virtualenv': [self.python, self.virtualenv_script],
+                'virtualenv': [self.python, '-S', self.virtualenv_script],
             },
             'title': socket.gethostname(),
             'default_actions': default_actions,
