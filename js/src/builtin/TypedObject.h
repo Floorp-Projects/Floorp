@@ -108,15 +108,16 @@ enum Kind {
 
 }  // namespace type
 
-///////////////////////////////////////////////////////////////////////////
-// Typed Prototypes
-
-/*
- * The prototype for a typed object.
- */
+/* The prototype for typed objects. */
 class TypedProto : public NativeObject {
  public:
   static const JSClass class_;
+
+ protected:
+  friend class ArrayMetaTypeDescr;
+  friend class StructMetaTypeDescr;
+
+  static TypedProto* create(JSContext* cx);
 };
 
 class TypeDescr : public NativeObject {
@@ -197,7 +198,6 @@ class ScalarTypeDescr : public SimpleTypeDescr {
   static const char* typeName(Type type);
 
   static const JSClass class_;
-  static const JSFunctionSpec typeObjectMethods[];
 
   Type type() const {
     // Make sure the values baked into TypedObjectConstants.h line up with
@@ -292,7 +292,6 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
   static const JSClass class_;
   static uint32_t size(Type t);
   static uint32_t alignment(Type t);
-  static const JSFunctionSpec typeObjectMethods[];
 
   ReferenceType type() const {
     return (ReferenceType)getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
@@ -332,16 +331,6 @@ class ArrayMetaTypeDescr : public NativeObject {
                                 int32_t length);
 
  public:
-  // Properties and methods to be installed on ArrayType.prototype,
-  // and hence inherited by all array type objects:
-  static const JSPropertySpec typeObjectProperties[];
-  static const JSFunctionSpec typeObjectMethods[];
-
-  // Properties and methods to be installed on ArrayType.prototype.prototype,
-  // and hence inherited by all array *typed* objects:
-  static const JSPropertySpec typedObjectProperties[];
-  static const JSFunctionSpec typedObjectMethods[];
-
   // This is the function that gets called when the user
   // does `new ArrayType(elem)`. It produces an array type object.
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -398,16 +387,6 @@ class StructMetaTypeDescr : public NativeObject {
   static StructTypeDescr* createFromArrays(
       JSContext* cx, HandleObject structTypePrototype, HandleIdVector ids,
       HandleValueVector fieldTypeObjs, Vector<StructFieldProps>& fieldProps);
-
-  // Properties and methods to be installed on StructType.prototype,
-  // and hence inherited by all struct type objects:
-  static const JSPropertySpec typeObjectProperties[];
-  static const JSFunctionSpec typeObjectMethods[];
-
-  // Properties and methods to be installed on StructType.prototype.prototype,
-  // and hence inherited by all struct *typed* objects:
-  static const JSPropertySpec typedObjectProperties[];
-  static const JSFunctionSpec typedObjectMethods[];
 
   // This is the function that gets called when the user
   // does `new StructType(...)`. It produces a struct type object.
