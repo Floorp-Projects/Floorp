@@ -317,10 +317,11 @@ pub unsafe extern "C" fn fog_give_ipc_buf(buf: *mut u8, buf_len: usize) -> usize
 /// buf before and after this call.
 pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
     let slice = std::slice::from_raw_parts(buf, buf_len);
-    let _res = fog::ipc::replay_from_buf(slice);
-    /*if res.is_err() {
-        // TODO: Record the error.
-    }*/
+    let res = fog::ipc::replay_from_buf(slice);
+    if res.is_err() {
+        log::warn!("Unable to replay ipc buffer. This will result in data loss.");
+        fog::metrics::fog_ipc::replay_failures.add(1);
+    }
 }
 
 #[no_mangle]

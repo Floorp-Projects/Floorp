@@ -30,3 +30,20 @@ fog:
       - jrediger@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+fog.ipc:
+  replay_failures:
+    type: counter
+    description: |
+      The number of times the ipc buffer failed to be replayed in the
+      parent process.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
