@@ -679,7 +679,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
                                        public nsITimerCallback {
  public:
   CheckPermitUnloadRequest(WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
-                           PermitUnloadAction aAction,
+                           nsIContentViewer::PermitUnloadAction aAction,
                            std::function<void(bool)>&& aResolver)
       : mResolver(std::move(aResolver)),
         mWGP(aWGP),
@@ -765,10 +765,10 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
     auto action = mAction;
     if (StaticPrefs::dom_disable_beforeunload()) {
-      action = PermitUnloadAction::Unload;
+      action = nsIContentViewer::eDontPromptAndUnload;
     }
-    if (action != PermitUnloadAction::Prompt) {
-      SendReply(action == PermitUnloadAction::Unload);
+    if (action != nsIContentViewer::ePrompt) {
+      SendReply(action == nsIContentViewer::eDontPromptAndUnload);
       return;
     }
 
@@ -835,7 +835,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
   uint32_t mPendingRequests = 0;
 
-  PermitUnloadAction mAction;
+  nsIContentViewer::PermitUnloadAction mAction;
 
   State mState = State::UNINITIALIZED;
 
@@ -847,7 +847,7 @@ NS_IMPL_ISUPPORTS(CheckPermitUnloadRequest, nsITimerCallback)
 }  // namespace
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvCheckPermitUnload(
-    bool aHasInProcessBlocker, PermitUnloadAction aAction,
+    bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
     CheckPermitUnloadResolver&& aResolver) {
   if (!IsCurrentGlobal()) {
     aResolver(false);
@@ -870,7 +870,8 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
   }
 
   auto request = MakeRefPtr<CheckPermitUnloadRequest>(
-      this, /* aHasInProcessBlocker */ false, aAction,
+      this, /* aHasInProcessBlocker */ false,
+      nsIContentViewer::PermitUnloadAction(aAction),
       [promise](bool aAllow) { promise->MaybeResolve(aAllow); });
   request->Run(/* aIgnoreProcess */ nullptr, aTimeout);
 

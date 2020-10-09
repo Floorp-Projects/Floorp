@@ -14,8 +14,6 @@ webidl Node;
 #include "nsTArray.h"
 #include "nsRect.h"
 
-#include "mozilla/dom/WindowGlobalActorsBinding.h"
-
 class nsIWidget;
 class nsPresContext;
 class nsView;
@@ -37,7 +35,6 @@ class WindowGlobalChild;
 [ptr] native Encoding(const mozilla::Encoding);
 [ptr] native PresShellPtr(mozilla::PresShell);
 [ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
-native PermitUnloadAction(mozilla::dom::PermitUnloadAction);
 
 [scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
 interface nsIContentViewer : nsISupports
@@ -54,6 +51,23 @@ interface nsIContentViewer : nsISupports
 
   [notxpcom,nostdcall] readonly attribute boolean isStopped;
 
+   /**
+   * aAction is passed to PermitUnload to indicate what action to take
+   * if a beforeunload handler wants to prompt the user.
+   *
+   * ePrompt: Prompt and return the user's choice (default).
+   * eDontPromptAndDontUnload: Don't prompt and return false (unload not permitted)
+   *                           if the document (or its children) asks us to prompt.
+   * eDontPromptAndUnload: Don't prompt and return true (unload permitted) no matter what.
+   *
+   * NOTE: Keep this in sync with PermitUnloadAction in WindowGlobalActors.webidl.
+   */
+  cenum PermitUnloadAction : 8 {
+    ePrompt = 0,
+    eDontPromptAndDontUnload = 1,
+    eDontPromptAndUnload = 2
+  };
+
   /**
    * The result of dispatching a "beforeunload" event. If `eAllowNavigation`,
    * no "beforeunload" listener requested to prevent the navigation, or its
@@ -66,11 +80,12 @@ interface nsIContentViewer : nsISupports
   };
 
   /**
-   * Overload PermitUnload method for C++ consumers with no aAction argument.
+   * Overload PermitUnload method for C++ consumers with no aPermitUnloadFlags
+   * argument.
    */
   %{C++
     nsresult PermitUnload(bool* canUnload) {
-      return PermitUnload(mozilla::dom::PermitUnloadAction::Prompt, canUnload);
+      return PermitUnload(ePrompt, canUnload);
     }
   %}
 
@@ -79,7 +94,7 @@ interface nsIContentViewer : nsISupports
    * the document.
    * The result is returned.
    */
-  boolean permitUnload([optional] in PermitUnloadAction aAction);
+  boolean permitUnload([optional] in nsIContentViewer_PermitUnloadAction aAction);
 
   /**
    * Exposes whether we're blocked in a call to permitUnload.
@@ -325,6 +340,7 @@ interface nsIContentViewer : nsISupports
 namespace mozilla {
 namespace dom {
 
+using XPCOMPermitUnloadAction = nsIContentViewer::PermitUnloadAction;
 using PermitUnloadResult = nsIContentViewer::PermitUnloadResult;
 
 } // namespace dom
