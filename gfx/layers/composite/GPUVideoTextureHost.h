@@ -70,6 +70,9 @@ class GPUVideoTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         const bool aPreferCompositorSurface) override;
 
+  void UnbindTextureSource() override;
+  void NotifyNotUsed() override;
+
  protected:
   GPUVideoTextureHost(TextureFlags aFlags,
                       const SurfaceDescriptorGPUVideo& aDescriptor);

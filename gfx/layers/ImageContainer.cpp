@@ -427,16 +427,7 @@ void ImageContainer::EnsureRecycleAllocatorForRDD(
     return;
   }
 
-  bool useRecycleAllocator =
-      StaticPrefs::layers_recycle_allocator_rdd_AtStartup();
-#ifdef XP_MACOSX
-  // Disable RecycleAllocator for RDD on MacOS without WebRender.
-  // Recycling caused rendering artifact on a MacOS PC with OpenGL compositor.
-  if (!gfxVars::UseWebRender()) {
-    useRecycleAllocator = false;
-  }
-#endif
-  if (!useRecycleAllocator) {
+  if (!StaticPrefs::layers_recycle_allocator_rdd_AtStartup()) {
     return;
   }
 
