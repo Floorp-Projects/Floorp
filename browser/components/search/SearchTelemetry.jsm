@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -22,98 +23,7 @@ const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
 const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
-/**
- * Used to identify various parameters used with partner search providers. This
- * consists of the following structure:
- * - {<string>} name
- *     Details for a particular provider with the string name.
- * - {regexp} <string>.regexp
- *     The regular expression used to match the url for the search providers
- *     main page.
- * - {string} <string>.queryParam
- *     The query parameter name that indicates a search has been made.
- * - {string} [<string>.codeParam]
- *     The query parameter name that indicates a search provider's code.
- * - {array} [<string>.codePrefixes]
- *     An array of the possible string prefixes for a codeParam, indicating a
- *     partner search.
- * - {array} [<string>.followonParams]
- *     An array of parameters name that indicates this is a follow-on search.
- * - {array} [<string>.extraAdServersRegexps]
- *     An array of regular expressions used to determine if a link on a search
- *     page might be an advert.
- * - {array} [<object>.followonCookies]
- *     An array of cookie details, which should look like:
- *     - {string} [extraCodeParam]
- *         The query parameter name that indicates an extra search provider's
- *         code.
- *     - {array} [<string>.extraCodePrefixes]
- *         An array of the possible string prefixes for a codeParam, indicating
- *         a partner search.
- *     - {string} host
- *         Host name to which the cookie is linked to.
- *     - {string} name
- *         Name of the cookie to look for that should contain the search
- *         provider's code.
- *     - {string} codeParam
- *         The cookie parameter name that indicates a search provider's code.
- *     - {array} <string>.codePrefixes
- *         An array of the possible string prefixes for a codeParam, indicating
- *         a partner search.
- */
-const SEARCH_PROVIDER_INFO = {
-  google: {
-    searchPageRegexp: /^https:\/\/www\.google\.(?:.+)\/search/,
-    queryParamName: "q",
-    codeParamName: "client",
-    codePrefixes: ["firefox"],
-    followOnParamNames: ["oq", "ved", "ei"],
-    extraAdServersRegexps: [
-      /^https:\/\/www\.google(?:adservices)?\.com\/(?:pagead\/)?aclk/,
-    ],
-  },
-  duckduckgo: {
-    searchPageRegexp: /^https:\/\/duckduckgo\.com\//,
-    queryParamName: "q",
-    codeParamName: "t",
-    codePrefixes: ["ff", "newext"],
-    extraAdServersRegexps: [
-      /^https:\/\/duckduckgo.com\/y\.js?.*ad_provider\=/,
-      /^https:\/\/www\.amazon\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)/,
-    ],
-  },
-  yahoo: {
-    searchPageRegexp: /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
-    queryParamName: "p",
-  },
-  baidu: {
-    searchPageRegexp: /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
-    queryParamName: "wd",
-    codeParamName: "tn",
-    codePrefixes: ["34046034_", "monline_"],
-    followOnParamNames: ["oq"],
-  },
-  bing: {
-    searchPageRegexp: /^https:\/\/www\.bing\.com\/search/,
-    queryParamName: "q",
-    codeParamName: "pc",
-    codePrefixes: ["MOZ", "MZ"],
-    followOnCookies: [
-      {
-        extraCodeParamName: "form",
-        extraCodePrefixes: ["QBRE"],
-        host: "www.bing.com",
-        name: "SRCHS",
-        codeParamName: "PC",
-        codePrefixes: ["MOZ", "MZ"],
-      },
-    ],
-    extraAdServersRegexps: [
-      /^https:\/\/www\.bing\.com\/acli?c?k/,
-      /^https:\/\/www\.bing\.com\/fd\/ls\/GLinkPingPost\.aspx.*acli?c?k/,
-    ],
-  },
-};
+const TELEMETRY_SETTINGS_KEY = "search-telemetry";
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
@@ -129,23 +39,37 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
  * It handles the *in-content:sap* keys of the SEARCH_COUNTS histogram.
  */
 class TelemetryHandler {
+  // Whether or not this class is initialised.
+  _initialized = false;
+
+  // An instance of ContentHandler.
+  _contentHandler;
+
+  // The original provider information, mainly used for tests.
+  _originalProviderInfo = null;
+
+  // The current search provider info.
+  _searchProviderInfo = null;
+
+  // An instance of remote settings that is used to access the provider info.
+  _telemetrySettings;
+
+  // _browserInfoByURL is a map of tracked search urls to objects containing:
+  // * {object} info
+  //   the search provider information associated with the url.
+  // * {WeakSet} browsers
+  //   a weak set of browsers that have the url loaded.
+  // * {integer} count
+  //   a manual count of browsers logged.
+  // We keep a weak set of browsers, in case we miss something on our counts
+  // and cause a memory leak - worst case our map is slightly bigger than it
+  // needs to be.
+  // The manual count is because WeakSet doesn't give us size/length
+  // information, but we want to know when we can clean up our associated
+  // entry.
+  _browserInfoByURL = new Map();
+
   constructor() {
-    // _browserInfoByURL is a map of tracked search urls to objects containing:
-    // * {object} info
-    //   the search provider information associated with the url.
-    // * {WeakSet} browsers
-    //   a weak set of browsers that have the url loaded.
-    // * {integer} count
-    //   a manual count of browsers logged.
-    // We keep a weak set of browsers, in case we miss something on our counts
-    // and cause a memory leak - worst case our map is slightly bigger than it
-    // needs to be.
-    // The manual count is because WeakSet doesn't give us size/length
-    // information, but we want to know when we can clean up our associated
-    // entry.
-    this._browserInfoByURL = new Map();
-    this._initialized = false;
-    this.__searchProviderInfo = null;
     this._contentHandler = new ContentHandler({
       browserInfoByURL: this._browserInfoByURL,
       findBrowserItemForURL: (...args) => this._findBrowserItemForURL(...args),
@@ -159,12 +83,25 @@ class TelemetryHandler {
    * appropriate listeners to the window so that window opening and closing
    * can be tracked.
    */
-  init() {
+  async init() {
     if (this._initialized) {
       return;
     }
 
-    this._contentHandler.init();
+    this._telemetrySettings = RemoteSettings(TELEMETRY_SETTINGS_KEY);
+    let rawProviderInfo = [];
+    try {
+      rawProviderInfo = await this._telemetrySettings.get();
+    } catch (ex) {
+      logConsole.error("Could not get settings:", ex);
+    }
+
+    // Send the provider info to the child handler.
+    this._contentHandler.init(rawProviderInfo);
+    this._originalProviderInfo = rawProviderInfo;
+
+    // Now convert the regexps into
+    this._setSearchProviderInfo(rawProviderInfo);
 
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
       this._registerWindow(win);
@@ -210,20 +147,35 @@ class TelemetryHandler {
    * Test-only function, used to override the provider information, so that
    * unit tests can set it to easy to test values.
    *
-   * @param {object} infoByProvider @see SEARCH_PROVIDER_INFO for type information.
+   * @param {array} providerInfo @see search-telemetry-schema.json for type information.
    */
-  overrideSearchTelemetryForTests(infoByProvider) {
-    if (infoByProvider) {
-      for (let info of Object.values(infoByProvider)) {
-        info.regexp = new RegExp(info.regexp);
+  overrideSearchTelemetryForTests(providerInfo) {
+    let info = providerInfo ? providerInfo : this._originalProviderInfo;
+    this._contentHandler.overrideSearchTelemetryForTests(info);
+    this._setSearchProviderInfo(info);
+  }
+
+  /**
+   * Used to set the local version of the search provider information.
+   * This automatically maps the regexps to RegExp objects so that
+   * we don't have to create a new instance each time.
+   *
+   * @param {array} providerInfo
+   *   A raw array of provider information to set.
+   */
+  _setSearchProviderInfo(providerInfo) {
+    this._searchProviderInfo = providerInfo.map(provider => {
+      let newProvider = {
+        ...provider,
+        searchPageRegexp: new RegExp(provider.searchPageRegexp),
+      };
+      if (provider.extraAdServersRegexps) {
+        newProvider.extraAdServersRegexps = provider.extraAdServersRegexps.map(
+          r => new RegExp(r)
+        );
       }
-      this.__searchProviderInfo = infoByProvider;
-    } else {
-      this.__searchProviderInfo = SEARCH_PROVIDER_INFO;
-    }
-    this._contentHandler.overrideSearchTelemetryForTests(
-      this.__searchProviderInfo
-    );
+      return newProvider;
+    });
   }
 
   reportPageWithAds(info) {
@@ -441,7 +393,7 @@ class TelemetryHandler {
    */
   _getProviderInfoForURL(url, useOnlyExtraAdServers = false) {
     if (useOnlyExtraAdServers) {
-      return Object.entries(this._searchProviderInfo).find(([_, info]) => {
+      return this._searchProviderInfo.find(info => {
         if (info.extraAdServersRegexps) {
           for (let regexp of info.extraAdServersRegexps) {
             if (regexp.test(url)) {
@@ -453,7 +405,7 @@ class TelemetryHandler {
       });
     }
 
-    return Object.entries(this._searchProviderInfo).find(([_, info]) =>
+    return this._searchProviderInfo.find(info =>
       info.searchPageRegexp.test(url)
     );
   }
@@ -467,11 +419,10 @@ class TelemetryHandler {
    *   returns an object of strings for provider, code and type.
    */
   _checkURLForSerpMatch(url) {
-    let info = this._getProviderInfoForURL(url);
-    if (!info) {
+    let searchProviderInfo = this._getProviderInfoForURL(url);
+    if (!searchProviderInfo) {
       return null;
     }
-    let [provider, searchProviderInfo] = info;
     let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
     if (!queries.get(searchProviderInfo.queryParamName)) {
       return null;
@@ -533,7 +484,7 @@ class TelemetryHandler {
         }
       }
     }
-    return { provider, type, code };
+    return { provider: searchProviderInfo.telemetryId, type, code };
   }
 
   /**
@@ -553,17 +504,6 @@ class TelemetryHandler {
     );
     histogram.add(payload);
     logConsole.debug("Counting", payload, "for", url);
-  }
-
-  /**
-   * Returns the current search provider information in use.
-   * @see SEARCH_PROVIDER_INFO
-   */
-  get _searchProviderInfo() {
-    if (!this.__searchProviderInfo) {
-      this.__searchProviderInfo = SEARCH_PROVIDER_INFO;
-    }
-    return this.__searchProviderInfo;
   }
 }
 
@@ -593,12 +533,12 @@ class ContentHandler {
   /**
    * Initializes the content handler. This will also set up the shared data that is
    * shared with the SearchTelemetryChild actor.
+   *
+   * @param {array} providerInfo
+   *  The provider information for the search telemetry to record.
    */
-  init() {
-    Services.ppmm.sharedData.set(
-      "SearchTelemetry:ProviderInfo",
-      SEARCH_PROVIDER_INFO
-    );
+  init(providerInfo) {
+    Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", providerInfo);
 
     Cc["@mozilla.org/network/http-activity-distributor;1"]
       .getService(Ci.nsIHttpActivityDistributor)
@@ -771,11 +711,15 @@ class ContentHandler {
       }
 
       try {
-        Services.telemetry.keyedScalarAdd(SEARCH_AD_CLICKS_SCALAR, info[0], 1);
+        Services.telemetry.keyedScalarAdd(
+          SEARCH_AD_CLICKS_SCALAR,
+          info.telemetryId,
+          1
+        );
         channel._adClickRecorded = true;
         logConsole.debug(
           "Counting ad click in page for",
-          info[0],
+          info.telemetryId,
           originURL,
           URL
         );
