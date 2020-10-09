@@ -159,13 +159,50 @@ We allocate shared memory (shm) by mmap(..., MAP_SHARED,...) as an interface
 between us and wayland compositor. We draw our graphics data to the shm and
 handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 (wl_buffer/wl_surface).
-
 */
 
 #define EVENT_LOOP_DELAY (1000 / 240)
 
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
+
+static mozilla::Mutex* gDelayedCommitLock = nullptr;
+static GList* gDelayedCommits = nullptr;
+
+static void DelayedCommitsEnsureMutext() {
+  if (!gDelayedCommitLock) {
+    gDelayedCommitLock = new mozilla::Mutex("DelayedCommit lock");
+  }
+}
+
+static bool DelayedCommitsCheckAndRemoveSurface(
+    WindowSurfaceWayland* aSurface) {
+  MutexAutoLock lock(*gDelayedCommitLock);
+  GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
+  if (foundCommit) {
+    gDelayedCommits = g_list_delete_link(gDelayedCommits, foundCommit);
+  }
+  return foundCommit != nullptr;
+}
+
+static bool DelayedCommitsCheckAndAddSurface(WindowSurfaceWayland* aSurface) {
+  MutexAutoLock lock(*gDelayedCommitLock);
+  GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
+  if (!foundCommit) {
+    gDelayedCommits = g_list_prepend(gDelayedCommits, aSurface);
+  }
+  return foundCommit == nullptr;
+}
+
+// When a new window is created we may not have a valid wl_surface
+// for drawing (Gtk haven't created it yet). All commits are queued
+// and CommitWaylandBuffer() is called by timer when wl_surface is ready
+// for drawing.
+static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland* aSurface) {
+  if (DelayedCommitsCheckAndRemoveSurface(aSurface)) {
+    aSurface->CommitWaylandBuffer();
+  }
+}
 
 RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
   return mWindowSurfaceWayland->GetWaylandDisplay();
@@ -400,7 +437,6 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mWaylandFullscreenDamage(false),
       mFrameCallback(nullptr),
       mLastCommittedSurface(nullptr),
-      mDelayedCommitHandle(nullptr),
       mLastCommitTime(0),
       mDrawToWaylandBufferDirectly(true),
       mCanSwitchWaylandBuffer(true),
@@ -412,6 +448,7 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     mShmBackupBuffer[i] = nullptr;
   }
+  DelayedCommitsEnsureMutext();
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
@@ -419,12 +456,9 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
     NS_WARNING("Deleted WindowSurfaceWayland with a pending commit!");
   }
 
-  if (mDelayedCommitHandle) {
-    // Delete reference to this to prevent WaylandBufferDelayCommitHandler()
-    // operate on released this. mDelayedCommitHandle itself will
-    // be released at WaylandBufferDelayCommitHandler().
-    *mDelayedCommitHandle = nullptr;
-  }
+  // Delete reference to this to prevent WaylandBufferDelayCommitHandler()
+  // operate on released this.
+  DelayedCommitsCheckAndRemoveSurface(this);
 
   if (mFrameCallback) {
     wl_callback_destroy(mFrameCallback);
@@ -865,23 +899,11 @@ bool WindowSurfaceWayland::CommitImageCacheToWaylandBuffer() {
   return true;
 }
 
-static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland** aSurface) {
-  if (*aSurface) {
-    (*aSurface)->DelayedCommitHandler();
-  } else {
-    // Referenced WindowSurfaceWayland is already deleted.
-    // Do nothing but just release the mDelayedCommitHandle allocated at
-    // WindowSurfaceWayland::CommitWaylandBuffer().
-    free(aSurface);
-  }
-}
-
 void WindowSurfaceWayland::CommitWaylandBuffer() {
   LOGWAYLAND(("WindowSurfaceWayland::CommitWaylandBuffer [%p]\n", (void*)this));
   LOGWAYLAND(
       ("   mDrawToWaylandBufferDirectly = %d\n", mDrawToWaylandBufferDirectly));
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
-  LOGWAYLAND(("   mDelayedCommitHandle = %p\n", mDelayedCommitHandle));
   LOGWAYLAND(("   mFrameCallback = %p\n", mFrameCallback));
   LOGWAYLAND(("   mLastCommittedSurface = %p\n", mLastCommittedSurface));
   LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
@@ -917,16 +939,10 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
     MOZ_ASSERT(!mFrameCallback || waylandSurface != mLastCommittedSurface,
                "Missing wayland surface at frame callback!");
 
-    // Do nothing if there's already mDelayedCommitHandle pending.
-    if (!mDelayedCommitHandle) {
-      mDelayedCommitHandle = static_cast<WindowSurfaceWayland**>(
-          moz_xmalloc(sizeof(*mDelayedCommitHandle)));
-      *mDelayedCommitHandle = this;
-
+    if (DelayedCommitsCheckAndAddSurface(this)) {
       MessageLoop::current()->PostDelayedTask(
           NewRunnableFunction("WaylandBackBufferCommit",
-                              &WaylandBufferDelayCommitHandler,
-                              mDelayedCommitHandle),
+                              &WaylandBufferDelayCommitHandler, this),
           EVENT_LOOP_DELAY);
     }
     return;
@@ -1035,25 +1051,6 @@ void WindowSurfaceWayland::FrameCallbackHandler() {
 
   wl_callback_destroy(mFrameCallback);
   mFrameCallback = nullptr;
-
-  CommitWaylandBuffer();
-}
-
-void WindowSurfaceWayland::DelayedCommitHandler() {
-  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
-  MOZ_ASSERT(mDelayedCommitHandle != nullptr, "Missing mDelayedCommitHandle!");
-
-  LOGWAYLAND(
-      ("WindowSurfaceWayland::DelayedCommitHandler [%p]\n", (void*)this));
-
-  if (!mDelayedCommitHandle) {
-    LOGWAYLAND(("    We're missing mDelayedCommitHandle!\n"));
-    return;
-  }
-
-  *mDelayedCommitHandle = nullptr;
-  free(mDelayedCommitHandle);
-  mDelayedCommitHandle = nullptr;
 
   CommitWaylandBuffer();
 }
