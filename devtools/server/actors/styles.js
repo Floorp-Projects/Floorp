@@ -1560,6 +1560,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return "[StyleRuleActor for " + this.rawRule + "]";
   },
 
+  // eslint-disable-next-line complexity
   form: function() {
     const form = {
       actor: this.actorID,
@@ -1652,13 +1653,29 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       const el = this.pageStyle.selectedElement;
       const style = this.pageStyle.cssLogic.computedStyle;
 
-      // We need to grab CSS from the window, since calling supports() on the
-      // one from the current global will fail due to not being an HTML global.
-      const CSS = this.pageStyle.inspector.targetActor.window.CSS;
+      // Whether the stylesheet is a user-agent stylesheet. This affects the
+      // validity of some properties and property values.
+      const userAgent =
+        this._parentSheet &&
+        !SharedCssLogic.isAuthorStylesheet(this._parentSheet);
+      // Whether the stylesheet is a chrome stylesheet. Ditto.
+      const chrome =
+        this._parentSheet &&
+        this._parentSheet.href &&
+        this._parentSheet.href.startsWith("chrome:");
+      // Whether the document is in quirks mode. This affects whether stuff
+      // like `width: 10` is valid.
+      const quirks =
+        !userAgent && el && el.ownerDocument.compatMode == "BackCompat";
+      const supportsOptions = { userAgent, chrome, quirks };
       form.declarations = declarations.map(decl => {
-        // Use the 1-arg CSS.supports() call so that we also accept !important
-        // in the value.
-        decl.isValid = CSS.supports(`${decl.name}:${decl.value}`);
+        // InspectorUtils.supports only supports the 1-arg version, but that's
+        // what we want to do anyways so that we also accept !important in the
+        // value.
+        decl.isValid = InspectorUtils.supports(
+          `${decl.name}:${decl.value}`,
+          supportsOptions
+        );
         // TODO: convert from Object to Boolean. See Bug 1574471
         decl.isUsed = inactivePropertyHelper.isPropertyUsed(
           el,
@@ -1667,7 +1684,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           decl.name
         );
         // Check property name. All valid CSS properties support "initial" as a value.
-        decl.isNameValid = CSS.supports(decl.name, "initial");
+        decl.isNameValid = InspectorUtils.supports(
+          `${decl.name}:initial`,
+          supportsOptions
+        );
         return decl;
       });
 
