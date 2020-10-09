@@ -559,6 +559,14 @@ public class GeckoViewActivity
         }
     }
 
+    private final IntSetting mDisplayMode = new IntSetting(
+            R.string.key_display_mode, R.integer.display_mode_default) {
+        @Override
+        public void setValue(final GeckoSessionSettings settings, final Integer value) {
+            settings.setDisplayMode(value);
+        }
+    };
+
     private final IntSetting mPreferredColorScheme = new IntSetting(
             R.string.key_preferred_color_scheme, R.integer.preferred_color_scheme_default,
             /* reloadCurrentSession */ true
@@ -938,7 +946,8 @@ public class GeckoViewActivity
                 .userAgentMode(mDesktopMode
                         ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
                         : GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
-                .useTrackingProtection(mTrackingProtection.value());
+                .useTrackingProtection(mTrackingProtection.value())
+                .displayMode(mDisplayMode.value());
 
         if (cookieStoreId != null) {
             settingsBuilder.contextId(cookieStoreId);
