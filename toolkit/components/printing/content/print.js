@@ -468,29 +468,25 @@ var PrintEventHandler = {
     if (
       parseFloat(this.viewSettings.customMargins.marginTop) +
         parseFloat(this.viewSettings.customMargins.marginBottom) >
-      paperHeight
+        paperHeight ||
+      this.viewSettings.customMargins.marginTop < 0 ||
+      this.viewSettings.customMargins.marginBottom < 0
     ) {
       let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginTop = marginTop;
-      settingsToUpdate.marginBottom = marginBottom;
-      if (settingsToUpdate.customMargins) {
-        settingsToUpdate.customMargins.marginTop = marginTop;
-        settingsToUpdate.customMargins.marginBottom = marginBottom;
-      }
+      settingsToUpdate.marginTop = settingsToUpdate.customMarginTop = marginTop;
+      settingsToUpdate.marginBottom = settingsToUpdate.customMarginTop = marginBottom;
     }
 
     if (
       parseFloat(this.viewSettings.customMargins.marginRight) +
         parseFloat(this.viewSettings.customMargins.marginLeft) >
-      paperWidth
+        paperWidth ||
+      this.viewSettings.customMargins.marginLeft < 0 ||
+      this.viewSettings.customMargins.marginRight < 0
     ) {
       let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginLeft = marginLeft;
-      settingsToUpdate.marginRight = marginRight;
-      if (settingsToUpdate.customMargins) {
-        settingsToUpdate.customMargins.marginLeft = marginLeft;
-        settingsToUpdate.customMargins.marginRight = marginRight;
-      }
+      settingsToUpdate.marginLeft = settingsToUpdate.customMarginLeft = marginLeft;
+      settingsToUpdate.marginRight = settingsToUpdate.customMarginRight = marginRight;
     }
 
     return settingsToUpdate;
@@ -782,22 +778,18 @@ var PrintEventHandler = {
       default: {
         let minimum = this.getMarginPresets("minimum", paper);
         return {
-          marginTop: Math.max(
-            minimum.marginTop,
-            this.defaultSettings.marginTop
-          ),
-          marginRight: Math.max(
-            minimum.marginRight,
-            this.defaultSettings.marginRight
-          ),
-          marginBottom: Math.max(
-            minimum.marginBottom,
-            this.defaultSettings.marginBottom
-          ),
-          marginLeft: Math.max(
-            minimum.marginLeft,
-            this.defaultSettings.marginLeft
-          ),
+          marginTop: !isNaN(minimum.marginTop)
+            ? Math.max(minimum.marginTop, this.defaultSettings.marginTop)
+            : this.defaultSettings.marginTop,
+          marginRight: !isNaN(minimum.marginRight)
+            ? Math.max(minimum.marginRight, this.defaultSettings.marginRight)
+            : this.defaultSettings.marginRight,
+          marginBottom: !isNaN(minimum.marginBottom)
+            ? Math.max(minimum.marginBottom, this.defaultSettings.marginBottom)
+            : this.defaultSettings.marginBottom,
+          marginLeft: !isNaN(minimum.marginLeft)
+            ? Math.max(minimum.marginLeft, this.defaultSettings.marginLeft)
+            : this.defaultSettings.marginLeft,
         };
       }
     }
@@ -1218,6 +1210,20 @@ var PrintSettingsViewProxy = {
             this._lastCustomMarginValues[settingName] = newVal;
           }
         }
+        break;
+
+      case "customMarginTop":
+      case "customMarginBottom":
+      case "customMarginLeft":
+      case "customMarginRight":
+        let customMarginName = "margin" + name.substring(12);
+        this.set(
+          target,
+          "customMargins",
+          Object.assign({}, this.get(target, "customMargins"), {
+            [customMarginName]: value,
+          })
+        );
         break;
 
       default:
