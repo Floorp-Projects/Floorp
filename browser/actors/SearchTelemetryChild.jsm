@@ -100,7 +100,7 @@ class SearchTelemetryChild extends JSWindowActorChild {
    */
   _getProviderInfoForUrl(url) {
     return Object.entries(searchProviders.info || []).find(([_, info]) =>
-      info.regexp.test(url)
+      info.searchPageRegexp.test(url)
     );
   }
 
