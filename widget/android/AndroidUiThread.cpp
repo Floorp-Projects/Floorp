@@ -53,9 +53,9 @@ class AndroidUiThread : public nsThread {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(AndroidUiThread, nsThread)
   AndroidUiThread()
-      : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
-                     MakeUnique<mozilla::EventQueue>()),
-                 nsThread::NOT_MAIN_THREAD, 0) {}
+      : nsThread(
+            MakeNotNull<ThreadEventQueue*>(MakeUnique<mozilla::EventQueue>()),
+            nsThread::NOT_MAIN_THREAD, 0) {}
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent,
                     uint32_t aFlags) override;

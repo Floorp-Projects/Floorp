@@ -15,8 +15,8 @@
 #  include "Logging.h"
 #endif
 
-using namespace mozilla;
-using namespace mozilla::a11y;
+namespace mozilla {
+namespace a11y {
 
 // Defines the number of selection add/remove events in the queue when they
 // aren't packed into single selection within event.
@@ -330,3 +330,6 @@ void EventQueue::ProcessEventQueue() {
     if (!mDocument) return;
   }
 }
+
+}  // namespace a11y
+}  // namespace mozilla

@@ -66,9 +66,9 @@ class WorkerThread::Observer final : public nsIThreadObserver {
 };
 
 WorkerThread::WorkerThread(ConstructorKey)
-    : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
-                   MakeUnique<mozilla::EventQueue>()),
-               nsThread::NOT_MAIN_THREAD, kWorkerStackSize),
+    : nsThread(
+          MakeNotNull<ThreadEventQueue*>(MakeUnique<mozilla::EventQueue>()),
+          nsThread::NOT_MAIN_THREAD, kWorkerStackSize),
       mLock("WorkerThread::mLock"),
       mWorkerPrivateCondVar(mLock, "WorkerThread::mWorkerPrivateCondVar"),
       mWorkerPrivate(nullptr),

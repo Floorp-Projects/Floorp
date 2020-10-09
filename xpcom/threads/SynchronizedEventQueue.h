@@ -8,7 +8,7 @@
 #define mozilla_SynchronizedEventQueue_h
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/AbstractEventQueue.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "nsIThreadInternal.h"

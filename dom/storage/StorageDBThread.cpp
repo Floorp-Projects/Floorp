@@ -406,8 +406,7 @@ void StorageDBThread::SetDefaultPriority() {
 
 void StorageDBThread::ThreadFunc(void* aArg) {
   {
-    auto queue =
-        MakeRefPtr<ThreadEventQueue<EventQueue>>(MakeUnique<EventQueue>());
+    auto queue = MakeRefPtr<ThreadEventQueue>(MakeUnique<EventQueue>());
     Unused << nsThreadManager::get().CreateCurrentThread(
         queue, nsThread::NOT_MAIN_THREAD);
   }

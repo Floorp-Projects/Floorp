@@ -32,7 +32,6 @@
 namespace mozilla {
 class CycleCollectedJSContext;
 class EventQueue;
-template <typename>
 class ThreadEventQueue;
 class ThreadEventTarget;
 }  // namespace mozilla
