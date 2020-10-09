@@ -381,6 +381,7 @@ class VirtualenvMixin(object):
 
         virtualenv = [
             sys.executable,
+            '-S',
             venv_py_path,
         ]
         virtualenv_options = c.get('virtualenv_options', [])
