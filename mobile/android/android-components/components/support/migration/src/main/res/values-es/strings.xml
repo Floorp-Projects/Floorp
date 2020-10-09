@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">Actualización completa</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_text">Firefox está actualizado, ¡y mejorado!</string>
 </resources>

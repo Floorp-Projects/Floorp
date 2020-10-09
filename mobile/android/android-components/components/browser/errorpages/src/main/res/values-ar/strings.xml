@@ -186,15 +186,23 @@
 
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ضُبط المتصفّح ليستخدم خادوما وسيطا، لكن لم يوجد الوسيط.</p><ul><li>هل إعدادات الوسيط سليمة؟ تأكد من الإعدادات وأعد المحاولة.</li><li>هل الجهاز متصل بشبكة نشطة؟</li><li>أما زلت تواجه المشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة.</li></ul>]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">مشكلة موقع يحتوي برمجيات خبيثة</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[أُبلِغ عن أن الموقع %1$s موقع هجمات و حُجب بناء على تفضيلات الأمن.]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">مشكلة موقع غير مرغوب فيه</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[أُبلِغ عن أن الموقع %1$s يقدم برمجيات غير مرغوب فيها و حُجب بناء على تفضيلات الأمن.]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">مشكلة موقع ضار</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع خطر محتمل و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">مشكلة موقع مخادع</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع مخادع و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
 </resources>
