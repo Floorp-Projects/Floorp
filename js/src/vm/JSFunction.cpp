@@ -1746,8 +1746,6 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   } else {
     script->relazify(rt);
   }
-
-  realm->scheduleDelazificationForDebugger();
 }
 
 js::GeneratorKind JSFunction::clonedSelfHostedGeneratorKind() const {

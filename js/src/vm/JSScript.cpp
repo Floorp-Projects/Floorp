@@ -4846,8 +4846,6 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
     MOZ_ASSERT(!data);
   }
 
-  cx->realm()->scheduleDelazificationForDebugger();
-
   return lazy;
 }
 
