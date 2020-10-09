@@ -75,7 +75,7 @@ def setup_virtualenv(target, python_bin=None):
             f.extractall(here)
 
         print('Creating new virtual environment')
-        cmd_args = [sys.executable, script_path, target]
+        cmd_args = [sys.executable, '-S', script_path, target]
 
         if python_bin:
             cmd_args.extend(['-p', python_bin])
