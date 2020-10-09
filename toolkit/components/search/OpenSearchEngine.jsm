@@ -362,7 +362,6 @@ class OpenSearchEngine extends SearchEngine {
     // specified
     var method = element.getAttribute("method") || "GET";
     var template = element.getAttribute("template");
-    var resultDomain = element.getAttribute("resultdomain");
 
     let rels = [];
     if (element.hasAttribute("rel")) {
@@ -378,7 +377,7 @@ class OpenSearchEngine extends SearchEngine {
     }
 
     try {
-      var url = new EngineURL(type, method, template, resultDomain);
+      var url = new EngineURL(type, method, template);
     } catch (ex) {
       throw Components.Exception(
         "_parseURL: failed to add " + template + " as a URL",
