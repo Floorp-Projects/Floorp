@@ -9,8 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="73dp"
-    android:layout_marginTop="12dp"
-    android:layout_marginEnd="12dp">
+    android:layout_marginTop="12dp">
 
     <TextView
         android:id="@+id/webAddressHeader"
@@ -38,7 +37,7 @@
         android:paddingBottom="@dimen/saved_logins_detail_menu_vertical_padding"
         android:textColor="?primaryText"
         android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="@id/webAddressHeader"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/webAddressHeader"
         app:layout_constraintTop_toBottomOf="@id/webAddressHeader"
         app:layout_constraintVertical_chainStyle="packed"
@@ -46,8 +45,8 @@
 
     <ImageButton
         android:id="@+id/openWebAddress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/saved_login_open_site"
         app:layout_constraintBottom_toBottomOf="@id/webAddressText"
@@ -91,8 +90,8 @@
 
     <ImageButton
         android:id="@+id/copyUsername"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/saved_login_copy_username"
         app:layout_constraintBottom_toBottomOf="@id/usernameText"
@@ -138,9 +137,8 @@
 
     <ImageButton
         android:id="@+id/revealPasswordButton"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginEnd="36dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="@null"
         android:contentDescription="@string/saved_login_reveal_password"
         app:layout_constraintBottom_toBottomOf="@id/passwordText"
@@ -151,8 +149,8 @@
 
     <ImageButton
         android:id="@+id/copyPassword"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/saved_logins_copy_password"
         app:layout_constraintBottom_toBottomOf="@id/passwordText"
