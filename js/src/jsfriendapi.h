@@ -849,9 +849,6 @@ extern JS_FRIEND_API void SetJitExceptionHandler(JitExceptionHandler handler);
 
 extern JS_FRIEND_API bool ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 
-extern JS_FRIEND_API JSObject* ConvertArgsToArray(JSContext* cx,
-                                                  const JS::CallArgs& args);
-
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
  public:
   explicit AutoAssertNoContentJS(JSContext* cx);
