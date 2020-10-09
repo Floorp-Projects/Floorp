@@ -41,46 +41,82 @@ following are valid:
     $ ./mach try fuzzy --help
 
 
-Auto Completion
----------------
+Tab Completion
+--------------
 
-A `bash completion`_ script is bundled with mach, it can be used with either ``bash`` or ``zsh``.
+There are commands built-in to ``mach`` that can generate a fast tab completion
+script for various shells. Supported shells are currently ``bash``, ``zsh`` and
+``fish``. These generated scripts will slowly become out of date over time, so
+you may want to create a cron task to periodically re-generate them.
+
+See below for installation instructions:
 
 Bash
 ~~~~
 
-Add the following to your ``~/.bashrc``, ``~/.bash_profile`` or equivalent:
+.. code-block:: shell
+
+    $ mach mach-completion bash -f _mach
+    $ sudo mv _mach /etc/bash_completion.d
+
+Bash (homebrew)
+~~~~~~~~~~~~~~~
 
 .. code-block:: shell
 
-    source <srcdir>/python/mach/bash-completion.sh
-
-.. tip::
-
-    Windows users using the default shell bundled with mozilla-build should source the completion
-    script from ``~/.bash_profile`` (it may need to be created first).
+    $ mach mach-completion bash -f $(brew --prefix)/etc/bash_completion.d/mach.bash-completion
 
 Zsh
 ~~~
 
-Add this to your ``~/.zshrc`` or equivalent:
+.. code-block:: shell
+
+    $ mkdir ~/.zfunc
+    $ mach mach-completion zsh -f ~/.zfunc/_mach
+
+then edit ~/.zshrc and add:
 
 .. code-block:: shell
 
-    autoload -U bashcompinit && bashcompinit
-    source <srcdir>/python/mach/bash-completion.sh
-
-The ``compinit`` function also needs to be loaded, but if using a framework (like ``oh-my-zsh``),
-this will often be done for you. So if you see ``command not found: compdef``, you'll need to modify
-the above instructions to:
-
-.. code-block:: shell
-
+    fpath += ~/.zfunc
     autoload -U compinit && compinit
-    autoload -U bashcompinit && bashcompinit
-    source <srcdir>/python/mach/bash-completion.sh
 
-Don't forget to substitute ``<srcdir>`` with the path to your checkout.
+You can use any directory of your choosing.
+
+Zsh (oh-my-zsh)
+~~~~~~~~~~~~~~~
+
+.. code-block:: shell
+
+    $ mkdir $ZSH/plugins/mach
+    $ mach mach-completion zsh -f $ZSH/plugins/mach/_mach
+
+then edit ~/.zshrc and add 'mach' to your enabled plugins:
+
+.. code-block:: shell
+
+    plugins(mach ...)
+
+Zsh (prezto)
+~~~~~~~~~~~~
+
+.. code-block:: shell
+
+    $ mach mach-completion zsh -f ~/.zprezto/modules/completion/external/src/_mach
+
+Fish
+~~~~
+
+.. code-block:: shell
+
+    $ ./mach mach-completion fish -f ~/.config/fish/completions/mach.fish
+
+Fish (homebrew)
+~~~~~~~~~~~~~~~
+
+.. code-block:: shell
+
+    $ ./mach mach-completion fish -f (brew --prefix)/share/fish/vendor_completions.d/mach.fish
 
 
 User Settings
