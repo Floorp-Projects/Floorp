@@ -61,8 +61,6 @@ class EventQueueInternal {
       const MutexAutoLock& aProofOfLock,
       mozilla::TimeDuration* aLastEventDelay = nullptr);
 
-  void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
-
   // Returns true if the queue is empty. Implies !HasReadyEvent().
   bool IsEmpty(const MutexAutoLock& aProofOfLock);
 
