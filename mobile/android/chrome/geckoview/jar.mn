@@ -17,7 +17,6 @@ geckoview.jar:
   content/GeckoViewMediaControlChild.js
   content/GeckoViewPromptChild.js
   content/GeckoViewScrollChild.js
-  content/GeckoViewSettingsChild.js
   content/GeckoViewSelectionActionChild.js
   content/SessionStateAggregator.js
 

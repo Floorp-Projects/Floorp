@@ -40,6 +40,12 @@ const USER_AGENT_MODE_MOBILE = 0;
 const USER_AGENT_MODE_DESKTOP = 1;
 const USER_AGENT_MODE_VR = 2;
 
+// This needs to match GeckoSessionSettings.java
+const DISPLAY_MODE_BROWSER = 0;
+const DISPLAY_MODE_MINIMAL_UI = 1;
+const DISPLAY_MODE_STANDALONE = 2;
+const DISPLAY_MODE_FULLSCREEN = 3;
+
 // Handles GeckoSession settings.
 class GeckoViewSettings extends GeckoViewModule {
   static get useMultiprocess() {
@@ -60,13 +66,13 @@ class GeckoViewSettings extends GeckoViewModule {
 
     switch (aEvent) {
       case "GeckoView:GetUserAgent": {
-        aCallback.onSuccess(this.userAgent);
+        aCallback.onSuccess(this.customUserAgent ?? MOBILE_USER_AGENT);
       }
     }
   }
 
   onSettingsUpdate() {
-    const settings = this.settings;
+    const { settings } = this;
     debug`onSettingsUpdate: ${settings}`;
 
     this.displayMode = settings.displayMode;
@@ -75,9 +81,18 @@ class GeckoViewSettings extends GeckoViewModule {
     this.userAgentOverride = settings.userAgentOverride;
     this.sessionContextId = settings.sessionContextId;
     this.suspendMediaWhenInactive = settings.suspendMediaWhenInactive;
+    this.allowJavascript = settings.allowJavascript;
+    this.useTrackingProtection = !!settings.useTrackingProtection;
+
+    // When the page is loading from the main process (e.g. from an extension
+    // page) we won't be able to query the actor here.
+    this.getActor("GeckoViewSettings")?.sendAsyncMessage(
+      "SettingsUpdate",
+      settings
+    );
   }
 
-  get userAgent() {
+  get customUserAgent() {
     if (this.userAgentOverride !== null) {
       return this.userAgentOverride;
     }
@@ -87,7 +102,11 @@ class GeckoViewSettings extends GeckoViewModule {
     if (this.userAgentMode === USER_AGENT_MODE_VR) {
       return VR_USER_AGENT;
     }
-    return MOBILE_USER_AGENT;
+    return null;
+  }
+
+  set useTrackingProtection(aUse) {
+    this.browsingContext.useTrackingProtection = aUse;
   }
 
   get userAgentMode() {
@@ -99,6 +118,11 @@ class GeckoViewSettings extends GeckoViewModule {
       return;
     }
     this._userAgentMode = aMode;
+    this.browsingContext.customUserAgent = this.customUserAgent;
+  }
+
+  get browsingContext() {
+    return this.browser.browsingContext.top;
   }
 
   get userAgentOverride() {
@@ -106,7 +130,11 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   set userAgentOverride(aUserAgent) {
+    if (aUserAgent === this.userAgentOverride) {
+      return;
+    }
     this._userAgentOverride = aUserAgent;
+    this.browsingContext.customUserAgent = this.customUserAgent;
   }
 
   get suspendMediaWhenInactive() {
@@ -119,12 +147,24 @@ class GeckoViewSettings extends GeckoViewModule {
     }
   }
 
-  get displayMode() {
-    return this.window.docShell.displayMode;
+  displayModeSettingToValue(aSetting) {
+    switch (aSetting) {
+      case DISPLAY_MODE_BROWSER:
+        return "browser";
+      case DISPLAY_MODE_MINIMAL_UI:
+        return "minimal-ui";
+      case DISPLAY_MODE_STANDALONE:
+        return "standalone";
+      case DISPLAY_MODE_FULLSCREEN:
+        return "fullscreen";
+      default:
+        warn`Invalid displayMode value ${aSetting}.`;
+        return "browser";
+    }
   }
 
   set displayMode(aMode) {
-    this.window.docShell.displayMode = aMode;
+    this.browsingContext.displayMode = this.displayModeSettingToValue(aMode);
   }
 
   set sessionContextId(aAttribute) {
