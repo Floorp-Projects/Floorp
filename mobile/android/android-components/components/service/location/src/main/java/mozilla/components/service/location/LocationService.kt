@@ -41,5 +41,17 @@ interface LocationService {
             override suspend fun fetchRegion(readFromCache: Boolean): Region? = null
             override fun hasRegionCached(): Boolean = false
         }
+
+        /**
+         * Creates a default [LocationService] implementation that always returns the "XX" region.
+         *
+         * The advantage of using the default implementation over the dummy implementations is that
+         * code may stop retrying fetching a region if a region was returned from the service
+         * instead of `null` which indicates a failure.
+         */
+        fun default() = object : LocationService {
+            override suspend fun fetchRegion(readFromCache: Boolean): Region? = Region("XX", "None")
+            override fun hasRegionCached(): Boolean = true
+        }
     }
 }

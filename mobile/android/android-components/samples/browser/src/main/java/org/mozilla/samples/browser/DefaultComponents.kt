@@ -130,17 +130,6 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 
-    val locationService by lazy {
-        // Just a dummy provider here. In a production app we may want to use MozillaLocationService.
-        object : LocationService {
-            override suspend fun fetchRegion(readFromCache: Boolean): LocationService.Region? {
-                return LocationService.Region("US", "The United States of America")
-            }
-
-            override fun hasRegionCached(): Boolean = true
-        }
-    }
-
     val store by lazy {
         BrowserStore(middleware = listOf(
             MediaMiddleware(applicationContext, MediaService::class.java),
@@ -150,7 +139,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             UndoMiddleware(::sessionManagerLookup),
             RegionMiddleware(
                 applicationContext,
-                locationService
+                LocationService.default()
             ),
             SearchMiddleware(applicationContext)
         ) + EngineMiddleware.create(engine, ::findSessionById))
