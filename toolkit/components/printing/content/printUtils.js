@@ -106,12 +106,11 @@ var PrintUtils = {
     // _enterPrintPreview will not have been invoked to set the last used
     // printer name. For the reasons outlined at that hack, we want that set
     // here too.
-    let lastUsedPrinterName = this._getLastUsedPrinterName();
-    if (!lastUsedPrinterName) {
+    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+    if (!PSSVC.lastUsedPrinterName) {
       if (printSettings.printerName) {
-        let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-          Ci.nsIPrintSettingsService
-        );
         PSSVC.savePrintSettingsToPrefs(
           printSettings,
           false,
@@ -134,20 +133,6 @@ var PrintUtils = {
       return false;
     }
     return true;
-  },
-
-  _getLastUsedPrinterName() {
-    try {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-        Ci.nsIPrintSettingsService
-      );
-
-      return PSSVC.lastUsedPrinterName;
-    } catch (e) {
-      Cu.reportError(e);
-    }
-
-    return null;
   },
 
   getPreviewBrowser(sourceBrowser) {
@@ -729,7 +714,11 @@ var PrintUtils = {
     }
     this._currentPPBrowser = ppBrowser;
     let mm = ppBrowser.messageManager;
-    let lastUsedPrinterName = this._getLastUsedPrinterName();
+
+    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+    let lastUsedPrinterName = PSSVC.lastUsedPrinterName;
     if (!lastUsedPrinterName) {
       // We "pass" print settings over to the content process by saving them to
       // prefs (yuck!). It is important to try to avoid saving to prefs without
@@ -740,9 +729,6 @@ var PrintUtils = {
       // too.
       let settings = this.getPrintSettings();
       if (settings.printerName) {
-        let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-          Ci.nsIPrintSettingsService
-        );
         PSSVC.savePrintSettingsToPrefs(
           settings,
           false,

@@ -24,6 +24,9 @@ const INPUT_DELAY_MS = 500;
 const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
 const ourBrowser = window.docShell.chromeEventHandler;
+const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+  Ci.nsIPrintSettingsService
+);
 
 var logger = (function() {
   const getMaxLogLevel = () =>
@@ -577,9 +580,6 @@ var PrintEventHandler = {
   },
 
   saveSettingsToPrefs(flags) {
-    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-      Ci.nsIPrintSettingsService
-    );
     PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
   },
 
@@ -696,7 +696,7 @@ var PrintEventHandler = {
     }
 
     const fallbackPaperList = await printerList.fallbackPaperList;
-    const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
+    const lastUsedPrinterName = PSSVC.lastUsedPrinterName;
     const defaultPrinterName = printerList.systemDefaultPrinterName;
     const printersByName = {};
 
@@ -947,10 +947,6 @@ var PrintSettingsViewProxy = {
       this.availablePaperSizes = printerInfo.availablePaperSizes;
       return printerInfo;
     }
-
-    const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-      Ci.nsIPrintSettingsService
-    );
 
     // Await the async printer data.
     if (printerInfo.printer) {

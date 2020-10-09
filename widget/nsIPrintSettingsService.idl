@@ -45,9 +45,11 @@ interface nsIPrintSettingsService : nsISupports
   readonly attribute nsIPrintSettings newPrintSettings;
 
   /**
-   * The name of the last printer used. Note that this may no longer be a valid
-   * printer anymore, the caller should check and fall back to the system
-   * default printer list otherwise.
+   * The name of the last printer used. Note that this may not be set, or may
+   * no longer be a valid printer. The caller is responsible for checking and
+   * falling back to some other printer (such as the system default printer).
+   *
+   * XXX: make it [infallible] when AString supports that (bug 1491187).
    */
   readonly attribute AString lastUsedPrinterName;
 
