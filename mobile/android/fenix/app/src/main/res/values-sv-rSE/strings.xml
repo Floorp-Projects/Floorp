@@ -350,6 +350,21 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Aviseringar</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Anpassad tilläggssamling</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Avbryt</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Samlingsnamn</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Samlingsägare (användar-ID)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Tilläggssamling ändrad. Avslutar applikationen för att tillämpa ändringar…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synkronisera nu</string>
@@ -653,6 +668,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Ta bort %1$d poster</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Idag</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Igår</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Senaste 24 timmarna</string>
     <!-- Text for the header that groups the history the past 7 days -->

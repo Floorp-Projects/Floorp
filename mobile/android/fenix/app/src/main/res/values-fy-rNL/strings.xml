@@ -347,6 +347,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notifikaasjes</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Oanpaste add-onkolleksje</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Annulearje</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Namme kolleksje</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Eigener kolleksje (brûkers-ID)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Add-onkolleksje oanpast. Tapassing wurdt ôfsluten om wizigingen ta te passen…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">No syngronisearje</string>
@@ -643,6 +657,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d items fuortsmite</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Hjoed</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Juster</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Lêste 24 oer</string>
     <!-- Text for the header that groups the history the past 7 days -->

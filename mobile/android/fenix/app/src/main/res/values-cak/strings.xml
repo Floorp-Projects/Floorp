@@ -356,6 +356,14 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Taq rutzijol</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ÜTZ</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Tiq\'at</string>
+
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Rub\'i\' mol</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Tixim wakami</string>
@@ -662,6 +670,10 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Keyuj %1$d ch\'akulal</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Wakami</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Iwir</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Ruk\'isib\'äl 24 ramaj</string>
     <!-- Text for the header that groups the history the past 7 days -->

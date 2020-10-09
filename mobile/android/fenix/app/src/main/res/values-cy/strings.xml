@@ -345,6 +345,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Hysbysiadau</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Casgliad Ychwanegion Cyfaddas</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Iawn</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Diddymu</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Enw’r casgliad</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Perchennog y casgliad (ID Defnyddiwr)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Mae’r casgliad Ychwanegion wedi’i addasu. Yn gadael y rhaglen i osod y newidiadau…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Cydweddu nawr</string>
@@ -642,6 +656,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Dileu %1$d eitem</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Heddiw</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Ddoe</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 awr ddiwethaf</string>
     <!-- Text for the header that groups the history the past 7 days -->

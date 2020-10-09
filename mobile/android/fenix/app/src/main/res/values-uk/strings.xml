@@ -350,6 +350,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Сповіщення</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Власна збірка додатків</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Скасувати</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Назва збірки</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Власник збірки (ID користувача)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Збірку додатків змінено. Вихід з програми для застосування змін…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронізувати</string>
@@ -651,6 +665,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Видалити %1$d елементів</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Сьогодні</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Вчора</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Останні 24 години</string>
     <!-- Text for the header that groups the history the past 7 days -->

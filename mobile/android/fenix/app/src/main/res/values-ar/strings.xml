@@ -345,6 +345,17 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">التنبيهات</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">حسنا</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">ألغِ</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">اسم التجميعة</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">مالك التجميعة (معرّف المستخدم)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">تعدّلت تجميعة الإضافات. يُنهي التطبيق لإجراء التغييرات…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">زامِن الآن</string>
@@ -639,6 +650,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">احذف العناصر (عددها %1$d)</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">اليوم</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">الأمس</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">آخر 24 ساعة</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -1115,6 +1130,8 @@
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_privacy_notice_description">صمّمنا لك %s لتقدر على التحكّم فيما تُشاركه عبر الشبكة، وما تُشاركه معنا.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">اقرأ تنويه الخصوصية</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">أغلِق</string>
 

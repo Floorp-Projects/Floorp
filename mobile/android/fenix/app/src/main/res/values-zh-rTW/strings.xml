@@ -351,6 +351,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">通知</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">自訂附加元件收藏集</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">確定</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">取消</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">收藏集名稱</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">收藏集擁有者（使用者 ID）</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">已更改收藏集內容。將結束應用程式讓變更生效…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>
@@ -653,6 +667,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">刪除 %1$d 個項目</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">今天</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">昨天</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 小時以內</string>
     <!-- Text for the header that groups the history the past 7 days -->

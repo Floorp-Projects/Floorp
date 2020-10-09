@@ -341,6 +341,18 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">התרעות</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">אוסף תוספות מותאם אישית</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">אישור</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">ביטול</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">שם האוסף</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">הבעלים של האוסף (מזהה משתמש)</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">סנכרון כעת</string>
@@ -635,6 +647,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">מחיקת %1$d פריטים</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">היום</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">אתמול</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 השעות האחרונות</string>
     <!-- Text for the header that groups the history the past 7 days -->

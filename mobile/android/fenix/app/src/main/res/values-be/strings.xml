@@ -339,6 +339,14 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Абвесткі</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Уласная калекцыя дадаткаў</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Назва калекцыі</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Уладальнік калекцыі (ID карыстальніка)</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Сінхранізаваць</string>
@@ -642,6 +650,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Выдаліць %1$d элементаў</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Сёння</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Учора</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Апошнія 24 гадзіны</string>
     <!-- Text for the header that groups the history the past 7 days -->

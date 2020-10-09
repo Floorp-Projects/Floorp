@@ -347,6 +347,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Értesítések</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Egyéni kiegészítőgyűjtemény</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Mégse</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Gyűjtemény neve</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Gyűjtemény tulajdonosa (felhasználói azonosító)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">A kiegészítőgyűjtemény módosítva. Kilépés az alkalmazásból a változások érvényesítéséhez…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Szinkronizálás most</string>
@@ -648,6 +662,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d elem törlése</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Ma</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Tegnap</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Elmúlt 24 óra</string>
     <!-- Text for the header that groups the history the past 7 days -->

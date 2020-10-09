@@ -322,6 +322,8 @@
     <string name="preferences_search_synced_tabs">Buscar llingüetes sincronizaes</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Axustes de la cuenta</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autocompletar les URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir los enllaces nes aplicaciones</string>
     <!-- Preference for open download with an external download manager app -->
@@ -331,6 +333,9 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Avisos</string>
+
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Encaboxar</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -588,6 +593,10 @@
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">Elementos esbillaos: %1$d</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Güei</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Ayeri</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Les últimes 24 hores</string>
     <!-- Text for the header that groups the history the past 7 days -->

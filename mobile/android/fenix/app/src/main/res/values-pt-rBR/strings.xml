@@ -345,6 +345,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificações</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Coleção personalizada de extensões</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Cancelar</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Nome da coleção</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Proprietário da coleção (ID de usuário)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Coleção de extensões modificada. Saindo do aplicativo para aplicar as alterações…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar agora</string>
@@ -643,6 +657,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Excluir %1$d itens</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Hoje</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Ontem</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Últimas 24 horas</string>
     <!-- Text for the header that groups the history the past 7 days -->
