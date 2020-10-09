@@ -9,15 +9,7 @@
 interface nsIMacAttributionService : nsISupports
 {
   /**
-   * Used by the Attributions system to get the download referrer.
-   *
-   * @param aFilePath A path to the file to get the quarantine data from.
-   * @returns referrerUrl
-   */
-  AString getReferrerUrl(in AUTF8String aFilePath);
-
-  /**
-   * Used by the tests.
+   * Set the referrer URL on a given path.
    *
    * @param aFilePath A path to the file to set the quarantine data on.
    * @param aReferrer A url to set as the referrer for the download.
