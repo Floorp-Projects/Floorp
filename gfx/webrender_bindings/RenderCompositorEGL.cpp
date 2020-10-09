@@ -59,9 +59,7 @@ EGLSurface RenderCompositorEGL::CreateEGLSurface() {
 
 RenderCompositorEGL::RenderCompositorEGL(
     RefPtr<widget::CompositorWidget> aWidget)
-    : RenderCompositor(std::move(aWidget)),
-      mEGLSurface(EGL_NO_SURFACE),
-      mBufferAge(0) {}
+    : RenderCompositor(std::move(aWidget)), mEGLSurface(EGL_NO_SURFACE) {}
 
 RenderCompositorEGL::~RenderCompositorEGL() {
 #ifdef MOZ_WIDGET_ANDROID
@@ -90,9 +88,6 @@ bool RenderCompositorEGL::BeginFrame() {
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
   gl()->MakeCurrent();  // DestroyUnused can change the current context!
 #endif
-
-  // sets 0 if buffer_age is not supported
-  mBufferAge = gl::GLContextEGL::Cast(gl())->GetBufferAge();
 
   return true;
 }
@@ -238,7 +233,7 @@ bool RenderCompositorEGL::UsePartialPresent() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
 }
 
-bool RenderCompositorEGL::RequestFullRender() { return mBufferAge == 0; }
+bool RenderCompositorEGL::RequestFullRender() { return false; }
 
 uint32_t RenderCompositorEGL::GetMaxPartialPresentRects() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects();
@@ -248,7 +243,9 @@ bool RenderCompositorEGL::ShouldDrawPreviousPartialPresentRegions() {
   return true;
 }
 
-size_t RenderCompositorEGL::GetBufferAge() const { return mBufferAge; }
+size_t RenderCompositorEGL::GetBufferAge() const {
+  return gl::GLContextEGL::Cast(gl())->GetBufferAge();
+}
 
 void RenderCompositorEGL::SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
                                                 size_t aNumRects) {

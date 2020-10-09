@@ -44,7 +44,6 @@ class RenderCompositorOGL : public RenderCompositor {
  protected:
   RefPtr<gl::GLContext> mGL;
   bool mIsEGL;
-  EGLint mBufferAge;
 };
 
 }  // namespace wr
