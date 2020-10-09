@@ -50,4 +50,9 @@ interface nsIBrowserChild : nsISupports
    * nsIWebNavigation navigation finished in the child.
    */
   void notifyNavigationFinished();
+
+  /**
+   * Id of the chrome window the tab is within.
+   */
+  readonly attribute uint64_t chromeOuterWindowID;
 };

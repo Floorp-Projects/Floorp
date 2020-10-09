@@ -25,12 +25,17 @@ class LightweightThemeChild extends JSWindowActorChild {
   }
 
   _getChromeOuterWindowID() {
-    if (this.docShell.messageManager) {
-      return this.docShell.messageManager.chromeOuterWindowID;
-    }
+    try {
+      // Getting the browserChild throws an exception when it is null.
+      let browserChild = this.docShell.browserChild;
+      if (browserChild) {
+        return browserChild.chromeOuterWindowID;
+      }
+    } catch (ex) {}
+
     // We don't have a message manager, so presumable we're running in a sidebar
     // in the parent process.
-    return this.contentWindow.top.docShell.outerWindowID;
+    return this.contentWindow.top.docShell?.outerWindowID;
   }
 
   /**

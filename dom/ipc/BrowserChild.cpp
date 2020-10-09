@@ -2993,6 +2993,12 @@ void BrowserChild::SetTabId(const TabId& aTabId) {
   NestedBrowserChildMap()[mUniqueId] = this;
 }
 
+NS_IMETHODIMP
+BrowserChild::GetChromeOuterWindowID(uint64_t* aId) {
+  *aId = ChromeOuterWindowID();
+  return NS_OK;
+}
+
 bool BrowserChild::DoSendBlockingMessage(
     const nsAString& aMessage, StructuredCloneData& aData,
     nsTArray<StructuredCloneData>* aRetVal) {
@@ -4022,13 +4028,6 @@ already_AddRefed<nsIEventTarget>
 BrowserChildMessageManager::GetTabEventTarget() {
   nsCOMPtr<nsIEventTarget> target = EventTargetFor(TaskCategory::Other);
   return target.forget();
-}
-
-uint64_t BrowserChildMessageManager::ChromeOuterWindowID() {
-  if (!mBrowserChild) {
-    return 0;
-  }
-  return mBrowserChild->ChromeOuterWindowID();
 }
 
 nsresult BrowserChildMessageManager::Dispatch(

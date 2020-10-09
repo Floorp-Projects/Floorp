@@ -62,7 +62,6 @@ class InProcessBrowserChildMessageManager final
     return do_AddRef(mDocShell);
   }
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
-  virtual uint64_t ChromeOuterWindowID() override;
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
 
