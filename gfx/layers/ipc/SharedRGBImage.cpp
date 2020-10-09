@@ -55,27 +55,41 @@ SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
   MOZ_COUNT_CTOR(SharedRGBImage);
 }
 
+SharedRGBImage::SharedRGBImage(TextureClientRecycleAllocator* aRecycleAllocator)
+    : Image(nullptr, ImageFormat::SHARED_RGB),
+      mRecycleAllocator(aRecycleAllocator) {
+  MOZ_COUNT_CTOR(SharedRGBImage);
+}
+
 SharedRGBImage::~SharedRGBImage() {
   MOZ_COUNT_DTOR(SharedRGBImage);
   NS_ReleaseOnMainThread("SharedRGBImage::mSourceSurface",
                          mSourceSurface.forget());
 }
 
-bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
+TextureClientRecycleAllocator* SharedRGBImage::RecycleAllocator() {
   static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
+
+  if (!mRecycleAllocator && mCompositable) {
+    if (!mCompositable->HasTextureClientRecycler()) {
+      // Initialize TextureClientRecycler
+      mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
+          MAX_POOLED_VIDEO_COUNT);
+    }
+    mRecycleAllocator = mCompositable->GetTextureClientRecycler();
+  }
+  return mRecycleAllocator;
+}
+
+bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   mSize = aSize;
 
-  if (!mCompositable->HasTextureClientRecycler()) {
-    // Initialize TextureClientRecycler
-    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
-        MAX_POOLED_VIDEO_COUNT);
-  }
-
+  TextureFlags flags =
+      mCompositable ? mCompositable->GetTextureFlags() : TextureFlags::DEFAULT;
   {
-    TextureClientForRawBufferAccessAllocationHelper helper(
-        aFormat, aSize, mCompositable->GetTextureFlags());
-    mTextureClient =
-        mCompositable->GetTextureClientRecycler()->CreateOrRecycle(helper);
+    TextureClientForRawBufferAccessAllocationHelper helper(aFormat, aSize,
+                                                           flags);
+    mTextureClient = RecycleAllocator()->CreateOrRecycle(helper);
   }
 
   return !!mTextureClient;
