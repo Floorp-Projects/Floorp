@@ -572,18 +572,6 @@ struct AllCompartments : public CompartmentFilter {
   virtual bool match(JS::Compartment* c) const override { return true; }
 };
 
-struct ContentCompartmentsOnly : public CompartmentFilter {
-  virtual bool match(JS::Compartment* c) const override {
-    return !IsSystemCompartment(c);
-  }
-};
-
-struct ChromeCompartmentsOnly : public CompartmentFilter {
-  virtual bool match(JS::Compartment* c) const override {
-    return IsSystemCompartment(c);
-  }
-};
-
 struct SingleCompartment : public CompartmentFilter {
   JS::Compartment* ours;
   explicit SingleCompartment(JS::Compartment* c) : ours(c) {}
