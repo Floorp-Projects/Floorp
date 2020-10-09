@@ -72,7 +72,17 @@ class UAOverrides {
       ) {
         for (const header of details.requestHeaders) {
           if (header.name.toLowerCase() === "user-agent") {
-            header.value = uaTransformer(header.value);
+            // Don't override the UA if we're on a mobile device that has the
+            // "Request Desktop Site" mode enabled. The UA for the desktop mode
+            // is set inside Gecko with a simple string replace, so we can use
+            // that as a check, see https://searchfox.org/mozilla-central/rev/89d33e1c3b0a57a9377b4815c2f4b58d933b7c32/mobile/android/chrome/geckoview/GeckoViewSettingsChild.js#23-28
+            let isMobileWithDesktopMode =
+              override.currentPlatform == "android" &&
+              header.value.includes("X11; Linux x86_64");
+
+            if (!isMobileWithDesktopMode) {
+              header.value = uaTransformer(header.value);
+            }
           }
         }
       }
@@ -177,6 +187,7 @@ class UAOverrides {
     for (const override of this._availableOverrides) {
       if (platformMatches.includes(override.platform)) {
         override.availableOnPlatform = true;
+        override.currentPlatform = platformInfo.os;
 
         // Note whether the user is actively in the override's experiment (if any).
         override.experimentActive = false;
