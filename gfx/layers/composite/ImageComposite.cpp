@@ -122,9 +122,15 @@ int ImageComposite::ChooseImageIndex() {
     // `compositionTime`.
     uint32_t imageIndex = 0;
     while (imageIndex + 1 < mImages.Length() &&
+           mImages[imageIndex + 1].mTextureHost->IsValid() &&
            GetBiasedTime(mImages[imageIndex + 1].mTimeStamp) <=
                compositionTime) {
       ++imageIndex;
+    }
+
+    if (!mImages[imageIndex].mTextureHost->IsValid()) {
+      // Still not ready to be shown.
+      return -1;
     }
 
     bool wasVisibleAtPreviousComposition =

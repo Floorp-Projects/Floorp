@@ -632,7 +632,6 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
     return;
   }
   auto it = mRenderTextures.find(aExternalImageId);
-  MOZ_ASSERT(it != mRenderTextures.end());
   if (it == mRenderTextures.end()) {
     return;
   }
