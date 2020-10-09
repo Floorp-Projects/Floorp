@@ -23,6 +23,7 @@ struct ProgramImpl {
   virtual size_t interpolants_size() const = 0;
   virtual VertexShaderImpl* get_vertex_shader() = 0;
   virtual FragmentShaderImpl* get_fragment_shader() = 0;
+  virtual const char* get_name() const = 0;
 };
 
 typedef ProgramImpl* (*ProgramLoader)();
