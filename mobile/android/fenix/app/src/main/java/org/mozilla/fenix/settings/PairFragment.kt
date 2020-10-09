@@ -37,6 +37,15 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { pairingUrl ->
+                    // By the time we get a scan result, we may not be attached to the context anymore.
+                    // See https://github.com/mozilla-mobile/fenix/issues/15812
+                    if (context == null) {
+                        findNavController().popBackStack(
+                            R.id.turnOnSyncFragment,
+                            false
+                        )
+                        return@QrFeature
+                    }
                     requireComponents.services.accountsAuthFeature.beginPairingAuthentication(
                         requireContext(),
                         pairingUrl
@@ -53,7 +62,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                         @Suppress("Deprecation")
                         vibrator.vibrate(VIBRATE_LENGTH)
                     }
-                    findNavController(this@PairFragment).popBackStack(
+                    findNavController().popBackStack(
                         R.id.turnOnSyncFragment,
                         false
                     )
