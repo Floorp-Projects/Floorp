@@ -9,6 +9,10 @@ const { AppConstants } = ChromeUtils.import(
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+add_task(async () => {
+  await setupStubs();
+});
+
 /**
  * Test validation of attribution codes,
  * to make sure we reject bad ones and accept good ones.

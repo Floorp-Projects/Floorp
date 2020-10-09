@@ -341,14 +341,14 @@ function spoofPartnerInfo() {
 }
 
 async function spoofAttributionData() {
-  if (gIsWindows) {
+  if (gIsWindows || gIsMac) {
     AttributionCode._clearCache();
     await AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
   }
 }
 
 function cleanupAttributionData() {
-  if (gIsWindows) {
+  if (gIsWindows || gIsMac) {
     AttributionCode.attributionFile.remove(false);
     AttributionCode._clearCache();
   }
@@ -490,7 +490,7 @@ function checkSettingsSection(data) {
     Assert.equal(typeof data.settings.defaultPrivateSearchEngineData, "object");
   }
 
-  if (gIsWindows && AppConstants.MOZ_BUILD_APP == "browser") {
+  if ((gIsWindows || gIsMac) && AppConstants.MOZ_BUILD_APP == "browser") {
     Assert.equal(typeof data.settings.attribution, "object");
     Assert.equal(data.settings.attribution.source, "google.com");
   }
