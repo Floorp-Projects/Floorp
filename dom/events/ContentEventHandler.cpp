@@ -283,7 +283,7 @@ nsresult ContentEventHandler::InitRootContent(Selection* aNormalSelection) {
   // selection range still keeps storing the nodes.  If the active element of
   // the deactive window is <input> or <textarea>, we can compute the
   // selection root from them.
-  nsINode* startNode = range->GetStartContainer();
+  nsCOMPtr<nsINode> startNode = range->GetStartContainer();
   nsINode* endNode = range->GetEndContainer();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
@@ -297,7 +297,8 @@ nsresult ContentEventHandler::InitRootContent(Selection* aNormalSelection) {
   NS_ASSERTION(startNode->GetComposedDoc() == endNode->GetComposedDoc(),
                "firstNormalSelectionRange crosses the document boundary");
 
-  mRootContent = startNode->GetSelectionRootContent(mDocument->GetPresShell());
+  RefPtr<PresShell> presShell = mDocument->GetPresShell();
+  mRootContent = startNode->GetSelectionRootContent(presShell);
   if (NS_WARN_IF(!mRootContent)) {
     return NS_ERROR_FAILURE;
   }

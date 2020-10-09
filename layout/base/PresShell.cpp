@@ -8666,11 +8666,14 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
     }
 
     if (aEvent->mClass == eCompositionEventClass) {
+      RefPtr<nsPresContext> presContext = GetPresContext();
+      RefPtr<BrowserParent> browserParent = BrowserParent::GetFocused();
       IMEStateManager::DispatchCompositionEvent(
-          eventTarget, GetPresContext(), BrowserParent::GetFocused(),
-          aEvent->AsCompositionEvent(), aEventStatus, eventCBPtr);
+          eventTarget, presContext, browserParent, aEvent->AsCompositionEvent(),
+          aEventStatus, eventCBPtr);
     } else {
-      EventDispatcher::Dispatch(eventTarget, GetPresContext(), aEvent, nullptr,
+      RefPtr<nsPresContext> presContext = GetPresContext();
+      EventDispatcher::Dispatch(eventTarget, presContext, aEvent, nullptr,
                                 aEventStatus, eventCBPtr);
     }
   }

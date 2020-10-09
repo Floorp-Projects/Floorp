@@ -88,8 +88,8 @@ nsresult SetDocumentStateCommand::DoCommandParam(
       return rv;
     }
     case Command::SetDocumentUseCSS: {
-      nsresult rv =
-          aTextEditor.AsHTMLEditor()->SetIsCSSEnabled(aBoolParam.value());
+      nsresult rv = MOZ_KnownLive(aTextEditor.AsHTMLEditor())
+                        ->SetIsCSSEnabled(aBoolParam.value());
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::SetIsCSSEnabled() failed");
       return rv;
