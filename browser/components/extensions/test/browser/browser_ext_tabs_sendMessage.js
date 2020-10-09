@@ -360,14 +360,17 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
         "http://example.com/mochitest/browser/browser/components/extensions/test/browser/file_dummy.html";
       let tab = await browser.tabs.create({ url });
 
-      try {
-        browser.tabs.sendMessage(tab.id, "message");
-        browser.tabs.sendMessage(tab.id + 100, "message");
-      } catch (e) {
-        browser.test.fail(
-          "no exception should be raised on tabs.sendMessage to nonexistent tabs"
-        );
-      }
+      await browser.test.assertRejects(
+        browser.tabs.sendMessage(tab.id, "message"),
+        /Could not establish connection. Receiving end does not exist./,
+        "exception should be raised on tabs.sendMessage to nonexistent tab"
+      );
+
+      await browser.test.assertRejects(
+        browser.tabs.sendMessage(tab.id + 100, "message"),
+        /Could not establish connection. Receiving end does not exist./,
+        "exception should be raised on tabs.sendMessage to nonexistent tab"
+      );
 
       await browser.tabs.remove(tab.id);
 

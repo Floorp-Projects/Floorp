@@ -306,7 +306,7 @@ const ProxyMessenger = {
   getTopBrowsingContextId(tabId) {
     // If a tab alredy has content scripts, no need to check private browsing.
     let tab = apiManager.global.tabTracker.getTab(tabId, null);
-    if ((tab.browser || tab).getAttribute("pending") === "true") {
+    if (!tab || (tab.browser || tab).getAttribute("pending") === "true") {
       // No receivers in discarded tabs, so bail early to keep the browser lazy.
       throw new ExtensionError(ERROR_NO_RECEIVERS);
     }
