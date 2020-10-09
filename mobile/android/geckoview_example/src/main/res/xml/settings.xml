@@ -42,5 +42,12 @@
         app:key="@string/key_allow_extensions_in_private_browsing"
         app:title="Run extensions in private tabs"
         app:defaultValue="@bool/allow_extensions_in_private_browsing_default"/>
+    <ListPreference
+        app:key="@string/key_display_mode"
+        app:title="Display Mode"
+        app:summary="%s"
+        app:entries="@array/pref_display_mode_names"
+        app:entryValues="@array/pref_display_mode_values"
+        app:defaultValue="@integer/display_mode_default"/>
 
 </PreferenceScreen>
