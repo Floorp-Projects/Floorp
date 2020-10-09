@@ -21,8 +21,8 @@ namespace js {
 
 class WasmNamespaceObject;
 
-extern bool InitTypedObjectNamespace(
-    JSContext* cx, Handle<WasmNamespaceObject*> namespaceObject);
+extern bool InitTypedObjectSlots(JSContext* cx,
+                                 Handle<WasmNamespaceObject*> namespaceObject);
 
 /* The prototype for typed objects. */
 class TypedProto : public NativeObject {
@@ -119,7 +119,7 @@ class TypeDescr : public NativeObject {
         getFixedSlot(Slot::TraceList).toPrivate());
   }
 
-  void initInstance(const JSRuntime* rt, uint8_t* mem);
+  void initInstance(uint8_t* mem);
   void traceInstance(JSTracer* trace, uint8_t* mem);
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -153,26 +153,14 @@ class ScalarTypeDescr : public SimpleTypeDescr {
 };
 
 // Enumerates the cases of ScalarTypeDescr::Type which have unique C
-// representation and which are representable as JS Number values. In
-// particular, omits Uint8Clamped since it is just a Uint8.
-#define JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(MACRO_) \
-  MACRO_(Scalar::Int8, int8_t, int8)                             \
-  MACRO_(Scalar::Uint8, uint8_t, uint8)                          \
-  MACRO_(Scalar::Int16, int16_t, int16)                          \
-  MACRO_(Scalar::Uint16, uint16_t, uint16)                       \
-  MACRO_(Scalar::Int32, int32_t, int32)                          \
-  MACRO_(Scalar::Uint32, uint32_t, uint32)                       \
-  MACRO_(Scalar::Float32, float, float32)                        \
-  MACRO_(Scalar::Float64, double, float64)
-
-// Must be in same order as the enum ScalarTypeDescr::Type:
-#define JS_FOR_EACH_SCALAR_NUMBER_TYPE_REPR(MACRO_)        \
-  JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(MACRO_) \
-  MACRO_(Scalar::Uint8Clamped, uint8_t, uint8Clamped)
+// representation and which are representable as JS Number values.
+#define JS_FOR_EACH_SCALAR_NUMBER_TYPE_REPR(MACRO_)                         \
+  MACRO_(Scalar::Int32, int32_t, int32, WasmNamespaceObject::Int32Desc)     \
+  MACRO_(Scalar::Float32, float, float32, WasmNamespaceObject::Float32Desc) \
+  MACRO_(Scalar::Float64, double, float64, WasmNamespaceObject::Float64Desc)
 
 #define JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(MACRO_) \
-  MACRO_(Scalar::BigInt64, int64_t, bigint64)       \
-  MACRO_(Scalar::BigUint64, uint64_t, biguint64)
+  MACRO_(Scalar::BigInt64, int64_t, bigint64, WasmNamespaceObject::Int64Desc)
 
 // Must be in same order as the enum ScalarTypeDescr::Type:
 #define JS_FOR_EACH_SCALAR_TYPE_REPR(MACRO_)  \
@@ -180,10 +168,8 @@ class ScalarTypeDescr : public SimpleTypeDescr {
   JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(MACRO_)
 
 enum class ReferenceType {
-  TYPE_ANY,
   TYPE_OBJECT,
   TYPE_WASM_ANYREF,
-  TYPE_STRING
 };
 
 // Type for reference type constructors like `Any`, `String`, and
@@ -195,7 +181,7 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
   using Type = ReferenceType;
   static const char* typeName(Type type);
 
-  static const int32_t TYPE_MAX = int32_t(ReferenceType::TYPE_STRING) + 1;
+  static const int32_t TYPE_MAX = int32_t(ReferenceType::TYPE_WASM_ANYREF) + 1;
   static const TypeKind Kind = TypeKind::Reference;
   static const JSClass class_;
   static uint32_t size(Type t);
@@ -213,10 +199,10 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
 // TODO/AnyRef-boxing: With boxed immediates and strings, GCPtrObject may not be
 // appropriate.
 #define JS_FOR_EACH_REFERENCE_TYPE_REPR(MACRO_)                    \
-  MACRO_(ReferenceType::TYPE_ANY, GCPtrValue, Any)                 \
-  MACRO_(ReferenceType::TYPE_WASM_ANYREF, GCPtrObject, WasmAnyRef) \
-  MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object)          \
-  MACRO_(ReferenceType::TYPE_STRING, GCPtrString, string)
+  MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object,          \
+         WasmNamespaceObject::ObjectDesc)                          \
+  MACRO_(ReferenceType::TYPE_WASM_ANYREF, GCPtrObject, WasmAnyRef, \
+         WasmNamespaceObject::WasmAnyRefDesc)
 
 class ArrayTypeDescr;
 
