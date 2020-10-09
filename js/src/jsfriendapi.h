@@ -121,8 +121,6 @@ namespace js {
 // Release-assert the compartment contains exactly one realm.
 extern JS_FRIEND_API void AssertCompartmentHasSingleRealm(
     JS::Compartment* comp);
-
-extern JS_FRIEND_API JS::Realm* GetScriptRealm(JSScript* script);
 } /* namespace js */
 
 extern JS_FRIEND_API bool JS_ScriptHasMutedErrors(JSScript* script);
