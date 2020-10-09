@@ -56,6 +56,11 @@ class IMEStateManager {
     if (sInstalledMenuKeyboardListener) {
       return nullptr;
     }
+    // If we know focused browser parent, use it for making any events related
+    // to composition go to same content process.
+    if (sFocusedIMEBrowserParent) {
+      return sFocusedIMEBrowserParent;
+    }
     return BrowserParent::GetFocused();
   }
 
