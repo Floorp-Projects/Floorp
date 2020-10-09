@@ -34,7 +34,7 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
 
 RenderCompositorOGL::RenderCompositorOGL(
     RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)), mGL(aGL), mBufferAge(0) {
+    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
   MOZ_ASSERT(mGL);
 
   mIsEGL = aGL->GetContextType() == mozilla::gl::GLContextType::EGL;
@@ -56,11 +56,6 @@ bool RenderCompositorOGL::BeginFrame() {
   }
 
   mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
-
-  if (mIsEGL) {
-    // sets 0 if buffer_age is not supported
-    mBufferAge = gl::GLContextEGL::Cast(gl())->GetBufferAge();
-  }
 
   return true;
 }
@@ -112,9 +107,7 @@ uint32_t RenderCompositorOGL::GetMaxPartialPresentRects() {
   return mIsEGL ? gfx::gfxVars::WebRenderMaxPartialPresentRects() : 0;
 }
 
-bool RenderCompositorOGL::RequestFullRender() {
-  return mIsEGL && (mBufferAge == 0);
-}
+bool RenderCompositorOGL::RequestFullRender() { return false; }
 
 bool RenderCompositorOGL::UsePartialPresent() {
   return mIsEGL && gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
@@ -126,7 +119,7 @@ bool RenderCompositorOGL::ShouldDrawPreviousPartialPresentRegions() {
 
 size_t RenderCompositorOGL::GetBufferAge() const {
   if (mIsEGL) {
-    return mBufferAge;
+    return gl::GLContextEGL::Cast(gl())->GetBufferAge();
   }
   return 0;
 }
