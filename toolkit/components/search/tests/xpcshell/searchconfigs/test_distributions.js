@@ -699,10 +699,20 @@ function hasEnginesFirst(engines, expectedEngines) {
   }
 }
 
-const engineSelector = new SearchEngineSelector();
+engineSelector = new SearchEngineSelector();
+
+AddonTestUtils.init(GLOBAL_SCOPE);
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+
+  await maybeSetupConfig();
 });
 
 add_task(async function test_expected_distribution_engines() {
