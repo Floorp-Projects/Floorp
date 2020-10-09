@@ -116,13 +116,6 @@ extern JS_FRIEND_API void JS_TraceObjectGroupCycleCollectorChildren(
 
 extern JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
 
-namespace js {
-
-// Release-assert the compartment contains exactly one realm.
-extern JS_FRIEND_API void AssertCompartmentHasSingleRealm(
-    JS::Compartment* comp);
-} /* namespace js */
-
 extern JS_FRIEND_API bool JS_ScriptHasMutedErrors(JSScript* script);
 
 extern JS_FRIEND_API JSObject* JS_CloneObject(JSContext* cx,
