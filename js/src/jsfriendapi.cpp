@@ -825,8 +825,6 @@ AutoAssertNoContentJS::~AutoAssertNoContentJS() {
 
 JS_FRIEND_API void js::EnableCodeCoverage() { js::coverage::EnableLCov(); }
 
-JS_FRIEND_API bool js::SystemZoneAvailable(JSContext* cx) { return true; }
-
 JS_FRIEND_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
   if (!object->is<ScriptSourceObject>()) {
     return UndefinedValue();

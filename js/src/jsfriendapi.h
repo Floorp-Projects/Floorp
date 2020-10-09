@@ -862,10 +862,6 @@ class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
   bool prevAllowContentJS_;
 };
 
-// Returns true if the system zone is available (i.e., if no cooperative
-// contexts are using it now).
-extern JS_FRIEND_API bool SystemZoneAvailable(JSContext* cx);
-
 /**
  * This function only reports GC heap memory,
  * and not malloc allocated memory associated with GC things.
