@@ -23,6 +23,7 @@
 #include "jit/Bailouts.h"  // js::jit::FinishBailoutToBaseline, js::jit::Bailout,
                            // js::jit::InvalidationBailout
 
+#include "jit/JitFrames.h"    // HandleException
 #include "jit/VMFunctions.h"  // Rest of js::jit::* functions.
 
 #include "js/Conversions.h"      // JS::ToInt32
@@ -46,29 +47,30 @@ namespace jit {
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)
 #endif
 
-#define ABIFUNCTION_LIST(_)                         \
-  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)            \
-  _(js::ArgumentsObject::finishForIonPure)          \
-  _(js::ArrayShiftMoveElements)                     \
-  _(js::ecmaAtan2)                                  \
-  _(js::ecmaHypot)                                  \
-  _(js::ecmaPow)                                    \
-  _(js::hypot3)                                     \
-  _(js::hypot4)                                     \
-  _(js::irregexp::CaseInsensitiveCompareNonUnicode) \
-  _(js::irregexp::CaseInsensitiveCompareUnicode)    \
-  _(js::irregexp::GrowBacktrackStack)               \
-  _(js::jit::AssumeUnreachable)                     \
-  _(js::jit::Bailout)                               \
-  _(js::jit::FinishBailoutToBaseline)               \
-  _(js::jit::InitBaselineFrameForOsr)               \
-  _(js::jit::InvalidationBailout)                   \
-  _(js::jit::Printf0)                               \
-  _(js::jit::Printf1)                               \
-  _(js::NumberMod)                                  \
-  _(js::powi)                                       \
-  _(js::RegExpInstanceOptimizableRaw)               \
-  _(js::RegExpPrototypeOptimizableRaw)
+#define ABIFUNCTION_LIST(_)                                 \
+  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
+  _(js::ArgumentsObject::finishForIonPure)                  \
+  _(js::ArrayShiftMoveElements)                             \
+  _(js::ecmaAtan2)                                          \
+  _(js::ecmaHypot)                                          \
+  _(js::ecmaPow)                                            \
+  _(js::hypot3)                                             \
+  _(js::hypot4)                                             \
+  _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
+  _(js::irregexp::CaseInsensitiveCompareUnicode)            \
+  _(js::irregexp::GrowBacktrackStack)                       \
+  _(js::jit::AssumeUnreachable)                             \
+  _(js::jit::Bailout)                                       \
+  _(js::jit::FinishBailoutToBaseline)                       \
+  _(js::jit::HandleException)                               \
+  _(js::jit::InitBaselineFrameForOsr)                       \
+  _(js::jit::InvalidationBailout)                           \
+  _(js::jit::Printf0)                                       \
+  _(js::jit::Printf1)                                       \
+  _(js::NumberMod)                                          \
+  _(js::powi)                                               \
+  _(js::RegExpInstanceOptimizableRaw)                       \
+  _(js::RegExpPrototypeOptimizableRaw)                      \
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
@@ -76,7 +78,8 @@ namespace jit {
 // is not overloaded, you should prefer adding the function to
 // ABIFUNCTION_LIST instead. This list must be sorted with the name of the C++
 // function.
-#define ABIFUNCTION_AND_TYPE_LIST(_) _(JS::ToInt32, int32_t (*)(double))
+#define ABIFUNCTION_AND_TYPE_LIST(_) \
+  _(JS::ToInt32, int32_t (*)(double))
 
 // GCC warns when the signature does not have matching attributes (for example
 // MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
