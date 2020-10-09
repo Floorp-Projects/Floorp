@@ -50,6 +50,13 @@ namespace jit {
 
 // List of all ABI functions to be used with callWithABI. Each entry stores
 // the fully qualified name of the C++ function. This list must be sorted.
+#if JS_GC_PROBES
+#  define ABIFUNCTION_JS_GC_PROBES_LIST(_) \
+    _(js::jit::TraceCreateObject)
+#else
+#  define ABIFUNCTION_JS_GC_PROBES_LIST(_)
+#endif
+
 #ifdef WASM_CODEGEN_DEBUG
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_) \
     _(js::wasm::PrintF32)                        \
@@ -62,6 +69,7 @@ namespace jit {
 #endif
 
 #define ABIFUNCTION_LIST(_)                                 \
+  ABIFUNCTION_JS_GC_PROBES_LIST(_)                          \
   ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
   _(js::ArgumentsObject::finishForIonPure)                  \
   _(js::ArrayShiftMoveElements)                             \
@@ -76,6 +84,10 @@ namespace jit {
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
   _(js::irregexp::CaseInsensitiveCompareUnicode)            \
   _(js::irregexp::GrowBacktrackStack)                       \
+  _(js::jit::AllocateAndInitTypedArrayBuffer)               \
+  _(js::jit::AllocateBigIntNoGC)                            \
+  _(js::jit::AllocateFatInlineString)                       \
+  _(js::jit::AllocateString)                                \
   _(js::jit::AssertValidBigIntPtr)                          \
   _(js::jit::AssertValidObjectOrNullPtr)                    \
   _(js::jit::AssertValidObjectPtr)                          \
@@ -84,6 +96,7 @@ namespace jit {
   _(js::jit::AssertValidValue)                              \
   _(js::jit::AssumeUnreachable)                             \
   _(js::jit::Bailout)                                       \
+  _(js::jit::CreateMatchResultFallbackFunc)                 \
   _(js::jit::FinishBailoutToBaseline)                       \
   _(js::jit::HandleException)                               \
   _(js::jit::InitBaselineFrameForOsr)                       \
