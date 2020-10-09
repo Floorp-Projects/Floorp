@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SelfHostingDefines.h"
+#include "TypedObjectConstants.h"
 
 // Assertions and debug printing, defined here instead of in the header above
 // to make `assert` invisible to C++.

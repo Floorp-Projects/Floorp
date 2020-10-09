@@ -22,7 +22,6 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
 
 UNIFIED_SOURCES += [
     'AsmJS.cpp',
-    'TypedObject.cpp',
     'WasmBaselineCompile.cpp',
     'WasmBuiltins.cpp',
     'WasmCode.cpp',

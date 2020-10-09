@@ -313,6 +313,7 @@ UNIFIED_SOURCES += [
     'builtin/String.cpp',
     'builtin/Symbol.cpp',
     'builtin/TestingFunctions.cpp',
+    'builtin/TypedObject.cpp',
     'builtin/WeakMapObject.cpp',
     'builtin/WeakRefObject.cpp',
     'builtin/WeakSetObject.cpp',
@@ -536,7 +537,7 @@ FINAL_LIBRARY = 'js'
 
 selfhosted_inputs = [
     '../public/friend/ErrorNumbers.msg',
-    'builtin/TypedArrayConstants.h',
+    'builtin/TypedObjectConstants.h',
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',
     'builtin/Array.js',
@@ -562,6 +563,7 @@ selfhosted_inputs = [
     'builtin/Set.js',
     'builtin/Sorting.js',
     'builtin/TypedArray.js',
+    'builtin/TypedObject.js',
     'builtin/WeakMap.js',
     'builtin/WeakSet.js'
 ] + ([

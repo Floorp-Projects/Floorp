@@ -30,6 +30,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
+#include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/BaselineCodeGen.h"

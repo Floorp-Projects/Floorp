@@ -1292,7 +1292,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     }
     obj = &no->as<TypedObject>();
     Rooted<TypeDescr*> td(cx, &obj->typeDescr());
-    if (td->kind() != TypeKind::Struct) {
+    if (td->kind() != type::Struct) {
       return nullptr;
     }
     typeDescr = &td->as<StructTypeDescr>();
