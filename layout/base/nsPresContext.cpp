@@ -1542,7 +1542,8 @@ void nsPresContext::PostRebuildAllStyleDataEvent(
 }
 
 void nsPresContext::MediaFeatureValuesChangedAllDocuments(
-    const MediaFeatureChange& aChange) {
+    const MediaFeatureChange& aChange,
+    RecurseIntoInProcessSubDocuments aRecurseSubDocuments) {
   // Handle the media feature value change in this document.
   MediaFeatureValuesChanged(aChange);
 
@@ -1550,14 +1551,17 @@ void nsPresContext::MediaFeatureValuesChangedAllDocuments(
   // document is using.
   mDocument->ImageTracker()->MediaFeatureValuesChangedAllDocuments(aChange);
 
-  // And then into any subdocuments.
-  auto recurse = [&aChange](dom::Document& aSubDoc) {
-    if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-      pc->MediaFeatureValuesChangedAllDocuments(aChange);
-    }
-    return CallState::Continue;
-  };
-  mDocument->EnumerateSubDocuments(recurse);
+  if (aRecurseSubDocuments == RecurseIntoInProcessSubDocuments::Yes) {
+    // And then into any subdocuments.
+    auto recurse = [&aChange, aRecurseSubDocuments](dom::Document& aSubDoc) {
+      if (nsPresContext* pc = aSubDoc.GetPresContext()) {
+        pc->MediaFeatureValuesChangedAllDocuments(aChange,
+                                                  aRecurseSubDocuments);
+      }
+      return CallState::Continue;
+    };
+    mDocument->EnumerateSubDocuments(recurse);
+  }
 }
 
 void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
