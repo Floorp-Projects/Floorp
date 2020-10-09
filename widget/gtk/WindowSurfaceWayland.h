@@ -161,7 +161,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // If we fail (wayland compositor is busy,
   // wl_surface is not created yet) we queue the painting
   // and we send it to wayland compositor in FrameCallbackHandler()/
-  // DelayedCommitHandler/CommitWaylandBuffer().
+  // CommitWaylandBuffer().
   already_AddRefed<gfx::DrawTarget> Lock(
       const LayoutDeviceIntRegion& aRegion) override;
   void Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
@@ -170,12 +170,6 @@ class WindowSurfaceWayland : public WindowSurface {
   // time to send wl_buffer to display. It's no-op if there's no
   // queued commits.
   void FrameCallbackHandler();
-
-  // When a new window is created we may not have a valid wl_surface
-  // for drawing (Gtk haven't created it yet). All commits are queued
-  // and DelayedCommitHandler() is called by timer when wl_surface is ready
-  // for drawing.
-  void DelayedCommitHandler();
 
   // Try to commit all queued drawings to Wayland compositor. This is usually
   // called from other routines but can be used to explicitly flush
@@ -249,17 +243,14 @@ class WindowSurfaceWayland : public WindowSurface {
   wl_callback* mFrameCallback;
   wl_surface* mLastCommittedSurface;
 
-  // Registered reference to pending DelayedCommitHandler() call.
-  WindowSurfaceWayland** mDelayedCommitHandle;
-
   // Cached drawings. If we can't get WaylandBuffer (wl_buffer) at
   // WindowSurfaceWayland::Lock() we direct gecko rendering to
   // mImageSurface.
   // If we can't get WaylandBuffer at WindowSurfaceWayland::Commit()
   // time, mImageSurface is moved to mDelayedImageCommits which
   // holds all cached drawings.
-  // mDelayedImageCommits can be drawn by FrameCallbackHandler(),
-  // DelayedCommitHandler() or when WaylandBuffer is detached.
+  // mDelayedImageCommits can be drawn by FrameCallbackHandler()
+  // or when WaylandBuffer is detached.
   RefPtr<gfxImageSurface> mImageSurface;
   AutoTArray<WindowImageSurface, 30> mDelayedImageCommits;
 
@@ -282,8 +273,8 @@ class WindowSurfaceWayland : public WindowSurface {
   // We can't send WaylandBuffer (wl_buffer) to compositor when gecko
   // is rendering into it (i.e. between WindowSurfaceWayland::Lock() /
   // WindowSurfaceWayland::Commit()).
-  // Thus we use mBufferCommitAllowed to disable commit by callbacks
-  // (FrameCallbackHandler(), DelayedCommitHandler())
+  // Thus we use mBufferCommitAllowed to disable commit by
+  // CommitWaylandBuffer().
   bool mBufferCommitAllowed;
 
   // We need to clear WaylandBuffer when entire transparent window is repainted.
