@@ -67,14 +67,14 @@ StatusBarEntry::StatusBarEntry(Element* aMenu) : mMenu(aMenu), mInitted(false) {
   mIconData = {/* cbSize */ sizeof(NOTIFYICONDATA),
                /* hWnd */ 0,
                /* uID */ 2,
-               /* uFlags */ NIF_ICON | NIF_MESSAGE | NIF_TIP,
+               /* uFlags */ NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP,
                /* uCallbackMessage */ WM_USER,
                /* hIcon */ 0,
                /* szTip */ L"",  // This is updated in Init()
                /* dwState */ 0,
                /* dwStateMask */ 0,
                /* szInfo */ L"",
-               /* uVersion */ {NOTIFYICON_VERSION},
+               /* uVersion */ {NOTIFYICON_VERSION_4},
                /* szInfoTitle */ L"",
                /* dwInfoFlags */ 0};
   MOZ_ASSERT(mMenu);
@@ -187,7 +187,8 @@ nsresult StatusBarEntry::OnComplete() {
 }
 
 LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
-  if (msg == WM_USER && (lp == WM_LBUTTONUP || lp == WM_RBUTTONUP)) {
+  if (msg == WM_USER &&
+      (LOWORD(lp) == WM_LBUTTONUP || LOWORD(lp) == WM_RBUTTONUP)) {
     nsMenuFrame* menu = do_QueryFrame(mMenu->GetPrimaryFrame());
     if (!menu) {
       return TRUE;
@@ -216,10 +217,8 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     // focuses any window in the parent process).
     ::SetForegroundWindow(win);
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    POINT pt;
-    ::GetCursorPos(&pt);
-    pm->ShowPopup(popupFrame->GetContent(), nullptr, EmptyString(), pt.x, pt.y,
-                  false, false, true, nullptr);
+    pm->ShowPopupAtScreen(popupFrame->GetContent(), GET_X_LPARAM(wp),
+                          GET_Y_LPARAM(wp), false, nullptr);
   }
 
   return DefWindowProc(hWnd, msg, wp, lp);
