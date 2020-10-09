@@ -663,12 +663,6 @@ class OutlineTypedObject : public TypedObject {
   static OutlineTypedObject* createZeroed(JSContext* cx, HandleTypeDescr descr,
                                           gc::InitialHeap heap);
 
-  // Creates a typedObj that aliases the memory pointed at by `owner`
-  // at the given offset. The typedObj will be a handle iff type is a
-  // handle and a typed object otherwise.
-  static OutlineTypedObject* createDerived(JSContext* cx, HandleTypeDescr type,
-                                           Handle<TypedObject*> typedContents,
-                                           uint32_t offset);
  private:
   // Use this method when `buffer` is the owner of the memory.
   void attach(ArrayBufferObject& buffer, uint32_t offset);
@@ -719,14 +713,6 @@ class InlineTypedObject : public TypedObject {
   static InlineTypedObject* create(JSContext* cx, HandleTypeDescr descr,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 };
-
-/*
- * Usage: NewDerivedTypedObject(typeObj, owner, offset)
- *
- * Constructs a new, unattached instance of `Handle`.
- */
-MOZ_MUST_USE bool NewDerivedTypedObject(JSContext* cx, unsigned argc,
-                                        Value* vp);
 
 /*
  * Usage: ObjectIsTypeDescr(obj)
