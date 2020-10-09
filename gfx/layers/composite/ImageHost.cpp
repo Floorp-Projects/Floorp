@@ -96,6 +96,7 @@ void ImageHost::SetCurrentTextureHost(TextureHost* aTexture) {
   }
 
   bool swapTextureSources = !!mCurrentTextureHost && !!mCurrentTextureSource &&
+                            mCurrentTextureHost->IsValid() &&
                             mCurrentTextureHost->HasIntermediateBuffer();
 
   if (swapTextureSources) {

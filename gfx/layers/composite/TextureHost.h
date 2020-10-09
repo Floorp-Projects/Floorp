@@ -487,6 +487,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   virtual void UnbindTextureSource();
 
+  virtual bool IsValid() { return true; }
+
   /**
    * Is called before compositing if the shared data has changed since last
    * composition.

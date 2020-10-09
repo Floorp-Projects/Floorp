@@ -49,7 +49,7 @@ WebRenderTextureHost::WebRenderTextureHost(
 
   MOZ_COUNT_CTOR(WebRenderTextureHost);
 
-  mWrappedTextureHost->EnsureRenderTexture(Some(aExternalImageId));
+  mExternalImageId = Some(aExternalImageId);
 }
 
 WebRenderTextureHost::~WebRenderTextureHost() {
@@ -57,9 +57,14 @@ WebRenderTextureHost::~WebRenderTextureHost() {
 }
 
 wr::ExternalImageId WebRenderTextureHost::GetExternalImageKey() {
+  if (IsValid()) {
+    mWrappedTextureHost->EnsureRenderTexture(mExternalImageId);
+  }
   MOZ_ASSERT(mWrappedTextureHost->mExternalImageId.isSome());
   return mWrappedTextureHost->mExternalImageId.ref();
 }
+
+bool WebRenderTextureHost::IsValid() { return mWrappedTextureHost->IsValid(); }
 
 bool WebRenderTextureHost::Lock() {
   MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
