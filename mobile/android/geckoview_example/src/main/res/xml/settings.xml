@@ -49,5 +49,9 @@
         app:entries="@array/pref_display_mode_names"
         app:entryValues="@array/pref_display_mode_values"
         app:defaultValue="@integer/display_mode_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_javascript_enabled"
+        app:title="Javascript Enabled"
+        app:defaultValue="@bool/javascript_enabled_default"/>
 
 </PreferenceScreen>
