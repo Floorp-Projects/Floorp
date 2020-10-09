@@ -159,7 +159,7 @@ class GeckoViewContentChild extends GeckoViewActorChild {
         const onResize = function() {
           gotResize = true;
           if (dwu.isMozAfterPaintPending) {
-            contentWindow.addEventListener(
+            contentWindow.windowRoot.addEventListener(
               "MozAfterPaint",
               () => zoomToFocusedInput(),
               { capture: true, once: true }
