@@ -186,25 +186,6 @@ InProcessBrowserChildMessageManager::GetTabEventTarget() {
   return target.forget();
 }
 
-uint64_t InProcessBrowserChildMessageManager::ChromeOuterWindowID() {
-  if (!mDocShell) {
-    return 0;
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  nsresult rv = mDocShell->GetInProcessRootTreeItem(getter_AddRefs(root));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return 0;
-  }
-
-  nsPIDOMWindowOuter* topWin = root->GetWindow();
-  if (!topWin) {
-    return 0;
-  }
-
-  return topWin->WindowID();
-}
-
 void InProcessBrowserChildMessageManager::FireUnloadEvent() {
   // We're called from Document::MaybeInitializeFinalizeFrameLoaders, so it
   // should be safe to run script.
