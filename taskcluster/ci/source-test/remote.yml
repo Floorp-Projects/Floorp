@@ -42,9 +42,6 @@ puppeteer:
         using: run-task
         command: >
             cd $GECKO_PATH/ &&
-            # Bug 1651542 - First start of Firefox take extra 15s due to font
-            # cache generation, which breaks first Puppeteer unit tests
-            $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
             ./mach puppeteer-test -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
 
 puppeteer-fis:
