@@ -5,9 +5,8 @@
 package mozilla.components.feature.search.middleware
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
@@ -22,6 +21,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import java.util.Locale
+import kotlin.coroutines.CoroutineContext
 
 /**
  * [Middleware] implementation for loading and saving [SearchEngine]s whenever the state changes.
@@ -31,8 +31,11 @@ class SearchMiddleware(
     private val customStorage: CustomStorage = CustomSearchEngineStorage(context),
     private val bundleStorage: BundleStorage = BundledSearchEnginesStorage(context),
     private val metadataStorage: MetadataStorage = SearchMetadataStorage(context),
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO
 ) : Middleware<BrowserState, BrowserAction> {
+
+    private val scope = CoroutineScope(ioDispatcher)
+
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -58,7 +61,7 @@ class SearchMiddleware(
 
     private fun loadMetadata(
         store: Store<BrowserState, BrowserAction>
-    ) = GlobalScope.launch(ioDispatcher) {
+    ) = scope.launch {
         val id = metadataStorage.getDefaultSearchEngineId()
         if (id != null) {
             store.dispatch(SearchAction.SetDefaultSearchEngineAction(id))
@@ -67,7 +70,7 @@ class SearchMiddleware(
 
     private fun loadCustomSearchEngines(
         store: Store<BrowserState, BrowserAction>
-    ) = GlobalScope.launch(ioDispatcher) {
+    ) = scope.launch {
         val searchEngines = customStorage.loadSearchEngineList()
 
         if (searchEngines.isNotEmpty()) {
@@ -80,8 +83,8 @@ class SearchMiddleware(
     private fun loadRegionSearchEngines(
         store: Store<BrowserState, BrowserAction>,
         region: RegionState
-    ) = GlobalScope.launch(ioDispatcher) {
-        val bundle = bundleStorage.load(region)
+    ) = scope.launch {
+        val bundle = bundleStorage.load(region, coroutineContext = ioDispatcher)
 
         store.dispatch(SearchAction.SetRegionSearchEngines(
             searchEngines = bundle.list,
@@ -91,7 +94,7 @@ class SearchMiddleware(
 
     private fun updateDefaultSearchEngine(
         action: SearchAction.SetDefaultSearchEngineAction
-    ) = GlobalScope.launch(Dispatchers.IO) {
+    ) = scope.launch {
         if (action.searchEngineId != metadataStorage.getDefaultSearchEngineId()) {
             metadataStorage.setDefaultSearchEngineId(action.searchEngineId)
         }
@@ -99,13 +102,13 @@ class SearchMiddleware(
 
     private fun removeCustomSearchEngine(
         action: SearchAction.RemoveCustomSearchEngineAction
-    ) = GlobalScope.launch(Dispatchers.IO) {
+    ) = scope.launch {
         customStorage.removeSearchEngine(action.searchEngineId)
     }
 
     private fun saveCustomSearchEngine(
         action: SearchAction.UpdateCustomSearchEngineAction
-    ) = GlobalScope.launch(Dispatchers.IO) {
+    ) = scope.launch {
         customStorage.saveSearchEngine(action.searchEngine)
     }
 
@@ -139,7 +142,8 @@ class SearchMiddleware(
          */
         suspend fun load(
             region: RegionState,
-            locale: Locale = Locale.getDefault()
+            locale: Locale = Locale.getDefault(),
+            coroutineContext: CoroutineContext = Dispatchers.IO
         ): Bundle
 
         /**

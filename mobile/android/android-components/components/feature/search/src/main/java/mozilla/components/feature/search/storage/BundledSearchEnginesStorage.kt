@@ -7,7 +7,6 @@ package mozilla.components.feature.search.storage
 import android.content.Context
 import android.content.res.AssetManager
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -20,6 +19,7 @@ import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
+import kotlin.coroutines.CoroutineContext
 
 /**
  * A storage implementation for reading bundled [SearchEngine]s from the app's assets.
@@ -32,14 +32,16 @@ internal class BundledSearchEnginesStorage(
      */
     override suspend fun load(
         region: RegionState,
-        locale: Locale
-    ): SearchMiddleware.BundleStorage.Bundle = withContext(Dispatchers.IO) {
+        locale: Locale,
+        coroutineContext: CoroutineContext
+    ): SearchMiddleware.BundleStorage.Bundle = withContext(coroutineContext) {
         val localizedConfiguration = loadAndFilterConfiguration(context, region, locale)
         val searchEngineIdentifiers = localizedConfiguration.visibleDefaultEngines
 
         val searchEngines = loadSearchEnginesFromList(
             context,
-            searchEngineIdentifiers.distinct()
+            searchEngineIdentifiers.distinct(),
+            coroutineContext
         )
 
         // Reorder the list of search engines according to the configuration.
@@ -198,7 +200,8 @@ private fun applyOverridesIfNeeded(
 
 private suspend fun loadSearchEnginesFromList(
     context: Context,
-    searchEngineIdentifiers: List<String>
+    searchEngineIdentifiers: List<String>,
+    coroutineContext: CoroutineContext
 ): List<SearchEngine> {
     val assets = context.assets
     val reader = SearchEngineReader()
@@ -206,7 +209,7 @@ private suspend fun loadSearchEnginesFromList(
     val deferredSearchEngines = mutableListOf<Deferred<SearchEngine>>()
 
     searchEngineIdentifiers.forEach { identifier ->
-        deferredSearchEngines.add(GlobalScope.async(Dispatchers.IO) {
+        deferredSearchEngines.add(GlobalScope.async(coroutineContext) {
             loadSearchEngine(assets, reader, identifier)
         })
     }
