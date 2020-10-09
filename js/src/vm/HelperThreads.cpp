@@ -563,6 +563,7 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 void ParseTask::activate(JSRuntime* rt) {
+  rt->addParseTaskRef();
   if (parseGlobal) {
     rt->setUsedByHelperThread(parseGlobal->zone());
   }
@@ -1881,6 +1882,7 @@ static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
   if (task->parseGlobal) {
     rt->clearUsedByHelperThread(task->parseGlobal->zoneFromAnyThread());
   }
+  rt->decParseTaskRef();
 }
 
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
