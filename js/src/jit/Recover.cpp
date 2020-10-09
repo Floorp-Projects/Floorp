@@ -11,6 +11,7 @@
 
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
+#include "builtin/TypedObject.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"
 #include "jit/JSJitFrameIter.h"

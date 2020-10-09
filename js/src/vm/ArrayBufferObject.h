@@ -11,7 +11,7 @@
 
 #include <tuple>  // std::tuple
 
-#include "builtin/TypedArrayConstants.h"
+#include "builtin/TypedObjectConstants.h"
 #include "gc/Memory.h"
 #include "gc/ZoneAllocator.h"
 #include "js/ArrayBuffer.h"
@@ -58,7 +58,7 @@ int32_t LiveMappedBufferCount();
 //
 //
 // - JSObject
-//   - TypedObject (declared in wasm/TypedObject.h)
+//   - TypedObject (declared in builtin/TypedObject.h)
 //   - NativeObject
 //     - ArrayBufferObjectMaybeShared
 //       - ArrayBufferObject
