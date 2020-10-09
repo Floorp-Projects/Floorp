@@ -18,4 +18,9 @@ add_task(async function test_policy_disable_telemetry() {
   });
 
   is(TelemetryReportingPolicy.canUpload(), false, "Telemetry is disabled");
+  is(
+    Services.prefs.getBoolPref("toolkit.telemetry.archive.enabled"),
+    false,
+    "Telemetry archive should be disabled."
+  );
 });
