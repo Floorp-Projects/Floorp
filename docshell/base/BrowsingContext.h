@@ -20,6 +20,7 @@
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ScreenOrientationBinding.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "nsCOMPtr.h"
@@ -172,7 +173,8 @@ class WindowProxyHolder;
   /* Default value for nsIContentViewer::authorStyleDisabled in any new      \
    * browsing contexts created as a descendant of this one.  Valid only for  \
    * top BCs. */                                                             \
-  FIELD(AuthorStyleDisabledDefault, bool)
+  FIELD(AuthorStyleDisabledDefault, bool)                                    \
+  FIELD(DisplayMode, mozilla::dom::DisplayMode)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -721,6 +723,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void ResetLocationChangeRateLimit();
 
+  mozilla::dom::DisplayMode DisplayMode() { return Top()->GetDisplayMode(); }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -808,6 +812,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     }
     return true;
   }
+
+  bool CanSet(FieldIndex<IDX_DisplayMode>, const enum DisplayMode& aDisplayMode,
+              ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_DisplayMode>, enum DisplayMode aOldValue);
 
   void DidSet(FieldIndex<IDX_IsActive>, bool aOldValue);
 
