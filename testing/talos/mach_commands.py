@@ -80,7 +80,7 @@ class TalosRunner(MozbuildObject):
             'base_work_dir': self.mozharness_dir,
             'exes': {
                 'python': self.python_interp,
-                'virtualenv': [self.python_interp, '-S', self.virtualenv_script]
+                'virtualenv': [self.python_interp, self.virtualenv_script]
             },
             'title': socket.gethostname(),
             'default_actions': default_actions,
