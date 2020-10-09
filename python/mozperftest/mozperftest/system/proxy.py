@@ -94,7 +94,7 @@ class ProxyRunner(Layer):
         replay_file = self.get_arg("replay")
         if replay_file is not None and replay_file.startswith("http"):
             self.tmpdir = tempfile.TemporaryDirectory()
-            target = os.path.join(self.tmpdir.name, "recording.dump")
+            target = os.path.join(self.tmpdir.name, "recording.zip")
             self.info("Downloading %s" % replay_file)
             download_file(replay_file, target)
             replay_file = target
@@ -113,8 +113,8 @@ class ProxyRunner(Layer):
         elif replay_file:
             command.append(replay_file)
         else:
-            command.append(os.path.join(HERE, "example.dump"))
-
+            command.append(os.path.join(HERE, "example.zip"))
+        print(" ".join(command))
         self.output_handler = OutputHandler()
         self.proxy = ProcessHandler(
             command,

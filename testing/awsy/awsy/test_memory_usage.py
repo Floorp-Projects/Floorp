@@ -108,13 +108,6 @@ class TestMemoryUsage(AwsyTestCase):
         }
 
         self._playback = get_playback(config)
-
-        recording_arg = []
-        for recording in recordings:
-            recording_arg.append(os.path.join(self._playback.mozproxy_dir, recording))
-
-        self._playback.config['playback_files'] = recording_arg
-
         self._playback.start()
 
         # We need to reload after the mitmproxy cert is installed
