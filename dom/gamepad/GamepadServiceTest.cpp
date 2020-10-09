@@ -71,17 +71,16 @@ void GamepadServiceTest::InitPBackgroundActor() {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
 
-  mChild = GamepadTestChannelChild::Create();
+  mChild = new GamepadTestChannelChild();
   PGamepadTestChannelChild* initedChild =
-      actor->SendPGamepadTestChannelConstructor(mChild.get());
+      actor->SendPGamepadTestChannelConstructor(mChild);
   if (NS_WARN_IF(!initedChild)) {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
 }
 
 void GamepadServiceTest::DestroyPBackgroundActor() {
-  MOZ_ASSERT(mChild);
-  PGamepadTestChannelChild::Send__delete__(mChild);
+  mChild->SendShutdownChannel();
   mChild = nullptr;
 }
 
