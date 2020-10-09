@@ -59,9 +59,14 @@ class RequestListColumnTransferredSize extends Component {
     if (blockedReason && blockingExtension) {
       text = L10N.getFormatStr("networkMenu.blockedby", blockingExtension);
     } else if (blockedReason) {
-      text =
-        BLOCKED_REASON_MESSAGES[blockedReason] ||
-        L10N.getStr("networkMenu.blocked2");
+      // If we receive a platform error code, print it as-is
+      if (typeof blockedReason == "string" && blockedReason.startsWith("NS_")) {
+        text = blockedReason;
+      } else {
+        text =
+          BLOCKED_REASON_MESSAGES[blockedReason] ||
+          L10N.getStr("networkMenu.blocked2");
+      }
     } else if (fromCache || status === "304") {
       text = SIZE_CACHED;
     } else if (fromServiceWorker) {

@@ -23,6 +23,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/network-monitor/utils/channel-map",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "getErrorCodeString",
+  "devtools/server/actors/network-monitor/utils/error-codes",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
@@ -393,12 +399,25 @@ NetworkObserver.prototype = {
       httpActivity.owner.addServerTimings(serverTimings);
     } else {
       // If the owner isn't set we need to create the network event and send
-      // it to the client. This happens in case where the request has been
-      // blocked (e.g. CORS) and "http-on-stop-request" is the first notification.
-      this._createNetworkEvent(subject, {
-        blockedReason: reason,
-        blockingExtension: id,
-      });
+      // it to the client. This happens in case where:
+      // - the request has been blocked (e.g. CORS) and "http-on-stop-request" is the first notification.
+      // - the NetworkObserver is start *after* the request started and we only receive the http-stop notification,
+      //   but that doesn't mean the request is blocked, so check for its status.
+      const { status } = channel;
+      if (status == 0) {
+        // Do not pass any blocked reason, as this request is just fine
+        this._createNetworkEvent(subject, {});
+      } else {
+        if (reason == 0) {
+          // If we get there, we have a non-zero status, but no clear blocking reason
+          // This is most likely a request that failed for some reason, so try to pass this reason
+          reason = getErrorCodeString(status);
+        }
+        this._createNetworkEvent(subject, {
+          blockedReason: reason,
+          blockingExtension: id,
+        });
+      }
     }
   },
 
