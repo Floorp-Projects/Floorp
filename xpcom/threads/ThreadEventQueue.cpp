@@ -127,8 +127,7 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
 }
 
 already_AddRefed<nsIRunnable> ThreadEventQueue::GetEvent(
-    bool aMayWait, EventQueuePriority* aPriority,
-    mozilla::TimeDuration* aLastEventDelay) {
+    bool aMayWait, mozilla::TimeDuration* aLastEventDelay) {
   nsCOMPtr<nsIRunnable> event;
   {
     // Scope for lock.  When we are about to return, we will exit this
@@ -139,12 +138,12 @@ already_AddRefed<nsIRunnable> ThreadEventQueue::GetEvent(
     for (;;) {
       const bool noNestedQueue = mNestedQueues.IsEmpty();
       if (noNestedQueue) {
-        event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay);
+        event = mBaseQueue->GetEvent(lock, aLastEventDelay);
       } else {
         // We always get events from the topmost queue when there are nested
         // queues.
-        event = mNestedQueues.LastElement().mQueue->GetEvent(aPriority, lock,
-                                                             aLastEventDelay);
+        event =
+            mNestedQueues.LastElement().mQueue->GetEvent(lock, aLastEventDelay);
       }
 
       if (event) {
@@ -184,18 +183,6 @@ bool ThreadEventQueue::HasPendingEvent() {
     return mBaseQueue->HasReadyEvent(lock);
   } else {
     return mNestedQueues.LastElement().mQueue->HasReadyEvent(lock);
-  }
-}
-
-bool ThreadEventQueue::HasPendingHighPriorityEvents() {
-  MutexAutoLock lock(mLock);
-
-  // We always get events from the topmost queue when there are nested queues.
-  if (mNestedQueues.IsEmpty()) {
-    return mBaseQueue->HasPendingHighPriorityEvents(lock);
-  } else {
-    return mNestedQueues.LastElement().mQueue->HasPendingHighPriorityEvents(
-        lock);
   }
 }
 
@@ -259,11 +246,11 @@ void ThreadEventQueue::PopEventQueue(nsIEventTarget* aTarget) {
 
   // Move events from the old queue to the new one.
   nsCOMPtr<nsIRunnable> event;
-  EventQueuePriority prio;
   TimeDuration delay;
-  while ((event = item.mQueue->GetEvent(&prio, lock, &delay))) {
+  while ((event = item.mQueue->GetEvent(lock, &delay))) {
     // preserve the event delay so far
-    prevQueue->PutEvent(event.forget(), prio, lock, &delay);
+    prevQueue->PutEvent(event.forget(), EventQueuePriority::Normal, lock,
+                        &delay);
   }
 
   mNestedQueues.RemoveLastElement();
