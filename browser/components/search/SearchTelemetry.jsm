@@ -63,19 +63,19 @@ const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
  */
 const SEARCH_PROVIDER_INFO = {
   google: {
-    regexp: /^https:\/\/www\.google\.(?:.+)\/search/,
-    queryParam: "q",
-    codeParam: "client",
+    searchPageRegexp: /^https:\/\/www\.google\.(?:.+)\/search/,
+    queryParamName: "q",
+    codeParamName: "client",
     codePrefixes: ["firefox"],
-    followonParams: ["oq", "ved", "ei"],
+    followOnParamNames: ["oq", "ved", "ei"],
     extraAdServersRegexps: [
       /^https:\/\/www\.google(?:adservices)?\.com\/(?:pagead\/)?aclk/,
     ],
   },
   duckduckgo: {
-    regexp: /^https:\/\/duckduckgo\.com\//,
-    queryParam: "q",
-    codeParam: "t",
+    searchPageRegexp: /^https:\/\/duckduckgo\.com\//,
+    queryParamName: "q",
+    codeParamName: "t",
     codePrefixes: ["ff", "newext"],
     extraAdServersRegexps: [
       /^https:\/\/duckduckgo.com\/y\.js?.*ad_provider\=/,
@@ -83,28 +83,28 @@ const SEARCH_PROVIDER_INFO = {
     ],
   },
   yahoo: {
-    regexp: /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
-    queryParam: "p",
+    searchPageRegexp: /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
+    queryParamName: "p",
   },
   baidu: {
-    regexp: /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
-    queryParam: "wd",
-    codeParam: "tn",
+    searchPageRegexp: /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
+    queryParamName: "wd",
+    codeParamName: "tn",
     codePrefixes: ["34046034_", "monline_"],
-    followonParams: ["oq"],
+    followOnParamNames: ["oq"],
   },
   bing: {
-    regexp: /^https:\/\/www\.bing\.com\/search/,
-    queryParam: "q",
-    codeParam: "pc",
+    searchPageRegexp: /^https:\/\/www\.bing\.com\/search/,
+    queryParamName: "q",
+    codeParamName: "pc",
     codePrefixes: ["MOZ", "MZ"],
-    followonCookies: [
+    followOnCookies: [
       {
-        extraCodeParam: "form",
+        extraCodeParamName: "form",
         extraCodePrefixes: ["QBRE"],
         host: "www.bing.com",
         name: "SRCHS",
-        codeParam: "PC",
+        codeParamName: "PC",
         codePrefixes: ["MOZ", "MZ"],
       },
     ],
@@ -454,7 +454,7 @@ class TelemetryHandler {
     }
 
     return Object.entries(this._searchProviderInfo).find(([_, info]) =>
-      info.regexp.test(url)
+      info.searchPageRegexp.test(url)
     );
   }
 
@@ -473,35 +473,35 @@ class TelemetryHandler {
     }
     let [provider, searchProviderInfo] = info;
     let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
-    if (!queries.get(searchProviderInfo.queryParam)) {
+    if (!queries.get(searchProviderInfo.queryParamName)) {
       return null;
     }
     // Default to organic to simplify things.
     // We override type in the sap cases.
     let type = "organic";
     let code;
-    if (searchProviderInfo.codeParam) {
-      code = queries.get(searchProviderInfo.codeParam);
+    if (searchProviderInfo.codeParamName) {
+      code = queries.get(searchProviderInfo.codeParamName);
       if (
         code &&
         searchProviderInfo.codePrefixes.some(p => code.startsWith(p))
       ) {
         if (
-          searchProviderInfo.followonParams &&
-          searchProviderInfo.followonParams.some(p => queries.has(p))
+          searchProviderInfo.followOnParamNames &&
+          searchProviderInfo.followOnParamNames.some(p => queries.has(p))
         ) {
           type = "sap-follow-on";
         } else {
           type = "sap";
         }
-      } else if (searchProviderInfo.followonCookies) {
+      } else if (searchProviderInfo.followOnCookies) {
         // Especially Bing requires lots of extra work related to cookies.
-        for (let followonCookie of searchProviderInfo.followonCookies) {
-          if (followonCookie.extraCodeParam) {
-            let eCode = queries.get(followonCookie.extraCodeParam);
+        for (let followOnCookie of searchProviderInfo.followOnCookies) {
+          if (followOnCookie.extraCodeParamName) {
+            let eCode = queries.get(followOnCookie.extraCodeParamName);
             if (
               !eCode ||
-              !followonCookie.extraCodePrefixes.some(p => eCode.startsWith(p))
+              !followOnCookie.extraCodePrefixes.some(p => eCode.startsWith(p))
             ) {
               continue;
             }
@@ -511,10 +511,10 @@ class TelemetryHandler {
           // This might be an organic follow-on in the same session, but there
           // is no way to tell the difference.
           for (let cookie of Services.cookies.getCookiesFromHost(
-            followonCookie.host,
+            followOnCookie.host,
             {}
           )) {
-            if (cookie.name != followonCookie.name) {
+            if (cookie.name != followOnCookie.name) {
               continue;
             }
 
@@ -522,8 +522,8 @@ class TelemetryHandler {
               .split("=")
               .map(p => p.trim());
             if (
-              cookieParam == followonCookie.codeParam &&
-              followonCookie.codePrefixes.some(p => cookieValue.startsWith(p))
+              cookieParam == followOnCookie.codeParamName &&
+              followOnCookie.codePrefixes.some(p => cookieValue.startsWith(p))
             ) {
               type = "sap-follow-on";
               code = cookieValue;
