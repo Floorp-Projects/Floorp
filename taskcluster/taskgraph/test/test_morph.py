@@ -82,7 +82,7 @@ def test_make_index_tasks(make_taskgraph, graph_config):
         },
     }
     task = Task(kind='test', label='a', attributes={}, task=task_def)
-    docker_task = Task(kind='docker-image', label='build-docker-image-index-task',
+    docker_task = Task(kind='docker-image', label='docker-image-index-task',
                        attributes={}, task={})
     taskgraph, label_to_taskid = make_taskgraph({
         task.label: task,

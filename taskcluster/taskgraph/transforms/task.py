@@ -448,7 +448,7 @@ def build_docker_worker_payload(config, task, task_def):
     if isinstance(image, dict):
         if 'in-tree' in image:
             name = image['in-tree']
-            docker_image_task = 'build-docker-image-' + image['in-tree']
+            docker_image_task = 'docker-image-' + image['in-tree']
             task.setdefault('dependencies', {})['docker-image'] = docker_image_task
 
             image = {

@@ -192,7 +192,7 @@ Tasks of the ``docker-image`` kind build the Docker images in which other
 Docker tasks run.
 
 The tasks to generate each docker image have predictable labels:
-``build-docker-image-<name>``.
+``docker-image-<name>``.
 
 Docker images are built from subdirectories of ``taskcluster/docker``, using
 ``docker build``.  There is currently no capability for one Docker image to

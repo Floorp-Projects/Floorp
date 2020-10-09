@@ -68,7 +68,7 @@ def derive_misc_task(
 
     # this is why all docker image tasks are included in the target task graph: we
     # need to find them in label_to_taskid, even if nothing else required them
-    image_taskid = label_to_taskid["build-docker-image-" + image]
+    image_taskid = label_to_taskid["docker-image-" + image]
 
     provisioner_id, worker_type = get_worker_type(
         graph_config, "misc", parameters["level"], parameters.release_level()

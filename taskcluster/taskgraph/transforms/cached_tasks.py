@@ -14,10 +14,7 @@ transforms = TransformSequence()
 
 def order_tasks(config, tasks):
     """Iterate image tasks in an order where parent tasks come first."""
-    if config.kind == 'docker-image':
-        kind_prefix = 'build-docker-image-'
-    else:
-        kind_prefix = config.kind + '-'
+    kind_prefix = config.kind + '-'
 
     pending = deque(tasks)
     task_labels = {task['label'] for task in pending}

@@ -25,7 +25,7 @@ from . import GECKO
 def load_image_by_name(image_name, tag=None):
     params = {'level': six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3'))}
     tasks = load_tasks_for_kind(params, 'docker-image')
-    task = tasks['build-docker-image-{}'.format(image_name)]
+    task = tasks['docker-image-{}'.format(image_name)]
     task_id = IndexSearch().should_replace_task(
         task, {}, task.optimization.get('index-search', []))
 

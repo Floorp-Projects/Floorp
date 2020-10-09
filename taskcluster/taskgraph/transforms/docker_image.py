@@ -138,7 +138,7 @@ def fill_template(config, tasks):
         # include some information that is useful in reconstructing this task
         # from JSON
         taskdesc = {
-            'label': 'build-docker-image-' + image_name,
+            'label': '{}-{}'.format(config.kind, image_name),
             'description': description,
             'attributes': {
                 'image_name': image_name,
@@ -191,7 +191,7 @@ def fill_template(config, tasks):
         else:
             worker['docker-image'] = {'in-tree': 'image_builder'}
             deps = taskdesc.setdefault('dependencies', {})
-            deps['docker-image'] = 'build-docker-image-image_builder'
+            deps['docker-image'] = '{}-image_builder'.format(config.kind)
 
         if packages:
             deps = taskdesc.setdefault('dependencies', {})
@@ -200,7 +200,7 @@ def fill_template(config, tasks):
 
         if parent:
             deps = taskdesc.setdefault('dependencies', {})
-            deps['parent'] = 'build-docker-image-{}'.format(parent)
+            deps['parent'] = '{}-{}'.format(config.kind, parent)
             worker['env']['PARENT_TASK_ID'] = {
                 'task-reference': '<parent>',
             }
