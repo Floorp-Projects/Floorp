@@ -216,6 +216,8 @@ var PrintUtils = {
    * Initialize a print, this will open the tab modal UI if it is enabled or
    * defer to the native dialog/silent print.
    *
+   * @param aTrigger What triggered the print, in string format, for telemetry
+   *        purposes.
    * @param aBrowsingContext
    *        The BrowsingContext of the window to print.
    *        Note that the browsing context could belong to a subframe of the
@@ -225,8 +227,22 @@ var PrintUtils = {
    *        nsIOpenWindowInfo object that has to be passed down to
    *        createBrowser in order for the child process to clone into it.
    */
-  startPrintWindow(aBrowsingContext, aOpenWindowInfo, aPrintSelectionOnly) {
+  startPrintWindow(
+    aTrigger,
+    aBrowsingContext,
+    aOpenWindowInfo,
+    aPrintSelectionOnly
+  ) {
     const printInitiationTime = Date.now();
+
+    // When we have a non-null aOpenWindowInfo, we only want to record
+    // telemetry if we're triggered by window.print() itself, otherwise it's an
+    // internal print (like the one we do when we actually print from the
+    // preview dialog, etc.), and that'd cause us to overcount.
+    if (!aOpenWindowInfo || aOpenWindowInfo.isForWindowDotPrint) {
+      Services.telemetry.keyedScalarAdd("printing.trigger", aTrigger, 1);
+    }
+
     let browser = null;
     if (aOpenWindowInfo) {
       browser = document.createXULElement("browser");
@@ -255,7 +271,7 @@ var PrintUtils = {
     if (
       PRINT_TAB_MODAL &&
       !PRINT_ALWAYS_SILENT &&
-      (!aOpenWindowInfo || aOpenWindowInfo.isForPrintPreview)
+      (!aOpenWindowInfo || aOpenWindowInfo.isForWindowDotPrint)
     ) {
       this._openTabModalPrint(
         aBrowsingContext,
@@ -334,6 +350,8 @@ var PrintUtils = {
   /**
    * Initializes print preview.
    *
+   * @param aTrigger Optionaly, if it's an external call, what triggered the
+   *                 print, in string format, for telemetry purposes.
    * @param aListenerObj
    *        An object that defines the following functions:
    *
@@ -370,7 +388,11 @@ var PrintUtils = {
    *        print preview (in which case, the previous aListenerObj passed
    *        to it will be used).
    */
-  printPreview(aListenerObj) {
+  printPreview(aTrigger, aListenerObj) {
+    if (aTrigger) {
+      Services.telemetry.keyedScalarAdd("printing.trigger", aTrigger, 1);
+    }
+
     if (PRINT_TAB_MODAL) {
       return this._openTabModalPrint(
         gBrowser.selectedBrowser.browsingContext,

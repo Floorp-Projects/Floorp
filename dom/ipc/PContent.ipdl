@@ -1456,7 +1456,7 @@ parent:
                        bool aCalledFromJS,
                        bool aWidthSpecified,
                        bool aForPrinting,
-                       bool aForPrintPreview,
+                       bool aForWindowDotPrint,
                        nsIURI aURIToLoad,
                        nsCString aFeatures,
                        float aFullZoom,

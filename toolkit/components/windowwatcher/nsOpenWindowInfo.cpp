@@ -22,8 +22,8 @@ NS_IMETHODIMP nsOpenWindowInfo::GetIsRemote(bool* aIsRemote) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOpenWindowInfo::GetIsForPrintPreview(bool* aIsForPrinPreview) {
-  *aIsForPrinPreview = mIsForPrintPreview;
+NS_IMETHODIMP nsOpenWindowInfo::GetIsForWindowDotPrint(bool* aResult) {
+  *aResult = mIsForWindowDotPrint;
   return NS_OK;
 }
 
