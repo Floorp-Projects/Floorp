@@ -20,7 +20,8 @@
         app:title="Allow Autoplay"/>
     <SwitchPreferenceCompat
         app:key="@string/key_remote_debugging"
-        app:title="Remote Debugging"/>
+        app:title="Remote Debugging"
+        app:defaultValue="true"/>
     <ListPreference
         app:key="@string/key_preferred_color_scheme"
         app:title="Preferred Color Scheme"
