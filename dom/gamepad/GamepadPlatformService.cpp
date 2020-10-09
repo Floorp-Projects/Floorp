@@ -34,7 +34,7 @@ GamepadPlatformService::MonitoringState::~MonitoringState() {
 }
 
 void GamepadPlatformService::MonitoringState::AddObserver(
-    RefPtr<GamepadTestChannelParent> aParent) {
+    WeakPtr<GamepadTestChannelParent> aParent) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mObservers.Contains(aParent));
@@ -60,6 +60,9 @@ void GamepadPlatformService::MonitoringState::Set(bool aIsMonitoring) {
   if (mIsMonitoring != aIsMonitoring) {
     mIsMonitoring = aIsMonitoring;
     for (auto& observer : mObservers) {
+      // Since each GamepadTestChannelParent removes itself in its dtor, this
+      // should never be nullptr
+      MOZ_RELEASE_ASSERT(observer);
       observer->OnMonitoringStateChanged(aIsMonitoring);
     }
   }
