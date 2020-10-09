@@ -44,25 +44,22 @@
 #define JS_DESCR_SLOT_TYPROTO 4      // Prototype for instances, if any
 #define JS_DESCR_SLOT_ARRAYPROTO 5   // Lazily created prototype for arrays
 #define JS_DESCR_SLOT_TRACE_LIST 6   // List of references for use in tracing
-#define JS_DESCR_SLOT_FLAGS 7        // int32 bitvector of JS_DESCR_FLAG_*
 
 // Slots on scalars, references
-#define JS_DESCR_SLOT_TYPE 8  // Type code
+#define JS_DESCR_SLOT_TYPE 7  // Type code
 
 // Slots on array descriptors
-#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE 8
-#define JS_DESCR_SLOT_ARRAY_LENGTH 9
+#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE 7
+#define JS_DESCR_SLOT_ARRAY_LENGTH 8
 
 // Slots on struct type objects
-#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 8
-#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 9
-#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 10
-#define JS_DESCR_SLOT_STRUCT_FIELD_MUTS 11
+#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 7
+#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 8
+#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 9
+#define JS_DESCR_SLOT_STRUCT_FIELD_MUTS 10
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS 12
-
-#define JS_DESCR_FLAG_ALLOW_CONSTRUCT 1  // Allow structure to be constructed
+#define JS_DESCR_SLOTS 11
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
