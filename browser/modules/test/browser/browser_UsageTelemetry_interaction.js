@@ -114,9 +114,9 @@ add_task(async function toolbarButtons() {
     await tabClose;
     click(document.querySelector("#PlacesToolbarItems .bookmark-item"));
 
+    click("pageActionButton");
     let pagePanel = elem("pageActionPanel");
     shown = BrowserTestUtils.waitForEvent(pagePanel, "popupshown");
-    click("pageActionButton");
     await shown;
 
     hidden = BrowserTestUtils.waitForEvent(pagePanel, "popuphidden");

@@ -444,12 +444,12 @@ add_task(async function pageActions() {
       "personal-bookmarks_pinned_bookmarks-bar",
     ]);
 
-    let panel = document.getElementById("pageActionPanel");
     let button = document.getElementById("pageActionButton");
     let context = document.getElementById("pageActionContextMenu");
 
-    let popupShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
     EventUtils.synthesizeMouseAtCenter(button, {}, window);
+    let panel = document.getElementById("pageActionPanel");
+    let popupShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
     await popupShown;
 
     popupShown = BrowserTestUtils.waitForEvent(context, "popupshown");
