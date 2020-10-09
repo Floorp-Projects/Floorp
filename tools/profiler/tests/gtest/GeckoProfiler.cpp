@@ -1148,10 +1148,13 @@ TEST(GeckoProfiler, Markers)
                          "default-templated markers 2.0 with empty options") {
                 EXPECT_EQ(state, S_Markers2DefaultEmptyOptions);
                 state = State(S_Markers2DefaultEmptyOptions + 1);
+// TODO: Re-enable this when bug 1646714 lands, and check for stack.
+#if 0
               } else if (nameString ==
                          "default-templated markers 2.0 with option") {
                 EXPECT_EQ(state, S_Markers2DefaultWithOptions);
                 state = State(S_Markers2DefaultWithOptions + 1);
+#endif
               } else if (nameString ==
                          "explicitly-default-templated markers 2.0 with empty "
                          "options") {
@@ -1273,6 +1276,14 @@ TEST(GeckoProfiler, Markers)
                               std::string("gtest-") + std::to_string(valueInt));
                   }
                 }
+
+              } else if (nameString ==
+                         "default-templated markers 2.0 with option") {
+                // TODO: Remove this when bug 1646714 lands.
+                EXPECT_EQ(state, S_Markers2DefaultWithOptions);
+                state = State(S_Markers2DefaultWithOptions + 1);
+                EXPECT_EQ(typeString, "NoPayloadUserData");
+                EXPECT_FALSE(payload["stack"].isNull());
 
               } else if (nameString == "FileIOMarkerPayload marker") {
                 EXPECT_EQ(state, S_FileIOMarkerPayload);

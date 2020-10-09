@@ -182,6 +182,26 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
                                ::mozilla::baseprofiler::markers::NoPayload>) {
     static_assert(sizeof...(Ts) == 0,
                   "NoPayload does not accept any payload arguments.");
+    // Special case for NoPayload where there is a stack or inner window id:
+    // Because these options would be stored in the payload 'data' object, but
+    // there is no such object for NoPayload, we convert the marker to another
+    // type (without user fields in the 'data' object), so that the stack and/or
+    // inner window id are not lost.
+    // TODO: Remove this when bug 1646714 lands.
+    if (aOptions.Stack().GetChunkedBuffer() ||
+        !aOptions.InnerWindowId().IsUnspecified()) {
+      struct NoPayloadUserData {
+        static constexpr Span<const char> MarkerTypeName() {
+          return MakeStringSpan("NoPayloadUserData");
+        }
+        static void StreamJSONMarkerData(JSONWriter& aWriter) {
+          // No user payload.
+        }
+      };
+      return MarkerTypeSerialization<NoPayloadUserData>::Serialize(
+          aBuffer, aName, aCategory, std::move(aOptions));
+    }
+
     // Note that options are first after the entry kind, because they contain
     // the thread id, which is handled first to filter markers by threads.
     return aBuffer.PutObjects(
