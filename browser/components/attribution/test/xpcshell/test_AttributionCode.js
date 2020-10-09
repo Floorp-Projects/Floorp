@@ -9,9 +9,17 @@ const { AppConstants } = ChromeUtils.import(
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-add_task(async () => {
-  await setupStubs();
-});
+async function writeAttributionFile(data) {
+  let appDir = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
+  let file = appDir.clone();
+  file.append(Services.appinfo.vendor || "mozilla");
+  file.append(AppConstants.MOZ_APP_NAME);
+
+  await OS.File.makeDir(file.path, { from: appDir.path, ignoreExisting: true });
+
+  file.append("postSigningData");
+  await OS.File.writeAtomic(file.path, data);
+}
 
 /**
  * Test validation of attribution codes,
@@ -20,7 +28,7 @@ add_task(async () => {
 add_task(async function testValidAttrCodes() {
   for (let entry of validAttrCodes) {
     AttributionCode._clearCache();
-    await AttributionCode.writeAttributionFile(entry.code);
+    await writeAttributionFile(entry.code);
     let result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(
       result,
@@ -37,7 +45,7 @@ add_task(async function testValidAttrCodes() {
 add_task(async function testInvalidAttrCodes() {
   for (let code of invalidAttrCodes) {
     AttributionCode._clearCache();
-    await AttributionCode.writeAttributionFile(code);
+    await writeAttributionFile(code);
     let result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(result, {}, "Code should have failed to parse: " + code);
   }
@@ -50,7 +58,7 @@ add_task(async function testInvalidAttrCodes() {
  */
 add_task(async function testDeletedFile() {
   // Set up the test by clearing the cache and writing a valid file.
-  await AttributionCode.writeAttributionFile(validAttrCodes[0].code);
+  await writeAttributionFile(validAttrCodes[0].code);
   let result = await AttributionCode.getAttrDataAsync();
   Assert.deepEqual(
     result,
