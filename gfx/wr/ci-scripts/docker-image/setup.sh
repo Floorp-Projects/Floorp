@@ -37,7 +37,8 @@ apt-get install -y \
     python-yaml \
     python3-pip \
     python3-mako \
-    software-properties-common
+    software-properties-common \
+    clang
 
 # Other stuff we need
 pip install servo-tidy==0.3.0
