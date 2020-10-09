@@ -442,7 +442,7 @@ public class GeckoViewActivity
 
     private void onPreferencesChange(SharedPreferences preferences) {
         boolean remoteDebugging = preferences.getBoolean(
-                getString(R.string.key_remote_debugging), false);
+                getString(R.string.key_remote_debugging), true);
         boolean trackingProtection = preferences.getBoolean(
                 getString(R.string.key_tracking_protection), false);
         String enhancedTrackingProtection = preferences.getString(
