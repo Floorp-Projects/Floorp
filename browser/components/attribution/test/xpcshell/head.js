@@ -21,6 +21,7 @@ let validAttrCodes = [
   {
     code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D%26content%3D",
     parsed: { source: "google.com", medium: "organic" },
+    doesNotRoundtrip: true, // `campaign=` and `=content` are dropped.
   },
   {
     code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)",
