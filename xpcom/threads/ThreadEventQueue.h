@@ -37,7 +37,6 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   already_AddRefed<nsIRunnable> GetEvent(
       bool aMayWait, mozilla::TimeDuration* aLastEventDelay = nullptr) final;
-  void DidRunEvent() final;
   bool HasPendingEvent() final;
 
   bool ShutdownIfNoPendingEvents() final;
