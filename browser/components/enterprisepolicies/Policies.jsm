@@ -714,6 +714,7 @@ var Policies = {
       if (param) {
         setAndLockPref("datareporting.healthreport.uploadEnabled", false);
         setAndLockPref("datareporting.policy.dataSubmissionEnabled", false);
+        setAndLockPref("toolkit.telemetry.archive.enabled", false);
         blockAboutPage(manager, "about:telemetry");
       }
     },
