@@ -32,7 +32,6 @@ def test_get_playback(get_binary):
     config["obj_path"] = os.path.dirname(get_binary("firefox"))
     config["playback_tool"] = "mitmproxy"
     config["playback_version"] = "5.1.1"
-    config["playback_binary_manifest"] = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
     config["playback_pageset_manifest"] = os.path.join(
         os.path.dirname(os.path.abspath(os.path.dirname(__file__))),
         "raptor",
