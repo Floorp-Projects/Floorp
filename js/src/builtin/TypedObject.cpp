@@ -48,9 +48,6 @@ const JSClass js::TypedObjectModuleObject::class_ = {
         JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
     JS_NULL_CLASS_OPS, &classSpec_};
 
-static const JSFunctionSpec TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("objectType", "TypeOfTypedObject", 1, 0), JS_FS_END};
-
 static void ReportCannotConvertTo(JSContext* cx, HandleValue fromValue,
                                   const char* toType) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
@@ -229,10 +226,7 @@ const JSClass js::ScalarTypeDescr::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
     &ScalarTypeDescrClassOps};
 
-const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0), JS_FS_END};
+const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {JS_FS_END};
 
 uint32_t ScalarTypeDescr::size(Type t) {
   return AssertedCast<uint32_t>(Scalar::byteSize(t));
@@ -389,15 +383,7 @@ const JSClass js::ReferenceTypeDescr::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
     &ReferenceTypeDescrClassOps};
 
-const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
-    JS_FS_END};
+const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {JS_FS_END};
 
 static const uint32_t ReferenceSizes[] = {
 #define REFERENCE_SIZE(_kind, _type, _name) sizeof(_type),
@@ -536,15 +522,7 @@ const JSClass ArrayTypeDescr::class_ = {
 
 const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {JS_PS_END};
 
-const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
-    JS_FS_END};
+const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {JS_FS_END};
 
 const JSPropertySpec ArrayMetaTypeDescr::typedObjectProperties[] = {JS_PS_END};
 
@@ -726,15 +704,7 @@ const JSClass StructTypeDescr::class_ = {
 
 const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {JS_PS_END};
 
-const JSFunctionSpec StructMetaTypeDescr::typeObjectMethods[] = {
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
-    JS_FS_END};
+const JSFunctionSpec StructMetaTypeDescr::typeObjectMethods[] = {JS_FS_END};
 
 const JSPropertySpec StructMetaTypeDescr::typedObjectProperties[] = {JS_PS_END};
 
@@ -1426,7 +1396,7 @@ static bool TypedObjectModuleObjectClassFinish(JSContext* cx, HandleObject ctor,
 const ClassSpec TypedObjectModuleObject::classSpec_ = {
     CreateTypedObjectModuleObject,
     nullptr,
-    TypedObjectMethods,
+    nullptr,
     nullptr,
     nullptr,
     nullptr,
@@ -1584,21 +1554,6 @@ OutlineTypedObject* OutlineTypedObject::createDerived(
   }
 
   obj->attach(cx, *typedObj, offset);
-  return obj;
-}
-
-/*static*/
-OutlineTypedObject* OutlineTypedObject::createOpaque(JSContext* cx,
-                                                     HandleTypeDescr descr,
-                                                     HandleTypedObject target,
-                                                     uint32_t offset) {
-  Rooted<OutlineTypedObject*> obj(cx);
-  obj = createUnattached(cx, descr);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->attach(cx, *target, offset);
   return obj;
 }
 
@@ -2086,23 +2041,6 @@ InlineTypedObject* InlineTypedObject::create(JSContext* cx,
 }
 
 /* static */
-InlineTypedObject* InlineTypedObject::createCopy(
-    JSContext* cx, Handle<InlineTypedObject*> templateObject,
-    gc::InitialHeap heap) {
-  AutoSetNewObjectMetadata metadata(cx);
-
-  Rooted<TypeDescr*> descr(cx, &templateObject->typeDescr());
-  InlineTypedObject* res = create(cx, descr, heap);
-  if (!res) {
-    return nullptr;
-  }
-
-  memcpy(res->inlineTypedMem(), templateObject->inlineTypedMem(),
-         templateObject->size());
-  return res;
-}
-
-/* static */
 void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
   InlineTypedObject& typedObj = object->as<InlineTypedObject>();
 
@@ -2271,25 +2209,6 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
  * Intrinsics
  */
 
-bool js::NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-
-  Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
-  Rooted<TypedObject*> target(cx, &args[1].toObject().as<TypedObject>());
-  uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
-
-  auto* obj = OutlineTypedObject::createOpaque(cx, descr, target, offset);
-  if (!obj) {
-    return false;
-  }
-
-  args.rval().setObject(*obj);
-  return true;
-}
-
 bool js::NewDerivedTypedObject(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
@@ -2327,35 +2246,11 @@ bool js::ObjectIsTypedObject(JSContext*, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::TypeDescrIsSimpleType(JSContext*, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[0].toObject().is<js::TypeDescr>());
-  args.rval().setBoolean(args[0].toObject().is<js::SimpleTypeDescr>());
-  return true;
-}
-
-bool js::TypedObjectTypeDescr(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  TypedObject& typedObj = args[0].toObject().as<TypedObject>();
-  args.rval().setObject(typedObj.typeDescr());
-  return true;
-}
-
 bool js::ClampToUint8(JSContext*, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(args[0].isNumber());
   args.rval().setNumber(ClampDoubleToUint8(args[0].toNumber()));
-  return true;
-}
-
-bool js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  Rooted<GlobalObject*> global(cx, cx->global());
-  MOZ_ASSERT(global);
-  args.rval().setObject(global->getTypedObjectModule());
   return true;
 }
 
