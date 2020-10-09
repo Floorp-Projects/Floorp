@@ -13,7 +13,6 @@
 
 #include "NamespaceImports.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Rooting.h"
 #include "jit/CacheIROpsGenerated.h"
 #include "jit/CompactBuffer.h"
@@ -23,6 +22,7 @@
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "vm/Iteration.h"
 #include "vm/Shape.h"
+#include "wasm/TypedObject.h"
 
 namespace js {
 namespace jit {
