@@ -7,7 +7,7 @@ include GamepadEventTypes;
 namespace mozilla {
 namespace dom {
 
-async protocol PGamepadTestChannel {
+refcounted protocol PGamepadTestChannel {
   manager PBackground;
   parent:
     async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
