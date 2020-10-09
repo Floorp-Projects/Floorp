@@ -17,8 +17,6 @@
     UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_ALIGNMENT)
 #define DESCR_SIZE(obj) \
     UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_SIZE)
-#define DESCR_OPAQUE(obj) \
-    UnsafeGetBooleanFromReservedSlot(obj, JS_DESCR_SLOT_OPAQUE)
 #define DESCR_TYPE(obj)   \
     UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_TYPE)
 #define DESCR_ARRAY_ELEMENT_TYPE(obj) \
