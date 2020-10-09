@@ -236,10 +236,13 @@ RefPtr<PlanarYCbCrImage> ImageContainer::CreatePlanarYCbCrImage() {
 RefPtr<SharedRGBImage> ImageContainer::CreateSharedRGBImage() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   EnsureImageClient();
-  if (!mImageClient || !mImageClient->AsImageClientSingle()) {
-    return nullptr;
+  if (mImageClient && mImageClient->AsImageClientSingle()) {
+    return new SharedRGBImage(mImageClient);
   }
-  return new SharedRGBImage(mImageClient);
+  if (mRecycleAllocator) {
+    return new SharedRGBImage(mRecycleAllocator);
+  }
+  return nullptr;
 }
 
 void ImageContainer::SetCurrentImageInternal(

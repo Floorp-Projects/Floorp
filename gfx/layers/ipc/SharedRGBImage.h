@@ -7,8 +7,9 @@
 #ifndef SHAREDRGBIMAGE_H_
 #define SHAREDRGBIMAGE_H_
 
-#include <stddef.h>          // for size_t
-#include <stdint.h>          // for uint8_t
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint8_t
+
 #include "ImageContainer.h"  // for ISharedImage, Image, etc
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"  // for override
@@ -30,6 +31,7 @@ class TextureClient;
 class SharedRGBImage : public Image {
  public:
   explicit SharedRGBImage(ImageClient* aCompositable);
+  explicit SharedRGBImage(TextureClientRecycleAllocator* aRecycleAllocator);
 
  protected:
   virtual ~SharedRGBImage();
@@ -44,9 +46,12 @@ class SharedRGBImage : public Image {
   bool Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
  private:
+  TextureClientRecycleAllocator* RecycleAllocator();
+
   gfx::IntSize mSize;
-  RefPtr<ImageClient> mCompositable;
   RefPtr<TextureClient> mTextureClient;
+  RefPtr<ImageClient> mCompositable;
+  RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
   RefPtr<gfx::SourceSurface> mSourceSurface;
 };
 
