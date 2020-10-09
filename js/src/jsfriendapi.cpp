@@ -823,18 +823,7 @@ AutoAssertNoContentJS::~AutoAssertNoContentJS() {
   context_->runtime()->allowContentJS_ = prevAllowContentJS_;
 }
 
-JS_FRIEND_API void js::EnableAccessValidation(JSContext* cx, bool enabled) {
-  cx->enableAccessValidation = enabled;
-}
-
 JS_FRIEND_API void js::EnableCodeCoverage() { js::coverage::EnableLCov(); }
-
-JS_FRIEND_API void js::SetRealmValidAccessPtr(JSContext* cx,
-                                              JS::HandleObject global,
-                                              bool* accessp) {
-  MOZ_ASSERT(global->is<GlobalObject>());
-  global->as<GlobalObject>().realm()->setValidAccessPtr(accessp);
-}
 
 JS_FRIEND_API bool js::SystemZoneAvailable(JSContext* cx) { return true; }
 

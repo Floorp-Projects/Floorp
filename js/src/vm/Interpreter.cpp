@@ -435,8 +435,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   MOZ_DIAGNOSTIC_ASSERT(cx->realm()->isSystem() ||
                         cx->runtime()->allowContentJS());
 
-  MOZ_ASSERT(!cx->enableAccessValidation || cx->realm()->isAccessValid());
-
   if (!DebugAPI::checkNoExecute(cx, state.script())) {
     return false;
   }
