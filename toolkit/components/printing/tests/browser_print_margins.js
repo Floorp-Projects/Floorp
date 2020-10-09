@@ -172,7 +172,7 @@ add_task(async function testInvalidMarginsReset() {
       "Wait for margin error to be hidden"
     );
     this.changeDefaultToCustom(helper);
-    await helper.assertSettingsMatch({
+    helper.assertSettingsMatch({
       marginTop: 0.5,
       marginRight: 0.5,
       marginBottom: 0.5,
@@ -243,7 +243,7 @@ add_task(async function testCustomMarginsPersist() {
     await helper.startPrint();
     await helper.openMoreSettings();
 
-    await helper.assertSettingsMatch({
+    helper.assertSettingsMatch({
       marginTop: 0.25,
       marginRight: 1,
       marginBottom: 2,
@@ -376,5 +376,81 @@ add_task(async function testChangeHonoredInPrint() {
       helper.resolvePrint();
     });
     helper.assertPrintedWithSettings({ marginRight: 1 });
+  });
+});
+
+add_task(async function testInvalidPrefValueHeight() {
+  await PrintHelper.withTestPage(async helper => {
+    // Set some bad prefs
+    await SpecialPowers.pushPrefEnv({
+      set: [["print.printer_Mozilla_Save_to_PDF.print_margin_top", "-1"]],
+    });
+    await helper.startPrint();
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+    });
+    await helper.closeDialog();
+  });
+});
+
+add_task(async function testInvalidPrefValueWidth() {
+  await PrintHelper.withTestPage(async helper => {
+    // Set some bad prefs
+    await SpecialPowers.pushPrefEnv({
+      set: [["print.printer_Mozilla_Save_to_PDF.print_margin_left", "-1"]],
+    });
+    await helper.startPrint();
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+    });
+    await helper.closeDialog();
+  });
+});
+
+add_task(async function testInvalidMarginStartup() {
+  const INCHES_PER_POINT = 1 / 72;
+  const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+    Ci.nsIPrinterList
+  );
+  let fallbackPaperList = await printerList.fallbackPaperList;
+  let paper = fallbackPaperList.find(
+    paper =>
+      paper.width * INCHES_PER_POINT == 8.5 &&
+      paper.height * INCHES_PER_POINT == 11
+  );
+  ok(paper, "Found a paper");
+  await PrintHelper.withTestPage(async helper => {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["print.printer_Mozilla_Save_to_PDF.print_margin_right", "4"],
+        ["print.printer_Mozilla_Save_to_PDF.print_margin_left", "5"],
+        [
+          "print.printer_Mozilla_Save_to_PDF.print_paper_id",
+          paper.id.toString(),
+        ],
+        ["print.printer_Mozilla_Save_to_PDF.print_paper_size_unit", 0],
+        [
+          "print.printer_Mozilla_Save_to_PDF.print_paper_width",
+          (paper.width * INCHES_PER_POINT).toString(),
+        ],
+        [
+          "print.printer_Mozilla_Save_to_PDF.print_paper_height",
+          (paper.height * INCHES_PER_POINT).toString(),
+        ],
+      ],
+    });
+    await helper.startPrint();
+    helper.assertSettingsMatch({
+      paperId: paper.id,
+      marginLeft: 0.5,
+      marginRight: 0.5,
+    });
+    helper.closeDialog();
   });
 });
