@@ -49,6 +49,8 @@
 
 #include "wasm/WasmBuiltins.h"  // js::wasm::*
 
+#include "builtin/Boolean-inl.h"  // js::EmulatesUndefined
+
 namespace js {
 namespace jit {
 
@@ -80,6 +82,7 @@ namespace jit {
   _(js::ecmaAtan2)                                          \
   _(js::ecmaHypot)                                          \
   _(js::ecmaPow)                                            \
+  _(js::EmulatesUndefined)                                  \
   _(js::ExecuteRegExpAtomRaw)                               \
   _(js_free)                                                \
   _(js::hypot3)                                             \
