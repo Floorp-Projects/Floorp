@@ -1453,7 +1453,10 @@ def patch_main():
                            "main_module_name = '%s'\n" % main_module_name +
                            ''.join(x[12:] for x in fork_code[1:]))
             cmdline = orig_command_line()
-            cmdline[2] = fork_string
+            # We don't catch errors if "-c" is not found because it's not clear
+            # what we should do if the original command line is not of the form
+            # "python ... -c 'script'".
+            cmdline[cmdline.index('-c') + 1] = fork_string
             return cmdline
         orig_command_line = forking.get_command_line
         forking.get_command_line = my_get_command_line
