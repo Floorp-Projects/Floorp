@@ -4,17 +4,19 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AttributionCode } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"
 );
 const { ASRouterTargeting } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
+const { MacAttribution } = ChromeUtils.import(
+  "resource:///modules/MacAttribution.jsm"
+);
 
 add_task(async function check_attribution_data() {
   // Some setup to fake the correct attribution data
-  const appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
+  const appPath = MacAttribution.applicationPath;
   const attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
     Ci.nsIMacAttributionService
   );
@@ -23,7 +25,7 @@ add_task(async function check_attribution_data() {
   const referrer = `https://allizom.org/anything/?utm_campaign=${campaign}&utm_source=${source}`;
   attributionSvc.setReferrerUrl(appPath, referrer, true);
   AttributionCode._clearCache();
-  AttributionCode.getAttrDataAsync();
+  await AttributionCode.getAttrDataAsync();
 
   const {
     campaign: attributionCampain,
