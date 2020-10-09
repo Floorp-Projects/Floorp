@@ -28,8 +28,10 @@
              oncommand="MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);"/>
 
     <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
-    <command id="cmd_print" oncommand="PrintUtils.startPrintWindow(window.gBrowser.selectedBrowser.browsingContext);"/>
-    <command id="cmd_printPreview" oncommand="PrintUtils.printPreview(PrintPreviewListener).catch(() => {});"/>
+    <command id="cmd_print" oncommand="PrintUtils.startPrintWindow('cmd_print', gBrowser.selectedBrowser.browsingContext);"/>
+    <!-- cmd_print_kb only exists so that we can differentiate menu prints from keyboard shortcut prints -->
+    <command id="cmd_print_kb" oncommand="PrintUtils.startPrintWindow('cmd_print_kb', gBrowser.selectedBrowser.browsingContext);"/>
+    <command id="cmd_printPreview" oncommand="PrintUtils.printPreview('cmd_printPreview', PrintPreviewListener).catch(() => {});"/>
     <command id="cmd_file_importFromAnotherBrowser" oncommand="MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_FILE_MENU]);"/>
     <command id="cmd_help_importFromAnotherBrowser" oncommand="MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_HELP_MENU]);"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow(event);"/>
@@ -171,7 +173,7 @@
     <key id="key_openAddons" data-l10n-id="addons-shortcut" command="Tools:Addons" modifiers="accel,shift"/>
     <key id="openFileKb" data-l10n-id="file-open-shortcut" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" data-l10n-id="save-page-shortcut" command="Browser:SavePage" modifiers="accel"/>
-    <key id="printKb" data-l10n-id="print-shortcut" command="cmd_print"  modifiers="accel"/>
+    <key id="printKb" data-l10n-id="print-shortcut" command="cmd_print_kb"  modifiers="accel"/>
     <key id="key_close" data-l10n-id="close-shortcut" command="cmd_close" modifiers="accel" reserved="true"/>
     <key id="key_closeWindow" data-l10n-id="close-shortcut" command="cmd_closeWindow" modifiers="accel,shift" reserved="true"/>
     <key id="key_toggleMute" data-l10n-id="mute-toggle-shortcut" command="cmd_toggleMute" modifiers="control"/>

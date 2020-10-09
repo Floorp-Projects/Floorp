@@ -1888,11 +1888,15 @@ class nsContextMenu {
   }
 
   printFrame() {
-    PrintUtils.startPrintWindow(this.actor.browsingContext);
+    PrintUtils.startPrintWindow(
+      "context_print_frame",
+      this.actor.browsingContext
+    );
   }
 
   printSelection() {
     PrintUtils.startPrintWindow(
+      "context_print_selection",
       this.actor.browsingContext,
       /* aOpenWindowInfo = */ null,
       /* aPrintSelectionOnly = */ true

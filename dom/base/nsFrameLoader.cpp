@@ -3297,7 +3297,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       aPrintSettings,
       /* aListener = */ nullptr, docShellToCloneInto,
       nsGlobalWindowOuter::IsPreview::Yes,
-      nsGlobalWindowOuter::BlockUntilDone::No,
+      nsGlobalWindowOuter::IsForWindowDotPrint::No,
       [resolve](const PrintPreviewResultInfo& aInfo) { resolve(aInfo); }, rv);
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(std::move(rv));
@@ -3369,7 +3369,7 @@ already_AddRefed<Promise> nsFrameLoader::Print(uint64_t aOuterWindowID,
   outerWindow->Print(aPrintSettings, listener,
                      /* aDocShellToCloneInto = */ nullptr,
                      nsGlobalWindowOuter::IsPreview::No,
-                     nsGlobalWindowOuter::BlockUntilDone::No,
+                     nsGlobalWindowOuter::IsForWindowDotPrint::No,
                      /* aPrintPreviewCallback = */ nullptr, rv);
   if (rv.Failed()) {
     promise->MaybeReject(std::move(rv));

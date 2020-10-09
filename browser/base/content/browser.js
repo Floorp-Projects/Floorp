@@ -2775,7 +2775,10 @@ function HandleAppCommandEvent(evt) {
       BrowserOpenFileWindow();
       break;
     case "Print":
-      PrintUtils.startPrintWindow(gBrowser.selectedBrowser.browsingContext);
+      PrintUtils.startPrintWindow(
+        "app_command",
+        gBrowser.selectedBrowser.browsingContext
+      );
       break;
     case "Save":
       saveBrowser(gBrowser.selectedBrowser);
@@ -6237,6 +6240,7 @@ nsBrowserAccess.prototype = {
       }
       case Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER: {
         let browser = PrintUtils.startPrintWindow(
+          "window_print",
           aOpenWindowInfo.parent,
           aOpenWindowInfo
         );
@@ -6320,6 +6324,7 @@ nsBrowserAccess.prototype = {
   ) {
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
       return PrintUtils.startPrintWindow(
+        "window_print",
         aParams.openWindowInfo.parent,
         aParams.openWindowInfo
       );

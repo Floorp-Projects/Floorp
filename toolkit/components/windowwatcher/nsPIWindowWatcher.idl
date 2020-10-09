@@ -45,8 +45,8 @@ interface nsPIWindowWatcher : nsISupports
 
   cenum PrintKind : 8 {
     PRINT_NONE,
-    PRINT_REGULAR,
-    PRINT_PREVIEW,
+    PRINT_INTERNAL,
+    PRINT_WINDOW_DOT_PRINT,
   };
 
   /** Like the public interface's open(), but can handle openDialog-style

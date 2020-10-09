@@ -54,11 +54,11 @@ interface nsIOpenWindowInfo : nsISupports {
   readonly attribute boolean isForPrinting;
 
   /**
-   * Whether this is a window opened for print preview.
+   * Whether this is a window opened for window.print().
    * When this is true, isForPrinting is necessarily true as well.
    */
   [infallible]
-  readonly attribute boolean isForPrintPreview;
+  readonly attribute boolean isForWindowDotPrint;
 
   /** BrowserParent instance to use in the new window */
   [notxpcom, nostdcall]
