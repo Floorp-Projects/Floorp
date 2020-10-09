@@ -521,11 +521,11 @@ MOZ_MUST_USE bool SetDenseElement(JSContext* cx, HandleNativeObject obj,
                                   int32_t index, HandleValue value,
                                   bool strict);
 
-void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
-void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
+void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);
 void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);
+void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
 void AssertValidValue(JSContext* cx, Value* v);
 
 void MarkValueFromJit(JSRuntime* rt, Value* vp);
@@ -533,6 +533,24 @@ void MarkStringFromJit(JSRuntime* rt, JSString** stringp);
 void MarkObjectFromJit(JSRuntime* rt, JSObject** objp);
 void MarkShapeFromJit(JSRuntime* rt, Shape** shapep);
 void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp);
+
+// Helper for generatePreBarrier.
+inline void* JitMarkFunction(MIRType type) {
+  switch (type) {
+    case MIRType::Value:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromJit);
+    case MIRType::String:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromJit);
+    case MIRType::Object:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromJit);
+    case MIRType::Shape:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromJit);
+    case MIRType::ObjectGroup:
+      return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromJit);
+    default:
+      MOZ_CRASH();
+  }
+}
 
 bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);

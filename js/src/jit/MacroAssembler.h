@@ -230,12 +230,6 @@ enum class CheckUnsafeCallWithABI {
   DontCheckOther,
 };
 
-// This is a global function made to create the DynFn type in a controlled
-// environment which would check if the function signature has been registered
-// as an ABI function signature.
-template <typename Sig>
-static inline DynFn DynamicFunction(Sig fun);
-
 enum class CharEncoding { Latin1, TwoByte };
 
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
@@ -627,9 +621,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void callWithABI(
       void* fun, MoveOp::Type result = MoveOp::GENERAL,
-      CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-  inline void callWithABI(
-      DynFn fun, MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
   template <typename Sig, Sig fun>
   inline void callWithABI(
@@ -4317,9 +4308,6 @@ static inline MIRType ToMIRType(ABIArgType argType) {
   }
   MOZ_CRASH("unexpected argType");
 }
-
-// Helper for generatePreBarrier.
-inline DynFn JitMarkFunction(MIRType type);
 
 template <class VecT>
 class ABIArgIter {

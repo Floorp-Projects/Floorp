@@ -9,15 +9,10 @@
 
 #include "jslibmath.h"  // js::NumberMod
 #include "jsmath.h"     // js::ecmaPow, js::ecmaHypot, js::hypot3, js::hypot4,
-                        // js::ecmaAtan2, js::UnaryMathFunctionType, js::powi
-#include "jsnum.h"      // js::StringToNumberPure, js::Int32ToStringHelperPure,
-                        // js::NumberToStringHelperPure
-
-#include "builtin/Array.h"      // js::ArrayShiftMoveElements
-#include "builtin/MapObject.h"  // js::MapIteratorObject::next,
-                                // js::SetIteratorObject::next
-#include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
-                                // js::RegExpInstanceOptimizableRaw
+                        // js::ecmaAtan2, js::powi
+#include "builtin/Array.h"   // js::ArrayShiftMoveElements
+#include "builtin/RegExp.h"  // js::RegExpPrototypeOptimizableRaw,
+                             // js::RegExpInstanceOptimizableRaw
 
 #include "irregexp/RegExpAPI.h"
 // js::irregexp::CaseInsensitiveCompareNonUnicode,
@@ -28,20 +23,10 @@
 #include "jit/Bailouts.h"  // js::jit::FinishBailoutToBaseline, js::jit::Bailout,
                            // js::jit::InvalidationBailout
 
-#include "jit/JitFrames.h"    // HandleException
 #include "jit/VMFunctions.h"  // Rest of js::jit::* functions.
 
-#include "js/CallArgs.h"     // JSNative
-#include "js/Conversions.h"  // JS::ToInt32
-#include "js/experimental/JitInfo.h"
-                             // JSJitGetterOp, JSJitSetterOp, JSJitMethodOp
-#include "js/Utility.h"      // js_free
-
+#include "js/Conversions.h"      // JS::ToInt32
 #include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
-#include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
-#include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
-                                 // js::TraceLogStartEvent,
-                                 // js::TraceLogStopEventPrivate
 
 #include "wasm/WasmBuiltins.h"  // js::wasm::*
 
@@ -61,45 +46,29 @@ namespace jit {
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)
 #endif
 
-#define ABIFUNCTION_LIST(_)                                 \
-  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
-  _(js::ArgumentsObject::finishForIonPure)                  \
-  _(js::ArrayShiftMoveElements)                             \
-  _(js::ecmaAtan2)                                          \
-  _(js::ecmaHypot)                                          \
-  _(js::ecmaPow)                                            \
-  _(js::ExecuteRegExpAtomRaw)                               \
-  _(js_free)                                                \
-  _(js::hypot3)                                             \
-  _(js::hypot4)                                             \
-  _(js::Int32ToStringHelperPure)                            \
-  _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
-  _(js::irregexp::CaseInsensitiveCompareUnicode)            \
-  _(js::irregexp::GrowBacktrackStack)                       \
-  _(js::jit::AssertValidBigIntPtr)                          \
-  _(js::jit::AssertValidObjectOrNullPtr)                    \
-  _(js::jit::AssertValidObjectPtr)                          \
-  _(js::jit::AssertValidStringPtr)                          \
-  _(js::jit::AssertValidSymbolPtr)                          \
-  _(js::jit::AssertValidValue)                              \
-  _(js::jit::AssumeUnreachable)                             \
-  _(js::jit::Bailout)                                       \
-  _(js::jit::FinishBailoutToBaseline)                       \
-  _(js::jit::HandleException)                               \
-  _(js::jit::InitBaselineFrameForOsr)                       \
-  _(js::jit::InvalidationBailout)                           \
-  _(js::jit::Printf0)                                       \
-  _(js::jit::Printf1)                                       \
-  _(js::MapIteratorObject::next)                            \
-  _(js::NumberMod)                                          \
-  _(js::NumberToStringHelperPure)                           \
-  _(js::powi)                                               \
-  _(js::RegExpInstanceOptimizableRaw)                       \
-  _(js::RegExpPrototypeOptimizableRaw)                      \
-  _(js::SetIteratorObject::next)                            \
-  _(js::StringToNumberPure)                                 \
-  _(js::TraceLogStartEventPrivate)                          \
-  _(js::TraceLogStopEventPrivate)
+#define ABIFUNCTION_LIST(_)                         \
+  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)            \
+  _(js::ArgumentsObject::finishForIonPure)          \
+  _(js::ArrayShiftMoveElements)                     \
+  _(js::ecmaAtan2)                                  \
+  _(js::ecmaHypot)                                  \
+  _(js::ecmaPow)                                    \
+  _(js::hypot3)                                     \
+  _(js::hypot4)                                     \
+  _(js::irregexp::CaseInsensitiveCompareNonUnicode) \
+  _(js::irregexp::CaseInsensitiveCompareUnicode)    \
+  _(js::irregexp::GrowBacktrackStack)               \
+  _(js::jit::AssumeUnreachable)                     \
+  _(js::jit::Bailout)                               \
+  _(js::jit::FinishBailoutToBaseline)               \
+  _(js::jit::InitBaselineFrameForOsr)               \
+  _(js::jit::InvalidationBailout)                   \
+  _(js::jit::Printf0)                               \
+  _(js::jit::Printf1)                               \
+  _(js::NumberMod)                                  \
+  _(js::powi)                                       \
+  _(js::RegExpInstanceOptimizableRaw)               \
+  _(js::RegExpPrototypeOptimizableRaw)
 
 // List of all ABI functions to be used with callWithABI, which are
 // overloaded. Each entry stores the fully qualified name of the C++ function,
@@ -107,27 +76,7 @@ namespace jit {
 // is not overloaded, you should prefer adding the function to
 // ABIFUNCTION_LIST instead. This list must be sorted with the name of the C++
 // function.
-#define ABIFUNCTION_AND_TYPE_LIST(_)                       \
-  _(js::TraceLogStartEvent,                                \
-    void (*)(TraceLoggerThread*, const TraceLoggerEvent&)) \
-  _(JS::ToInt32, int32_t (*)(double))
-
-// List of all ABI function signature which are using a computed function
-// pointer instead of a statically known function pointer.
-#define ABIFUNCTIONSIG_LIST(_)                       \
-  _(AtomicsCompareExchangeFn)                        \
-  _(AtomicsReadWriteModifyFn)                        \
-  _(float (*)(float))                                \
-  _(JSJitGetterOp)                                   \
-  _(JSJitMethodOp)                                   \
-  _(JSJitSetterOp)                                   \
-  _(JSNative)                                        \
-  _(js::UnaryMathFunctionType)                       \
-  _(void (*)(JSRuntime * rt, JSObject * *objp))      \
-  _(void (*)(JSRuntime * rt, JSString * *stringp))   \
-  _(void (*)(JSRuntime * rt, ObjectGroup * *groupp)) \
-  _(void (*)(JSRuntime * rt, Shape * *shapep))       \
-  _(void (*)(JSRuntime * rt, Value * vp))
+#define ABIFUNCTION_AND_TYPE_LIST(_) _(JS::ToInt32, int32_t (*)(double))
 
 // GCC warns when the signature does not have matching attributes (for example
 // MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
@@ -152,15 +101,6 @@ ABIFUNCTION_LIST(DEF_TEMPLATE)
     static constexpr bool registered = true;  \
   };
 ABIFUNCTION_AND_TYPE_LIST(DEF_TEMPLATE)
-#undef DEF_TEMPLATE
-
-// Define a known list of function signatures.
-#define DEF_TEMPLATE(...)                        \
-  template <>                                    \
-  struct ABIFunctionSignatureData<__VA_ARGS__> { \
-    static constexpr bool registered = true;     \
-  };
-ABIFUNCTIONSIG_LIST(DEF_TEMPLATE)
 #undef DEF_TEMPLATE
 
 #if MOZ_IS_GCC
