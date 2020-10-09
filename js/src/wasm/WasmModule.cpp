@@ -1336,10 +1336,8 @@ bool Module::makeStructTypeDescrs(
     // prevent JS from constructing instances of them.
 
     Rooted<StructTypeDescr*> structTypeDescr(
-        cx, StructMetaTypeDescr::createFromArrays(cx, prototype,
-                                                  /* opaque= */ true,
-                                                  allowConstruct, ids,
-                                                  fieldTypeObjs, fieldProps));
+        cx, StructMetaTypeDescr::createFromArrays(
+                cx, prototype, allowConstruct, ids, fieldTypeObjs, fieldProps));
 
     if (!structTypeDescr || !structTypeDescrs.append(structTypeDescr)) {
       return false;
