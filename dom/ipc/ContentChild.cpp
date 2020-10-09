@@ -1127,7 +1127,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
                    aWidthSpecified, aOpenWindowInfo->GetIsForPrinting(),
-                   aOpenWindowInfo->GetIsForPrintPreview(), aURI, features,
+                   aOpenWindowInfo->GetIsForWindowDotPrint(), aURI, features,
                    fullZoom, Principal(triggeringPrincipal), csp, referrerInfo,
                    aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
                    std::move(reject));

@@ -5251,14 +5251,14 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
                          !StaticPrefs::print_always_print_silent();
   Print(nullptr, nullptr, nullptr, IsPreview(isPreview),
-        BlockUntilDone(isPreview), nullptr, aError);
+        IsForWindowDotPrint::Yes, nullptr, aError);
 #endif
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
     nsIDocShell* aDocShellToCloneInto, IsPreview aIsPreview,
-    BlockUntilDone aBlockUntilDone,
+    IsForWindowDotPrint aForWindowDotPrint,
     PrintPreviewResolver&& aPrintPreviewCallback, ErrorResult& aError) {
 #ifdef NS_PRINTING
   nsCOMPtr<nsIPrintSettingsService> printSettingsService =
@@ -5292,7 +5292,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   if (docToPrint->IsStaticDocument() &&
       (aIsPreview == IsPreview::Yes ||
        StaticPrefs::print_tab_modal_enabled())) {
-    MOZ_DIAGNOSTIC_ASSERT(aBlockUntilDone == BlockUntilDone::No);
+    MOZ_DIAGNOSTIC_ASSERT(aForWindowDotPrint == IsForWindowDotPrint::No);
     // We're already a print preview window, just reuse our browsing context /
     // content viewer.
     bc = sourceBC;
@@ -5315,8 +5315,9 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       bc = aDocShellToCloneInto->GetBrowsingContext();
     } else {
       AutoNoJSAPI nojsapi;
-      auto printKind = aIsPreview == IsPreview::Yes ? PrintKind::PrintPreview
-                                                    : PrintKind::Print;
+      auto printKind = aForWindowDotPrint == IsForWindowDotPrint::Yes
+                           ? PrintKind::WindowDotPrint
+                           : PrintKind::InternalPrint;
       aError = OpenInternal(u""_ns, u""_ns, u""_ns,
                             false,             // aDialog
                             false,             // aContentModal
@@ -5388,11 +5389,10 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   }
 
   if (aIsPreview == IsPreview::Yes) {
-    // When using the new print preview UI from window.print()
-    // (BlockUntilDone::Yes), this would be wasted work (and use
-    // probably-incorrect settings). So skip it, the preview UI will take care
-    // of calling PrintPreview again.
-    if (aBlockUntilDone != BlockUntilDone::Yes) {
+    // When using the new print preview UI from window.print() this would be
+    // wasted work (and use probably-incorrect settings). So skip it, the
+    // preview UI will take care of calling PrintPreview again.
+    if (aForWindowDotPrint == IsForWindowDotPrint::No) {
       aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener,
                                              std::move(aPrintPreviewCallback));
       if (aError.Failed()) {
@@ -5404,13 +5404,14 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     webBrowserPrint->Print(aPrintSettings, aListener);
   }
 
-  // When aBlockUntilDone is true, we usually want to block until the print
-  // dialog is hidden. But we can't really do that if we have print callbacks,
-  // because we are inside a sync operation, and we want to run microtasks / etc
-  // that the print callbacks may create.
+  // When using window.print() with the new UI, we usually want to block until
+  // the print dialog is hidden. But we can't really do that if we have print
+  // callbacks, because we are inside a sync operation, and we want to run
+  // microtasks / etc that the print callbacks may create.
   //
   // It is really awkward to have this subtle behavior difference...
-  if (aBlockUntilDone == BlockUntilDone::Yes && !hasPrintCallbacks) {
+  if (aIsPreview == IsPreview::Yes &&
+      aForWindowDotPrint == IsForWindowDotPrint::Yes && !hasPrintCallbacks) {
     SpinEventLoopUntil([&] { return bc->IsDiscarded(); });
   }
 
@@ -7249,10 +7250,10 @@ nsresult nsGlobalWindowOuter::OpenInternal(
     switch (aPrintKind) {
       case PrintKind::None:
         return nsPIWindowWatcher::PRINT_NONE;
-      case PrintKind::Print:
-        return nsPIWindowWatcher::PRINT_REGULAR;
-      case PrintKind::PrintPreview:
-        return nsPIWindowWatcher::PRINT_PREVIEW;
+      case PrintKind::InternalPrint:
+        return nsPIWindowWatcher::PRINT_INTERNAL;
+      case PrintKind::WindowDotPrint:
+        return nsPIWindowWatcher::PRINT_WINDOW_DOT_PRINT;
     }
     MOZ_ASSERT_UNREACHABLE("Wat");
     return nsPIWindowWatcher::PRINT_NONE;

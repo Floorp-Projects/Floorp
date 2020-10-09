@@ -168,6 +168,7 @@ class BrowserDOMWindow {
     // of a window.open call.
     if (where == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
       return PrintUtils.startPrintWindow(
+        "window_print",
         params.openWindowInfo.parent,
         params.openWindowInfo
       );

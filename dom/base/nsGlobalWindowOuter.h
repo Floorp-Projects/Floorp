@@ -587,10 +587,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void PrintOuter(mozilla::ErrorResult& aError);
 
   enum class IsPreview : bool { No, Yes };
-  enum class BlockUntilDone : bool { No, Yes };
+  enum class IsForWindowDotPrint : bool { No, Yes };
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Print(
       nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*, IsPreview,
-      BlockUntilDone, PrintPreviewResolver&&, mozilla::ErrorResult&);
+      IsForWindowDotPrint, PrintPreviewResolver&&, mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();
@@ -749,7 +749,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
  private:
   explicit nsGlobalWindowOuter(uint64_t aWindowID);
 
-  enum class PrintKind : uint8_t { None, Print, PrintPreview };
+  enum class PrintKind : uint8_t { None, InternalPrint, WindowDotPrint };
 
   /**
    * @param aUrl the URL we intend to load into the window.  If aNavigate is
