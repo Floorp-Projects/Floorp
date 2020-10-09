@@ -11,9 +11,8 @@ async protocol PGamepadTestChannel {
   manager PBackground;
   parent:
     async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
-    async ShutdownChannel();
-  child:
     async __delete__();
+  child:
     async ReplyGamepadIndex(uint32_t aID, uint32_t aIndex);
 };
 
