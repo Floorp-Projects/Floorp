@@ -276,11 +276,6 @@ JS_FRIEND_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
   return StringIsArrayIndexHelper(str, length, indexp);
 }
 
-JS_FRIEND_API bool js::StringIsArrayIndex(const char* str, uint32_t length,
-                                          uint32_t* indexp) {
-  return StringIsArrayIndexHelper(str, length, indexp);
-}
-
 template <typename T>
 static bool ToId(JSContext* cx, T index, MutableHandleId id);
 

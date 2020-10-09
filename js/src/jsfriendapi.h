@@ -483,12 +483,9 @@ JS_FRIEND_API bool AppendUnique(JSContext* cx, JS::MutableHandleIdVector base,
 JS_FRIEND_API bool StringIsArrayIndex(JSLinearString* str, uint32_t* indexp);
 
 /**
- * Overloads of StringIsArrayIndex taking (char*,length) pairs.  These
- * behave the same as the JSLinearString version.
+ * Overload of StringIsArrayIndex taking a (char16_t*,length) pair. Behaves
+ * the same as the JSLinearString version.
  */
-JS_FRIEND_API bool StringIsArrayIndex(const char* str, uint32_t length,
-                                      uint32_t* indexp);
-
 JS_FRIEND_API bool StringIsArrayIndex(const char16_t* str, uint32_t length,
                                       uint32_t* indexp);
 
