@@ -790,14 +790,6 @@ JS_FRIEND_API bool js::ForwardToNative(JSContext* cx, JSNative native,
   return native(cx, args.length(), args.base());
 }
 
-JS_FRIEND_API JSAtom* js::GetPropertyNameFromPC(JSScript* script,
-                                                jsbytecode* pc) {
-  if (!IsGetPropPC(pc) && !IsSetPropPC(pc)) {
-    return nullptr;
-  }
-  return script->getName(pc);
-}
-
 AutoAssertNoContentJS::AutoAssertNoContentJS(JSContext* cx)
     : context_(cx), prevAllowContentJS_(cx->runtime()->allowContentJS_) {
   cx->runtime()->allowContentJS_ = false;
