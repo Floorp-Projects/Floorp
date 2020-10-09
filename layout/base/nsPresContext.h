@@ -283,6 +283,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void ContentLanguageChanged();
 
+  enum class RecurseIntoInProcessSubDocuments : bool { No, Yes };
+
   /**
    * Handle changes in the values of media features (used in media queries).
    */
@@ -296,7 +298,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    * features that must be updated in all subdocuments e.g. display-mode.
    */
   void MediaFeatureValuesChangedAllDocuments(
-      const mozilla::MediaFeatureChange&);
+      const mozilla::MediaFeatureChange&,
+      RecurseIntoInProcessSubDocuments = RecurseIntoInProcessSubDocuments::Yes);
 
   /**
    * Updates the size mode on all remote children and recursively notifies this
