@@ -3,23 +3,24 @@
 
 "use strict";
 
-// Test that CSS property names are case insensitive when validating.
-
 const TEST_URI = `
-  <style type='text/css'>
+  <style>
     div {
       color: red;
+      width: 10; /* This document is in quirks mode so this value should be valid */
     }
   </style>
   <div></div>
 `;
 
+// Test that CSS property names are case insensitive when validating, and that
+// quirks mode is accounted for when validating.
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView } = await openRuleView();
 
   await selectNode("div", inspector);
-  const prop = getTextProperty(ruleView, 1, { color: "red" });
+  let prop = getTextProperty(ruleView, 1, { color: "red" });
 
   let onRuleViewChanged;
 
@@ -42,4 +43,9 @@ add_task(async function() {
   is(prop.overridden, false, "Uppercase property is not overriden");
   is(prop.enabled, true, "Uppercase property is enabled");
   is(prop.isNameValid(), true, "Uppercase property is valid");
+
+  info(`Checking width validity`);
+  prop = getTextProperty(ruleView, 1, { width: "10" });
+  is(prop.isNameValid(), true, "width is a valid property");
+  is(prop.isValid(), true, "10 is a valid property value in quirks mode");
 });
