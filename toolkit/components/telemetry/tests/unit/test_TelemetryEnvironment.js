@@ -340,16 +340,29 @@ function spoofPartnerInfo() {
   }
 }
 
-async function spoofAttributionData() {
-  if (gIsWindows || gIsMac) {
+function getAttributionFile() {
+  return FileUtils.getFile("LocalAppData", [
+    "mozilla",
+    AppConstants.MOZ_APP_NAME,
+    "postSigningData",
+  ]);
+}
+
+function spoofAttributionData() {
+  if (gIsWindows) {
     AttributionCode._clearCache();
-    await AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
+    let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+      Ci.nsIFileOutputStream
+    );
+    stream.init(getAttributionFile(), -1, -1, 0);
+    stream.write(ATTRIBUTION_CODE, ATTRIBUTION_CODE.length);
+    stream.close();
   }
 }
 
 function cleanupAttributionData() {
-  if (gIsWindows || gIsMac) {
-    AttributionCode.attributionFile.remove(false);
+  if (gIsWindows) {
+    getAttributionFile().remove(false);
     AttributionCode._clearCache();
   }
 }
@@ -490,7 +503,7 @@ function checkSettingsSection(data) {
     Assert.equal(typeof data.settings.defaultPrivateSearchEngineData, "object");
   }
 
-  if ((gIsWindows || gIsMac) && AppConstants.MOZ_BUILD_APP == "browser") {
+  if (gIsWindows && AppConstants.MOZ_BUILD_APP == "browser") {
     Assert.equal(typeof data.settings.attribution, "object");
     Assert.equal(data.settings.attribution.source, "google.com");
   }
