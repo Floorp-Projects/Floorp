@@ -10,9 +10,6 @@ with Files('AUTHORS'):
 with Files('LICENSE'):
     BUG_COMPONENT = ('mozilla.org', 'Licensing')
 
-with Files('LEGAL'):
-    BUG_COMPONENT = ('mozilla.org', 'Licensing')
-
 with Files('aclocal.m4'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
