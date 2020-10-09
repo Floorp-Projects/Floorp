@@ -3807,11 +3807,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
     return false;
   }
 
-  if (!SharedImmutableScriptData::shareScriptData(cx,
-                                                  scriptStencil.sharedData)) {
-    return false;
-  }
-
   script->initSharedData(scriptStencil.sharedData);
 
   // NOTE: JSScript is now constructed and should be linked in.
