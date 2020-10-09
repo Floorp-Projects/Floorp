@@ -887,23 +887,6 @@ interface nsIDocShell : nsIDocShellTreeItem
 %}
 
   /**
-   * Allowed CSS display modes. This needs to be kept in
-   * sync with similar values in ServoStyleConsts.h
-   */
-  cenum DisplayMode: 8 {
-    DISPLAY_MODE_BROWSER = 0,
-    DISPLAY_MODE_MINIMAL_UI = 1,
-    DISPLAY_MODE_STANDALONE = 2,
-    DISPLAY_MODE_FULLSCREEN = 3,
-  };
-
-  /**
-   * Display mode for this docshell. Defaults to DISPLAY_MODE_BROWSER.
-   * Media queries only look at the value in the top-most docshell.
-   */
-  [infallible] attribute nsIDocShell_DisplayMode displayMode;
-
-  /**
    * The message manager for this docshell.  This does not throw, but
    * can return null if the docshell has no message manager.
    */

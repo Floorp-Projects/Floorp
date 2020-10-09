@@ -19,6 +19,7 @@
 #include "nsIPrintSettings.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/BrowsingContextBinding.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "mozilla/RelativeLuminanceUtils.h"
@@ -198,21 +199,21 @@ StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(const Document* aDocument) {
     }
   }
 
-  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER ==
+  static_assert(static_cast<int32_t>(DisplayMode::Browser) ==
                         static_cast<int32_t>(StyleDisplayMode::Browser) &&
-                    nsIDocShell::DISPLAY_MODE_MINIMAL_UI ==
+                    static_cast<int32_t>(DisplayMode::Minimal_ui) ==
                         static_cast<int32_t>(StyleDisplayMode::MinimalUi) &&
-                    nsIDocShell::DISPLAY_MODE_STANDALONE ==
+                    static_cast<int32_t>(DisplayMode::Standalone) ==
                         static_cast<int32_t>(StyleDisplayMode::Standalone) &&
-                    nsIDocShell::DISPLAY_MODE_FULLSCREEN ==
+                    static_cast<int32_t>(DisplayMode::Fullscreen) ==
                         static_cast<int32_t>(StyleDisplayMode::Fullscreen),
-                "nsIDocShell display modes must mach nsStyleConsts.h");
+                "DisplayMode must mach nsStyleConsts.h");
 
-  nsIDocShell* docShell = rootDocument->GetDocShell();
-  if (!docShell) {
+  BrowsingContext* browsingContext = aDocument->GetBrowsingContext();
+  if (!browsingContext) {
     return StyleDisplayMode::Browser;
   }
-  return static_cast<StyleDisplayMode>(docShell->GetDisplayMode());
+  return static_cast<StyleDisplayMode>(browsingContext->DisplayMode());
 }
 
 bool Gecko_MediaFeatures_HasSystemMetric(const Document* aDocument,

@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1648157
+-->
+<head>
+  <title>Test for displayMode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="property_database.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+  <iframe id="iframe" src="http://example.org/tests/layout/style/test/media_queries_iframe2.html"></iframe>
+</p>
+<pre id="test">
+<script class="testbody">
+let iframe = document.getElementById("iframe");
+
+// Keep in sync with media_queries_iframe2.html
+const DISPLAY_MODES_BACKGROUND_COLOR = {
+  'minimal-ui': 'rgb(255, 0, 0)',
+  'standalone': 'rgb(0, 128, 0)',
+  'fullscreen': 'rgb(0, 0, 255)',
+  'browser':    'rgb(255, 255, 0)'
+};
+const DISPLAY_MODES = Object.keys(DISPLAY_MODES_BACKGROUND_COLOR);
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", async (event) => {
+  const wrappedWindow = SpecialPowers.wrap(window);
+
+  function setDisplayMode(mode) {
+    wrappedWindow.browsingContext.top.displayMode = mode;
+  }
+
+  async function displayModeApplies(mode) {
+    let responsePromise = new Promise(resolve => {
+      window.addEventListener("message", e => {
+        resolve(e.data.backgroundColor);
+      }, { once: true });
+    });
+    iframe.contentWindow.postMessage('get-background-color', '*');
+    let response = await responsePromise;
+    let expected = DISPLAY_MODES_BACKGROUND_COLOR[mode];
+
+    info(`displayModeApplies: ${response} === ${expected}`);
+    return response === expected;
+  }
+
+  async function checkIfApplies(q, shouldApply) {
+    let message = shouldApply ? "should apply" : "should not apply";
+    is((await displayModeApplies(q)), shouldApply, `${q} ${message}`);
+  }
+
+  for (let currentMode of DISPLAY_MODES) {
+    setDisplayMode(currentMode);
+
+    for (let mode of DISPLAY_MODES) {
+      await checkIfApplies(mode, currentMode === mode);
+    }
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
