@@ -24,7 +24,6 @@ class PanZoomControllerTest : BaseSessionTest() {
     private val scrollWaitTimeout = 10000.0 // 10 seconds
 
     private fun setupScroll() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
         sessionRule.session.loadTestPath(SCROLL_TEST_PATH)
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)

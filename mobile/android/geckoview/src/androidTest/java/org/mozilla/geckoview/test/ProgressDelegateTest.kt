@@ -294,8 +294,6 @@ class ProgressDelegateTest : BaseSessionTest() {
     }
 
     fun collectState(vararg uris: String) : GeckoSession.SessionState {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
-
         for (uri in uris) {
             mainSession.loadUri(uri)
             sessionRule.waitForPageStop()
@@ -393,8 +391,6 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @WithDisplay(width = 400, height = 400)
     @Test fun flushSessionState() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
-
         val startUri = createTestUrl(SAVE_STATE_PATH)
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
