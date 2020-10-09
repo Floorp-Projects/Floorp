@@ -103,6 +103,21 @@
         <item>1</item>
     </string-array>
 
+    <string name="key_display_mode">display_mode</string>
+    <item type="integer" name="display_mode_default">0</item>
+    <string-array name="pref_display_mode_names">
+        <item>Browser</item>
+        <item>MinimalUi</item>
+        <item>Standalone</item>
+        <item>Fullscreen</item>
+    </string-array>
+    <string-array name="pref_display_mode_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
     <string name="before_unload_message">This page is asking you to confirm that you want to leave - data you have entered may not be saved</string>
     <string name="before_unload_title">Are you sure?</string>
     <string name="before_unload_leave_page">Leave Page</string>
