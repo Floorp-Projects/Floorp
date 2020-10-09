@@ -153,7 +153,7 @@
         android:id="@+id/copyPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@null"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/saved_logins_copy_password"
         app:layout_constraintBottom_toBottomOf="@id/passwordText"
         app:layout_constraintEnd_toEndOf="@id/openWebAddress"
