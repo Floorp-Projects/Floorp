@@ -348,7 +348,7 @@ interface nsIHTMLEditor : nsISupports
    *
    * @return    true if CSS handled and enabled
    */
-  attribute boolean isCSSEnabled;
+  [setter_can_run_script] attribute boolean isCSSEnabled;
 
   /**
    * checkSelectionStateForAnonymousButtons() may refresh editing UI such as
