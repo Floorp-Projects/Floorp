@@ -1322,7 +1322,7 @@ var Policies = {
 
   OverrideFirstRunPage: {
     onProfileAfterChange(manager, param) {
-      let url = param ? param.href : "";
+      let url = param ? param : "";
       setAndLockPref("startup.homepage_welcome_url", url);
       setAndLockPref("browser.aboutwelcome.enabled", false);
     },
