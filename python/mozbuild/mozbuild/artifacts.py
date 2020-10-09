@@ -994,12 +994,25 @@ class Artifacts(object):
                 continue
             hashes.append(hg_hash)
         if not hashes:
-            raise UserError(
-                'Could not list any recent revisions in your clone. Does your '
-                'clone have git-cinnabar metadata? If not, consider re-cloning '
-                'using the directions at '
-                'https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-'
-                'workflow-for-Gecko-development')
+            msg = ('Could not list any recent revisions in your clone. Does '
+                   'your clone have git-cinnabar metadata? If not, consider '
+                   're-cloning using the directions at '
+                   'https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-'
+                   'git-workflow-for-Gecko-development')
+            try:
+                subprocess.check_output(
+                    [self._git, 'cat-file', '-e',
+                     '05e5d33a570d48aed58b2d38f5dfc0a7870ff8d3^{commit}'],
+                    stderr=subprocess.STDOUT)
+                # If the above commit exists, we're probably in a clone of
+                # `gecko-dev`, and this documentation applies.
+                msg += ('\n\nNOTE: Consider following the directions '
+                        'at https://github.com/glandium/git-cinnabar/wiki/'
+                        'Mozilla:-Using-a-git-clone-of-gecko%E2%80%90dev-'
+                        'to-push-to-mercurial to resolve this issue.')
+            except subprocess.CalledProcessError:
+                pass
+            raise UserError(msg)
         return hashes
 
     def _get_recent_public_revisions(self):
