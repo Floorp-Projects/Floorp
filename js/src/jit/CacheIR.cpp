@@ -1868,7 +1868,8 @@ AttachDecision GetPropIRGenerator::tryAttachTypedObject(HandleObject obj,
     Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
     monitorLoad = type == Scalar::Uint32;
   } else {
-    monitorLoad = true;
+    ReferenceType type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
+    monitorLoad = type != ReferenceType::TYPE_STRING;
   }
 
   if (monitorLoad) {
@@ -3944,8 +3945,13 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
   // StoreTypedObjectReferenceProperty is infallible.
   ReferenceType type = fieldDescr->as<ReferenceTypeDescr>().type();
   switch (type) {
+    case ReferenceType::TYPE_ANY:
+      break;
     case ReferenceType::TYPE_OBJECT:
       writer.guardIsObjectOrNull(rhsId);
+      break;
+    case ReferenceType::TYPE_STRING:
+      writer.guardNonDoubleType(rhsId, ValueType::String);
       break;
     case ReferenceType::TYPE_WASM_ANYREF:
       MOZ_CRASH();

@@ -1623,12 +1623,16 @@ bool IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
+  // We don't need to check property types if the property is always a
+  // string.
+  if (type != ReferenceType::TYPE_STRING) {
+    FailurePath* failure;
+    if (!addFailurePath(&failure)) {
+      return false;
+    }
+    EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, TypedOrValueRegister(val),
+                           *liveRegs_, failure->label());
   }
-  EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, TypedOrValueRegister(val),
-                         *liveRegs_, failure->label());
 
   // Compute the address being written to.
   LoadTypedThingData(masm, layout, obj, scratch1);

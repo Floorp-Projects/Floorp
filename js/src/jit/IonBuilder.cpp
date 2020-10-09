@@ -13,6 +13,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/ModuleObject.h"
+#include "builtin/TypedObject.h"
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
@@ -37,7 +38,6 @@
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
-#include "wasm/TypedObject.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"

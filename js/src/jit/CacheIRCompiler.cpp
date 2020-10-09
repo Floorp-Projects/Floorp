@@ -5525,6 +5525,10 @@ bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
   } else {
     ReferenceType type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
     switch (type) {
+      case ReferenceType::TYPE_ANY:
+        masm.loadValue(fieldAddr, output.valueReg());
+        break;
+
       case ReferenceType::TYPE_WASM_ANYREF:
         // TODO/AnyRef-boxing: With boxed immediates and strings this may be
         // more complicated.
@@ -5539,6 +5543,11 @@ bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
         masm.bind(&done);
         break;
       }
+
+      case ReferenceType::TYPE_STRING:
+        masm.loadPtr(fieldAddr, scratch2);
+        masm.tagValue(JSVAL_TYPE_STRING, scratch2, output.valueReg());
+        break;
 
       default:
         MOZ_CRASH("Invalid ReferenceTypeDescr");
@@ -6623,6 +6632,11 @@ void CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val,
   // Callers will post-barrier this store.
 
   switch (type) {
+    case ReferenceType::TYPE_ANY:
+      EmitPreBarrier(masm, dest, MIRType::Value);
+      masm.storeValue(val, dest);
+      break;
+
     case ReferenceType::TYPE_WASM_ANYREF:
       // TODO/AnyRef-boxing: With boxed immediates and strings this may be
       // more complicated.
@@ -6637,6 +6651,12 @@ void CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val,
       masm.bind(&done);
       break;
     }
+
+    case ReferenceType::TYPE_STRING:
+      EmitPreBarrier(masm, dest, MIRType::String);
+      masm.unboxString(val, scratch);
+      masm.storePtr(scratch, dest);
+      break;
   }
 }
 

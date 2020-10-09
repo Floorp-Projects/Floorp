@@ -39,6 +39,9 @@
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/Symbol.h"
+#ifdef JS_HAS_TYPED_OBJECTS
+#  include "builtin/TypedObject.h"
+#endif
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
@@ -72,6 +75,7 @@ extern const JSClass IntlClass;
 extern const JSClass JSONClass;
 extern const JSClass MathClass;
 extern const JSClass ReflectClass;
+extern const JSClass WebAssemblyClass;
 
 }  // namespace js
 
@@ -89,13 +93,13 @@ JS_FRIEND_API const JSClass* js::ProtoKeyToClass(JSProtoKey key) {
 }
 
 // This method is not in the header file to avoid having to include
-// WasmJS.h from GlobalObject.h. It is not generally perf
+// TypedObject.h from GlobalObject.h. It is not generally perf
 // sensitive.
-WasmNamespaceObject& js::GlobalObject::getWebAssemblyNamespace() const {
-  Value v = getConstructor(JSProto_WebAssembly);
-  // only gets called from contexts where WebAssembly must be initialized
+TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
+  Value v = getConstructor(JSProto_TypedObject);
+  // only gets called from contexts where TypedObject must be initialized
   MOZ_ASSERT(v.isObject());
-  return v.toObject().as<WasmNamespaceObject>();
+  return v.toObject().as<TypedObjectModuleObject>();
 }
 
 /* static */
@@ -174,6 +178,11 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_NumberFormat:
     case JSProto_PluralRules:
     case JSProto_RelativeTimeFormat:
+      return false;
+#endif
+
+#ifdef JS_HAS_TYPED_OBJECTS
+    case JSProto_TypedObject:
       return false;
 #endif
 

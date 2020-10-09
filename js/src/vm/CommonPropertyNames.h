@@ -95,6 +95,7 @@
         "constructContentFunction")                                            \
   MACRO(constructor, constructor, "constructor")                               \
   MACRO(continue, continue_, "continue")                                       \
+  MACRO(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo")                \
   MACRO(CopyDataProperties, CopyDataProperties, "CopyDataProperties")          \
   MACRO(CopyDataPropertiesUnfiltered, CopyDataPropertiesUnfiltered,            \
         "CopyDataPropertiesUnfiltered")                                        \

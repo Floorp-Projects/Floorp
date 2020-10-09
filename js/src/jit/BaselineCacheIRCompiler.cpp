@@ -1120,11 +1120,14 @@ bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch2(allocator, masm);
 
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch1, saveRegs)) {
-    return false;
+  // We don't need a type update IC if the property is always a string.
+  if (type != ReferenceType::TYPE_STRING) {
+    LiveGeneralRegisterSet saveRegs;
+    saveRegs.add(obj);
+    saveRegs.add(val);
+    if (!callTypeUpdateIC(obj, val, scratch1, saveRegs)) {
+      return false;
+    }
   }
 
   // Compute the address being written to.

@@ -6,7 +6,7 @@
 
 #include "vm/ReceiverGuard.h"
 
-#include "wasm/TypedObject.h"
+#include "builtin/TypedObject.h"
 
 #include "vm/JSObject-inl.h"
 

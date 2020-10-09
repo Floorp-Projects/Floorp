@@ -55,7 +55,7 @@ class LexicalEnvironmentObject;
 class PlainObject;
 class RegExpStatics;
 class TypeDescr;
-class WasmNamespaceObject;
+class TypedObjectModuleObject;
 
 enum class ReferenceType;
 
@@ -500,9 +500,9 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_WeakSet).toObject().as<NativeObject>();
   }
 
-  static JSObject* getOrCreateWebAssemblyNamespace(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateConstructor(cx, JSProto_WebAssembly);
+  static JSObject* getOrCreateTypedObjectModule(JSContext* cx,
+                                                Handle<GlobalObject*> global) {
+    return getOrCreateConstructor(cx, JSProto_TypedObject);
   }
 
   static TypeDescr* getOrCreateScalarTypeDescr(JSContext* cx,
@@ -513,7 +513,7 @@ class GlobalObject : public NativeObject {
                                                   Handle<GlobalObject*> global,
                                                   ReferenceType type);
 
-  WasmNamespaceObject& getWebAssemblyNamespace() const;
+  TypedObjectModuleObject& getTypedObjectModule() const;
 
   static bool ensureModulePrototypesCreated(JSContext* cx,
                                             Handle<GlobalObject*> global);
@@ -872,6 +872,10 @@ class GlobalObject : public NativeObject {
   static bool initExportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
   static bool initRequestedModuleProto(JSContext* cx,
                                        Handle<GlobalObject*> global);
+
+  // Implemented in builtin/TypedObject.cpp
+  static bool initTypedObjectModule(JSContext* cx,
+                                    Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
   static bool initSelfHostingBuiltins(JSContext* cx,

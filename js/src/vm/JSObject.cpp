@@ -64,6 +64,7 @@
 #include "vm/TypedArrayObject.h"
 
 #include "builtin/Boolean-inl.h"
+#include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
@@ -82,7 +83,6 @@
 #include "vm/StringObject-inl.h"
 #include "vm/TypedArrayObject-inl.h"
 #include "vm/TypeInference-inl.h"
-#include "wasm/TypedObject-inl.h"
 
 using namespace js;
 

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef wasm_TypedObject_inl_h
-#define wasm_TypedObject_inl_h
+#ifndef builtin_TypedObject_inl_h
+#define builtin_TypedObject_inl_h
 
-#include "wasm/TypedObject.h"
+#include "builtin/TypedObject.h"
 
 #include "gc/ObjectKind-inl.h"
 
@@ -20,4 +20,4 @@ js::gc::AllocKind js::InlineTypedObject::allocKindForTypeDescriptor(
   return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
 }
 
-#endif  // wasm_TypedObject_inl_h
+#endif  // builtin_TypedObject_inl_h
