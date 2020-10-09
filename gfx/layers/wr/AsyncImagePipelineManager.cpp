@@ -631,6 +631,20 @@ void AsyncImagePipelineManager::ProcessPipelineRendered(
         holder->mTextureHostsUntilRenderSubmitted.begin(),
         holder->mTextureHostsUntilRenderSubmitted.end(),
         [&aEpoch](const auto& entry) { return aEpoch <= entry.mEpoch; });
+#ifdef MOZ_WIDGET_ANDROID
+    // Set release fence if TextureHost owns AndroidHardwareBuffer.
+    // The TextureHost handled by mTextureHostsUntilRenderSubmitted instead of
+    // mTextureHostsUntilRenderCompleted, since android fence could be used
+    // to wait until its end of usage by GPU.
+    for (auto it = holder->mTextureHostsUntilRenderSubmitted.begin();
+         it != firstSubmittedHostToKeep; ++it) {
+      const auto& entry = it;
+      if (entry->mTexture->GetAndroidHardwareBuffer()) {
+        ipc::FileDescriptor fenceFd = mReleaseFenceFd;
+        entry->mTexture->SetReleaseFence(std::move(fenceFd));
+      }
+    }
+#endif
     holder->mTextureHostsUntilRenderSubmitted.erase(
         holder->mTextureHostsUntilRenderSubmitted.begin(),
         firstSubmittedHostToKeep);
@@ -697,19 +711,6 @@ void AsyncImagePipelineManager::ProcessPipelineRemoved(
 
 void AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU() {
   uint64_t lastCompletedFrameId = mLastCompletedFrameId;
-
-#ifdef MOZ_WIDGET_ANDROID
-  // Set release fence if TextureHost owns AndroidHardwareBuffer.
-  for (auto& it : mTexturesInUseByGPU) {
-    auto& textures = it.second;
-    for (auto& texture : textures) {
-      if (texture->mTexture->GetAndroidHardwareBuffer()) {
-        ipc::FileDescriptor fenceFd = mReleaseFenceFd;
-        texture->mTexture->SetReleaseFence(std::move(fenceFd));
-      }
-    }
-  }
-#endif
 
   // Find first entry after mLastCompletedFrameId and release all prior ones.
   auto firstTexturesToKeep =
