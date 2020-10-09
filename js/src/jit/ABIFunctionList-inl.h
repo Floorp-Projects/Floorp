@@ -112,6 +112,7 @@ namespace jit {
   _(js::jit::CreateMatchResultFallbackFunc)                 \
   _(js::jit::EqualStringsHelperPure)                        \
   _(js::jit::FinishBailoutToBaseline)                       \
+  _(js::jit::FrameIsDebuggeeCheck)                          \
   _(js::jit::GetDynamicNamePure)                            \
   _(js::jit::GetIndexFromString)                            \
   _(js::jit::GetInt32FromStringPure)                        \
@@ -119,6 +120,8 @@ namespace jit {
   _(js::jit::GetNativeDataPropertyByValuePure<true>)        \
   _(js::jit::GetNativeDataPropertyPure<false>)              \
   _(js::jit::GetNativeDataPropertyPure<true>)               \
+  _(js::jit::GlobalHasLiveOnDebuggerStatement)              \
+  _(js::jit::GroupHasPropertyTypes)                         \
   _(js::jit::HandleCodeCoverageAtPC)                        \
   _(js::jit::HandleCodeCoverageAtPrologue)                  \
   _(js::jit::HandleException)                               \
@@ -129,6 +132,9 @@ namespace jit {
   _(js::jit::InvalidationBailout)                           \
   _(js::jit::InvokeFromInterpreterStub)                     \
   _(js::jit::LazyLinkTopActivation)                         \
+  _(js::jit::ObjectHasGetterSetterPure)                     \
+  _(js::jit::ObjectIsCallable)                              \
+  _(js::jit::ObjectIsConstructor)                           \
   _(js::jit::PostGlobalWriteBarrier)                        \
   _(js::jit::PostWriteBarrier)                              \
   _(js::jit::PostWriteElementBarrier<IndexInBounds::Yes>)   \
@@ -138,6 +144,7 @@ namespace jit {
   _(js::jit::SetNativeDataPropertyPure<false>)              \
   _(js::jit::SetNativeDataPropertyPure<true>)               \
   _(js::jit::StringFromCharCodeNoGC)                        \
+  _(js::jit::TypeOfObject)                                  \
   _(js::jit::WrapObjectPure)                                \
   _(js::MapIteratorObject::next)                            \
   _(js::NativeObject::addDenseElementPure)                  \
