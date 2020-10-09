@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.bookmarks.viewholders
 
-import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -12,10 +11,11 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.hideAndDisable
-import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.showAndEnable
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
@@ -64,7 +64,7 @@ class BookmarkNodeViewHolder(
 
         // Hide menu button if this item is a root folder or is selected
         if (item.type == BookmarkNodeType.FOLDER && item.inRoots()) {
-            containerView.overflowView.visibility = View.GONE
+            containerView.overflowView.removeAndDisable()
         } else if (payload.modeChanged) {
             if (mode is BookmarkFragmentState.Mode.Selecting) {
                 containerView.overflowView.hideAndDisable()
