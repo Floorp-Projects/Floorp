@@ -38,6 +38,7 @@ import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
@@ -77,6 +78,11 @@ class GeckoEngineSession(
     private val context: CoroutineContext = Dispatchers.IO,
     openGeckoSession: Boolean = true
 ) : CoroutineScope, EngineSession() {
+
+    // This logger is temporary and parsed by FNPRMS for performance measurements. It can be
+    // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+    // It mimics GeckoView debug log statements, hence the unintuitive tag and messages.
+    private val fnprmsLogger = Logger("GeckoSession")
 
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
@@ -583,6 +589,9 @@ class GeckoEngineSession(
         }
 
         override fun onPageStart(session: GeckoSession, url: String) {
+            // This log statement is temporary and parsed by FNPRMS for performance measurements. It can be
+            // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+            fnprmsLogger.info("handleMessage GeckoView:PageStart uri=") // uri intentionally blank
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
@@ -590,6 +599,9 @@ class GeckoEngineSession(
         }
 
         override fun onPageStop(session: GeckoSession, success: Boolean) {
+            // This log statement is temporary and parsed by FNPRMS for performance measurements. It can be
+            // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+            fnprmsLogger.info("handleMessage GeckoView:PageStop uri=null") // uri intentionally hard-coded to null
             // by the time we reach here, any new request will come from web content.
             // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
             // false.
