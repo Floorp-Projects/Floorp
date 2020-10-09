@@ -9,6 +9,8 @@
 
 using mozilla::Preferences;
 
+#define DATA_PREF "datareporting.healthreport.uploadEnabled"
+
 extern "C" {
 // This function is called by the rust code in test.rs if a non-fatal test
 // failure occurs.
@@ -23,7 +25,13 @@ nsresult fog_submit_ping(const nsACString* aPingName);
 // Initialize FOG exactly once.
 // This needs to be the first test to run!
 TEST(FOG, FogInitDoesntCrash)
-{ ASSERT_EQ(NS_OK, fog_init()); }
+{
+  Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
+  ASSERT_EQ(NS_OK, fog_init());
+  // Fog init isn't actually done (it passes work to a background thread)
+  Preferences::SetBool(DATA_PREF, false);
+  Preferences::SetBool(DATA_PREF, true);
+}
 
 extern "C" void Rust_MeasureInitializeTime();
 TEST(FOG, TestMeasureInitializeTime)
