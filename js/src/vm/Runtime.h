@@ -561,6 +561,11 @@ struct JSRuntime {
   bool activeThreadHasScriptDataAccess;
 #endif
 
+  // Number of off-thread ParseTasks that are using this runtime. This is only
+  // updated on main-thread. If this is non-zero we must use `scriptDataLock` to
+  // protect access to the bytecode table;
+  mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> numParseTasks;
+
   // Number of zones which may be operated on by helper threads.
   mozilla::Atomic<size_t, mozilla::SequentiallyConsistent>
       numActiveHelperThreadZones;
@@ -571,11 +576,15 @@ struct JSRuntime {
   void setUsedByHelperThread(JS::Zone* zone);
   void clearUsedByHelperThread(JS::Zone* zone);
 
+  bool hasParseTasks() const { return numParseTasks > 0; }
   bool hasHelperThreadZones() const { return numActiveHelperThreadZones > 0; }
+
+  void addParseTaskRef() { numParseTasks++; }
+  void decParseTaskRef() { numParseTasks--; }
 
 #ifdef DEBUG
   bool currentThreadHasScriptDataAccess() const {
-    if (!hasHelperThreadZones()) {
+    if (!hasParseTasks()) {
       return js::CurrentThreadCanAccessRuntime(this) &&
              activeThreadHasScriptDataAccess;
     }
