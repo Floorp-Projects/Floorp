@@ -199,7 +199,7 @@ async function testFormlesSubmitNavigation(tc, testDoc, scriptName) {
 
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
 
-  let formsProcessed = promiseFormsProcessed(tc.expectedFormsCount);
+  let formsProcessed = promiseFormsProcessedInChildFrame(tc.expectedFormsCount);
   // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = testDoc;
   await formsProcessed;
