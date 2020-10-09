@@ -114,12 +114,10 @@ using IterateScriptCallback = void (*)(JSRuntime*, void*, BaseScript*,
 
 /*
  * Invoke scriptCallback on every in-use script for the given realm or for all
- * realms if it is null.
+ * realms if it is null. The scripts may or may not have bytecode.
  */
 extern void IterateScripts(JSContext* cx, JS::Realm* realm, void* data,
                            IterateScriptCallback scriptCallback);
-extern void IterateLazyScripts(JSContext* cx, JS::Realm* realm, void* data,
-                               IterateScriptCallback lazyScriptCallback);
 
 JS::Realm* NewRealm(JSContext* cx, JSPrincipals* principals,
                     const JS::RealmOptions& options);
