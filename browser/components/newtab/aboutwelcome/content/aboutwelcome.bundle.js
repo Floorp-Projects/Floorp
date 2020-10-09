@@ -102,12 +102,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_SimpleAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6);
+/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -133,7 +135,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   componentDidMount() {
     this.fetchFxAFlowUri(); // Record impression with performance data after allowing the page to load
 
-    window.addEventListener("load", () => {
+    const recordImpression = domState => {
       const {
         domComplete,
         domInteractive
@@ -144,21 +146,32 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
           domComplete,
           domInteractive,
           mountStart: performance.getEntriesByName("mount").pop().startTime,
+          domState,
           source: this.props.UTMTerm,
           page: "about:welcome"
         },
         message_id: this.props.messageId
       });
-    }, {
-      once: true
-    }); // Captures user has seen about:welcome by setting
+    };
+
+    if (document.readyState === "complete") {
+      // Page might have already triggered a load event because it waited for async data,
+      // e.g., attribution, so the dom load timing could be of a empty content
+      // with domState in telemetry captured as 'complete'
+      recordImpression(document.readyState);
+    } else {
+      window.addEventListener("load", () => recordImpression("load"), {
+        once: true
+      });
+    } // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
+
 
     window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
   }
 
   handleStartBtnClick() {
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
     const ping = {
       event: "CLICK_BUTTON",
       event_context: {
@@ -187,6 +200,13 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
         startButton: props.startButton,
         handleStartBtnClick: this.handleStartBtnClick
       });
+    } else if (props.template === "return_to_amo") {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__["ReturnToAMO"], {
+        message_id: props.messageId,
+        name: props.name,
+        url: props.url,
+        iconURL: props.iconURL
+      });
     }
 
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
@@ -199,14 +219,14 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
 
 }
 
-AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_WELCOME_CONTENT"];
+AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["DEFAULT_WELCOME_CONTENT"]; // Computes messageId and UTMTerm info used in telemetry
 
-function ComputeMessageId(experimentId, branchId, settings) {
-  let messageId = "DEFAULT_ABOUTWELCOME";
+function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
+  let messageId = welcomeContent.template === "return_to_amo" ? "RTAMO_DEFAULT_WELCOME" : "DEFAULT_ABOUTWELCOME";
   let UTMTerm = "default";
 
-  if (settings.id && settings.screens) {
-    messageId = settings.id.toUpperCase();
+  if (welcomeContent.id) {
+    messageId = welcomeContent.id.toUpperCase();
   }
 
   if (experimentId && branchId) {
@@ -219,26 +239,67 @@ function ComputeMessageId(experimentId, branchId, settings) {
   };
 }
 
-async function mount() {
+async function retrieveRenderContent() {
+  var _aboutWelcomeProps;
+
+  // Check for override content in pref browser.aboutwelcome.overrideContent
+  let aboutWelcomeProps = await window.AWGetWelcomeOverrideContent();
+
+  if ((_aboutWelcomeProps = aboutWelcomeProps) === null || _aboutWelcomeProps === void 0 ? void 0 : _aboutWelcomeProps.template) {
+    let {
+      messageId,
+      UTMTerm
+    } = ComputeTelemetryInfo(aboutWelcomeProps);
+    return {
+      aboutWelcomeProps,
+      messageId,
+      UTMTerm
+    };
+  } // Check for experiment and retrieve content
+
+
   const {
     slug,
     branch
-  } = await window.AWGetStartupData();
-  let settings = (branch === null || branch === void 0 ? void 0 : branch.feature) ? branch.feature.value : {};
+  } = await window.AWGetExperimentData();
+  aboutWelcomeProps = (branch === null || branch === void 0 ? void 0 : branch.feature) ? branch.feature.value : {}; // Check if there is any attribution data, this could take a while to await in series
+  // especially when there is an add-on that requires remote lookup
+  // Moving RTAMO as part of another screen of multistage is one option to fix the delay
+  // as it will allow the initial page to be fast while we fetch attribution data in parallel for a later screen.
 
-  if (!(branch === null || branch === void 0 ? void 0 : branch.feature)) {
-    // Check for override content in pref browser.aboutwelcome.overrideContent
-    settings = await window.AWGetMultiStageScreens();
+  const attribution = await window.AWGetAttributionData();
+
+  if (attribution === null || attribution === void 0 ? void 0 : attribution.template) {
+    var _aboutWelcomeProps2;
+
+    aboutWelcomeProps = { ...aboutWelcomeProps,
+      // If part of an experiment, render experiment template
+      template: ((_aboutWelcomeProps2 = aboutWelcomeProps) === null || _aboutWelcomeProps2 === void 0 ? void 0 : _aboutWelcomeProps2.template) ? aboutWelcomeProps.template : attribution.template,
+      ...attribution.extraProps
+    };
   }
 
   let {
     messageId,
     UTMTerm
-  } = ComputeMessageId(slug, branch && branch.slug, settings);
+  } = ComputeTelemetryInfo(aboutWelcomeProps, slug, branch && branch.slug);
+  return {
+    aboutWelcomeProps,
+    messageId,
+    UTMTerm
+  };
+}
+
+async function mount() {
+  let {
+    aboutWelcomeProps,
+    messageId,
+    UTMTerm
+  } = await retrieveRenderContent();
   react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, _extends({
     messageId: messageId,
     UTMTerm: UTMTerm
-  }, settings)), document.getElementById("root"));
+  }, aboutWelcomeProps)), document.getElementById("root"));
 }
 
 performance.mark("mount");
@@ -774,6 +835,7 @@ const Zap = props => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AboutWelcomeUtils", function() { return AboutWelcomeUtils; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_RTAMO_CONTENT", function() { return DEFAULT_RTAMO_CONTENT; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_WELCOME_CONTENT", function() { return DEFAULT_WELCOME_CONTENT; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -843,6 +905,41 @@ const AboutWelcomeUtils = {
     return document.body.hasAttribute("lwt-newtab-brighttext");
   }
 
+};
+const DEFAULT_RTAMO_CONTENT = {
+  template: "return_to_amo",
+  content: {
+    header: {
+      string_id: "onboarding-welcome-header"
+    },
+    subtitle: {
+      string_id: "return-to-amo-subtitle"
+    },
+    text: {
+      string_id: "return-to-amo-addon-title"
+    },
+    primary_button: {
+      label: {
+        string_id: "return-to-amo-add-extension-label"
+      },
+      action: {
+        type: "INSTALL_ADDON_FROM_URL",
+        data: {
+          url: null,
+          telemetrySource: "rtamo"
+        }
+      }
+    },
+    startButton: {
+      label: {
+        string_id: "onboarding-start-browsing-button-label"
+      },
+      message_id: "RTAMO_START_BROWSING_BUTTON",
+      action: {
+        type: "OPEN_AWESOME_BAR"
+      }
+    }
+  }
 };
 const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
@@ -1275,6 +1372,124 @@ class OnboardingCard extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
   }
 
 }
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ReturnToAMO", function() { return ReturnToAMO; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onClickAddExtension = this.onClickAddExtension.bind(this);
+    this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
+  }
+
+  onClickAddExtension() {
+    var _content$primary_butt, _content$primary_butt2;
+
+    const {
+      content,
+      message_id,
+      url
+    } = this.props;
+
+    if (!(content === null || content === void 0 ? void 0 : (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : (_content$primary_butt2 = _content$primary_butt.action) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.data)) {
+      return;
+    } // Set add-on url in action.data.url property from JSON
+
+
+    content.primary_button.action.data.url = url;
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].handleUserAction(content.primary_button.action);
+    const ping = {
+      event: "INSTALL",
+      event_context: {
+        source: "ADD_EXTENSION_BUTTON",
+        page: "about:welcome"
+      },
+      message_id
+    };
+    window.AWSendEventTelemetry(ping);
+  }
+
+  handleStartBtnClick() {
+    const {
+      content,
+      message_id
+    } = this.props;
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].handleUserAction(content.startButton.action);
+    const ping = {
+      event: "CLICK_BUTTON",
+      event_context: {
+        source: content.startButton.message_id,
+        page: "about:welcome"
+      },
+      message_id
+    };
+    window.AWSendEventTelemetry(ping);
+  }
+
+  render() {
+    const {
+      content
+    } = this.props;
+
+    if (!content) {
+      return null;
+    } // For experiments, when needed below rendered UI allows settings hard coded strings
+    // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
+
+
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "ReturnToAMOOverlay"
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+      text: content.header
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "ReturnToAMOContainer"
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "ReturnToAMOAddonContents"
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+      text: content.subtitle
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+      text: content.text
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "ReturnToAMOText",
+      "data-l10n-args": this.props.name ? JSON.stringify({
+        "addon-name": this.props.name
+      }) : null
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+      "data-l10n-name": "icon",
+      src: this.props.iconURL,
+      alt: ""
+    }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+      text: content.primary_button.label
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+      onClick: this.onClickAddExtension,
+      className: "puffy blue ReturnToAMOAddExtension"
+    }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "ReturnToAMOIcon"
+    })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+      text: content.startButton.label
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+      onClick: this.handleStartBtnClick,
+      className: "default grey ReturnToAMOGetStarted"
+    }))));
+  }
+
+}
+ReturnToAMO.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["DEFAULT_RTAMO_CONTENT"];
 
 /***/ })
 /******/ ]);

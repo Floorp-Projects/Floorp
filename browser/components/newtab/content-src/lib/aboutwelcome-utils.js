@@ -54,6 +54,33 @@ export const AboutWelcomeUtils = {
   },
 };
 
+export const DEFAULT_RTAMO_CONTENT = {
+  template: "return_to_amo",
+  content: {
+    header: { string_id: "onboarding-welcome-header" },
+    subtitle: { string_id: "return-to-amo-subtitle" },
+    text: {
+      string_id: "return-to-amo-addon-title",
+    },
+    primary_button: {
+      label: { string_id: "return-to-amo-add-extension-label" },
+      action: {
+        type: "INSTALL_ADDON_FROM_URL",
+        data: { url: null, telemetrySource: "rtamo" },
+      },
+    },
+    startButton: {
+      label: {
+        string_id: "onboarding-start-browsing-button-label",
+      },
+      message_id: "RTAMO_START_BROWSING_BUTTON",
+      action: {
+        type: "OPEN_AWESOME_BAR",
+      },
+    },
+  },
+};
+
 export const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
   screens: [
