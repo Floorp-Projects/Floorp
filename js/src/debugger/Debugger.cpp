@@ -4939,7 +4939,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         url(cx),
         displayURLString(cx),
         source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr))),
-        innermostForRealm(cx, cx->zone()),
         scriptVector(cx, BaseScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)) {}
 
@@ -5136,15 +5135,43 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       return false;
     }
 
-    // For most queries, we just accumulate results in 'scriptVector' as we find
-    // them. But if this is an 'innermost' query, then we've accumulated the
-    // results in the 'innermostForRealm' map. In that case, we now need to walk
-    // that map and populate 'scriptVector'.
+    // If this is an 'innermost' query, we want to filter the results again to
+    // only return the innermost script for each realm. To do this we build a
+    // hashmap to track innermost and then recreate the `scriptVector` with the
+    // results that remain in the hashmap.
     if (innermost) {
+      using RealmToScriptMap =
+          GCHashMap<Realm*, BaseScript*, DefaultHasher<Realm*>>;
+
+      Rooted<RealmToScriptMap> innermostForRealm(cx);
+
+      // Visit each candidate script and find innermost in each realm.
+      for (BaseScript* script : scriptVector) {
+        Realm* realm = script->realm();
+        RealmToScriptMap::AddPtr p = innermostForRealm.lookupForAdd(realm);
+        if (p) {
+          // Is our newly found script deeper than the last one we found?
+          BaseScript* incumbent = p->value();
+          if (script->asJSScript()->innermostScope()->chainLength() >
+              incumbent->asJSScript()->innermostScope()->chainLength()) {
+            p->value() = script;
+          }
+        } else {
+          // This is the first matching script we've encountered for this
+          // realm, so it is thus the innermost such script.
+          if (!innermostForRealm.add(p, realm, script)) {
+            return false;
+          }
+        }
+      }
+
+      // Reset the results vector.
+      scriptVector.clear();
+
+      // Re-add only the innermost scripts to the results.
       for (RealmToScriptMap::Range r = innermostForRealm.all(); !r.empty();
            r.popFront()) {
         if (!scriptVector.append(r.front().value())) {
-          ReportOutOfMemory(cx);
           return false;
         }
       }
@@ -5199,16 +5226,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
 
   /* True if the query has an 'innermost' property whose value is true. */
   bool innermost = false;
-
-  using RealmToScriptMap =
-      GCHashMap<Realm*, JSScript*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
-
-  /*
-   * For 'innermost' queries, a map from realms to the innermost script
-   * we've seen so far in that realm. (Template instantiation code size
-   * explosion ho!)
-   */
-  Rooted<RealmToScriptMap> innermostForRealm;
 
   /*
    * Accumulate the scripts in an Rooted<BaseScriptVector> instead of creating
@@ -5310,9 +5327,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   }
 
   /*
-   * If |script| matches this query, append it to |scriptVector| or place it
-   * in |innermostForRealm|, as appropriate. Set |oom| if an out of memory
-   * condition occurred.
+   * If |script| matches this query, append it to |scriptVector|. Set |oom| if
+   * an out of memory condition occurred.
    */
   void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
     if (oom || script->selfHosted()) {
@@ -5332,39 +5348,13 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       }
     }
 
-    if (innermost) {
-      // For 'innermost' queries, we don't place scripts in
-      // |scriptVector| right away; we may later find another script that
-      // is nested inside this one. Instead, we record the innermost
-      // script we've found so far for each realm in innermostForRealm,
-      // and only populate |scriptVector| at the bottom of findScripts,
-      // when we've traversed all the scripts.
-      //
-      // So: check this script against the innermost one we've found so
-      // far (if any), as recorded in innermostForRealm, and replace that
-      // if it's better.
-      RealmToScriptMap::AddPtr p = innermostForRealm.lookupForAdd(realm);
-      if (p) {
-        // Is our newly found script deeper than the last one we found?
-        JSScript* incumbent = p->value();
-        if (script->innermostScope()->chainLength() >
-            incumbent->innermostScope()->chainLength()) {
-          p->value() = script;
-        }
-      } else {
-        // This is the first matching script we've encountered for this
-        // realm, so it is thus the innermost such script.
-        if (!innermostForRealm.add(p, realm, script)) {
-          oom = true;
-          return;
-        }
-      }
-    } else {
-      // Record this matching script in the results scriptVector.
-      if (!scriptVector.append(script)) {
-        oom = true;
-        return;
-      }
+    // If innermost filter is required, we collect everything that matches the
+    // line number and filter at the end of `findScripts`.
+    MOZ_ASSERT_IF(innermost, hasLine);
+
+    if (!scriptVector.append(script)) {
+      oom = true;
+      return;
     }
   }
 
