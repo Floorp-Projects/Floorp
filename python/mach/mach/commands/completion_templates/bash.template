@@ -1,0 +1,62 @@
+_mach_complete()
+{
+    local com coms comsubs cur opts script sub subs
+    COMPREPLY=()
+    declare -A comsubs=( %(commands_subcommands)s )
+
+    _get_comp_words_by_ref -n : cur words
+    # for an alias, get the real script behind it
+    if [[ $(type -t ${words[0]}) == "alias" ]]; then
+        script=$(alias ${words[0]} | sed -E "s/alias ${words[0]}='(.*)'/\\1/")
+    else
+        script=${words[0]}
+    fi
+    # lookup for command and subcommand
+    for word in ${words[@]:1}; do
+        if [[ $word == -* ]]; then
+            continue
+        fi
+
+        if [[ -z $com ]]; then
+            com=$word
+        elif [[ "${comsubs[$com]}" == *" $word "* ]]; then
+            sub=$word
+            break
+        fi
+    done
+    # completing for an option
+    if [[ ${cur} == -* ]] ; then
+        if [[ -n $com ]]; then
+            if [[ -n $sub ]]; then
+                optkey="$com $sub"
+            else
+                optkey="$com"
+            fi
+            case $optkey in
+%(case_options)s
+            esac
+        else
+            # no command, complete global options
+            opts="%(globalopts)s"
+        fi
+        COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+        __ltrim_colon_completions "$cur"
+        return 0;
+    # completing for a command
+    elif [[ $cur == $com ]]; then
+        coms="%(commands)s"
+        COMPREPLY=($(compgen -W "${coms}" -- ${cur}))
+        __ltrim_colon_completions "$cur"
+        return 0
+    else
+        if [[ -z $sub ]]; then
+            case "$com" in
+%(case_subcommands)s
+            esac
+            COMPREPLY=($(compgen -W "${subs}" -- ${cur}))
+            __ltrim_colon_completions "$cur"
+        fi
+        return 0
+    fi
+}
+complete -o default -F _mach_complete mach
