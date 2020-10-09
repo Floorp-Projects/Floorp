@@ -142,8 +142,6 @@ namespace js {
 
 JS_FRIEND_API bool IsArgumentsObject(JS::HandleObject obj);
 
-JS_FRIEND_API const char* ObjectClassName(JSContext* cx, JS::HandleObject obj);
-
 JS_FRIEND_API bool AddRawValueRoot(JSContext* cx, JS::Value* vp,
                                    const char* name);
 

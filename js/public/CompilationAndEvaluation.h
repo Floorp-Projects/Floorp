@@ -234,15 +234,6 @@ extern JS_PUBLIC_API JSFunction* CompileFunctionUtf8(
     const char* const* argnames, const char* utf8, size_t length);
 
 /*
- * Associate an element wrapper and attribute name with a previously compiled
- * script, for debugging purposes. Calling this function is optional, but should
- * be done before script execution if it is required.
- */
-extern JS_PUBLIC_API bool InitScriptSourceElement(
-    JSContext* cx, Handle<JSScript*> script, Handle<JSObject*> element,
-    Handle<JSString*> elementAttrName = nullptr);
-
-/*
  * For a script compiled with the hideScriptFromDebugger option, expose the
  * script to the debugger by calling the debugger's onNewScript hook.
  */
