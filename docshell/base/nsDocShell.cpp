@@ -8955,12 +8955,16 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
             scrollRestorationIsManual.value());
       }
 
-      // FIXME We should probably just compute mChildOffset in the parent
-      //       instead of passing it over IPC here.
-      mBrowsingContext->SetActiveSessionHistoryEntry(
-          Some(scrollPos), mActiveEntry.get(), mLoadType, mChildOffset,
-          cacheKey);
-      // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
+      if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
+        mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
+      } else {
+        // FIXME We should probably just compute mChildOffset in the parent
+        //       instead of passing it over IPC here.
+        mBrowsingContext->SetActiveSessionHistoryEntry(
+            Some(scrollPos), mActiveEntry.get(), mLoadType, mChildOffset,
+            cacheKey);
+        // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
+      }
     }
   }
 
