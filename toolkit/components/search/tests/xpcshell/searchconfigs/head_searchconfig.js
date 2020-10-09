@@ -44,6 +44,25 @@ const SUBMISSION_PURPOSES = [
 let engineSelector;
 
 /**
+ * This function is used to override the remote settings configuration
+ * if the SEARCH_CONFIG environment variable is set. This allows testing
+ * against a remote server.
+ */
+async function maybeSetupConfig() {
+  const SEARCH_CONFIG = gEnvironment.get("SEARCH_CONFIG");
+  if (SEARCH_CONFIG) {
+    if (!(SEARCH_CONFIG in SearchUtils.ENGINES_URLS)) {
+      throw new Error(`Invalid value for SEARCH_CONFIG`);
+    }
+    const url = SearchUtils.ENGINES_URLS[SEARCH_CONFIG];
+    const response = await fetch(url);
+    const config = await response.json();
+    const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+    sinon.stub(settings, "get").returns(config.data);
+  }
+}
+
+/**
  * This class implements the test harness for search configuration tests.
  * These tests are designed to ensure that the correct search engines are
  * loaded for the various region/locale configurations.
@@ -103,17 +122,7 @@ class SearchConfigTest {
       "42"
     );
 
-    const SEARCH_CONFIG = gEnvironment.get("SEARCH_CONFIG");
-    if (SEARCH_CONFIG) {
-      if (!(SEARCH_CONFIG in SearchUtils.ENGINES_URLS)) {
-        throw new Error(`Invalid value for SEARCH_CONFIG`);
-      }
-      const url = SearchUtils.ENGINES_URLS[SEARCH_CONFIG];
-      const response = await fetch(url);
-      const config = await response.json();
-      const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
-      sinon.stub(settings, "get").returns(config.data);
-    }
+    await maybeSetupConfig();
 
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
