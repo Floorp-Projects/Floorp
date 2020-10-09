@@ -62,13 +62,6 @@ class EventQueueInternal {
   already_AddRefed<nsIRunnable> GetEvent(
       EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
       mozilla::TimeDuration* aLastEventDelay = nullptr);
-  already_AddRefed<nsIRunnable> GetEvent(EventQueuePriority* aPriority,
-                                         const MutexAutoLock& aProofOfLock,
-                                         TimeDuration* aLastEventDelay,
-                                         bool* aIsIdleEvent) {
-    *aIsIdleEvent = false;
-    return GetEvent(aPriority, aProofOfLock, aLastEventDelay);
-  }
 
   void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
 
@@ -103,12 +96,6 @@ class EventQueueInternal {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  IdlePeriodState* GetIdlePeriodState() const { return nullptr; }
-
-  bool HasIdleRunnables(const MutexAutoLock& aProofOfLock) const {
-    return false;
   }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {

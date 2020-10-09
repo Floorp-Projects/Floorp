@@ -130,11 +130,6 @@ already_AddRefed<nsIRunnable> ThreadEventQueue::GetEvent(
     bool aMayWait, EventQueuePriority* aPriority,
     mozilla::TimeDuration* aLastEventDelay) {
   nsCOMPtr<nsIRunnable> event;
-  bool eventIsIdleRunnable = false;
-  // This will be the IdlePeriodState for the queue the event, if any,
-  // came from.  May be null all along.
-  IdlePeriodState* idleState = nullptr;
-
   {
     // Scope for lock.  When we are about to return, we will exit this
     // scope so we can do some work after releasing the lock but
@@ -144,53 +139,16 @@ already_AddRefed<nsIRunnable> ThreadEventQueue::GetEvent(
     for (;;) {
       const bool noNestedQueue = mNestedQueues.IsEmpty();
       if (noNestedQueue) {
-        idleState = mBaseQueue->GetIdlePeriodState();
-        event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay,
-                                     &eventIsIdleRunnable);
+        event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay);
       } else {
         // We always get events from the topmost queue when there are nested
         // queues.
-        MOZ_ASSERT(!mNestedQueues.LastElement().mQueue->GetIdlePeriodState());
-        event = mNestedQueues.LastElement().mQueue->GetEvent(
-            aPriority, lock, aLastEventDelay, &eventIsIdleRunnable);
-        MOZ_ASSERT(!eventIsIdleRunnable);
+        event = mNestedQueues.LastElement().mQueue->GetEvent(aPriority, lock,
+                                                             aLastEventDelay);
       }
 
       if (event) {
         break;
-      }
-
-      if (idleState) {
-        MOZ_ASSERT(noNestedQueue);
-        if (mBaseQueue->HasIdleRunnables(lock)) {
-          // We have idle runnables that we may not have gotten above because
-          // our idle state is not up to date.  We need to update the idle state
-          // and try again.  We need to temporarily release the lock while we do
-          // that.
-          MutexAutoUnlock unlock(mLock);
-          idleState->UpdateCachedIdleDeadline(unlock);
-        } else {
-          // We need to notify our idle state that we're out of tasks to run.
-          // This needs to be done while not holding the lock.
-          MutexAutoUnlock unlock(mLock);
-          idleState->RanOutOfTasks(unlock);
-        }
-
-        // When we unlocked, someone may have queued a new runnable on us.  So
-        // we _must_ try to get a runnable again before we start sleeping, since
-        // that might be the runnable we were waiting for.
-        MOZ_ASSERT(
-            noNestedQueue == mNestedQueues.IsEmpty(),
-            "Who is pushing nested queues on us from some other thread?");
-        event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay,
-                                     &eventIsIdleRunnable);
-        // Now clear the cached idle deadline, because it was specific to this
-        // GetEvent() call.
-        idleState->ClearCachedIdleDeadline();
-
-        if (event) {
-          break;
-        }
       }
 
       // No runnable available.  Sleep waiting for one if if we're supposed to.
@@ -201,19 +159,6 @@ already_AddRefed<nsIRunnable> ThreadEventQueue::GetEvent(
 
       AUTO_PROFILER_LABEL("ThreadEventQueue::GetEvent::Wait", IDLE);
       mEventsAvailable.Wait();
-    }
-  }
-
-  if (idleState) {
-    // The pending task guarantee is not needed anymore, since we just tried
-    // doing GetEvent().
-    idleState->ForgetPendingTaskGuarantee();
-    if (event && !eventIsIdleRunnable) {
-      // We don't have a MutexAutoUnlock to pass to the callee here.  We _could_
-      // have one if we wanted to, simply by moving this into the same scope as
-      // our MutexAutoLock and adding a MutexAutoUnlock, but then we'd be doing
-      // an extra lock/unlock pair on mLock, which seems uncalled-for.
-      idleState->FlagNotIdle();
     }
   }
 
