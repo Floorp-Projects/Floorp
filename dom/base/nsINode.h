@@ -1426,11 +1426,16 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsSelected(uint32_t aStartOffset, uint32_t aEndOffset) const;
 
   /**
-   * Get the root content of an editor. So, this node must be a descendant of
-   * an editor. Note that this should be only used for getting input or textarea
-   * editor's root content. This method doesn't support HTML editors.
+   * Get the root element of the text editor associated with this node or the
+   * root element of the text editor of the ancestor 'TextControlElement' if
+   * this is in its native anonymous subtree.  I.e., this returns anonymous
+   * `<div>` element of a `TextEditor`. Note that this can be used only for
+   * getting root content of `<input>` or `<textarea>`.  I.e., this method
+   * doesn't support HTML editors. Note that this may create a `TextEditor`
+   * instance, and it means that the `TextEditor` may modify its native
+   * anonymous subtree and may run selection listeners.
    */
-  nsIContent* GetTextEditorRootContent(
+  MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetAnonymousRootElementOfTextEditor(
       mozilla::TextEditor** aTextEditor = nullptr);
 
   /**
@@ -1441,7 +1446,8 @@ class nsINode : public mozilla::dom::EventTarget {
    * node. Be aware that if this node and the computed selection limiter are
    * not in same subtree, this returns the root content of the closeset subtree.
    */
-  nsIContent* GetSelectionRootContent(mozilla::PresShell* aPresShell);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsIContent* GetSelectionRootContent(
+      mozilla::PresShell* aPresShell);
 
   nsINodeList* ChildNodes();
 
