@@ -8,32 +8,20 @@
 "use strict";
 
 add_task(async function setup() {
-  useHttpServer();
+  await SearchTestUtils.useTestEngines("data", null);
   await AddonTestUtils.promiseStartupManager();
 });
 
 add_task(async function test_resultDomain() {
-  let [engine1, engine2, engine3] = await addTestEngines([
-    { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "A second test engine", xmlFileName: "engine2.xml" },
-    {
-      name: "bacon",
-      details: {
-        alias: "bacon",
-        description: "Search Bacon",
-        method: "GET",
-        template: "http://www.bacon.moz/?search={searchTerms}",
-      },
-    },
-  ]);
+  await Services.search.init();
 
-  Assert.equal(engine1.getResultDomain(), "google.com");
-  Assert.equal(engine1.getResultDomain("text/html"), "google.com");
+  let engine = Services.search.getEngineByName("Test search engine");
+
+  Assert.equal(engine.getResultDomain(), "www.google.com");
+  Assert.equal(engine.getResultDomain("text/html"), "www.google.com");
   Assert.equal(
-    engine1.getResultDomain("application/x-moz-default-purpose"),
-    "purpose.google.com"
+    engine.getResultDomain("application/x-suggestions+json"),
+    "suggestqueries.google.com"
   );
-  Assert.equal(engine1.getResultDomain("fake-response-type"), "");
-  Assert.equal(engine2.getResultDomain(), "duckduckgo.com");
-  Assert.equal(engine3.getResultDomain(), "www.bacon.moz");
+  Assert.equal(engine.getResultDomain("fake-response-type"), "");
 });

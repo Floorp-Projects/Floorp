@@ -169,11 +169,15 @@ add_task(async function test_settings_write() {
     if ("_shortName" in engine) {
       delete engine._shortName;
     }
-    // Only app-provided engines support purpose & mozparams, others do not,
-    // so filter them out of the expected template.
     if ("_urls" in engine) {
+      // Only app-provided engines support purpose & mozparams, others do not,
+      // so filter them out of the expected template.
       for (let urls of engine._urls) {
         urls.params = urls.params.filter(p => !p.purpose && !p.mozparam);
+        // resultDomain is also no longer supported.
+        if ("resultDomain" in urls) {
+          delete urls.resultDomain;
+        }
       }
     }
   }
@@ -286,7 +290,6 @@ var EXPECTED_ENGINE = {
           type: "text/html",
           method: "GET",
           template: "http://www.google.com/search",
-          resultDomain: "google.com",
           params: [
             {
               name: "q",
@@ -299,7 +302,6 @@ var EXPECTED_ENGINE = {
           type: "application/x-moz-default-purpose",
           method: "GET",
           template: "http://www.google.com/search",
-          resultDomain: "purpose.google.com",
           params: [
             {
               name: "q",
