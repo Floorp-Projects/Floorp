@@ -1207,7 +1207,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
   RefPtr<nsDocumentViewer> kungFuDeathGrip(this);
 
   if (StaticPrefs::dom_disable_beforeunload()) {
-    aAction = eDontPromptAndUnload;
+    aAction = PermitUnloadAction::Unload;
   }
 
   *aPermitUnload = true;
@@ -1245,8 +1245,8 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
     if (!foundBlocker) {
       return NS_OK;
     }
-    if (aAction != ePrompt) {
-      *aPermitUnload = aAction == eDontPromptAndUnload;
+    if (aAction != PermitUnloadAction::Prompt) {
+      *aPermitUnload = aAction == PermitUnloadAction::Unload;
       return NS_OK;
     }
   }

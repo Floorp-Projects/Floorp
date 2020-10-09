@@ -24,7 +24,6 @@ interface WindowContext {
   readonly attribute boolean hasBeforeUnload;
 };
 
-// Keep this in sync with nsIContentViewer::PermitUnloadAction.
 enum PermitUnloadAction {
   "prompt",
   "dontUnload",
