@@ -81,11 +81,6 @@ class SynchronizedEventQueue : public ThreadTargetSink {
   void RemoveObserver(nsIThreadObserver* aObserver);
   const nsTObserverArray<nsCOMPtr<nsIThreadObserver>>& EventObservers();
 
-  virtual void EnableInputEventPrioritization() = 0;
-  virtual void FlushInputEventPrioritization() = 0;
-  virtual void SuspendInputEventPrioritization() = 0;
-  virtual void ResumeInputEventPrioritization() = 0;
-
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
     return mEventObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);

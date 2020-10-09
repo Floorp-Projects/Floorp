@@ -14,6 +14,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventQueue.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
@@ -778,22 +779,22 @@ nsThreadManager::DispatchToMainThread(nsIRunnable* aEvent, uint32_t aPriority,
 void nsThreadManager::EnableMainThreadEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
   InputEventStatistics::Get().SetEnable(true);
-  mMainThread->EnableInputEventPrioritization();
+  InputTaskManager::Get()->EnableInputEventPrioritization();
 }
 
 void nsThreadManager::FlushInputEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
-  mMainThread->FlushInputEventPrioritization();
+  InputTaskManager::Get()->FlushInputEventPrioritization();
 }
 
 void nsThreadManager::SuspendInputEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
-  mMainThread->SuspendInputEventPrioritization();
+  InputTaskManager::Get()->SuspendInputEventPrioritization();
 }
 
 void nsThreadManager::ResumeInputEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
-  mMainThread->ResumeInputEventPrioritization();
+  InputTaskManager::Get()->ResumeInputEventPrioritization();
 }
 
 // static
