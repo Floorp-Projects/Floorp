@@ -18,7 +18,7 @@ class Task(object):
     - task: the task definition (JSON-able dictionary)
     - optimization: optimization to apply to the task (see taskgraph.optimize)
     - dependencies: tasks this one depends on, in the form {name: label}, for example
-      {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
+      {'build': 'build-linux64/opt', 'docker-image': 'docker-image-desktop-test'}
     - soft_dependencies: tasks this one may depend on if they are available post
       optimisation. They are set as a list of tasks label.
     - if_dependencies: only run this task if at least one of these dependencies
@@ -54,8 +54,6 @@ class Task(object):
     def name(self):
         if self.label.startswith(self.kind + "-"):
             return self.label[len(self.kind)+1:]
-        elif self.label.startswith("build-docker-image-"):
-            return self.label[len("build-docker-image-"):]
         else:
             raise AttributeError("Task {} does not have a name.".format(self.label))
 
