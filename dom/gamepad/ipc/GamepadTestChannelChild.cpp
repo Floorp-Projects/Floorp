@@ -9,11 +9,6 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<GamepadTestChannelChild> GamepadTestChannelChild::Create() {
-  return RefPtr<GamepadTestChannelChild>(new GamepadTestChannelChild())
-      .forget();
-}
-
 void GamepadTestChannelChild::AddPromise(const uint32_t& aID,
                                          Promise* aPromise) {
   MOZ_ASSERT(!mPromiseList.Get(aID, nullptr));

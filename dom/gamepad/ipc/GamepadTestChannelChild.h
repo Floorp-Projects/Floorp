@@ -14,28 +14,18 @@ namespace mozilla {
 namespace dom {
 
 class GamepadTestChannelChild final : public PGamepadTestChannelChild {
+  friend class PGamepadTestChannelChild;
+
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadTestChannelChild)
-
-  static already_AddRefed<GamepadTestChannelChild> Create();
-
-  void AddPromise(const uint32_t& aID, Promise* aPromise);
-
-  GamepadTestChannelChild(const GamepadTestChannelChild&) = delete;
-  GamepadTestChannelChild(GamepadTestChannelChild&&) = delete;
-  GamepadTestChannelChild& operator=(const GamepadTestChannelChild&) = delete;
-  GamepadTestChannelChild& operator=(GamepadTestChannelChild&&) = delete;
-
- private:
   GamepadTestChannelChild() = default;
   ~GamepadTestChannelChild() = default;
+  void AddPromise(const uint32_t& aID, Promise* aPromise);
 
+ private:
   mozilla::ipc::IPCResult RecvReplyGamepadIndex(const uint32_t& aID,
                                                 const uint32_t& aIndex);
 
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
-
-  friend class PGamepadTestChannelChild;
 };
 
 }  // namespace dom
