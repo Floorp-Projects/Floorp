@@ -394,6 +394,7 @@ public class GeckoViewActivity
     private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
     private boolean mDesktopMode;
+    private boolean mTrackingProtectionException;
     private String mUserAgentOverride;
     private boolean mAllowExtensionsInPrivateBrowsing;
 
@@ -936,10 +937,26 @@ public class GeckoViewActivity
         return true;
     }
 
+    private void updateTrackingProtectionException() {
+        if (sGeckoRuntime == null) {
+            return;
+        }
+
+        final GeckoSession session = mTabSessionManager.getCurrentSession();
+        if (session == null) {
+            return;
+        }
+
+        sGeckoRuntime.getContentBlockingController()
+                .checkException(session)
+                .accept(value -> mTrackingProtectionException = value.booleanValue());
+    }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
+        menu.findItem(R.id.action_tpe).setChecked(mTrackingProtectionException);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
         return true;
     }
@@ -958,10 +975,8 @@ public class GeckoViewActivity
                 sGeckoRuntime.getContentBlockingController().checkException(session).accept(value -> {
                     if (value.booleanValue()) {
                         sGeckoRuntime.getContentBlockingController().removeException(session);
-                        item.setTitle(R.string.tracking_protection_ex);
                     } else {
                         sGeckoRuntime.getContentBlockingController().addException(session);
-                        item.setTitle(R.string.tracking_protection_ex2);
                     }
                     session.reload();
                 });
@@ -1704,6 +1719,7 @@ public class GeckoViewActivity
                 tabSession.onLocationChange(url);
             }
             mCurrentUri = url;
+            updateTrackingProtectionException();
         }
 
         @Override
