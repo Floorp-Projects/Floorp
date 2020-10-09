@@ -23,6 +23,7 @@
 #include "jit/Bailouts.h"  // js::jit::FinishBailoutToBaseline, js::jit::Bailout,
                            // js::jit::InvalidationBailout
 
+#include "jit/JitFrames.h"    // HandleException
 #include "jit/VMFunctions.h"  // Rest of js::jit::* functions.
 
 #include "js/Conversions.h"  // JS::ToInt32
@@ -61,6 +62,7 @@ namespace jit {
   _(js::jit::AssumeUnreachable)                             \
   _(js::jit::Bailout)                                       \
   _(js::jit::FinishBailoutToBaseline)                       \
+  _(js::jit::HandleException)                               \
   _(js::jit::InitBaselineFrameForOsr)                       \
   _(js::jit::InvalidationBailout)                           \
   _(js::jit::Printf0)                                       \
