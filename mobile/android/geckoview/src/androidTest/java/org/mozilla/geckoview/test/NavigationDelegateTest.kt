@@ -594,12 +594,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
-        val userAgentJs = "window.navigator.userAgent"
         val mobileSubStr = "Mobile"
         val desktopSubStr = "X11"
 
         assertThat("User agent should be set to mobile",
-                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   getUserAgent(),
                    containsString(mobileSubStr))
 
         var userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
@@ -612,7 +611,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to desktop",
-                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   getUserAgent(),
                    containsString(desktopSubStr))
 
         userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
@@ -625,7 +624,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to mobile",
-                   sessionRule.session.evaluateJS(userAgentJs) as String,
+                   getUserAgent(),
                    containsString(mobileSubStr))
 
         userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
@@ -639,7 +638,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to VR",
-                sessionRule.session.evaluateJS(userAgentJs) as String,
+                getUserAgent(),
                 containsString(vrSubStr))
 
         userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
@@ -648,28 +647,40 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     }
 
+    private fun getUserAgent(session: GeckoSession = sessionRule.session): String {
+        return session.evaluateJS("window.navigator.userAgent") as String
+    }
+
+    @Test fun uaOverrideNewSession() {
+        val newSession = sessionRule.createClosedSession()
+        newSession.settings.userAgentOverride = "Test user agent override"
+
+        newSession.open()
+        newSession.loadUri("https://example.com")
+        newSession.waitForPageStop()
+
+        assertThat("User agent should match override", getUserAgent(newSession),
+                equalTo("Test user agent override"))
+    }
+
     @Test fun uaOverride() {
         sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
-        val userAgentJs = "window.navigator.userAgent"
         val mobileSubStr = "Mobile"
         val vrSubStr = "Mobile VR"
         val overrideUserAgent = "This is the override user agent"
 
-        var userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
         assertThat("User agent should be reported as mobile",
-                userAgent, containsString(mobileSubStr))
+                getUserAgent(), containsString(mobileSubStr))
 
         sessionRule.session.settings.userAgentOverride = overrideUserAgent
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
-
         assertThat("User agent should be reported as override",
-                userAgent, equalTo(overrideUserAgent))
+                getUserAgent(), equalTo(overrideUserAgent))
 
         sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
 
@@ -677,16 +688,15 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         assertThat("User agent should still be reported as override even when USER_AGENT_MODE is set",
-                userAgent, equalTo(overrideUserAgent))
+                getUserAgent(), equalTo(overrideUserAgent))
 
         sessionRule.session.settings.userAgentOverride = null
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
         assertThat("User agent should now be reported as VR",
-                userAgent, containsString(vrSubStr))
+                getUserAgent(), containsString(vrSubStr))
 
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
@@ -698,10 +708,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
-
         assertThat("User agent should be reported as override after being set in onLoadRequest",
-                userAgent, equalTo(overrideUserAgent))
+                getUserAgent(), equalTo(overrideUserAgent))
 
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
@@ -713,9 +721,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
-        userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
         assertThat("User agent should again be reported as VR after disabling override in onLoadRequest",
-                userAgent, containsString(vrSubStr))
+                getUserAgent(), containsString(vrSubStr))
     }
 
     @WithDisplay(width = 600, height = 200)

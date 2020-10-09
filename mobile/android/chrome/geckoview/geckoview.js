@@ -136,7 +136,7 @@ var ModuleManager = {
   },
 
   getActor(aActorName) {
-    return this.browser.browsingContext.currentWindowGlobal.getActor(
+    return this.browser.browsingContext.currentWindowGlobal?.getActor(
       aActorName
     );
   },
@@ -663,7 +663,13 @@ function startup() {
       name: "GeckoViewSettings",
       onInit: {
         resource: "resource://gre/modules/GeckoViewSettings.jsm",
-        frameScript: "chrome://geckoview/content/GeckoViewSettingsChild.js",
+        actors: {
+          GeckoViewSettings: {
+            child: {
+              moduleURI: "resource:///actors/GeckoViewSettingsChild.jsm",
+            },
+          },
+        },
       },
     },
     {
