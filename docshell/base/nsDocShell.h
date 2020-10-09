@@ -1236,10 +1236,6 @@ class nsDocShell final : public nsDocLoader,
   uint32_t mLoadType;
   uint32_t mFailedLoadType;
 
-  // This represents the CSS display-mode we are currently using. This is mostly
-  // used for media queries.
-  DisplayMode mDisplayMode;
-
   // A depth count of how many times NotifyRunToCompletionStart
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
