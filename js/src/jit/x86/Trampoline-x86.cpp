@@ -642,7 +642,7 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                                   const VMFunctionData& f, DynFn nativeFun,
+                                   const VMFunctionData& f, void* nativeFun,
                                    uint32_t* wrapperOffset) {
   *wrapperOffset = startTrampolineCode(masm);
 
@@ -872,12 +872,12 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   return offset;
 }
 
-void JitRuntime::generateExceptionTailStub(MacroAssembler& masm,
+void JitRuntime::generateExceptionTailStub(MacroAssembler& masm, void* handler,
                                            Label* profilerExitTail) {
   exceptionTailOffset_ = startTrampolineCode(masm);
 
   masm.bind(masm.failureLabel());
-  masm.handleFailureWithHandlerTail(profilerExitTail);
+  masm.handleFailureWithHandlerTail(handler, profilerExitTail);
 }
 
 void JitRuntime::generateBailoutTailStub(MacroAssembler& masm,

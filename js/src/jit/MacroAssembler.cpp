@@ -2269,13 +2269,12 @@ void MacroAssembler::tracelogStartId(Register logger, uint32_t textId,
 
   Register temp = regs.takeAnyGeneral();
 
-  using Fn = void (*)(TraceLoggerThread * logger, uint32_t id);
   setupUnalignedABICall(temp);
   passABIArg(logger);
   move32(Imm32(textId), temp);
   passABIArg(temp);
-  callWithABI<Fn, TraceLogStartEventPrivate>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate),
+              MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   PopRegsInMask(save);
 }
@@ -2289,17 +2288,19 @@ void MacroAssembler::tracelogStartId(Register logger, Register textId) {
 
   Register temp = regs.takeAnyGeneral();
 
-  using Fn = void (*)(TraceLoggerThread * logger, uint32_t id);
   setupUnalignedABICall(temp);
   passABIArg(logger);
   passABIArg(textId);
-  callWithABI<Fn, TraceLogStartEventPrivate>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate),
+              MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   PopRegsInMask(save);
 }
 
 void MacroAssembler::tracelogStartEvent(Register logger, Register event) {
+  void (&TraceLogFunc)(TraceLoggerThread*, const TraceLoggerEvent&) =
+      TraceLogStartEvent;
+
   AllocatableRegisterSet regs(RegisterSet::Volatile());
   LiveRegisterSet save(regs.asLiveSet());
   PushRegsInMask(save);
@@ -2308,12 +2309,11 @@ void MacroAssembler::tracelogStartEvent(Register logger, Register event) {
 
   Register temp = regs.takeAnyGeneral();
 
-  using Fn = void (*)(TraceLoggerThread*, const TraceLoggerEvent&);
   setupUnalignedABICall(temp);
   passABIArg(logger);
   passABIArg(event);
-  callWithABI<Fn, TraceLogStartEvent>(MoveOp::GENERAL,
-                                      CheckUnsafeCallWithABI::DontCheckOther);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogFunc), MoveOp::GENERAL,
+              CheckUnsafeCallWithABI::DontCheckOther);
 
   PopRegsInMask(save);
 }
@@ -2331,14 +2331,13 @@ void MacroAssembler::tracelogStopId(Register logger, uint32_t textId,
 
   Register temp = regs.takeAnyGeneral();
 
-  using Fn = void (*)(TraceLoggerThread * logger, uint32_t id);
   setupUnalignedABICall(temp);
   passABIArg(logger);
   move32(Imm32(textId), temp);
   passABIArg(temp);
 
-  callWithABI<Fn, TraceLogStopEventPrivate>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate),
+              MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   PopRegsInMask(save);
 }
@@ -2352,12 +2351,11 @@ void MacroAssembler::tracelogStopId(Register logger, Register textId) {
 
   Register temp = regs.takeAnyGeneral();
 
-  using Fn = void (*)(TraceLoggerThread * logger, uint32_t id);
   setupUnalignedABICall(temp);
   passABIArg(logger);
   passABIArg(textId);
-  callWithABI<Fn, TraceLogStopEventPrivate>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate),
+              MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   PopRegsInMask(save);
 }

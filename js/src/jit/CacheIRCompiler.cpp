@@ -2182,13 +2182,12 @@ bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(str);
     masm.passABIArg(output.payloadOrValueReg());
-    masm.callWithABI<Fn, js::StringToNumberPure>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberPure));
     masm.mov(ReturnReg, scratch);
 
     LiveRegisterSet ignore;
@@ -4032,11 +4031,9 @@ bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
   masm.passABIArg(iter);
   masm.passABIArg(resultArr);
   if (isMap) {
-    using Fn = bool (*)(MapIteratorObject * iter, ArrayObject * resultPairObj);
-    masm.callWithABI<Fn, MapIteratorObject::next>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MapIteratorObject::next));
   } else {
-    using Fn = bool (*)(SetIteratorObject * iter, ArrayObject * resultObj);
-    masm.callWithABI<Fn, SetIteratorObject::next>();
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetIteratorObject::next));
   }
   masm.storeCallBoolResult(scratch);
 
@@ -4682,8 +4679,7 @@ bool CacheIRCompiler::emitMathFunctionNumberResultShared(
 
   masm.setupUnalignedABICall(output.scratchReg());
   masm.passABIArg(inputScratch, MoveOp::DOUBLE);
-  masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
-                   MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, funPtr), MoveOp::DOUBLE);
   masm.storeCallFloatResult(inputScratch);
 
   masm.PopRegsInMask(save);
@@ -7287,12 +7283,11 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
   volatileRegs.takeUnchecked(result);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSLinearString* (*)(JSContext * cx, int32_t i);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(input);
-  masm.callWithABI<Fn, js::Int32ToStringHelperPure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::Int32ToStringHelperPure)));
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);
@@ -7324,12 +7319,11 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   volatileRegs.addUnchecked(floatScratch0);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSString* (*)(JSContext * cx, double d);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, js::NumberToStringHelperPure>();
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::NumberToStringHelperPure)));
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);
@@ -7813,8 +7807,8 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     masm.passABIArg(index);
     masm.passABIArg(expected);
     masm.passABIArg(replacement);
-    masm.callWithABI(DynamicFunction<AtomicsCompareExchangeFn>(
-        AtomicsCompareExchange(elementType)));
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, AtomicsCompareExchange(elementType)));
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
@@ -7864,7 +7858,7 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
     masm.passABIArg(obj);
     masm.passABIArg(index);
     masm.passABIArg(value);
-    masm.callWithABI(DynamicFunction<AtomicsReadWriteModifyFn>(fn));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
