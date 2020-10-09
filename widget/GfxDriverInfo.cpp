@@ -707,6 +707,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x9800, 0x980a);
       APPEND_RANGE(0x9640, 0x964f);
       APPEND_RANGE(0x6720, 0x677f);
+
+      // Carrizo
+      APPEND_RANGE(0x9870, 0x9877);
 #endif
 
       break;
