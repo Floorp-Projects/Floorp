@@ -259,7 +259,7 @@ class WindowGlobalParent final : public WindowContext,
       uint32_t aMillis);
 
   mozilla::ipc::IPCResult RecvCheckPermitUnload(
-      bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
+      bool aHasInProcessBlocker, PermitUnloadAction aAction,
       CheckPermitUnloadResolver&& aResolver);
 
  private:
