@@ -6,7 +6,6 @@
 
 #include "gc/Barrier.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Policy.h"
 #include "jit/Ion.h"
 #include "js/HashTable.h"

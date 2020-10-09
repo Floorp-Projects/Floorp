@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Tracer.h"
 #include "js/PropertySpec.h"
 #include "js/TracingAPI.h"

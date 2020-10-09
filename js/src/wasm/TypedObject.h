@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_TypedObject_h
-#define builtin_TypedObject_h
+#ifndef wasm_TypedObject_h
+#define wasm_TypedObject_h
 
 #include "mozilla/CheckedInt.h"
 
@@ -16,83 +16,6 @@
 #include "js/ScalarType.h"            // js::Scalar::Type
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
-
-/*
- * -------------
- * [SMDOC] Typed Objects
- * -------------
- *
- * Typed objects are a special kind of JS object where the data is
- * given well-structured form. To use a typed object, users first
- * create *type objects* (no relation to the type objects used in TI)
- * that define the type layout. For example, a statement like:
- *
- *    var PointType = new StructType({x: uint8, y: uint8});
- *
- * would create a type object PointType that is a struct with
- * two fields, each of uint8 type.
- *
- * This comment typically assumes familiary with the API.  For more
- * info on the API itself, see the Harmony wiki page at
- * http://wiki.ecmascript.org/doku.php?id=harmony:typed_objects or the
- * ES6 spec (not finalized at the time of this writing).
- *
- * - Initialization:
- *
- * Currently, all "globals" related to typed objects are packaged
- * within a single "module" object `TypedObject`. This module has its
- * own JSClass and when that class is initialized, we also create
- * and define all other values (in `js::InitTypedObjectModuleClass()`).
- *
- * - Type objects, meta type objects, and type representations:
- *
- * There are a number of pre-defined type objects, one for each
- * scalar type (`uint8` etc). Each of these has its own class_,
- * defined in `DefineNumericClass()`.
- *
- * There are also meta type objects (`ArrayType`, `StructType`).
- * These constructors are not themselves type objects but rather the
- * means for the *user* to construct new typed objects.
- *
- * Each type object is associated with a *type representation* (see
- * TypeRepresentation.h). Type representations are canonical versions
- * of type objects. We attach them to TI type objects and (eventually)
- * use them for shape guards etc. They are purely internal to the
- * engine and are not exposed to end users (though self-hosted code
- * sometimes accesses them).
- *
- * - Typed objects:
- *
- * A typed object is an instance of a *type object* (note the past participle).
- * Typed objects can be either transparent or opaque, depending on whether
- * their underlying buffer can be accessed. Transparent and opaque typed
- * objects have different classes, and can have different physical layouts.
- * The following layouts are possible:
- *
- * InlineTypedObject: Typed objects whose data immediately follows the object's
- *   header are inline typed objects. The buffer for these objects is created
- *   lazily and stored via the compartment's LazyArrayBufferTable, and points
- *   back into the object's internal data.
- *
- * OutlineTypedObject: Typed objects whose data is owned by another object,
- *   which can be either an array buffer or an inline typed object. Outline
- *   typed objects may be attached or unattached. An unattached typed object
- *   has no data associated with it. When first created, objects are always
- *   attached, but they can become unattached if their buffer becomes detached.
- *
- * Note that whether a typed object is opaque is not directly
- * connected to its type. That is, opaque types are *always*
- * represented by opaque typed objects, but you may have opaque typed
- * objects for transparent types too. This can occur for two reasons:
- * (1) a transparent type may be embedded within an opaque type or (2)
- * users can choose to convert transparent typed objects into opaque
- * ones to avoid giving access to the buffer itself.
- *
- * Typed objects (no matter their class) are non-native objects that
- * fully override the property accessors etc. The overridden accessor
- * methods are the same in each and are defined in methods of
- * TypedObject.
- */
 
 namespace js {
 
@@ -696,4 +619,4 @@ inline bool JSObject::is<js::InlineTypedObject>() const {
   return js::IsInlineTypedObjectClass(getClass());
 }
 
-#endif /* builtin_TypedObject_h */
+#endif /* wasm_TypedObject_h */
