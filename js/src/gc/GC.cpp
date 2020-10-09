@@ -7923,13 +7923,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   source->zone()->clearTables();
   source->unsetIsDebuggee();
 
-  // The delazification flag indicates the presence of lazy scripts in a realm
-  // for the Debugger API, so if the source realm created lazy scripts, the flag
-  // must be propagated to the target realm.
-  if (source->needsDelazificationForDebugger()) {
-    target->scheduleDelazificationForDebugger();
-  }
-
   // Release any relocated arenas which we may be holding on to as they might
   // be in the source zone
   releaseHeldRelocatedArenas();
