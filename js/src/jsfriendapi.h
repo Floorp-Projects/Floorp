@@ -158,8 +158,6 @@ JS_FRIEND_API bool AddRawValueRoot(JSContext* cx, JS::Value* vp,
 
 JS_FRIEND_API void RemoveRawValueRoot(JSContext* cx, JS::Value* vp);
 
-JS_FRIEND_API JSAtom* GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
-
 }  // namespace js
 
 namespace JS {
