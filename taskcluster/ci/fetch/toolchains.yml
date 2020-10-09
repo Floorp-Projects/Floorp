@@ -471,8 +471,8 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        # 0.0.5 + ELF/MachO/fixes
-        revision: 756bf4b555418960564c0a7c6d5ed0b1a8329283
+        # 0.0.6
+        revision: 24aee9c56bf3c21ce905e1b90c01c345836e9de1
 
 fix-stacks:
     description: fix-stacks source code
