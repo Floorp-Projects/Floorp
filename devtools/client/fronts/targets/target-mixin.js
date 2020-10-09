@@ -66,7 +66,7 @@ function TargetMixin(parentClass) {
       // instead of `this.on()`.
       super.on("resource-available-form", this._onResourceAvailable);
 
-      this._setupRemoteListeners();
+      this._addListeners();
     }
 
     on(eventName, listener) {
@@ -590,19 +590,19 @@ function TargetMixin(parentClass) {
     }
 
     /**
-     * Setup listeners for remote debugging, updating existing ones as necessary.
+     * Setup listeners.
      */
-    _setupRemoteListeners() {
+    _addListeners() {
       this.client.on("closed", this.destroy);
 
       this.on("tabDetached", this.destroy);
     }
 
     /**
-     * Teardown listeners for remote debugging.
+     * Teardown listeners.
      */
-    _teardownRemoteListeners() {
-      // Remove listeners set in _setupRemoteListeners
+    _removeListeners() {
+      // Remove listeners set in _addListeners
       if (this.client) {
         this.client.off("closed", this.destroy);
       }
@@ -667,7 +667,7 @@ function TargetMixin(parentClass) {
         }
       }
 
-      this._teardownRemoteListeners();
+      this._removeListeners();
 
       this.threadFront = null;
 
