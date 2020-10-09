@@ -680,4 +680,11 @@ extern const VMFunctionData& GetVMFunction(TailCallVMFunctionId id);
 }  // namespace jit
 }  // namespace js
 
+#if defined(JS_CODEGEN_ARM)
+extern "C" {
+extern MOZ_EXPORT int64_t __aeabi_idivmod(int, int);
+extern MOZ_EXPORT int64_t __aeabi_uidivmod(int, int);
+}
+#endif
+
 #endif /* jit_VMFunctions_h */
