@@ -4,10 +4,12 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { MacAttribution } = ChromeUtils.import(
+  "resource:///modules/MacAttribution.jsm"
+);
 
 add_task(async function testValidAttrCodes() {
-  let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
+  let appPath = MacAttribution.applicationPath;
   let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
     Ci.nsIMacAttributionService
   );
@@ -20,7 +22,7 @@ add_task(async function testValidAttrCodes() {
     // URI-encoded.
     let url = `http://example.com?${encodeURI(decodeURIComponent(entry.code))}`;
     attributionSvc.setReferrerUrl(appPath, url, true);
-    let referrer = attributionSvc.getReferrerUrl(appPath);
+    let referrer = await MacAttribution.getReferrerUrl(appPath);
     equal(referrer, url, "overwrite referrer url");
 
     // Read attribution code from referrer to ensure cache is fresh.
@@ -34,7 +36,7 @@ add_task(async function testValidAttrCodes() {
 
     // Does not overwrite cached existing attribution code.
     attributionSvc.setReferrerUrl(appPath, "http://test.com", false);
-    referrer = attributionSvc.getReferrerUrl(appPath);
+    referrer = await MacAttribution.getReferrerUrl(appPath);
     equal(referrer, url, "update referrer url");
 
     result = await AttributionCode.getAttrDataAsync();
@@ -47,7 +49,7 @@ add_task(async function testValidAttrCodes() {
 });
 
 add_task(async function testInvalidAttrCodes() {
-  let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
+  let appPath = MacAttribution.applicationPath;
   let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
     Ci.nsIMacAttributionService
   );
@@ -59,7 +61,7 @@ add_task(async function testInvalidAttrCodes() {
     let referrer;
     try {
       attributionSvc.setReferrerUrl(appPath, url, true);
-      referrer = attributionSvc.getReferrerUrl(appPath);
+      referrer = await MacAttribution.getReferrerUrl(appPath);
     } catch (ex) {
       continue;
     }
