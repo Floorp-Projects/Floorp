@@ -1457,10 +1457,12 @@ nsIContent* IMEStateManager::GetRootContent(nsPresContext* aPresContext) {
 void IMEStateManager::HandleSelectionEvent(
     nsPresContext* aPresContext, nsIContent* aEventTargetContent,
     WidgetSelectionEvent* aSelectionEvent) {
-  nsIContent* eventTargetContent =
-      aEventTargetContent ? aEventTargetContent : GetRootContent(aPresContext);
-  RefPtr<BrowserParent> browserParent =
-      eventTargetContent ? BrowserParent::GetFrom(eventTargetContent) : nullptr;
+  RefPtr<BrowserParent> browserParent = GetActiveBrowserParent();
+  if (!browserParent) {
+    browserParent = BrowserParent::GetFrom(aEventTargetContent
+                                               ? aEventTargetContent
+                                               : GetRootContent(aPresContext));
+  }
 
   MOZ_LOG(
       sISMLog, LogLevel::Info,

@@ -8667,7 +8667,8 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
 
     if (aEvent->mClass == eCompositionEventClass) {
       RefPtr<nsPresContext> presContext = GetPresContext();
-      RefPtr<BrowserParent> browserParent = BrowserParent::GetFocused();
+      RefPtr<BrowserParent> browserParent =
+          IMEStateManager::GetActiveBrowserParent();
       IMEStateManager::DispatchCompositionEvent(
           eventTarget, presContext, browserParent, aEvent->AsCompositionEvent(),
           aEventStatus, eventCBPtr);
