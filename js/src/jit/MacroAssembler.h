@@ -4318,6 +4318,9 @@ static inline MIRType ToMIRType(ABIArgType argType) {
   MOZ_CRASH("unexpected argType");
 }
 
+// Helper for generatePreBarrier.
+inline DynFn JitMarkFunction(MIRType type);
+
 template <class VecT>
 class ABIArgIter {
   ABIArgGenerator gen_;
