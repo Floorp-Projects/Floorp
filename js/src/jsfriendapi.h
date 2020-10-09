@@ -546,9 +546,6 @@ extern JS_FRIEND_API JSObject* GetTestingFunctions(JSContext* cx);
 extern JS_FRIEND_API JSLinearString* GetErrorTypeName(JSContext* cx,
                                                       int16_t exnType);
 
-extern JS_FRIEND_API RegExpShared* RegExpToSharedNonInline(
-    JSContext* cx, JS::HandleObject regexp);
-
 /* Implemented in CrossCompartmentWrapper.cpp. */
 typedef enum NukeReferencesToWindow {
   NukeWindowReferences,

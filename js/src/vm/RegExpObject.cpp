@@ -1185,11 +1185,6 @@ JSObject* js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj) {
   return RegExpObject::create(cx, source, reobj.getFlags(), TenuredObject);
 }
 
-JS_FRIEND_API RegExpShared* js::RegExpToSharedNonInline(JSContext* cx,
-                                                        HandleObject obj) {
-  return RegExpToShared(cx, obj);
-}
-
 JS::ubi::Node::Size JS::ubi::Concrete<RegExpShared>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   return js::gc::Arena::thingSize(gc::AllocKind::REGEXP_SHARED) +
