@@ -14,6 +14,16 @@ onboarding-cards-dismiss =
     .title = Dismiss
     .aria-label = Dismiss
 
+## Custom Return To AMO onboarding strings
+
+return-to-amo-subtitle = Great, you’ve got { -brand-short-name }
+# <img data-l10n-name="icon"/> will be replaced with the icon belonging to the extension
+#
+# Variables:
+#   $addon-name (String) - Name of the add-on
+return-to-amo-addon-title = Now let’s get you <img data-l10n-name="icon"/> <b>{ $addon-name }</b>.
+return-to-amo-add-extension-label = Add the Extension
+
 ## Multistage 3-screen onboarding flow strings (about:welcome pages)
 
 # The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
