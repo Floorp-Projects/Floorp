@@ -14,8 +14,9 @@ const { ADLINK_CHECK_TIMEOUT_MS } = ChromeUtils.import(
   "resource:///actors/SearchTelemetryChild.jsm"
 );
 
-const TEST_PROVIDER_INFO = {
-  example: {
+const TEST_PROVIDER_INFO = [
+  {
+    telemetryId: "example",
     searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
@@ -23,7 +24,7 @@ const TEST_PROVIDER_INFO = {
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
-};
+];
 
 const SEARCH_AD_CLICK_SCALARS = [
   "browser.search.with_ads",

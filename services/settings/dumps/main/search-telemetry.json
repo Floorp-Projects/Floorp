@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "codeParamName": "client",
+      "codePrefixes": [
+        "firefox"
+      ],
+      "extraAdServersRegexps": [
+        "^https://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
+      ],
+      "followOnParamNames": [
+        "oq", "ved", "ei"
+      ],
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
+      "telemetryId": "google"
+    },
+    {
+      "codeParamName": "t",
+      "codePrefixes": [
+        "ff", "newext"
+      ],
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
+      ],
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "telemetryId": "duckduckgo"
+    },
+    {
+      "queryParamName": "p",
+      "searchPageRegexp": "^https://(?:.*)search\\.yahoo\\.com/search",
+      "telemetryId": "yahoo"
+    },
+    {
+      "codeParamName": "tn",
+      "codePrefixes": [
+        "34046034_", "monline_"
+      ],
+      "followOnParamNames": [
+        "oq"
+      ],
+      "queryParamName": "wd",
+      "searchPageRegexp": "^https://www\\.baidu\\.com/(?:s|baidu)",
+      "telemetryId": "baidu"
+    },
+    {
+      "codeParamName": "pc",
+      "codePrefixes": [
+        "MOZ",
+        "MZ"
+      ],
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k",
+        "^https://www\\.bing\\.com/fd/ls/GLinkPingPost\\.aspx.*acli?c?k"
+      ],
+      "followOnCookies": [
+        {
+          "extraCodePrefixes": [
+            "QBRE"
+          ],
+          "codePrefixes": [
+            "MOZ",
+            "MZ"
+          ],
+          "extraCodeParamName": "form",
+          "host": "www.bing.com",
+          "name": "SRCHS",
+          "codeParamName": "PC"
+        }
+      ],
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://www\\.bing\\.com/search",
+      "telemetryId": "bing"
+    }
+  ]
+}
