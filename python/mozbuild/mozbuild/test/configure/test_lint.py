@@ -397,6 +397,24 @@ class TestLint(unittest.TestCase):
         self.assertEquals(str(e.exception),
                           "global name 'unknown' is not defined")
 
+        # Ideally, this would raise on line 4, where `unknown` is used, but
+        # python disassembly doesn't give use the information.
+        with self.assertRaisesFromLine(NameError, 2) as e:
+            with self.moz_configure('''
+                @template
+                def tmpl():
+                    @depends(unknown)
+                    def foo(value):
+                        if value:
+                            return True
+                    return foo
+                tmpl()
+            '''):
+                self.lint_test()
+
+        self.assertEquals(str(e.exception),
+                          "global name 'unknown' is not defined")
+
 
 if __name__ == '__main__':
     main()

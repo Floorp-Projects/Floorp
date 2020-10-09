@@ -312,6 +312,9 @@ class LintSandbox(ConfigureSandbox):
                 # Raise the same kind of error as what would happen during
                 # execution.
                 e = NameError("global name '{}' is not defined".format(instr.argval))
-                self._raise_from(e, func, instr.starts_line - func.__code__.co_firstlineno)
+                if instr.starts_line is None:
+                    self._raise_from(e, func)
+                else:
+                    self._raise_from(e, func, instr.starts_line - code.co_firstlineno)
 
         return wrapped
