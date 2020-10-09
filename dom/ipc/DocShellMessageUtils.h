@@ -43,11 +43,11 @@ struct ParamTraits<mozilla::dom::PermitUnloadResult>
           mozilla::dom::PermitUnloadResult::eRequestBlockNavigation> {};
 
 template <>
-struct ParamTraits<mozilla::dom::PermitUnloadAction>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::PermitUnloadAction,
-          mozilla::dom::PermitUnloadAction(0),
-          mozilla::dom::PermitUnloadAction::EndGuard_> {};
+struct ParamTraits<mozilla::dom::XPCOMPermitUnloadAction>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::XPCOMPermitUnloadAction,
+          mozilla::dom::XPCOMPermitUnloadAction::ePrompt,
+          mozilla::dom::XPCOMPermitUnloadAction::eDontPromptAndUnload> {};
 
 }  // namespace IPC
 
