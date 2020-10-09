@@ -473,13 +473,6 @@ interface ContentFrameMessageManager : EventTarget
    */
   readonly attribute nsIEventTarget? tabEventTarget;
 
-  /**
-   * Returns the outerWindowID of the browser window hosting the frame.
-   * If, for some reason, the frameloader can't be resolved to a browser
-   * window, this will return 0.
-   */
-  readonly attribute long long chromeOuterWindowID;
-
 };
 ContentFrameMessageManager includes MessageManagerGlobal;
 ContentFrameMessageManager includes SyncMessageSenderMixin;

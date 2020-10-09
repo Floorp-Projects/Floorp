@@ -41,13 +41,17 @@ windows.
        "Both browsers should belong to the same document.");
     let winID = getOuterWindowID(browser1.ownerGlobal);
 
-    let browser1ID = await ContentTask.spawn(browser1, null, () => {
-      return chromeOuterWindowID;
-    });
+    let getChildRootOuterId = browser => { 
+      try {
+        return docShell.browserChild?.chromeOuterWindowID;
+      } catch(ex) { }
 
-    let browser2ID = await ContentTask.spawn(browser2, null, () => {
-      return chromeOuterWindowID;
-    });
+      // Not a remote tab
+      return content.top.windowRoot.ownerGlobal.docShell.outerWindowID;
+    };
+
+    let browser1ID = await SpecialPowers.spawn(browser1, [], getChildRootOuterId);
+    let browser2ID = await SpecialPowers.spawn(browser2, [], getChildRootOuterId);
 
     is(browser1ID, winID,
        "Browser 1 frame script environment should have the correct chromeOuterWindowID");
