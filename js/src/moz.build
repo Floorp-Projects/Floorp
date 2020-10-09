@@ -537,7 +537,7 @@ FINAL_LIBRARY = 'js'
 
 selfhosted_inputs = [
     '../public/friend/ErrorNumbers.msg',
-    'builtin/TypedObjectConstants.h',
+    'builtin/TypedArrayConstants.h',
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',
     'builtin/Array.js',
@@ -563,7 +563,6 @@ selfhosted_inputs = [
     'builtin/Set.js',
     'builtin/Sorting.js',
     'builtin/TypedArray.js',
-    'builtin/TypedObject.js',
     'builtin/WeakMap.js',
     'builtin/WeakSet.js'
 ] + ([
