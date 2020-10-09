@@ -4940,6 +4940,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         displayURLString(cx),
         source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr))),
         scriptVector(cx, BaseScriptVector(cx)),
+        partialMatchVector(cx, BaseScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)) {}
 
   /*
@@ -5058,13 +5059,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         return false;
       }
       double doubleLine = lineProperty.toNumber();
-      if (doubleLine <= 0 || (unsigned int)doubleLine != doubleLine) {
+      uint32_t uintLine = (uint32_t)doubleLine;
+      if (doubleLine <= 0 || uintLine != doubleLine) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_DEBUG_BAD_LINE);
         return false;
       }
       hasLine = true;
-      line = doubleLine;
+      line = uintLine;
     } else {
       JS_ReportErrorNumberASCII(
           cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
@@ -5110,14 +5112,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       return false;
     }
 
-    bool delazified = false;
-    if (needsDelazifyBeforeQuery()) {
-      if (!delazifyScripts()) {
-        return false;
-      }
-      delazified = true;
-    }
-
     Realm* singletonRealm = nullptr;
     if (realms.count() == 1) {
       singletonRealm = realms.all().front();
@@ -5125,14 +5119,77 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
 
     // Search each realm for debuggee scripts.
     MOZ_ASSERT(scriptVector.empty());
+    MOZ_ASSERT(partialMatchVector.empty());
     oom = false;
     IterateScripts(cx, singletonRealm, this, considerScript);
-    if (!delazified) {
-      IterateLazyScripts(cx, singletonRealm, this, considerLazyScript);
-    }
+    IterateLazyScripts(cx, singletonRealm, this, considerLazyScript);
     if (oom) {
       ReportOutOfMemory(cx);
       return false;
+    }
+
+    // If we are filtering by line number, the lazy BaseScripts were not checked
+    // yet since they do not implement `GetScriptLineExtent`. Instead we revisit
+    // each result script and delazify its children and add any matching ones to
+    // the results list.
+    MOZ_ASSERT(hasLine || partialMatchVector.empty());
+    Rooted<BaseScript*> script(cx);
+    RootedFunction fun(cx);
+    while (!partialMatchVector.empty()) {
+      script = partialMatchVector.popCopy();
+
+      MOZ_ASSERT(script->isFunction());
+      MOZ_ASSERT(script->isReadyForDelazification());
+
+      fun = script->function();
+
+      // Delazify script.
+      JSScript* compiledScript = GetOrCreateFunctionScript(cx, fun);
+      if (!compiledScript) {
+        return false;
+      }
+
+      // If target line isn't in script, we are done with it.
+      MOZ_ASSERT(line >= compiledScript->lineno());
+      if (compiledScript->lineno() + GetScriptLineExtent(compiledScript) <
+          line) {
+        continue;
+      }
+
+      // Add script to results now that we've completed checks.
+      if (!scriptVector.append(compiledScript)) {
+        return false;
+      }
+
+      // If script was a leaf we are done with it. This is an optional
+      // optimization to avoid inspecting the `gcthings` list below.
+      if (!script->hasInnerFunctions()) {
+        continue;
+      }
+
+      // Now add inner scripts to `partialMatchVector` work list to determine
+      // if they are matches. Note that IterateLazyScripts ignored them
+      // already since they did not have a compiled parent at the time.
+      for (const JS::GCCellPtr& thing : script->gcthings()) {
+        if (!thing.is<JSObject>() || !thing.as<JSObject>().is<JSFunction>()) {
+          continue;
+        }
+        if (!thing.as<JSObject>().as<JSFunction>().hasBaseScript()) {
+          continue;
+        }
+        BaseScript* inner = thing.as<JSObject>().as<JSFunction>().baseScript();
+
+        // If target line isn't in script, we are done with it.
+        if (line < inner->lineno()) {
+          continue;
+        }
+
+        // Add the matching inner script to the back of the results queue
+        // where it will be processed recursively.
+        if (!partialMatchVector.append(inner)) {
+          return false;
+        }
+      }
     }
 
     // If this is an 'innermost' query, we want to filter the results again to
@@ -5222,7 +5279,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   bool hasLine = false;
 
   /* The line matching scripts must cover. */
-  unsigned int line = 0;
+  uint32_t line = 0;
 
   /* True if the query has an 'innermost' property whose value is true. */
   bool innermost = false;
@@ -5233,6 +5290,16 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
    * we use the CellIter.
    */
   Rooted<BaseScriptVector> scriptVector;
+
+  /*
+   * While in the CellIter we may find BaseScripts that need to be compiled
+   * before the query can be fully checked. Since we cannot compile while under
+   * CellIter we accumulate them here instead.
+   *
+   * This occurs when matching line numbers since `GetScriptLineExtent` cannot
+   * be computed without bytecode existing.
+   */
+  Rooted<BaseScriptVector> partialMatchVector;
 
   /*
    * Like above, but for wasm modules.
@@ -5256,18 +5323,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     return true;
   }
 
-  bool delazifyScripts() {
-    // All scripts in debuggee realms must be visible, so delazify
-    // everything.
-    for (auto r = realms.all(); !r.empty(); r.popFront()) {
-      Realm* realm = r.front();
-      if (!realm->ensureDelazifyScriptsForDebugger(cx)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   static void considerScript(JSRuntime* rt, void* data, BaseScript* script,
                              const JS::AutoRequireNoGC& nogc) {
     ScriptQuery* self = static_cast<ScriptQuery*>(data);
@@ -5278,15 +5333,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
                                  const JS::AutoRequireNoGC& nogc) {
     ScriptQuery* self = static_cast<ScriptQuery*>(data);
     self->considerLazy(script, nogc);
-  }
-
-  bool needsDelazifyBeforeQuery() const {
-    // * innermost
-    //   Currently not supported, since this is not used outside of test.
-    //
-    // * hasLine
-    //   Only JSScript supports GetScriptLineExtent.
-    return innermost || hasLine;
   }
 
   template <typename T>
@@ -5359,8 +5405,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   }
 
   void considerLazy(BaseScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
-    MOZ_ASSERT(!needsDelazifyBeforeQuery());
-
     if (oom) {
       return;
     }
@@ -5378,8 +5422,24 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       return;
     }
 
-    /* Record this matching script in the results scriptVector. */
-    if (!scriptVector.append(lazyScript)) {
+    bool partial = false;
+
+    if (hasLine) {
+      // GetScriptLineExtent is not available on lazy scripts so instead add
+      // potential matches to `partialMatchVector` so that script can be
+      // compiled and reprocessed later. We only add scripts that are ready for
+      // delazification and they may in turn process their inner functions.
+      if (!lazyScript->isReadyForDelazification()) {
+        return;
+      }
+      if (line < lazyScript->lineno()) {
+        return;
+      }
+      partial = true;
+    }
+
+    Rooted<BaseScriptVector>& vec = partial ? partialMatchVector : scriptVector;
+    if (!vec.append(lazyScript)) {
       oom = true;
     }
   }
