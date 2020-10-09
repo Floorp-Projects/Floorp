@@ -18,6 +18,7 @@
 
 #include "jstypes.h"
 
+#include "jit/ABIFunctions.h"
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CalleeToken.h"
@@ -261,7 +262,7 @@ class JitRuntime {
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
   bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                         const VMFunctionData& f, void* nativeFun,
+                         const VMFunctionData& f, DynFn nativeFun,
                          uint32_t* wrapperOffset);
 
   template <typename IdT>

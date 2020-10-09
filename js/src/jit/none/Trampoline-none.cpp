@@ -43,7 +43,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler&, Label*) {
 }
 
 bool JitRuntime::generateVMWrapper(JSContext*, MacroAssembler&,
-                                   const VMFunctionData&, void*, uint32_t*) {
+                                   const VMFunctionData&, DynFn, uint32_t*) {
   MOZ_CRASH();
 }
 
