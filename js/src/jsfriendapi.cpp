@@ -198,10 +198,6 @@ JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script) {
   return script->principals();
 }
 
-JS_FRIEND_API JS::Realm* js::GetScriptRealm(JSScript* script) {
-  return script->realm();
-}
-
 JS_FRIEND_API bool JS_ScriptHasMutedErrors(JSScript* script) {
   return script->mutedErrors();
 }
