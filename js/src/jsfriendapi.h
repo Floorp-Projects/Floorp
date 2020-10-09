@@ -289,8 +289,6 @@ extern JS_FRIEND_API bool IsSystemCompartment(JS::Compartment* comp);
 
 extern JS_FRIEND_API bool IsSystemZone(JS::Zone* zone);
 
-extern JS_FRIEND_API bool IsAtomsZone(JS::Zone* zone);
-
 struct WeakMapTracer {
   JSRuntime* runtime;
 
