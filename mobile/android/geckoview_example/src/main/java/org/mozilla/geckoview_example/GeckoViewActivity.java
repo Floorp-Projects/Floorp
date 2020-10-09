@@ -596,6 +596,16 @@ public class GeckoViewActivity
         }
     };
 
+    private final BooleanSetting mJavascriptEnabled = new BooleanSetting(
+            R.string.key_javascript_enabled, R.bool.javascript_enabled_default,
+            /* reloadCurrentSession */ true
+    ) {
+        @Override
+        public void setValue(final GeckoRuntimeSettings settings, final Boolean value) {
+            settings.setJavaScriptEnabled(value);
+        }
+    };
+
     private final BooleanSetting mTrackingProtection = new BooleanSetting(
             R.string.key_tracking_protection, R.bool.tracking_protection_default
     ) {
@@ -725,6 +735,7 @@ public class GeckoViewActivity
                     .crashHandler(ExampleCrashHandler.class)
                     .preferredColorScheme(mPreferredColorScheme.value())
                     .telemetryDelegate(new ExampleTelemetryDelegate())
+                    .javaScriptEnabled(mJavascriptEnabled.value())
                     .aboutConfigEnabled(true);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
