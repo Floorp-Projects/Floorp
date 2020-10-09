@@ -24,7 +24,7 @@ fuzzy(1,5000) == border-image-fill.yaml border-image-fill-ref.png
 fuzzy(2,25326) == border-image-fill-2.yaml border-image-fill-2-ref.png
 == border-no-bogus-line.yaml border-no-bogus-line-ref.png
 platform(linux,mac) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
-== overlapping.yaml overlapping.png
+fuzzy-if(platform(swgl),1,20) == overlapping.yaml overlapping.png
 == zero-width.yaml blank.yaml
 platform(linux,mac) == small-dotted-border.yaml small-dotted-border.png
 == discontinued-dash.yaml discontinued-dash.png
