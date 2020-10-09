@@ -1323,9 +1323,9 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean isInModalState();
 
   /**
-   * Request set internal desktopMode flag change.
+   * Internal desktopMode flag.
    */
-  void setDesktopModeViewport(in boolean aDesktopModeViewport);
+  attribute boolean desktopModeViewport;
 
   /**
    * Suspend/resume timeouts on this window and its descendant windows.

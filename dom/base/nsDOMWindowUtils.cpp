@@ -2150,6 +2150,13 @@ nsDOMWindowUtils::IsInModalState(bool* retval) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetDesktopModeViewport(bool* retval) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  *retval = window && window->IsDesktopModeViewport();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetDesktopModeViewport(bool aDesktopMode) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
