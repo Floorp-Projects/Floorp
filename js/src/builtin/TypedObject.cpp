@@ -48,12 +48,6 @@ const JSClass js::TypedObjectModuleObject::class_ = {
         JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
     JS_NULL_CLASS_OPS, &classSpec_};
 
-static void ReportCannotConvertTo(JSContext* cx, HandleValue fromValue,
-                                  const char* toType) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                            InformalValueTypeName(fromValue), toType);
-}
-
 template <typename T>
 BigInt* CreateBigInt(JSContext* cx, T i);
 template <>
@@ -119,21 +113,6 @@ static bool Reify(JSContext* cx, HandleTypeDescr type,
 
   return CallSelfHostedFunction(cx, cx->names().Reify, UndefinedHandleValue,
                                 args, to);
-}
-
-// Extracts the `prototype` property from `obj`, throwing if it is
-// missing or not an object.
-static JSObject* GetPrototype(JSContext* cx, HandleObject obj) {
-  RootedValue prototypeVal(cx);
-  if (!GetProperty(cx, obj, obj, cx->names().prototype, &prototypeVal)) {
-    return nullptr;
-  }
-  if (!prototypeVal.isObject()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INVALID_PROTOTYPE);
-    return nullptr;
-  }
-  return &prototypeVal.toObject();
 }
 
 /***************************************************************************
@@ -500,79 +479,9 @@ ArrayTypeDescr* ArrayMetaTypeDescr::create(JSContext* cx,
 }
 
 bool ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!ThrowIfNotConstructing(cx, args, "ArrayType")) {
-    return false;
-  }
-
-  RootedObject arrayTypeGlobal(cx, &args.callee());
-
-  // Expect two arguments. The first is a type object, the second is a length.
-  if (!args.requireAtLeast(cx, "ArrayType", 2)) {
-    return false;
-  }
-
-  if (!args[0].isObject() || !args[0].toObject().is<SimpleTypeDescr>()) {
-    ReportCannotConvertTo(cx, args[0], "ArrayType element specifier");
-    return false;
-  }
-
-  if (!args[1].isInt32() || args[1].toInt32() < 0) {
-    ReportCannotConvertTo(cx, args[1], "ArrayType length specifier");
-    return false;
-  }
-
-  Rooted<TypeDescr*> elementType(cx, &args[0].toObject().as<TypeDescr>());
-
-  int32_t length = args[1].toInt32();
-
-  // Compute the byte size.
-  CheckedInt32 size = CheckedInt32(elementType->size()) * length;
-  if (!size.isValid()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPEDOBJECT_TOO_BIG);
-    return false;
-  }
-
-  // Construct a canonical string `new ArrayType(<elementType>, N)`:
-  StringBuffer contents(cx);
-  if (!contents.append("new ArrayType(")) {
-    return false;
-  }
-  if (!contents.append(&elementType->stringRepr())) {
-    return false;
-  }
-  if (!contents.append(", ")) {
-    return false;
-  }
-  if (!NumberValueToStringBuffer(cx, NumberValue(length), contents)) {
-    return false;
-  }
-  if (!contents.append(")")) {
-    return false;
-  }
-  RootedAtom stringRepr(cx, contents.finishAtom());
-  if (!stringRepr) {
-    return false;
-  }
-
-  // Extract ArrayType.prototype
-  RootedObject arrayTypePrototype(cx, GetPrototype(cx, arrayTypeGlobal));
-  if (!arrayTypePrototype) {
-    return false;
-  }
-
-  // Create the instance of ArrayType
-  Rooted<ArrayTypeDescr*> obj(cx);
-  obj = create(cx, arrayTypePrototype, elementType, stringRepr, size.value(),
-               length);
-  if (!obj) {
-    return false;
-  }
-
-  args.rval().setObject(*obj);
-  return true;
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_TYPEDOBJECT_NOT_CONSTRUCTIBLE);
+  return false;
 }
 
 /*********************************
@@ -587,7 +496,7 @@ static const JSClassOps StructTypeDescrClassOps = {
     nullptr,                 // resolve
     nullptr,                 // mayResolve
     TypeDescr::finalize,     // finalize
-    StructTypeDescr::call,   // call
+    nullptr,                 // call
     nullptr,                 // hasInstance
     TypedObject::construct,  // construct
     nullptr,                 // trace
@@ -633,70 +542,6 @@ CheckedInt32 StructMetaTypeDescr::Layout::close(int32_t* alignment) {
     *alignment = structAlignment;
   }
   return RoundUpToAlignment(sizeSoFar, structAlignment);
-}
-
-/* static */
-JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
-                                      HandleObject fields) {
-  // Obtain names of fields, which are the own properties of `fields`
-  RootedIdVector ids(cx);
-  if (!GetPropertyKeys(cx, fields, JSITER_OWNONLY | JSITER_SYMBOLS, &ids)) {
-    return nullptr;
-  }
-
-  // Iterate through each field. Collect values for the various
-  // vectors below and also track total size and alignment. Be wary
-  // of overflow!
-  RootedValueVector fieldTypeObjs(cx);  // Type descriptor of each field.
-
-  Vector<StructFieldProps> fieldProps(cx);
-
-  RootedValue fieldTypeVal(cx);
-  RootedId id(cx);
-  Rooted<TypeDescr*> fieldType(cx);
-
-  for (unsigned int i = 0; i < ids.length(); i++) {
-    id = ids[i];
-
-    // Check that all the property names are non-numeric strings.
-    uint32_t unused;
-    if (!JSID_IS_ATOM(id) || JSID_TO_ATOM(id)->isIndex(&unused)) {
-      RootedValue idValue(cx, IdToValue(id));
-      ReportCannotConvertTo(cx, idValue, "StructType field name");
-      return nullptr;
-    }
-
-    // Load the value for the current field from the `fields` object.
-    // The value should be a simple type descriptor.
-    if (!GetProperty(cx, fields, fields, id, &fieldTypeVal)) {
-      return nullptr;
-    }
-    fieldType = ToObjectIf<SimpleTypeDescr>(fieldTypeVal);
-    if (!fieldType) {
-      ReportCannotConvertTo(cx, fieldTypeVal, "StructType field specifier");
-      return nullptr;
-    }
-
-    // Collect field type object
-    if (!fieldTypeObjs.append(ObjectValue(*fieldType))) {
-      return nullptr;
-    }
-
-    // Along this path everything is mutable
-    StructFieldProps props;
-    props.isMutable = true;
-    if (!fieldProps.append(props)) {
-      return nullptr;
-    }
-  }
-
-  RootedObject structTypePrototype(cx, GetPrototype(cx, metaTypeDescr));
-  if (!structTypePrototype) {
-    return nullptr;
-  }
-
-  return createFromArrays(cx, structTypePrototype, ids, fieldTypeObjs,
-                          fieldProps);
 }
 
 /* static */
@@ -917,25 +762,8 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
 
 bool StructMetaTypeDescr::construct(JSContext* cx, unsigned int argc,
                                     Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!ThrowIfNotConstructing(cx, args, "StructType")) {
-    return false;
-  }
-
-  if (args.length() >= 1 && args[0].isObject()) {
-    RootedObject metaTypeDescr(cx, &args.callee());
-    RootedObject fields(cx, &args[0].toObject());
-    RootedObject obj(cx, create(cx, metaTypeDescr, fields));
-    if (!obj) {
-      return false;
-    }
-    args.rval().setObject(*obj);
-    return true;
-  }
-
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS);
+                            JSMSG_TYPEDOBJECT_NOT_CONSTRUCTIBLE);
   return false;
 }
 
@@ -981,14 +809,6 @@ TypeDescr& StructTypeDescr::fieldDescr(size_t index) const {
   ArrayObject& fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
   MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
   return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
-}
-
-bool StructTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
-  // A structure type is a constructor and hence callable, but at present the
-  // call always throws.
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_TYPEDOBJECT_STRUCTTYPE_NOT_CALLABLE);
-  return false;
 }
 
 /******************************************************************************
