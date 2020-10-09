@@ -50,17 +50,11 @@ class SearchProviders {
 
     // Filter-out non-ad providers so that we're not trying to match against
     // those unnecessarily.
-    this._searchProviderInfo = this._searchProviderInfo
-      .filter(p => "extraAdServersRegexps" in p)
-      .map(p => {
-        return {
-          ...p,
-          searchPageRegexp: new RegExp(p.searchPageRegexp),
-          extraAdServersRegexps: p.extraAdServersRegexps.map(
-            r => new RegExp(r)
-          ),
-        };
-      });
+    for (let [providerName, info] of Object.entries(this._searchProviderInfo)) {
+      if (!("extraAdServersRegexps" in info)) {
+        delete this._searchProviderInfo[providerName];
+      }
+    }
 
     return this._searchProviderInfo;
   }
@@ -105,7 +99,9 @@ class SearchTelemetryChild extends JSWindowActorChild {
    *   of provider name and the provider information.
    */
   _getProviderInfoForUrl(url) {
-    return searchProviders.info?.find(info => info.searchPageRegexp.test(url));
+    return Object.entries(searchProviders.info || []).find(([_, info]) =>
+      info.regexp.test(url)
+    );
   }
 
   /**
@@ -129,7 +125,7 @@ class SearchTelemetryChild extends JSWindowActorChild {
       return;
     }
 
-    let regexps = providerInfo.extraAdServersRegexps;
+    let regexps = providerInfo[1].extraAdServersRegexps;
     let anchors = doc.getElementsByTagName("a");
     let hasAds = false;
     for (let anchor of anchors) {
