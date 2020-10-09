@@ -157,10 +157,6 @@ JS_FRIEND_API bool JS::GetIsSecureContext(JS::Realm* realm) {
   return realm->creationOptions().secureContext();
 }
 
-JS_FRIEND_API void js::AssertCompartmentHasSingleRealm(JS::Compartment* comp) {
-  MOZ_RELEASE_ASSERT(comp->realms().length() == 1);
-}
-
 JS_FRIEND_API JSPrincipals* JS::GetRealmPrincipals(JS::Realm* realm) {
   return realm->principals();
 }
