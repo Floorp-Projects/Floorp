@@ -3,7 +3,7 @@
 <ShortName>Test search engine (fr)</ShortName>
 <Description>A test search engine (based on Google search for a different locale)</Description>
 <InputEncoding>ISO-8859-1</InputEncoding>
-<Url type="text/html" method="GET" template="http://www.google.fr/search" resultdomain="google.fr">
+<Url type="text/html" method="GET" template="http://www.google.fr/search">
   <Param name="q" value="{searchTerms}"/>
   <Param name="ie" value="iso-8859-1"/>
   <Param name="oe" value="iso-8859-1"/>
