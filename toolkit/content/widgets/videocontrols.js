@@ -167,15 +167,6 @@ this.VideoControlsWidget = class {
       return false;
     }
 
-    // Bug 1592539 - It's possible to confuse the underlying visual
-    // cloning mechanism by switching which video stream a <video> is
-    // rendering. We try to head that case off for now by hiding the
-    // Picture-in-Picture capability on <video> elements that have
-    // srcObject != null.
-    if (someVideo.srcObject) {
-      return false;
-    }
-
     return true;
   }
 
