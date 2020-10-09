@@ -144,17 +144,24 @@ class AlternateServerPlayback:
                 except exceptions.FlowReadException as e:
                     raise exceptions.CommandError(str(e))
                 self.load_flows(flows)
-                proto = os.path.splitext(path)[0] + ".json"
+                proto = os.path.join(os.path.dirname(path), "metadata.json")
                 if os.path.exists(proto):
                     ctx.log.info("Loading proto info from %s" % proto)
                     with open(proto) as f:
                         recording_info = json.loads(f.read())
-                    ctx.log.info(
-                        "Replaying file {} recorded on {}".format(
-                            os.path.basename(path), recording_info["recording_date"]
+                    if recording_info.get("http_protocol", False):
+                        ctx.log.info(
+                            "Replaying file {} recorded on {}".format(
+                                path, recording_info["recording_date"]
+                            )
                         )
-                    )
-                    _PROTO.update(recording_info["http_protocol"])
+                        _PROTO.update(recording_info["http_protocol"])
+                    else:
+                        ctx.log.warn(
+                            "Replaying file {} has no http_protocol info.".format(
+                                proto
+                            )
+                        )
         except Exception as e:
             ctx.log.error("Could not load recording file! Stopping playback process!")
             ctx.log.error(str(e))

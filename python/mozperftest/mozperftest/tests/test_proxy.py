@@ -13,7 +13,7 @@ from mozperftest.environment import SYSTEM
 from mozperftest.utils import install_package, silence
 
 here = os.path.abspath(os.path.dirname(__file__))
-example_dump = os.path.join(here, "..", "system", "example.dump")
+example_dump = os.path.join(here, "..", "system", "example.zip")
 
 
 @pytest.fixture(scope="module")
