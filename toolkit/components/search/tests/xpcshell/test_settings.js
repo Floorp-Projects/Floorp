@@ -298,18 +298,6 @@ var EXPECTED_ENGINE = {
             },
           ],
         },
-        {
-          type: "application/x-moz-default-purpose",
-          method: "GET",
-          template: "http://www.google.com/search",
-          params: [
-            {
-              name: "q",
-              value: "{searchTerms}",
-              purpose: undefined,
-            },
-          ],
-        },
       ],
     },
   },

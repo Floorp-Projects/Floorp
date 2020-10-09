@@ -60,34 +60,6 @@
               "pref": "test"
             }
           ]
-        },
-        {
-          "template": "http://www.google.com/search",
-          "rels": [],
-          "resultDomain": "purpose.google.com",
-          "type": "application/x-moz-default-purpose",
-          "params": [
-            {
-              "name": "q",
-              "value": "{searchTerms}"
-            },
-            {
-              "name": "channel",
-              "value": "fflb",
-              "purpose": "keyword"
-            },
-            {
-              "name": "channel",
-              "value": "rcs",
-              "purpose": "contextmenu"
-            },
-            {
-              "name": "myparam",
-              "mozparam": true,
-              "condition": "pref",
-              "pref": "test"
-            }
-          ]
         }
       ],
       "queryCharset": "UTF-8",
