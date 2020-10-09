@@ -266,7 +266,19 @@ class ProcessHandlerMixin(object):
         if isWin:
             # Redefine the execute child so that we can track process groups
             def _execute_child(self, *args_tuple):
-                if six.PY3:
+                # workaround for bug 1670130
+                if sys.hexversion >= 0x03090000:  # after 3.9.0
+                    (args, executable, preexec_fn, close_fds,
+                     pass_fds, cwd, env,
+                     startupinfo, creationflags, shell,
+                     p2cread, p2cwrite,
+                     c2pread, c2pwrite,
+                     errread, errwrite,
+                     restore_signals,
+                     gid, gids, uid,
+                     umask,
+                     start_new_session) = args_tuple
+                elif six.PY3:
                     (args, executable, preexec_fn, close_fds,
                      pass_fds, cwd, env,
                      startupinfo, creationflags, shell,
