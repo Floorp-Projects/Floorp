@@ -15,17 +15,26 @@
 namespace mozilla {
 
 StaticRefPtr<URLExtraData> URLExtraData::sDummy;
+StaticRefPtr<URLExtraData> URLExtraData::sDummyChrome;
 
 /* static */
-void URLExtraData::InitDummy() {
+void URLExtraData::Init() {
   RefPtr<nsIURI> baseURI = new NullPrincipalURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(nullptr);
-  sDummy = new URLExtraData(baseURI.forget(), referrerInfo.forget(),
+  sDummy = new URLExtraData(do_AddRef(baseURI), do_AddRef(referrerInfo),
                             NullPrincipal::CreateWithoutOriginAttributes());
+
+  sDummyChrome =
+      new URLExtraData(baseURI.forget(), referrerInfo.forget(),
+                       NullPrincipal::CreateWithoutOriginAttributes());
+  sDummyChrome->mIsChrome = true;
 }
 
 /* static */
-void URLExtraData::ReleaseDummy() { sDummy = nullptr; }
+void URLExtraData::Shutdown() {
+  sDummy = nullptr;
+  sDummyChrome = nullptr;
+}
 
 URLExtraData::~URLExtraData() {
   if (!NS_IsMainThread()) {

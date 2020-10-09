@@ -1400,8 +1400,8 @@ static StaticRefPtr<UACacheReporter> gUACacheReporter;
 namespace mozilla {
 
 void InitializeServo() {
-  URLExtraData::InitDummy();
-  Servo_Initialize(URLExtraData::Dummy());
+  URLExtraData::Init();
+  Servo_Initialize(URLExtraData::Dummy(), URLExtraData::DummyChrome());
 
   gUACacheReporter = new UACacheReporter();
   RegisterWeakMemoryReporter(gUACacheReporter);
@@ -1416,7 +1416,10 @@ void ShutdownServo() {
   gUACacheReporter = nullptr;
 
   delete sServoFFILock;
+  sServoFFILock = nullptr;
   Servo_Shutdown();
+
+  URLExtraData::Shutdown();
 }
 
 void AssertIsMainThreadOrServoFontMetricsLocked() {

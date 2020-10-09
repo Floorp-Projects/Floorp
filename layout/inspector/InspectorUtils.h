@@ -165,6 +165,9 @@ class InspectorUtils {
                                       const nsACString& aProperty,
                                       InspectorPropertyType, ErrorResult& aRv);
 
+  static bool Supports(GlobalObject&, const nsACString& aDeclaration,
+                       const SupportsOptions&);
+
   static bool IsIgnorableWhitespace(GlobalObject& aGlobalObject,
                                     CharacterData& aDataNode) {
     return IsIgnorableWhitespace(aDataNode);

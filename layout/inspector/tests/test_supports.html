@@ -1,0 +1,23 @@
+<!doctype html>
+<title>Test for InspectorUtils.supports</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+ok(!CSS.supports("-moz-window-transform: unset"), "-moz-window-transform is only available to chrome and UA sheets");
+for (let chrome of [true, false]) {
+  is(InspectorUtils.supports("-moz-window-transform: unset", { chrome }), chrome, "InspectorUtils.supports should properly report to support chrome-only properties");
+}
+
+ok(!CSS.supports("-moz-top-layer: top"), "-moz-top-layer is only available to UA sheets");
+ok(!CSS.supports("selector(:-moz-inert)"), "-moz-inert is an UA-only pseudo-class");
+for (let userAgent of [true, false]) {
+  is(InspectorUtils.supports("-moz-top-layer: top", { userAgent }), userAgent, "InspectorUtils.supports should properly report to support UA properties");
+  is(InspectorUtils.supports("selector(:-moz-inert)", { userAgent }), userAgent, "InspectorUtils.supports should properly report to support UA-only selectors");
+}
+
+ok(!CSS.supports("width: 100"), "width shouldn't allow unitless lengths in non-quirks, and in CSS.supports");
+for (let quirks of [true, false]) {
+  is(InspectorUtils.supports("width: 100", { quirks }), quirks, "InspectorUtils.supports should allow quirks if told to do so");
+}
+</script>

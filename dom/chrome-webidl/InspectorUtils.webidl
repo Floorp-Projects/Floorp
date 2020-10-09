@@ -45,6 +45,9 @@ namespace InspectorUtils {
 
   [Throws] boolean cssPropertySupportsType(UTF8String property, InspectorPropertyType type);
 
+  // A version of CSS.supports that allows you to set UA or chrome context.
+  boolean supports(UTF8String conditionText, optional SupportsOptions options = {});
+
   boolean isIgnorableWhitespace(CharacterData dataNode);
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
   [NewObject] NodeList getChildrenForNode(Node node,
@@ -82,6 +85,12 @@ namespace InspectorUtils {
   Element? containingBlockOf(Element element);
 
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
+};
+
+dictionary SupportsOptions {
+  boolean userAgent = false;
+  boolean chrome = false;
+  boolean quirks = false;
 };
 
 dictionary PropertyNamesOptions {

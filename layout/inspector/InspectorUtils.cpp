@@ -443,6 +443,12 @@ static uint8_t ToServoCssType(InspectorPropertyType aType) {
   }
 }
 
+bool InspectorUtils::Supports(GlobalObject&, const nsACString& aDeclaration,
+                              const SupportsOptions& aOptions) {
+  return Servo_CSSSupports(&aDeclaration, aOptions.mUserAgent, aOptions.mChrome,
+                           aOptions.mQuirks);
+}
+
 bool InspectorUtils::CssPropertySupportsType(GlobalObject& aGlobalObject,
                                              const nsACString& aProperty,
                                              InspectorPropertyType aType,
