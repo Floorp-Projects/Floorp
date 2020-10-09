@@ -5569,12 +5569,13 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
 static LayerState RequiredLayerStateForChildren(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aParameters, const nsDisplayList& aList,
-    AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren) {
+    const AnimatedGeometryRoot* aExpectedAGRForChildren,
+    const ActiveScrolledRoot* aExpectedASRForChildren) {
   LayerState result = LayerState::LAYER_INACTIVE;
   for (nsDisplayItem* i : aList) {
     if (result == LayerState::LAYER_INACTIVE &&
-        i->GetAnimatedGeometryRoot() !=
-            aExpectedAnimatedGeometryRootForChildren) {
+        (i->GetAnimatedGeometryRoot() != aExpectedAGRForChildren ||
+         i->GetActiveScrolledRoot() != aExpectedASRForChildren)) {
       result = LayerState::LAYER_ACTIVE;
     }
 
@@ -5589,7 +5590,8 @@ static LayerState RequiredLayerStateForChildren(
       // So we ignore its layer state and look at its children instead.
       state = RequiredLayerStateForChildren(
           aBuilder, aManager, aParameters,
-          *i->GetSameCoordinateSystemChildren(), i->GetAnimatedGeometryRoot());
+          *i->GetSameCoordinateSystemChildren(), i->GetAnimatedGeometryRoot(),
+          i->GetActiveScrolledRoot());
     }
     if ((state == LayerState::LAYER_ACTIVE ||
          state == LayerState::LAYER_ACTIVE_FORCE) &&
@@ -5603,8 +5605,8 @@ static LayerState RequiredLayerStateForChildren(
       nsDisplayList* list = i->GetSameCoordinateSystemChildren();
       if (list) {
         LayerState childState = RequiredLayerStateForChildren(
-            aBuilder, aManager, aParameters, *list,
-            aExpectedAnimatedGeometryRootForChildren);
+            aBuilder, aManager, aParameters, *list, aExpectedAGRForChildren,
+            aExpectedASRForChildren);
         if (childState > result) {
           result = childState;
         }
@@ -5991,7 +5993,8 @@ nsDisplayItem::LayerState nsDisplayOpacity::GetLayerState(
   }
 
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
-                                       GetAnimatedGeometryRoot());
+                                       GetAnimatedGeometryRoot(),
+                                       GetActiveScrolledRoot());
 }
 
 bool nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -6217,7 +6220,8 @@ LayerState nsDisplayBlendContainer::GetLayerState(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aParameters) {
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
-                                       GetAnimatedGeometryRoot());
+                                       GetAnimatedGeometryRoot(),
+                                       GetActiveScrolledRoot());
 }
 
 bool nsDisplayBlendContainer::CreateWebRenderCommands(
@@ -6267,7 +6271,8 @@ LayerState nsDisplayOwnLayer::GetLayerState(
   }
 
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
-                                       mAnimatedGeometryRoot);
+                                       GetAnimatedGeometryRoot(),
+                                       GetActiveScrolledRoot());
 }
 
 bool nsDisplayOwnLayer::IsScrollThumbLayer() const {
@@ -8184,9 +8189,9 @@ nsDisplayItem::LayerState nsDisplayTransform::GetLayerState(
   // geometry root (since it will be their reference frame). If they have a
   // different animated geometry root, we'll make this an active layer so the
   // animation can be accelerated.
-  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                       *GetChildren(),
-                                       mAnimatedGeometryRootForChildren);
+  return RequiredLayerStateForChildren(
+      aBuilder, aManager, aParameters, *GetChildren(),
+      mAnimatedGeometryRootForChildren, GetActiveScrolledRoot());
 }
 
 bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -9292,7 +9297,8 @@ LayerState nsDisplayMasksAndClipPaths::GetLayerState(
     const ContainerLayerParameters& aParameters) {
   if (CanPaintOnMaskLayer(aManager)) {
     LayerState result = RequiredLayerStateForChildren(
-        aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot());
+        aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot(),
+        GetActiveScrolledRoot());
     // When we're not active, FrameLayerBuilder will call PaintAsLayer()
     // on us during painting. In that case we don't want a mask layer to
     // be created, because PaintAsLayer() takes care of applying the mask.
@@ -9656,7 +9662,8 @@ LayerState nsDisplayBackdropRootContainer::GetLayerState(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aParameters) {
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
-                                       GetAnimatedGeometryRoot());
+                                       GetAnimatedGeometryRoot(),
+                                       GetActiveScrolledRoot());
 }
 
 bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
