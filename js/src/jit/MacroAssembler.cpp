@@ -15,7 +15,6 @@
 
 #include "jsfriendapi.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/GCProbes.h"
 #include "jit/ABIFunctions.h"
 #include "jit/AtomicOp.h"
@@ -39,6 +38,7 @@
 #include "vm/JSContext.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/TypedObject.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/ABIFunctionList-inl.h"
@@ -3616,13 +3616,6 @@ void MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch,
   loadObjClassUnsafe(obj, scratch);
   branchTest32(Assembler::NonZero, Address(scratch, JSClass::offsetOfFlags()),
                Imm32(JSClass::NON_NATIVE), label);
-}
-
-void MacroAssembler::branchIfInlineTypedObject(Register obj, Register scratch,
-                                               Label* label) {
-  loadObjClassUnsafe(obj, scratch);
-  branchPtr(Assembler::Equal, scratch, ImmPtr(&InlineTypedObject::class_),
-            label);
 }
 
 void MacroAssembler::copyObjGroupNoPreBarrier(Register sourceObj,

@@ -39,9 +39,6 @@
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/Symbol.h"
-#ifdef JS_HAS_TYPED_OBJECTS
-#  include "builtin/TypedObject.h"
-#endif
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
@@ -60,6 +57,9 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
+#ifdef JS_HAS_TYPED_OBJECTS
+#  include "wasm/TypedObject.h"
+#endif
 
 #include "gc/FreeOp-inl.h"
 #include "vm/JSObject-inl.h"

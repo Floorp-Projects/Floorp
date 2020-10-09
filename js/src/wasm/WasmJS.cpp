@@ -25,7 +25,6 @@
 
 #include <algorithm>
 
-#include "builtin/TypedObject.h"
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
@@ -49,6 +48,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/StringType.h"
 #include "vm/Warnings.h"  // js::WarnNumberASCII
+#include "wasm/TypedObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
