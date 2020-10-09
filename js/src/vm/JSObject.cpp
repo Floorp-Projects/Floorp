@@ -1101,9 +1101,8 @@ bool JSObject::nonNativeSetElement(JSContext* cx, HandleObject obj,
   return nonNativeSetProperty(cx, obj, id, v, receiver, result);
 }
 
-JS_FRIEND_API bool JS_CopyPropertyFrom(JSContext* cx, HandleId id,
-                                       HandleObject target, HandleObject obj,
-                                       PropertyCopyBehavior copyBehavior) {
+static bool CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
+                             HandleObject obj) {
   // |target| must not be a CCW because we need to enter its realm below and
   // CCWs are not associated with a single realm.
   MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
@@ -1123,11 +1122,6 @@ JS_FRIEND_API bool JS_CopyPropertyFrom(JSContext* cx, HandleId id,
   }
   if (desc.setter() && !desc.hasSetterObject()) {
     return true;
-  }
-
-  if (copyBehavior == MakeNonConfigurableIntoConfigurable) {
-    // Mask off the JSPROP_PERMANENT bit.
-    desc.attributesRef() &= ~JSPROP_PERMANENT;
   }
 
   JSAutoRealm ar(cx, target);
@@ -1159,7 +1153,7 @@ JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
   }
 
   for (size_t i = 0; i < props.length(); ++i) {
-    if (!JS_CopyPropertyFrom(cx, props[i], target, obj)) {
+    if (!CopyPropertyFrom(cx, props[i], target, obj)) {
       return false;
     }
   }
