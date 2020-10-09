@@ -250,7 +250,7 @@ class VirtualenvManager(VirtualenvHelper):
         if os.path.exists(self.virtualenv_root):
             shutil.rmtree(self.virtualenv_root)
 
-        args = [python, '-S', self.virtualenv_script_path,
+        args = [python, self.virtualenv_script_path,
                 # Without this, virtualenv.py may attempt to contact the outside
                 # world and search for or download a newer version of pip,
                 # setuptools, or wheel. This is bad for security, reproducibility,
