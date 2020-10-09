@@ -43,6 +43,8 @@ class WebRenderTextureHost : public TextureHost {
 
   virtual void NotifyNotUsed() override;
 
+  virtual bool IsValid() override;
+
   // Return the format used for reading the texture. Some hardware specific
   // textureHosts use their special data representation internally, but we could
   // treat these textureHost as the read-format when we read them.

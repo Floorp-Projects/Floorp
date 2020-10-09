@@ -511,6 +511,10 @@ void TextureHost::EnsureRenderTexture(
         Some(AsyncImagePipelineManager::GetNextExternalImageId());
   } else {
     // TextureHost is wrapped by WebRenderTextureHost.
+    if (aExternalImageId == mExternalImageId) {
+      // The texture has already been created.
+      return;
+    }
     MOZ_ASSERT(mExternalImageId.isNothing());
     mExternalImageId = aExternalImageId;
   }
