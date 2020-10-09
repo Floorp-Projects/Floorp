@@ -41,7 +41,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'AbstractEventQueue.h',
     'AbstractThread.h',
     'BlockingResourceBase.h',
     'CondVar.h',

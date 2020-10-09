@@ -249,9 +249,9 @@ class WorkletThread::TerminateRunnable final : public Runnable {
 };
 
 WorkletThread::WorkletThread(WorkletImpl* aWorkletImpl)
-    : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
-                   MakeUnique<mozilla::EventQueue>()),
-               nsThread::NOT_MAIN_THREAD, kWorkletStackSize),
+    : nsThread(
+          MakeNotNull<ThreadEventQueue*>(MakeUnique<mozilla::EventQueue>()),
+          nsThread::NOT_MAIN_THREAD, kWorkletStackSize),
       mWorkletImpl(aWorkletImpl),
       mExitLoop(false),
       mIsTerminating(false) {
