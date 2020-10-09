@@ -360,11 +360,6 @@ JS_FRIEND_API bool js::UninlinedIsCrossCompartmentWrapper(const JSObject* obj) {
   return js::IsCrossCompartmentWrapper(obj);
 }
 
-JS_FRIEND_API JSObject* js::GetPrototypeNoProxy(JSObject* obj) {
-  MOZ_ASSERT(!obj->is<js::ProxyObject>());
-  return obj->staticPrototype();
-}
-
 JS_FRIEND_API void js::AssertSameCompartment(JSContext* cx, JSObject* obj) {
   cx->check(obj);
 }

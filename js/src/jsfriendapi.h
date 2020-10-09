@@ -400,8 +400,6 @@ static MOZ_ALWAYS_INLINE JS::Realm* GetNonCCWObjectRealm(JSObject* obj) {
   return reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
 }
 
-JS_FRIEND_API JSObject* GetPrototypeNoProxy(JSObject* obj);
-
 JS_FRIEND_API void AssertSameCompartment(JSContext* cx, JSObject* obj);
 
 JS_FRIEND_API void AssertSameCompartment(JSContext* cx, JS::HandleValue v);
