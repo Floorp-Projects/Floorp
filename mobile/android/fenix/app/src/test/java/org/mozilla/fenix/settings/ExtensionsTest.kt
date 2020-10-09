@@ -43,9 +43,6 @@ class ExtensionsTest {
         every {
             fragment.getString(R.string.pref_key_accessibility_force_enable_zoom)
         } returns "pref_key_accessibility_force_enable_zoom"
-        every {
-            fragment.getString(R.string.pref_key_accessibility_auto_size)
-        } returns "pref_key_accessibility_auto_size"
     }
 
     @Test
@@ -78,11 +75,6 @@ class ExtensionsTest {
         every {
             fragment.findPreference<SwitchPreference>("pref_key_accessibility_auto_size")
         } returns switchPreference
-
-        assertEquals(
-            switchPreference,
-            fragment.requirePreference<SwitchPreference>(R.string.pref_key_accessibility_auto_size)
-        )
     }
 
     @Test

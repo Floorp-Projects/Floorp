@@ -21,7 +21,6 @@ import android.widget.TextView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import org.hamcrest.CoreMatchers.allOf
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -49,13 +48,7 @@ class SettingsSubMenuAccessibilityRobot {
         const val TEXT_SIZE = 16f
     }
 
-    fun verifyAutomaticFontSizingMenuItems() = assertAutomaticFontSizingMenuItems()
-
-    fun clickFontSizingSwitch() = toggleFontSizingSwitch()
-
-    fun verifyNewMenuItems() = assertNewMenuItems()
-
-    fun verifyNewMenuItemsAreGone() = assertNewMenuItemsAreGone()
+    fun verifyMenuItems() = assertMenuItems()
 
     fun changeTextSizeSlider(seekBarPercentage: Int) = adjustTextSizeSlider(seekBarPercentage)
 
@@ -76,22 +69,7 @@ class SettingsSubMenuAccessibilityRobot {
 
 val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-private fun assertAutomaticFontSizingMenuItems() {
-    onView(withText("Automatic font sizing"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    val strFont = "Font size will match your Android settings. Disable to manage font size here."
-    onView(withText(strFont))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun toggleFontSizingSwitch() {
-    // Toggle font size to off
-    onView(withText("Automatic font sizing"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-        .perform(click())
-}
-
-private fun assertNewMenuItems() {
+private fun assertMenuItems() {
     assertFontSize()
     assertSliderBar()
 }
@@ -123,22 +101,6 @@ private fun adjustTextSizeSlider(seekBarPercentage: Int) {
 private fun assertTextSizePercentage(textSize: Int) {
     onView(withId(org.mozilla.fenix.R.id.sampleText))
         .check(textSizePercentageEquals(textSize))
-}
-
-private fun assertNewMenuItemsAreGone() {
-    onView(withText("Font Size")).check(doesNotExist())
-    val strFont = "Make text on websites larger or smaller"
-    onView(withText(strFont))
-        .check(doesNotExist())
-
-    onView(withId(org.mozilla.fenix.R.id.sampleText))
-        .check(doesNotExist())
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar_value))
-        .check(doesNotExist())
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar))
-        .check(doesNotExist())
 }
 
 private fun goBackButton() =

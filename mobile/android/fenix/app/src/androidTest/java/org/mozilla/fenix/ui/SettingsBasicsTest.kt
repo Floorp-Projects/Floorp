@@ -85,7 +85,7 @@ class SettingsBasicsTest {
             verifyThemes()
         }.goBack {
         }.openAccessibilitySubMenu {
-            verifyAutomaticFontSizingMenuItems()
+            verifyMenuItems()
         }.goBack {
             // drill down to submenu
         }
@@ -181,7 +181,7 @@ class SettingsBasicsTest {
     }
 
     @Test
-    fun changeAccessibiltySettings() {
+    fun changeAccessibilitySettings() {
         // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
         val webpage = getLoremIpsumAsset(mockWebServer).url
@@ -193,8 +193,7 @@ class SettingsBasicsTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openAccessibilitySubMenu {
-            clickFontSizingSwitch()
-            verifyNewMenuItems()
+            verifyMenuItems()
             changeTextSizeSlider(textSizePercentage)
             verifyTextSizePercentage(textSizePercentage)
         }.goBack {
@@ -202,14 +201,6 @@ class SettingsBasicsTest {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(webpage) {
             checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismiss {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openAccessibilitySubMenu {
-            clickFontSizingSwitch()
-            verifyNewMenuItemsAreGone()
         }
     }
 
