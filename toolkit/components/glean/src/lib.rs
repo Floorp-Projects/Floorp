@@ -125,6 +125,7 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
             }
 
             fog::metrics::fog::initialization.stop();
+            schedule_fog_validation_ping();
         });
     }
 
@@ -358,4 +359,14 @@ pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
     } else {
         return NS_ERROR_FAILURE;
     }
+}
+
+fn schedule_fog_validation_ping() {
+    std::thread::spawn(|| {
+        loop {
+            // Sleep for an hour before and between submissions.
+            std::thread::sleep(std::time::Duration::from_secs(60 * 60));
+            fog::pings::fog_validation.submit(None);
+        }
+    });
 }
