@@ -12,6 +12,7 @@
 #include <map>
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,7 +40,7 @@ class GamepadPlatformService final {
     MonitoringState() = default;
     ~MonitoringState();
 
-    void AddObserver(RefPtr<GamepadTestChannelParent> aParent);
+    void AddObserver(WeakPtr<GamepadTestChannelParent> aParent);
     void RemoveObserver(GamepadTestChannelParent* aParent);
 
     bool IsMonitoring() const;
@@ -53,7 +54,7 @@ class GamepadPlatformService final {
     void Set(bool aIsMonitoring);
 
     bool mIsMonitoring{false};
-    nsTArray<RefPtr<GamepadTestChannelParent>> mObservers;
+    nsTArray<WeakPtr<GamepadTestChannelParent>> mObservers;
 
     friend class GamepadPlatformService;
   };
