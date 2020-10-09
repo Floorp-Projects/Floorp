@@ -165,11 +165,14 @@ impl ClosureHelper for DeclarationBlockMutationClosure {
  */
 
 // A dummy url data for where we don't pass url data in.
-// We need to get rid of this sooner than later.
 static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut _;
+static mut DUMMY_CHROME_URL_DATA: *mut URLExtraData = 0 as *mut _;
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
+pub unsafe extern "C" fn Servo_Initialize(
+    dummy_url_data: *mut URLExtraData,
+    dummy_chrome_url_data: *mut URLExtraData,
+) {
     use style::gecko_bindings::sugar::origin_flags;
 
     // Pretend that we're a Servo Layout thread, to make some assertions happy.
@@ -183,11 +186,13 @@ pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     specified::font::assert_variant_ligatures_matches();
 
     DUMMY_URL_DATA = dummy_url_data;
+    DUMMY_CHROME_URL_DATA = dummy_chrome_url_data;
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_Shutdown() {
     DUMMY_URL_DATA = ptr::null_mut();
+    DUMMY_CHROME_URL_DATA = ptr::null_mut();
     Stylist::shutdown();
     url::shutdown();
 }
@@ -4050,14 +4055,14 @@ fn parse_property_into(
     declarations: &mut SourcePropertyDeclaration,
     property_id: PropertyId,
     value: &nsACString,
-    data: *mut URLExtraData,
+    origin: Origin,
+    url_data: &UrlExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
     rule_type: CssRuleType,
     reporter: Option<&dyn ParseErrorReporter>,
 ) -> Result<(), ()> {
     let value = unsafe { value.as_str_unchecked() };
-    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
 
     if let Some(non_custom) = property_id.non_custom_id() {
@@ -4070,6 +4075,7 @@ fn parse_property_into(
         declarations,
         property_id,
         value,
+        origin,
         url_data,
         reporter,
         parsing_mode,
@@ -4079,7 +4085,7 @@ fn parse_property_into(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseProperty(
+pub unsafe extern "C" fn Servo_ParseProperty(
     property: nsCSSPropertyID,
     value: &nsACString,
     data: *mut URLExtraData,
@@ -4091,10 +4097,12 @@ pub extern "C" fn Servo_ParseProperty(
     let id = get_property_id_from_nscsspropertyid!(property, Strong::null());
     let mut declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
+    let data = UrlExtraData::from_ptr_ref(&data);
     let result = parse_property_into(
         &mut declarations,
         id,
         value,
+        Origin::Author,
         data,
         parsing_mode,
         quirks_mode.into(),
@@ -4454,7 +4462,7 @@ fn set_property(
     property_id: PropertyId,
     value: &nsACString,
     is_important: bool,
-    data: *mut URLExtraData,
+    data: &UrlExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
     loader: *mut Loader,
@@ -4462,11 +4470,12 @@ fn set_property(
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     let mut source_declarations = SourcePropertyDeclaration::new();
-    let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
+    let reporter = ErrorReporter::new(ptr::null_mut(), loader, data.ptr());
     let result = parse_property_into(
         &mut source_declarations,
         property_id,
         value,
+        Origin::Author,
         data,
         parsing_mode,
         quirks_mode,
@@ -4516,7 +4525,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
         get_property_id_from_property!(property, false),
         value,
         is_important,
-        data,
+        UrlExtraData::from_ptr_ref(&data),
         parsing_mode,
         quirks_mode.into(),
         loader,
@@ -4560,7 +4569,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
         get_property_id_from_nscsspropertyid!(property, false),
         value,
         is_important,
-        data,
+        UrlExtraData::from_ptr_ref(&data),
         parsing_mode,
         quirks_mode.into(),
         loader,
@@ -4723,13 +4732,11 @@ pub extern "C" fn Servo_MediaList_GetMediumAt(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_MediaList_AppendMedium(
-    list: &RawServoMediaList,
-    new_medium: &nsACString,
-) {
+pub extern "C" fn Servo_MediaList_AppendMedium(list: &RawServoMediaList, new_medium: &nsACString) {
     let new_medium = unsafe { new_medium.as_str_unchecked() };
     let url_data = unsafe { dummy_url_data() };
-    let context = ParserContext::new_for_cssom(
+    let context = ParserContext::new(
+        Origin::Author,
         url_data,
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
@@ -4749,7 +4756,8 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
 ) -> bool {
     let old_medium = unsafe { old_medium.as_str_unchecked() };
     let url_data = unsafe { dummy_url_data() };
-    let context = ParserContext::new_for_cssom(
+    let context = ParserContext::new(
+        Origin::Author,
         url_data,
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
@@ -5306,18 +5314,16 @@ pub extern "C" fn Servo_DeclarationBlock_SetAspectRatio(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CSSSupports2(
-    property: &nsACString,
-    value: &nsACString,
-) -> bool {
-    let id = get_property_id_from_property!(property, false);
+pub extern "C" fn Servo_CSSSupports2(property: &nsACString, value: &nsACString) -> bool {
+    let id = unsafe { get_property_id_from_property!(property, false) };
 
     let mut declarations = SourcePropertyDeclaration::new();
     parse_property_into(
         &mut declarations,
         id,
         value,
-        DUMMY_URL_DATA,
+        Origin::Author,
+        unsafe { dummy_url_data() },
         structs::ParsingMode_Default,
         QuirksMode::NoQuirks,
         CssRuleType::Style,
@@ -5327,7 +5333,12 @@ pub unsafe extern "C" fn Servo_CSSSupports2(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_CSSSupports(cond: &nsACString) -> bool {
+pub extern "C" fn Servo_CSSSupports(
+    cond: &nsACString,
+    ua_origin: bool,
+    chrome_sheet: bool,
+    quirks: bool,
+) -> bool {
     let condition = unsafe { cond.as_str_unchecked() };
     let mut input = ParserInput::new(&condition);
     let mut input = Parser::new(&mut input);
@@ -5336,15 +5347,32 @@ pub extern "C" fn Servo_CSSSupports(cond: &nsACString) -> bool {
         Err(..) => return false,
     };
 
-    let url_data = unsafe { dummy_url_data() };
+    let origin = if ua_origin {
+        Origin::UserAgent
+    } else {
+        Origin::Author
+    };
+    let url_data = unsafe {
+        UrlExtraData::from_ptr_ref(if chrome_sheet {
+            &DUMMY_CHROME_URL_DATA
+        } else {
+            &DUMMY_URL_DATA
+        })
+    };
+    let quirks_mode = if quirks {
+        QuirksMode::Quirks
+    } else {
+        QuirksMode::NoQuirks
+    };
 
     // NOTE(emilio): The supports API is not associated to any stylesheet,
     // so the fact that there is no namespace map here is fine.
-    let context = ParserContext::new_for_cssom(
+    let context = ParserContext::new(
+        origin,
         url_data,
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
-        QuirksMode::NoQuirks,
+        quirks_mode,
         None,
         None,
     );
