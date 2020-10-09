@@ -656,10 +656,13 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
       required_attribs.push_back(LOCAL_EGL_CONTEXT_MAJOR_VERSION);
       required_attribs.push_back(2);
     } else {
+      // !REQUIRE_COMPAT_PROFILE means core profle.
+      required_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_PROFILE_MASK);
+      required_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT);
       required_attribs.push_back(LOCAL_EGL_CONTEXT_MAJOR_VERSION);
       required_attribs.push_back(3);
       required_attribs.push_back(LOCAL_EGL_CONTEXT_MINOR_VERSION);
-      required_attribs.push_back(1);
+      required_attribs.push_back(2);
     }
   }
 
