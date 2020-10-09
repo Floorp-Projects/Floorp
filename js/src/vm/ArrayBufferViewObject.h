@@ -7,7 +7,7 @@
 #ifndef vm_ArrayBufferViewObject_h
 #define vm_ArrayBufferViewObject_h
 
-#include "builtin/TypedObjectConstants.h"
+#include "builtin/TypedArrayConstants.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/NativeObject.h"
 #include "vm/SharedArrayObject.h"
