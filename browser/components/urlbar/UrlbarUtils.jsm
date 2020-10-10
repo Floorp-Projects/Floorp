@@ -668,6 +668,21 @@ var UrlbarUtils = {
   },
 
   /**
+   * Strips a PSL verified public suffix from an hostname.
+   * @param {string} host A host name.
+   * @returns {string} Host name without the public suffix.
+   * @note Because stripping the full suffix requires to verify it against the
+   *   Public Suffix List, this call is not the cheapest, and thus it should
+   *   not be used in hot paths.
+   */
+  stripPublicSuffixFromHost(host) {
+    return host.substring(
+      0,
+      host.length - Services.eTLD.getKnownPublicSuffixFromHost(host).length
+    );
+  },
+
+  /**
    * Used to filter out the javascript protocol from URIs, since we don't
    * support LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL for those.
    * @param {string} pasteData The data to check for javacript protocol.

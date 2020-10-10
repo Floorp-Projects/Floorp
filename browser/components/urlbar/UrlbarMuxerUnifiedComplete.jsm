@@ -90,6 +90,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       canShowPrivateSearch: context.results.length > 1,
       canShowTailSuggestions: true,
       formHistorySuggestions: new Set(),
+      canAddTabToSearch: true,
     };
 
     let resultsWithSuggestedIndex = [];
@@ -166,11 +167,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     resultsWithSuggestedIndex.sort(
       (a, b) => a.suggestedIndex - b.suggestedIndex
     );
-    // Do a first pass to update sort state for each result.  We'll do both a
-    // pre- and post-add update because each of these results will be added.
+    // Do a first pass to update sort state for each result.
     for (let result of resultsWithSuggestedIndex) {
       this._updateStatePreAdd(result, state);
-      this._updateStatePostAdd(result, state);
     }
     // Now insert them.
     for (let result of resultsWithSuggestedIndex) {
@@ -180,6 +179,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
             ? result.suggestedIndex
             : sortedResults.length;
         sortedResults.splice(index, 0, result);
+        this._updateStatePostAdd(result, state);
       }
     }
 
@@ -292,10 +292,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     if (result.providerName == "TabToSearch") {
-      // Discard tab-to-search results if we're not autofilling a URL.
+      // Discard tab-to-search results if we're not autofilling a URL or
+      // a tab-to-search result was added already.
       if (
         state.context.heuristicResult.type != UrlbarUtils.RESULT_TYPE.URL ||
-        !state.context.heuristicResult.autofill
+        !state.context.heuristicResult.autofill ||
+        !state.canAddTabToSearch
       ) {
         return false;
       }
@@ -305,17 +307,20 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       let [autofillDomain] = UrlbarUtils.stripPrefixAndTrim(autofillHostname, {
         stripWww: true,
       });
-      // For tab-to-search results, result.payload.url is the engine's result
-      // domain. This is already stripped down to the hostname in most cases; we
-      // run stripPrefixAndTrim here just to be sure.
+      // Strip the public suffix because we want to allow matching "domain.it"
+      // with "domain.com".
+      autofillDomain = UrlbarUtils.stripPublicSuffixFromHost(autofillDomain);
+      if (!autofillDomain) {
+        return false;
+      }
+
+      // For tab-to-search results, result.payload.url is the engine's domain
+      // with the public suffix already stripped, for example "www.mozilla.".
       let [engineDomain] = UrlbarUtils.stripPrefixAndTrim(result.payload.url, {
-        stripHttp: true,
-        stripHttps: true,
         stripWww: true,
       });
-      // Discard if the tab-to-search domain does not equal the autofilled
-      // domain.
-      if (autofillDomain != engineDomain) {
+      // Discard if the engine domain does not end with the autofilled one.
+      if (!engineDomain.endsWith(autofillDomain)) {
         return false;
       }
     }
@@ -491,6 +496,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       result.source == UrlbarUtils.RESULT_SOURCE.HISTORY
     ) {
       state.formHistorySuggestions.add(result.payload.lowerCaseSuggestion);
+    }
+
+    // Avoid multiple tab-to-search results.
+    // TODO (Bug 1670185): figure out better strategies to manage this case.
+    if (result.providerName == "TabToSearch") {
+      state.canAddTabToSearch = false;
     }
   }
 

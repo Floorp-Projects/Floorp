@@ -60,6 +60,15 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString searchUrlQueryParamName;
 
   /**
+   * Returns the public suffix for the submission URL of type
+   * `SearchUtils.URL_TYPE.SEARCH`.
+   *
+   * @returns A string which is a known public suffix, or empty string
+   *          if one cannot be found.
+   */
+  readonly attribute AString searchUrlPublicSuffix;
+
+  /**
    * Determines whether the engine can return responses in the given
    * MIME type.  Returns true if the engine spec has a URL with the
    * given responseType, false otherwise.
