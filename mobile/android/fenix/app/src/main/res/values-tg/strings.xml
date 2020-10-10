@@ -429,10 +429,16 @@
     <string name="preferences_telemetry">Телеметрия</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Истифодабарӣ ва маълумоти техникӣ</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Барои беҳтар кардани %1$s маълумоти самаранокӣ, истифодабарӣ, сахтафзор ва танзимоти фармоишӣ дар бораи браузери шумо бо Mozilla мубодила карда шавад</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маълумоти маркетингӣ</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Маълумот дар бораи хусусиятҳое, ки шумо дар %1$s истифода мебаред бо Leanplum, яъне фурӯшандаи маркетинги мобилии мо, мубодила карда шавад</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Таҷрибаҳо</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Ба Mozilla имкон медиҳад, ки барои хусусиятҳои таҷрибавӣ маълумотро насб ва ҷамъ кунад</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Гузориш дар бораи садама</string>
     <!-- Preference switch for Mozilla location service -->
@@ -443,6 +449,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Фаъол кардани ҳамоҳангсозӣ</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Рамзи ҷуфтро дар версияи Firefox-и мизи корӣ скан кунед</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Ворид шудан</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -479,6 +487,11 @@
     <string name="preference_gestures_website_pull_to_refresh">Барон нав кардан кашед</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Барои пинҳон кардани навори абзорҳо ҳаракат кунед</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Барои иваз кардани варақаҳо аз болои навори абзорҳо ба тарафи лозимӣ бо ангуш молед</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Барои кушодани варақаҳо аз болои навори абзорҳо ба боло бо ангуш молед</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -568,6 +581,8 @@
     <string name="tab_tray_menu_open_new_tab">Варақаи нав</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Гузариш ба саҳифаи асосӣ</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Гузариш ба реҷаи варақзанӣ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Тоза кардани варақаҳо аз маҷмӯа</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -818,6 +833,8 @@
     <string name="collections_header">Маҷмӯаҳо</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Менюи маҷмӯаҳо</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Чизҳоеро, ки ба шумо муҳиманд, ҷамъ кунед\nҶустуҷӯҳо, сомонаҳо ва варақаҳои монандро барои дастрасии фаврӣ дар оянда якҷоя кунед.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Варақаҳоро интихоб намоед</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -828,6 +845,8 @@
     <string name="create_collection_add_new_collection">Илова кардани маҷмӯаи нав</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Ҳамаро интихоб кардан</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Бекор кардани интихоб</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Варақаҳоро барои нигоҳ доштан интихоб намоед</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -878,6 +897,8 @@
     <string name="sync_offline">Офлайн</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Пайваст кардани дастгоҳи дигар</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Барои фиристодани варақа, ақаллан дар дастгоҳи дигар ба Firefox ворид шавед.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Фаҳмо</string>
 
@@ -955,6 +976,8 @@
     <string name="full_screen_notification">Ба реҷаи экрани пурра ворид шуда истодааст</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL нусха бардошта шуд</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Ин матни намунавӣ мебошад. Дар ин ҷо матни намунавӣ нишон медиҳад, ки чӣ тавр он ҳангоми калон ва хурд кардани андозаи ҳуруф бо танзими ҷорӣ нишон дода мешавад.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Калонтар ё хурдтар кардани матн дар сомонаҳо</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1023,6 +1046,10 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Нашри Firefox-и «Пешнамоиш» акнун Firefox-и «Ҳаршабона» шуд</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">
+        Firefox-и «Ҳаршабона» ҳар шаб навсозӣ мешавад ва хусусиятҳои нави таҷрибавиро дар бар мегирад.
+        Аммо, он метавонад ноустувор бошад. Барои ба даст овардани таҷрибаи устувор, браузери «бета»-ро боргирӣ намоед.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">«Firefox»-ро барои «Android Beta» ба даст оред</string>
 
@@ -1055,34 +1082,52 @@
     <string name="onboarding_feature_section_header">Бо %s шинос шавед</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Бинед, ки чӣ нав аст</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Оид ба тарҳи нави %s савол доред? Мехоҳед донед, ки чӣ тағйир ёфтааст?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Ҷавобҳоро дар ин ҷо гиред</string>
     <!-- text for the Firefox account onboarding sign in card header -->
     <string name="onboarding_account_sign_in_header">Ба воситаи ҳисоби Firefox-и худ ҳамоҳангсозии хатбаракҳо, ниҳонвожаҳо ва чизҳои дигарро оғоз кунед.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Маълумоти бештар</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Шумо ҳамчун %s тавассути браузери дигари Firefox дар ин дастгоҳ ворид шудаед. Шумо мехоҳед, ки бо ин ҳисоб ворид шавед?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ҳа, маро ворид кунед</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Ворид шуда истодааст…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Ба Firefox ворид шавед</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Вориднашуда истад</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ҳамоҳангсозӣ фаъол аст</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Воридшавӣ иҷро нашуд</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Махфияти худкор</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Танзимоти махфият ва амният васоити пайгирӣ, барномаҳои зараровар ва ширкатҳоеро, ки шуморо пайгирӣ мекунанд, маҳдуд мекунад.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартӣ (пешфарз)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Баъзеи васоити пайгириро маҳдуд мекунад. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Ҷиддӣ (тавсия дода мешавад)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ҷиддӣ</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Васоити пайгирӣ, реклама ва равзанаҳои зоҳиршавандаи бештарро маҳдуд мекунад. Саҳифаҳо зудтар бор мешаванд, аммо баъзеи функсияҳо метавонанд кор накунанд.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Интихоб кунед</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Тамошокуниро бо як даст тавассути навори абзорҳои поён кӯшиш кунед ё ин ки наворро ба боло гузоред.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Реҷаи тамошои махфӣ</string>
     <!-- text for the private browsing onboarding card description
@@ -1105,6 +1150,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Мавзӯи худро интихоб кунед</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Бо фаъол кардани реҷаи торик барқи батареяро сарфа кунед ва биноии худро ҳифз намоед.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Худкор</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1156,13 +1203,33 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Маълумоти бештар</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартӣ (пешфарз)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Баъзеи васоити пайгириро маҳдуд мекунад. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Ба воситаи муҳофизати стандартӣ аз пайгирӣ чӣ баста шудааст</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ҷиддӣ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Васоити пайгирӣ, реклама ва равзанаҳои зоҳиршавандаи бештарро маҳдуд мекунад. Саҳифаҳо зудтар бор мешаванд, аммо баъзеи функсияҳо метавонанд кор накунанд.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ба воситаи муҳофизати ҷиддӣ аз пайгирӣ чӣ баста шудааст</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Фармоишӣ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Интихоб кунед, ки кадом васоити пайгирӣ ва скриптҳо бояд баста шаванд.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Ба воситаи муҳофизати фармоишӣ аз пайгирӣ чӣ баста шудааст</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Кукиҳо</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Васоити пайгирии шабакаҳои иҷтимоӣ ва байни сомонаҳо</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Кукиҳо аз сомонаҳои боқимонда</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Ҳамаи кукиҳои тарафҳои сеюм (метавонанд фаъолияти сомонаҳоро вайрон кунанд)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Ҳамаи кукиҳо (метавонанд фаъолияти сомонаҳоро вайрон кунанд)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Муҳтавои пайгирикунанда</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1178,6 +1245,10 @@
     <string name="enhanced_tracking_protection_blocked">Манъ карда мешавад</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Иҷозат дода мешавад</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Васоити пайгирии шабакаҳои иҷтимоӣ</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Кукиҳои васоити пайгирӣ байни сомонаҳо</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Кукиҳоеро, ки шабакаҳои рекламавӣ ва ширкатҳои таҳлилӣ барои ҷамъоварии маълумоти тамошокунии шумо дар бисёр сомонаҳо истифода мебаранд, манъ мекунад.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1190,6 +1261,11 @@
     <string name="etp_panel_on">Муҳофизат барои ин сомона фаъол аст</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Муҳофизат барои ин сомона ғайрифаъол аст</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Муҳофизати такмилёфта аз пайгирӣ барои сомонаҳои зерин ғайрифаъол аст</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Ба қафо гузаштан</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Ҳуқуқҳои шумо</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1199,6 +1275,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Китобхонаҳои OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Васоити пайгирии интиқолдиҳӣ</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Дастгирӣ</string>
@@ -1212,6 +1291,8 @@
     <string name="about_licensing_information">Маълумот дар бораи иҷозатнома</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Китобхонаҳое, ки мо истифода мебарем</string>
+
+    <string name="about_debug_menu_toast_done">Менюи ислоҳ кардани хатоҳо фаъол аст</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 варақа</string>
@@ -1243,6 +1324,8 @@
     <string name="preferences_passwords_logins_and_passwords">Воридшавиҳо ва ниҳонвожаҳо</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Нигоҳ доштани воридшавиҳо ва ниҳонвожаҳо</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Бо пешниҳоди нигоҳдорӣ</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ҳеҷ гоҳ нигоҳ дошта нашавад</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -1259,10 +1342,16 @@
     <string name="preferences_passwords_sync_logins_sign_in">Барои ҳамоҳангсозӣ ворид шавед</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Воридшавиҳои нигоҳдошташуда</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Воридшавиҳое, ки шумо дар %s нигоҳ медоред ё ҳамоҳанг мекунед, дар ин ҷо нишон дода мешаванд.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Маълумоти бештар дар бораи ҳамоҳангсозӣ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Истисноҳо</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Воридшавиҳо ва ниҳонвожаҳое, ки нигоҳ дошта нашудаанд, дар ин ҷо нишон дошта мешаванд.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Воридшавиҳо ва ниҳонвожаҳо барои сомонаҳои зерин нигоҳ дошта намешаванд.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Нест кардани ҳамаи истисноҳо</string>
     <!-- Hint for search box in logins list -->
@@ -1279,6 +1368,8 @@
     <string name="preferences_passwords_saved_logins_password">Ниҳонвожа</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">PIN-и худро такроран ворид намоед</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Барои дидани воридшавиҳои нигоҳдошташуда, қулфро кушоед</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Маълумоти бештар</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
@@ -1309,6 +1400,8 @@
     <string name="saved_login_reveal_password">Нишон додани ниҳонвожа</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Пинҳон кардани ниҳонвожа</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Барои дидани воридшавиҳои нигоҳдошташуда, қулфро кушоед</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Воридшавиҳо ва ниҳонвожаҳои худро муҳофизат намоед</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1460,10 +1553,27 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ягон варақаи кушодашуда нест</string>
 
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Барои илова кардани сомонаи роиҷи нав, сомонаи дигареро тоза намоед. Сомонаро ламс карда, доред ва &quot;Тоза кардан&quot;-ро интихоб намоед.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Хуб, фаҳмидам</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Намоиш додани сомонаҳои роиҷ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Тоза кардан</string>
 
-    </resources>
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Аз %s баштар истифода баред.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Чизҳоеро, ки ба шумо муҳиманд, ҷамъ кунед</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Ҷустуҷӯҳо, сомонаҳо ва варақаҳои монандро барои дастрасии фаврӣ дар оянда якҷоя кунед.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Шумо ҳамчун %s тавассути браузери дигари Firefox дар ин телефон ворид шудаед. Шумо мехоҳед, ки бо ин ҳисоб ворид шавед?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Шумо метавонед ин сомонаро ба экрани асосии телефони худ ба осонӣ илова кунед, то ки ба он дастрасии фаврӣ дошта бошед ва бо таҷрибаи ба барнома монанд зудтар паймоиш кунед.</string>
+</resources>

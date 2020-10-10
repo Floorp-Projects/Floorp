@@ -347,6 +347,9 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Уладальнік калекцыі (ID карыстальніка)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Калекцыя дадаткаў зменена. Выхад з праграмы, каб прымяніць змены…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Сінхранізаваць</string>
@@ -1041,6 +1044,9 @@
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Дадзеныя аглядання выдалены</string>
 
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Выдаленне дадзеныя аглядання…</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview цяпер Firefox Nightly</string>
@@ -1190,6 +1196,9 @@
     <string name="sign_out_disconnect">Адлучыцца</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Адмена</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Нельга рэдагаваць прадвызначаныя папкі</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->

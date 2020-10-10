@@ -552,6 +552,14 @@
     <string name="recently_closed_empty_message">Inga nyligen stängda flikar här</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Flikar</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Flikvy</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lista</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Rutnät</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Stäng flikar</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -810,6 +818,8 @@
     <string name="preference_phone_feature_location">Plats</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Meddelanden</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Beständig lagring</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Fråga för att tillåta</string>
     <!-- Label that indicates that a permission must be blocked -->
