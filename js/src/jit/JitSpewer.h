@@ -7,15 +7,15 @@
 #ifndef jit_JitSpewer_h
 #define jit_JitSpewer_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
 #include <stdarg.h>
 
 #include "jit/JSONSpewer.h"
-
-#include "js/RootingAPI.h"
-
+#include "js/TypeDecls.h"
 #include "vm/Printer.h"
 
 namespace js {
