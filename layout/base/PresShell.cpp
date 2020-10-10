@@ -188,6 +188,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/layers/ScrollInputMethods.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderUserData.h"
@@ -2360,6 +2361,9 @@ PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::MainThreadScrollPage);
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES, ScrollMode::Smooth,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
@@ -2373,6 +2377,9 @@ PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::MainThreadScrollLine);
     int32_t lineCount =
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
@@ -2389,6 +2396,9 @@ PresShell::ScrollCharacter(bool aRight) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(ScrollableDirection::Horizontal);
   if (scrollFrame) {
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::MainThreadScrollCharacter);
     int32_t h =
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
                             NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
@@ -2405,6 +2415,9 @@ PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::MainThreadCompleteScroll);
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, ScrollMode::Smooth,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
