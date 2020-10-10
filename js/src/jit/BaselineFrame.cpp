@@ -12,6 +12,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSContext.h"
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Stack-inl.h"
@@ -98,6 +99,10 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
   if (auto* debugEnvs = script->realm()->debugEnvs()) {
     debugEnvs->traceLiveFrame(trc, this);
   }
+}
+
+bool BaselineFrame::uninlineIsProfilerSamplingEnabled(JSContext* cx) {
+  return cx->isProfilerSamplingEnabled();
 }
 
 bool BaselineFrame::initFunctionEnvironmentObjects(JSContext* cx) {
