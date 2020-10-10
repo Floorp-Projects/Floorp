@@ -62,72 +62,50 @@ add_task(async function() {
 
   setupKeyBindingsTest();
 
-  info("Test the first inspector key (there are 2 of them on Mac)");
-  const inspectorKeys = allKeys.filter(({ toolId }) => {
-    return toolId === "inspector" || toolId === "inspectorMac";
-  });
+  const tests = [
+    { id: "inspector", toolId: "inspector" },
+    { id: "webconsole", toolId: "webconsole" },
+    { id: "netmonitor", toolId: "netmonitor" },
+    { id: "jsdebugger", toolId: "jsdebugger" },
+  ];
 
+  // There are two possible keyboard shortcuts to open the inspector on macOS
   if (isMac) {
-    is(inspectorKeys.length, 2, "There are 2 inspector keys on Mac");
-  } else {
-    is(inspectorKeys.length, 1, "Only 1 inspector key on non-Mac platforms");
+    tests.push({ id: "inspectorMac", toolId: "inspector" });
   }
 
-  info("The first inspector key should open the toolbox.");
-  const onToolboxReady = gDevTools.once("toolbox-ready");
-  inspectorKeys[0].synthesizeKey();
-  const toolbox = await onToolboxReady;
-  await inspectorShouldBeOpenAndHighlighting(inspectorKeys[0]);
+  // Toolbox reference will be set by first tool to open.
+  let toolbox;
 
-  let onSelectTool = gDevTools.once("select-tool-command");
-  const webconsole = allKeys.filter(({ toolId }) => toolId === "webconsole")[0];
-  webconsole.synthesizeKey();
-  await onSelectTool;
-  await webconsoleShouldBeSelected();
+  for (const test of tests) {
+    const onToolboxReady = gDevTools.once("toolbox-ready");
+    const onSelectTool = gDevTools.once("select-tool-command");
 
-  onSelectTool = gDevTools.once("select-tool-command");
-  const netmonitor = allKeys.filter(({ toolId }) => toolId === "netmonitor")[0];
-  netmonitor.synthesizeKey();
-  await onSelectTool;
-  await netmonitorShouldBeSelected();
+    info(`Run the keyboard shortcut for ${test.id}`);
+    const key = allKeys.filter(({ toolId }) => toolId === test.id)[0];
+    key.synthesizeKey();
 
-  onSelectTool = gDevTools.once("select-tool-command");
-  const jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
-  jsdebugger.synthesizeKey();
-  await onSelectTool;
-  await jsdebuggerShouldBeSelected();
+    if (!toolbox) {
+      toolbox = await onToolboxReady;
+    }
 
-  if (isMac) {
-    info("On MacOS, we check the extra inspector shortcut too");
-    onSelectTool = gDevTools.once("select-tool-command");
-    inspectorKeys[1].synthesizeKey();
+    if (test.toolId === "inspector") {
+      const onPickerStart = toolbox.nodePicker.once("picker-started");
+      await onPickerStart;
+      ok(true, "picker-started event received, highlighter started");
+
+      info(
+        `Run the keyboard shortcut for ${test.id} again to stop the node picker`
+      );
+      const onPickerStop = toolbox.nodePicker.once("picker-stopped");
+      key.synthesizeKey();
+      await onPickerStop;
+      ok(true, "picker-stopped event received, highlighter stopped");
+    }
+
     await onSelectTool;
-    await inspectorShouldBeOpenAndHighlighting(inspectorKeys[1]);
+    is(toolbox.currentToolId, test.toolId, `${test.toolId} should be selected`);
   }
 
   gBrowser.removeCurrentTab();
-
-  async function inspectorShouldBeOpenAndHighlighting(inspector) {
-    is(toolbox.currentToolId, "inspector", "Correct tool has been loaded");
-
-    await toolbox.nodePicker.once("picker-started");
-
-    ok(true, "picker-started event received, highlighter started");
-    inspector.synthesizeKey();
-
-    await toolbox.nodePicker.once("picker-stopped");
-    ok(true, "picker-stopped event received, highlighter stopped");
-  }
-
-  function jsdebuggerShouldBeSelected() {
-    is(toolbox.currentToolId, "jsdebugger", "jsdebugger should be selected.");
-  }
-
-  function webconsoleShouldBeSelected() {
-    is(toolbox.currentToolId, "webconsole", "webconsole should be selected.");
-  }
-
-  function netmonitorShouldBeSelected() {
-    is(toolbox.currentToolId, "netmonitor", "netmonitor should be selected.");
-  }
 });
