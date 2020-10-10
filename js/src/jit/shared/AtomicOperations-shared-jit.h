@@ -18,10 +18,11 @@
 #define jit_shared_AtomicOperations_shared_jit_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
 
-#include "jsapi.h"
+#include <stddef.h>
+#include <stdint.h>
 
+#include "js/GCAPI.h"
 #include "vm/Uint8Clamped.h"
 
 namespace js {
