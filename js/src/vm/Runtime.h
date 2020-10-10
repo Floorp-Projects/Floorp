@@ -55,6 +55,7 @@
 #include "vm/CommonPropertyNames.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSScript.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseRuntimeState
 #include "vm/Scope.h"
@@ -136,34 +137,6 @@ namespace JS {
 struct RuntimeSizes;
 }  // namespace JS
 
-/* Various built-in or commonly-used names pinned on first context. */
-struct JSAtomState {
-#define PROPERTYNAME_FIELD(idpart, id, text) js::ImmutablePropertyNamePtr id;
-  FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
-#undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name, clasp) js::ImmutablePropertyNamePtr name;
-  JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
-#undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name) js::ImmutablePropertyNamePtr name;
-  JS_FOR_EACH_WELL_KNOWN_SYMBOL(PROPERTYNAME_FIELD)
-#undef PROPERTYNAME_FIELD
-#define PROPERTYNAME_FIELD(name) js::ImmutablePropertyNamePtr Symbol_##name;
-  JS_FOR_EACH_WELL_KNOWN_SYMBOL(PROPERTYNAME_FIELD)
-#undef PROPERTYNAME_FIELD
-
-  js::ImmutablePropertyNamePtr* wellKnownSymbolNames() {
-#define FIRST_PROPERTYNAME_FIELD(name) return &name;
-    JS_FOR_EACH_WELL_KNOWN_SYMBOL(FIRST_PROPERTYNAME_FIELD)
-#undef FIRST_PROPERTYNAME_FIELD
-  }
-
-  js::ImmutablePropertyNamePtr* wellKnownSymbolDescriptions() {
-#define FIRST_PROPERTYNAME_FIELD(name) return &Symbol_##name;
-    JS_FOR_EACH_WELL_KNOWN_SYMBOL(FIRST_PROPERTYNAME_FIELD)
-#undef FIRST_PROPERTYNAME_FIELD
-  }
-};
-
 namespace js {
 
 /*
@@ -195,14 +168,6 @@ struct WellKnownSymbols {
   WellKnownSymbols(const WellKnownSymbols&) = delete;
   WellKnownSymbols& operator=(const WellKnownSymbols&) = delete;
 };
-
-#define NAME_OFFSET(name) offsetof(JSAtomState, name)
-
-inline HandlePropertyName AtomStateOffsetToName(const JSAtomState& atomState,
-                                                size_t offset) {
-  return *reinterpret_cast<js::ImmutablePropertyNamePtr*>((char*)&atomState +
-                                                          offset);
-}
 
 // There are several coarse locks in the enum below. These may be either
 // per-runtime or per-process. When acquiring more than one of these locks,

@@ -15,8 +15,8 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitFrames.h"
 #include "jit/Registers.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSFunction.h"
-#include "vm/Runtime.h"
 
 namespace js {
 namespace jit {

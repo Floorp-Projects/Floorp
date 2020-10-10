@@ -9,8 +9,6 @@
 #ifndef vm_CommonPropertyNames_h
 #define vm_CommonPropertyNames_h
 
-#include "js/ProtoKey.h"
-
 // The following common atoms are reserved by the js::StaticStrigs /
 // WellKnownParserAtoms::lookupTiny mechanisms. We still use a named reference
 // for the parser and VM to use.

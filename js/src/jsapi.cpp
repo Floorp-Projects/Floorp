@@ -91,6 +91,7 @@
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
