@@ -13,7 +13,6 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CalleeToken.h"
-#include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
 #include "jit/JitRuntime.h"

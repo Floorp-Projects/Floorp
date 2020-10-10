@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "jit/BitSet.h"
+#include "jit/CompileInfo.h"
 #include "js/Printf.h"
 
 using namespace js;

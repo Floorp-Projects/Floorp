@@ -10,7 +10,9 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
+#include "jit/CompileInfo.h"
 #include "jit/FixedList.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/MIR.h"
 

@@ -34,6 +34,8 @@
 #include "gc/Nursery.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/BaselineCodeGen.h"
+#include "jit/CompileInfo.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonScript.h"
