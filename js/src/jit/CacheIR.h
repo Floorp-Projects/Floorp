@@ -34,6 +34,7 @@ class ICStub;
 class ICScript;
 class Label;
 class MacroAssembler;
+struct Register;
 
 // [SMDOC] CacheIR
 //

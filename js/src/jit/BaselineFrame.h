@@ -19,6 +19,7 @@ namespace jit {
 
 class ICEntry;
 class ICScript;
+class JSJitFrameIter;
 
 // The stack looks like this, fp is the frame pointer:
 //
