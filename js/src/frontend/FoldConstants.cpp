@@ -10,6 +10,7 @@
 #include "mozilla/Range.h"
 
 #include "jslibmath.h"
+#include "jsmath.h"
 #include "jsnum.h"
 
 #include "frontend/ParseNode.h"

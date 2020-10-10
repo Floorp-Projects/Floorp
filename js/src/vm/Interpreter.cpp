@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "jslibmath.h"
+#include "jsmath.h"
 #include "jsnum.h"
 
 #include "builtin/Array.h"

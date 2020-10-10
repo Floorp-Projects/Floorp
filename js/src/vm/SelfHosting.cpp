@@ -17,6 +17,7 @@
 
 #include "jsdate.h"
 #include "jsfriendapi.h"
+#include "jsmath.h"
 #include "selfhosted.out.h"
 
 #include "builtin/Array.h"

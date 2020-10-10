@@ -9,8 +9,6 @@
 
 #include <new>
 
-#include "jsmath.h"
-
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
