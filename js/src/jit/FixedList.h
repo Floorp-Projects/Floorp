@@ -7,10 +7,14 @@
 #ifndef jit_FixedList_h
 #define jit_FixedList_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
+
 #include <stddef.h>
 
-#include "jit/Ion.h"
 #include "jit/JitAllocPolicy.h"
+#include "js/Utility.h"
 
 namespace js {
 namespace jit {
