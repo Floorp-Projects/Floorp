@@ -7,20 +7,37 @@
 #ifndef jit_RematerializedFrame_h
 #define jit_RematerializedFrame_h
 
-#include <algorithm>
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
+#include <algorithm>
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jstypes.h"
+
+#include "gc/Rooting.h"
 #include "jit/JitFrames.h"
-#include "jit/JSJitFrameIter.h"
 #include "jit/ScriptFromCalleeToken.h"
+#include "js/GCVector.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Value.h"
 #include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/Stack.h"
+
+class JS_PUBLIC_API JSTracer;
 
 namespace js {
 
+class ArgumentsObject;
 class CallObject;
 
 namespace jit {
+
+class InlineFrameIterator;
+struct MaybeReadFallback;
 
 // RematerializedFrame: An optimized frame that has been rematerialized with
 // values read out of Snapshots.
