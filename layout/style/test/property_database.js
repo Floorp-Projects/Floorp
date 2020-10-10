@@ -345,7 +345,7 @@ var validNonUrlImageValues = [
 
         "repeating-conic-gradient(red, blue)",
         "repeating-conic-gradient(red, yellow, blue)",
-        "repeating-conic-gradient(red 1deg, yellow 20%, blue 24em, green)",
+        "repeating-conic-gradient(red 1deg, yellow 20%, blue 5rad, green)",
         "repeating-conic-gradient(red, yellow, green, blue 50%)",
         "repeating-conic-gradient(red -50%, yellow -25%, green, blue)",
         "repeating-conic-gradient(red -99deg, yellow, green, blue 120%)",
