@@ -133,12 +133,14 @@ interface Element : Node {
    * element.
    *
    */
+  [UseCounter]
   void setCapture(optional boolean retargetToElement = false);
 
   /**
    * If this element has captured the mouse, release the capture. If another
    * element has captured the mouse, this method has no effect.
    */
+  [UseCounter]
   void releaseCapture();
 
   /*
@@ -351,7 +353,7 @@ partial interface Element {
   void setAttributeDevtools(DOMString name, DOMString value);
   [ChromeOnly, CEReactions, Throws]
   void setAttributeDevtoolsNS(DOMString? namespace, DOMString name, DOMString value);
-  
+
   /**
    * Provide a direct way to determine if this Element has visible
    * scrollbars. Flushes layout.
