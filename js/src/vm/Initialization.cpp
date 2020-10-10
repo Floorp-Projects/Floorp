@@ -29,6 +29,7 @@
 #  include "unicode/utypes.h"
 #endif  // JS_HAS_INTL_API
 #include "util/Poison.h"
+#include "vm/ArrayBufferObject.h"
 #include "vm/BigIntType.h"
 #include "vm/DateTime.h"
 #include "vm/HelperThreads.h"
