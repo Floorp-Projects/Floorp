@@ -11,6 +11,7 @@
 
 #include <limits.h>
 
+#include "gc/Barrier.h"
 #include "jit/AtomicOp.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitCode.h"
@@ -20,6 +21,7 @@
 #include "jit/RegisterSets.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/HelperThreads.h"
+#include "vm/NativeObject.h"
 #include "wasm/WasmTypes.h"
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \

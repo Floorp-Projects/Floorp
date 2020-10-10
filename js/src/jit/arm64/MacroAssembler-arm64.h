@@ -13,6 +13,7 @@
 #include "jit/AtomicOp.h"
 #include "jit/MoveResolver.h"
 #include "vm/BigIntType.h"  // JS::BigInt
+#include "wasm/WasmTypes.h"
 
 #ifdef _M_ARM64
 #  ifdef move32
