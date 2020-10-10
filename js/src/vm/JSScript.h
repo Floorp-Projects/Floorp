@@ -29,7 +29,6 @@
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
-#include "jit/JitCode.h"
 #include "js/CompileOptions.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
@@ -64,6 +63,7 @@ class LCovSource;
 namespace jit {
 class AutoKeepJitScripts;
 class BaselineScript;
+class IonScript;
 struct IonScriptCounts;
 class JitScript;
 }  // namespace jit

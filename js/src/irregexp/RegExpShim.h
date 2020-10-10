@@ -26,6 +26,7 @@
 #include "irregexp/util/FlagsShim.h"
 #include "irregexp/util/VectorShim.h"
 #include "irregexp/util/ZoneShim.h"
+#include "jit/JitCode.h"
 #include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit{,Conservative}DontReport

@@ -20,6 +20,7 @@
 #include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
 #include "irregexp/RegExpTypes.h"
+#include "jit/JitCode.h"
 #include "jit/JitOptions.h"
 #include "js/AllocPolicy.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
