@@ -704,10 +704,6 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_munmap:
         return Allow();
 
-        // Shared memory
-      case __NR_memfd_create:
-        return Allow();
-
         // ipc::Shmem; also, glibc when creating threads:
       case __NR_mprotect:
         return Allow();
@@ -1398,6 +1394,11 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 
       case __NR_eventfd2:
         return Allow();
+
+#  ifdef __NR_memfd_create
+      case __NR_memfd_create:
+        return Allow();
+#  endif
 
 #  ifdef __NR_rt_tgsigqueueinfo
         // Only allow to send signals within the process.
