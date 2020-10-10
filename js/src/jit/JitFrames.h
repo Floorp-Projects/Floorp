@@ -7,15 +7,24 @@
 #ifndef jit_JitFrames_h
 #define jit_JitFrames_h
 
-#include <stdint.h>  // uintptr_t
+#include "mozilla/Assertions.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 #include "jit/CalleeToken.h"
-#include "jit/JSJitFrameIter.h"
-#include "vm/JSContext.h"
+#include "jit/Registers.h"
+#include "js/Id.h"
+#include "js/TypeDecls.h"
+#include "js/Value.h"
 
 namespace js {
 namespace jit {
 
+enum class FrameType;
+class IonScript;
+class JitActivation;
+class JitFrameLayout;
 struct SafepointSlotEntry;
 struct VMFunctionData;
 
@@ -132,7 +141,7 @@ struct ResumeFromException {
   uint32_t kind;
 
   // Value to push when resuming into a |finally| block.
-  Value exception;
+  JS::Value exception;
 
   BaselineBailoutInfo* bailoutInfo;
 };
@@ -224,18 +233,20 @@ class JitFrameLayout : public CommonFrameLayout {
   }
   static size_t offsetOfThis() { return sizeof(JitFrameLayout); }
   static size_t offsetOfEvalNewTarget() { return sizeof(JitFrameLayout); }
-  static size_t offsetOfActualArgs() { return offsetOfThis() + sizeof(Value); }
+  static size_t offsetOfActualArgs() {
+    return offsetOfThis() + sizeof(JS::Value);
+  }
   static size_t offsetOfActualArg(size_t arg) {
-    return offsetOfActualArgs() + arg * sizeof(Value);
+    return offsetOfActualArgs() + arg * sizeof(JS::Value);
   }
 
-  Value thisv() {
+  JS::Value thisv() {
     MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
     return argv()[0];
   }
-  Value* argv() {
+  JS::Value* argv() {
     MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
-    return (Value*)(this + 1);
+    return (JS::Value*)(this + 1);
   }
   uintptr_t numActualArgs() const { return numActualArgs_; }
 
@@ -393,7 +404,9 @@ class NativeExitFrameLayout {
   static size_t offsetOfResult() {
     return offsetof(NativeExitFrameLayout, loCalleeResult_);
   }
-  inline Value* vp() { return reinterpret_cast<Value*>(&loCalleeResult_); }
+  inline JS::Value* vp() {
+    return reinterpret_cast<JS::Value*>(&loCalleeResult_);
+  }
   inline uintptr_t argc() const { return argc_; }
 };
 
@@ -438,7 +451,7 @@ class IonOOLNativeExitFrameLayout {
   static inline size_t Size(size_t argc) {
     // The frame accounts for the callee/result and |this|, so we only need
     // args.
-    return sizeof(IonOOLNativeExitFrameLayout) + (argc * sizeof(Value));
+    return sizeof(IonOOLNativeExitFrameLayout) + (argc * sizeof(JS::Value));
   }
 
   static size_t offsetOfResult() {
@@ -446,8 +459,10 @@ class IonOOLNativeExitFrameLayout {
   }
 
   inline JitCode** stubCode() { return &stubCode_; }
-  inline Value* vp() { return reinterpret_cast<Value*>(&loCalleeResult_); }
-  inline Value* thisp() { return reinterpret_cast<Value*>(&loThis_); }
+  inline JS::Value* vp() {
+    return reinterpret_cast<JS::Value*>(&loCalleeResult_);
+  }
+  inline JS::Value* thisp() { return reinterpret_cast<JS::Value*>(&loThis_); }
   inline uintptr_t argc() const { return argc_; }
 };
 
@@ -486,7 +501,7 @@ class IonOOLProxyExitFrameLayout {
   }
 
   inline JitCode** stubCode() { return &stubCode_; }
-  inline Value* vp() { return reinterpret_cast<Value*>(&vp0_); }
+  inline JS::Value* vp() { return reinterpret_cast<JS::Value*>(&vp0_); }
   inline jsid* id() { return &id_; }
   inline JSObject** proxy() { return &proxy_; }
 };
@@ -511,7 +526,9 @@ class IonDOMExitFrameLayout {
   static size_t offsetOfResult() {
     return offsetof(IonDOMExitFrameLayout, loCalleeResult_);
   }
-  inline Value* vp() { return reinterpret_cast<Value*>(&loCalleeResult_); }
+  inline JS::Value* vp() {
+    return reinterpret_cast<JS::Value*>(&loCalleeResult_);
+  }
   inline JSObject** thisObjAddress() { return &thisObj; }
   inline bool isMethodFrame();
 };
@@ -525,7 +542,7 @@ class IonDOMMethodExitFrameLayout {
   // This must be the last thing pushed, so as to stay common with
   // IonDOMExitFrameLayout.
   JSObject* thisObj_;
-  Value* argv_;
+  JS::Value* argv_;
   uintptr_t argc_;
 
   // We need to split the Value into 2 fields of 32 bits, otherwise the C++
@@ -544,12 +561,12 @@ class IonDOMMethodExitFrameLayout {
     return offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_);
   }
 
-  inline Value* vp() {
+  inline JS::Value* vp() {
     // The code in visitCallDOMNative depends on this static assert holding
     static_assert(
         offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
         (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
-    return reinterpret_cast<Value*>(&loCalleeResult_);
+    return reinterpret_cast<JS::Value*>(&loCalleeResult_);
   }
   inline JSObject** thisObjAddress() { return &thisObj_; }
   inline uintptr_t argc() { return argc_; }

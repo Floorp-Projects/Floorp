@@ -12,12 +12,14 @@
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/ScriptFromCalleeToken.h"
+#include "vm/JSContext.h"
 #include "vm/Stack.h"
 
 namespace js {
 namespace jit {
 
 class ICEntry;
+class ICScript;
 
 // The stack looks like this, fp is the frame pointer:
 //

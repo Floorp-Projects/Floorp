@@ -16,6 +16,7 @@
 #include "jit/JitFrames.h"
 #include "jit/Registers.h"
 #include "vm/JSFunction.h"
+#include "vm/Runtime.h"
 
 namespace js {
 namespace jit {
