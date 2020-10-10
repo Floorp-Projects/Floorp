@@ -16,7 +16,9 @@
 #include "jit/CalleeToken.h"
 #include "jit/CompileWrappers.h"
 #include "jit/JitFrames.h"
+#include "jit/JSJitFrameIter.h"
 #include "vm/ProxyObject.h"
+#include "vm/Runtime.h"
 
 #include "jit/ABIFunctionList-inl.h"
 
