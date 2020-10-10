@@ -40,22 +40,11 @@
 #include "irregexp/RegExpAPI.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
+#include "jit/Simulator.h"
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"      // JS::ContextOptions
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/Printf.h"
-#ifdef JS_SIMULATOR_ARM
-#  include "jit/arm/Simulator-arm.h"
-#endif
-#ifdef JS_SIMULATOR_ARM64
-#  include "jit/arm64/vixl/Simulator-vixl.h"
-#endif
-#ifdef JS_SIMULATOR_MIPS32
-#  include "jit/mips32/Simulator-mips32.h"
-#endif
-#ifdef JS_SIMULATOR_MIPS64
-#  include "jit/mips64/Simulator-mips64.h"
-#endif
 #include "util/DiagnosticAssertions.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
