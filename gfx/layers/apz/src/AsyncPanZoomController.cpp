@@ -931,6 +931,10 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   if (aEvent.mType == MouseInput::MouseType::MOUSE_DOWN) {
     APZC_LOG("%p starting scrollbar drag\n", this);
     SetState(SCROLLBAR_DRAG);
+
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::ApzScrollbarDrag);
   }
 
   if (aEvent.mType != MouseInput::MouseType::MOUSE_MOVE) {
@@ -943,9 +947,6 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
              layers::ScrollbarLayerType::Thumb);
   MOZ_ASSERT(scrollbarData.mDirection.isSome());
   ScrollDirection direction = *scrollbarData.mDirection;
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                 (uint32_t)ScrollInputMethod::ApzScrollbarDrag);
 
   bool isMouseAwayFromThumb = false;
   if (int snapMultiplier = StaticPrefs::slider_snapMultiplier_AtStartup()) {
@@ -1206,6 +1207,9 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
 void AsyncPanZoomController::StartAutoscroll(const ScreenPoint& aPoint) {
   // Cancel any existing animation.
   CancelAnimation();
+
+  Telemetry::Accumulate(Telemetry::SCROLL_INPUT_METHODS,
+                        (uint32_t)ScrollInputMethod::ApzAutoscrolling);
 
   SetState(AUTOSCROLL);
   StartAnimation(new AutoscrollAnimation(*this, aPoint));
@@ -2441,6 +2445,9 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
 
   StartTouch(aEvent.mLocalPanStartPoint, aEvent.mTimeStamp);
 
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+                                 (uint32_t)ScrollInputMethod::ApzPanGesture);
+
   if (GetAxisLockMode() == FREE) {
     SetState(PANNING);
     return nsEventStatus_eConsumeNoDefault;
@@ -2572,9 +2579,6 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
                                   aEvent.mTimeStamp);
 
   HandlePanningUpdate(physicalPanDisplacement);
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                 (uint32_t)ScrollInputMethod::ApzPanGesture);
 
   ScreenPoint panDistance(fabs(physicalPanDisplacement.x),
                           fabs(physicalPanDisplacement.y));
@@ -3105,6 +3109,9 @@ nsEventStatus AsyncPanZoomController::StartPanning(
   }
 
   if (IsInPanningState()) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+                                   (uint32_t)ScrollInputMethod::ApzTouch);
+
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
       controller->NotifyAPZStateChange(GetGuid(),
@@ -3563,8 +3570,6 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
 
   UpdateWithTouchAtDevicePoint(aEvent);
   if (prevTouchPoint != touchPoint) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-                                   (uint32_t)ScrollInputMethod::ApzTouch);
     MOZ_ASSERT(GetCurrentTouchBlock());
     OverscrollHandoffState handoffState(
         *GetCurrentTouchBlock()->GetOverscrollHandoffChain(), panVector,
