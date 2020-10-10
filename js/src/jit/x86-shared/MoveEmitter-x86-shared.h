@@ -7,11 +7,20 @@
 #ifndef jit_MoveEmitter_x86_shared_h
 #define jit_MoveEmitter_x86_shared_h
 
-#include "jit/MacroAssembler.h"
+#include "mozilla/Maybe.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
 #include "jit/MoveResolver.h"
+#include "jit/Registers.h"
 
 namespace js {
 namespace jit {
+
+struct Address;
+class MacroAssembler;
+class Operand;
 
 class MoveEmitterX86 {
   bool inCycle_;

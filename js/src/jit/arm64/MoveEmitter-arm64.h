@@ -7,9 +7,14 @@
 #ifndef jit_arm64_MoveEmitter_arm64_h
 #define jit_arm64_MoveEmitter_arm64_h
 
+#include "mozilla/Assertions.h"
+
+#include <stdint.h>
+
 #include "jit/arm64/Assembler-arm64.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MoveResolver.h"
+#include "jit/Registers.h"
 
 namespace js {
 namespace jit {
