@@ -23,10 +23,15 @@ var subtests = [
   {"file": "helper_bug1638458_contextmenu.html", "prefs": [["apz.allow_zooming", true]]},
   {"file": "helper_bug1638441_fixed_pos_hit_test.html", "prefs": [["apz.allow_zooming", true]]},
   {"file": "helper_bug1637135_narrow_viewport.html", "prefs": [["apz.allow_zooming", true],
-                                                               ["dom.meta-viewport.enabled", true]]}
+                                                               ["dom.meta-viewport.enabled", true]]},
+
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-5.html file. Refer to 1423011#c57
   // for more details.
+  // test_group_touchevents-5.html already exists because a new test would
+  // timeout (without making any process) with fission x-origin tests if added
+  // here. So you can add tests here or in test_group_touchevents-5.html until
+  // they start timing out.
 ];
 
 if (isApzEnabled()) {
