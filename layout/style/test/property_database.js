@@ -298,7 +298,7 @@ var validNonUrlImageValues = [
         "conic-gradient(red 0, blue 50deg)",
         "conic-gradient(red 10%, blue 50%)",
         "conic-gradient(red -50deg, blue 50deg)",
-        "conic-gradient(red 50deg, blue 0.3turn, yellow 200grad, orange 60%, 5rad)",
+        "conic-gradient(red 50deg, blue 0.3turn, yellow 200grad, orange 60% 5rad)",
 
         "conic-gradient(red 0 100%)",
         "conic-gradient(red 0 50%, blue 50%)",
@@ -345,7 +345,7 @@ var validNonUrlImageValues = [
 
         "repeating-conic-gradient(red, blue)",
         "repeating-conic-gradient(red, yellow, blue)",
-        "repeating-conic-gradient(red 1deg, yellow 20%, blue 24em, green)",
+        "repeating-conic-gradient(red 1deg, yellow 20%, blue 5rad, green)",
         "repeating-conic-gradient(red, yellow, green, blue 50%)",
         "repeating-conic-gradient(red -50%, yellow -25%, green, blue)",
         "repeating-conic-gradient(red -99deg, yellow, green, blue 120%)",
@@ -547,6 +547,7 @@ var invalidNonUrlImageValues = [
 
   /* Invalid units */
   "conic-gradient(red, blue 50px, yellow 30px)",
+  "repeating-conic-gradient(red 1deg, yellow 20%, blue 24em, green)",
   "conic-gradient(from 0%, black, white)",
   "conic-gradient(from 60%, black, white)",
   "conic-gradient(from 40px, black, white)",
@@ -635,6 +636,9 @@ var invalidNonUrlImageValues = [
   "conic-gradient(red 0% 50% 75%, blue 75%)",
   "conic-gradient(center, red 0% 50% 100%)",
   "conic-gradient(center, red 0% 50% 75%, blue 75%)",
+
+  // missing color in color stop
+  "conic-gradient(red 50deg, blue 0.3turn, yellow 200grad, orange 60%, 5rad)",
 
   "-moz-linear-gradient(unset, 10px 10px, from(blue))",
   "-moz-linear-gradient(unset, 10px 10px, blue 0)",
