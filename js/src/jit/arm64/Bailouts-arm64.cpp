@@ -6,6 +6,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/SafepointIndex.h"
+#include "jit/ScriptFromCalleeToken.h"
 
 #include "vm/JSScript-inl.h"
 

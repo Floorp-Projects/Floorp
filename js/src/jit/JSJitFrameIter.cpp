@@ -16,6 +16,7 @@
 #include "jit/JitScript.h"
 #include "jit/SafepointIndex.h"
 #include "jit/Safepoints.h"
+#include "jit/ScriptFromCalleeToken.h"
 #include "jit/VMFunctions.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
 
