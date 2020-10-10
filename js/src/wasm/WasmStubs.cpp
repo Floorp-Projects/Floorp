@@ -23,6 +23,7 @@
 #include <algorithm>
 
 #include "jit/ABIFunctions.h"
+#include "jit/JitFrames.h"
 #include "jit/JitScript.h"
 #include "jit/RegisterAllocator.h"
 #include "js/Printf.h"

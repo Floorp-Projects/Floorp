@@ -13,7 +13,6 @@
 
 #include "jit/InlineScriptTree.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitFrames.h"
 #include "jit/LIR.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MIRGenerator.h"

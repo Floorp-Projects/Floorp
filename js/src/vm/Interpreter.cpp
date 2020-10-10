@@ -65,7 +65,6 @@
 
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
-#include "jit/JitFrames-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"

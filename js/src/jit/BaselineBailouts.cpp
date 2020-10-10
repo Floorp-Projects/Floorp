@@ -15,6 +15,7 @@
 #include "jit/CalleeToken.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
+#include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/mips32/Simulator-mips32.h"

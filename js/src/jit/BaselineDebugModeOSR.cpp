@@ -11,11 +11,12 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/PerfSpewer.h"
 
-#include "jit/JitFrames-inl.h"
+#include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/TypeInference-inl.h"

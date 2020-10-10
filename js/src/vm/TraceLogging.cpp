@@ -28,8 +28,6 @@
 #include "vm/Time.h"
 #include "vm/TraceLoggingGraph.h"
 
-#include "jit/JitFrames-inl.h"
-
 using namespace js;
 
 static TraceLoggerThreadState* traceLoggerState = nullptr;
