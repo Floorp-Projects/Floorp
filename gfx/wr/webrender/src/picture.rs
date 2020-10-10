@@ -287,15 +287,15 @@ pub const TILE_SIZE_DEFAULT: DeviceIntSize = DeviceIntSize {
 
 /// The size in device pixels of a tile for horizontal scroll bars
 pub const TILE_SIZE_SCROLLBAR_HORIZONTAL: DeviceIntSize = DeviceIntSize {
-    width: 512,
-    height: 16,
+    width: 1024,
+    height: 32,
     _unit: marker::PhantomData,
 };
 
 /// The size in device pixels of a tile for vertical scroll bars
 pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
-    width: 16,
-    height: 512,
+    width: 32,
+    height: 1024,
     _unit: marker::PhantomData,
 };
 
