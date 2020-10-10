@@ -9,15 +9,7 @@
 
 // Various macros used by all JITs.
 
-#if defined(JS_SIMULATOR_ARM)
-#  include "jit/arm/Simulator-arm.h"
-#elif defined(JS_SIMULATOR_ARM64)
-#  include "jit/arm64/vixl/Simulator-vixl.h"
-#elif defined(JS_SIMULATOR_MIPS32)
-#  include "jit/mips32/Simulator-mips32.h"
-#elif defined(JS_SIMULATOR_MIPS64)
-#  include "jit/mips64/Simulator-mips64.h"
-#endif
+#include "jit/Simulator.h"
 
 #ifdef JS_SIMULATOR
 // Call into cross-jitted code by following the ABI of the simulated
