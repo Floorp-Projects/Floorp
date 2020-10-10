@@ -20,26 +20,33 @@
 #include <algorithm>
 #include <initializer_list>
 
-#include "builtin/ModuleObject.h"
+#include "NamespaceImports.h"
+
+#include "gc/Allocator.h"
 #include "jit/AtomicOp.h"
-#include "jit/BaselineIC.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/JitAllocPolicy.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MOpcodesGenerated.h"
-#include "jit/TIOracle.h"
 #include "jit/TypePolicy.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/HeapAPI.h"
+#include "js/Id.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/Value.h"
+#include "js/Vector.h"
 #include "vm/ArrayObject.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
+#include "vm/JSContext.h"
+#include "vm/ReceiverGuard.h"
 #include "vm/RegExpObject.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/TypeSet.h"
 
 namespace js {
 
@@ -47,9 +54,12 @@ namespace wasm {
 class FuncExport;
 }
 
+class GenericPrinter;
 class StringObject;
 
 enum class UnaryMathFunction : uint8_t;
+
+bool CurrentThreadIsIonCompiling();
 
 namespace jit {
 
@@ -67,7 +77,8 @@ class MDefinitionVisitorDefaultNoop {
 #undef VISIT_INS
 };
 
-class BaselineInspector;
+class CompactBufferWriter;
+class IonBuilder;
 class Range;
 
 template <typename T>

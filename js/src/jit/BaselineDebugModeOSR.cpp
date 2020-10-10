@@ -9,6 +9,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
