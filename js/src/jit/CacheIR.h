@@ -11,19 +11,25 @@
 
 #include "NamespaceImports.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Rooting.h"
 #include "jit/CacheIROpsGenerated.h"
 #include "jit/CompactBuffer.h"
 #include "jit/ICState.h"
 #include "jit/Simulator.h"
+#include "js/experimental/JitInfo.h"
 #include "js/friend/XrayJitInfo.h"  // JS::XrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "vm/JSFunction.h"
 #include "vm/Shape.h"
+
+enum class JSOp : uint8_t;
 
 namespace js {
 
+enum class ReferenceType;
 enum class UnaryMathFunction : uint8_t;
+
+bool IsTypedObjectClass(const JSClass* class_);
 
 namespace jit {
 
@@ -2063,18 +2069,12 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 };
 
-static inline uint32_t SimpleTypeDescrKey(SimpleTypeDescr* descr) {
-  if (descr->is<ScalarTypeDescr>()) {
-    return uint32_t(descr->as<ScalarTypeDescr>().type()) << 1;
-  }
-  return (uint32_t(descr->as<ReferenceTypeDescr>().type()) << 1) | 1;
-}
-
+// |key| is a tagged integer, see |SimpleTypeDescrKey()|.
 inline bool SimpleTypeDescrKeyIsScalar(uint32_t key) { return !(key & 1); }
 
-inline ScalarTypeDescr::Type ScalarTypeFromSimpleTypeDescrKey(uint32_t key) {
+inline Scalar::Type ScalarTypeFromSimpleTypeDescrKey(uint32_t key) {
   MOZ_ASSERT(SimpleTypeDescrKeyIsScalar(key));
-  return ScalarTypeDescr::Type(key >> 1);
+  return Scalar::Type(key >> 1);
 }
 
 inline ReferenceType ReferenceTypeFromSimpleTypeDescrKey(uint32_t key) {
