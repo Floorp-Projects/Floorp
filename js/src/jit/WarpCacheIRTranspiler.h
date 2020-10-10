@@ -7,20 +7,18 @@
 #ifndef jit_WarpCacheIRTranspiler_h
 #define jit_WarpCacheIRTranspiler_h
 
+#include "mozilla/Attributes.h"
+
 #include <initializer_list>
 
-#include "js/AllocPolicy.h"
-#include "js/Vector.h"
-
-#include "vm/BytecodeLocation.h"
-
 namespace js {
+
+class BytecodeLocation;
+
 namespace jit {
 
 class CallInfo;
-class MBasicBlock;
 class MDefinition;
-class MInstruction;
 class WarpBuilder;
 class WarpCacheIR;
 

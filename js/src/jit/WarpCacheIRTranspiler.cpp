@@ -25,6 +25,7 @@
 #include "jit/WarpSnapshot.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArgumentsObject.h"
+#include "vm/BytecodeLocation.h"
 
 #include "gc/ObjectKind-inl.h"
 
