@@ -7,11 +7,16 @@
 #ifndef jit_arm_MoveEmitter_arm_h
 #define jit_arm_MoveEmitter_arm_h
 
-#include "jit/MacroAssembler.h"
+#include <stdint.h>
+
 #include "jit/MoveResolver.h"
+#include "jit/Registers.h"
 
 namespace js {
 namespace jit {
+
+struct Address;
+class MacroAssembler;
 
 class MoveEmitterARM {
   uint32_t inCycle_;
