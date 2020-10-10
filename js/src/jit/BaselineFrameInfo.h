@@ -14,6 +14,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
+#include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
 
 namespace js {

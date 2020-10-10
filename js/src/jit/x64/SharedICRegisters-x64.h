@@ -7,7 +7,9 @@
 #ifndef jit_x64_SharedICRegisters_x64_h
 #define jit_x64_SharedICRegisters_x64_h
 
-#include "jit/MacroAssembler.h"
+#include "jit/Registers.h"
+#include "jit/RegisterSets.h"
+#include "jit/x64/Assembler-x64.h"
 
 namespace js {
 namespace jit {

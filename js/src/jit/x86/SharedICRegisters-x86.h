@@ -7,7 +7,9 @@
 #ifndef jit_x86_SharedICRegisters_x86_h
 #define jit_x86_SharedICRegisters_x86_h
 
-#include "jit/MacroAssembler.h"
+#include "jit/Registers.h"
+#include "jit/RegisterSets.h"
+#include "jit/x86/Assembler-x86.h"
 
 namespace js {
 namespace jit {
