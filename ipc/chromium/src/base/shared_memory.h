@@ -218,7 +218,6 @@ class SharedMemory {
   bool external_section_ = false;
 #elif defined(OS_POSIX)
   mozilla::UniqueFileHandle frozen_file_;
-  bool is_memfd_ = false;
 #endif
   bool read_only_ = false;
   bool freezeable_ = false;
