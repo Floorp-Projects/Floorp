@@ -22,6 +22,8 @@
 
 #include <algorithm>
 
+#include "jsmath.h"
+
 #include "jit/AtomicOperations.h"
 #include "jit/Disassemble.h"
 #include "jit/InlinableNatives.h"

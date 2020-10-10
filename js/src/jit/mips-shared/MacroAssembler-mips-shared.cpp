@@ -8,6 +8,8 @@
 
 #include "mozilla/EndianUtils.h"
 
+#include "jsmath.h"
+
 #include "jit/MacroAssembler.h"
 
 using namespace js;

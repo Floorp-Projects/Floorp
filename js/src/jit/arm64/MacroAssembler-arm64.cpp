@@ -6,6 +6,8 @@
 
 #include "jit/arm64/MacroAssembler-arm64.h"
 
+#include "jsmath.h"
+
 #include "jit/arm64/MoveEmitter-arm64.h"
 #include "jit/arm64/SharedICRegisters-arm64.h"
 #include "jit/Bailouts.h"

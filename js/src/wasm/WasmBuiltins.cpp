@@ -22,6 +22,7 @@
 
 #include "fdlibm.h"
 #include "jslibmath.h"
+#include "jsmath.h"
 
 #include "gc/Allocator.h"
 #include "jit/AtomicOperations.h"
