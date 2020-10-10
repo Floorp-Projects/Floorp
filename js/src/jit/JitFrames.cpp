@@ -32,6 +32,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
@@ -1327,6 +1328,20 @@ void UpdateJitActivationsForMinorGC(JSRuntime* rt) {
       }
     }
   }
+}
+
+JSScript* GetTopJitJSScript(JSContext* cx) {
+  JSJitFrameIter frame(cx->activation()->asJit());
+  MOZ_ASSERT(frame.type() == FrameType::Exit);
+  ++frame;
+
+  if (frame.isBaselineStub()) {
+    ++frame;
+    MOZ_ASSERT(frame.isBaselineJS());
+  }
+
+  MOZ_ASSERT(frame.isScripted());
+  return frame.script();
 }
 
 void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
