@@ -30,6 +30,7 @@ add_task(async function test_addEngineWithDetails() {
     !engine.isAppProvided,
     "Should not be shown as an app-provided engine"
   );
+  Assert.equal(engine.searchUrlPublicSuffix, "com");
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.

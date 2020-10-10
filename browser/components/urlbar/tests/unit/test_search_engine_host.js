@@ -74,7 +74,7 @@ add_task(async function test_searchEngine_noautoFill() {
       }),
       makeSearchResult(context, {
         engineName: engine.name,
-        uri: engine.getResultDomain(),
+        uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
         keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
         query: "",
         providerName: "TabToSearch",
