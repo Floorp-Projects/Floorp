@@ -13,6 +13,7 @@
 
 #include "jit/AtomicOp.h"
 #include "jit/JitAllocPolicy.h"
+#include "jit/JitCode.h"
 #include "jit/JitContext.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
