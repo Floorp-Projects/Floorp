@@ -7,7 +7,9 @@
 #ifndef jit_none_SharedICRegisters_none_h
 #define jit_none_SharedICRegisters_none_h
 
-#include "jit/MacroAssembler.h"
+#include "jit/none/MacroAssembler-none.h"
+#include "jit/Registers.h"
+#include "jit/RegisterSets.h"
 
 namespace js {
 namespace jit {
