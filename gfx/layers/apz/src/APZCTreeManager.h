@@ -31,6 +31,7 @@
 #include "mozilla/TimeStamp.h"               // for mozilla::TimeStamp
 #include "mozilla/UniquePtr.h"               // for UniquePtr
 #include "nsCOMPtr.h"                        // for already_AddRefed
+#include "OvershootDetector.h"
 
 namespace mozilla {
 class MultiTouchInput;
@@ -1017,6 +1018,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   std::unordered_map<LayersId, UniquePtr<APZTestData>, LayersId::HashFn>
       mTestData;
   mutable mozilla::Mutex mTestDataLock;
+
+  // A state machine that tries to record how much users are overshooting
+  // their desired scroll destination while using the scrollwheel.
+  OvershootDetector mOvershootDetector;
 
   // This must only be touched on the controller thread.
   float mDPI;
