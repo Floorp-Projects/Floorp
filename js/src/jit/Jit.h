@@ -7,7 +7,9 @@
 #ifndef jit_Jit_h
 #define jit_Jit_h
 
-#include "vm/JSContext.h"
+#include "jstypes.h"
+
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
