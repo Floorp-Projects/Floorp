@@ -9,16 +9,10 @@
 
 #include "jit/JitFrames.h"
 
-#include "jit/LIR.h"
-
 #include "jit/JSJitFrameIter-inl.h"
 
 namespace js {
 namespace jit {
-
-inline SafepointIndex::SafepointIndex(const CodegenSafepointIndex& csi)
-    : displacement_(csi.displacement()),
-      safepointOffset_(csi.safepoint()->offset()) {}
 
 inline BaselineFrame* GetTopBaselineFrame(JSContext* cx) {
   JSJitFrameIter frame(cx->activation()->asJit());

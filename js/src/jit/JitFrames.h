@@ -46,64 +46,6 @@ JSScript* MaybeForwardedScriptFromCalleeToken(CalleeToken token);
 // - Exit frames are necessary to leave JIT code and enter C++, and thus,
 // C++ code will always begin iterating from the topmost exit frame.
 
-class LSafepoint;
-class CodegenSafepointIndex;
-
-// Two-tuple that lets you look up the safepoint entry given the
-// displacement of a call instruction within the JIT code.
-class SafepointIndex {
-  // The displacement is the distance from the first byte of the JIT'd code
-  // to the return address (of the call that the safepoint was generated for).
-  uint32_t displacement_ = 0;
-
-  // Offset within the safepoint buffer.
-  uint32_t safepointOffset_ = 0;
-
- public:
-  inline explicit SafepointIndex(const CodegenSafepointIndex& csi);
-
-  uint32_t displacement() const { return displacement_; }
-  uint32_t safepointOffset() const { return safepointOffset_; }
-};
-
-class CodegenSafepointIndex {
-  uint32_t displacement_ = 0;
-
-  LSafepoint* safepoint_ = nullptr;
-
- public:
-  CodegenSafepointIndex(uint32_t displacement, LSafepoint* safepoint)
-      : displacement_(displacement), safepoint_(safepoint) {}
-
-  LSafepoint* safepoint() const { return safepoint_; }
-  uint32_t displacement() const { return displacement_; }
-  void adjustDisplacement(uint32_t offset) {
-    MOZ_ASSERT(offset >= displacement_);
-    displacement_ = offset;
-  }
-  inline SnapshotOffset snapshotOffset() const;
-  inline bool hasSnapshotOffset() const;
-};
-
-class MacroAssembler;
-// The OSI point is patched to a call instruction. Therefore, the
-// returnPoint for an OSI call is the address immediately following that
-// call instruction. The displacement of that point within the assembly
-// buffer is the |returnPointDisplacement|.
-class OsiIndex {
-  uint32_t callPointDisplacement_;
-  uint32_t snapshotOffset_;
-
- public:
-  OsiIndex(uint32_t callPointDisplacement, uint32_t snapshotOffset)
-      : callPointDisplacement_(callPointDisplacement),
-        snapshotOffset_(snapshotOffset) {}
-
-  uint32_t returnPointDisplacement() const;
-  uint32_t callPointDisplacement() const { return callPointDisplacement_; }
-  uint32_t snapshotOffset() const { return snapshotOffset_; }
-};
-
 // The layout of an Ion frame on the C stack is roughly:
 //      argN     _
 //      ...       \ - These are jsvals
