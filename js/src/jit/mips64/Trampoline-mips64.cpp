@@ -19,6 +19,7 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
+#include "vm/JSContext.h"
 #include "vm/Realm.h"
 
 #include "jit/MacroAssembler-inl.h"
