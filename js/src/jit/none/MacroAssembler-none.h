@@ -9,6 +9,7 @@
 
 #include "jit/MoveResolver.h"
 #include "jit/shared/Assembler-shared.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace jit {

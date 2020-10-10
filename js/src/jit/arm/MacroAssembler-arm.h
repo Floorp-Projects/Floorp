@@ -13,6 +13,7 @@
 #include "jit/MoveResolver.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace jit {
