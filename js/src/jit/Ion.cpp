@@ -28,6 +28,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/FoldLinearArithConstants.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/InstructionReordering.h"
