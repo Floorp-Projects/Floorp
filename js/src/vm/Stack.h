@@ -17,7 +17,6 @@
 #include <type_traits>
 
 #include "gc/Rooting.h"
-#include "jit/JSJitFrameIter.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
