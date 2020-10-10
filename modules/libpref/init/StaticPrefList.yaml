@@ -5932,7 +5932,7 @@
 # Is support for CSS conic-gradient enabled?
 - name: layout.css.conic-gradient.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
