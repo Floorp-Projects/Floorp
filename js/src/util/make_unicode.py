@@ -137,15 +137,22 @@ def read_unicode_data(unicode_data):
 
 
 def read_case_folding(case_folding):
+    """
+        File format is:
+        <code>; <status>; <mapping>; # <name>
+    """
+
     for line in case_folding:
         if line == '\n' or line.startswith('#'):
             continue
         row = line.split('; ')
         if row[1] in ['F', 'T']:
             continue
-        row[0] = int(row[0], 16)
-        row[2] = int(row[2], 16)
-        yield row
+        assert row[1] in ['C', 'S'],\
+               "expect either (C)ommon or (S)imple case foldings"
+        code = int(row[0], 16)
+        mapping = int(row[2], 16)
+        yield (code, mapping)
 
 
 def read_derived_core_properties(derived_core_properties):
@@ -409,7 +416,7 @@ def process_unicode_data(unicode_data, derived_core_properties):
 def process_case_folding(case_folding):
     folding_map = {}
     rev_folding_map = {}
-    folding_dummy = (0, 0, 0, 0)
+    folding_dummy = (0,)
     folding_table = [folding_dummy]
     folding_cache = {folding_dummy: 0}
     folding_index = [0] * (MAX_BMP + 1)
@@ -417,9 +424,7 @@ def process_case_folding(case_folding):
     folding_tests = []
     folding_codes = set()
 
-    for row in read_case_folding(case_folding):
-        code = row[0]
-        mapping = row[2]
+    for (code, mapping) in read_case_folding(case_folding):
         folding_map[code] = mapping
 
         if mapping not in rev_folding_map:
@@ -443,8 +448,6 @@ def process_case_folding(case_folding):
         else:
             rev_folding = []
 
-        assert len(rev_folding) <= 3
-
         if folding != code or len(rev_folding):
             item = [code]
             if folding != code:
@@ -455,18 +458,12 @@ def process_case_folding(case_folding):
             continue
 
         folding_d = folding - code
-        rev_folding_ds = [v - code for v in rev_folding]
 
         assert folding_d > -65535 and folding_d < 65535
-        assert all([v > -65535 and v < 65535 for v in rev_folding])
 
         folding = folding_d & 0xffff
-        rev_folding = [v & 0xffff for v in rev_folding_ds]
-        rev_folding_0 = rev_folding[0] if len(rev_folding) >= 1 else 0
-        rev_folding_1 = rev_folding[1] if len(rev_folding) >= 2 else 0
-        rev_folding_2 = rev_folding[2] if len(rev_folding) >= 3 else 0
 
-        item = (folding, rev_folding_0, rev_folding_1, rev_folding_2)
+        item = (folding,)
 
         i = folding_cache.get(item)
         if i is None:
@@ -1113,7 +1110,7 @@ def make_unicode_file(version,
     folding_index1, folding_index2, folding_shift = splitbins(folding_index)
 
     # Don't forget to update CaseFoldInfo in Unicode.h if you need to change this
-    assert folding_shift == 6
+    assert folding_shift == 5
 
     # verify correctness
     for char in index:
