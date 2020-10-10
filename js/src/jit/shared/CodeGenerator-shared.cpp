@@ -19,6 +19,7 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
+#include "jit/SafepointIndex.h"
 #include "js/Conversions.h"
 #include "util/Memory.h"
 #include "vm/TraceLogging.h"

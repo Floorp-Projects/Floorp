@@ -21,6 +21,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/LIR.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Recover.h"
 #include "jit/Safepoints.h"
@@ -1403,13 +1404,6 @@ void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
   if (cx->ionPcScriptCache.ref()) {
     cx->ionPcScriptCache->add(hash, retAddr, *pcRes, *scriptRes);
   }
-}
-
-uint32_t OsiIndex::returnPointDisplacement() const {
-  // In general, pointer arithmetic on code is bad, but in this case,
-  // getting the return address from a call instruction, stepping over pools
-  // would be wrong.
-  return callPointDisplacement_ + Assembler::PatchWrite_NearCallSize();
 }
 
 RInstructionResults::RInstructionResults(JitFrameLayout* fp)
