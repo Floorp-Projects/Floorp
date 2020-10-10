@@ -281,11 +281,6 @@ def process_unicode_data(unicode_data, derived_core_properties):
     table = [dummy]
     cache = {dummy: 0}
     index = [0] * (MAX_BMP + 1)
-    same_upper_map = {}
-    same_upper_dummy = (0, 0, 0)
-    same_upper_table = [same_upper_dummy]
-    same_upper_cache = {same_upper_dummy: 0}
-    same_upper_index = [0] * (MAX_BMP + 1)
 
     codepoint_table = codepoint_dict()
     test_space_table = []
@@ -334,12 +329,6 @@ def process_unicode_data(unicode_data, derived_core_properties):
 
         assert lower <= MAX_BMP and upper <= MAX_BMP
 
-        if code != upper:
-            if upper not in same_upper_map:
-                same_upper_map[upper] = [code]
-            else:
-                same_upper_map[upper].append(code)
-
         flags = 0
 
         # we combine whitespace and lineterminators because in pratice we don't need them separated
@@ -373,39 +362,8 @@ def process_unicode_data(unicode_data, derived_core_properties):
             table.append(item)
         index[code] = i
 
-    for code in range(0, MAX_BMP + 1):
-        entry = codepoint_table.get(code)
-
-        if not entry:
-            continue
-
-        (upper, _, _, _) = entry
-
-        if upper not in same_upper_map:
-            continue
-
-        same_upper_ds = [v - code for v in same_upper_map[upper]]
-
-        assert len(same_upper_ds) <= 3
-        assert all([v > -65535 and v < 65535 for v in same_upper_ds])
-
-        same_upper = [v & 0xffff for v in same_upper_ds]
-        same_upper_0 = same_upper[0] if len(same_upper) >= 1 else 0
-        same_upper_1 = same_upper[1] if len(same_upper) >= 2 else 0
-        same_upper_2 = same_upper[2] if len(same_upper) >= 3 else 0
-
-        item = (same_upper_0, same_upper_1, same_upper_2)
-
-        i = same_upper_cache.get(item)
-        if i is None:
-            assert item not in same_upper_table
-            same_upper_cache[item] = i = len(same_upper_table)
-            same_upper_table.append(item)
-        same_upper_index[code] = i
-
     return (
         table, index,
-        same_upper_table, same_upper_index,
         non_bmp_lower_map, non_bmp_upper_map,
         non_bmp_space_set,
         non_bmp_id_start_set, non_bmp_id_cont_set,
@@ -1090,7 +1048,6 @@ if (typeof reportCompare === "function")
 
 def make_unicode_file(version,
                       table, index,
-                      same_upper_table, same_upper_index,
                       folding_table, folding_index,
                       non_bmp_space_set,
                       non_bmp_id_start_set, non_bmp_id_cont_set,
@@ -1100,12 +1057,6 @@ def make_unicode_file(version,
 
     # Don't forget to update CharInfo in Unicode.h if you need to change this
     assert shift == 6
-
-    same_upper_index1, same_upper_index2, same_upper_shift = splitbins(same_upper_index)
-
-    # Don't forget to update CodepointsWithSameUpperCaseInfo in Unicode.h if you need
-    # to change this
-    assert same_upper_shift == 6
 
     folding_index1, folding_index2, folding_shift = splitbins(folding_index)
 
@@ -1120,15 +1071,6 @@ def make_unicode_file(version,
         idx = index2[(idx << shift) + (char & ((1 << shift) - 1))]
 
         assert test == table[idx]
-
-    # verify correctness
-    for char in same_upper_index:
-        test = same_upper_table[same_upper_index[char]]
-
-        idx = same_upper_index1[char >> same_upper_shift]
-        idx = same_upper_index2[(idx << same_upper_shift) + (char & ((1 << same_upper_shift) - 1))]
-
-        assert test == same_upper_table[idx]
 
     # verify correctness
     for char in folding_index:
@@ -1252,12 +1194,6 @@ def make_unicode_file(version,
                     'js_charinfo', table,
                     'index1', index1,
                     'index2', index2,
-                    println)
-
-        write_table('CodepointsWithSameUpperCaseInfo',
-                    'js_codepoints_with_same_upper_info', same_upper_table,
-                    'codepoints_with_same_upper_index1', same_upper_index1,
-                    'codepoints_with_same_upper_index2', same_upper_index2,
                     println)
 
         write_table('FoldingInfo',
@@ -1404,7 +1340,6 @@ def update_unicode(args):
         print('Processing...')
         (
             table, index,
-            same_upper_table, same_upper_index,
             non_bmp_lower_map, non_bmp_upper_map,
             non_bmp_space_set,
             non_bmp_id_start_set, non_bmp_id_cont_set,
@@ -1421,7 +1356,6 @@ def update_unicode(args):
     print('Generating...')
     make_unicode_file(unicode_version,
                       table, index,
-                      same_upper_table, same_upper_index,
                       folding_table, folding_index,
                       non_bmp_space_set,
                       non_bmp_id_start_set, non_bmp_id_cont_set,
