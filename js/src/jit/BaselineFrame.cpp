@@ -13,7 +13,7 @@
 #include "jit/Ion.h"
 #include "vm/EnvironmentObject.h"
 
-#include "jit/JitFrames-inl.h"
+#include "jit/JSJitFrameIter-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

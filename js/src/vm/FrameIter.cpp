@@ -14,6 +14,7 @@
 #include <stdlib.h>  // getenv
 
 #include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
+#include "jit/JitFrames.h"       // js::jit::EnsureBareExitFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::{FrameType,InlineFrameIterator,JSJitFrameIter,MaybeReadFallback,SnapshotIterator}
 #include "js/GCAPI.h"            // JS::AutoSuppressGCAnalysis
 #include "js/Principals.h"       // JSSubsumesOp

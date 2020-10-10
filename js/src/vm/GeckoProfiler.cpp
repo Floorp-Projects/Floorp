@@ -17,7 +17,6 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
 #include "js/ProfilingStack.h"

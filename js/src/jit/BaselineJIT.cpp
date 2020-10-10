@@ -30,7 +30,6 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
-#include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/GeckoProfiler-inl.h"

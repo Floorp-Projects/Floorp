@@ -14,6 +14,7 @@
 #include "jit/FixedList.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
