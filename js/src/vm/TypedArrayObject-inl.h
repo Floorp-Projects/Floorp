@@ -29,6 +29,7 @@
 #include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
+#include "vm/Uint8Clamped.h"
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/ObjectOperations-inl.h"

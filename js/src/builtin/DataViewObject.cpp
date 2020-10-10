@@ -32,6 +32,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SharedMem.h"
+#include "vm/Uint8Clamped.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/Nursery-inl.h"
