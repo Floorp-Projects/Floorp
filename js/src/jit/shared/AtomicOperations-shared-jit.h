@@ -22,7 +22,7 @@
 
 #include "jsapi.h"
 
-#include "vm/ArrayBufferObject.h"
+#include "vm/Uint8Clamped.h"
 
 namespace js {
 namespace jit {

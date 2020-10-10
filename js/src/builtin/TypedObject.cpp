@@ -25,6 +25,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Uint8Clamped.h"
 
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
