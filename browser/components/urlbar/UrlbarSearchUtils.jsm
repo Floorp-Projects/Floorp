@@ -59,19 +59,45 @@ class SearchUtils {
    *
    * @param {string} prefix
    *   String containing the first part of the matching domain name(s).
+   * @param {object} [options]
+   * @param {boolean} [options.matchAllDomainLevels]
+   *   Match at each sub domain, for example "a.b.c.com" will be matched at
+   *   "a.b.c.com", "b.c.com", and "c.com". Partial matches are always returned
+   *   after perfect matches.
    * @returns {Array<nsISearchEngine>}
    *   An array of all matching engines. An empty array if there are none.
    */
-  async enginesForDomainPrefix(prefix) {
+  async enginesForDomainPrefix(prefix, { matchAllDomainLevels = false } = {}) {
     await this.init();
+    prefix = prefix.toLowerCase();
     let engines = [];
+    let partialMatchEngines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
       let domain = engine.getResultDomain();
       if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
         engines.push(engine);
       }
+      if (matchAllDomainLevels) {
+        // Strip the public suffix, we don't want to match on it.
+        domain = domain.substr(
+          0,
+          domain.length - engine.searchUrlPublicSuffix.length
+        );
+        let parts = domain.split(".");
+        for (let i = 1; i < parts.length - 1; ++i) {
+          if (
+            parts
+              .slice(i)
+              .join(".")
+              .startsWith(prefix)
+          ) {
+            partialMatchEngines.push(engine);
+          }
+        }
+      }
     }
-    return engines;
+    // Partial matches come after perfect matches.
+    return engines.concat(partialMatchEngines);
   }
 
   /**

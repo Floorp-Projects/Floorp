@@ -92,14 +92,20 @@ class ProviderTabToSearch extends UrlbarProvider {
 
     // Add all matching engines. The muxer will pick the one that matches
     // autofill, if any.
-    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr);
+    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
+      matchAllDomainLevels: true,
+    });
     for (let engine of engines) {
+      // Set the domain without public suffix as url, it will be used by
+      // the muxer to evaluate this result.
+      let url = engine.getResultDomain();
+      url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
       let result = new UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
         UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           engine: engine.name,
-          url: engine.getResultDomain(),
+          url,
           keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
           icon: engine.iconURI?.spec,
           query: "",
