@@ -9,8 +9,6 @@
 
 #include "mozilla/Maybe.h"
 
-#include "jsmath.h"
-
 #include "NamespaceImports.h"
 
 #include "builtin/TypedObject.h"
@@ -21,10 +19,12 @@
 #include "jit/Simulator.h"
 #include "js/friend/XrayJitInfo.h"  // JS::XrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
-#include "vm/Iteration.h"
 #include "vm/Shape.h"
 
 namespace js {
+
+enum class UnaryMathFunction : uint8_t;
+
 namespace jit {
 
 enum class BaselineCacheIRStubKind;
