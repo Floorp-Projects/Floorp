@@ -19,6 +19,7 @@
 #include "builtin/RegExp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineInspector.h"
+#include "jit/CompileInfo.h"
 #include "jit/IonBuilder.h"
 #include "jit/JitSpewer.h"
 #include "jit/KnownClass.h"
