@@ -41,6 +41,7 @@
 #include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
+#include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
 #include "jit/MacroAssembler-inl.h"

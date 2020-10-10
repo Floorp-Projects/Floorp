@@ -12,6 +12,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/SharedMem.h"
+#include "vm/Uint8Clamped.h"
 #include "wasm/WasmJS.h"
 
 using namespace js;
