@@ -82,6 +82,7 @@ UNIFIED_SOURCES += [
     'Recover.cpp',
     'RegisterAllocator.cpp',
     'RematerializedFrame.cpp',
+    'SafepointIndex.cpp',
     'Safepoints.cpp',
     'ScalarReplacement.cpp',
     'shared/CodeGenerator-shared.cpp',

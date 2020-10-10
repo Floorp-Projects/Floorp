@@ -12,6 +12,7 @@
 #include "jit/IonScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
+#include "jit/SafepointIndex.h"
 
 using namespace js;
 using namespace jit;

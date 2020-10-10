@@ -6,6 +6,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/JitRuntime.h"
+#include "jit/SafepointIndex.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
