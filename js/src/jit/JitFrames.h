@@ -12,26 +12,12 @@
 #include "jit/CalleeToken.h"
 #include "jit/JSJitFrameIter.h"
 #include "vm/JSContext.h"
-#include "vm/JSFunction.h"
 
 namespace js {
 namespace jit {
 
 struct SafepointSlotEntry;
 struct VMFunctionData;
-
-static inline JSScript* ScriptFromCalleeToken(CalleeToken token) {
-  switch (GetCalleeTokenTag(token)) {
-    case CalleeToken_Script:
-      return CalleeTokenToScript(token);
-    case CalleeToken_Function:
-    case CalleeToken_FunctionConstructing:
-      return CalleeTokenToFunction(token)->nonLazyScript();
-  }
-  MOZ_CRASH("invalid callee token tag");
-}
-
-JSScript* MaybeForwardedScriptFromCalleeToken(CalleeToken token);
 
 // In between every two frames lies a small header describing both frames. This
 // header, minimally, contains a returnAddress word and a descriptor word. The

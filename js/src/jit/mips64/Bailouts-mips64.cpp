@@ -6,6 +6,7 @@
 
 #include "jit/mips64/Bailouts-mips64.h"
 
+#include "jit/ScriptFromCalleeToken.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 

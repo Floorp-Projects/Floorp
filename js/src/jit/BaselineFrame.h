@@ -11,6 +11,7 @@
 
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
+#include "jit/ScriptFromCalleeToken.h"
 #include "vm/Stack.h"
 
 namespace js {
