@@ -40,6 +40,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"

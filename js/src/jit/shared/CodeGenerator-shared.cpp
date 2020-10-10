@@ -15,6 +15,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MIR.h"
@@ -24,7 +25,6 @@
 #include "util/Memory.h"
 #include "vm/TraceLogging.h"
 
-#include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSScript-inl.h"
 
