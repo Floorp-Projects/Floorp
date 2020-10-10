@@ -7,6 +7,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import yaml
 
+from six import ensure_text
+
 from taskgraph.util.memoize import memoize
 
 
@@ -27,7 +29,7 @@ def get_components():
 
 
 def get_version():
-    return _read_build_config()["componentsVersion"]
+    return ensure_text(_read_build_config()["componentsVersion"])
 
 
 def get_path(component):
