@@ -7,7 +7,9 @@
 #ifndef jit_mips32_SharedICRegisters_mips32_h
 #define jit_mips32_SharedICRegisters_mips32_h
 
-#include "jit/MacroAssembler.h"
+#include "jit/mips32/Assembler-mips32.h"
+#include "jit/Registers.h"
+#include "jit/RegisterSets.h"
 
 namespace js {
 namespace jit {
