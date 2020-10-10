@@ -22,7 +22,6 @@
 #include "gc/HashUtil.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
-#include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "js/MemoryMetrics.h"

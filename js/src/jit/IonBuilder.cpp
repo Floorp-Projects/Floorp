@@ -18,6 +18,8 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
 #include "jit/CacheIR.h"
+#include "jit/CompileInfo.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/Ion.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
@@ -41,6 +43,7 @@
 
 #include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"
+#include "jit/InlineScriptTree-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"

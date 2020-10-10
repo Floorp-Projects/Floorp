@@ -14,6 +14,7 @@
 #include "jsnum.h"
 
 #include "jit/CodeGenerator.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/MIR.h"

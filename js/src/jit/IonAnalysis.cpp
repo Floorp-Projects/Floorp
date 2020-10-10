@@ -12,6 +12,8 @@
 #include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CompileInfo.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"

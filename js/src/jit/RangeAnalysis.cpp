@@ -14,6 +14,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
+#include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitSpewer.h"

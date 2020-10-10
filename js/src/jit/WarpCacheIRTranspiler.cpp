@@ -15,6 +15,7 @@
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
+#include "jit/CompileInfo.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"

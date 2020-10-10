@@ -6,7 +6,6 @@
 
 #include "jit/Snapshots.h"
 
-#include "jit/CompileInfo.h"
 #include "jit/JitSpewer.h"
 #ifdef TRACK_SNAPSHOTS
 #  include "jit/LIR.h"

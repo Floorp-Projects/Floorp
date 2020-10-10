@@ -12,6 +12,8 @@
 
 #include "jit/CodeGenerator.h"
 #include "jit/CompactBuffer.h"
+#include "jit/CompileInfo.h"
+#include "jit/InlineScriptTree.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
 #include "jit/MacroAssembler.h"
