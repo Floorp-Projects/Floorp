@@ -11,6 +11,7 @@
 
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
+#include "jit/ScriptFromCalleeToken.h"
 #include "js/UniquePtr.h"
 #include "vm/JSFunction.h"
 #include "vm/Stack.h"

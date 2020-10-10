@@ -12,6 +12,7 @@
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitFrames.h"
+#include "jit/ScriptFromCalleeToken.h"
 
 namespace js {
 namespace jit {
