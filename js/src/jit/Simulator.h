@@ -19,4 +19,10 @@
 #  error "Unexpected simulator platform"
 #endif
 
+#if defined(JS_SIMULATOR_ARM64)
+namespace js::jit {
+using Simulator = vixl::Simulator;
+}
+#endif
+
 #endif /* jit_Simulator_h */
