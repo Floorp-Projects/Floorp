@@ -12,6 +12,7 @@
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"
 #include "vm/BytecodeUtil.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace jit {

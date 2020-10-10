@@ -12,6 +12,7 @@
 #include "js/HeapAPI.h"
 #include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/Realm.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace jit {

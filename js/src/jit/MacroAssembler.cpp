@@ -40,6 +40,7 @@
 #include "vm/JSContext.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/WasmTypes.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/ABIFunctionList-inl.h"

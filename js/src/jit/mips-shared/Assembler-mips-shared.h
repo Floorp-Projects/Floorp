@@ -18,6 +18,7 @@
 #include "jit/mips-shared/Architecture-mips-shared.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/IonAssemblerBuffer.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace jit {

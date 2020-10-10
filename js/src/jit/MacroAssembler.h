@@ -36,6 +36,11 @@
 #include "jit/VMFunctions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
+#include "vm/BytecodeUtil.h"
+#include "vm/FunctionFlags.h"
+#include "vm/JSObject.h"
+#include "vm/ObjectGroup.h"
+#include "vm/StringType.h"
 
 // [SMDOC] MacroAssembler multi-platform overview
 //
@@ -205,6 +210,19 @@
 namespace js {
 
 class TypedArrayObject;
+class TypeSet;
+
+namespace wasm {
+class CalleeDesc;
+class CallSiteDesc;
+class BytecodeOffset;
+class MemoryAccessDesc;
+
+enum class FailureMode : uint8_t;
+enum class SimdOp;
+enum class SymbolicAddress;
+enum class Trap;
+}
 
 namespace jit {
 
