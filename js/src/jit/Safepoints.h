@@ -7,15 +7,23 @@
 #ifndef jit_Safepoints_h
 #define jit_Safepoints_h
 
+#include "mozilla/Attributes.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
 #include "jit/BitSet.h"
 #include "jit/CompactBuffer.h"
-#include "jit/shared/Assembler-shared.h"
+#include "jit/RegisterSets.h"
 
 namespace js {
 namespace jit {
 
+class CodeLocationLabel;
+class IonScript;
 class SafepointIndex;
 struct SafepointSlotEntry;
+class TempAllocator;
 
 class LAllocation;
 class LSafepoint;
