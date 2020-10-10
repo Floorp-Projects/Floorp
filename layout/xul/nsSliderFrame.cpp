@@ -523,10 +523,6 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
           return NS_OK;
         }
 
-        mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::SCROLL_INPUT_METHODS,
-            (uint32_t)ScrollInputMethod::MainThreadScrollbarDrag);
-
         // take our current position and subtract the start location
         pos -= mDragStart;
         bool isMouseOutsideThumb = false;
@@ -1120,6 +1116,19 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
 nsresult nsSliderFrame::StopDrag() {
   AddListener();
   DragThumb(false);
+
+  if (!mScrollingWithAPZ) {
+    // We record this one at the end of the drag rather than at the beginning
+    // because at the point that the main thread starts the drag (in StartDrag)
+    // it may not know for sure whether APZ or the main thread will end up
+    // handling the drag. Even if mScrollingWithAPZ is true initially, it
+    // may get set to false if APZ rejects the drag. But by the end of the drag
+    // the mScrollingWithAPZ flag should be correct and so we can use it here
+    // to determine if APZ or the main thread handled the drag.
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t)ScrollInputMethod::MainThreadScrollbarDrag);
+  }
 
   mScrollingWithAPZ = false;
 
