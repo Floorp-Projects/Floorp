@@ -18,6 +18,7 @@
 #else
 #  error "Unknown architecture!"
 #endif
+#include "jit/CompactBuffer.h"
 
 namespace js {
 namespace jit {
