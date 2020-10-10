@@ -31,18 +31,18 @@
 
   <html:form id="addEngineForm">
     <html:span id="engineNameExists" hidden="hidden" data-l10n-id="engine-name-exists"/>
-    <html:label for="engineName" data-l10n-id="add-engine-name"/>
+    <html:label id="engineNameLabel" for="engineName" data-l10n-id="add-engine-name"/>
     <hbox>
       <html:input id="engineName" type="text" required="required" />
     </hbox>
 
-    <html:label for="engineUrl" data-l10n-id="add-engine-url" />
+    <html:label id="engineUrlLabel" for="engineUrl" data-l10n-id="add-engine-url" />
     <hbox>
       <html:input id="engineUrl" type="url" required="required" />
     </hbox>
 
     <html:span id="engineAliasExists" hidden="hidden" data-l10n-id="engine-alias-exists"/>
-    <html:label for="engineAlias" data-l10n-id="add-engine-alias" />
+    <html:label id="engineAliasLabel" for="engineAlias" data-l10n-id="add-engine-alias" />
     <hbox>
       <html:input id="engineAlias" type="text" />
     </hbox>
