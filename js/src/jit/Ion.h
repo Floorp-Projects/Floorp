@@ -7,19 +7,36 @@
 #ifndef jit_Ion_h
 #define jit_Ion_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Result.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jsfriendapi.h"
+#include "jspubtd.h"
 
 #include "jit/BaselineJIT.h"
-#include "jit/CompileWrappers.h"
+#include "jit/IonTypes.h"
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"
+#include "js/Principals.h"
+#include "js/TypeDecls.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSContext.h"
-#include "vm/Realm.h"
+#include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/TypeInference.h"
 
 namespace js {
+
+class RunState;
+
 namespace jit {
+
+class BaselineFrame;
 
 bool CanIonCompileScript(JSContext* cx, JSScript* script);
 bool CanIonInlineScript(JSScript* script);
