@@ -13084,9 +13084,8 @@ void Document::MaybeWarnAboutZoom() {
   if (mHasWarnedAboutZoom) {
     return;
   }
-  const bool usedZoom =
-      mStyleUseCounters && Servo_IsPropertyIdRecordedInUseCounter(
-                               mStyleUseCounters.get(), eCSSProperty_zoom);
+  const bool usedZoom = Servo_IsPropertyIdRecordedInUseCounter(
+      mStyleUseCounters.get(), eCSSProperty_zoom);
   if (!usedZoom) {
     return;
   }
@@ -15023,15 +15022,10 @@ static_assert(size_t(eUseCounter_Count) * 2 ==
 #undef ASSERT_CSS_COUNTER
 
 void Document::SetCssUseCounterBits() {
-  auto* docCounters = mStyleUseCounters.get();
-  if (!docCounters) {
-    return;
-  }
-
   if (StaticPrefs::layout_css_use_counters_enabled()) {
     for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
       auto id = nsCSSPropertyID(i);
-      if (Servo_IsPropertyIdRecordedInUseCounter(docCounters, id)) {
+      if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
         SetUseCounter(nsCSSProps::UseCounterFor(id));
       }
     }
@@ -15040,7 +15034,8 @@ void Document::SetCssUseCounterBits() {
   if (StaticPrefs::layout_css_use_counters_unimplemented_enabled()) {
     for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
       auto id = CountedUnknownProperty(i);
-      if (Servo_IsUnknownPropertyRecordedInUseCounter(docCounters, id)) {
+      if (Servo_IsUnknownPropertyRecordedInUseCounter(mStyleUseCounters.get(),
+                                                      id)) {
         SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
       }
     }
