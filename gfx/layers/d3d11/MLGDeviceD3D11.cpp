@@ -19,7 +19,6 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "MLGShaders.h"
-#include "LayersLogging.h"
 #include "TextureD3D11.h"
 #include "gfxConfig.h"
 #include "mozilla/StaticPrefs_layers.h"

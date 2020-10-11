@@ -10,7 +10,6 @@
 
 #include "APZCCallbackHelper.h"
 #include "ActiveElementManager.h"
-#include "LayersLogging.h"
 #include "TouchManager.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/IntegerPrintfMacros.h"

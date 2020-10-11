@@ -9,7 +9,6 @@
 #include "AsyncPanZoomController.h"
 
 #include "InputBlockState.h"
-#include "LayersLogging.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/ToString.h"
 #include "OverscrollHandoffState.h"

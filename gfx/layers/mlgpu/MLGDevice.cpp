@@ -11,7 +11,6 @@
 #include "gfxConfig.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "gfxUtils.h"
-#include "LayersLogging.h"
 #include "ShaderDefinitionsMLGPU.h"
 #include "SharedBufferMLGPU.h"
 #include "UtilityMLGPU.h"

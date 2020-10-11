@@ -21,7 +21,6 @@
 #include "EventStateManager.h"
 #include "FrameLayerBuilder.h"
 #include "Layers.h"
-#include "LayersLogging.h"
 #include "MMPrinter.h"
 #include "PermissionMessageUtils.h"
 #include "PuppetWidget.h"

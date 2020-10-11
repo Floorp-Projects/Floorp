@@ -371,6 +371,15 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) MOZ_FORMAT_PRINTF(1, 0);
  */
 void fprintf_stderr(FILE* aFile, const char* aFmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
+/*
+ * print_stderr and fprint_stderr are like printf_stderr and fprintf_stderr,
+ * except they deal with Android logcat line length limitations. They do this
+ * by printing individual lines out of the provided stringstream using separate
+ * calls to logcat.
+ */
+void print_stderr(std::stringstream& aStr);
+void fprint_stderr(FILE* aFile, std::stringstream& aStr);
+
 #ifdef __cplusplus
 }
 #endif

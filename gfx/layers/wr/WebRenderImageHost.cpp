@@ -8,7 +8,6 @@
 
 #include <utility>
 
-#include "LayersLogging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/Compositor.h"                // for Compositor

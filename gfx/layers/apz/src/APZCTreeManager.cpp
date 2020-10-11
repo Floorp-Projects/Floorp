@@ -49,7 +49,6 @@
 #include "nsThreadUtils.h"           // for NS_IsMainThread
 #include "OverscrollHandoffState.h"  // for OverscrollHandoffState
 #include "TreeTraversal.h"           // for ForEachNode, BreadthFirstSearch, etc
-#include "LayersLogging.h"           // for Stringify
 #include "Units.h"                   // for ParentlayerPixel
 #include "GestureEventListener.h"  // for GestureEventListener::setLongTapEnabled
 #include "UnitTransforms.h"        // for ViewAs
