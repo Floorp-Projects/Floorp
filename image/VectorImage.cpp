@@ -355,7 +355,7 @@ VectorImage::VectorImage(nsIURI* aURI /* = nullptr */)
       mHasPendingInvalidation(false) {}
 
 VectorImage::~VectorImage() {
-  ReportUseCounters();
+  ReportDocumentUseCounters();
   CancelAllListeners();
   SurfaceCache::RemoveImage(ImageKey(this));
 }
@@ -1412,7 +1412,7 @@ void VectorImage::OnSVGDocumentLoaded() {
   // This is the earliest point that we can get accurate use counter data
   // for a valid SVG document.  Without the FlushLayout call, we would miss
   // any CSS property usage that comes from SVG presentation attributes.
-  mSVGDocumentWrapper->GetDocument()->ReportUseCounters();
+  mSVGDocumentWrapper->GetDocument()->ReportDocumentUseCounters();
 
   mIsFullyLoaded = true;
   mHaveAnimations = mSVGDocumentWrapper->IsAnimated();
@@ -1452,7 +1452,7 @@ void VectorImage::OnSVGDocumentError() {
 
   // We won't enter OnSVGDocumentLoaded, so report use counters now for this
   // invalid document.
-  ReportUseCounters();
+  ReportDocumentUseCounters();
 
   if (mProgressTracker) {
     // Notify observers about the error and unblock page load.
@@ -1582,13 +1582,13 @@ nsresult VectorImage::GetHotspotY(int32_t* aY) {
   return Image::GetHotspotY(aY);
 }
 
-void VectorImage::ReportUseCounters() {
+void VectorImage::ReportDocumentUseCounters() {
   if (!mSVGDocumentWrapper) {
     return;
   }
 
   if (Document* doc = mSVGDocumentWrapper->GetDocument()) {
-    doc->ReportUseCounters();
+    doc->ReportDocumentUseCounters();
   }
 }
 

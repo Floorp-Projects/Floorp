@@ -1058,14 +1058,13 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   }
   StartDying();
 
-  if (mDoc) {
-    // The document is about to lose its window, so this is a good time to
-    // report use counters for it, while we still have access to our
-    // WindowContext.
+  if (mDoc && mDoc->GetWindowContext()) {
+    // The document is about to lose its window, so this is a good time to send
+    // our page use counters.
     //
     // (We also do this in Document::SetScriptGlobalObject(nullptr), which
     // catches most cases of documents losing their window, but not all.)
-    mDoc->ReportUseCounters();
+    mDoc->SendPageUseCounters();
   }
 
   // Make sure that this is called before we null out the document and

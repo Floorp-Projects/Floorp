@@ -131,6 +131,15 @@ add_task(async function() {
       counters: [{ name: "SVGSVGELEMENT_CURRENTSCALE_getter" }],
     },
 
+    // Check that a document that comes out of the bfcache reports any new use
+    // counters recorded on it.
+    {
+      type: "direct",
+      filename: "file_use_counter_bfcache.html",
+      waitForExplicitFinish: true,
+      counters: [{ name: "SVGSVGELEMENT_GETELEMENTBYID" }],
+    },
+
     // // data: URLs don't correctly propagate to their referring document yet.
     // {
     //   type: "direct",
@@ -181,6 +190,17 @@ add_task(async function() {
 
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    if (test.waitForExplicitFinish) {
+      if (test.type != "direct") {
+        throw new Error(
+          `cannot use waitForExplicitFinish with test type ${test.type}`
+        );
+      }
+
+      // Wait until the tab changes its hash to indicate it has finished.
+      await BrowserTestUtils.waitForLocationChange(gBrowser, url + "#finished");
+    }
 
     if (targetElement) {
       // Inject our desired file into the target element of the newly-loaded page.
