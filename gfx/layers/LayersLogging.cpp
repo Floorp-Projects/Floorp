@@ -21,32 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, TextureFlags flags,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  if (flags == TextureFlags::NO_FLAGS) {
-    aStream << "NoFlags";
-  } else {
-#define AppendFlag(test)    \
-  {                         \
-    if (!!(flags & test)) { \
-      if (previous) {       \
-        aStream << "|";     \
-      }                     \
-      aStream << #test;     \
-      previous = true;      \
-    }                       \
-  }
-    bool previous = false;
-    AppendFlag(TextureFlags::USE_NEAREST_FILTER);
-    AppendFlag(TextureFlags::ORIGIN_BOTTOM_LEFT);
-    AppendFlag(TextureFlags::DISALLOW_BIGIMAGE);
-
-#undef AppendFlag
-  }
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream,
                     mozilla::gfx::SurfaceFormat format, const char* pfx,
                     const char* sfx) {

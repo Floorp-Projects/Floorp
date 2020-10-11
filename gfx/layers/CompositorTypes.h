@@ -7,6 +7,7 @@
 #ifndef MOZILLA_LAYERS_COMPOSITORTYPES_H
 #define MOZILLA_LAYERS_COMPOSITORTYPES_H
 
+#include <iosfwd>
 #include <stdint.h>       // for uint32_t
 #include <sys/types.h>    // for int32_t
 #include "LayersTypes.h"  // for LayersBackend, etc
@@ -90,6 +91,8 @@ enum class TextureFlags : uint32_t {
   DEFAULT = NO_FLAGS
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextureFlags)
+
+std::ostream& operator<<(std::ostream& aStream, const TextureFlags& aFlags);
 
 static inline bool TextureRequiresLocking(TextureFlags aFlags) {
   // If we're not double buffered, or uploading
