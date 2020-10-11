@@ -146,7 +146,8 @@ var AttributionCode = {
           // choose non-utm params over utm params.
           for (let paramKey of [`utm_${key}`, `funnel_${key}`, key]) {
             if (params.has(paramKey)) {
-              let value = params.get(paramKey);
+              // We expect URI-encoded components.
+              let value = encodeURIComponent(params.get(paramKey));
               if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
                 gCachedAttrData[key] = value;
               }
