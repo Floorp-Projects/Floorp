@@ -3565,9 +3565,15 @@ class Document : public nsINode,
   // document goes away.
   void InitUseCounters();
 
-  // Reports document use counters via telemetry, and sends any page use
-  // counters to the parent process for accumulation.
-  void ReportUseCounters();
+  // Reports document use counters via telemetry.  This method only has an
+  // effect once per document, and so is called during document destruction.
+  void ReportDocumentUseCounters();
+
+  // Sends page use counters to the parent process to accumulate against the
+  // top-level document.  Must be called while we still have access to our
+  // WindowContext.  This method has an effect each time it is called, and we
+  // call it just before the document loses its window.
+  void SendPageUseCounters();
 
   void SetUseCounter(UseCounter aUseCounter) {
     mUseCounters[aUseCounter] = true;
@@ -4575,13 +4581,13 @@ class Document : public nsINode,
   // terminated instead of letting it finish at its own pace.
   bool mParserAborted : 1;
 
-  // Whether we have reported use counters for this document with Telemetry yet.
-  // Normally this is only done at document destruction time, but for image
-  // documents (SVG documents) that are not guaranteed to be destroyed, we
-  // report use counters when the image cache no longer has any imgRequestProxys
-  // pointing to them.  We track whether we ever reported use counters so
-  // that we only report them once for the document.
-  bool mReportedUseCounters : 1;
+  // Whether we have reported document use counters for this document with
+  // Telemetry yet.  Normally this is only done at document destruction time,
+  // but for image documents (SVG documents) that are not guaranteed to be
+  // destroyed, we report use counters when the image cache no longer has any
+  // imgRequestProxys pointing to them.  We track whether we ever reported use
+  // counters so that we only report them once for the document.
+  bool mReportedDocumentUseCounters : 1;
 
   bool mHasReportedShadowDOMUsage : 1;
 

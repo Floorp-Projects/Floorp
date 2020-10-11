@@ -1321,7 +1321,7 @@ Document::Document(const char* aContentType)
       mValidMaxScale(false),
       mWidthStrEmpty(false),
       mParserAborted(false),
-      mReportedUseCounters(false),
+      mReportedDocumentUseCounters(false),
       mHasReportedShadowDOMUsage(false),
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
@@ -7005,18 +7005,16 @@ void Document::SetScriptGlobalObject(
       mMaybeServiceWorkerControlled = false;
     }
 
-    // The document is about to lose its window, so this is a good time to
-    // report use counters for it, while we still have access to our
-    // WindowContext.
-    //
-    // (We also do this in nsGlobalWindowInner::FreeInnerObjects(), which
-    // catches some cases of documents losing their window that don't
-    // get in here.)
-    //
-    // FIXME(heycam): Reporting use counters here means that if the document
-    // goes into then comes out of the bfcache, we won't report any new use
-    // counters that are set.  This will be fixed in a followup.
-    ReportUseCounters();
+    if (GetWindowContext()) {
+      // The document is about to lose its window, so this is a good time to
+      // send our page use counters, while we still have access to our
+      // WindowContext.
+      //
+      // (We also do this in nsGlobalWindowInner::FreeInnerObjects(), which
+      // catches some cases of documents losing their window that don't
+      // get in here.)
+      SendPageUseCounters();
+    }
   }
 
   // BlockOnload() might be called before mScriptGlobalObject is set.
@@ -10662,6 +10660,8 @@ void Document::Destroy() {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
   if (mIsGoingAway) return;
+
+  ReportDocumentUseCounters();
 
   mIsGoingAway = true;
 
@@ -15132,12 +15132,12 @@ void Document::InitUseCounters() {
 // that don't get widely used.  Doing things in this fashion means
 // smaller telemetry payloads and faster processing on the server
 // side.
-void Document::ReportUseCounters() {
-  if (!mShouldReportUseCounters || mReportedUseCounters) {
+void Document::ReportDocumentUseCounters() {
+  if (!mShouldReportUseCounters || mReportedDocumentUseCounters) {
     return;
   }
 
-  mReportedUseCounters = true;
+  mReportedDocumentUseCounters = true;
 
   // Note that a document is being destroyed.  See the comment above for how
   // use counter histograms are interpreted relative to this measurement.
@@ -15146,18 +15146,11 @@ void Document::ReportUseCounters() {
   Telemetry::Accumulate(Telemetry::CONTENT_DOCUMENTS_DESTROYED, 1);
 
   // Ask all of our resource documents to report their own document use
-  // counters.  Any page use counters from them will be sent directly to
-  // the parent process.
+  // counters.
   EnumerateExternalResources([](Document& aDoc) {
-    aDoc.ReportUseCounters();
+    aDoc.ReportDocumentUseCounters();
     return CallState::Continue;
   });
-
-  // Any documents in descendant browsing contexts will report their page use
-  // counters to the parent process when the documents are destroyed.  If we
-  // need to hurry that along, because cycle collection causes that to happen
-  // slowly, we could send a message to them to call ReportUseCounters
-  // immediately.
 
   // Copy StyleUseCounters into our document use counters.
   SetCssUseCounterBits();
@@ -15178,6 +15171,19 @@ void Document::ReportUseCounters() {
             (" > %s\n", Telemetry::GetHistogramName(id)));
     Telemetry::Accumulate(id, 1);
   }
+}
+
+void Document::SendPageUseCounters() {
+  if (!mShouldReportUseCounters || !mShouldSendPageUseCounters) {
+    return;
+  }
+
+  // Ask all of our resource documents to send their own document use
+  // counters to the parent process to be counted as page use counters.
+  EnumerateExternalResources([](Document& aDoc) {
+    aDoc.SendPageUseCounters();
+    return CallState::Continue;
+  });
 
   // Send our use counters to the parent process to accumulate them towards the
   // page use counters for the top-level document.
@@ -15186,24 +15192,26 @@ void Document::ReportUseCounters() {
   // document use counters (those in mChildDocumentUseCounters) that have been
   // explicitly propagated up to us, which includes resource documents, static
   // clones, and SVG images.
-  if (mShouldSendPageUseCounters) {
-    RefPtr<WindowGlobalChild> wgc = GetWindowGlobalChild();
-    if (!wgc) {
-      MOZ_ASSERT_UNREACHABLE(
-          "ReportUseCounters should be called while we still have access "
-          "to our WindowContext");
-      MOZ_LOG(gUseCountersLog, LogLevel::Debug,
-              (" > too late to send page use counters"));
-      return;
-    }
-
+  RefPtr<WindowGlobalChild> wgc = GetWindowGlobalChild();
+  if (!wgc) {
+    MOZ_ASSERT_UNREACHABLE(
+        "SendPageUseCounters should be called while we still have access "
+        "to our WindowContext");
     MOZ_LOG(gUseCountersLog, LogLevel::Debug,
-            (" > sending page use counters: from WindowContext %" PRIu64,
-             wgc->InnerWindowId()));
-
-    UseCounters counters = mUseCounters | mChildDocumentUseCounters;
-    wgc->SendAccumulatePageUseCounters(counters);
+            (" > too late to send page use counters"));
+    return;
   }
+
+  MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+          ("Sending page use counters: from WindowContext %" PRIu64 " [%s]",
+           wgc->WindowContext()->Id(),
+           nsContentUtils::TruncatedURLForDisplay(GetDocumentURI()).get()));
+
+  // Copy StyleUseCounters into our document use counters.
+  SetCssUseCounterBits();
+
+  UseCounters counters = mUseCounters | mChildDocumentUseCounters;
+  wgc->SendAccumulatePageUseCounters(counters);
 }
 
 WindowContext* Document::GetWindowContextForPageUseCounters() const {
