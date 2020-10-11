@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<a href="file_use_counter_bfcache_helper.html?b">b</a>
+<a href="file_use_counter_bfcache_helper.html?c">c</a>
+<svg></svg>
+<script>
+let which = location.search.substring(1);
+
+if (which == "c") {
+  // Set the sentinel use counter.
+  let s = document.createElement("style");
+  s.textContent = "g { marker-mid: none; }";
+  document.body.append(s);
+}
+
+onload = function() {
+  window.opener.postMessage(`${which}-doc-loaded`, "*");
+};
+
+onmessage = function() {
+  switch (event.data) {
+    case "click-b-link":
+      document.querySelectorAll("a")[0].click();
+      break;
+    case "click-c-link":
+      document.querySelectorAll("a")[1].click();
+      break;
+    case "go-back":
+      history.back();
+      break;
+    case "set-use-counter":
+      document.querySelector("svg").getElementById("x");
+      window.opener.postMessage("did-set-use-counter", "*");
+      break;
+  }
+};
+
+onpageshow = function() {
+  window.opener.postMessage(`${which}-doc-shown`, "*");
+};
+</script>
