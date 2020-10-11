@@ -24,7 +24,7 @@ info: |
   ...
 
 
-features: [FinalizationRegistry, Symbol, host-gc-required]
+features: [cleanupSome, FinalizationRegistry, Symbol, host-gc-required]
 includes: [async-gc.js]
 flags: [async, non-deterministic]
 ---*/
