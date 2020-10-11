@@ -57,6 +57,8 @@
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
+extern mozilla::LazyLogModule gUseCountersLog;
+
 namespace mozilla {
 namespace dom {
 
@@ -967,7 +969,155 @@ already_AddRefed<Promise> WindowGlobalParent::GetSecurityInfo(
   return promise.forget();
 }
 
+/**
+ * Accumulated page use counter data for a given top-level content document.
+ */
+struct PageUseCounters {
+  // The number of page use counter data messages we are still waiting for.
+  uint32_t mWaiting = 0;
+
+  // Whether we have received any page use counter data.
+  bool mReceivedAny = false;
+
+  // The accumulated page use counters.
+  UseCounters mUseCounters;
+};
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvExpectPageUseCounters(
+    const MaybeDiscarded<WindowContext>& aTop) {
+  if (aTop.IsNull()) {
+    return IPC_FAIL(this, "aTop must not be null");
+  }
+
+  MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+          ("Expect page use counters: WindowContext %" PRIu64 " -> %" PRIu64,
+           InnerWindowId(), aTop.ContextId()));
+
+  // We've been called to indicate that the document in our window intends
+  // to send use counter data to accumulate towards the top-level document's
+  // page use counters.  This causes us to wait for this window to go away
+  // (in WindowGlobalParent::ActorDestroy) before reporting the page use
+  // counters via Telemetry.
+  RefPtr<WindowGlobalParent> page =
+      static_cast<WindowGlobalParent*>(aTop.GetMaybeDiscarded());
+  if (!page || page->mSentPageUseCounters) {
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > too late, won't report page use counters for this straggler"));
+    return IPC_OK();
+  }
+
+  if (mPageUseCountersWindow) {
+    if (mPageUseCountersWindow != page) {
+      return IPC_FAIL(this,
+                      "ExpectPageUseCounters called on the same "
+                      "WindowContext with a different aTop value");
+    }
+
+    // We can get called with the same aTop value more than once, e.g. for
+    // initial about:blank documents and then subsequent "real" documents loaded
+    // into the same window.  We must note each source window only once.
+    return IPC_OK();
+  }
+
+  // Note that the top-level document must wait for one more window's use
+  // counters before reporting via Telemetry.
+  mPageUseCountersWindow = page;
+  if (!page->mPageUseCounters) {
+    page->mPageUseCounters = MakeUnique<PageUseCounters>();
+  }
+  ++page->mPageUseCounters->mWaiting;
+
+  MOZ_LOG(
+      gUseCountersLog, LogLevel::Debug,
+      (" > top-level now waiting on %d\n", page->mPageUseCounters->mWaiting));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvAccumulatePageUseCounters(
+    const UseCounters& aUseCounters) {
+  // We've been called to accumulate use counter data into the page use counters
+  // for the document in mPageUseCountersWindow.
+
+  MOZ_LOG(
+      gUseCountersLog, LogLevel::Debug,
+      ("Accumulate page use counters: WindowContext %" PRIu64 " -> %" PRIu64,
+       InnerWindowId(),
+       mPageUseCountersWindow ? mPageUseCountersWindow->InnerWindowId()
+                              : 0));
+
+  if (!mPageUseCountersWindow || mPageUseCountersWindow->mSentPageUseCounters) {
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > too late, won't report page use counters for this straggler"));
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mPageUseCountersWindow->mPageUseCounters);
+  MOZ_ASSERT(mPageUseCountersWindow->mPageUseCounters->mWaiting > 0);
+
+  mPageUseCountersWindow->mPageUseCounters->mUseCounters |= aUseCounters;
+  mPageUseCountersWindow->mPageUseCounters->mReceivedAny = true;
+  return IPC_OK();
+}
+
+// This is called on the top-level WindowGlobal, i.e. the one that is
+// accumulating the page use counters, not the (potentially descendant) window
+// that has finished providing use counter data.
+void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
+  MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+          ("Stop expecting page use counters: -> WindowContext %" PRIu64,
+           InnerWindowId()));
+
+  if (!mPageUseCounters) {
+    MOZ_ASSERT_UNREACHABLE("Not expecting page use counter data");
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > not expecting page use counter data"));
+    return;
+  }
+
+  MOZ_ASSERT(mPageUseCounters->mWaiting > 0);
+  --mPageUseCounters->mWaiting;
+
+  if (mPageUseCounters->mWaiting > 0) {
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > now waiting on %d", mPageUseCounters->mWaiting));
+    return;
+  }
+
+  if (mPageUseCounters->mReceivedAny) {
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > reporting [%s]",
+             nsContentUtils::TruncatedURLForDisplay(mDocumentURI).get()));
+
+    Telemetry::Accumulate(Telemetry::TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED, 1);
+
+    for (int32_t c = 0; c < eUseCounter_Count; ++c) {
+      auto uc = static_cast<UseCounter>(c);
+      if (!mPageUseCounters->mUseCounters[uc]) {
+        continue;
+      }
+
+      auto id = static_cast<Telemetry::HistogramID>(
+          Telemetry::HistogramFirstUseCounter + uc * 2 + 1);
+      MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+              (" > %s\n", Telemetry::GetHistogramName(id)));
+      Telemetry::Accumulate(id, 1);
+    }
+  } else {
+    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
+            (" > no page use counter data was received"));
+  }
+
+  mSentPageUseCounters = true;
+  mPageUseCounters = nullptr;
+}
+
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (mPageUseCountersWindow) {
+    mPageUseCountersWindow->FinishAccumulatingPageUseCounters();
+    mPageUseCountersWindow = nullptr;
+  }
+
   if (GetBrowsingContext()->IsTopContent() &&
       !mDocumentPrincipal->SchemeIs("about")) {
     // Record the page load
@@ -1125,7 +1275,8 @@ void WindowGlobalParent::AddSecurityState(uint32_t aStateFlags) {
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
+                                   mPageUseCountersWindow)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalParent,
                                                WindowContext)

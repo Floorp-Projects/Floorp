@@ -42,6 +42,7 @@ class BrowserParent;
 class WindowGlobalChild;
 class JSWindowActorParent;
 class JSActorMessageMeta;
+struct PageUseCounters;
 
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
@@ -262,6 +263,11 @@ class WindowGlobalParent final : public WindowContext,
       bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
       CheckPermitUnloadResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvExpectPageUseCounters(
+      const MaybeDiscarded<dom::WindowContext>& aTop);
+  mozilla::ipc::IPCResult RecvAccumulatePageUseCounters(
+      const UseCounters& aUseCounters);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
@@ -270,6 +276,7 @@ class WindowGlobalParent final : public WindowContext,
   ~WindowGlobalParent();
 
   bool ShouldTrackSiteOriginTelemetry();
+  void FinishAccumulatingPageUseCounters();
 
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.
@@ -318,6 +325,18 @@ class WindowGlobalParent final : public WindowContext,
 
   // HTTPS-Only Mode flags
   uint32_t mHttpsOnlyStatus;
+
+  // The window of the document whose page use counters our document's use
+  // counters will contribute to.  (If we are a top-level document, this
+  // will point to ourselves.)
+  RefPtr<WindowGlobalParent> mPageUseCountersWindow;
+
+  // Our page use counters, if we are a top-level document.
+  UniquePtr<PageUseCounters> mPageUseCounters;
+
+  // Whether we have sent our page use counters, and so should ignore any
+  // subsequent ExpectPageUseCounters calls.
+  bool mSentPageUseCounters = false;
 };
 
 }  // namespace dom

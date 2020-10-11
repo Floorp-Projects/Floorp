@@ -3558,6 +3558,15 @@ class Document : public nsINode,
 
   bool IsSynthesized();
 
+  // Records whether we will track use counters for this document, and if so,
+  // which top-level document that page counters will be accumulated to.
+  //
+  // Informs the parent process that page use counters will be sent once the
+  // document goes away.
+  void InitUseCounters();
+
+  // Reports document use counters via telemetry, and sends any page use
+  // counters to the parent process for accumulation.
   void ReportUseCounters();
 
   void SetUseCounter(UseCounter aUseCounter) {
@@ -3568,8 +3577,13 @@ class Document : public nsINode,
     return mStyleUseCounters.get();
   }
 
-  void PropagateUseCountersToPage();
-  void PropagateUseCounters(Document* aParentDocument);
+  // Propagate our use counters explicitly into the specified referencing
+  // document.
+  //
+  // This is used for SVG image documents, which cannot be enumerated in the
+  // referencing document's ReportUseCounters() like external resource documents
+  // can.
+  void PropagateImageUseCounters(Document* aReferencingDocument);
 
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
@@ -3947,6 +3961,10 @@ class Document : public nsINode,
   bool ShouldAvoidNativeTheme() const;
 
  protected:
+  // Returns the WindowContext for the document that we will contribute
+  // page use counters to.
+  WindowContext* GetWindowContextForPageUseCounters() const;
+
   void DoUpdateSVGUseElementShadowTrees();
 
   already_AddRefed<nsIPrincipal> MaybeDowngradePrincipal(
@@ -3984,20 +4002,6 @@ class Document : public nsINode,
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
   bool ApplyFullscreen(UniquePtr<FullscreenRequest>);
-
-  bool GetUseCounter(UseCounter aUseCounter) {
-    return mUseCounters[aUseCounter];
-  }
-
-  void SetChildDocumentUseCounter(UseCounter aUseCounter) {
-    if (!mChildDocumentUseCounters[aUseCounter]) {
-      mChildDocumentUseCounters[aUseCounter] = true;
-    }
-  }
-
-  bool GetChildDocumentUseCounter(UseCounter aUseCounter) {
-    return mChildDocumentUseCounters[aUseCounter];
-  }
 
   void RemoveDocStyleSheetsFromStyleSets();
   void ResetStylesheetsToURI(nsIURI* aURI);
@@ -4840,11 +4844,26 @@ class Document : public nsINode,
 
   // Flags for use counters used directly by this document.
   UseCounters mUseCounters;
-  // Flags for use counters used by any child documents of this document.
+  // Flags for use counters from resource documents, static clones,
+  // and SVG images referenced by this document.  Those documents propagate
+  // their use counters up to here, which then count towards the top-level
+  // document's page use counters.
   UseCounters mChildDocumentUseCounters;
 
   // The CSS property use counters.
   UniquePtr<StyleUseCounters> mStyleUseCounters;
+
+  // Whether we have initialized mShouldReportUseCounters and
+  // mShouldSendPageUseCounters, and sent any needed message to the parent
+  // process to indicate that use counter data will be sent at some later point.
+  bool mUseCountersInitialized : 1;
+
+  // Whether this document should report use counters.
+  bool mShouldReportUseCounters : 1;
+
+  // Whether this document should send page use counters.  Set to true after
+  // we've called SendExpectPageUseCounters on the top-level WindowGlobal.
+  bool mShouldSendPageUseCounters : 1;
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
