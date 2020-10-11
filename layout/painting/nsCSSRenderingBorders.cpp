@@ -3623,13 +3623,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         return ImgDrawResult::NOT_SUPPORTED;
       }
 
-      uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
-      if (aDisplayListBuilder->UseHighQualityScaling()) {
-        flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-      }
-      if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
-        flags |= imgIContainer::FLAG_SYNC_DECODE;
-      }
+      uint32_t flags = aDisplayListBuilder->GetImageDecodeFlags();
 
       LayoutDeviceRect imageRect = LayoutDeviceRect::FromAppUnits(
           nsRect(nsPoint(), mImageRenderer.GetSize()), appUnitsPerDevPixel);
