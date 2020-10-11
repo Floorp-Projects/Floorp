@@ -1,5 +1,8 @@
-commit d3bfa94c16ef8b3c7e2cf8510852f610c369161e
+commit e0ef80b9678b844a3d902148e3d86480a18d046f
+Merge: f6a9847c73 c46be192bb
 Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Wed Jul 15 13:46:48 2020 -0700
+Date:   Thu Jul 30 15:19:38 2020 -0700
 
-    Fix bad renaming, main should upstream to master
+    Merge pull request #2712 from shvaikalesh/intl402-intl-object-tostringtag
+    
+    Add Intl[@@toStringTag] coverage

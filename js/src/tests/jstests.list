@@ -138,6 +138,10 @@ skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670124
+skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-8.js
+skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-strict-strict.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
 skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js

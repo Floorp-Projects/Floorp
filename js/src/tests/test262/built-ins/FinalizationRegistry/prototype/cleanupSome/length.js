@@ -22,7 +22,7 @@ info: |
   function object has the attributes { [[Writable]]: false,
   [[Enumerable]]: false, [[Configurable]]: true }.
 includes: [propertyHelper.js]
-features: [FinalizationRegistry]
+features: [cleanupSome, FinalizationRegistry]
 ---*/
 
 verifyProperty(FinalizationRegistry.prototype.cleanupSome, 'length', {
