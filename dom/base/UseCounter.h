@@ -7,6 +7,7 @@
 #define UseCounter_h_
 
 #include <stdint.h>
+#include "mozilla/BitSet.h"
 
 namespace mozilla {
 
@@ -58,6 +59,8 @@ enum UseCounter : int16_t {
 
   eUseCounter_Count
 };
+
+using UseCounters = BitSet<eUseCounter_Count, uint64_t>;
 
 enum class UseCounterWorker : int16_t {
   Unknown = -1,
