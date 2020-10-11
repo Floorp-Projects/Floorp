@@ -468,13 +468,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
     return true;
   }
 
-  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
-  if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
-    flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-  if (aDisplayListBuilder->IsPaintingToWindow()) {
-    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-  }
+  uint32_t flags = aDisplayListBuilder->GetImageDecodeFlags();
 
   // Compute bounds of the image
   nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
