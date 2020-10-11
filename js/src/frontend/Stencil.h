@@ -260,7 +260,7 @@ class ScopeStencil {
 
   bool isArrow() const { return isArrow_; }
 
-  Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo,
+  Scope* createScope(JSContext* cx, CompilationInput& input,
                      CompilationGCOutput& gcOutput) const;
 
   uint32_t nextFrameSlot() const;
