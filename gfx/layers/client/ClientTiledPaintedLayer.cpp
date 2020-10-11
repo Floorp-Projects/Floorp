@@ -23,7 +23,6 @@
 #include "mozilla/layers/PaintThread.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "nsISupportsImpl.h"   // for MOZ_COUNT_CTOR, etc
-#include "LayersLogging.h"
 #include "mozilla/layers/MultiTiledContentClient.h"
 #include "mozilla/layers/SingleTiledContentClient.h"
 

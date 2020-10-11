@@ -7,7 +7,6 @@
 #include "mozilla/layers/WebRenderScrollData.h"
 
 #include "Layers.h"
-#include "LayersLogging.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/ToString.h"

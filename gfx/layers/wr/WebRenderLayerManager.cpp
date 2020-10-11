@@ -9,7 +9,6 @@
 #include "BasicLayers.h"
 
 #include "GeckoProfiler.h"
-#include "LayersLogging.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/dom/BrowserChild.h"

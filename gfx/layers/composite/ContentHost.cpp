@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/ContentHost.h"
-#include "LayersLogging.h"                  // for AppendToString
 #include "gfx2DGlue.h"                      // for ContentForFormat
 #include "mozilla/gfx/Point.h"              // for IntSize
 #include "mozilla/Assertions.h"             // for MOZ_ASSERT, etc

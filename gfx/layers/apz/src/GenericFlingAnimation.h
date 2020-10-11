@@ -12,7 +12,6 @@
 #include "AsyncPanZoomController.h"
 #include "FrameMetrics.h"
 #include "Layers.h"
-#include "LayersLogging.h"
 #include "Units.h"
 #include "OverscrollHandoffState.h"
 #include "mozilla/Assertions.h"

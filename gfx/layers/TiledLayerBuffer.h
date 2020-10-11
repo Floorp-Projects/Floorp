@@ -15,7 +15,6 @@
 #include <stdint.h>     // for uint16_t, uint32_t
 #include <sys/types.h>  // for int32_t
 #include <type_traits>
-#include "LayersLogging.h"  // for print_stderr
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"         // for gfxCriticalError
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode

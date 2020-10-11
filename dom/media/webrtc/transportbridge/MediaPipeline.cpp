@@ -16,7 +16,6 @@
 #include "ImageContainer.h"
 #include "ImageTypes.h"
 #include "Layers.h"
-#include "LayersLogging.h"
 #include "MediaEngine.h"
 #include "MediaSegment.h"
 #include "MediaTrackGraphImpl.h"

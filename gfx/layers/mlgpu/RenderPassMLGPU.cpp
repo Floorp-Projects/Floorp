@@ -8,7 +8,6 @@
 #include "ContainerLayerMLGPU.h"
 #include "FrameBuilder.h"
 #include "ImageLayerMLGPU.h"
-#include "LayersLogging.h"
 #include "MaskOperation.h"
 #include "MLGDevice.h"
 #include "PaintedLayerMLGPU.h"

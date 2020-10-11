@@ -7,7 +7,6 @@
 #include "ZoomConstraintsClient.h"
 
 #include <inttypes.h>
-#include "LayersLogging.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/ZoomConstraints.h"

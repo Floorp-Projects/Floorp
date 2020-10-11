@@ -291,3 +291,26 @@ void fprintf_stderr(FILE* aFile, const char* aFmt, ...) {
   }
   va_end(args);
 }
+
+void print_stderr(std::stringstream& aStr) {
+#if defined(ANDROID)
+  // On Android logcat output is truncated to 1024 chars per line, and
+  // we usually use std::stringstream to build up giant multi-line gobs
+  // of output. So to avoid the truncation we find the newlines and
+  // print the lines individually.
+  std::string line;
+  while (std::getline(aStr, line)) {
+    printf_stderr("%s\n", line.c_str());
+  }
+#else
+  printf_stderr("%s", aStr.str().c_str());
+#endif
+}
+
+void fprint_stderr(FILE* aFile, std::stringstream& aStr) {
+  if (aFile == stderr) {
+    print_stderr(aStr);
+  } else {
+    fprintf_stderr(aFile, "%s", aStr.str().c_str());
+  }
+}
