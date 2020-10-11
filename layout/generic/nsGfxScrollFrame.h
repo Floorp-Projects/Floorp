@@ -718,6 +718,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // mApzAnimationInProgress is updated.
   bool mApzAnimationRequested : 1;
 
+  // Whether we need to reclamp the visual viewport offset in ReflowFinished.
+  bool mReclampVVOffsetInReflowFinished : 1;
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
  protected:

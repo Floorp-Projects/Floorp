@@ -1365,10 +1365,9 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     // remove the scrollbars the only valid vvoffset is (0,0). We could wait
     // until we send the new frame metrics to apz and then have it reply with
     // the new corrected vvoffset but having an inconsistent vvoffset causes
-    // problems so we re-set the vvoffset here, SetVisualViewportOffset will
-    // correct it.
-    PresShell()->SetVisualViewportOffset(GetVisualViewportOffset(),
-                                         GetScrollPosition());
+    // problems so trigger the vvoffset to be re-set and re-clamped in
+    // ReflowFinished.
+    mHelper.mReclampVVOffsetInReflowFinished = true;
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -2233,6 +2232,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mProcessingScrollEvent(false),
       mApzAnimationInProgress(false),
       mApzAnimationRequested(false),
+      mReclampVVOffsetInReflowFinished(false),
       mVelocityQueue(aOuter->PresContext()) {
   mScrollUpdates.AppendElement(
       ScrollPositionUpdate::NewScrollframe(mScrollGeneration, nsPoint()));
@@ -6357,6 +6357,15 @@ bool ScrollFrameHelper::ReflowFinished() {
   }
 
   nsAutoScriptBlocker scriptBlocker;
+
+  if (mReclampVVOffsetInReflowFinished) {
+    MOZ_ASSERT(mIsRoot);
+    mReclampVVOffsetInReflowFinished = false;
+    AutoWeakFrame weakFrame(mOuter);
+    mOuter->PresShell()->SetVisualViewportOffset(GetVisualViewportOffset(),
+                                                 GetScrollPosition());
+    NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
+  }
 
   if (doScroll) {
     ScrollToRestoredPosition();
