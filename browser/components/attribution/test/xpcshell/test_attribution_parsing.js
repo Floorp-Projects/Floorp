@@ -21,6 +21,15 @@ add_task(async function testValidAttrCodes() {
       entry.parsed,
       "Parsed code should match expected value, code was: " + entry.code
     );
+
+    result = AttributionCode.serializeAttributionData(entry.parsed);
+    if (!entry.doesNotRoundtrip) {
+      Assert.deepEqual(
+        result,
+        entry.code,
+        "Serialized data should match expected value, code was: " + entry.code
+      );
+    }
   }
 });
 
