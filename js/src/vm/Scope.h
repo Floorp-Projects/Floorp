@@ -26,7 +26,7 @@
 namespace js {
 
 namespace frontend {
-struct CompilationInfo;
+struct CompilationAtomCache;
 class ScriptStencil;
 class ScopeStencil;
 class ParserAtom;
@@ -1637,7 +1637,7 @@ Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               uint32_t baseShapeFlags);
 
 Shape* CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
     AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
     uint32_t numSlots, uint32_t baseShapeFlags);
 

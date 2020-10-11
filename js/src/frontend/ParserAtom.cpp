@@ -213,11 +213,11 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
-    JSContext* cx, CompilationInfo& compilationInfo) const {
+JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
+                                  CompilationAtomCache& atomCache) const {
   switch (atomIndexKind_) {
     case AtomIndexKind::AtomIndex:
-      return compilationInfo.input.atoms[atomIndex_];
+      return atomCache.atoms[atomIndex_];
 
     case AtomIndexKind::WellKnown:
       return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
@@ -241,11 +241,13 @@ JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
     atom = AtomizeChars(cx, twoByteChars(), length());
   }
   if (!atom) {
-    return RaiseParserAtomsOOMError(cx);
+    js::ReportOutOfMemory(cx);
+    return nullptr;
   }
-  auto index = compilationInfo.input.atoms.length();
-  if (!compilationInfo.input.atoms.append(atom)) {
-    return RaiseParserAtomsOOMError(cx);
+  auto index = atomCache.atoms.length();
+  if (!atomCache.atoms.append(atom)) {
+    js::ReportOutOfMemory(cx);
+    return nullptr;
   }
 
   const_cast<ParserAtomEntry*>(this)->setAtomIndex(AtomIndex(index));
@@ -508,8 +510,8 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
   if (id->atomIndexKind_ == ParserAtomEntry::AtomIndexKind::Unresolved) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
-    auto index = AtomIndex(compilationInfo.input.atoms.length());
-    if (!compilationInfo.input.atoms.append(atom)) {
+    auto index = AtomIndex(compilationInfo.input.atomCache.atoms.length());
+    if (!compilationInfo.input.atomCache.atoms.append(atom)) {
       return RaiseParserAtomsOOMError(cx);
     }
 
@@ -517,7 +519,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(id->toJSAtom(cx, compilationInfo).unwrap() == atom);
+  MOZ_ASSERT(id->toJSAtom(cx, compilationInfo.input.atomCache) == atom);
 
   return id;
 }

@@ -41,6 +41,7 @@ class JSONPrinter;
 namespace frontend {
 
 struct CompilationInfo;
+struct CompilationAtomCache;
 struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencil;
@@ -285,7 +286,7 @@ class ScopeStencil {
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::Data> createSpecificScopeData(
-      JSContext* cx, CompilationInfo& compilationInfo,
+      JSContext* cx, CompilationAtomCache& atomCache,
       CompilationGCOutput& gcOutput) const;
 
   template <typename SpecificScopeType>
@@ -410,7 +411,7 @@ class StencilModuleMetadata {
 
   StencilModuleMetadata() = default;
 
-  bool initModule(JSContext* cx, CompilationInfo& compilationInfo,
+  bool initModule(JSContext* cx, CompilationAtomCache& atomCache,
                   JS::Handle<ModuleObject*> module) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

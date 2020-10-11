@@ -1281,7 +1281,7 @@ enum class ModuleArrayType {
 };
 
 static ArrayObject* ModuleBuilderInitArray(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
     ModuleArrayType arrayType,
     const frontend::StencilModuleMetadata::EntryVector& vector) {
   RootedArrayObject resultArray(
@@ -1302,28 +1302,28 @@ static ArrayObject* ModuleBuilderInitArray(
     const frontend::StencilModuleEntry& entry = vector[i];
 
     if (entry.specifier) {
-      specifier = compilationInfo.liftParserAtomToJSAtom(cx, entry.specifier);
+      specifier = entry.specifier->toJSAtom(cx, atomCache);
       if (!specifier) {
         return nullptr;
       }
     }
 
     if (entry.localName) {
-      localName = compilationInfo.liftParserAtomToJSAtom(cx, entry.localName);
+      localName = entry.localName->toJSAtom(cx, atomCache);
       if (!localName) {
         return nullptr;
       }
     }
 
     if (entry.importName) {
-      importName = compilationInfo.liftParserAtomToJSAtom(cx, entry.importName);
+      importName = entry.importName->toJSAtom(cx, atomCache);
       if (!importName) {
         return nullptr;
       }
     }
 
     if (entry.exportName) {
-      exportName = compilationInfo.liftParserAtomToJSAtom(cx, entry.exportName);
+      exportName = entry.exportName->toJSAtom(cx, atomCache);
       if (!exportName) {
         return nullptr;
       }
@@ -1360,10 +1360,10 @@ static ArrayObject* ModuleBuilderInitArray(
 
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
   RootedArrayObject requestedModulesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
+      cx, ModuleBuilderInitArray(cx, atomCache,
                                  ModuleArrayType::RequestedModuleObject,
                                  requestedModules));
   if (!requestedModulesObject) {
@@ -1371,33 +1371,33 @@ bool frontend::StencilModuleMetadata::initModule(
   }
 
   RootedArrayObject importEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ImportEntryObject,
-                                 importEntries));
+      cx,
+      ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ImportEntryObject,
+                             importEntries));
   if (!importEntriesObject) {
     return false;
   }
 
   RootedArrayObject localExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
-                                 localExportEntries));
+      cx,
+      ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
+                             localExportEntries));
   if (!localExportEntriesObject) {
     return false;
   }
 
   RootedArrayObject indirectExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
-                                 indirectExportEntries));
+      cx,
+      ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
+                             indirectExportEntries));
   if (!indirectExportEntriesObject) {
     return false;
   }
 
   RootedArrayObject starExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
-                                 starExportEntries));
+      cx,
+      ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
+                             starExportEntries));
   if (!starExportEntriesObject) {
     return false;
   }

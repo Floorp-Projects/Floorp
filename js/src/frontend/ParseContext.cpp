@@ -421,11 +421,11 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
   MOZ_ASSERT(sc()->isEvalContext());
 
   // TODO-Stencil: After scope snapshotting, this can be done away with.
-  auto mbNameAtom = name->toJSAtom(sc()->cx_, sc()->compilationInfo());
-  if (mbNameAtom.isErr()) {
+  JSAtom* nameAtom =
+      name->toJSAtom(sc()->cx_, sc()->compilationInfo().input.atomCache);
+  if (!nameAtom) {
     return false;
   }
-  JSAtom* nameAtom = mbNameAtom.unwrap();
 
   // In the case of eval, we also need to check enclosing VM scopes to see
   // if the var declaration is allowed in the context.
