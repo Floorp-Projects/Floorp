@@ -277,6 +277,8 @@
     <string name="preferences_override_fxa_server">שרת Firefox Account מותאם אישית</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">שרת Sync מותאם אישית</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">שרת Firefox Account/Sync השתנה. היישום ייסגר לצורך להחלת השינויים…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">חשבון</string>
     <!-- Preference shown on banner to sign into account -->
@@ -352,6 +354,9 @@
     <string name="customize_addon_collection_hint">שם האוסף</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">הבעלים של האוסף (מזהה משתמש)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">אוסף התוספות השתנה. היישום ייסגר לצורך להחלת השינויים…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -534,6 +539,14 @@
     <string name="recently_closed_empty_message">אין כאן לשוניות שנסגרו לאחרונה</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">לשוניות</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">תצוגת לשוניות</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">רשימה</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">רשת</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">סגירת לשוניות</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

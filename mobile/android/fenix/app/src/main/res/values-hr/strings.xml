@@ -344,6 +344,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Obavijesti</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Prilagođena kolekcija dodataka</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">U redu</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Odustani</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Ime kolekcije</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Vlasnik kolekcije (ID korisnika)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Izmijenjena je kolekcija dodataka. Napuštanje aplikacije za primjenu izmjena…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinkroniziraj sada</string>
@@ -530,6 +544,14 @@
     <string name="recently_closed_empty_message">Ovdje nema nedavno zatvorenih kartica</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Kartice</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Prikaz kartica</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Popis</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Mreža</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zatvori kartice</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -647,6 +669,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Izbriši %1$d stavke</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Danas</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Jučer</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Zadnjih 24 sata</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -788,6 +814,8 @@
     <string name="preference_phone_feature_location">Lokacija</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Obavijest</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Trajna pohrana</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Zatraži dozvolu</string>
     <!-- Label that indicates that a permission must be blocked -->

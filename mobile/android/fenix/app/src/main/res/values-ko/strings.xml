@@ -557,6 +557,14 @@
     <string name="recently_closed_empty_message">최근에 닫은 탭 없음</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">탭</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">탭 보기</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">목록</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">그리드</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">탭 닫기</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -823,6 +831,8 @@
     <string name="preference_phone_feature_location">위치</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">알림</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">영구 저장소</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">항상 확인</string>
     <!-- Label that indicates that a permission must be blocked -->

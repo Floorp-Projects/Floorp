@@ -552,6 +552,14 @@
     <string name="recently_closed_empty_message">Keine kürzlich geschlossenen Tabs vorhanden</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Tabs</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Tab-Ansicht</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Liste</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Raster</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Tabs schließen</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -815,6 +823,8 @@
     <string name="preference_phone_feature_location">Standort</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Benachrichtigung</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Dauerhafter Speicher</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Um Erlaubnis fragen</string>
     <!-- Label that indicates that a permission must be blocked -->

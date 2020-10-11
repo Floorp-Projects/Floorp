@@ -443,6 +443,9 @@
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">خدمة التموضع من Mozilla</string>
 
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">تقرير صحة %s</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">فعّل «تزامُن»</string>
@@ -537,6 +540,14 @@
     <string name="recently_closed_empty_message">ما من ألسنة أُغلقت حديثًا</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">الألسنة</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">منظور الألسنة</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">قائمة</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">شبكة</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">إغلاق الألسنة</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -794,6 +805,8 @@
     <string name="preference_phone_feature_location">المكان</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">التنبيهات</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">التخزين الدائم</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">اطلب السماح</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1364,6 +1377,8 @@
     <string name="preferences_passwords_saved_logins_username">اسم المستخدم</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">كلمة السر</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">أعِد إدخال رمز PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">ألغِ القفل لعرض جلسات الولوج المحفوظة</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
@@ -1417,6 +1432,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">آخر استخدام</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">افرز قائمة جلسات الولوج</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">أضِف محرك بحث</string>
     <!-- Title of the Edit search engine screen -->
@@ -1444,6 +1462,8 @@
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">أدخِل اسم محرك البحث</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">يوجد بالفعل محرك بالاسم ”%s“.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">أدخِل نص البحث</string>
 

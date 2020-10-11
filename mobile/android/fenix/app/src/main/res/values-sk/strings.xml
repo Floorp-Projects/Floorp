@@ -328,6 +328,8 @@
     <string name="preferences_search_browsing_history">Navrhovať z histórie prehliadania</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Navrhovať zo záložiek</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Hľadať v synchronizovaných kartách</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavenia účtu</string>
 
@@ -343,6 +345,13 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Upozornenia</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Zrušiť</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Názov kolekcie</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -517,7 +526,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Nemáte žiadne nedávno zatvorené karty</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zavrieť karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

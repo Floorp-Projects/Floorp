@@ -540,6 +540,14 @@
     <string name="recently_closed_empty_message">Ягон варақаи ба наздикӣ пӯшидашуда нест</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Варақаҳо</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Намоиши варақаҳо</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Рӯйхат</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Тӯр</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Пӯшидани варақаҳо</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -798,6 +806,8 @@
 
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Огоҳинома</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Захирагоҳи доимӣ</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Дархости иҷозат</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1139,6 +1149,11 @@
     <string name="onboarding_private_browsing_button">Кушодани танзимот</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Махфияти шумо</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Мо %s-ро ҳамин тавр тарҳрезӣ кардаем, ки шумо тавонед он чизҳоеро, ки дар онлайн
+        ва бо мо мубодила мекунед, идора намоед.
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Огоҳиномаи махфияти моро хонед</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1199,6 +1214,8 @@
     <string name="preference_enhanced_tracking_protection">Муҳофизати такмилёфта аз пайгирӣ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Тамошокунӣ бе пайгирӣ</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Маълумоти худро бо худ нигоҳ доред. %s шуморо аз бисёр васоити пайгирие, ки фаъолияти шуморо дар онлайн пайгирӣ мекунанд, муҳофизат менамояд.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Маълумоти бештар</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1247,16 +1264,26 @@
     <string name="enhanced_tracking_protection_allowed">Иҷозат дода мешавад</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Васоити пайгирии шабакаҳои иҷтимоӣ</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Имконияти шабакаҳои иҷтимоиро барои пайгирии фаъолияти тамошокунии шумо дар Интернет маҳдуд мекунад.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Кукиҳои васоити пайгирӣ байни сомонаҳо</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Кукиҳоеро, ки шабакаҳои рекламавӣ ва ширкатҳои таҳлилӣ барои ҷамъоварии маълумоти тамошокунии шумо дар бисёр сомонаҳо истифода мебаранд, манъ мекунад.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнерҳо</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Скриптҳои зараровареро, ки дастгоҳи шуморо барои истеҳсоли пули рақамӣ дастрас мекунанд, пешгирӣ менамояд.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Хонандаи изи ангушт</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Ҷамъкунии маълумоти нодири муайяншавандаеро дар бораи дастгоҳи шумо, ки метавонад бо мақсадҳои пайгирӣ истифода шавад, манъ мекунад.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Муҳтавои пайгирикунанда</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Боркунии рекламаҳои хориҷӣ, видеоҳо ва маводҳои дигареро, ки метавонанд рамзи пайгириро дар бар гиранд, манъ мекунад. Метавонад ба кори баъзеи сомонаҳо таъсир расонад.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Сипар бо ранги лоҷувард маънои онро дорад, ки %s дар сомона васоити пайгириро манъ кард. Барои маълумоти бештар, зер кунед.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Муҳофизат барои ин сомона фаъол аст</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1279,6 +1306,9 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Васоити пайгирии интиқолдиҳӣ</string>
 
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Кукиҳоеро, ки тавассути восоити интиқолдиҳӣ ба сомонаҳои пайгирикунандаи маъруф насб шудаанд, тоза мекунад.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Дастгирӣ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1292,7 +1322,10 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Китобхонаҳое, ки мо истифода мебарем</string>
 
-    <string name="about_debug_menu_toast_done">Менюи ислоҳ кардани хатоҳо фаъол аст</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Менюи ислоҳкунии хатоҳо: барои фаъолсозӣ %1$d зеркунӣ боқӣ монд</string>
+    <string name="about_debug_menu_toast_done">Менюи ислоҳкунии хатоҳо фаъол аст</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 варақа</string>
@@ -1319,6 +1352,9 @@
     <string name="add_to_homescreen_continue">Ба сомона идома диҳед</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Номи миёнбур</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Шумо метавонед ин сомонаро ба экрани асосии дастгоҳи худ ба осонӣ илова кунед, то ки ба он дастрасии фаврӣ дошта бошед ва бо таҷрибаи ба барнома монанд зудтар паймоиш кунед.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Воридшавиҳо ва ниҳонвожаҳо</string>
@@ -1370,6 +1406,8 @@
     <string name="preferences_passwords_saved_logins_enter_pin">PIN-и худро такроран ворид намоед</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Барои дидани воридшавиҳои нигоҳдошташуда, қулфро кушоед</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Ин пайвастшавӣ бехатар нест. Воридшавиҳое, ки дар ин ҷо ворид карда мешаванд, метавонанд ошкор шаванд.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Маълумоти бештар</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
@@ -1404,6 +1442,8 @@
     <string name="logins_biometric_prompt_message">Барои дидани воридшавиҳои нигоҳдошташуда, қулфро кушоед</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Воридшавиҳо ва ниҳонвожаҳои худро муҳофизат намоед</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Барои муҳофизат кардани воридшавиҳо ва ниҳонвожаҳои худ аз дастрасии озод, агар касе дигар аз дастгоҳи шумо истифода барад, шаклвораи қулфи экран, рамзи PIN ё ниҳонвожаеро барои дастгоҳи худ танзим намоед.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Дертар</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1412,6 +1452,8 @@
     <string name="logins_biometric_prompt_message_pin">Қулфи дастгоҳи худро кушоед</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Тағйири андоза дар ҳамаи сомонаҳо</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Фаъол кардани имкони хурдкунӣ ва калонкунии намоиш, ҳатто дар сомонаҳое, ки ин ишораро манъ мекунанд.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Ном (А-Я)</string>
 
@@ -1455,6 +1497,8 @@
     <string name="search_add_custom_engine_error_existing_name">Низоми ҷустуҷӯӣ бо номи “%s” аллакай вуҷуд дорад.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Сатри ҷустуҷӯро ворид кунед</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Тафтиш кунед, ки сатри ҷустуҷӯ ба шакли намунавӣ мувофиқат мекунад</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Хатои пайвастшавӣ ба “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1464,6 +1508,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s нест карда шуд</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Хуш омадед ба барномаи комилан нави %s</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s нав шуда истодааст...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1553,6 +1599,9 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ягон варақаи кушодашуда нест</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Ба ҳудуди шумораи сомонаҳои беҳтарин расид</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_content_2">Барои илова кардани сомонаи роиҷи нав, сомонаи дигареро тоза намоед. Сомонаро ламс карда, доред ва &quot;Тоза кардан&quot;-ро интихоб намоед.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
