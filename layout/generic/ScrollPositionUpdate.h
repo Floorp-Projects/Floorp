@@ -6,6 +6,7 @@
 #define mozilla_ScrollPositionUpdate_h_
 
 #include <cstdint>
+#include <iosfwd>
 
 #include "nsPoint.h"
 #include "mozilla/ScrollOrigin.h"
@@ -83,7 +84,8 @@ class ScrollPositionUpdate {
   // GetDelta is only valid for the PureRelative type; it asserts otherwise.
   CSSPoint GetDelta() const;
 
-  void AppendToString(std::stringstream& aStream) const;
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const ScrollPositionUpdate& aUpdate);
 
  private:
   uint32_t mScrollGeneration;

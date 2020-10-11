@@ -4,6 +4,8 @@
 
 #include "ScrollPositionUpdate.h"
 
+#include <ostream>
+
 #include "mozilla/Assertions.h"
 
 namespace mozilla {
@@ -117,12 +119,15 @@ CSSPoint ScrollPositionUpdate::GetDelta() const {
   return mDelta;
 }
 
-void ScrollPositionUpdate::AppendToString(std::stringstream& aStream) const {
-  aStream << "ScrollPositionUpdate(gen=" << mScrollGeneration
-          << ", type=" << (int)mType << ", mode=" << (int)mScrollMode
-          << ", origin=" << (int)mScrollOrigin << ", dst=" << mDestination.x
-          << "," << mDestination.y << ", src=" << mSource.x << "," << mSource.y
-          << ", delta=" << mDelta.x << "," << mDelta.y << ")";
+std::ostream& operator<<(std::ostream& aStream,
+                         const ScrollPositionUpdate& aUpdate) {
+  aStream << "{ gen=" << aUpdate.mScrollGeneration
+          << ", type=" << (int)aUpdate.mType
+          << ", mode=" << (int)aUpdate.mScrollMode
+          << ", origin=" << (int)aUpdate.mScrollOrigin
+          << ", dst=" << aUpdate.mDestination << ", src=" << aUpdate.mSource
+          << ", delta=" << aUpdate.mDelta << " }";
+  return aStream;
 }
 
 }  // namespace mozilla
