@@ -18,36 +18,6 @@
 #include "nsRegion.h"         // for nsRegion, nsIntRegion
 #include "nscore.h"           // for nsACString, etc
 
-struct nsRectAbsolute;
-
-namespace mozilla {
-
-namespace gfx {
-template <class units, class F>
-struct RectTyped;
-}  // namespace gfx
-
-enum class ImageFormat;
-
-namespace layers {
-
-void AppendToString(std::stringstream& aStream, gfx::SurfaceType format,
-                    const char* pfx = "", const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream, ImageFormat format,
-                    const char* pfx = "", const char* sfx = "");
-
-// Sometimes, you just want a string from a single value.
-template <typename T>
-std::string Stringify(const T& obj) {
-  std::stringstream ss;
-  AppendToString(ss, obj);
-  return ss.str();
-}
-
-}  // namespace layers
-}  // namespace mozilla
-
 // versions of printf_stderr and fprintf_stderr that deal with line
 // truncation on android by printing individual lines out of the
 // stringstream as separate calls to logcat.

@@ -7,11 +7,11 @@
 #include "WebRenderAPI.h"
 
 #include "mozilla/StaticPrefs_gfx.h"
-#include "LayersLogging.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/ToString.h"
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
@@ -26,8 +26,6 @@
 
 namespace mozilla {
 namespace wr {
-
-using layers::Stringify;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderMallocSizeOf)
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(WebRenderMallocEnclosingSizeOf)
@@ -961,8 +959,8 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
   }
   const wr::LayoutTransform* maybeTransform = transform ? &matrix : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState,
-           Stringify(aBounds).c_str(),
-           transform ? Stringify(*transform).c_str() : "none");
+           ToString(aBounds).c_str(),
+           transform ? ToString(*transform).c_str() : "none");
 
   auto spatialId = wr_dp_push_stacking_context(
       mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aParams,
@@ -1013,8 +1011,8 @@ wr::WrClipId DisplayListBuilder::DefineClip(
   }
 
   WRDL_LOG("DefineClip id=%zu p=%s r=%s complex=%zu\n", mWrState, clipId.id,
-           aParent ? Stringify(aParent->clip.id).c_str() : "(nil)",
-           Stringify(aClipRect).c_str(), aComplex ? aComplex->Length() : 0);
+           aParent ? ToString(aParent->clip.id).c_str() : "(nil)",
+           ToString(aClipRect).c_str(), aComplex ? aComplex->Length() : 0);
 
   return clipId;
 }
@@ -1060,14 +1058,14 @@ wr::WrSpatialId DisplayListBuilder::DefineStickyFrame(
       aHorizontalBounds, aAppliedOffset);
 
   WRDL_LOG("DefineSticky id=%zu c=%s t=%s r=%s b=%s l=%s v=%s h=%s a=%s\n",
-           mWrState, spatialId.id, Stringify(aContentRect).c_str(),
-           aTopMargin ? Stringify(*aTopMargin).c_str() : "none",
-           aRightMargin ? Stringify(*aRightMargin).c_str() : "none",
-           aBottomMargin ? Stringify(*aBottomMargin).c_str() : "none",
-           aLeftMargin ? Stringify(*aLeftMargin).c_str() : "none",
-           Stringify(aVerticalBounds).c_str(),
-           Stringify(aHorizontalBounds).c_str(),
-           Stringify(aAppliedOffset).c_str());
+           mWrState, spatialId.id, ToString(aContentRect).c_str(),
+           aTopMargin ? ToString(*aTopMargin).c_str() : "none",
+           aRightMargin ? ToString(*aRightMargin).c_str() : "none",
+           aBottomMargin ? ToString(*aBottomMargin).c_str() : "none",
+           aLeftMargin ? ToString(*aLeftMargin).c_str() : "none",
+           ToString(aVerticalBounds).c_str(),
+           ToString(aHorizontalBounds).c_str(),
+           ToString(aAppliedOffset).c_str());
 
   return spatialId;
 }
@@ -1107,8 +1105,8 @@ wr::WrSpaceAndClip DisplayListBuilder::DefineScrollLayer(
 
   WRDL_LOG("DefineScrollLayer id=%" PRIu64 "/%zu p=%s co=%s cl=%s\n", mWrState,
            aViewId, spaceAndClip.space.id,
-           aParent ? Stringify(aParent->space.id).c_str() : "(nil)",
-           Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
+           aParent ? ToString(aParent->space.id).c_str() : "(nil)",
+           ToString(aContentRect).c_str(), ToString(aClipRect).c_str());
 
   mScrollIds[aViewId] = spaceAndClip;
   return spaceAndClip;
@@ -1119,8 +1117,8 @@ void DisplayListBuilder::PushRect(const wr::LayoutRect& aBounds,
                                   bool aIsBackfaceVisible,
                                   const wr::ColorF& aColor) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
-  WRDL_LOG("PushRect b=%s cl=%s c=%s\n", mWrState, Stringify(aBounds).c_str(),
-           Stringify(clip).c_str(), Stringify(aColor).c_str());
+  WRDL_LOG("PushRect b=%s cl=%s c=%s\n", mWrState, ToString(aBounds).c_str(),
+           ToString(clip).c_str(), ToString(aColor).c_str());
   wr_dp_push_rect(mWrState, aBounds, clip, aIsBackfaceVisible,
                   &mCurrentSpaceAndClipChain, aColor);
 }
@@ -1131,8 +1129,8 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
                                          const wr::ColorF& aColor) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushRoundedRect b=%s cl=%s c=%s\n", mWrState,
-           Stringify(aBounds).c_str(), Stringify(clip).c_str(),
-           Stringify(aColor).c_str());
+           ToString(aBounds).c_str(), ToString(clip).c_str(),
+           ToString(aColor).c_str());
 
   // Draw the rounded rectangle as a border with rounded corners. We could also
   // draw this as a rectangle clipped to a rounded rectangle, but:
@@ -1157,8 +1155,8 @@ void DisplayListBuilder::PushHitTest(
     const layers::ScrollableLayerGuid::ViewID& aScrollId,
     gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
-  WRDL_LOG("PushHitTest b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
-           Stringify(clip).c_str());
+  WRDL_LOG("PushHitTest b=%s cl=%s\n", mWrState, ToString(aBounds).c_str(),
+           ToString(clip).c_str());
 
   static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
                 "CompositorHitTestFlags MAX value has to be less than number "
@@ -1177,8 +1175,8 @@ void DisplayListBuilder::PushRectWithAnimation(
     const WrAnimationProperty* aAnimation) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushRectWithAnimation b=%s cl=%s c=%s\n", mWrState,
-           Stringify(aBounds).c_str(), Stringify(clip).c_str(),
-           Stringify(aColor).c_str());
+           ToString(aBounds).c_str(), ToString(clip).c_str(),
+           ToString(aColor).c_str());
 
   wr_dp_push_rect_with_animation(mWrState, aBounds, clip, aIsBackfaceVisible,
                                  &mCurrentSpaceAndClipChain, aColor,
@@ -1187,8 +1185,8 @@ void DisplayListBuilder::PushRectWithAnimation(
 
 void DisplayListBuilder::PushClearRect(const wr::LayoutRect& aBounds) {
   wr::LayoutRect clip = MergeClipLeaf(aBounds);
-  WRDL_LOG("PushClearRect b=%s c=%s\n", mWrState, Stringify(aBounds).c_str(),
-           Stringify(clip).c_str());
+  WRDL_LOG("PushClearRect b=%s c=%s\n", mWrState, ToString(aBounds).c_str(),
+           ToString(clip).c_str());
   wr_dp_push_clear_rect(mWrState, aBounds, clip, &mCurrentSpaceAndClipChain);
 }
 
@@ -1196,7 +1194,7 @@ void DisplayListBuilder::PushClearRectWithComplexRegion(
     const wr::LayoutRect& aBounds, const wr::ComplexClipRegion& aRegion) {
   wr::LayoutRect clip = MergeClipLeaf(aBounds);
   WRDL_LOG("PushClearRectWithComplexRegion b=%s c=%s\n", mWrState,
-           Stringify(aBounds).c_str(), Stringify(clip).c_str());
+           ToString(aBounds).c_str(), ToString(clip).c_str());
 
   // TODO(gw): This doesn't pass the complex region through to WR, as clear
   //           rects with complex clips are currently broken. This is the
@@ -1220,7 +1218,7 @@ void DisplayListBuilder::PushBackdropFilter(
     const nsTArray<wr::WrFilterData>& aFilterDatas, bool aIsBackfaceVisible) {
   wr::LayoutRect clip = MergeClipLeaf(aBounds);
   WRDL_LOG("PushBackdropFilter b=%s c=%s\n", mWrState,
-           Stringify(aBounds).c_str(), Stringify(clip).c_str());
+           ToString(aBounds).c_str(), ToString(clip).c_str());
 
   AutoTArray<wr::ComplexClipRegion, 1> clips;
   clips.AppendElement(aRegion);
@@ -1274,8 +1272,8 @@ void DisplayListBuilder::PushImage(
     bool aPremultipliedAlpha, const wr::ColorF& aColor,
     bool aPreferCompositorSurface, bool aSupportsExternalCompositing) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
-  WRDL_LOG("PushImage b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
-           Stringify(clip).c_str());
+  WRDL_LOG("PushImage b=%s cl=%s\n", mWrState, ToString(aBounds).c_str(),
+           ToString(clip).c_str());
   wr_dp_push_image(mWrState, aBounds, clip, aIsBackfaceVisible,
                    &mCurrentSpaceAndClipChain, aFilter, aImage,
                    aPremultipliedAlpha, aColor, aPreferCompositorSurface,
@@ -1289,8 +1287,8 @@ void DisplayListBuilder::PushRepeatingImage(
     wr::ImageKey aImage, bool aPremultipliedAlpha, const wr::ColorF& aColor) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushImage b=%s cl=%s s=%s t=%s\n", mWrState,
-           Stringify(aBounds).c_str(), Stringify(clip).c_str(),
-           Stringify(aStretchSize).c_str(), Stringify(aTileSpacing).c_str());
+           ToString(aBounds).c_str(), ToString(clip).c_str(),
+           ToString(aStretchSize).c_str(), ToString(aTileSpacing).c_str());
   wr_dp_push_repeating_image(
       mWrState, aBounds, clip, aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
       aStretchSize, aTileSpacing, aFilter, aImage, aPremultipliedAlpha, aColor);
