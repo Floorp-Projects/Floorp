@@ -8652,8 +8652,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
-          const ParserAtom* keyAtom =
-              key->as<NumericLiteral>().toAtom(cx, compilationInfo);
+          const ParserAtom* keyAtom = key->as<NumericLiteral>().toAtom(
+              cx, compilationInfo.stencil.parserAtoms);
           if (!keyAtom) {
             return false;
           }
