@@ -245,6 +245,8 @@ class ScopeStencil {
                                  ScopeIndex* index);
 
   AbstractScopePtr enclosing(CompilationInfo& compilationInfo) const;
+  js::Scope* enclosingExistingScope(const CompilationInput& input,
+                                    const CompilationGCOutput& gcOutput) const;
 
   ScopeKind kind() const { return kind_; }
 
