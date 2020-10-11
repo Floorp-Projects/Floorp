@@ -302,7 +302,7 @@ class ScopeStencil {
                                         MutableHandleShape shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
-  Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo,
+  Scope* createSpecificScope(JSContext* cx, CompilationInput& input,
                              CompilationGCOutput& gcOutput) const;
 };
 
