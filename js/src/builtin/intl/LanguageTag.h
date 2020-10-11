@@ -345,19 +345,8 @@ class MOZ_STACK_CLASS LanguageTag final {
     privateuse_ = std::move(privateuse);
   }
 
- private:
-  enum class DuplicateVariants { Reject, Accept };
-
-  bool canonicalizeBaseName(JSContext* cx, DuplicateVariants duplicateVariants);
-
- public:
-  /**
-   * Canonicalize the base-name subtags, that means the language, script,
-   * region, and variant subtags.
-   */
-  bool canonicalizeBaseName(JSContext* cx) {
-    return canonicalizeBaseName(cx, DuplicateVariants::Reject);
-  }
+  /** Canonicalize the base-name (language, script, region, variant) subtags. */
+  bool canonicalizeBaseName(JSContext* cx);
 
   /**
    * Canonicalize all extension subtags.
