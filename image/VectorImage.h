@@ -128,6 +128,8 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   void CancelAllListeners();
   void SendInvalidationNotifications();
 
+  void ReportUseCounters();
+
   RefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
   RefPtr<SVGRootRenderingObserver> mRenderingObserver;
   RefPtr<SVGLoadEventListener> mLoadEventListener;

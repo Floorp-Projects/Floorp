@@ -24,6 +24,8 @@ using mozilla::dom::XPCOMPermitUnloadAction from "mozilla/dom/DocShellMessageUti
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+using mozilla::UseCounters from "mozilla/UseCounter.h";
+using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 
 namespace mozilla {
 namespace dom {
@@ -167,6 +169,19 @@ parent:
   // hosted outside of the caller process will be checked automatically.
   async CheckPermitUnload(bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction)
     returns (bool permitUnload);
+
+  /**
+   * Informs the parent process that the document in aTop should expect to
+   * receive page use counter contributions from the document in this
+   * WindowGlobal.
+   */
+  async ExpectPageUseCounters(MaybeDiscardedWindowContext aTop);
+
+  /**
+   * Accumulates use counter data from the document in this WindowGlobal into
+   * the document previously passed into the ExpectPageUseCounters call.
+   */
+  async AccumulatePageUseCounters(UseCounters aUseCounters);
 
   async Destroy();
 };

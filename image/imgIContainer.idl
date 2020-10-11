@@ -681,7 +681,7 @@ interface imgIContainer : nsISupports
    * Propagate the use counters (if any) from this container to the passed in
    * document.
    */
-  [noscript, notxpcom] void propagateUseCounters(in Document aDocument);
+  [noscript, notxpcom] void propagateUseCounters(in Document aReferencingDocument);
 
   %{C++
   /*

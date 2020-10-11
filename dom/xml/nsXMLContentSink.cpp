@@ -387,6 +387,16 @@ nsXMLContentSink::OnTransformDone(nsresult aResult, Document* aResultDocument) {
 
   DropParserAndPerfHint();
 
+  // By this point, the result document has been set in the content viewer.  But
+  // the content viewer does not call Destroy on the original document, and we
+  // won't end up reporting use counters through either of the two main entry
+  // points -- in nsGlobalWindowOuter::SetNewDocument, when dooming the inner
+  // window, or in Document::SetScriptGlobalObject(nullptr).  It's possible we
+  // should be detaching the document from the window, but for now, we call
+  // ReportUseCounters on the original document here, to avoid assertions in
+  // ~Document about not having reported them.
+  originalDocument->ReportUseCounters();
+
   return NS_OK;
 }
 

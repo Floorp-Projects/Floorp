@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ErrorEvent.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 #include "nsPresContext.h"
