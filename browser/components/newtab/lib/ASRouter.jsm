@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
   SnippetsTestMessageProvider:
     "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
@@ -1722,18 +1721,7 @@ class _ASRouter {
   // RTAMO messages. This should only be called from within about:newtab#asrouter
   /* istanbul ignore next */
   async _writeAttributionFile(data) {
-    let appDir = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
-    let file = appDir.clone();
-    file.append(Services.appinfo.vendor || "mozilla");
-    file.append(AppConstants.MOZ_APP_NAME);
-
-    await OS.File.makeDir(file.path, {
-      from: appDir.path,
-      ignoreExisting: true,
-    });
-
-    file.append("postSigningData");
-    await OS.File.writeAtomic(file.path, data);
+    await AttributionCode.writeAttributionFile(data);
   }
 
   /**

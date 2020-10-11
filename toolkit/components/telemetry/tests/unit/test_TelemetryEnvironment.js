@@ -340,29 +340,16 @@ function spoofPartnerInfo() {
   }
 }
 
-function getAttributionFile() {
-  return FileUtils.getFile("LocalAppData", [
-    "mozilla",
-    AppConstants.MOZ_APP_NAME,
-    "postSigningData",
-  ]);
-}
-
-function spoofAttributionData() {
+async function spoofAttributionData() {
   if (gIsWindows) {
     AttributionCode._clearCache();
-    let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
-      Ci.nsIFileOutputStream
-    );
-    stream.init(getAttributionFile(), -1, -1, 0);
-    stream.write(ATTRIBUTION_CODE, ATTRIBUTION_CODE.length);
-    stream.close();
+    await AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
   }
 }
 
 function cleanupAttributionData() {
   if (gIsWindows) {
-    getAttributionFile().remove(false);
+    AttributionCode.attributionFile.remove(false);
     AttributionCode._clearCache();
   }
 }
