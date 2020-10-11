@@ -453,6 +453,7 @@ UNIFIED_SOURCES += [
     'CompositionRecorder.cpp',
     'Compositor.cpp',
     'CompositorAnimationStorage.cpp',
+    'CompositorTypes.cpp',
     'Effects.cpp',
     'FrameMetrics.cpp',
     'GLImages.cpp',
