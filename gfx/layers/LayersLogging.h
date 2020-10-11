@@ -32,10 +32,6 @@ enum class ImageFormat;
 namespace layers {
 
 void AppendToString(std::stringstream& aStream,
-                    mozilla::layers::TextureFlags flags, const char* pfx = "",
-                    const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream,
                     mozilla::gfx::SurfaceFormat format, const char* pfx = "",
                     const char* sfx = "");
 

@@ -531,7 +531,7 @@ void TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
     AppendToString(aStream, GetFormat(), " [format=", "]");
     Unlock();
   }
-  AppendToString(aStream, mFlags, " [flags=", "]");
+  aStream << " [flags=" << mFlags << "]";
 #ifdef MOZ_DUMP_PAINTING
   if (StaticPrefs::layers_dump_texture()) {
     nsAutoCString pfx(aPrefix);
