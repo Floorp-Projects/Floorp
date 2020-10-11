@@ -794,6 +794,9 @@ static const JSFunctionSpec intl_static_methods[] = {
     JS_SELF_HOSTED_FN("getCanonicalLocales", "Intl_getCanonicalLocales", 1, 0),
     JS_FS_END};
 
+static const JSPropertySpec intl_static_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Intl", JSPROP_READONLY), JS_PS_END};
+
 static JSObject* CreateIntlObject(JSContext* cx, JSProtoKey key) {
   Handle<GlobalObject*> global = cx->global();
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
@@ -835,7 +838,7 @@ static bool IntlClassFinish(JSContext* cx, HandleObject intl,
 }
 
 static const ClassSpec IntlClassSpec = {
-    CreateIntlObject, nullptr, intl_static_methods, nullptr,
+    CreateIntlObject, nullptr, intl_static_methods, intl_static_properties,
     nullptr,          nullptr, IntlClassFinish};
 
 const JSClass js::IntlClass = {"Intl", JSCLASS_HAS_CACHED_PROTO(JSProto_Intl),
