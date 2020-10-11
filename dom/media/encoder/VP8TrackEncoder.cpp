@@ -7,7 +7,6 @@
 
 #include "GeckoProfiler.h"
 #include "ImageToI420.h"
-#include "LayersLogging.h"
 #include "mozilla/gfx/2D.h"
 #include "prsystem.h"
 #include "VideoSegment.h"

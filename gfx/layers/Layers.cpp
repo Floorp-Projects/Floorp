@@ -11,7 +11,6 @@
 #include "ImageContainer.h"    // for ImageContainer, etc
 #include "ImageLayers.h"       // for ImageLayer
 #include "LayerSorter.h"       // for SortLayersBy3DZOrder
-#include "LayersLogging.h"     // for AppendToString
 #include "LayerUserData.h"
 #include "ReadbackLayer.h"   // for ReadbackLayer
 #include "UnitTransforms.h"  // for ViewAs
