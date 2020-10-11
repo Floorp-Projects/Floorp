@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/IntegerRange.h"
@@ -1294,6 +1295,27 @@ struct BitfieldHelper {
       return true;
     }
     return false;
+  }
+};
+
+template <size_t N, typename Word>
+struct ParamTraits<mozilla::BitSet<N, Word>> {
+  typedef mozilla::BitSet<N, Word> paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    for (Word word : aParam.Storage()) {
+      WriteParam(aMsg, word);
+    }
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    for (Word& word : aResult->Storage()) {
+      if (!ReadParam(aMsg, aIter, &word)) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 
