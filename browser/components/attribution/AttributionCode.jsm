@@ -37,19 +37,32 @@ const ATTR_CODE_KEYS = [
 
 let gCachedAttrData = null;
 
-/**
- * Returns an nsIFile for the file containing the attribution data.
- */
-function getAttributionFile() {
-  let file = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
-  // appinfo does not exist in xpcshell, so we need defaults.
-  file.append(Services.appinfo.vendor || "mozilla");
-  file.append(AppConstants.MOZ_APP_NAME);
-  file.append("postSigningData");
-  return file;
-}
-
 var AttributionCode = {
+  /**
+   * Returns an nsIFile for the file containing the attribution data.
+   */
+  get attributionFile() {
+    let file = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
+    // appinfo does not exist in xpcshell, so we need defaults.
+    file.append(Services.appinfo.vendor || "mozilla");
+    file.append(AppConstants.MOZ_APP_NAME);
+    file.append("postSigningData");
+    return file;
+  },
+
+  /**
+   * Write the given attribution code to the attribution file.
+   * @param {String} code to write.
+   */
+  async writeAttributionFile(code) {
+    const file = AttributionCode.attributionFile;
+    await OS.File.makeDir(file.parent.path, {
+      ignoreExisting: true,
+    });
+    let bytes = new TextEncoder().encode(code);
+    await OS.File.writeAtomic(file.path, bytes);
+  },
+
   /**
    * Returns an array of allowed attribution code keys.
    */
@@ -111,7 +124,7 @@ var AttributionCode = {
     if (AppConstants.platform == "win") {
       let bytes;
       try {
-        bytes = await OS.File.read(getAttributionFile().path);
+        bytes = await OS.File.read(this.attributionFile.path);
       } catch (ex) {
         if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
           return gCachedAttrData;
@@ -176,7 +189,7 @@ var AttributionCode = {
    */
   async deleteFileAsync() {
     try {
-      await OS.File.remove(getAttributionFile().path);
+      await OS.File.remove(this.attributionFile.path);
     } catch (ex) {
       // The attribution file may already have been deleted,
       // or it may have never been installed at all;
