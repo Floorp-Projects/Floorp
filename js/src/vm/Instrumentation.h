@@ -13,8 +13,8 @@
 namespace js {
 
 namespace frontend {
-struct CompilationInfo;
 class ParserAtom;
+class ParserAtomsTable;
 }  // namespace frontend
 
 // Logic related to instrumentation which can be performed in a realm.
@@ -70,7 +70,7 @@ class RealmInstrumentation {
 
   // Get the string name of an instrumentation kind.
   static const frontend::ParserAtom* getInstrumentationKindName(
-      JSContext* cx, frontend::CompilationInfo& compilationInfo,
+      JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
       InstrumentationKind kind);
 
   static bool getScriptId(JSContext* cx, Handle<GlobalObject*> global,
