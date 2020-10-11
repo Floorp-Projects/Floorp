@@ -530,7 +530,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsCString mRemoteType;
 
   bool mDepthTooGreat : 1;
-  bool mIsTopLevelContent : 1;
   bool mDestroyCalled : 1;
   bool mNeedsAsyncDestroy : 1;
   bool mInSwap : 1;
