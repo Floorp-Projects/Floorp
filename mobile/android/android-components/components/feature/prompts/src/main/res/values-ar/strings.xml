@@ -36,6 +36,9 @@
     <string name="mozac_feature_prompt_login_update_headline">أنحدّث هذا الولوج؟</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">أنُضيف اسم المستخدم إلى كلمة المرور المحفوظة؟</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">تسمية لإدخال نص في حقل نصوص</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">اختر لونًا</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
