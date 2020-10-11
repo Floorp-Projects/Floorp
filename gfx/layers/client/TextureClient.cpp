@@ -12,7 +12,6 @@
 #include "IPDLActor.h"
 #include "ImageContainer.h"  // for PlanarYCbCrData, etc
 #include "Layers.h"          // for Layer, etc
-#include "LayersLogging.h"   // for AppendToString
 #include "MainThreadUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"  // for gfxPlatform
@@ -1491,9 +1490,9 @@ already_AddRefed<gfx::DataSourceSurface> TextureClient::GetAsSurface() {
 void TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   aStream << aPrefix;
   aStream << nsPrintfCString("TextureClient (0x%p)", this).get()
-          << " [size=" << GetSize() << "]";
-  AppendToString(aStream, GetFormat(), " [format=", "]");
-  aStream << " [flags=" << mFlags << "]";
+          << " [size=" << GetSize() << "]"
+          << " [format=" << GetFormat() << "]"
+          << " [flags=" << mFlags << "]";
 
 #ifdef MOZ_DUMP_PAINTING
   if (StaticPrefs::layers_dump_texture()) {
