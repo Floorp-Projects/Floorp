@@ -48,6 +48,10 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeSet.h"
 
+namespace JS {
+struct ExpandoAndGeneration;
+}
+
 namespace js {
 
 namespace wasm {
@@ -11268,6 +11272,135 @@ class MGetDOMMember : public MGetDOMPropertyBase {
     }
 
     return baseCongruentTo(ins->toGetDOMMember());
+  }
+};
+
+// Load the private value expando from a DOM proxy. The target is stored in the
+// proxy object's private slot.
+// This is either an UndefinedValue (no expando), ObjectValue (the expando
+// object), or PrivateValue(ExpandoAndGeneration*).
+class MLoadDOMExpandoValue : public MUnaryInstruction,
+                             public SingleObjectPolicy::Data {
+  explicit MLoadDOMExpandoValue(MDefinition* proxy)
+      : MUnaryInstruction(classOpcode, proxy) {
+    setMovable();
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadDOMExpandoValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    // TODO: Investigate using a narrower or a custom alias set.
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+class MLoadDOMExpandoValueGuardGeneration : public MUnaryInstruction,
+                                            public SingleObjectPolicy::Data {
+  JS::ExpandoAndGeneration* expandoAndGeneration_;
+  uint64_t generation_;
+
+  MLoadDOMExpandoValueGuardGeneration(
+      MDefinition* proxy, JS::ExpandoAndGeneration* expandoAndGeneration,
+      uint64_t generation)
+      : MUnaryInstruction(classOpcode, proxy),
+        expandoAndGeneration_(expandoAndGeneration),
+        generation_(generation) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadDOMExpandoValueGuardGeneration)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy))
+
+  JS::ExpandoAndGeneration* expandoAndGeneration() const {
+    return expandoAndGeneration_;
+  }
+  uint64_t generation() const { return generation_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isLoadDOMExpandoValueGuardGeneration()) {
+      return false;
+    }
+    const auto* other = ins->toLoadDOMExpandoValueGuardGeneration();
+    if (expandoAndGeneration() != other->expandoAndGeneration() ||
+        generation() != other->generation()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    // TODO: Investigate using a narrower or a custom alias set.
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+class MLoadDOMExpandoValueIgnoreGeneration : public MUnaryInstruction,
+                                             public SingleObjectPolicy::Data {
+  explicit MLoadDOMExpandoValueIgnoreGeneration(MDefinition* proxy)
+      : MUnaryInstruction(classOpcode, proxy) {
+    setMovable();
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadDOMExpandoValueIgnoreGeneration)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    // TODO: Investigate using a narrower or a custom alias set.
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+// Takes an expando Value as input, then guards it's either UndefinedValue or
+// an object with the expected shape.
+class MGuardDOMExpandoMissingOrGuardShape : public MUnaryInstruction,
+                                            public BoxInputsPolicy::Data {
+  CompilerShape shape_;
+
+  MGuardDOMExpandoMissingOrGuardShape(MDefinition* obj, Shape* shape)
+      : MUnaryInstruction(classOpcode, obj), shape_(shape) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardDOMExpandoMissingOrGuardShape)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, expando))
+
+  const Shape* shape() const { return shape_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardDOMExpandoMissingOrGuardShape()) {
+      return false;
+    }
+    if (shape() != ins->toGuardDOMExpandoMissingOrGuardShape()->shape()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(shape_);
   }
 };
 

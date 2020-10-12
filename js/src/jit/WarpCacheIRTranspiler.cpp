@@ -121,6 +121,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const JSJitInfo* jitInfoStubField(uint32_t offset) {
     return reinterpret_cast<const JSJitInfo*>(readStubWord(offset));
   }
+  JS::ExpandoAndGeneration* expandoAndGenerationField(uint32_t offset) {
+    return reinterpret_cast<JS::ExpandoAndGeneration*>(readStubWord(offset));
+  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -132,6 +135,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   }
   uint32_t uint32StubField(uint32_t offset) {
     return static_cast<uint32_t>(readStubWord(offset));
+  }
+  uint64_t uint64StubField(uint32_t offset) {
+    return static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
   }
 
   // This must only be called when the caller knows the object is tenured and
@@ -517,6 +523,53 @@ bool WarpCacheIRTranspiler::emitCallDOMSetter(ObjOperandId objId,
                            (JS::Realm*)mirGen().realm->realmPtr(), obj, value);
   addEffectful(set);
   return resumeAfter(set);
+}
+
+bool WarpCacheIRTranspiler::emitLoadDOMExpandoValue(ObjOperandId objId,
+                                                    ValOperandId resultId) {
+  MDefinition* proxy = getOperand(objId);
+
+  auto* ins = MLoadDOMExpandoValue::New(alloc(), proxy);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitLoadDOMExpandoValueGuardGeneration(
+    ObjOperandId objId, uint32_t expandoAndGenerationOffset,
+    uint32_t generationOffset, ValOperandId resultId) {
+  MDefinition* proxy = getOperand(objId);
+  JS::ExpandoAndGeneration* expandoAndGeneration =
+      expandoAndGenerationField(expandoAndGenerationOffset);
+  uint64_t generation = uint64StubField(generationOffset);
+
+  auto* ins = MLoadDOMExpandoValueGuardGeneration::New(
+      alloc(), proxy, expandoAndGeneration, generation);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitLoadDOMExpandoValueIgnoreGeneration(
+    ObjOperandId objId, ValOperandId resultId) {
+  MDefinition* proxy = getOperand(objId);
+
+  auto* ins = MLoadDOMExpandoValueIgnoreGeneration::New(alloc(), proxy);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitGuardDOMExpandoMissingOrGuardShape(
+    ValOperandId expandoId, uint32_t shapeOffset) {
+  MDefinition* expando = getOperand(expandoId);
+  Shape* shape = shapeStubField(shapeOffset);
+
+  auto* ins = MGuardDOMExpandoMissingOrGuardShape::New(alloc(), expando, shape);
+  add(ins);
+
+  setOperand(expandoId, ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,

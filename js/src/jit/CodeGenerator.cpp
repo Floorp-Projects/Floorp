@@ -55,8 +55,9 @@
 #include "jit/VMFunctions.h"
 #include "jit/WarpSnapshot.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}CallArgs, JSJitMethodCallArgsTraits, JSJitInfo
-#include "js/RegExpFlags.h"  // JS::RegExpFlag
-#include "js/ScalarType.h"   // js::Scalar::Type
+#include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
+#include "js/RegExpFlags.h"      // JS::RegExpFlag
+#include "js/ScalarType.h"       // js::Scalar::Type
 #include "proxy/DOMProxy.h"
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
@@ -99,6 +100,8 @@ using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
+
+using JS::ExpandoAndGeneration;
 
 namespace js {
 namespace jit {
@@ -13975,6 +13978,68 @@ void CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins) {
   masm.adjustStack(IonDOMExitFrameLayout::Size());
 
   MOZ_ASSERT(masm.framePushed() == initialStack);
+}
+
+void CodeGenerator::visitLoadDOMExpandoValue(LLoadDOMExpandoValue* ins) {
+  Register proxy = ToRegister(ins->proxy());
+  ValueOperand out = ToOutValue(ins);
+
+  masm.loadPtr(Address(proxy, ProxyObject::offsetOfReservedSlots()),
+               out.scratchReg());
+  masm.loadValue(Address(out.scratchReg(),
+                         js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+                 out);
+}
+
+void CodeGenerator::visitLoadDOMExpandoValueGuardGeneration(
+    LLoadDOMExpandoValueGuardGeneration* ins) {
+  Register proxy = ToRegister(ins->proxy());
+  ValueOperand out = ToOutValue(ins);
+
+  Label bail;
+  masm.loadDOMExpandoValueGuardGeneration(proxy, out,
+                                          ins->mir()->expandoAndGeneration(),
+                                          ins->mir()->generation(), &bail);
+  bailoutFrom(&bail, ins->snapshot());
+}
+
+void CodeGenerator::visitLoadDOMExpandoValueIgnoreGeneration(
+    LLoadDOMExpandoValueIgnoreGeneration* ins) {
+  Register proxy = ToRegister(ins->proxy());
+  ValueOperand out = ToOutValue(ins);
+
+  masm.loadPtr(Address(proxy, ProxyObject::offsetOfReservedSlots()),
+               out.scratchReg());
+
+  // Load the ExpandoAndGeneration* from the PrivateValue.
+  masm.loadPrivate(
+      Address(out.scratchReg(),
+              js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+      out.scratchReg());
+
+  // Load expandoAndGeneration->expando into the output Value register.
+  masm.loadValue(
+      Address(out.scratchReg(), ExpandoAndGeneration::offsetOfExpando()), out);
+}
+
+void CodeGenerator::visitGuardDOMExpandoMissingOrGuardShape(
+    LGuardDOMExpandoMissingOrGuardShape* ins) {
+  Register temp = ToRegister(ins->temp());
+  ValueOperand input = ToValue(ins, LGuardDOMExpandoMissingOrGuardShape::Input);
+
+  Label done;
+  masm.branchTestUndefined(Assembler::Equal, input, &done);
+
+  masm.debugAssertIsObject(input);
+  masm.unboxObject(input, temp);
+  // The expando object is not used in this case, so we don't need Spectre
+  // mitigations.
+  Label bail;
+  masm.branchTestObjShapeNoSpectreMitigations(Assembler::NotEqual, temp,
+                                              ins->mir()->shape(), &bail);
+  bailoutFrom(&bail, ins->snapshot());
+
+  masm.bind(&done);
 }
 
 class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator> {

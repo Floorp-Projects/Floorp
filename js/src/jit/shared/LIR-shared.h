@@ -1240,6 +1240,73 @@ class LSetDOMProperty : public LDOMPropertyInstructionHelper<0, BOX_PIECES> {
   MSetDOMProperty* mir() const { return mir_->toSetDOMProperty(); }
 };
 
+class LLoadDOMExpandoValue : public LInstructionHelper<BOX_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(LoadDOMExpandoValue)
+
+  explicit LLoadDOMExpandoValue(const LAllocation& proxy)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+  }
+
+  const LAllocation* proxy() { return getOperand(0); }
+
+  const MLoadDOMExpandoValue* mir() const {
+    return mir_->toLoadDOMExpandoValue();
+  }
+};
+
+class LLoadDOMExpandoValueGuardGeneration
+    : public LInstructionHelper<BOX_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(LoadDOMExpandoValueGuardGeneration)
+
+  explicit LLoadDOMExpandoValueGuardGeneration(const LAllocation& proxy)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+  }
+
+  const LAllocation* proxy() { return getOperand(0); }
+
+  const MLoadDOMExpandoValueGuardGeneration* mir() const {
+    return mir_->toLoadDOMExpandoValueGuardGeneration();
+  }
+};
+
+class LLoadDOMExpandoValueIgnoreGeneration
+    : public LInstructionHelper<BOX_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(LoadDOMExpandoValueIgnoreGeneration)
+
+  explicit LLoadDOMExpandoValueIgnoreGeneration(const LAllocation& proxy)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+  }
+
+  const LAllocation* proxy() { return getOperand(0); }
+};
+
+class LGuardDOMExpandoMissingOrGuardShape
+    : public LInstructionHelper<0, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(GuardDOMExpandoMissingOrGuardShape)
+
+  explicit LGuardDOMExpandoMissingOrGuardShape(const LBoxAllocation& input,
+                                               const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+    setTemp(0, temp);
+  }
+
+  const LDefinition* temp() { return getTemp(0); }
+
+  static const size_t Input = 0;
+
+  MGuardDOMExpandoMissingOrGuardShape* mir() {
+    return mir_->toGuardDOMExpandoMissingOrGuardShape();
+  }
+};
+
 // Generates a polymorphic callsite, wherein the function being called is
 // unknown and anticipated to vary.
 class LApplyArgsGeneric

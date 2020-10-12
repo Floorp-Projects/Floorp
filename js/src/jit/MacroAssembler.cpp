@@ -32,6 +32,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/Simulator.h"
 #include "js/Conversions.h"
+#include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferViewObject.h"
@@ -1847,6 +1848,32 @@ void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
   move32(Imm32(1), output);
 
   bind(&done);
+}
+
+void MacroAssembler::loadDOMExpandoValueGuardGeneration(
+    Register obj, ValueOperand output,
+    JS::ExpandoAndGeneration* expandoAndGeneration, uint64_t generation,
+    Label* fail) {
+  loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()),
+          output.scratchReg());
+  loadValue(Address(output.scratchReg(),
+                    js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+            output);
+
+  // Guard the ExpandoAndGeneration* matches the proxy's ExpandoAndGeneration
+  // privateSlot.
+  branchTestValue(Assembler::NotEqual, output,
+                  PrivateValue(expandoAndGeneration), fail);
+
+  // Guard expandoAndGeneration->generation matches the expected generation.
+  Address generationAddr(output.payloadOrValueReg(),
+                         JS::ExpandoAndGeneration::offsetOfGeneration());
+  branch64(Assembler::NotEqual, generationAddr, Imm64(generation), fail);
+
+  // Load expandoAndGeneration->expando into the output Value register.
+  loadValue(Address(output.payloadOrValueReg(),
+                    JS::ExpandoAndGeneration::offsetOfExpando()),
+            output);
 }
 
 void MacroAssembler::loadJitActivation(Register dest) {
