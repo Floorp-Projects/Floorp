@@ -429,7 +429,7 @@ clang-11:
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: 8aca41f39c207b6f9efe2e448986d109892072ad
+        revision: 176249bd6732a8044d457092ed932768724a6f06
 
 wasi-sdk:
     description: wasi-sdk source code
