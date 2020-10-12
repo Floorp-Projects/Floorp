@@ -701,6 +701,9 @@
 
     on_popupshowing(event) {
       if (event.target == this) {
+        // getBoundingClientRect here is a wallpaper, see bug 1670317 and
+        // bug 1666497.
+        this.getBoundingClientRect();
         this.setAttribute("animate", "open");
       }
     }
