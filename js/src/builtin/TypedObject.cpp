@@ -618,7 +618,7 @@ bool ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<TypeDescr>()) {
+  if (!args[0].isObject() || !args[0].toObject().is<SimpleTypeDescr>()) {
     ReportCannotConvertTo(cx, args[0], "ArrayType element specifier");
     return false;
   }
@@ -780,11 +780,11 @@ JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
     }
 
     // Load the value for the current field from the `fields` object.
-    // The value should be a type descriptor.
+    // The value should be a simple type descriptor.
     if (!GetProperty(cx, fields, fields, id, &fieldTypeVal)) {
       return nullptr;
     }
-    fieldType = ToObjectIf<TypeDescr>(fieldTypeVal);
+    fieldType = ToObjectIf<SimpleTypeDescr>(fieldTypeVal);
     if (!fieldType) {
       ReportCannotConvertTo(cx, fieldTypeVal, "StructType field specifier");
       return nullptr;
@@ -1542,23 +1542,6 @@ OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
 }
 
 /*static*/
-OutlineTypedObject* OutlineTypedObject::createDerived(
-    JSContext* cx, HandleTypeDescr type, HandleTypedObject typedObj,
-    uint32_t offset) {
-  MOZ_ASSERT(offset <= typedObj->size());
-  MOZ_ASSERT(offset + type->size() <= typedObj->size());
-
-  Rooted<OutlineTypedObject*> obj(cx);
-  obj = createUnattached(cx, type);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->attach(cx, *typedObj, offset);
-  return obj;
-}
-
-/*static*/
 TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
                                        gc::InitialHeap heap) {
   // If possible, create an object with inline data.
@@ -2209,27 +2192,6 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
 /******************************************************************************
  * Intrinsics
  */
-
-bool js::NewDerivedTypedObject(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
-  MOZ_ASSERT(args[1].isObject() && args[1].toObject().is<TypedObject>());
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-
-  Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
-  Rooted<TypedObject*> typedObj(cx, &args[1].toObject().as<TypedObject>());
-  uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
-
-  Rooted<TypedObject*> obj(cx);
-  obj = OutlineTypedObject::createDerived(cx, descr, typedObj, offset);
-  if (!obj) {
-    return false;
-  }
-
-  args.rval().setObject(*obj);
-  return true;
-}
 
 bool js::ObjectIsTypeDescr(JSContext*, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);

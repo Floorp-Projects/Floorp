@@ -51,20 +51,10 @@ function TypedObjectGet(descr, typedObj, offset) {
 
   case JS_TYPEREPR_REFERENCE_KIND:
     return TypedObjectGetReference(descr, typedObj, offset);
-
-  case JS_TYPEREPR_ARRAY_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return TypedObjectGetDerived(descr, typedObj, offset);
   }
 
   assert(false, "Unhandled kind: " + DESCR_KIND(descr));
   return undefined;
-}
-
-function TypedObjectGetDerived(descr, typedObj, offset) {
-  assert(!TypeDescrIsSimpleType(descr),
-         "getDerived() used with simple type");
-  return NewDerivedTypedObject(descr, typedObj, offset | 0);
 }
 
 function TypedObjectGetScalar(descr, typedObj, offset) {
