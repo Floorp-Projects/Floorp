@@ -96,27 +96,14 @@ export function createPause(thread: string, packet: PausedPacket): any {
   };
 }
 
-function getTargetType(target: Target) {
-  if (target.isWorkerTarget) {
-    return "worker";
-  }
-
-  if (target.isContentProcess) {
-    return "contentProcess";
-  }
-
-  return "frame";
-}
-
 export function createThread(actor: string, target: Target): Thread {
-  const type = getTargetType(target);
   const name = target.isTopLevel ? L10N.getStr("mainThread") : target.name;
 
   return {
     actor,
     url: target.url,
     isTopLevel: target.isTopLevel,
-    type,
+    targetType: target.targetType,
     name,
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
   };

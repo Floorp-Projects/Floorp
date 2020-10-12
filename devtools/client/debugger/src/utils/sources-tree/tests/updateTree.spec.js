@@ -44,7 +44,7 @@ const threads = [
   {
     actor: "FakeThread",
     url: "https://davidwalsh.name",
-    type: "worker",
+    targetType: "worker",
     name: "FakeThread",
     isTopLevel: false,
   },

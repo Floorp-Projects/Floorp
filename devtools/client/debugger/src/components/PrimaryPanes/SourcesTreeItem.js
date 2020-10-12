@@ -11,7 +11,6 @@ import { showMenu } from "../../context-menu/menu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";
-import { isWorker } from "../../utils/threads";
 
 import {
   getGeneratedSourceByURL,
@@ -327,7 +326,7 @@ class SourceTreeItem extends Component<Props, State> {
       const thread = threads.find(thrd => thrd.actor == item.name);
 
       if (thread) {
-        const icon = isWorker(thread) ? "worker" : "window";
+        const icon = thread.targetType.includes("worker") ? "worker" : "window";
         return (
           <AccessibleImage
             className={classnames(icon, {
