@@ -70,7 +70,7 @@ where
     F: FnOnce(&Device, &TempDir, &Path) -> () + panic::UnwindSafe,
 {
     fn clean_remote_dir(device: &Device, path: &Path) {
-        let command = format!("rm -r {}", path.display());
+        let command = format!("rm -fr {}", path.display());
         let _ = device.execute_host_shell_command(&command);
     }
 
@@ -82,7 +82,7 @@ where
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
-    let remote_path = Path::new("/mnt/sdcard/mozdevice/");
+    let remote_path = Path::new("/data/local/tmp/mozdevice/");
 
     clean_remote_dir(&device, remote_path);
 
@@ -324,22 +324,62 @@ fn device_kill_reverse_all_ports_twice() {
 #[test]
 fn device_push() {
     run_device_test(|device: &Device, _: &TempDir, remote_root_path: &Path| {
+        fn adjust_mode(mode: u32) -> u32 {
+            // Adjust the mode by copying the user permissions to
+            // group and other as indicated in
+            // [send_impl](https://android.googlesource.com/platform/system/core/+/master/adb/daemon/file_sync_service.cpp#516).
+            // This ensures that group and other can both access a
+            // file if the user can access it.
+            let mut m = mode & 0o777;
+            m |= (m >> 3) & 0o070;
+            m |= (m >> 3) & 0o007;
+            m
+        }
+
+        fn get_permissions(mode: u32) -> String {
+            // Convert the mode integer into the string representation
+            // of the mode returned by `ls`. This assumes the object is
+            // a file and not a directory.
+            let mut perms = vec!["-", "r", "w", "x", "r", "w", "x", "r", "w", "x"];
+            let mut bit_pos = 0;
+            while bit_pos < 9 {
+                if (1 << bit_pos) & mode == 0 {
+                    perms[9 - bit_pos] = "-"
+                }
+                bit_pos += 1;
+            }
+            perms.concat()
+        }
         let content = "test";
         let remote_path = remote_root_path.join("foo.bar");
 
-        device
-            .push(
-                &mut io::BufReader::new(content.as_bytes()),
-                &remote_path,
-                0o777,
-            )
-            .expect("file has been pushed");
+        let modes = vec![0o421, 0o644, 0o666, 0o777];
+        for mode in modes {
+            let perms = get_permissions(mode);
+            let adjusted_mode = adjust_mode(mode);
+            let adjusted_perms = get_permissions(adjusted_mode);
+            device
+                .push(
+                    &mut io::BufReader::new(content.as_bytes()),
+                    &remote_path,
+                    mode,
+                )
+                .expect("file has been pushed");
+
+            let output = device
+                .execute_host_shell_command(&format!("ls -l {}", remote_path.display()))
+                .expect("host shell command for 'ls' to succeed");
+
+            assert!(output.contains(remote_path.to_str().unwrap()));
+            assert!(output.starts_with(&adjusted_perms));
+        }
 
         let output = device
-            .execute_host_shell_command(&format!("ls {}", remote_path.display()))
-            .expect("host shell command for 'ls' to succeed");
+            .execute_host_shell_command(&format!("ls -ld {}", remote_root_path.display()))
+            .expect("host shell command for 'ls parent' to succeed");
 
-        assert!(output.contains(remote_path.to_str().unwrap()));
+        assert!(output.contains(remote_root_path.to_str().unwrap()));
+        assert!(output.starts_with("drwxrwxrwx"));
 
         let file_content = device
             .execute_host_shell_command(&format!("cat {}", remote_path.display()))
@@ -359,7 +399,7 @@ fn device_push_dir() {
                 Path::new("foo1.bar"),
                 Path::new("foo2.bar"),
                 Path::new("bar/foo3.bar"),
-                Path::new("bar/more/foo3.bar"),
+                Path::new("bar/more/baz/moar/foo3.bar"),
             ];
 
             for file in files.iter() {

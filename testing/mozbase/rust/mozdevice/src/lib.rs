@@ -455,6 +455,11 @@ impl Device {
             .and(Ok(()))
     }
 
+    pub fn path_exists(&self, path: &Path) -> Result<bool> {
+        self.execute_host_shell_command(format!("ls {}", path.display()).as_str())
+            .map(|path| !path.contains("No such file or directory"))
+    }
+
     pub fn push(&self, buffer: &mut dyn Read, dest: &Path, mode: u32) -> Result<()> {
         // Implement the ADB protocol to send a file to the device.
         // The protocol consists of the following steps:
@@ -463,6 +468,43 @@ impl Device {
         // * Send "SEND" command with name and mode of the file
         // * Send "DATA" command one or more times for the file content
         // * Send "DONE" command to indicate end of file transfer
+
+        // If the destination directory does not exist, adb will
+        // create it and any necessary ancestors however it will not
+        // set the directory permissions to 0o777.  In addition,
+        // Android 9 (P) has a bug in its push implementation which
+        // will cause a push which creates directories to fail with
+        // the error `secure_mkdirs failed: Operation not
+        // permitted`. We can work around this by creating the
+        // destination directories prior to the push.  Collect the
+        // ancestors of the destination directory which do not yet
+        // exist so we can create them and adjust their permissions
+        // prior to performing the push.
+        let mut current = dest.parent();
+        let mut leaf: Option<&Path> = None;
+        let mut root: Option<&Path> = None;
+        loop {
+            match current {
+                Some(p) => {
+                    if self.path_exists(p)? {
+                        break;
+                    }
+                    if leaf.is_none() {
+                        leaf = Some(p);
+                    }
+                    root = Some(p);
+                    current = p.parent();
+                }
+                None => break,
+            }
+        }
+        if let Some(p) = leaf {
+            self.execute_host_shell_command(format!("mkdir -p {}", p.display()).as_str())?;
+        }
+        if let Some(p) = root {
+            self.execute_host_shell_command(format!("chmod -R 777 {}", p.display()).as_str())?;
+        }
+
         let mut stream = self.host.connect()?;
 
         let message = encode_message(&format!("host:transport:{}", self.serial))?;
