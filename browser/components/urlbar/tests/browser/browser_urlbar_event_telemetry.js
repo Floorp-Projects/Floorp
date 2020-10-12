@@ -1331,6 +1331,8 @@ const tests = [
       entry: "topsites_urlbar",
     });
 
+    await UrlbarTestUtils.exitSearchMode(win);
+
     // To avoid needing to add a custom search shortcut Top Site, we just
     // abandon this interaction.
     await UrlbarTestUtils.promisePopupClose(win, () => {

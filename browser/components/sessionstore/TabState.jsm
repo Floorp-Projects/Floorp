@@ -110,6 +110,8 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+    tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
+
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
 
