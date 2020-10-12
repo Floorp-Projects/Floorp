@@ -128,6 +128,10 @@ class WindowsDllDetourPatcher final
   using PrimitiveT = WindowsDllDetourPatcherPrimitive<MMPolicyT>;
   Maybe<DetourFlags> mFlags;
 
+#if defined(NIGHTLY_BUILD)
+  Maybe<DetourError> mLastError;
+#endif  // defined(NIGHTLY_BUILD)
+
  public:
   template <typename... Args>
   explicit WindowsDllDetourPatcher(Args&&... aArgs)
@@ -139,6 +143,15 @@ class WindowsDllDetourPatcher final
   WindowsDllDetourPatcher(WindowsDllDetourPatcher&&) = delete;
   WindowsDllDetourPatcher& operator=(const WindowsDllDetourPatcher&) = delete;
   WindowsDllDetourPatcher& operator=(WindowsDllDetourPatcher&&) = delete;
+
+#if defined(NIGHTLY_BUILD)
+  const Maybe<DetourError>& GetLastError() const { return mLastError; }
+  void SetLastError(DetourResultCode aError) {
+    mLastError = Some(DetourError(aError));
+  }
+#else
+  void SetLastError(DetourResultCode) {}
+#endif  // defined(NIGHTLY_BUILD)
 
   void Clear() {
     if (!this->mVMPolicy.ShouldUnhookUponDestruction()) {
@@ -540,11 +553,9 @@ class WindowsDllDetourPatcher final
 #endif  // defined(_M_X64)
 
     Maybe<TrampPoolT> maybeTrampPool = this->mVMPolicy.Reserve(pivot, distance);
-#if defined(NIGHTLY_BUILD)
-    if (!maybeTrampPool && this->GetLastError().isNothing()) {
+    if (!maybeTrampPool) {
       SetLastError(DetourResultCode::DETOUR_PATCHER_DO_RESERVE_ERROR);
     }
-#endif  // defined(NIGHTLY_BUILD)
     return maybeTrampPool;
   }
 
@@ -932,19 +943,18 @@ class WindowsDllDetourPatcher final
 #if defined(NIGHTLY_BUILD)
       origBytes.Rewind();
       SetLastError(DetourResultCode::DETOUR_PATCHER_CREATE_TRAMPOLINE_ERROR);
-      DetourError& lastError = *this->mVMPolicy.mLastError;
       size_t bytesToCapture = std::min(
-          ArrayLength(lastError.mOrigBytes),
+          ArrayLength(mLastError->mOrigBytes),
           static_cast<size_t>(PrimitiveT::GetWorstCaseRequiredBytesToPatch()));
 #  if defined(_M_ARM64)
       size_t numInstructionsToCapture = bytesToCapture / sizeof(uint32_t);
-      auto origBytesDst = reinterpret_cast<uint32_t*>(lastError.mOrigBytes);
+      auto origBytesDst = reinterpret_cast<uint32_t*>(mLastError->mOrigBytes);
       for (size_t i = 0; i < numInstructionsToCapture; ++i) {
         origBytesDst[i] = origBytes.ReadNextInstruction();
       }
 #  else
       for (size_t i = 0; i < bytesToCapture; ++i) {
-        lastError.mOrigBytes[i] = origBytes[i];
+        mLastError->mOrigBytes[i] = origBytes[i];
       }
 #  endif  // defined(_M_ARM64)
 #else

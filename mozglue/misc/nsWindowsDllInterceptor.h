@@ -229,12 +229,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
       return false;
     }
 
-    bool ret = CopyStubToChildProcess(origFunc, aProcess);
-    if (!ret) {
-      aInterceptor.SetLastError(FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
-                                ::GetLastError());
-    }
-    return ret;
+    return CopyStubToChildProcess(origFunc, aProcess);
   }
 
   bool SetDetour(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
@@ -245,12 +240,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
       return false;
     }
 
-    bool ret = CopyStubToChildProcess(origFunc, aProcess);
-    if (!ret) {
-      aInterceptor.SetLastError(FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
-                                ::GetLastError());
-    }
-    return ret;
+    return CopyStubToChildProcess(origFunc, aProcess);
   }
 
   explicit operator bool() const { return !!mOrigFunc; }
@@ -376,10 +366,6 @@ class WindowsDllInterceptor final
     return mDetourPatcher.GetLastError();
   }
 #endif  // defined(NIGHTLY_BUILD)
-  template <typename... Args>
-  void SetLastError(Args&&... aArgs) {
-    return mDetourPatcher.SetLastError(std::forward<Args>(aArgs)...);
-  }
 
   constexpr static uint32_t GetWorstCaseRequiredBytesToPatch() {
     return WindowsDllDetourPatcherPrimitive<
