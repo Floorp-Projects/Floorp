@@ -1,4 +1,4 @@
-# 
+#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,6 +9,7 @@ EXPORTS = \
 	secmodt.h \
 	secpkcs5.h \
 	pk11func.h \
+	pk11hpke.h \
 	pk11pub.h \
 	pk11priv.h \
 	pk11sdr.h \
@@ -30,6 +31,7 @@ CSRCS = \
 	pk11cert.c \
 	pk11cxt.c \
 	pk11err.c  \
+	pk11hpke.c \
 	pk11kea.c \
 	pk11list.c \
 	pk11load.c \

@@ -210,6 +210,8 @@ typedef enum {
 
     SEC_ERROR_APPLICATION_CALLBACK_ERROR = (SEC_ERROR_BASE + 178),
 
+    SEC_ERROR_INVALID_STATE = (SEC_ERROR_BASE + 179),
+
     /* Add new error codes above here. */
     SEC_ERROR_END_OF_LIST
 } SECErrorCodes;

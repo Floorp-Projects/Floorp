@@ -1,0 +1,233 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef hpke_vectors_h__
+#define hpke_vectors_h__
+
+#include "pk11hpke.h"
+#include <vector>
+
+typedef struct hpke_encrypt_vector_str {
+  std::string pt;
+  std::string aad;
+  std::string ct;
+} hpke_encrypt_vector;
+
+typedef struct hpke_export_vector_str {
+  std::string ctxt;
+  size_t len;
+  std::string exported;
+} hpke_export_vector;
+
+/* Note: The following test vec values are implicitly checked via:
+ * shared_secret: secret derivation
+ * key_sched_context: key/nonce derivations
+ * secret: key/nonce derivations
+ * exporter_secret: export vectors */
+typedef struct hpke_vector_str {
+  uint32_t test_id;
+  HpkeModeId mode;
+  HpkeKemId kem_id;
+  HpkeKdfId kdf_id;
+  HpkeAeadId aead_id;
+  std::string info;
+  std::string pkcs8_e;
+  std::string pkcs8_r;
+  std::string psk;
+  std::string psk_id;
+  std::string enc;
+  std::string key;
+  std::string nonce;
+  std::vector<hpke_encrypt_vector> encrypt_vecs;
+  std::vector<hpke_export_vector> export_vecs;
+} hpke_vector;
+
+const hpke_vector kHpkeTestVectors[] = {
+    // A.1. DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, Base mode
+    {0,
+     static_cast<HpkeModeId>(0),
+     static_cast<HpkeKemId>(32),
+     static_cast<HpkeKdfId>(1),
+     static_cast<HpkeAeadId>(1),
+     "4f6465206f6e2061204772656369616e2055726e",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a"
+     "02010104208c490e5b0c7dbe0c6d2192484d2b7a0423b3b4544f2481095a9"
+     "9dbf238fb350fa1230321008a07563949fac6232936ed6f36c4fa735930ecd"
+     "eaef6734e314aeac35a56fd0a",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a"
+     "02010104205a8aa0d2476b28521588e0c704b14db82cdd4970d340d293a957"
+     "6deaee9ec1c7a1230321008756e2580c07c1d2ffcb662f5fadc6d6ff13da85"
+     "abd7adfecf984aaa102c1269",
+     "",
+     "",
+     "8a07563949fac6232936ed6f36c4fa735930ecdeaef6734e314aeac35a56fd0a",
+     "550ee0b7ec1ea2532f2e2bac87040a4c",
+     "2b855847756795a57229559a",
+     {// Encryptions
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d30",
+       "971ba65db526758ea30ae748cd769bc8d90579b62a037816057f24ce4274"
+       "16bd47c05ed1c2446ac8e19ec9ae79"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d31",
+       "f18f1ec397667ca069b9a6ee0bebf0890cd5caa34bb9875b3600ca0142cb"
+       "a774dd35f2aafd79a02a08ca5f2806"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d32",
+       "51a8dea350fe6e753f743ec17c956de4cbdfa35f3018fc6a12752c51d137"
+       "2c5093959f18c7253da9c953c6cfbe"}},
+     {// Exports
+      {"436f6e746578742d30", 32,
+       "0df04ac640d34a56561419bab20a68e6b7331070208004f89c7b973f4c47"
+       "2e92"},
+      {"436f6e746578742d31", 32,
+       "723c2c8f80e6b827e72bd8e80973a801a05514afe3d4bc46e82e505dceb9"
+       "53aa"},
+      {"436f6e746578742d32", 32,
+       "38010c7d5d81093a11b55e2403a258e9a195bcf066817b332dd996b0a9bc"
+       "bc9a"},
+      {"436f6e746578742d33", 32,
+       "ebf6ab4c3186131de9b2c3c0bc3e2ad21dfcbc4efaf050cd0473f5b1535a"
+       "8b6d"},
+      {"436f6e746578742d34", 32,
+       "c4823eeb3efd2d5216b2d3b16e542bf57470dc9b9ea9af6bce85b151a358"
+       "9d90"}}},
+
+    // A.1. DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, PSK mode
+    {1,
+     static_cast<HpkeModeId>(1),
+     static_cast<HpkeKemId>(32),
+     static_cast<HpkeKdfId>(1),
+     static_cast<HpkeAeadId>(1),
+     "4f6465206f6e2061204772656369616e2055726e",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "1010420e7d2b539792a48a24451303ccd0cfe77176b6cb06823c439edfd217458"
+     "a1398aa12303210008d39d3e7f9b586341b6004dafba9679d2bd9340066edb247"
+     "e3e919013efcd0f",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "10104204b41ef269169090551fcea177ecdf622bca86d82298e21cd93119b804c"
+     "cc5eaba123032100a5c85773bed3a831e7096f7df4ff5d1d8bac48fc97bfac366"
+     "141efab91892a3a",
+     "5db3b80a81cb63ca59470c83414ef70a",
+     "456e6e796e20447572696e206172616e204d6f726961",
+     "08d39d3e7f9b586341b6004dafba9679d2bd9340066edb247e3e919013efcd0f",
+     "811e9b2d7a10f4f9d58786bf8a534ca6",
+     "b79b0c5a8c3808e238b10411",
+     {// Encryptions
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d30",
+       "fb68f911b4e4033d1547f646ea30c9cee987fb4b4a8c30918e5de6e96de32fc"
+       "63466f2fc05e09aeff552489741"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d31",
+       "85e7472fbb7e2341af35fb2a0795df9a85caa99a8f584056b11d452bc160470"
+       "672e297f9892ce2c5020e794ae1"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d32",
+       "74229b7491102bcf94cf7633888bc48baa4e5a73cc544bfad4ff61585506fac"
+       "b44b359ade03c0b2b35c6430e4c"}},
+     {// Exports
+      {"436f6e746578742d30", 32,
+       "bd292b132fae00243851451c3f3a87e9e11c3293c14d61b114b7e12e07245ffd"},
+      {"436f6e746578742d31", 32,
+       "695de26bc9336caee01cb04826f6e224f4d2108066ab17fc18f0c993dce05f24"},
+      {"436f6e746578742d32", 32,
+       "c53f26ef1bf4f5fd5469d807c418a0e103d035c76ccdbc6afb5bc42b24968f6c"},
+      {"436f6e746578742d33", 32,
+       "8cea4a595dfe3de84644ca8ea7ea9401a345f0db29bb4beebc2c471afc602ec4"},
+      {"436f6e746578742d34", 32,
+       "e6313f12f6c2054c69018f273211c54fcf2439d90173392eaa34b4caac929068"}}},
+
+    // A.2. DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305, Base mode
+    {2,
+     static_cast<HpkeModeId>(0),
+     static_cast<HpkeKemId>(32),
+     static_cast<HpkeKdfId>(1),
+     static_cast<HpkeAeadId>(3),
+     "4f6465206f6e2061204772656369616e2055726e",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "10104205006a9a0f0138b9b5d577ed4a67c4f795aee8fc146ac63d7a4167765be"
+     "3ad7dca123032100716281787b035b2fee90455d951fa70b3db6cc92f13bedfd7"
+     "58c3487994b7020",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "101042062139576dcbf9878ccd56262d1b28dbea897821c03370d81971513cc74"
+     "aea3ffa1230321001ae26f65041b36ad69eb392c198bfd33df1c6ff17a910cb3e"
+     "49db7506b6a4e7f",
+     "",
+     "",
+     "716281787b035b2fee90455d951fa70b3db6cc92f13bedfd758c3487994b7020",
+     "1d5e71e2885ddadbcc479798cc65ea74d308f2a9e99c0cc7fe480adce66b5722",
+     "8354a7fcfef97d4bbef6d24e",
+     {// Encryptions
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d30",
+       "fa4632a400962c98143e58450e75d879365359afca81a5f5b5997c6555647ec"
+       "302045a80c57d3e2c2abe7e1ced"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d31",
+       "8313fcbf760714f5a93b6864820e48dcec3ddd476ad4408ff1c1a1f7bfb8cb8"
+       "699fada4a9e59bf8086eb1c0635"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d32",
+       "020f2856d95b85e1def9549bf327c484d327616f1e213045f117be4c287571a"
+       "b983958f74766cbc6f8197c8d8d"}},
+     {// Exports
+      {"436f6e746578742d30", 32,
+       "22bbe971392c685b55e13544cdaf976f36b89dc1dbe1296c2884971a5aa9e331"},
+      {"436f6e746578742d31", 32,
+       "5c0fa72053a2622d8999b726446db9ef743e725e2cb040afac2d83eae0d41981"},
+      {"436f6e746578742d32", 32,
+       "72b0f9999fd37ac2b948a07dadd01132587501a5a9460d596c1f7383299a2442"},
+      {"436f6e746578742d33", 32,
+       "73d2308ed5bdd63aacd236effa0db2d3a30742b6293a924d95a372e76d90486b"},
+      {"436f6e746578742d34", 32,
+       "d4f8878dbc471935e86cdee08746e53837bbb4b6013003bebb0bc1cc3e074085"}}},
+
+    // A.2. DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305, PSK mode
+    {3,
+     static_cast<HpkeModeId>(1),
+     static_cast<HpkeKemId>(32),
+     static_cast<HpkeKdfId>(1),
+     static_cast<HpkeAeadId>(3),
+     "4f6465206f6e2061204772656369616e2055726e",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "10104204bfdb62b95ae2a1f29f20ea49e24aa2673e0d240c6e967f668f55ed5de"
+     "e996dca123032100f4639297e3305b03d34dd5d86522ddc6ba11a608a0003670a"
+     "30734823cdd3763",
+     "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a020"
+     "1010420a6ab4e1bb782d580d837843089d65ebe271a0ee9b5a951777cecf1293c"
+     "58c150a123032100c49b46ed73ecb7d3a6a3e44f54b8f00f9ab872b57dd79ded6"
+     "6d7231a14c64144",
+     "5db3b80a81cb63ca59470c83414ef70a",
+     "456e6e796e20447572696e206172616e204d6f726961",
+     "f4639297e3305b03d34dd5d86522ddc6ba11a608a0003670a30734823cdd3763",
+     "396c06a52b39d0930594aa2c6944561cc1741f638557a12bef1c1cad349157c9",
+     "baa4ecf96b5d6d536d0d7210",
+     {// Encryptions
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d30",
+       "f97ca72675b8199e8ffec65b4c200d901110b177b246f241b6f9716fb60b35b"
+       "32a6d452675534b591e8141468a"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d31",
+       "57796e2b9dd0ddf807f1a7cb5884dfc50e61468c4fd69fa03963731e51674ca"
+       "88fee94eeac3290734e1627ded6"},
+      {"4265617574792069732074727574682c20747275746820626561757479",
+       "436f756e742d32",
+       "b514150af1057151687d0036a9b4a3ad50fb186253f839d8433622baa85719e"
+       "d5d2532017a0ce7b9ca0007f276"}},
+     {// Exports
+      {"436f6e746578742d30", 32,
+       "735400cd9b9193daffe840f412074728ade6b1978e9ae27957aacd588dbd7c9e"},
+      {"436f6e746578742d31", 32,
+       "cf4e351e1943d171ff2d88726f18160086ecbec52a8151dba8cf5ba0737a6097"},
+      {"436f6e746578742d32", 32,
+       "8e23b44d4f23dd906d1c100580a670d171132c9786212c4ca2876a1541a84fae"},
+      {"436f6e746578742d33", 32,
+       "56252a940ece53d4013eb619b444ee1d019a08eec427ded2b6dbf24be624a4a0"},
+      {"436f6e746578742d34", 32,
+       "fc6cdca9ce8ab062401478ffd16ee1c07e2b15d7c781d4227f07c6043d937fad"}}}};
+
+#endif  // hpke_vectors_h__

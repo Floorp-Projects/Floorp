@@ -132,6 +132,7 @@
     'mozpkix_only%': 0,
     'coverage%': 0,
     'softfp_cflags%': '',
+    'enable_draft_hpke%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.
@@ -566,6 +567,11 @@
           [ 'disable_dbm==1', {
             'defines': [
               'NSS_DISABLE_DBM',
+            ],
+          }],
+          [ 'enable_draft_hpke==1', {
+            'defines': [
+              'NSS_ENABLE_DRAFT_HPKE',
             ],
           }],
           [ 'disable_libpkix==1', {

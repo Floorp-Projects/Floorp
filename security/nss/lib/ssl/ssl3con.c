@@ -6645,7 +6645,11 @@ ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
 
     /* TLS 1.3: We sent a session ID.  The server's should match. */
     if (!IS_DTLS(ss) && (sentRealSid || sentFakeSid)) {
-        return sidMatch;
+        if (sidMatch) {
+            ss->ssl3.hs.allowCcs = PR_TRUE;
+            return PR_TRUE;
+        }
+        return PR_FALSE;
     }
 
     /* TLS 1.3 (no SID)/DTLS 1.3: The server shouldn't send a session ID. */
@@ -8692,6 +8696,7 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
                 errCode = PORT_GetError();
                 goto alert_loser;
             }
+            ss->ssl3.hs.allowCcs = PR_TRUE;
         }
 
         /* TLS 1.3 requires that compression include only null. */
@@ -13061,8 +13066,15 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
             ss->ssl3.hs.ws != idle_handshake &&
             cText->buf->len == 1 &&
             cText->buf->buf[0] == change_cipher_spec_choice) {
-            /* Ignore the CCS. */
-            return SECSuccess;
+            if (ss->ssl3.hs.allowCcs) {
+                /* Ignore the first CCS. */
+                ss->ssl3.hs.allowCcs = PR_FALSE;
+                return SECSuccess;
+            }
+
+            /* Compatibility mode is not negotiated. */
+            alert = unexpected_message;
+            PORT_SetError(SSL_ERROR_RX_MALFORMED_CHANGE_CIPHER);
         }
 
         if ((IS_DTLS(ss) && !dtls13_AeadLimitReached(spec)) ||

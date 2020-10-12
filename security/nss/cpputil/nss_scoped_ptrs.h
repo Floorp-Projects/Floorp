@@ -11,6 +11,7 @@
 #include "cert.h"
 #include "keyhi.h"
 #include "p12.h"
+#include "pk11hpke.h"
 #include "pk11pqg.h"
 #include "pk11pub.h"
 #include "pkcs11uri.h"
@@ -26,6 +27,9 @@ struct ScopedDelete {
   void operator()(CERTCertList* list) { CERT_DestroyCertList(list); }
   void operator()(CERTSubjectPublicKeyInfo* spki) {
     SECKEY_DestroySubjectPublicKeyInfo(spki);
+  }
+  void operator()(HpkeContext* context) {
+    PK11_HPKE_DestroyContext(context, true);
   }
   void operator()(PK11Context* context) { PK11_DestroyContext(context, true); }
   void operator()(PK11GenericObject* obj) { PK11_DestroyGenericObject(obj); }
@@ -70,6 +74,7 @@ SCOPED(CERTCertificateList);
 SCOPED(CERTDistNames);
 SCOPED(CERTName);
 SCOPED(CERTSubjectPublicKeyInfo);
+SCOPED(HpkeContext);
 SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(PK11SlotInfo);

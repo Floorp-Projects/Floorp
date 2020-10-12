@@ -522,7 +522,7 @@ VFY_EndWithSignature;
 ;+NSS_3.3.1 { 	# NSS 3.3.1 release
 ;+    global:
 ;+#
-;+# The following symbols are exported only to make libsmime3.so work. 
+;+# The following symbols are exported only to make libsmime3.so work.
 ;+# These are still private!!!
 ;+#
 PK11_CreatePBEParams;
@@ -1189,6 +1189,17 @@ PK11_FindEncodedCertInSlot;
 ;+};
 ;+NSS_3.58 { 	# NSS 3.58 release
 ;+    global:
+PK11_HPKE_DestroyContext;
+PK11_HPKE_Deserialize;
+PK11_HPKE_ExportSecret;
+PK11_HPKE_GetEncapPubKey;
+PK11_HPKE_NewContext;
+PK11_HPKE_Open;
+PK11_HPKE_Seal;
+PK11_HPKE_Serialize;
+PK11_HPKE_SetupS;
+PK11_HPKE_SetupR;
+PK11_HPKE_ValidateParameters;
 PK11_ImportDataKey;
 ;+    local:
 ;+       *;
