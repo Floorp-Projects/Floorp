@@ -2890,10 +2890,12 @@ dependencies = [
 
 [[package]]
 name = "mapped_hyph"
-version = "0.4.0"
-source = "git+https://github.com/jfkthame/mapped_hyph.git?tag=v0.4.0#c7737af5ebe9b404c6b7eed6006785ea41337ca1"
+version = "0.4.2"
+source = "git+https://github.com/jfkthame/mapped_hyph.git?tag=v0.4.2#d0d2e862cea33c262d8173a2dddbe0b50fdd6775"
 dependencies = [
  "arrayref",
+ "env_logger 0.7.1",
+ "log",
  "memmap",
 ]
 

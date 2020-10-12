@@ -353,3 +353,12 @@ touch-warning = async touch input disabled due to unsupported pref: { $preferenc
 policies-inactive = Inactive
 policies-active = Active
 policies-error = Error
+
+## Printing section
+
+support-printing-title = Printing
+support-printing-troubleshoot = Troubleshooting
+support-printing-clear-settings-button = Clear saved print settings
+support-printing-modified-settings = Modified print settings
+support-printing-prefs-name = Name
+support-printing-prefs-value = Value

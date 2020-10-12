@@ -79,7 +79,7 @@ export function getWorkerByThread(state: State, thread: string): ?Worker {
 }
 
 function isMainThread(thread: Thread) {
-  return thread.type === "mainThread";
+  return thread.isTopLevel;
 }
 
 export function getMainThread(state: State): ?Thread {

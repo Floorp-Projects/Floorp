@@ -10,7 +10,6 @@ import classnames from "classnames";
 
 import actions from "../../actions";
 import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
-import { isWorker } from "../../utils/threads";
 import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Context, Thread as ThreadType } from "../../types";
@@ -35,7 +34,7 @@ export class Thread extends Component<Props> {
   render() {
     const { currentThread, isPaused, thread } = this.props;
 
-    const worker = isWorker(thread);
+    const isWorker = thread.targetType.includes("worker");
     let label = thread.name;
     if (thread.serviceWorkerStatus) {
       label += ` (${thread.serviceWorkerStatus})`;
@@ -50,7 +49,7 @@ export class Thread extends Component<Props> {
         onClick={this.onSelectThread}
       >
         <div className="icon">
-          <AccessibleImage className={worker ? "worker" : "window"} />
+          <AccessibleImage className={isWorker ? "worker" : "window"} />
         </div>
         <div className="label">{label}</div>
         {isPaused ? (
