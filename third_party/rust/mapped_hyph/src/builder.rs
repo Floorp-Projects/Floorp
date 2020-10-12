@@ -132,7 +132,10 @@ impl LevelBuilder {
         let mut got_digit = false;
         for byte in bytes {
             if *byte <= b'9' && *byte >= b'0' {
-                assert!(!got_digit, "invalid pattern \"{}\": consecutive digits", pattern);
+                if got_digit {
+                    warn!("invalid pattern \"{}\": consecutive digits", pattern);
+                    return;
+                }
                 digits.push(*byte);
                 got_digit = true;
             } else {
@@ -157,7 +160,10 @@ impl LevelBuilder {
             // Convert repl_index and repl_cut from Unicode char to byte indexing.
             let start = if text[0] == b'.' { 1 } else { 0 };
             if start == 1 {
-                assert_eq!(digits[0], b'0', "unexpected digit before start of word");
+                if digits[0] != b'0' {
+                    warn!("invalid pattern \"{}\": unexpected digit before start of word", pattern);
+                    return;
+                }
                 digits.remove(0);
             }
             let word = std::str::from_utf8(&text[start..]).unwrap();
@@ -171,7 +177,10 @@ impl LevelBuilder {
         // (which should not already have a match_string).
         let mut state_num = self.find_state_number_for(&text);
         let mut state = &mut self.states[state_num as usize];
-        assert!(state.match_string.is_none(), "duplicate pattern?");
+        if state.match_string.is_some() {
+            warn!("duplicate pattern \"{}\" discarded", pattern);
+            return;
+        }
         if !digits.is_empty() {
             state.match_string = Some(digits);
         }
@@ -188,7 +197,7 @@ impl LevelBuilder {
             text.truncate(text.len() - 1);
             state_num = self.find_state_number_for(&text);
             if let Some(exists) = self.states[state_num as usize].transitions.0.insert(ch, last_state) {
-                assert_eq!(exists, last_state, "overwriting existing transition?");
+                assert_eq!(exists, last_state, "overwriting existing transition at pattern \"{}\"", pattern);
                 break;
             }
         }
@@ -349,7 +358,7 @@ impl LevelBuilder {
 /// machine transitions, etc.
 /// The returned Vec can be passed to write_hyf_file() to generate a flattened
 /// representation of the state machine in mapped_hyph's binary format.
-fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
+fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Result<Vec<LevelBuilder>, &'static str> {
     let reader = BufReader::new(dic_file);
 
     let mut builders = Vec::<LevelBuilder>::new();
@@ -370,14 +379,19 @@ fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
         if trimmed.as_bytes()[0] >= b'A' && trimmed.as_bytes()[0] <= b'Z' {
             // First line is encoding; we only support UTF-8.
             if builder.encoding.is_none() {
-                assert_eq!(trimmed, "UTF-8", "Only UTF-8 patterns are accepted!");
+                if trimmed != "UTF-8" {
+                    return Err("Only UTF-8 patterns are accepted!");
+                };
                 builder.encoding = Some(trimmed);
                 continue;
             }
             // Check for valid keyword-value pairs.
             if trimmed.contains(' ') {
                 let parts: Vec<&str> = trimmed.split(' ').collect();
-                assert!(parts.len() == 2);
+                if parts.len() != 2 {
+                    warn!("unrecognized keyword/values: {}", trimmed);
+                    continue;
+                }
                 let keyword = parts[0];
                 let value = parts[1];
                 match keyword {
@@ -386,7 +400,7 @@ fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
                     "COMPOUNDLEFTHYPHENMIN" => builder.clh_min = value.parse::<u8>().unwrap(),
                     "COMPOUNDRIGHTHYPHENMIN" => builder.crh_min = value.parse::<u8>().unwrap(),
                     "NOHYPHEN" => builder.nohyphen = Some(trimmed),
-                    _ => println!("unknown keyword: {}", trimmed),
+                    _ => warn!("unknown keyword: {}", trimmed),
                 }
                 continue;
             }
@@ -396,11 +410,15 @@ fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
                 builder = builders.last_mut().unwrap();
                 continue;
             }
-            println!("unknown keyword: {}", trimmed);
+            warn!("unknown keyword: {}", trimmed);
             continue;
         }
-        // Patterns should always be provided in lowercase; complain if not.
-        assert_eq!(trimmed, trimmed.to_lowercase(), "pattern \"{}\" not lowercased at line {}", trimmed, index);
+        // Patterns should always be provided in lowercase; complain if not, and discard
+        // the bad pattern.
+        if trimmed != trimmed.to_lowercase() {
+            warn!("pattern \"{}\" not lowercased at line {}", trimmed, index);
+            continue;
+        }
         builder.add_pattern(&trimmed);
     }
 
@@ -446,7 +464,7 @@ fn read_dic_file<T: Read>(dic_file: T, compress: bool) -> Vec<LevelBuilder> {
         }
     }
 
-    builders
+    Ok(builders)
 }
 
 /// Write out the state machines representing a set of hyphenation rules
@@ -481,5 +499,11 @@ fn write_hyf_file<T: Write>(hyf_file: &mut T, levels: Vec<LevelBuilder>) -> std:
 /// to `hyf_file`. The `compress` param determines whether extra processing to reduce the
 /// size of the output is performed.
 pub fn compile<T1: Read, T2: Write>(dic_file: T1, hyf_file: &mut T2, compress: bool) -> std::io::Result<()> {
-    write_hyf_file(hyf_file, read_dic_file(dic_file, compress))
+    match read_dic_file(dic_file, compress) {
+        Ok(dic) => write_hyf_file(hyf_file, dic),
+        Err(e) => {
+            warn!("parse error: {}", e);
+            return Err(Error::from(ErrorKind::InvalidData))
+        }
+    }
 }
