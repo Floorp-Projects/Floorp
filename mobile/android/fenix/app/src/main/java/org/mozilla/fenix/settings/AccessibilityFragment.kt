@@ -45,7 +45,10 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             val components = preference.context.components
 
             // Value is mapped from 0->30 in steps of 1 so let's convert to float in range 0.5->2.0
-            val newTextScale = ((newTextSize * STEP_SIZE) + MIN_SCALE_VALUE).toFloat() / PERCENT_TO_DECIMAL
+            val newTextScale =
+                ((newTextSize * STEP_SIZE) + MIN_SCALE_VALUE).toFloat() / PERCENT_TO_DECIMAL
+
+            settings.fontSizeFactor = newTextScale
 
             // If scale is 100%, use the automatic font size adjustment
             val useAutoSize = newTextScale == 1F
@@ -54,7 +57,6 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
 
             // If using manual sizing, update the engine settings with the new scale
             if (!useAutoSize) {
-                settings.fontSizeFactor = newTextScale
                 components.core.engine.settings.fontSizeFactor = newTextScale
             }
 
