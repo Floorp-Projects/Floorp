@@ -3,29 +3,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 h1 {
-  text-align: center;
-  font-size: 2.5em;
+  font-size: 1.5em;
   font-weight: lighter;
+  color: white;
+  margin: 3em 0 1em;
 }
 
 .certificate-tabs {
   display: flex;
   text-align: center;
+  border-bottom: 1px solid var(--in-content-border-active);
 }
 
 .info-groups {
   display: none;
+  outline: none;
+  background-color: var(--in-content-page-background);
+  margin-bottom: 2em;
+  border-radius: 0 0 4px 4px;
 }
 
 .info-groups.selected {
-  display: contents;
+  display: block;
 }
 
 .tab {
   margin: 0;
   border-radius: 0;
-  padding: 12px;
-  border: 1px solid var(--in-content-box-border-color);
+  padding: 18px;
+  border: none;
   background-color: var(--in-content-box-background);
   color: var(--in-content-text-color);
   flex: 1 1 auto;
@@ -34,15 +40,26 @@ h1 {
   font-size: 1.363rem;
 }
 
+.tab:first-of-type {
+  border-radius: 4px 0 0 0;
+}
+
+.tab:last-of-type {
+  border-radius: 0 4px 0 0;
+}
+
 .tab:hover {
-  background-color: var(--in-content-box-background-hover);
+  border-bottom: 3px solid var(--in-content-border-active-shadow);
+  /* The bottom border is 3px more than before, so we need to
+   * compensate the padding to prevent the text from jumping */
+  padding-bottom: 15px;
 }
 
 .tab.selected {
-  border-bottom: 2px solid var(--in-content-link-color);
-  /* The bottom border is 1px more than before, so we need to
+  border-bottom: 3px solid var(--in-content-border-active);
+  /* The bottom border is 3px more than before, so we need to
    * compensate the padding to prevent the text from jumping */
-  padding-bottom: 11px;
+  padding-bottom: 15px;
   color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;
