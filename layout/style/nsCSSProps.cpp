@@ -72,7 +72,11 @@ void nsCSSProps::RecomputeEnabledState(const char* aPref, void*) {
        pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
     if (!aPref || !strcmp(aPref, pref->mPref)) {
       foundPref = true;
+#ifdef FUZZING
+      gPropertyEnabled[pref->mPropID] = true;
+#else
       gPropertyEnabled[pref->mPropID] = Preferences::GetBool(pref->mPref);
+#endif
       if (pref->mPropID == eCSSProperty_backdrop_filter) {
         gPropertyEnabled[pref->mPropID] &=
             gfx::gfxVars::GetUseWebRenderOrDefault();
@@ -119,8 +123,6 @@ void nsCSSProps::AddRefTable(void) {
     }
   }
 }
-
-#undef DEBUG_SHORTHANDS_CONTAINING
 
 void nsCSSProps::ReleaseTable(void) {
   if (0 == --gPropertyTableRefCount) {
