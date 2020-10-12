@@ -1,6 +1,6 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
-// We can read the object fields from JS, and write them if they are mutable.
+// We can read the object fields from JS
 
 {
     let ins = wasmEvalText(`(module
@@ -13,9 +13,6 @@
     assertEq(p._0, 1.5);
     assertEq(p._1, 33);
     assertEq(p._2, undefined);
-
-    p._1 = 44;
-    assertEq(p._1, 44);
 }
 
 // Writing an immutable field from JS throws.
@@ -33,10 +30,7 @@
                        /setting immutable field/);
 }
 
-// MVA v1 restriction: structs that expose ref-typed fields should not be
-// constructible from JS.
-//
-// However, if the fields are externref the structs can be constructed from JS.
+// MVA v1 restriction: structs are not constructible from JS.
 
 {
     let ins = wasmEvalText(`(module
@@ -51,20 +45,16 @@
                              (func (export "mkr") (result externref)
                               (struct.new $r (ref.null extern))))`).exports;
 
-    assertEq(typeof ins.mkp().constructor, "function");
     assertErrorMessage(() => new (ins.mkp().constructor)({_0:null}),
                        TypeError,
                        /not constructible/);
 
-    assertEq(typeof ins.mkr().constructor, "function");
-    let r = new (ins.mkr().constructor)({_0:null});
-    assertEq(typeof r, "object");
+    assertErrorMessage(() => new (ins.mkr().constructor)({_0:null}),
+                       TypeError,
+                       /not constructible/);
 }
 
-// MVA v1 restriction: structs that expose ref-typed fields make those fields
-// immutable from JS even if we're trying to store the correct type.
-//
-// However, externref fields are mutable from JS.
+// MVA v1 restriction: all fields are immutable
 
 {
     let ins = wasmEvalText(`(module
@@ -79,6 +69,7 @@
     let q = ins.mkq();
     assertEq(typeof q, "object");
     assertEq(q._0, 1.5);
+
     let p = ins.mkp();
     assertEq(typeof p, "object");
     assertEq(p._0, null);
@@ -87,8 +78,9 @@
                        Error,
                        /setting immutable field/);
 
-    p._1 = q;
-    assertEq(p._1, q);
+    assertErrorMessage(() => { p._1 = q },
+                       Error,
+                       /setting immutable field/);
 }
 
 // MVA v1 restriction: structs that expose i64 fields make those fields
@@ -105,7 +97,6 @@
     assertEq(p._0_high, 0x12345678)
     assertEq(p._0_low, 0x87654321|0);
 
-    assertEq(typeof p.constructor, "function");
     assertErrorMessage(() => new (p.constructor)({_0_high:0, _0_low:0}),
                        TypeError,
                        /not constructible/);
