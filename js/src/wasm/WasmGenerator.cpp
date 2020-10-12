@@ -558,11 +558,8 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::LeaveFrame: {
         Uint32Vector& jumps = metadataTier_->debugTrapFarJumpOffsets;
         if (jumps.empty() || !InRange(jumps.back(), callerOffset)) {
-          // See BaseCompiler::insertBreakablePoint for why we must
-          // reload the TLS register on this path.
           Offsets offsets;
           offsets.begin = masm_.currentOffset();
-          masm_.loadPtr(Address(FramePointer, Frame::tlsOffset()), WasmTlsReg);
           CodeOffset jumpOffset = masm_.farJumpWithPatch();
           offsets.end = masm_.currentOffset();
           if (masm_.oom()) {
