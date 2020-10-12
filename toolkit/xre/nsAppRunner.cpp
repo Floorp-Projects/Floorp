@@ -2004,18 +2004,18 @@ static void OnLauncherPrefChanged(const char* aPref, void* aData) {
   bool prefVal = Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED, true);
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
-  mozilla::LauncherVoidResult reflectResult =
+  mozilla::DebugOnly<mozilla::LauncherVoidResult> reflectResult =
       launcherRegInfo.ReflectPrefToRegistry(prefVal);
-  MOZ_ASSERT(reflectResult.isOk());
+  MOZ_ASSERT(reflectResult.inspect().isOk());
 }
 
 static void OnLauncherTelemetryPrefChanged(const char* aPref, void* aData) {
   bool prefVal = Preferences::GetBool(kPrefHealthReportUploadEnabled, true);
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
-  mozilla::LauncherVoidResult reflectResult =
+  mozilla::DebugOnly<mozilla::LauncherVoidResult> reflectResult =
       launcherRegInfo.ReflectTelemetryPrefToRegistry(prefVal);
-  MOZ_ASSERT(reflectResult.isOk());
+  MOZ_ASSERT(reflectResult.inspect().isOk());
 }
 
 static void SetupLauncherProcessPref() {
@@ -2043,10 +2043,10 @@ static void SetupLauncherProcessPref() {
             mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled);
   }
 
-  mozilla::LauncherVoidResult reflectResult =
+  mozilla::DebugOnly<mozilla::LauncherVoidResult> reflectResult =
       launcherRegInfo.ReflectTelemetryPrefToRegistry(
           Preferences::GetBool(kPrefHealthReportUploadEnabled, true));
-  MOZ_ASSERT(reflectResult.isOk());
+  MOZ_ASSERT(reflectResult.inspect().isOk());
 
   Preferences::RegisterCallback(&OnLauncherPrefChanged,
                                 PREF_WIN_LAUNCHER_PROCESS_ENABLED);
