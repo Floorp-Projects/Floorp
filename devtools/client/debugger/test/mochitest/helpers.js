@@ -1813,9 +1813,10 @@ async function waitForBreakableLine(dbg, source, lineNumber) {
 async function waitForSourceCount(dbg, i) {
   // We are forced to wait until the DOM nodes appear because the
   // source tree batches its rendering.
+  info(`waiting for ${i} sources`);
   await waitUntil(() => {
     return findAllElements(dbg, "sourceNodes").length === i;
-  }, `waiting for ${i} sources`);
+  });
 }
 
 async function assertSourceCount(dbg, count) {
