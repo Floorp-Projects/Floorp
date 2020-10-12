@@ -9,8 +9,8 @@
 
 #include "vm/ReceiverGuard.h"
 
-#include "builtin/TypedObject.h"
 #include "vm/JSObject.h"
+#include "wasm/TypedObject.h"
 
 namespace js {
 
