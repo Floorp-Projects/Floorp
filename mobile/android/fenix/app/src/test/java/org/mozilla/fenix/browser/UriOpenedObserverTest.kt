@@ -59,7 +59,7 @@ class UriOpenedObserverTest {
         observer.onSessionRemoved(session)
         verify { session.unregister(observer.singleSessionObserver) }
 
-        verify { settings.setOpenTabsCount(1) }
+        verify { settings.openTabsCount = 1 }
     }
 
     @Test

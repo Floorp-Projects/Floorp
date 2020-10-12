@@ -339,6 +339,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
 
+        // We will remove this when AC code lands to emit a fact on getTopSites in DefaultTopSitesStorage
+        // https://github.com/mozilla-mobile/android-components/issues/8679
+        settings().topSitesSize = components.core.topSitesStorage.cachedTopSites.size
+
         super.onPause()
 
         // Diagnostic breadcrumb for "Display already aquired" crash:

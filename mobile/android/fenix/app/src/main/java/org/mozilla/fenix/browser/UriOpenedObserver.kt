@@ -46,7 +46,7 @@ class UriOpenedObserver(
     }
 
     private fun saveOpenTabsCount() {
-        settings.setOpenTabsCount(sessionManager.sessionsOfType(private = false).count())
+        settings.openTabsCount = sessionManager.sessionsOfType(private = false).count()
     }
 
     override fun onAllSessionsRemoved() {
