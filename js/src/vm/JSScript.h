@@ -1361,6 +1361,10 @@ struct MemberInitializers {
 //
 // Accessing this array just requires calling the appropriate public
 // Span-computing function.
+//
+// This class doesn't use the GC barrier wrapper classes. BaseScript::swapData
+// performs a manual pre-write barrier when detaching PrivateScriptData from a
+// script.
 class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
  private:
   uint32_t ngcthings = 0;
@@ -1403,7 +1407,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
     return memberInitializers_;
   }
 
-  // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
+  // Allocate a new PrivateScriptData. Headers and GCCellPtrs are initialized.
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
 
   template <XDRMode mode>
@@ -1955,16 +1959,6 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 extern void SweepScriptData(JSRuntime* rt);
 
 } /* namespace js */
-
-namespace JS {
-
-// Define a GCManagedDeletePolicy to allow deleting type outside of normal
-// sweeping.
-template <>
-struct DeletePolicy<js::PrivateScriptData>
-    : public js::GCManagedDeletePolicy<js::PrivateScriptData> {};
-
-} /* namespace JS */
 
 class JSScript : public js::BaseScript {
  private:
