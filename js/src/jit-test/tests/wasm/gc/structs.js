@@ -290,14 +290,10 @@ assertEq(the_list, null);
     assertEq(ins.high(v), 0x42);
     assertEq(v._2, 0x6bbbbbbb);
 
-    v._0 = 0x5ccccccc;
-    v._2 = 0x4ddddddd;
-    assertEq(v._1_low, 0x01020337);
-
     ins.set(v);
-    assertEq(v._0, 0x5ccccccc);
+    assertEq(v._0, 0x7aaaaaaa);
     assertEq(v._1_low, 0x76544567);
-    assertEq(v._2, 0x4ddddddd);
+    assertEq(v._2, 0x6bbbbbbb);
 
     ins.set2(v);
     assertEq(v._1_low, 0x53589793);
