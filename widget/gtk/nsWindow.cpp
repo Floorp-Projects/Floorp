@@ -5048,7 +5048,8 @@ void nsWindow::HideWaylandWindow() {
 
 void nsWindow::WaylandStartVsync() {
 #ifdef MOZ_WAYLAND
-  if (!gUseWaylandVsync) {
+  // only use for toplevel windows for now - see bug 1619246
+  if (!gUseWaylandVsync || mWindowType != eWindowType_toplevel) {
     return;
   }
 
