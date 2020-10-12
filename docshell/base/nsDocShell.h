@@ -1104,7 +1104,7 @@ class nsDocShell final : public nsDocLoader,
   // Sets the active entry to the current loading entry. If aCommit is true then
   // SessionHistoryCommit will be called on the CanonicalBrowsingContext
   // (directly or over IPC).
-  void MoveLoadingToActiveEntry(bool aCommit);
+  void MoveLoadingToActiveEntry();
 
  private:  // data members
   nsString mTitle;
