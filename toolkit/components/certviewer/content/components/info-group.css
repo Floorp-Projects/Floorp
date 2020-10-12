@@ -4,26 +4,22 @@
 
 :host {
   display: grid;
-  grid-template-columns: minmax(11em, 25%) minmax(50%, 75%);
-  grid-gap: 0 15px;
-  margin: 1.75em 0;
+  grid-template-columns: minmax(8em, 25%) minmax(50%, 75%);
+  grid-gap: 0 2em;
+  padding: 1.75em 30px;
   align-items: center;
+  border-top: 1px solid var(--in-content-border-color);
+}
+
+:host:first-of-type {
+  border-top: none;
 }
 
 .info-group-title {
   text-align: end;
   font-weight: 700;
-  color: var(--in-content-deemphasized-text);
+  color: var(--in-content-text-color);
   font-size: 1em;
-}
-
-.info-group-title-hr {
-  height: 1px;
-  background-color: var(--in-content-deemphasized-text);
-  width: calc(100% - 3.5em);
-  position: relative;
-  margin: auto 0;
-  inset: 0;
 }
 
 #critical-info {
@@ -33,4 +29,5 @@
 
 .extension {
   text-align: end;
+  margin-block-end: 1em;
 }

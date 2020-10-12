@@ -37,7 +37,7 @@ export const updateSelectedItem = (() => {
   };
 })();
 
-const createEntryItem = (labelId, info) => {
+const createEntryItem = (labelId, info, isHex = false) => {
   if (
     labelId == null ||
     info == null ||
@@ -48,6 +48,7 @@ const createEntryItem = (labelId, info) => {
   return {
     labelId,
     info,
+    isHex,
   };
 };
 
@@ -166,9 +167,9 @@ export const adjustCertInformation = cert => {
           createEntryItem("algorithm", cert.subjectPublicKeyInfo.kty),
           createEntryItem("key-size", cert.subjectPublicKeyInfo.keysize),
           createEntryItem("curve", cert.subjectPublicKeyInfo.crv),
-          createEntryItem("public-value", cert.subjectPublicKeyInfo.xy),
+          createEntryItem("public-value", cert.subjectPublicKeyInfo.xy, true),
           createEntryItem("exponent", cert.subjectPublicKeyInfo.e),
-          createEntryItem("modulus", cert.subjectPublicKeyInfo.n),
+          createEntryItem("modulus", cert.subjectPublicKeyInfo.n, true),
         ].filter(elem => elem != null);
       }
       return items;
@@ -181,7 +182,7 @@ export const adjustCertInformation = cert => {
   addToResultUsing(
     () => {
       let items = [
-        createEntryItem("serial-number", cert.serialNumber),
+        createEntryItem("serial-number", cert.serialNumber, true),
         createEntryItem(
           "signature-algorithm",
           cert.signature ? cert.signature.name : null
@@ -201,8 +202,8 @@ export const adjustCertInformation = cert => {
       let items = [];
       if (cert.fingerprint) {
         items = [
-          createEntryItem("sha-256", cert.fingerprint.sha256),
-          createEntryItem("sha-1", cert.fingerprint.sha1),
+          createEntryItem("sha-256", cert.fingerprint.sha256, true),
+          createEntryItem("sha-1", cert.fingerprint.sha1, true),
         ].filter(elem => elem != null);
       }
       return items;
@@ -284,7 +285,7 @@ export const adjustCertInformation = cert => {
     () => {
       let items = [];
       if (cert.ext.sKID) {
-        items = [createEntryItem("key-id", cert.ext.sKID.id)].filter(
+        items = [createEntryItem("key-id", cert.ext.sKID.id, true)].filter(
           elem => elem != null
         );
       }
@@ -299,7 +300,7 @@ export const adjustCertInformation = cert => {
     () => {
       let items = [];
       if (cert.ext.aKID) {
-        items = [createEntryItem("key-id", cert.ext.aKID.id)].filter(
+        items = [createEntryItem("key-id", cert.ext.aKID.id, true)].filter(
           elem => elem != null
         );
       }
@@ -387,8 +388,12 @@ export const adjustCertInformation = cert => {
             if (key.includes("timestamp")) {
               timestamps[key.includes("UTC") ? "utc" : "local"] = entry[key];
             } else {
+              let isHex = false;
+              if (key == "logId") {
+                isHex = true;
+              }
               items.push(
-                createEntryItem(normalizeToKebabCase(key), entry[key])
+                createEntryItem(normalizeToKebabCase(key), entry[key], isHex)
               );
             }
           }
