@@ -4,17 +4,8 @@
                  type="text/css"?>
 <window onload="runTests()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <!-- XXXdholbert this wrapper-div and the 'min-height' below are temporary
-       hacks, to be removed when bug 1602410 lands. They only exist so that
-       the print-preview area can be sufficiently tall for the previewed
-       content to be visible in the top left corner of print-preview, in the
-       face of the "contain"-style scaling & centering that we do.
-    -->
-  <div style="overflow:hidden; height: 200px;">
-    <iframe height="200" width="600" type="content"></iframe>
-    <iframe height="200" width="600" type="content"
-            style="min-height:500px"></iframe>
-  </div>
+  <iframe height="200" width="600" type="content"></iframe>
+  <iframe height="200" width="600" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
 // Note: We can't use window.frames directly here because the type="content"
