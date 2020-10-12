@@ -2092,6 +2092,10 @@ bool nsFocusManager::Blur(BrowsingContext* aBrowsingContextToClear,
     ancestorWindowToFocus->SetFocusedElement(nullptr, 0, true);
     ancestorWindowToFocusHandled = true;
   }
+  // The expectation is that the blurring would eventually result in an IPC
+  // message doing this anyway, but this doesn't happen if the focus is in OOP
+  // iframe which won't try to bounce an IPC message to its parent frame.
+  SetFocusedWindowInternal(nullptr);
   contentChild->SendBlurToParent(
       focusedBrowsingContext, aBrowsingContextToClear,
       aAncestorBrowsingContextToFocus, aIsLeavingDocument, aAdjustWidget,
