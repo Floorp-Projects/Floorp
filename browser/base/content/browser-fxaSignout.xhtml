@@ -22,18 +22,11 @@
       <html:link rel="localization" href="browser/sync.ftl"/>
     </linkset>
     <script src="chrome://browser/content/browser-fxaSignout.js"/>
-
-    <vbox id="fxaSignoutContent">
-      <hbox class="signout-header-row">
-        <image class="sign-out-icon" />
-        <vbox class="sign-out-header-details">
-          <description id="fxaSignoutHeading" class="sign-out-header" data-l10n-id="fxa-signout-dialog-heading"></description>
-          <label id="fxaSignoutBody" class="sign-out-body" data-l10n-id="fxa-signout-dialog-body"></label>
-        </vbox>
-      </hbox>
-      <hbox id="fxaDeleteLocalDataContent" class="delete-local-data-row">
-        <checkbox id="shouldDeleteLocalData" class="delete-local-data-checkbox" data-l10n-id="fxa-signout-checkbox"/>
-      </hbox>
+    <vbox>
+      <description class="sign-out-header" data-l10n-id="fxa-signout-dialog-heading"></description>
+      <label id="fxaSignoutDetail" data-l10n-id="fxa-signout-dialog-body"></label>
+      <separator/>
+      <checkbox id="shouldDeleteLocalData" class="delete-local-data-checkbox" data-l10n-id="fxa-signout-checkbox"/>
     </vbox>
   </dialog>
 </window>

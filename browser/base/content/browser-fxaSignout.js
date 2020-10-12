@@ -11,10 +11,10 @@ ChromeUtils.defineModuleGetter(
 function onLoad() {
   const hideDeleteLocalDataSections = window.arguments[0].hideDeleteDataOption;
   document.getElementById(
-    "fxaDeleteLocalDataContent"
+    "shouldDeleteLocalData"
   ).hidden = hideDeleteLocalDataSections;
   document.getElementById(
-    "fxaSignoutBody"
+    "fxaSignoutDetail"
   ).hidden = hideDeleteLocalDataSections;
 
   document.addEventListener("dialogaccept", () => {
