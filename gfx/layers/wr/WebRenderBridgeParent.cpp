@@ -1971,7 +1971,9 @@ void WebRenderBridgeParent::SetOMTASampleTime() {
 void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
-    mCompositorScheduler->ScheduleComposition();
+    if (mCompositorScheduler) {
+      mCompositorScheduler->ScheduleComposition();
+    }
   }
 }
 
