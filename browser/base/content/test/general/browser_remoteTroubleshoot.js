@@ -105,6 +105,10 @@ add_task(async function() {
     !got.message.modifiedPreferences,
     "should not have a modifiedPreferences key"
   );
+  Assert.ok(
+    !got.message.printingPreferences,
+    "should not have a printingPreferences key"
+  );
   Assert.ok(!got.message.crashes, "should not have crash info");
 
   // Now a http:// URI - should receive an error
