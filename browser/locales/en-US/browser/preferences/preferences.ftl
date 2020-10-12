@@ -544,6 +544,12 @@ browsing-picture-in-picture-toggle-enabled =
 
 browsing-picture-in-picture-learn-more = Learn more
 
+browsing-media-control =
+    .label = Control media via keyboard, headset, or virtual interface
+    .accesskey = v
+
+browsing-media-control-learn-more = Learn more
+
 browsing-cfr-recommendations =
     .label = Recommend extensions as you browse
     .accesskey = R
