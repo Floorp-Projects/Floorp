@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Webconsole test filter groups page</title>
+  </head>
+  <body>
+    <p>Webconsole test filter groups page</p>
+    <script>
+      "use strict";
+
+      /*
+       * This is going to print the following:
+       *   ▼[a]
+       *   |   [b]
+       *   |   [c]
+       *   | ▼[d]
+       *   | |   [e]
+       *   |   [f]
+       *   |   [g]
+       *   [h]
+       *   [i]
+       *   ▶︎[j]
+       *   ▼[group]
+       *   | ▼[subgroup]
+       *   | |  [subitem]
+       */
+      console.group("[a]");
+      console.log("[b]");
+      console.info("[c]");
+      console.group("[d]");
+      console.error("[e]");
+      console.groupEnd();
+      console.warn("[f]");
+      console.debug("[g]");
+      console.groupEnd();
+      console.log("[h]");
+      console.log("[i]");
+      console.groupCollapsed("[j]");
+      console.log("[k]");
+      console.groupEnd();
+      console.group("[group]");
+      console.group("[subgroup]");
+      console.log("[subitem]");
+      console.groupEnd();
+      console.groupEnd();
+    </script>
+  </body>
+</html>
