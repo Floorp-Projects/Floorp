@@ -10482,7 +10482,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
   //            [stack] CALLBACK UNDEFINED
 
   const ParserAtom* atom = RealmInstrumentation::getInstrumentationKindName(
-      cx, compilationInfo, kind);
+      cx, compilationInfo.stencil.parserAtoms, kind);
   if (!atom) {
     return false;
   }
