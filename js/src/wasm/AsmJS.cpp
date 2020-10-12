@@ -36,6 +36,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
+#include "frontend/ParserAtom.h"
 #include "frontend/SharedContext.h"  // TopLevelFunction
 #include "gc/Policy.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector
@@ -1315,7 +1316,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
  protected:
   JSContext* cx_;
-  CompilationInfo& compilationInfo_;
+  ParserAtomsTable& parserAtoms_;
   FunctionNode* moduleFunctionNode_;
   const ParserName* moduleFunctionName_;
   const ParserName* globalArgumentName_ = nullptr;
@@ -1343,10 +1344,10 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   bool errorOverRecursed_ = false;
 
  protected:
-  ModuleValidatorShared(JSContext* cx, CompilationInfo& compilationInfo,
+  ModuleValidatorShared(JSContext* cx, ParserAtomsTable& parserAtoms,
                         FunctionNode* moduleFunctionNode)
       : cx_(cx),
-        compilationInfo_(compilationInfo),
+        parserAtoms_(parserAtoms),
         moduleFunctionNode_(moduleFunctionNode),
         moduleFunctionName_(FunctionName(moduleFunctionNode)),
         standardLibraryMathNames_(cx),
@@ -1384,8 +1385,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      auto mbAtom = compilationInfo_.stencil.parserAtoms.internAscii(
-          cx_, name, strlen(name));
+      auto mbAtom = parserAtoms_.internAscii(cx_, name, strlen(name));
       if (mbAtom.isErr()) {
         return false;
       }
@@ -1415,8 +1415,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      auto mbAtom = compilationInfo_.stencil.parserAtoms.internAscii(
-          cx_, name, strlen(name));
+      auto mbAtom = parserAtoms_.internAscii(cx_, name, strlen(name));
       if (mbAtom.isErr()) {
         return false;
       }
@@ -1854,9 +1853,9 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   AsmJSParser<Unit>& parser_;
 
  public:
-  ModuleValidator(JSContext* cx, CompilationInfo& compilationInfo,
+  ModuleValidator(JSContext* cx, ParserAtomsTable& parserAtoms,
                   AsmJSParser<Unit>& parser, FunctionNode* moduleFunctionNode)
-      : ModuleValidatorShared(cx, compilationInfo, moduleFunctionNode),
+      : ModuleValidatorShared(cx, parserAtoms, moduleFunctionNode),
         parser_(parser) {}
 
   ~ModuleValidator() {
@@ -6354,14 +6353,14 @@ static bool CheckModuleEnd(ModuleValidator<Unit>& m) {
 }
 
 template <typename Unit>
-static SharedModule CheckModule(JSContext* cx, CompilationInfo& compilationInfo,
+static SharedModule CheckModule(JSContext* cx, ParserAtomsTable& parserAtoms,
                                 AsmJSParser<Unit>& parser, ParseNode* stmtList,
                                 unsigned* time) {
   int64_t before = PRMJ_Now();
 
   FunctionNode* moduleFunctionNode = parser.pc_->functionBox()->functionNode;
 
-  ModuleValidator<Unit> m(cx, compilationInfo, parser, moduleFunctionNode);
+  ModuleValidator<Unit> m(cx, parserAtoms, parser, moduleFunctionNode);
   if (!m.init()) {
     return nullptr;
   }
@@ -7049,7 +7048,7 @@ static bool EstablishPreconditions(JSContext* cx,
 }
 
 template <typename Unit>
-static bool DoCompileAsmJS(JSContext* cx, CompilationInfo& compilationInfo,
+static bool DoCompileAsmJS(JSContext* cx, ParserAtomsTable& parserAtoms,
                            AsmJSParser<Unit>& parser, ParseNode* stmtList,
                            bool* validated) {
   *validated = false;
@@ -7062,8 +7061,7 @@ static bool DoCompileAsmJS(JSContext* cx, CompilationInfo& compilationInfo,
   // "Checking" parses, validates and compiles, producing a fully compiled
   // WasmModuleObject as result.
   unsigned time;
-  SharedModule module =
-      CheckModule(cx, compilationInfo, parser, stmtList, &time);
+  SharedModule module = CheckModule(cx, parserAtoms, parser, stmtList, &time);
   if (!module) {
     return NoExceptionPending(cx);
   }
@@ -7083,16 +7081,16 @@ static bool DoCompileAsmJS(JSContext* cx, CompilationInfo& compilationInfo,
   return NoExceptionPending(cx);
 }
 
-bool js::CompileAsmJS(JSContext* cx, CompilationInfo& compilationInfo,
+bool js::CompileAsmJS(JSContext* cx, ParserAtomsTable& parserAtoms,
                       AsmJSParser<char16_t>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, compilationInfo, parser, stmtList, validated);
+  return DoCompileAsmJS(cx, parserAtoms, parser, stmtList, validated);
 }
 
-bool js::CompileAsmJS(JSContext* cx, CompilationInfo& compilationInfo,
+bool js::CompileAsmJS(JSContext* cx, ParserAtomsTable& parserAtoms,
                       AsmJSParser<Utf8Unit>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, compilationInfo, parser, stmtList, validated);
+  return DoCompileAsmJS(cx, parserAtoms, parser, stmtList, validated);
 }
 
 /*****************************************************************************/
