@@ -315,8 +315,15 @@ Maybe<wr::WrSpaceAndClip> ClipManager::DefineScrollLayers(
   if (parent) {
     parent->space = SpatialIdAfterOverride(parent->space);
   }
-  LayoutDevicePoint scrollOffset =
-      metrics.GetLayoutScrollOffset() * metrics.GetDevPixelsPerCSSPixel();
+  // The external scroll offset is accumulated into the local space positions of
+  // display items inside WR, so that the elements hash (intern) to the same
+  // content ID for quick comparisons. To avoid invalidations when the
+  // auPerDevPixel is not a round value, round here directly from app units.
+  // This guarantees we won't introduce any inaccuracy in the external scroll
+  // offset passed to WR.
+  LayoutDevicePoint scrollOffset = LayoutDevicePoint::FromAppUnitsRounded(
+      scrollableFrame->GetScrollPosition(), auPerDevPixel);
+
   return Some(mBuilder->DefineScrollLayer(
       viewId, parent, wr::ToLayoutRect(contentRect),
       wr::ToLayoutRect(clipBounds), wr::ToLayoutPoint(scrollOffset)));
