@@ -37,6 +37,7 @@ describe("getDirectories", () => {
         url: "http://a",
         type: "worker",
         name: "FakeThread",
+        isTopLevel: false,
       },
     ];
 
@@ -80,6 +81,7 @@ describe("findSourceTreeNodes", () => {
         url: "http://a",
         type: "worker",
         name: "FakeThread",
+        isTopLevel: false,
       },
     ];
 

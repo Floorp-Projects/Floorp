@@ -16,8 +16,6 @@ import type {
 
 import { clientCommands } from "./commands";
 
-const mainThreadType = "mainThread";
-
 export function prepareSourcePayload(
   threadFront: ThreadFront,
   source: SourcePayload
@@ -107,17 +105,17 @@ function getTargetType(target: Target) {
     return "contentProcess";
   }
 
-  return mainThreadType;
+  return "frame";
 }
 
 export function createThread(actor: string, target: Target): Thread {
   const type = getTargetType(target);
-  const name =
-    type === mainThreadType ? L10N.getStr("mainThread") : target.name;
+  const name = target.isTopLevel ? L10N.getStr("mainThread") : target.name;
 
   return {
     actor,
     url: target.url,
+    isTopLevel: target.isTopLevel,
     type,
     name,
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
