@@ -9,7 +9,6 @@
 
 #include "mozilla/CheckedInt.h"
 
-#include "builtin/TypedObjectConstants.h"
 #include "gc/Allocator.h"
 #include "gc/WeakMap.h"
 #include "js/Conversions.h"
@@ -98,17 +97,6 @@
 
 namespace js {
 
-namespace type {
-
-enum Kind {
-  Scalar = JS_TYPEREPR_SCALAR_KIND,
-  Reference = JS_TYPEREPR_REFERENCE_KIND,
-  Struct = JS_TYPEREPR_STRUCT_KIND,
-  Array = JS_TYPEREPR_ARRAY_KIND
-};
-
-}  // namespace type
-
 /* The prototype for typed objects. */
 class TypedProto : public NativeObject {
  public:
@@ -121,28 +109,60 @@ class TypedProto : public NativeObject {
   static TypedProto* create(JSContext* cx);
 };
 
+enum class TypeKind : int32_t { Scalar, Reference, Struct, Array };
+
 class TypeDescr : public NativeObject {
  public:
+  // Some slots apply to all type objects and some are specific to
+  // particular kinds of type objects. For simplicity we use the same
+  // number of slots no matter what kind of type descriptor we are
+  // working with, even though this is mildly wasteful.
+  enum Slot {
+    // Slots on all type objects
+    Kind = 0,        // Kind of the type descriptor
+    StringRepr = 1,  // Atomized string representation
+    Alignment = 2,   // Alignment in bytes
+    Size = 3,        // Size in bytes, else 0
+    Proto = 4,       // Prototype for instances, if any
+    TraceList = 5,   // List of references for use in tracing
+
+    // Slots on scalars, references
+    Type = 6,  // Type code
+
+    // Slots on array descriptors
+    ArrayElemType = 6,
+    ArrayLength = 7,
+
+    // Slots on struct type objects
+    StructFieldNames = 6,
+    StructFieldTypes = 7,
+    StructFieldOffsets = 8,
+    StructFieldMuts = 9,
+
+    // Maximum number of slots for any descriptor
+    SlotCount = 10,
+  };
+
   TypedProto& typedProto() const {
-    return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
+    return getReservedSlot(Slot::Proto).toObject().as<TypedProto>();
   }
 
   JSAtom& stringRepr() const {
-    return getReservedSlot(JS_DESCR_SLOT_STRING_REPR).toString()->asAtom();
+    return getReservedSlot(Slot::StringRepr).toString()->asAtom();
   }
 
-  type::Kind kind() const {
-    return (type::Kind)getReservedSlot(JS_DESCR_SLOT_KIND).toInt32();
+  TypeKind kind() const {
+    return (TypeKind)getReservedSlot(Slot::Kind).toInt32();
   }
 
   uint32_t alignment() const {
-    int32_t i = getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
+    int32_t i = getReservedSlot(Slot::Alignment).toInt32();
     MOZ_ASSERT(i >= 0);
     return uint32_t(i);
   }
 
   uint32_t size() const {
-    int32_t i = getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
+    int32_t i = getReservedSlot(Slot::Size).toInt32();
     MOZ_ASSERT(i >= 0);
     return uint32_t(i);
   }
@@ -164,12 +184,12 @@ class TypeDescr : public NativeObject {
   // TODO/AnyRef-boxing: once anyref has a more complicated structure, we must
   // revisit this.
   MOZ_MUST_USE bool hasTraceList() const {
-    return !getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).isUndefined();
+    return !getFixedSlot(Slot::TraceList).isUndefined();
   }
   const uint32_t* traceList() const {
     MOZ_ASSERT(hasTraceList());
     return reinterpret_cast<uint32_t*>(
-        getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).toPrivate());
+        getFixedSlot(Slot::TraceList).toPrivate());
   }
 
   void initInstance(const JSRuntime* rt, uint8_t* mem);
@@ -193,54 +213,14 @@ class ScalarTypeDescr : public SimpleTypeDescr {
  public:
   using Type = Scalar::Type;
 
-  static const type::Kind Kind = type::Scalar;
+  static const TypeKind Kind = TypeKind::Scalar;
   static uint32_t size(Type t);
   static uint32_t alignment(Type t);
   static const char* typeName(Type type);
 
   static const JSClass class_;
 
-  Type type() const {
-    // Make sure the values baked into TypedObjectConstants.h line up with
-    // the Scalar::Type enum. We don't define Scalar::Type directly in
-    // terms of these constants to avoid making TypedObjectConstants.h a
-    // public header file.
-    static_assert(
-        Scalar::Int8 == JS_SCALARTYPEREPR_INT8,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Uint8 == JS_SCALARTYPEREPR_UINT8,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Int16 == JS_SCALARTYPEREPR_INT16,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Uint16 == JS_SCALARTYPEREPR_UINT16,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Int32 == JS_SCALARTYPEREPR_INT32,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Uint32 == JS_SCALARTYPEREPR_UINT32,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::BigInt64 == JS_SCALARTYPEREPR_BIGINT64,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::BigUint64 == JS_SCALARTYPEREPR_BIGUINT64,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Float32 == JS_SCALARTYPEREPR_FLOAT32,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Float64 == JS_SCALARTYPEREPR_FLOAT64,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-    static_assert(
-        Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED,
-        "TypedObjectConstants.h must be consistent with Scalar::Type");
-
-    return Type(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
-  }
+  Type type() const { return Type(getReservedSlot(Slot::Type).toInt32()); }
 
   static MOZ_MUST_USE bool call(JSContext* cx, unsigned argc, Value* vp);
 };
@@ -273,10 +253,10 @@ class ScalarTypeDescr : public SimpleTypeDescr {
   JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(MACRO_)
 
 enum class ReferenceType {
-  TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
-  TYPE_OBJECT = JS_REFERENCETYPEREPR_OBJECT,
-  TYPE_WASM_ANYREF = JS_REFERENCETYPEREPR_WASM_ANYREF,
-  TYPE_STRING = JS_REFERENCETYPEREPR_STRING
+  TYPE_ANY,
+  TYPE_OBJECT,
+  TYPE_WASM_ANYREF,
+  TYPE_STRING
 };
 
 // Type for reference type constructors like `Any`, `String`, and
@@ -289,13 +269,13 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
   static const char* typeName(Type type);
 
   static const int32_t TYPE_MAX = int32_t(ReferenceType::TYPE_STRING) + 1;
-  static const type::Kind Kind = type::Reference;
+  static const TypeKind Kind = TypeKind::Reference;
   static const JSClass class_;
   static uint32_t size(Type t);
   static uint32_t alignment(Type t);
 
   ReferenceType type() const {
-    return (ReferenceType)getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    return (ReferenceType)getReservedSlot(Slot::Type).toInt32();
   }
 
   const char* typeName() const { return typeName(type()); }
@@ -343,22 +323,20 @@ class ArrayMetaTypeDescr : public NativeObject {
 class ArrayTypeDescr : public ComplexTypeDescr {
  public:
   static const JSClass class_;
-  static const type::Kind Kind = type::Array;
+  static const TypeKind Kind = TypeKind::Array;
 
   TypeDescr& elementType() const {
-    return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE)
-        .toObject()
-        .as<TypeDescr>();
+    return getReservedSlot(Slot::ArrayElemType).toObject().as<TypeDescr>();
   }
 
   uint32_t length() const {
-    int32_t i = getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
+    int32_t i = getReservedSlot(Slot::ArrayLength).toInt32();
     MOZ_ASSERT(i >= 0);
     return uint32_t(i);
   }
 
   static int32_t offsetOfLength() {
-    return getFixedSlotOffset(JS_DESCR_SLOT_ARRAY_LENGTH);
+    return getFixedSlotOffset(Slot::ArrayLength);
   }
 };
 
@@ -512,6 +490,9 @@ class TypedObject : public JSObject {
                                               HandleId id,
                                               ObjectOpResult& result);
 
+  bool loadValue(JSContext* cx, size_t offset, HandleTypeDescr type,
+                 MutableHandleValue vp);
+
   uint8_t* typedMem() const;
   uint8_t* typedMemBase() const;
 
@@ -657,91 +638,6 @@ class InlineTypedObject : public TypedObject {
   static InlineTypedObject* create(JSContext* cx, HandleTypeDescr descr,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 };
-
-/*
- * Usage: ObjectIsTypeDescr(obj)
- *
- * True if `obj` is a type object.
- */
-MOZ_MUST_USE bool ObjectIsTypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: ObjectIsTypedObject(obj)
- *
- * True if `obj` is a transparent or opaque typed object.
- */
-MOZ_MUST_USE bool ObjectIsTypedObject(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: ClampToUint8(v)
- *
- * Same as the C function ClampDoubleToUint8. `v` must be a number.
- */
-MOZ_MUST_USE bool ClampToUint8(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: IsBoxedWasmAnyRef(Object) -> bool
- *
- * Return true iff object is an instance of the Wasm-internal type WasmValueBox.
- */
-MOZ_MUST_USE bool IsBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: IsBoxableWasmAnyRef(Value) -> bool
- *
- * Return true iff the value must be boxed into a WasmValueBox in order to be
- * stored into an anyref field.  Values for which false is returned may be
- * passed as they are to Store_WasmAnyRef and may therefore appear as results
- * from Load_WasmAnyRef.
- */
-MOZ_MUST_USE bool IsBoxableWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: UnboxBoxedWasmAnyRef(Object) -> Value
- *
- * The object must be a value for which IsBoxedWasmAnyRef returns true.
- * Return the value stored in the box.
- */
-MOZ_MUST_USE bool UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: LoadScalar(targetDatum, targetOffset, value)
- *
- * Intrinsic function. Loads value (which must be an int32 or uint32)
- * by `scalarTypeRepr` (which must be a type repr obj) and loads the
- * value at the memory for `targetDatum` at offset `targetOffset`.
- * `targetDatum` must be attached.
- */
-#define JS_LOAD_SCALAR_CLASS_DEFN(_constant, T, _name)                      \
-  class LoadScalar##T {                                                     \
-   public:                                                                  \
-    static MOZ_MUST_USE bool Func(JSContext* cx, unsigned argc, Value* vp); \
-    static const JSJitInfo JitInfo;                                         \
-  };
-
-/*
- * Usage: LoadReference(targetDatum, targetOffset, value)
- *
- * Intrinsic function. Stores value (which must be an int32 or uint32)
- * by `scalarTypeRepr` (which must be a type repr obj) and stores the
- * value at the memory for `targetDatum` at offset `targetOffset`.
- * `targetDatum` must be attached.
- */
-#define JS_LOAD_REFERENCE_CLASS_DEFN(_constant, T, _name)                   \
-  class LoadReference##_name {                                              \
-   private:                                                                 \
-    static void load(T* heap, MutableHandleValue v);                        \
-                                                                            \
-   public:                                                                  \
-    static MOZ_MUST_USE bool Func(JSContext* cx, unsigned argc, Value* vp); \
-    static const JSJitInfo JitInfo;                                         \
-  };
-
-// I was using templates for this stuff instead of macros, but ran
-// into problems with the Unagi compiler.
-JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_LOAD_SCALAR_CLASS_DEFN)
-JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_LOAD_SCALAR_CLASS_DEFN)
-JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_DEFN)
 
 inline bool IsTypedObjectClass(const JSClass* class_) {
   return class_ == &OutlineTypedObject::class_ ||
