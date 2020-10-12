@@ -331,57 +331,43 @@ uint8_t* WasmFrameIter::resumePCinCurrentFrame() const {
 // generation.
 #if defined(JS_CODEGEN_X64)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 2;
-static const unsigned PushedFP = 3;
-static const unsigned SetFP = 6;
-static const unsigned PoppedFP = 2;
-static const unsigned PoppedTLSReg = 0;
+static const unsigned PushedFP = 1;
+static const unsigned SetFP = 4;
+static const unsigned PoppedFP = 0;
 #elif defined(JS_CODEGEN_X86)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 1;
-static const unsigned PushedFP = 2;
-static const unsigned SetFP = 4;
-static const unsigned PoppedFP = 1;
-static const unsigned PoppedTLSReg = 0;
+static const unsigned PushedFP = 1;
+static const unsigned SetFP = 3;
+static const unsigned PoppedFP = 0;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedTLS = 8;
-static const unsigned PushedFP = 12;
-static const unsigned SetFP = 16;
-static const unsigned PoppedFP = 4;
-static const unsigned PoppedTLSReg = 0;
+static const unsigned PushedFP = 8;
+static const unsigned SetFP = 12;
+static const unsigned PoppedFP = 0;
 #elif defined(JS_CODEGEN_ARM64)
 // On ARM64 we do not use push or pop; the prologues and epilogues are
 // structured differently due to restrictions on SP alignment.  Even so,
-// PushedRetAddr, PushedTLS, and PushedFP are used in some restricted contexts
+// PushedRetAddr and PushedFP are used in some restricted contexts
 // and must be superficially meaningful.
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedTLS = 12;
-static const unsigned PushedFP = 16;
-static const unsigned SetFP = 20;
-static const unsigned PoppedFP = 8;
-static const unsigned PoppedTLSReg = 4;
+static const unsigned PushedFP = 12;
+static const unsigned SetFP = 16;
+static const unsigned PoppedFP = 4;
 static_assert(BeforePushRetAddr == 0, "Required by StartUnwinding");
 static_assert(PushedFP > PushedRetAddr, "Required by StartUnwinding");
-static_assert(PushedFP > PushedTLS, "Required by StartUnwinding");
-static_assert(PoppedFP > PoppedTLSReg, "Required by StartUnwinding");
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedTLS = 12;
-static const unsigned PushedFP = 16;
-static const unsigned SetFP = 20;
-static const unsigned PoppedFP = 8;
-static const unsigned PoppedTLSReg = 4;
+static const unsigned PushedFP = 12;
+static const unsigned SetFP = 16;
+static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 // Synthetic values to satisfy asserts and avoid compiler warnings.
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 1;
-static const unsigned PushedFP = 2;
-static const unsigned SetFP = 3;
-static const unsigned PoppedFP = 4;
-static const unsigned PoppedTLSReg = 5;
+static const unsigned PushedFP = 1;
+static const unsigned SetFP = 2;
+static const unsigned PoppedFP = 3;
 #else
 #  error "Unknown architecture!"
 #endif
@@ -433,8 +419,6 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     masm.subFromStackPtr(Imm32(sizeof(Frame)));
     masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.storePtr(WasmTlsReg, Address(StackPointer, Frame::tlsOffset()));
-    MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
     masm.storePtr(FramePointer, Address(StackPointer, Frame::callerFPOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.moveStackPtrTo(FramePointer);
@@ -446,15 +430,13 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     MOZ_ASSERT(masm.GetStackPointer64().code() == sp.code());
 
     AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 5);
+                               /* number of instructions in scope = */ 4);
 
     *entry = masm.currentOffset();
 
     masm.Sub(sp, sp, sizeof(Frame));
     masm.Str(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.Str(ARMRegister(WasmTlsReg, 64), MemOperand(sp, Frame::tlsOffset()));
-    MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
     masm.Str(ARMRegister(FramePointer, 64),
              MemOperand(sp, Frame::callerFPOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
@@ -465,7 +447,7 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   {
 #  if defined(JS_CODEGEN_ARM)
     AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 7);
+                               /* number of instructions in scope = */ 6);
 
     *entry = masm.currentOffset();
 
@@ -477,8 +459,6 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
 #  endif
 
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.push(WasmTlsReg);
-    MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
     masm.push(FramePointer);
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.moveStackPtrTo(FramePointer);
@@ -498,14 +478,11 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   }
 
   DebugOnly<uint32_t> poppedFP;
-  DebugOnly<uint32_t> poppedTlsReg;
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 
   masm.loadPtr(Address(StackPointer, Frame::callerFPOffset()), FramePointer);
   poppedFP = masm.currentOffset();
-  masm.loadPtr(Address(StackPointer, Frame::tlsOffset()), WasmTlsReg);
-  poppedTlsReg = masm.currentOffset();
   masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset()), ra);
 
   *ret = masm.currentOffset();
@@ -517,14 +494,11 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   // We do not use the PseudoStackPointer.
   MOZ_ASSERT(masm.GetStackPointer64().code() == sp.code());
 
-  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 5);
+  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 4);
 
   masm.Ldr(ARMRegister(FramePointer, 64),
            MemOperand(sp, Frame::callerFPOffset()));
   poppedFP = masm.currentOffset();
-
-  masm.Ldr(ARMRegister(WasmTlsReg, 64), MemOperand(sp, Frame::tlsOffset()));
-  poppedTlsReg = masm.currentOffset();
 
   masm.Ldr(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
   *ret = masm.currentOffset();
@@ -535,7 +509,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 #else
   // Forbid pools for the same reason as described in GenerateCallablePrologue.
 #  if defined(JS_CODEGEN_ARM)
-  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 7);
+  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 6);
 #  endif
 
   // There is an important ordering constraint here: fp must be repointed to
@@ -548,16 +522,12 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   masm.pop(FramePointer);
   poppedFP = masm.currentOffset();
 
-  masm.pop(WasmTlsReg);
-  poppedTlsReg = masm.currentOffset();
-
   *ret = masm.currentOffset();
   masm.ret();
 
 #endif
 
   MOZ_ASSERT_IF(!masm.oom(), PoppedFP == *ret - poppedFP);
-  MOZ_ASSERT_IF(!masm.oom(), PoppedTLSReg == *ret - poppedTlsReg);
 }
 
 static void EnsureOffset(MacroAssembler& masm, uint32_t base,
@@ -1052,8 +1022,8 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       } else
 #elif defined(JS_CODEGEN_ARM64)
       if (offsetFromEntry < PushedFP || codeRange->isThunk()) {
-        // Constraints above ensure that this covers BeforePushRetAddr,
-        // PushedRetAddr, and PushedTLS.
+        // Constraints above ensure that this covers BeforePushRetAddr and
+        // PushedRetAddr.
         //
         // On ARM64 we subtract the size of the Frame from SP and then store
         // values into the stack.  Execution can be interrupted at various
@@ -1077,12 +1047,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedPC = sp[0];
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
-      } else if (offsetFromEntry >= PushedTLS && offsetFromEntry < PushedFP) {
-        // The return address and caller's TLS have been pushed on the
-        // stack; fp is still the caller's fp.
-        fixedPC = sp[1];
-        fixedFP = fp;
-        AssertMatchesCallSite(fixedPC, fixedFP);
       } else if (offsetFromEntry == PushedFP) {
         // The full Frame has been pushed; fp is still the caller's fp.
         const auto* frame = Frame::fromUntaggedWasmExitFP(sp);
@@ -1096,7 +1060,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
       } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
                  offsetInCode <= codeRange->ret()) {
-        (void)PoppedTLSReg;
         // The fixedFP field of the Frame has been loaded into fp.
         // The ra and TLS might also be loaded, but the Frame structure is
         // still on stack, so we can acess the ra form there.
@@ -1114,7 +1077,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         AssertMatchesCallSite(fixedPC, fixedFP);
 #else
       } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
-                 offsetInCode < codeRange->ret() - PoppedTLSReg) {
+                 offsetInCode < codeRange->ret()) {
         // The fixedFP field of the Frame has been popped into fp.
         fixedPC = sp[1];
         fixedFP = fp;

@@ -2461,7 +2461,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
     MIRTypeVector coerceArgTypes;
     MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
     unsigned offsetToCoerceArgv =
-        AlignBytes(StackArgBytesForWasmABI(coerceArgTypes), sizeof(Value));
+        AlignBytes(StackArgBytesForNativeABI(coerceArgTypes), sizeof(Value));
     MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
     AssertStackAlignment(masm, ABIStackAlignment);
 
