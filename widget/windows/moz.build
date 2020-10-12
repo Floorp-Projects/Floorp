@@ -11,7 +11,19 @@ with Files("**"):
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
+with Files("*IMEHandler*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*IMMHandler*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*KeyboardLayout*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 with Files("OSK*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*TSFTextStore*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 TEST_DIRS += ['tests']

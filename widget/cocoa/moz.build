@@ -8,6 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
     SCHEDULES.exclusive = ['macosx']
 
+with Files("*TextInput*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 XPIDL_SOURCES += [
     'nsPIWidgetCocoa.idl',
 ]

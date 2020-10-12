@@ -13,6 +13,12 @@ with Files("*CompositorWidget*"):
 with Files("*WindowSurface*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
+with Files("*IMContextWrapper*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*nsGtkKeyUtils*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     DIRS += ['mozgtk']
 
