@@ -9,7 +9,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "frontend/CompilationInfo.h"  // frontend::CompilationAtomCache
+#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
 #include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomTable
 #include "js/RootingAPI.h"
 #include "vm/JSAtom.h"
@@ -26,7 +26,7 @@ namespace js {
 
 static bool InterpretObjLiteralValue(JSContext* cx,
                                      const ObjLiteralAtomVector& atoms,
-                                     frontend::CompilationAtomCache& atomCache,
+                                     frontend::CompilationInfo& compilationInfo,
                                      const ObjLiteralInsn& insn,
                                      JS::Value* valOut) {
   switch (insn.getOp()) {
@@ -39,7 +39,7 @@ static bool InterpretObjLiteralValue(JSContext* cx,
       //   This needs to be coalesced to wherever jsatom creation is eventually
       //   Seems like InterpretLiteralObj would be called from main-thread
       //   stencil instantiation.
-      JSAtom* jsatom = atoms[index]->toJSAtom(cx, atomCache);
+      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(cx, atoms[index]);
       if (!jsatom) {
         return false;
       }
@@ -64,7 +64,7 @@ static bool InterpretObjLiteralValue(JSContext* cx,
 }
 
 static JSObject* InterpretObjLiteralObj(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     const ObjLiteralAtomVector& atoms,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool specificGroup = flags.contains(ObjLiteralFlag::SpecificGroup);
@@ -89,7 +89,7 @@ static JSObject* InterpretObjLiteralObj(
       //   since the other GC allocations in the function (properties vector,
       //   etc.) would need to be addressed.
       const frontend::ParserAtom* atom = atoms[insn.getKey().getAtomIndex()];
-      JSAtom* jsatom = atom->toJSAtom(cx, atomCache);
+      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(cx, atom);
       if (!jsatom) {
         return nullptr;
       }
@@ -98,7 +98,8 @@ static JSObject* InterpretObjLiteralObj(
 
     JS::Value propVal;
     if (!noValues) {
-      if (!InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal)) {
+      if (!InterpretObjLiteralValue(cx, atoms, compilationInfo, insn,
+                                    &propVal)) {
         return nullptr;
       }
     }
@@ -119,7 +120,7 @@ static JSObject* InterpretObjLiteralObj(
 }
 
 static JSObject* InterpretObjLiteralArray(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     const ObjLiteralAtomVector& atoms,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool isCow = flags.contains(ObjLiteralFlag::ArrayCOW);
@@ -132,7 +133,7 @@ static JSObject* InterpretObjLiteralArray(
     MOZ_ASSERT(insn.isValid());
 
     JS::Value propVal;
-    if (!InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal)) {
+    if (!InterpretObjLiteralValue(cx, atoms, compilationInfo, insn, &propVal)) {
       return nullptr;
     }
     if (!elements.append(propVal)) {
@@ -154,14 +155,14 @@ static JSObject* InterpretObjLiteralArray(
 }
 
 JSObject* InterpretObjLiteral(JSContext* cx,
-                              frontend::CompilationAtomCache& atomCache,
+                              frontend::CompilationInfo& compilationInfo,
                               const ObjLiteralAtomVector& atoms,
                               const mozilla::Span<const uint8_t> literalInsns,
                               ObjLiteralFlags flags) {
   return flags.contains(ObjLiteralFlag::Array)
-             ? InterpretObjLiteralArray(cx, atomCache, atoms, literalInsns,
-                                        flags)
-             : InterpretObjLiteralObj(cx, atomCache, atoms, literalInsns,
+             ? InterpretObjLiteralArray(cx, compilationInfo, atoms,
+                                        literalInsns, flags)
+             : InterpretObjLiteralObj(cx, compilationInfo, atoms, literalInsns,
                                       flags);
 }
 
