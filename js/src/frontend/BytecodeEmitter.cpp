@@ -2480,7 +2480,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, compilationInfo, body)) {
+  if (!NameFunctions(cx, compilationInfo.stencil.parserAtoms, body)) {
     return false;
   }
 
@@ -2560,7 +2560,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   }
 
   if (isTopLevel == TopLevelFunction::Yes) {
-    if (!NameFunctions(cx, compilationInfo, funNode)) {
+    if (!NameFunctions(cx, compilationInfo.stencil.parserAtoms, funNode)) {
       return false;
     }
   }
@@ -9263,7 +9263,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
         MOZ_CRASH("Invalid private method accessor type");
     }
     const ParserAtom* storedMethodAtom =
-        storedMethodName.finishParserAtom(compilationInfo);
+        storedMethodName.finishParserAtom(compilationInfo.stencil.parserAtoms);
 
     // Emit the private method body and store it as a lexical var.
     if (!emitFunction(&propdef->as<ClassMethod>().method())) {
