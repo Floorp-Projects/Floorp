@@ -201,6 +201,7 @@ describe("sources-tree", () => {
             name: "FakeThread",
             url: "https://davidwalsh.name",
             type: "worker",
+            isTopLevel: false,
           },
         ],
       }).sourceTree;
@@ -229,6 +230,7 @@ describe("sources-tree", () => {
             url: "https://davidwalsh.name",
             type: "worker",
             name: "FakeThread",
+            isTopLevel: false,
           },
         ],
       }).sourceTree;
@@ -261,12 +263,14 @@ describe("sources-tree", () => {
             name: "FakeThread",
             url: "https://davidwalsh.name",
             type: "worker",
+            isTopLevel: false,
           },
           {
             actor: "FakeThread2",
             name: "FakeThread2",
             url: "https://davidwalsh.name/WorkerA.js",
             type: "worker",
+            isTopLevel: false,
           },
         ],
       }).sourceTree;
