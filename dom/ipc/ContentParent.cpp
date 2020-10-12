@@ -5427,7 +5427,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetupFamilyCharMap(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetHyphDict(
-    nsIURI* aURI, mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle,
+    nsIURI* aURI, base::SharedMemoryHandle* aOutHandle,
     uint32_t* aOutSize) {
   if (!aURI) {
     return IPC_FAIL_NO_REASON(this);

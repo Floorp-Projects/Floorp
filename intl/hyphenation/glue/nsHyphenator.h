@@ -6,7 +6,7 @@
 #ifndef nsHyphenator_h__
 #define nsHyphenator_h__
 
-#include "mozilla/ipc/SharedMemoryBasic.h"
+#include "base/shared_memory.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
@@ -42,8 +42,7 @@ class nsHyphenator {
   nsresult Hyphenate(const nsAString& aText, nsTArray<bool>& aHyphens);
 
   void ShareToProcess(base::ProcessId aPid,
-                      mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle,
-                      uint32_t* aOutSize);
+                      base::SharedMemoryHandle* aOutHandle, uint32_t* aOutSize);
 
  private:
   ~nsHyphenator() = default;
@@ -52,7 +51,7 @@ class nsHyphenator {
                      nsTArray<bool>& aHyphens);
 
   mozilla::Variant<const void*,  // raw pointer to uncompressed omnijar data
-                   RefPtr<mozilla::ipc::SharedMemoryBasic>,  // shmem block
+                   mozilla::UniquePtr<base::SharedMemory>,  // shmem block
                    mozilla::UniquePtr<const HyphDic>  // loaded by mapped_hyph
                    >
       mDict;
