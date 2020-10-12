@@ -384,6 +384,8 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
 static bool InstantiateScriptStencils(JSContext* cx,
                                       CompilationInfo& compilationInfo,
                                       CompilationGCOutput& gcOutput) {
+  MOZ_ASSERT(compilationInfo.input.lazy == nullptr);
+
   for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
     auto& scriptStencil = item.script;
     auto& fun = item.function;
@@ -391,8 +393,8 @@ static bool InstantiateScriptStencils(JSContext* cx,
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
-      // `wasFunctionEmitted` is false also for standalone functions and
-      // functions being delazified. they are handled in InstantiateTopLevel.
+      // `wasFunctionEmitted` is false also for standalone functions. They are
+      // handled in InstantiateTopLevel.
       if (!scriptStencil.wasFunctionEmitted) {
         continue;
       }
@@ -412,10 +414,8 @@ static bool InstantiateScriptStencils(JSContext* cx,
       }
     } else if (scriptStencil.functionFlags.isAsmJSNative()) {
       MOZ_ASSERT(fun->isAsmJSNative());
-    } else if (fun->isIncomplete()) {
-      // Lazy functions are generally only allocated in the initial parse.
-      MOZ_ASSERT(compilationInfo.input.lazy == nullptr);
-
+    } else {
+      MOZ_ASSERT(fun->isIncomplete());
       if (!CreateLazyScript(cx, compilationInfo, gcOutput, scriptStencil,
                             fun)) {
         return false;
@@ -596,6 +596,10 @@ static void AssertDelazificationFieldsMatch(CompilationInfo& compilationInfo,
                (scriptStencil.functionFlags.toRaw() |
                 acceptableDifferenceForFunction));
 
+    // Delazification shouldn't delazify inner scripts.
+    MOZ_ASSERT_IF(item.functionIndex == 0, scriptStencil.sharedData);
+    MOZ_ASSERT_IF(item.functionIndex > 0, !scriptStencil.sharedData);
+
     // FIXME: If this function is lazily parsed again, nargs isn't set to
     //        correct value (bug 1666978).
     MOZ_ASSERT_IF(scriptStencil.sharedData,
@@ -665,8 +669,10 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
     return false;
   }
 
-  if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
-    return false;
+  if (!input.lazy) {
+    if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
+      return false;
+    }
   }
 
   if (!InstantiateTopLevel(cx, *this, gcOutput)) {
