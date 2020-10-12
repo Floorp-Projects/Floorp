@@ -178,15 +178,6 @@ bool js::IsBoxableWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::BoxWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  WasmValueBox* box = WasmValueBox::create(cx, args[0]);
-  if (!box) return false;
-  args.rval().setObject(*box);
-  return true;
-}
-
 bool js::UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
