@@ -91,6 +91,7 @@
 
 using namespace js;
 
+using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PointerRangeSize;
