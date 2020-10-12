@@ -375,6 +375,7 @@ class GCRuntime {
   void waitBackgroundSweepEnd();
   void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
+  void waitForBackgroundTasks();
 
   void lockGC() { lock.lock(); }
 

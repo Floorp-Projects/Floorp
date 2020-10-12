@@ -7781,8 +7781,21 @@ void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {
     JS::PrepareForIncrementalGC(cx);
     JS::FinishIncrementalGC(cx, reason);
   }
+}
 
-  cx->runtime()->gc.waitBackgroundFreeEnd();
+void js::gc::WaitForBackgroundTasks(JSContext* cx) {
+  cx->runtime()->gc.waitForBackgroundTasks();
+}
+
+void GCRuntime::waitForBackgroundTasks() {
+  MOZ_ASSERT(!isIncrementalGCInProgress());
+  MOZ_ASSERT(sweepTask.isIdle());
+  MOZ_ASSERT(decommitTask.isIdle());
+  MOZ_ASSERT(sweepMarkTask.isIdle());
+
+  allocTask.join();
+  freeTask.join();
+  nursery().joinDecommitTask();
 }
 
 Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
