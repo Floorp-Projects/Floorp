@@ -67,6 +67,10 @@ public class Environment {
         return abi.startsWith("x86");
     }
 
+    public boolean isWebrender() {
+        return getEnvVar("MOZ_WEBRENDER").equals("1");
+    }
+
     public long getScaledTimeoutMillis() {
         if (isX86()) {
             return isEmulator() ? DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS

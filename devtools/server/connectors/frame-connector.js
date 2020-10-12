@@ -253,6 +253,14 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       // in case content wasn't able to destroy them via a message
       spawnInParentActorPool.destroy();
 
+      if (actor) {
+        // The FrameTargetActor within the child process doesn't necessary
+        // have time to uninitialize itself when the frame is closed/killed.
+        // So ensure telling the client that the related actor is detached.
+        connection.send({ from: actor.actor, type: "tabDetached" });
+        actor = null;
+      }
+
       if (childTransport) {
         // If we have a child transport, the actor has already
         // been created. We need to stop using this message manager.
@@ -273,13 +281,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         // had a chance to be created, so we are not able to create
         // the actor.
         resolve(null);
-      }
-      if (actor) {
-        // The FrameTargetActor within the child process doesn't necessary
-        // have time to uninitialize itself when the frame is closed/killed.
-        // So ensure telling the client that the related actor is detached.
-        connection.send({ from: actor.actor, type: "tabDetached" });
-        actor = null;
       }
 
       if (onDestroy) {

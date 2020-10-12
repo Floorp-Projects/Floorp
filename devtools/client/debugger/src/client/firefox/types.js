@@ -202,6 +202,8 @@ export type Target = {
   isBrowsingContext: boolean,
   isContentProcess: boolean,
   isWorkerTarget: boolean,
+  targetType: string,
+  isTopLevel: boolean,
   traits: Object,
   chrome: boolean,
   url: URL,

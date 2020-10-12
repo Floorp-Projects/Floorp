@@ -716,10 +716,14 @@ function TargetMixin(parentClass) {
      *        The type of the target front ("worker", "browsing-context", ...)
      */
     logDetachError(e, targetType) {
-      const noSuchActorError = e?.message.includes("noSuchActor");
+      const ignoredError =
+        e?.message.includes("noSuchActor") ||
+        e?.message.includes("Connection closed");
 
-      // Silence exceptions for already destroyed actors, ie noSuchActor errors.
-      if (noSuchActorError) {
+      // Silence exceptions for already destroyed actors and fronts:
+      // - "noSuchActor" errors from the server
+      // - "Connection closed" errors from the client, when purging requests
+      if (ignoredError) {
         return;
       }
 

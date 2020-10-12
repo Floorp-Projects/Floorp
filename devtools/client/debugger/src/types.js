@@ -477,11 +477,11 @@ export type Scope = {|
   scopeKind: string,
 |};
 
-export type ThreadType = "mainThread" | "worker" | "contentProcess";
 export type Thread = {
   +actor: ThreadId,
   +url: URL,
-  +type: ThreadType,
+  +isTopLevel: boolean,
+  +targetType: string,
   +name: string,
   serviceWorkerStatus?: string,
 };

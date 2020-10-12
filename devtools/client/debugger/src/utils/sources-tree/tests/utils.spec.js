@@ -193,13 +193,15 @@ describe("sources tree", () => {
         actor: "FakeThread",
         name: "FakeThread",
         url: "https://example.com/",
-        type: "worker",
+        targetType: "worker",
+        isTopLevel: false,
       },
       {
         actor: "OtherThread",
         name: "OtherThread",
         url: "https://example.com/",
-        type: "worker",
+        targetType: "worker",
+        isTopLevel: false,
       },
     ];
 

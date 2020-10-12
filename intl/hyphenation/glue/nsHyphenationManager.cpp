@@ -328,11 +328,11 @@ void nsHyphenationManager::LoadAliases() {
 }
 
 void nsHyphenationManager::ShareHyphDictToProcess(
-    nsIURI* aURI, base::ProcessId aPid,
-    mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle, uint32_t* aOutSize) {
+    nsIURI* aURI, base::ProcessId aPid, base::SharedMemoryHandle* aOutHandle,
+    uint32_t* aOutSize) {
   MOZ_ASSERT(XRE_IsParentProcess());
   // aURI will be referring to an omnijar resource (otherwise just bail).
-  *aOutHandle = ipc::SharedMemoryBasic::NULLHandle();
+  *aOutHandle = base::SharedMemory::NULLHandle();
   *aOutSize = 0;
 
   // Extract the locale code from the URI, and get the corresponding

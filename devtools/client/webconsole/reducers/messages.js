@@ -117,7 +117,14 @@ function cloneState(state) {
  */
 // eslint-disable-next-line complexity
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
-  const { messagesById, groupsById, currentGroup, repeatById } = state;
+  const { messagesById, groupsById, repeatById } = state;
+
+  if (newMessage.type === constants.MESSAGE_TYPE.NAVIGATION_MARKER) {
+    // We set the state's currentGroup property to null after navigating
+    state.currentGroup = null;
+  }
+  const { currentGroup } = state;
+
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
     // When the message has a NULL type, we don't add it.
     return state;
