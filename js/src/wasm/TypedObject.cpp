@@ -122,14 +122,12 @@ uint32_t ScalarTypeDescr::alignment(Type t) {
 
 /*static*/ const char* ScalarTypeDescr::typeName(Type type) {
   switch (type) {
-#define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
-  case constant_:                                       \
+#define NUMERIC_TYPE_TO_STRING(constant_, type_, name_, slot_) \
+  case constant_:                                              \
     return #name_;
     JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
 #undef NUMERIC_TYPE_TO_STRING
-    case Scalar::Int64:
-    case Scalar::Simd128:
-    case Scalar::MaxTypedArrayViewType:
+    default:
       break;
   }
   MOZ_CRASH("Invalid type");
@@ -186,7 +184,7 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   ScalarTypeDescr::Type type = descr->type();
 
   switch (type) {
-#define NUMBER_CALL(constant_, type_, name_)        \
+#define NUMBER_CALL(constant_, type_, name_, slot_) \
   case constant_: {                                 \
     double number;                                  \
     if (!ToNumber(cx, args[0], &number)) {          \
@@ -201,7 +199,7 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   }
     JS_FOR_EACH_SCALAR_NUMBER_TYPE_REPR(NUMBER_CALL)
 #undef NUMBER_CALL
-#define BIGINT_CALL(constant_, type_, name_)          \
+#define BIGINT_CALL(constant_, type_, name_, slot_)   \
   case constant_: {                                   \
     BigInt* bi = ToBigInt(cx, args[0]);               \
     if (!bi) {                                        \
@@ -217,9 +215,7 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   }
     JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(BIGINT_CALL)
 #undef BIGINT_CALL
-    case Scalar::Int64:
-    case Scalar::Simd128:
-    case Scalar::MaxTypedArrayViewType:
+    default:
       MOZ_CRASH();
   }
   return true;
@@ -310,7 +306,7 @@ const JSClass js::ReferenceTypeDescr::class_ = {
     &ReferenceTypeDescrClassOps};
 
 static const uint32_t ReferenceSizes[] = {
-#define REFERENCE_SIZE(_kind, _type, _name) sizeof(_type),
+#define REFERENCE_SIZE(_kind, _type, _name, slot_) sizeof(_type),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(REFERENCE_SIZE) 0
 #undef REFERENCE_SIZE
 };
@@ -325,8 +321,8 @@ uint32_t ReferenceTypeDescr::alignment(Type t) {
 
 /*static*/ const char* ReferenceTypeDescr::typeName(Type type) {
   switch (type) {
-#define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
-  case constant_:                                       \
+#define NUMERIC_TYPE_TO_STRING(constant_, type_, name_, slot_) \
+  case constant_:                                              \
     return #name_;
     JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
 #undef NUMERIC_TYPE_TO_STRING
@@ -346,10 +342,6 @@ bool js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   switch (descr->type()) {
-    case ReferenceType::TYPE_ANY:
-      args.rval().set(args[0]);
-      return true;
-
     case ReferenceType::TYPE_WASM_ANYREF:
       // As a cast in JS, anyref is an identity operation.
       args.rval().set(args[0]);
@@ -361,15 +353,6 @@ bool js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       args.rval().setObject(*obj);
-      return true;
-    }
-
-    case ReferenceType::TYPE_STRING: {
-      RootedString obj(cx, ToString<CanGC>(cx, args[0]));
-      if (!obj) {
-        return false;
-      }
-      args.rval().setString(&*obj);
       return true;
     }
   }
@@ -846,7 +829,8 @@ template <typename T>
 static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
                                   Handle<WasmNamespaceObject*> namespaceObject,
                                   typename T::Type type,
-                                  HandlePropertyName className) {
+                                  HandlePropertyName className,
+                                  WasmNamespaceObject::Slot descSlot) {
   RootedObject objProto(cx,
                         GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!objProto) {
@@ -880,11 +864,6 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
   }
   descr->initReservedSlot(TypeDescr::Proto, ObjectValue(*proto));
 
-  RootedValue descrValue(cx, ObjectValue(*descr));
-  if (!DefineDataProperty(cx, namespaceObject, className, descrValue, 0)) {
-    return false;
-  }
-
   if (!CreateTraceList(cx, descr)) {
     return false;
   }
@@ -893,25 +872,27 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
     return false;
   }
 
+  namespaceObject->initReservedSlot(descSlot, ObjectValue(*descr));
+
   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-static JSObject* DefineMetaTypeDescr(
-    JSContext* cx, const char* name, Handle<GlobalObject*> global,
-    Handle<WasmNamespaceObject*> namespaceObject,
-    WasmNamespaceObject::Slot protoSlot) {
+static bool DefineMetaTypeDescr(JSContext* cx, const char* name,
+                                Handle<GlobalObject*> global,
+                                Handle<WasmNamespaceObject*> namespaceObject,
+                                WasmNamespaceObject::Slot protoSlot) {
   RootedAtom className(cx, Atomize(cx, name, strlen(name)));
   if (!className) {
-    return nullptr;
+    return false;
   }
 
   RootedObject proto(cx,
                      GlobalObject::getOrCreateFunctionPrototype(cx, global));
   if (!proto) {
-    return nullptr;
+    return false;
   }
 
   const int constructorLength = 2;
@@ -919,105 +900,47 @@ static JSObject* DefineMetaTypeDescr(
   ctor = GlobalObject::createConstructor(cx, T::construct, className,
                                          constructorLength);
   if (!ctor || !LinkConstructorAndPrototype(cx, ctor, proto)) {
-    return nullptr;
+    return false;
   }
 
   namespaceObject->initReservedSlot(protoSlot, ObjectValue(*proto));
 
-  return ctor;
+  return true;
 }
 
-bool js::InitTypedObjectNamespace(
-    JSContext* cx, Handle<WasmNamespaceObject*> namespaceObject) {
+bool js::InitTypedObjectSlots(JSContext* cx,
+                              Handle<WasmNamespaceObject*> namespaceObject) {
   Handle<GlobalObject*> global = cx->global();
 
-  // uint8, uint16, any, etc
+  // int32, int64, etc
 
-#define BINARYDATA_SCALAR_DEFINE(constant_, type_, name_)                    \
-  if (!DefineSimpleTypeDescr<ScalarTypeDescr>(cx, global, namespaceObject,   \
-                                              constant_, cx->names().name_)) \
+#define BINARYDATA_SCALAR_DEFINE(constant_, type_, name_, slot_)             \
+  if (!DefineSimpleTypeDescr<ScalarTypeDescr>(                               \
+          cx, global, namespaceObject, constant_, cx->names().name_, slot_)) \
     return false;
   JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_SCALAR_DEFINE)
 #undef BINARYDATA_SCALAR_DEFINE
 
-#define BINARYDATA_REFERENCE_DEFINE(constant_, type_, name_)          \
-  if (!DefineSimpleTypeDescr<ReferenceTypeDescr>(                     \
-          cx, global, namespaceObject, constant_, cx->names().name_)) \
+#define BINARYDATA_REFERENCE_DEFINE(constant_, type_, name_, slot_)          \
+  if (!DefineSimpleTypeDescr<ReferenceTypeDescr>(                            \
+          cx, global, namespaceObject, constant_, cx->names().name_, slot_)) \
     return false;
   JS_FOR_EACH_REFERENCE_TYPE_REPR(BINARYDATA_REFERENCE_DEFINE)
 #undef BINARYDATA_REFERENCE_DEFINE
 
-  // Tuck away descriptors we will use for wasm.
-
-  RootedValue typeDescr(cx);
-
-  // The lookups should fail only from atomization-related OOM in
-  // JS_GetProperty().  The properties themselves will always exist on the
-  // object.
-
-  if (!JS_GetProperty(cx, namespaceObject, "int32", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::Int32Desc, typeDescr);
-
-  if (!JS_GetProperty(cx, namespaceObject, "int64", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::Int64Desc, typeDescr);
-
-  if (!JS_GetProperty(cx, namespaceObject, "float32", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::Float32Desc,
-                                    typeDescr);
-
-  if (!JS_GetProperty(cx, namespaceObject, "float64", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::Float64Desc,
-                                    typeDescr);
-
-  if (!JS_GetProperty(cx, namespaceObject, "Object", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::ObjectDesc, typeDescr);
-
-  if (!JS_GetProperty(cx, namespaceObject, "WasmAnyRef", &typeDescr)) {
-    return false;
-  }
-  namespaceObject->initReservedSlot(WasmNamespaceObject::WasmAnyRefDesc,
-                                    typeDescr);
-
   // ArrayType.
 
-  RootedObject arrayType(cx);
-  arrayType = DefineMetaTypeDescr<ArrayMetaTypeDescr>(
-      cx, "ArrayType", global, namespaceObject,
-      WasmNamespaceObject::ArrayTypePrototype);
-  if (!arrayType) {
-    return false;
-  }
-
-  RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
-  if (!DefineDataProperty(cx, namespaceObject, cx->names().ArrayType,
-                          arrayTypeValue, JSPROP_READONLY | JSPROP_PERMANENT)) {
+  if (!DefineMetaTypeDescr<ArrayMetaTypeDescr>(
+          cx, "ArrayType", global, namespaceObject,
+          WasmNamespaceObject::ArrayTypePrototype)) {
     return false;
   }
 
   // StructType.
 
-  RootedObject structType(cx);
-  structType = DefineMetaTypeDescr<StructMetaTypeDescr>(
-      cx, "StructType", global, namespaceObject,
-      WasmNamespaceObject::StructTypePrototype);
-  if (!structType) {
-    return false;
-  }
-
-  RootedValue structTypeValue(cx, ObjectValue(*structType));
-  if (!DefineDataProperty(cx, namespaceObject, cx->names().StructType,
-                          structTypeValue,
-                          JSPROP_READONLY | JSPROP_PERMANENT)) {
+  if (!DefineMetaTypeDescr<StructMetaTypeDescr>(
+          cx, "StructType", global, namespaceObject,
+          WasmNamespaceObject::StructTypePrototype)) {
     return false;
   }
 
@@ -1168,7 +1091,7 @@ OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
   if (!buffer) {
     return nullptr;
   }
-  descr->initInstance(cx->runtime(), buffer->dataPointer());
+  descr->initInstance(buffer->dataPointer());
   obj->attach(*buffer, 0);
   return obj;
 }
@@ -1185,7 +1108,7 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
       return nullptr;
     }
     JS::AutoCheckCannotGC nogc(cx);
-    descr->initInstance(cx->runtime(), obj->inlineTypedMem(nogc));
+    descr->initInstance(obj->inlineTypedMem(nogc));
     return obj;
   }
 
@@ -1627,10 +1550,6 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static void LoadReference_Any(GCPtrValue* heap, MutableHandleValue v) {
-  v.set(*heap);
-}
-
 static void LoadReference_Object(GCPtrObject* heap, MutableHandleValue v) {
   if (*heap) {
     v.setObject(**heap);
@@ -1653,11 +1572,7 @@ static void LoadReference_WasmAnyRef(GCPtrObject* heap, MutableHandleValue v) {
   }
 }
 
-static void LoadReference_string(GCPtrString* heap, MutableHandleValue v) {
-  v.setString(*heap);
-}
-
-#define JS_LOAD_NUMBER_IMPL(constant, T, _name)               \
+#define JS_LOAD_NUMBER_IMPL(constant, T, _name, _slot)        \
   case constant: {                                            \
     /* Should be guaranteed by the typed objects API: */      \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                 \
@@ -1668,7 +1583,7 @@ static void LoadReference_string(GCPtrString* heap, MutableHandleValue v) {
     return true;                                              \
   }
 
-#define JS_LOAD_BIGINT_IMPL(constant, T, _name)              \
+#define JS_LOAD_BIGINT_IMPL(constant, T, _name, _slot)       \
   case constant: {                                           \
     /* Should be guaranteed by the typed objects API: */     \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                \
@@ -1686,7 +1601,7 @@ static void LoadReference_string(GCPtrString* heap, MutableHandleValue v) {
     return true;                                             \
   }
 
-#define JS_LOAD_REFERENCE_IMPL(constant, T, name)             \
+#define JS_LOAD_REFERENCE_IMPL(constant, T, name, _slot)      \
   case constant: {                                            \
     /* Should be guaranteed by the typed objects API: */      \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                 \
@@ -1705,7 +1620,7 @@ bool TypedObject::loadValue(JSContext* cx, size_t offset, HandleTypeDescr type,
     case TypeKind::Scalar: {
       ScalarTypeDescr::Type scalarType = type->as<ScalarTypeDescr>().type();
       switch (scalarType) {
-        JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_LOAD_NUMBER_IMPL)
+        JS_FOR_EACH_SCALAR_NUMBER_TYPE_REPR(JS_LOAD_NUMBER_IMPL)
         JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_LOAD_BIGINT_IMPL)
         default:
           MOZ_CRASH("unsupported");
@@ -1917,11 +1832,7 @@ static void VisitReferences(TypeDescr& descr, uint8_t* base, V& visitor,
 namespace {
 
 class MemoryInitVisitor {
-  const JSRuntime* rt_;
-
  public:
-  explicit MemoryInitVisitor(const JSRuntime* rt) : rt_(rt) {}
-
   void visitReference(ReferenceTypeDescr& descr, uint8_t* base, size_t offset);
 };
 
@@ -1930,13 +1841,6 @@ class MemoryInitVisitor {
 void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* base,
                                        size_t offset) {
   switch (descr.type()) {
-    case ReferenceType::TYPE_ANY: {
-      js::GCPtrValue* heapValue =
-          reinterpret_cast<js::GCPtrValue*>(base + offset);
-      heapValue->init(UndefinedValue());
-      return;
-    }
-
     case ReferenceType::TYPE_WASM_ANYREF:
     case ReferenceType::TYPE_OBJECT: {
       js::GCPtrObject* objectPtr =
@@ -1944,20 +1848,13 @@ void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* base,
       objectPtr->init(nullptr);
       return;
     }
-
-    case ReferenceType::TYPE_STRING: {
-      js::GCPtrString* stringPtr =
-          reinterpret_cast<js::GCPtrString*>(base + offset);
-      stringPtr->init(rt_->emptyString);
-      return;
-    }
   }
 
   MOZ_CRASH("Invalid kind");
 }
 
-void TypeDescr::initInstance(const JSRuntime* rt, uint8_t* mem) {
-  MemoryInitVisitor visitor(rt);
+void TypeDescr::initInstance(uint8_t* mem) {
+  MemoryInitVisitor visitor;
 
   // Initialize the instance
   memset(mem, 0, size());
@@ -1983,12 +1880,6 @@ class MemoryTracingVisitor {
 void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
                                           uint8_t* base, size_t offset) {
   switch (descr.type()) {
-    case ReferenceType::TYPE_ANY: {
-      GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(base + offset);
-      TraceEdge(trace_, heapValue, "reference-val");
-      return;
-    }
-
     case ReferenceType::TYPE_WASM_ANYREF:
       // TODO/AnyRef-boxing: With boxed immediates and strings the tracing code
       // will be more complicated.  For now, tracing as an object is fine.
@@ -1996,13 +1887,6 @@ void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
       GCPtrObject* objectPtr =
           reinterpret_cast<js::GCPtrObject*>(base + offset);
       TraceNullableEdge(trace_, objectPtr, "reference-obj");
-      return;
-    }
-
-    case ReferenceType::TYPE_STRING: {
-      GCPtrString* stringPtr =
-          reinterpret_cast<js::GCPtrString*>(base + offset);
-      TraceNullableEdge(trace_, stringPtr, "reference-str");
       return;
     }
   }
@@ -2039,17 +1923,11 @@ void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* base,
   // TODO/AnyRef-boxing: Once a WasmAnyRef is no longer just a JSObject*
   // we must revisit this structure.
   switch (descr.type()) {
-    case ReferenceType::TYPE_ANY:
-      offsets = &valueOffsets;
-      break;
     case ReferenceType::TYPE_OBJECT:
       offsets = &objectOffsets;
       break;
     case ReferenceType::TYPE_WASM_ANYREF:
       offsets = &objectOffsets;
-      break;
-    case ReferenceType::TYPE_STRING:
-      offsets = &stringOffsets;
       break;
     default:
       MOZ_CRASH("Invalid kind");
