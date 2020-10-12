@@ -2249,7 +2249,7 @@ Scope* ScopeStencil::createSpecificScope<WithScope, std::nullptr_t>(
     JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
   RootedScope enclosingScope(
-      cx, enclosing(compilationInfo).existingScope(gcOutput));
+      cx, enclosingExistingScope(compilationInfo.input, gcOutput));
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
@@ -2264,7 +2264,8 @@ Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
     return nullptr;
   }
 
-  MOZ_ASSERT(enclosing(compilationInfo).isNullptr());
+  MOZ_ASSERT(!enclosing_);
+  MOZ_ASSERT(!compilationInfo.input.enclosingScope);
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<GlobalScope>(cx, kind(), nullptr, nullptr, &rootedData);
@@ -2288,7 +2289,7 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
   }
 
   RootedScope enclosingScope(
-      cx, enclosing(compilationInfo).existingScope(gcOutput));
+      cx, enclosingExistingScope(compilationInfo.input, gcOutput));
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<SpecificScopeT>(cx, kind(), enclosingScope, shape,
