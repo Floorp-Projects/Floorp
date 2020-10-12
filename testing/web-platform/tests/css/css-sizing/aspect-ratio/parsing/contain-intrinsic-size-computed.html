@@ -23,9 +23,5 @@ test_computed_value("aspect-ratio", "16 / 0");
 test_computed_value("aspect-ratio", "auto 1");
 test_computed_value("aspect-ratio", "auto 1 / 1", "auto 1");
 test_computed_value("aspect-ratio", "0 auto", "auto 0");
-// The computed value of a <ratio> is the pair of numbers provided, unless
-// both numbers are zero, in which case the computed value is the pair (1, 0)
-// (same as 1 / 0).
-// https://github.com/w3c/csswg-drafts/issues/5084
-test_computed_value("aspect-ratio", "0 / 0", "1 / 0");
+test_computed_value("aspect-ratio", "0 / 0");
 </script>
