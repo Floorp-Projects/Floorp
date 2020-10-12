@@ -206,7 +206,8 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     BaseScript* lazyOuterFunction)
     : Base(cx, options, foldConstants, compilationInfo, compilationState,
            syntaxParser, lazyOuterFunction),
-      tokenStream(cx, &compilationInfo, options, units, length) {}
+      tokenStream(cx, &compilationInfo.stencil.parserAtoms, options, units,
+                  length) {}
 
 template <typename Unit>
 void Parser<SyntaxParseHandler, Unit>::setAwaitHandling(
