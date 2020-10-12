@@ -46,6 +46,7 @@ const threads = [
     url: "https://davidwalsh.name",
     type: "worker",
     name: "FakeThread",
+    isTopLevel: false,
   },
 ];
 
