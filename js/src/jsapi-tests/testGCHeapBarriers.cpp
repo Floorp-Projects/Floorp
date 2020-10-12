@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 
@@ -31,19 +32,6 @@ struct TestStruct {
   TestStruct() {}
   explicit TestStruct(T init) : wrapper(init) {}
 };
-
-// Give the GCPtr version GCManagedDeletePolicy as required.
-namespace JS {
-
-template <typename T>
-struct DeletePolicy<TestStruct<js::GCPtr<T>, T>>
-    : public js::GCManagedDeletePolicy<TestStruct<js::GCPtr<T>, T>> {};
-
-template <typename T>
-struct DeletePolicy<TestStruct<const js::GCPtr<T>, T>>
-    : public js::GCManagedDeletePolicy<TestStruct<const js::GCPtr<T>, T>> {};
-
-}  // namespace JS
 
 template <typename T>
 static T* CreateNurseryGCThing(JSContext* cx) {
@@ -161,8 +149,14 @@ bool TestHeapPostBarriersForWrapper() {
   CHECK((TestHeapPostBarrierConstruction<W<T*>, T>()));
   CHECK((TestHeapPostBarrierConstruction<const W<T*>, T>()));
   CHECK((TestHeapPostBarrierUpdate<W<T*>, T>()));
-  CHECK((TestHeapPostBarrierInitFailure<W<T*>, T>()));
-  CHECK((TestHeapPostBarrierInitFailure<const W<T*>, T>()));
+  if constexpr (!std::is_same_v<W<T*>, GCPtr<T*>>) {
+    // It is not allowed to delete heap memory containing GCPtrs on
+    // initialization failure like this and doing so will cause an assertion to
+    // fail in the GCPtr destructor (although we disable this in some places in
+    // this test).
+    CHECK((TestHeapPostBarrierInitFailure<W<T*>, T>()));
+    CHECK((TestHeapPostBarrierInitFailure<const W<T*>, T>()));
+  }
   return true;
 }
 
@@ -179,7 +173,7 @@ bool TestHeapPostBarrierConstruction() {
     // roots.
     JS::AutoSuppressGCAnalysis noAnalysis(cx);
 
-    auto testStruct = cx->make_unique<TestStruct<W, T*>>(initialObj);
+    auto* testStruct = js_new<TestStruct<W, T*>>(initialObj);
     CHECK(testStruct);
 
     auto& wrapper = testStruct->wrapper;
@@ -190,6 +184,15 @@ bool TestHeapPostBarrierConstruction() {
     CHECK(uintptr_t(wrapper.get()) != initialObjAsInt);
     CHECK(!js::gc::IsInsideNursery(wrapper.get()));
     CHECK(CanAccessObject(wrapper.get()));
+
+    // Disable the check that GCPtrs are only destroyed by the GC. What happens
+    // on destruction isn't relevant to the test.
+    mozilla::Maybe<gc::AutoSetThreadIsFinalizing> threadIsFinalizing;
+    if constexpr (std::is_same_v<std::remove_const_t<W>, GCPtr<T*>>) {
+      threadIsFinalizing.emplace();
+    }
+
+    js_delete(testStruct);
   }
 
   cx->minorGC(JS::GCReason::API);
@@ -213,7 +216,7 @@ bool TestHeapPostBarrierUpdate() {
     // roots.
     JS::AutoSuppressGCAnalysis noAnalysis(cx);
 
-    auto testStruct = cx->make_unique<TestStruct<W, T*>>();
+    auto* testStruct = js_new<TestStruct<W, T*>>();
     CHECK(testStruct);
 
     auto& wrapper = testStruct->wrapper;
@@ -227,6 +230,12 @@ bool TestHeapPostBarrierUpdate() {
     CHECK(uintptr_t(wrapper.get()) != initialObjAsInt);
     CHECK(!js::gc::IsInsideNursery(wrapper.get()));
     CHECK(CanAccessObject(wrapper.get()));
+
+    // Disable the check that GCPtrs are only destroyed by the GC. What happens
+    // on destruction isn't relevant to the test.
+    gc::AutoSetThreadIsFinalizing threadIsFinalizing;
+
+    js_delete(testStruct);
   }
 
   cx->minorGC(JS::GCReason::API);

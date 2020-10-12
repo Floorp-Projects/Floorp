@@ -214,6 +214,7 @@
 #include "builtin/FinalizationRegistryObject.h"
 #include "builtin/WeakRefObject.h"
 #include "debugger/DebugAPI.h"
+#include "gc/ClearEdgesTracer.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
@@ -8903,8 +8904,11 @@ js::gc::ClearEdgesTracer::ClearEdgesTracer()
 
 template <typename S>
 inline bool js::gc::ClearEdgesTracer::clearEdge(S** thingp) {
+  // We don't handle removing pointers to nursery edges from the store buffer
+  // with this tracer.
+  MOZ_ASSERT(!IsInsideNursery(*thingp));
+
   InternalBarrierMethods<S*>::preBarrier(*thingp);
-  InternalBarrierMethods<S*>::postBarrier(thingp, *thingp, nullptr);
   *thingp = nullptr;
   return false;
 }
