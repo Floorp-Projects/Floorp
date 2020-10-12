@@ -3987,6 +3987,13 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
     // identifier, the error page won't persist.
     mLSHE->AbandonBFCacheEntry();
   }
+  if (mozilla::SessionHistoryInParent()) {
+    // Commit the loading entry for the real load here, Embed will not commit
+    // the loading entry for the error page. History will then contain an entry
+    // for the real load, and the error page won't persist if we try loading
+    // that entry again.
+    MoveLoadingToActiveEntry(true);
+  }
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aErrorURI);
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
@@ -3996,12 +4003,6 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
   loadState->SetLoadType(LOAD_ERROR_PAGE);
   loadState->SetFirstParty(true);
   loadState->SetSourceBrowsingContext(mBrowsingContext);
-  if (mozilla::SessionHistoryInParent() && mLoadingEntry) {
-    // We keep the loading entry for the load that failed here. If the user
-    // reloads we want to try to reload the original load, not the error page.
-    loadState->SetLoadingSessionHistoryInfo(
-        MakeUnique<LoadingSessionHistoryInfo>(*mLoadingEntry));
-  }
   return InternalLoad(loadState);
 }
 
@@ -5704,7 +5705,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
 
   if (!aIsTransientAboutBlank && mozilla::SessionHistoryInParent()) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Embed", this));
-    MoveLoadingToActiveEntry();
+    MoveLoadingToActiveEntry(mLoadType != LOAD_ERROR_PAGE);
   }
 
   bool updateHistory = true;
@@ -13241,7 +13242,7 @@ void nsDocShell::SetLoadingSessionHistoryInfo(
   mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
 }
 
-void nsDocShell::MoveLoadingToActiveEntry() {
+void nsDocShell::MoveLoadingToActiveEntry(bool aCommit) {
   MOZ_ASSERT(mozilla::SessionHistoryInParent());
 
   MOZ_LOG(gSHLog, LogLevel::Debug,
@@ -13260,14 +13261,12 @@ void nsDocShell::MoveLoadingToActiveEntry() {
     mLoadingEntry.swap(loadingEntry);
   }
 
-  if (mActiveEntry) {
+  if (mActiveEntry && aCommit) {
     MOZ_ASSERT(loadingEntry);
     nsID changeID = {};
-    uint32_t loadType =
-        mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
     if (XRE_IsParentProcess()) {
       mBrowsingContext->Canonical()->SessionHistoryCommit(loadingEntry->mLoadId,
-                                                          changeID, loadType);
+                                                          changeID, mLoadType);
     } else {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
@@ -13283,7 +13282,7 @@ void nsDocShell::MoveLoadingToActiveEntry() {
       }
       ContentChild* cc = ContentChild::GetSingleton();
       mozilla::Unused << cc->SendHistoryCommit(
-          mBrowsingContext, loadingEntry->mLoadId, changeID, loadType);
+          mBrowsingContext, loadingEntry->mLoadId, changeID, mLoadType);
     }
   }
 }
