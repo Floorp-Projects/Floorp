@@ -283,8 +283,8 @@ extern JS_FRIEND_API bool IsCompartmentZoneSweepingOrCompacting(
 using IterateGCThingCallback = void (*)(void*, JS::GCCellPtr,
                                         const JS::AutoRequireNoGC&);
 
-extern JS_FRIEND_API void VisitGrayWrapperTargets(
-    JS::Zone* zone, IterateGCThingCallback callback, void* closure);
+extern JS_FRIEND_API void TraceGrayWrapperTargets(JSTracer* trc,
+                                                  JS::Zone* zone);
 
 /**
  * Invoke cellCallback on every gray JSObject in the given zone.

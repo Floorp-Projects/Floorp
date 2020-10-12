@@ -529,16 +529,15 @@ JS_FRIEND_API bool js::IsCompartmentZoneSweepingOrCompacting(
   return comp->zone()->isGCSweepingOrCompacting();
 }
 
-JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
-                                               IterateGCThingCallback callback,
-                                               void* closure) {
+JS_FRIEND_API void js::TraceGrayWrapperTargets(JSTracer* trc, Zone* zone) {
   JS::AutoSuppressGCAnalysis nogc;
 
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
     for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
       JSObject* target = e.front().key();
       if (target->isMarkedGray()) {
-        callback(closure, JS::GCCellPtr(target), nogc);
+        TraceManuallyBarrieredEdge(trc, &target, "gray CCW target");
+        MOZ_ASSERT(target == e.front().key());
       }
     }
   }
