@@ -40,8 +40,8 @@
             android:layout_height="16dp"
             android:layout_marginStart="8dp"
             android:importantForAccessibility="no"
-            app:layout_constraintBottom_toTopOf="@id/mozac_browser_tabstray_card"
-            app:layout_constraintStart_toStartOf="@id/mozac_browser_tabstray_card"
+            app:layout_constraintBottom_toTopOf="@id/horizonatal_divider"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -69,21 +69,27 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/close_tab"
-            app:layout_constraintBottom_toTopOf="@id/mozac_browser_tabstray_card"
-            app:layout_constraintEnd_toEndOf="@id/mozac_browser_tabstray_card"
+            app:layout_constraintBottom_toTopOf="@+id/horizonatal_divider"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/mozac_ic_close"
             app:tint="@color/photonInk80" />
+
+        <View
+            android:id="@+id/horizonatal_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/photonLightGrey30"
+            app:layout_constraintTop_toBottomOf="@+id/mozac_browser_tabstray_title" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/mozac_browser_tabstray_card"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tab_tray_grid_item_thumbnail_height"
-            android:layout_marginTop="30dp"
             android:backgroundTint="?tabTrayThumbnailItemBackground"
             app:cardBackgroundColor="@color/photonWhite"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/horizonatal_divider">
 
             <ImageView
                 android:id="@+id/default_tab_thumbnail"
