@@ -2542,9 +2542,6 @@ nsresult HTMLEditor::InsertTextWithQuotations(
                          "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
     return EditorBase::ToGenericNSResult(rv);
   }
-  if (aStringToInsert.IsEmpty()) {
-    return NS_OK;
-  }
 
   // The whole operation should be undoable in one transaction:
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
@@ -2560,11 +2557,11 @@ nsresult HTMLEditor::InsertTextWithQuotations(
 
 nsresult HTMLEditor::InsertTextWithQuotationsInternal(
     const nsAString& aStringToInsert) {
-  MOZ_ASSERT(!aStringToInsert.IsEmpty());
   // We're going to loop over the string, collecting up a "hunk"
   // that's all the same type (quoted or not),
   // Whenever the quotedness changes (or we reach the string's end)
   // we will insert the hunk all at once, quoted or non.
+
   static const char16_t cite('>');
   bool curHunkIsQuoted = (aStringToInsert.First() == cite);
 
@@ -2880,10 +2877,6 @@ NS_IMETHODIMP HTMLEditor::Rewrap(bool aRespectNewlines) {
   if (NS_FAILED(rv)) {
     NS_WARNING("TextEditor::SharedOutputString() failed");
     return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (current.IsEmpty()) {
-    return NS_OK;
   }
 
   nsString wrapped;
