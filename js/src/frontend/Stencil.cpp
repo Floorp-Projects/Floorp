@@ -46,6 +46,17 @@ AbstractScopePtr ScopeStencil::enclosing(
   return AbstractScopePtr(compilationInfo.input.enclosingScope);
 }
 
+Scope* ScopeStencil::enclosingExistingScope(
+    const CompilationInput& input, const CompilationGCOutput& gcOutput) const {
+  if (enclosing_) {
+    Scope* result = gcOutput.scopes[*enclosing_];
+    MOZ_ASSERT(result, "Scope must already exist to use this method");
+    return result;
+  }
+
+  return input.enclosingScope;
+}
+
 Scope* ScopeStencil::createScope(JSContext* cx,
                                  CompilationInfo& compilationInfo,
                                  CompilationGCOutput& gcOutput) const {
@@ -302,11 +313,13 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
   // enclosing Scope should already be allocated.
   //
   // Enclosing scope of ScopeStencil can be either ScopeStencil or Scope*
-  // pointer, capsulated by AbstractScopePtr.
+  // pointer.
   //
   // If the enclosing scope is ScopeStencil, it's guaranteed to be earlier
-  // element in compilationInfo.scopeData, because AbstractScopePtr holds index
+  // element in compilationInfo.scopeData, because enclosing_ field holds index
   // into it, and newly created ScopeStencil is pushed back to the vector.
+  //
+  // If the enclosing scope is Scope*, it's CompilationInput.enclosingScope.
 
   if (!gcOutput.scopes.reserve(compilationInfo.stencil.scopeData.length())) {
     return false;

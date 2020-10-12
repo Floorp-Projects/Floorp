@@ -88,10 +88,6 @@ class AbstractScopePtr {
   frontend::ScopeStencil& scopeData() const;
   frontend::CompilationInfo& compilationInfo() const;
 
-  // Concrete GC scope. If a deferred scope, the target must already have been
-  // converted to a GC scope.
-  Scope* existingScope(frontend::CompilationGCOutput& gcOutput) const;
-
   // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.
   template <typename T>
