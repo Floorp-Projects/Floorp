@@ -137,14 +137,8 @@ void ProfileBufferEntry::CopyCharsInto(char (&aOutArray)[kNumChars]) const {
 //     The elements need to be added in-order.
 class MOZ_RAII AutoArraySchemaWriter {
  public:
-  AutoArraySchemaWriter(SpliceableJSONWriter& aWriter,
-                        UniqueJSONStrings& aStrings)
-      : mJSONWriter(aWriter), mStrings(&aStrings), mNextFreeIndex(0) {
-    mJSONWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
-  }
-
   explicit AutoArraySchemaWriter(SpliceableJSONWriter& aWriter)
-      : mJSONWriter(aWriter), mStrings(nullptr), mNextFreeIndex(0) {
+      : mJSONWriter(aWriter), mNextFreeIndex(0) {
     mJSONWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
   }
 
@@ -168,31 +162,35 @@ class MOZ_RAII AutoArraySchemaWriter {
     mJSONWriter.BoolElement(aValue);
   }
 
-  void StringElement(uint32_t aIndex, const char* aValue) {
-    MOZ_RELEASE_ASSERT(mStrings);
-    FillUpTo(aIndex);
-    mStrings->WriteElement(mJSONWriter, aValue);
-  }
+ protected:
+  SpliceableJSONWriter& Writer() { return mJSONWriter; }
 
-  // Write an element using a callback that takes a JSONWriter& and a
-  // UniqueJSONStrings&.
-  template <typename LambdaT>
-  void FreeFormElement(uint32_t aIndex, LambdaT aCallback) {
-    MOZ_RELEASE_ASSERT(mStrings);
-    FillUpTo(aIndex);
-    aCallback(mJSONWriter, *mStrings);
-  }
-
- private:
   void FillUpTo(uint32_t aIndex) {
     MOZ_ASSERT(aIndex >= mNextFreeIndex);
     mJSONWriter.NullElements(aIndex - mNextFreeIndex);
     mNextFreeIndex = aIndex + 1;
   }
 
+ private:
   SpliceableJSONWriter& mJSONWriter;
-  UniqueJSONStrings* mStrings;
   uint32_t mNextFreeIndex;
+};
+
+// Same as AutoArraySchemaWriter, but this can also write strings (output as
+// indexes into the table of unique strings).
+class MOZ_RAII AutoArraySchemaWithStringsWriter : public AutoArraySchemaWriter {
+ public:
+  AutoArraySchemaWithStringsWriter(SpliceableJSONWriter& aWriter,
+                                   UniqueJSONStrings& aStrings)
+      : AutoArraySchemaWriter(aWriter), mStrings(aStrings) {}
+
+  void StringElement(uint32_t aIndex, const char* aValue) {
+    FillUpTo(aIndex);
+    mStrings.WriteElement(Writer(), aValue);
+  }
+
+ private:
+  UniqueJSONStrings& mStrings;
 };
 
 UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
@@ -288,7 +286,7 @@ void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter) {
 void UniqueStacks::StreamStack(const StackKey& aStack) {
   enum Schema : uint32_t { PREFIX = 0, FRAME = 1 };
 
-  AutoArraySchemaWriter writer(mStackTableWriter, *mUniqueStrings);
+  AutoArraySchemaWriter writer(mStackTableWriter);
   if (aStack.mPrefixStackIndex.isSome()) {
     writer.IntElement(PREFIX, *aStack.mPrefixStackIndex);
   }
@@ -310,7 +308,7 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     SUBCATEGORY = 8
   };
 
-  AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
+  AutoArraySchemaWithStringsWriter writer(mFrameTableWriter, *mUniqueStrings);
 
   const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
   writer.StringElement(LOCATION, data.mLocation.c_str());
@@ -350,7 +348,6 @@ struct ProfileSample {
 };
 
 static void WriteSample(SpliceableJSONWriter& aWriter,
-                        UniqueJSONStrings& aUniqueStrings,
                         const ProfileSample& aSample) {
   enum Schema : uint32_t {
     STACK = 0,
@@ -358,7 +355,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
     EVENT_DELAY = 2,
   };
 
-  AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
+  AutoArraySchemaWriter writer(aWriter);
 
   writer.IntElement(STACK, aSample.mStack);
 
@@ -797,7 +794,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         e.Next();
       }
 
-      WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
+      WriteSample(aWriter, sample);
     }
   });
 }
