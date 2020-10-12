@@ -333,20 +333,6 @@ limitations under the License.
       });
 
 
-      it('does not trigger if target is not a descendant of the intersection root in the containing block chain',
-          function(done) {
-
-        var spy = sinon.spy();
-        io = new IntersectionObserver(spy, {root: parentEl});
-
-        parentEl.style.position = 'static';
-        io.observe(targetEl2);
-        callDelayed(function() {
-          expect(spy.callCount).to.be(0);
-          done();
-        });
-      });
-
       it('triggers if target or root becomes invisible',
           function(done) {
 
@@ -928,25 +914,6 @@ limitations under the License.
     });
 
     describe('observe subframe', function () {
-
-      it('should not trigger if target and root are not in the same document',
-          function(done) {
-
-        var spy = sinon.spy();
-        io = new IntersectionObserver(spy, {root: rootEl});
-
-        targetEl4.onload = function () {
-          targetEl5 = targetEl4.contentDocument.getElementById('target5');
-          io.observe(targetEl5);
-          callDelayed(function() {
-            expect(spy.callCount).to.be(0);
-            done();
-          });
-        }
-
-        targetEl4.src = "intersectionobserver_iframe.html";
-
-      });
 
       it('boundingClientRect matches target.getBoundingClientRect() for an element inside an iframe',
           function(done) {
