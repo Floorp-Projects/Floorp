@@ -565,8 +565,10 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
 
   bool sizeChanged = (mPrefSize != prefSize);
-  // if the size changed then set the bounds to be the preferred size
+  // if the size changed then set the bounds to be the preferred size, and make
+  // sure we re-position the popup too (as that can shrink or resize us again).
   if (sizeChanged) {
+    shouldPosition = true;
     SetXULBounds(aState, nsRect(0, 0, prefSize.width, prefSize.height), false);
     mPrefSize = prefSize;
 #if MOZ_WAYLAND
