@@ -166,6 +166,10 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::CallGetProperty:
     case MDefinition::Opcode::GetDOMProperty:
     case MDefinition::Opcode::GetDOMMember:
+    case MDefinition::Opcode::LoadDOMExpandoValue:
+    case MDefinition::Opcode::LoadDOMExpandoValueGuardGeneration:
+    case MDefinition::Opcode::LoadDOMExpandoValueIgnoreGeneration:
+    case MDefinition::Opcode::GuardDOMExpandoMissingOrGuardShape:
     case MDefinition::Opcode::Call:
     case MDefinition::Opcode::Throw:
     case MDefinition::Opcode::ThrowRuntimeLexicalError:
