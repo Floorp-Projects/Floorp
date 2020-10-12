@@ -452,15 +452,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef JS_HAS_TYPED_OBJECTS
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "typed-objects", value)) {
-    return false;
-  }
-
 #ifdef JS_HAS_INTL_API
   value = BooleanValue(true);
 #else

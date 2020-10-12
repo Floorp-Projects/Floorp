@@ -27,6 +27,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
 
+#include "wasm/WasmJS.h"     // WasmNamespaceObject
 #include "wasm/WasmTypes.h"  // WasmValueBox
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
@@ -43,12 +44,6 @@ using mozilla::PodCopy;
 using mozilla::PointerRangeSize;
 
 using namespace js;
-
-const JSClass js::TypedObjectModuleObject::class_ = {
-    "TypedObject",
-    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
-    JS_NULL_CLASS_OPS, &classSpec_};
 
 template <class T>
 static inline T* ToObjectIf(HandleValue value) {
@@ -236,28 +231,28 @@ TypeDescr* GlobalObject::getOrCreateScalarTypeDescr(
   int32_t slot = 0;
   switch (scalarType) {
     case Scalar::Int32:
-      slot = TypedObjectModuleObject::Int32Desc;
+      slot = WasmNamespaceObject::Int32Desc;
       break;
     case Scalar::Int64:
-      slot = TypedObjectModuleObject::Int64Desc;
+      slot = WasmNamespaceObject::Int64Desc;
       break;
     case Scalar::Float32:
-      slot = TypedObjectModuleObject::Float32Desc;
+      slot = WasmNamespaceObject::Float32Desc;
       break;
     case Scalar::Float64:
-      slot = TypedObjectModuleObject::Float64Desc;
+      slot = WasmNamespaceObject::Float64Desc;
       break;
     default:
       MOZ_CRASH("NYI");
   }
 
-  Rooted<TypedObjectModuleObject*> module(
-      cx, &GlobalObject::getOrCreateTypedObjectModule(cx, global)
-               ->as<TypedObjectModuleObject>());
-  if (!module) {
+  Rooted<WasmNamespaceObject*> namespaceObject(
+      cx, &GlobalObject::getOrCreateWebAssemblyNamespace(cx, global)
+               ->as<WasmNamespaceObject>());
+  if (!namespaceObject) {
     return nullptr;
   }
-  return &module->getReservedSlot(slot).toObject().as<TypeDescr>();
+  return &namespaceObject->getReservedSlot(slot).toObject().as<TypeDescr>();
 }
 
 /* static */
@@ -266,22 +261,22 @@ TypeDescr* GlobalObject::getOrCreateReferenceTypeDescr(
   int32_t slot = 0;
   switch (type) {
     case ReferenceType::TYPE_OBJECT:
-      slot = TypedObjectModuleObject::ObjectDesc;
+      slot = WasmNamespaceObject::ObjectDesc;
       break;
     case ReferenceType::TYPE_WASM_ANYREF:
-      slot = TypedObjectModuleObject::WasmAnyRefDesc;
+      slot = WasmNamespaceObject::WasmAnyRefDesc;
       break;
     default:
       MOZ_CRASH("NYI");
   }
 
-  Rooted<TypedObjectModuleObject*> module(
-      cx, &GlobalObject::getOrCreateTypedObjectModule(cx, global)
-               ->as<TypedObjectModuleObject>());
-  if (!module) {
+  Rooted<WasmNamespaceObject*> namespaceObject(
+      cx, &GlobalObject::getOrCreateWebAssemblyNamespace(cx, global)
+               ->as<WasmNamespaceObject>());
+  if (!namespaceObject) {
     return nullptr;
   }
-  return &module->getReservedSlot(slot).toObject().as<TypeDescr>();
+  return &namespaceObject->getReservedSlot(slot).toObject().as<TypeDescr>();
 }
 
 /***************************************************************************
@@ -849,7 +844,8 @@ TypeDescr& StructTypeDescr::fieldDescr(size_t index) const {
 // Here `T` is either `ScalarTypeDescr` or `ReferenceTypeDescr`
 template <typename T>
 static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
-                                  HandleObject module, typename T::Type type,
+                                  Handle<WasmNamespaceObject*> namespaceObject,
+                                  typename T::Type type,
                                   HandlePropertyName className) {
   RootedObject objProto(cx,
                         GlobalObject::getOrCreateObjectPrototype(cx, global));
@@ -885,7 +881,7 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
   descr->initReservedSlot(TypeDescr::Proto, ObjectValue(*proto));
 
   RootedValue descrValue(cx, ObjectValue(*descr));
-  if (!DefineDataProperty(cx, module, className, descrValue, 0)) {
+  if (!DefineDataProperty(cx, namespaceObject, className, descrValue, 0)) {
     return false;
   }
 
@@ -903,10 +899,10 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
 ///////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
-                                     Handle<GlobalObject*> global,
-                                     Handle<TypedObjectModuleObject*> module,
-                                     TypedObjectModuleObject::Slot protoSlot) {
+static JSObject* DefineMetaTypeDescr(
+    JSContext* cx, const char* name, Handle<GlobalObject*> global,
+    Handle<WasmNamespaceObject*> namespaceObject,
+    WasmNamespaceObject::Slot protoSlot) {
   RootedAtom className(cx, Atomize(cx, name, strlen(name)));
   if (!className) {
     return nullptr;
@@ -926,46 +922,27 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
     return nullptr;
   }
 
-  module->initReservedSlot(protoSlot, ObjectValue(*proto));
+  namespaceObject->initReservedSlot(protoSlot, ObjectValue(*proto));
 
   return ctor;
 }
 
-static JSObject* CreateTypedObjectModuleObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject objProto(cx,
-                        GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!objProto) {
-    return nullptr;
-  }
-
-  return NewSingletonObjectWithGivenProto<TypedObjectModuleObject>(cx,
-                                                                   objProto);
-}
-
-/*  The initialization strategy for TypedObjects is mildly unusual
- * compared to other classes. Because all of the types are members
- * of a single global, `TypedObject`, we basically make the
- * initializer for the `TypedObject` class populate the
- * `TypedObject` global (which is referred to as "module" herein).
- */
-static bool TypedObjectModuleObjectClassFinish(JSContext* cx, HandleObject ctor,
-                                               HandleObject proto) {
-  Handle<TypedObjectModuleObject*> module = ctor.as<TypedObjectModuleObject>();
+bool js::InitTypedObjectNamespace(
+    JSContext* cx, Handle<WasmNamespaceObject*> namespaceObject) {
   Handle<GlobalObject*> global = cx->global();
 
   // uint8, uint16, any, etc
 
 #define BINARYDATA_SCALAR_DEFINE(constant_, type_, name_)                    \
-  if (!DefineSimpleTypeDescr<ScalarTypeDescr>(cx, global, module, constant_, \
-                                              cx->names().name_))            \
+  if (!DefineSimpleTypeDescr<ScalarTypeDescr>(cx, global, namespaceObject,   \
+                                              constant_, cx->names().name_)) \
     return false;
   JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_SCALAR_DEFINE)
 #undef BINARYDATA_SCALAR_DEFINE
 
-#define BINARYDATA_REFERENCE_DEFINE(constant_, type_, name_) \
-  if (!DefineSimpleTypeDescr<ReferenceTypeDescr>(            \
-          cx, global, module, constant_, cx->names().name_)) \
+#define BINARYDATA_REFERENCE_DEFINE(constant_, type_, name_)          \
+  if (!DefineSimpleTypeDescr<ReferenceTypeDescr>(                     \
+          cx, global, namespaceObject, constant_, cx->names().name_)) \
     return false;
   JS_FOR_EACH_REFERENCE_TYPE_REPR(BINARYDATA_REFERENCE_DEFINE)
 #undef BINARYDATA_REFERENCE_DEFINE
@@ -978,49 +955,52 @@ static bool TypedObjectModuleObjectClassFinish(JSContext* cx, HandleObject ctor,
   // JS_GetProperty().  The properties themselves will always exist on the
   // object.
 
-  if (!JS_GetProperty(cx, module, "int32", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "int32", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::Int32Desc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::Int32Desc, typeDescr);
 
-  if (!JS_GetProperty(cx, module, "int64", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "int64", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::Int64Desc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::Int64Desc, typeDescr);
 
-  if (!JS_GetProperty(cx, module, "float32", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "float32", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::Float32Desc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::Float32Desc,
+                                    typeDescr);
 
-  if (!JS_GetProperty(cx, module, "float64", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "float64", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::Float64Desc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::Float64Desc,
+                                    typeDescr);
 
-  if (!JS_GetProperty(cx, module, "Object", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "Object", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::ObjectDesc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::ObjectDesc, typeDescr);
 
-  if (!JS_GetProperty(cx, module, "WasmAnyRef", &typeDescr)) {
+  if (!JS_GetProperty(cx, namespaceObject, "WasmAnyRef", &typeDescr)) {
     return false;
   }
-  module->initReservedSlot(TypedObjectModuleObject::WasmAnyRefDesc, typeDescr);
+  namespaceObject->initReservedSlot(WasmNamespaceObject::WasmAnyRefDesc,
+                                    typeDescr);
 
   // ArrayType.
 
   RootedObject arrayType(cx);
   arrayType = DefineMetaTypeDescr<ArrayMetaTypeDescr>(
-      cx, "ArrayType", global, module,
-      TypedObjectModuleObject::ArrayTypePrototype);
+      cx, "ArrayType", global, namespaceObject,
+      WasmNamespaceObject::ArrayTypePrototype);
   if (!arrayType) {
     return false;
   }
 
   RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
-  if (!DefineDataProperty(cx, module, cx->names().ArrayType, arrayTypeValue,
-                          JSPROP_READONLY | JSPROP_PERMANENT)) {
+  if (!DefineDataProperty(cx, namespaceObject, cx->names().ArrayType,
+                          arrayTypeValue, JSPROP_READONLY | JSPROP_PERMANENT)) {
     return false;
   }
 
@@ -1028,29 +1008,21 @@ static bool TypedObjectModuleObjectClassFinish(JSContext* cx, HandleObject ctor,
 
   RootedObject structType(cx);
   structType = DefineMetaTypeDescr<StructMetaTypeDescr>(
-      cx, "StructType", global, module,
-      TypedObjectModuleObject::StructTypePrototype);
+      cx, "StructType", global, namespaceObject,
+      WasmNamespaceObject::StructTypePrototype);
   if (!structType) {
     return false;
   }
 
   RootedValue structTypeValue(cx, ObjectValue(*structType));
-  if (!DefineDataProperty(cx, module, cx->names().StructType, structTypeValue,
+  if (!DefineDataProperty(cx, namespaceObject, cx->names().StructType,
+                          structTypeValue,
                           JSPROP_READONLY | JSPROP_PERMANENT)) {
     return false;
   }
 
   return true;
 }
-
-const ClassSpec TypedObjectModuleObject::classSpec_ = {
-    CreateTypedObjectModuleObject,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    TypedObjectModuleObjectClassFinish};
 
 TypedProto* TypedProto::create(JSContext* cx) {
   Handle<GlobalObject*> global = cx->global();

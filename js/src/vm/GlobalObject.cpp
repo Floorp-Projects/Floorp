@@ -57,9 +57,6 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
-#ifdef JS_HAS_TYPED_OBJECTS
-#  include "wasm/TypedObject.h"
-#endif
 
 #include "gc/FreeOp-inl.h"
 #include "vm/JSObject-inl.h"
@@ -75,7 +72,6 @@ extern const JSClass IntlClass;
 extern const JSClass JSONClass;
 extern const JSClass MathClass;
 extern const JSClass ReflectClass;
-extern const JSClass WebAssemblyClass;
 
 }  // namespace js
 
@@ -93,13 +89,13 @@ JS_FRIEND_API const JSClass* js::ProtoKeyToClass(JSProtoKey key) {
 }
 
 // This method is not in the header file to avoid having to include
-// TypedObject.h from GlobalObject.h. It is not generally perf
+// WasmJS.h from GlobalObject.h. It is not generally perf
 // sensitive.
-TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
-  Value v = getConstructor(JSProto_TypedObject);
-  // only gets called from contexts where TypedObject must be initialized
+WasmNamespaceObject& js::GlobalObject::getWebAssemblyNamespace() const {
+  Value v = getConstructor(JSProto_WebAssembly);
+  // only gets called from contexts where WebAssembly must be initialized
   MOZ_ASSERT(v.isObject());
-  return v.toObject().as<TypedObjectModuleObject>();
+  return v.toObject().as<WasmNamespaceObject>();
 }
 
 /* static */
@@ -178,11 +174,6 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_NumberFormat:
     case JSProto_PluralRules:
     case JSProto_RelativeTimeFormat:
-      return false;
-#endif
-
-#ifdef JS_HAS_TYPED_OBJECTS
-    case JSProto_TypedObject:
       return false;
 #endif
 

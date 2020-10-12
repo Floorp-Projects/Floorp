@@ -67,7 +67,6 @@ var ecmaGlobals = [
   "String",
   "Symbol",
   "SyntaxError",
-  { name: "TypedObject", nightly: true },
   "TypeError",
   "Uint16Array",
   "Uint32Array",

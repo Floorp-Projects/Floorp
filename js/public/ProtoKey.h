@@ -40,13 +40,7 @@
 #  define IF_INTL(REAL, IMAGINARY) IMAGINARY
 #endif
 
-#ifdef JS_HAS_TYPED_OBJECTS
-#  define IF_TYPEDOBJ(REAL, IMAGINARY) REAL
-#else
-#  define IF_TYPEDOBJ(REAL, IMAGINARY) IMAGINARY
-#endif
-
-#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_BDATA)      \
+#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL)                     \
   IMAGINARY(Null, dummy)                                                      \
   REAL(Object, OCLASP(Plain))                                                 \
   REAL(Function, &JSFunction::class_)                                         \
@@ -100,7 +94,6 @@
   REAL_IF_INTL(NumberFormat, OCLASP(NumberFormat))                            \
   REAL_IF_INTL(PluralRules, OCLASP(PluralRules))                              \
   REAL_IF_INTL(RelativeTimeFormat, OCLASP(RelativeTimeFormat))                \
-  REAL_IF_BDATA(TypedObject, OCLASP(TypedObjectModule))                       \
   REAL(Reflect, CLASP(Reflect))                                               \
   REAL(WeakSet, OCLASP(WeakSet))                                              \
   REAL(TypedArray, &js::TypedArrayObject::sharedTypedArrayPrototypeClass)     \
@@ -122,7 +115,7 @@
   REAL(WritableStreamDefaultWriter, &js::WritableStreamDefaultWriter::class_) \
   REAL(ByteLengthQueuingStrategy, &js::ByteLengthQueuingStrategy::class_)     \
   REAL(CountQueuingStrategy, &js::CountQueuingStrategy::class_)               \
-  REAL(WebAssembly, CLASP(WebAssembly))                                       \
+  REAL(WebAssembly, OCLASP(WasmNamespace))                                    \
   REAL(WasmModule, OCLASP(WasmModule))                                        \
   REAL(WasmInstance, OCLASP(WasmInstance))                                    \
   REAL(WasmMemory, OCLASP(WasmMemory))                                        \
@@ -133,9 +126,8 @@
   REAL(Iterator, OCLASP(Iterator))                                            \
   REAL(AsyncIterator, OCLASP(AsyncIterator))
 
-#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
-  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
-                     IF_TYPEDOBJ(REAL, IMAGINARY))
+#define JS_FOR_PROTOTYPES(REAL, IMAGINARY) \
+  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 
