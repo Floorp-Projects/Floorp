@@ -57,14 +57,13 @@ Scope* ScopeStencil::enclosingExistingScope(
   return input.enclosingScope;
 }
 
-Scope* ScopeStencil::createScope(JSContext* cx,
-                                 CompilationInfo& compilationInfo,
+Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput) const {
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
-      scope = createSpecificScope<FunctionScope, CallObject>(
-          cx, compilationInfo.input, gcOutput);
+      scope =
+          createSpecificScope<FunctionScope, CallObject>(cx, input, gcOutput);
       break;
     }
     case ScopeKind::Lexical:
@@ -75,34 +74,34 @@ Scope* ScopeStencil::createScope(JSContext* cx,
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
       scope = createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
-          cx, compilationInfo.input, gcOutput);
+          cx, input, gcOutput);
       break;
     }
     case ScopeKind::FunctionBodyVar: {
-      scope = createSpecificScope<VarScope, VarEnvironmentObject>(
-          cx, compilationInfo.input, gcOutput);
+      scope = createSpecificScope<VarScope, VarEnvironmentObject>(cx, input,
+                                                                  gcOutput);
       break;
     }
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      scope = createSpecificScope<GlobalScope, std::nullptr_t>(
-          cx, compilationInfo.input, gcOutput);
+      scope =
+          createSpecificScope<GlobalScope, std::nullptr_t>(cx, input, gcOutput);
       break;
     }
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      scope = createSpecificScope<EvalScope, VarEnvironmentObject>(
-          cx, compilationInfo.input, gcOutput);
+      scope = createSpecificScope<EvalScope, VarEnvironmentObject>(cx, input,
+                                                                   gcOutput);
       break;
     }
     case ScopeKind::Module: {
       scope = createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
-          cx, compilationInfo.input, gcOutput);
+          cx, input, gcOutput);
       break;
     }
     case ScopeKind::With: {
-      scope = createSpecificScope<WithScope, std::nullptr_t>(
-          cx, compilationInfo.input, gcOutput);
+      scope =
+          createSpecificScope<WithScope, std::nullptr_t>(cx, input, gcOutput);
       break;
     }
     case ScopeKind::WasmFunction:
@@ -326,7 +325,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
   }
 
   for (const ScopeStencil& scd : compilationInfo.stencil.scopeData) {
-    Scope* scope = scd.createScope(cx, compilationInfo, gcOutput);
+    Scope* scope = scd.createScope(cx, compilationInfo.input, gcOutput);
     if (!scope) {
       return false;
     }
