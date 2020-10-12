@@ -240,6 +240,12 @@ class GenericTracer : public JSTracer {
 
   // Override these methods to receive notification when an edge is visited
   // with the type contained in the callback.
+  //
+  // In C++, overriding a method hides all methods in the base class with that
+  // name, not just methods with that signature. Thus, the typed edge methods
+  // have to have distinct names to allow us to override them individually,
+  // which is freqently useful if, for example, we only want to process one type
+  // of edge.
   virtual bool onObjectEdge(JSObject** objp) = 0;
   virtual bool onStringEdge(JSString** strp) = 0;
   virtual bool onSymbolEdge(JS::Symbol** symp) = 0;
@@ -251,33 +257,6 @@ class GenericTracer : public JSTracer {
   virtual bool onBaseShapeEdge(js::BaseShape** basep) = 0;
   virtual bool onJitCodeEdge(js::jit::JitCode** codep) = 0;
   virtual bool onScopeEdge(js::Scope** scopep) = 0;
-
-  // In C++, overriding a method hides all methods in the base class with that
-  // name, not just methods with that signature. Thus, the typed edge methods
-  // have to have distinct names to allow us to override them individually,
-  // which is freqently useful if, for example, we only want to process one type
-  // of edge.
-  bool dispatchToOnEdge(JSObject** objp) { return onObjectEdge(objp); }
-  bool dispatchToOnEdge(JSString** strp) { return onStringEdge(strp); }
-  bool dispatchToOnEdge(JS::Symbol** symp) { return onSymbolEdge(symp); }
-  bool dispatchToOnEdge(JS::BigInt** bip) { return onBigIntEdge(bip); }
-  bool dispatchToOnEdge(js::BaseScript** scriptp) {
-    return onScriptEdge(scriptp);
-  }
-  bool dispatchToOnEdge(js::Shape** shapep) { return onShapeEdge(shapep); }
-  bool dispatchToOnEdge(js::ObjectGroup** groupp) {
-    return onObjectGroupEdge(groupp);
-  }
-  bool dispatchToOnEdge(js::BaseShape** basep) {
-    return onBaseShapeEdge(basep);
-  }
-  bool dispatchToOnEdge(js::jit::JitCode** codep) {
-    return onJitCodeEdge(codep);
-  }
-  bool dispatchToOnEdge(js::Scope** scopep) { return onScopeEdge(scopep); }
-  bool dispatchToOnEdge(js::RegExpShared** sharedp) {
-    return onRegExpSharedEdge(sharedp);
-  }
 };
 
 }  // namespace js
