@@ -18,7 +18,6 @@
 
 #include "wasm/WasmCraneliftCompile.h"
 
-#include "mozilla/CheckedInt.h"
 #include "mozilla/ScopeExit.h"
 
 #include "jit/Disassemble.h"
@@ -37,8 +36,6 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
-
-using mozilla::CheckedInt;
 
 bool wasm::CraneliftPlatformSupport() { return cranelift_supports_platform(); }
 
