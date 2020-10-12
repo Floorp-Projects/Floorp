@@ -393,10 +393,14 @@ class AliasSet {
     // frame during exception bailouts.)
     ExceptionState = 1 << 13,
 
-    Last = ExceptionState,
+    // Used for instructions that load the privateSlot of DOM proxies and
+    // the ExpandoAndGeneration.
+    DOMProxyExpando = 1 << 14,
+
+    Last = DOMProxyExpando,
     Any = Last | (Last - 1),
 
-    NumCategories = 14,
+    NumCategories = 15,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -11296,8 +11300,7 @@ class MLoadDOMExpandoValue : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    // TODO: Investigate using a narrower or a custom alias set.
-    return AliasSet::Load(AliasSet::Any);
+    return AliasSet::Load(AliasSet::DOMProxyExpando);
   }
 };
 
@@ -11339,8 +11342,7 @@ class MLoadDOMExpandoValueGuardGeneration : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    // TODO: Investigate using a narrower or a custom alias set.
-    return AliasSet::Load(AliasSet::Any);
+    return AliasSet::Load(AliasSet::DOMProxyExpando);
   }
 };
 
@@ -11361,8 +11363,7 @@ class MLoadDOMExpandoValueIgnoreGeneration : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    // TODO: Investigate using a narrower or a custom alias set.
-    return AliasSet::Load(AliasSet::Any);
+    return AliasSet::Load(AliasSet::DOMProxyExpando);
   }
 };
 
