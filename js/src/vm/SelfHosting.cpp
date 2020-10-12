@@ -2438,7 +2438,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
-    JS_FN("NewDerivedTypedObject", js::NewDerivedTypedObject, 3, 0),
     JS_FN("ClampToUint8", js::ClampToUint8, 1, 0),
 
     JS_FN("ObjectIsTypeDescr", js::ObjectIsTypeDescr, 1, 0),
