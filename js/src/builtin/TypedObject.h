@@ -158,12 +158,6 @@ class TypeDescr : public NativeObject {
     return (type::Kind)getReservedSlot(JS_DESCR_SLOT_KIND).toInt32();
   }
 
-  bool opaque() const {
-    return getReservedSlot(JS_DESCR_SLOT_OPAQUE).toBoolean();
-  }
-
-  bool transparent() const { return !opaque(); }
-
   uint32_t alignment() const {
     int32_t i = getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
     MOZ_ASSERT(i >= 0);
@@ -220,7 +214,6 @@ class ScalarTypeDescr : public SimpleTypeDescr {
   using Type = Scalar::Type;
 
   static const type::Kind Kind = type::Scalar;
-  static const bool Opaque = false;
   static uint32_t size(Type t);
   static uint32_t alignment(Type t);
   static const char* typeName(Type type);
@@ -318,7 +311,6 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
 
   static const int32_t TYPE_MAX = int32_t(ReferenceType::TYPE_STRING) + 1;
   static const type::Kind Kind = type::Reference;
-  static const bool Opaque = true;
   static const JSClass class_;
   static uint32_t size(Type t);
   static uint32_t alignment(Type t);
@@ -358,9 +350,6 @@ class ComplexTypeDescr : public TypeDescr {
 };
 
 bool IsTypedObjectClass(const JSClass* clasp);  // Defined below
-
-MOZ_MUST_USE bool CreateUserSizeAndAlignmentProperties(JSContext* cx,
-                                                       HandleTypeDescr obj);
 
 class ArrayTypeDescr;
 
@@ -445,8 +434,8 @@ class StructMetaTypeDescr : public NativeObject {
   // The names in `ids` must all be non-numeric.
   // The type objects in `fieldTypeObjs` must all be TypeDescr objects.
   static StructTypeDescr* createFromArrays(
-      JSContext* cx, HandleObject structTypePrototype, bool opaque,
-      bool allowConstruct, HandleIdVector ids, HandleValueVector fieldTypeObjs,
+      JSContext* cx, HandleObject structTypePrototype, bool allowConstruct,
+      HandleIdVector ids, HandleValueVector fieldTypeObjs,
       Vector<StructFieldProps>& fieldProps);
 
   // Properties and methods to be installed on StructType.prototype,
@@ -542,7 +531,7 @@ class TypedObjectModuleObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
-/* Base type for transparent and opaque typed objects. */
+/* Base type for typed objects. */
 class TypedObject : public JSObject {
   static const bool IsTypedObjectClass = true;
 
@@ -625,8 +614,6 @@ class TypedObject : public JSObject {
     return typedMem(nogc) + offset;
   }
 
-  inline MOZ_MUST_USE bool opaque() const;
-
   // Creates a new typed object whose memory is freshly allocated and
   // initialized with zeroes (or, in the case of references, an appropriate
   // default value).
@@ -660,6 +647,8 @@ class OutlineTypedObject : public TypedObject {
   static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
   static size_t offsetOfOwner() { return offsetof(OutlineTypedObject, owner_); }
 
+  static const JSClass class_;
+
   JSObject& owner() const {
     MOZ_ASSERT(owner_);
     return *owner_;
@@ -668,11 +657,6 @@ class OutlineTypedObject : public TypedObject {
   uint8_t* outOfLineTypedMem() const { return data_; }
 
  private:
-  // Helper for createUnattached()
-  static OutlineTypedObject* createUnattachedWithClass(
-      JSContext* cx, const JSClass* clasp, HandleTypeDescr type,
-      gc::InitialHeap heap = gc::DefaultHeap);
-
   // Creates an unattached typed object or handle (depending on the
   // type parameter T). Note that it is only legal for unattached
   // handles to escape to the end user; for non-handles, the caller
@@ -710,19 +694,6 @@ class OutlineTypedObject : public TypedObject {
   static void obj_trace(JSTracer* trace, JSObject* object);
 };
 
-// Class for a transparent typed object whose owner is an array buffer.
-class OutlineTransparentTypedObject : public OutlineTypedObject {
- public:
-  static const JSClass class_;
-};
-
-// Class for an opaque typed object whose owner may be either an array buffer
-// or an opaque inlined typed object.
-class OutlineOpaqueTypedObject : public OutlineTypedObject {
- public:
-  static const JSClass class_;
-};
-
 // Class for a typed object whose data is allocated inline.
 class InlineTypedObject : public TypedObject {
   friend class TypedObject;
@@ -731,6 +702,8 @@ class InlineTypedObject : public TypedObject {
   uint8_t data_[1];
 
  public:
+  static const JSClass class_;
+
   static const size_t MaxInlineBytes =
       JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
 
@@ -762,23 +735,6 @@ class InlineTypedObject : public TypedObject {
   static InlineTypedObject* createCopy(
       JSContext* cx, Handle<InlineTypedObject*> templateObject,
       gc::InitialHeap heap);
-};
-
-// Class for a transparent typed object with inline data, which may have a
-// lazily allocated array buffer.
-class InlineTransparentTypedObject : public InlineTypedObject {
- public:
-  static const JSClass class_;
-
-  uint8_t* inlineTypedMem() const {
-    return InlineTypedObject::inlineTypedMem();
-  }
-};
-
-// Class for an opaque typed object with inline data and no array buffer.
-class InlineOpaqueTypedObject : public InlineTypedObject {
- public:
-  static const JSClass class_;
 };
 
 /*
@@ -965,30 +921,16 @@ JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_STORE_REFERENCE_CLASS_DEFN)
 JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_DEFN)
 
 inline bool IsTypedObjectClass(const JSClass* class_) {
-  return class_ == &OutlineTransparentTypedObject::class_ ||
-         class_ == &InlineTransparentTypedObject::class_ ||
-         class_ == &OutlineOpaqueTypedObject::class_ ||
-         class_ == &InlineOpaqueTypedObject::class_;
-}
-
-inline bool IsOpaqueTypedObjectClass(const JSClass* class_) {
-  return class_ == &OutlineOpaqueTypedObject::class_ ||
-         class_ == &InlineOpaqueTypedObject::class_;
+  return class_ == &OutlineTypedObject::class_ ||
+         class_ == &InlineTypedObject::class_;
 }
 
 inline bool IsOutlineTypedObjectClass(const JSClass* class_) {
-  return class_ == &OutlineOpaqueTypedObject::class_ ||
-         class_ == &OutlineTransparentTypedObject::class_;
+  return class_ == &OutlineTypedObject::class_;
 }
 
 inline bool IsInlineTypedObjectClass(const JSClass* class_) {
-  return class_ == &InlineOpaqueTypedObject::class_ ||
-         class_ == &InlineTransparentTypedObject::class_;
-}
-
-inline const JSClass* GetOutlineTypedObjectClass(bool opaque) {
-  return opaque ? &OutlineOpaqueTypedObject::class_
-                : &OutlineTransparentTypedObject::class_;
+  return class_ == &InlineTypedObject::class_;
 }
 
 inline bool IsSimpleTypeDescrClass(const JSClass* clasp) {
@@ -1002,10 +944,6 @@ inline bool IsComplexTypeDescrClass(const JSClass* clasp) {
 
 inline bool IsTypeDescrClass(const JSClass* clasp) {
   return IsSimpleTypeDescrClass(clasp) || IsComplexTypeDescrClass(clasp);
-}
-
-inline bool TypedObject::opaque() const {
-  return IsOpaqueTypedObjectClass(getClass());
 }
 
 }  // namespace js
