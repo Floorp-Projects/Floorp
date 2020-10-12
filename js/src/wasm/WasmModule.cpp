@@ -1244,23 +1244,18 @@ bool Module::makeStructTypeDescrs(
   MOZ_CRASH("Should not have seen any struct types");
 #else
 
-#  ifndef JS_HAS_TYPED_OBJECTS
-#    error "GC types require TypedObject"
-#  endif
-
   // Not just any prototype object will do, we must have the actual
   // StructTypePrototype.
-  RootedObject typedObjectModule(
-      cx, GlobalObject::getOrCreateTypedObjectModule(cx, cx->global()));
-  if (!typedObjectModule) {
+  RootedObject namespaceObject(
+      cx, GlobalObject::getOrCreateWebAssemblyNamespace(cx, cx->global()));
+  if (!namespaceObject) {
     return false;
   }
 
-  RootedNativeObject toModule(cx, &typedObjectModule->as<NativeObject>());
+  RootedNativeObject toModule(cx, &namespaceObject->as<NativeObject>());
   RootedObject prototype(
-      cx,
-      &toModule->getReservedSlot(TypedObjectModuleObject::StructTypePrototype)
-           .toObject());
+      cx, &toModule->getReservedSlot(WasmNamespaceObject::StructTypePrototype)
+               .toObject());
 
   for (const StructType& structType : structTypes()) {
     RootedIdVector ids(cx);
