@@ -687,21 +687,73 @@ function setVisibleMessages({
   uiState,
   forceTimestampSort = false,
 }) {
-  const { messagesById } = messagesState;
+  const { messagesById, visibleMessages, messagesUiById } = messagesState;
 
-  const messagesToShow = [];
+  const messagesToShow = new Set();
+  const matchedGroups = new Set();
   const filtered = getDefaultFiltersCounter();
 
   messagesById.forEach((message, msgId) => {
+    const groupParentId = message.groupId;
+    let hasMatchedAncestor = false;
+    const ancestors = [];
+
+    if (groupParentId) {
+      let ancestorId = groupParentId;
+
+      // we track the message's ancestors and their state
+      while (ancestorId) {
+        ancestors.push({
+          ancestorId: ancestorId,
+          matchedFilters: matchedGroups.has(ancestorId),
+          isOpen: messagesUiById.includes(ancestorId),
+          isCurrentlyVisible: visibleMessages.includes(ancestorId),
+        });
+        if (!hasMatchedAncestor && matchedGroups.has(ancestorId)) {
+          hasMatchedAncestor = true;
+        }
+        ancestorId = messagesById.get(ancestorId).groupId;
+      }
+    }
+
     const { visible, cause } = getMessageVisibility(message, {
       messagesState,
       filtersState,
       prefsState,
       uiState,
+      hasMatchedAncestor,
     });
 
+    // if the message is not visible but passes the search filters, we show its visible ancestors
+    if (!visible && passSearchFilters(message, filtersState)) {
+      const tmp = [];
+      ancestors.forEach(msg => {
+        if (msg.isCurrentlyVisible) {
+          tmp.push(msg.ancestorId);
+        }
+      });
+      tmp.reverse().forEach(id => {
+        messagesToShow.add(id);
+      });
+    }
     if (visible) {
-      messagesToShow.push(msgId);
+      // if the visible message is a child of a group, we add its ancestors to the visible messages
+      if (groupParentId) {
+        // We need to reverse the visibleAncestors array to show the groups in the correct order
+        ancestors.reverse().forEach(msg => {
+          messagesToShow.add(msg.ancestorId);
+        });
+      }
+
+      // we keep track of matched startGroup and startGroupCollapsed messages so we don't filter their children
+      if (
+        message.type === "startGroup" ||
+        message.type === "startGroupCollapsed"
+      ) {
+        matchedGroups.add(msgId);
+      }
+
+      messagesToShow.add(msgId);
     } else if (DEFAULT_FILTERS.includes(cause)) {
       filtered.global = filtered.global + 1;
       filtered[cause] = filtered[cause] + 1;
@@ -710,7 +762,7 @@ function setVisibleMessages({
 
   const newState = {
     ...messagesState,
-    visibleMessages: messagesToShow,
+    visibleMessages: Array.from(messagesToShow),
     filteredMessagesCount: filtered,
   };
 
@@ -970,6 +1022,8 @@ function getToplevelMessageCount(state) {
  *                   - {Boolean} checkParentWarningGroupVisibility: Set to false to not
  *                                 check if a message should be visible because it is in a
  *                                 warningGroup and the warningGroup is visible.
+ *                   - {Boolean} hasMatchedAncestor: Set to true if message is part of a
+ *                                 group that has been set to visible
  *
  * @return {Object} An object of the following form:
  *         - visible {Boolean}: true if the message should be visible
@@ -985,6 +1039,7 @@ function getMessageVisibility(
     uiState,
     checkGroup = true,
     checkParentWarningGroupVisibility = true,
+    hasMatchedAncestor = false,
   }
 ) {
   // Do not display the message if it's not from chromeContext and we don't show content
@@ -1155,7 +1210,9 @@ function getMessageVisibility(
 
   // This should always be the last check, or we might report that a message was hidden
   // because of text search, while it may be hidden because its category is disabled.
-  if (!passSearchFilters(message, filtersState)) {
+  // Do not check for search filters if it is part of a group and one of its ancestor
+  // has matched the current search filters and set to visible
+  if (!hasMatchedAncestor && !passSearchFilters(message, filtersState)) {
     return {
       visible: false,
       cause: FILTERS.TEXT,
@@ -1171,8 +1228,6 @@ function isUnfilterable(message) {
   return [
     MESSAGE_TYPE.COMMAND,
     MESSAGE_TYPE.RESULT,
-    MESSAGE_TYPE.START_GROUP,
-    MESSAGE_TYPE.START_GROUP_COLLAPSED,
     MESSAGE_TYPE.NAVIGATION_MARKER,
   ].includes(message.type);
 }
