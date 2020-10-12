@@ -982,6 +982,10 @@ inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio() const {
   //
   // For now, we accept these values, but layout AspectRatio makes these values
   // 0.0.
+  //
+  // Note: a ratio of 0/0 behaves as the ratio 1/0 instead. So ToLayoutRatio()
+  //       also makes it as 0.0 for now.
+  // https://drafts.csswg.org/css-values-4/#ratios
   return AspectRatio::FromSize(_0, _1);
 }
 
