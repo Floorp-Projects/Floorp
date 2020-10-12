@@ -98,25 +98,6 @@
 
 namespace js {
 
-/*
- * Helper method for converting a double into other scalar
- * types in the same way that JavaScript would. In particular,
- * simple C casting from double to int32_t gets things wrong
- * for values like 0xF0000000.
- */
-template <typename T>
-static T ConvertScalar(double d) {
-  if (TypeIsFloatingPoint<T>()) {
-    return T(d);
-  }
-  if (TypeIsUnsigned<T>()) {
-    uint32_t n = JS::ToUint32(d);
-    return T(n);
-  }
-  int32_t n = JS::ToInt32(d);
-  return T(n);
-}
-
 namespace type {
 
 enum Kind {
@@ -130,11 +111,6 @@ enum Kind {
 
 ///////////////////////////////////////////////////////////////////////////
 // Typed Prototypes
-
-class SimpleTypeDescr;
-class ComplexTypeDescr;
-class StructTypeDescr;
-class TypedProto;
 
 /*
  * The prototype for a typed object.
@@ -204,6 +180,9 @@ class TypeDescr : public NativeObject {
 using HandleTypeDescr = Handle<TypeDescr*>;
 
 class SimpleTypeDescr : public TypeDescr {};
+// Type descriptors whose instances are objects and hence which have
+// an associated `prototype` property.
+class ComplexTypeDescr : public TypeDescr {};
 
 // Type for scalar type constructors like `uint8`. All such type
 // constructors share a common JSClass and JSFunctionSpec. Scalar
@@ -333,18 +312,6 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
   MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object)          \
   MACRO_(ReferenceType::TYPE_STRING, GCPtrString, string)
 
-// Type descriptors whose instances are objects and hence which have
-// an associated `prototype` property.
-class ComplexTypeDescr : public TypeDescr {
- public:
-  bool allowConstruct() const {
-    return getReservedSlot(JS_DESCR_SLOT_FLAGS).toInt32() &
-           JS_DESCR_FLAG_ALLOW_CONSTRUCT;
-  }
-};
-
-bool IsTypedObjectClass(const JSClass* clasp);  // Defined below
-
 class ArrayTypeDescr;
 
 /*
@@ -413,6 +380,8 @@ struct StructFieldProps {
   uint32_t alignAsV128 : 1;
 };
 
+class StructTypeDescr;
+
 /*
  * Properties and methods of the `StructType` meta type object. There
  * is no `class_` field because `StructType` is just a native
@@ -428,9 +397,8 @@ class StructMetaTypeDescr : public NativeObject {
   // The names in `ids` must all be non-numeric.
   // The type objects in `fieldTypeObjs` must all be TypeDescr objects.
   static StructTypeDescr* createFromArrays(
-      JSContext* cx, HandleObject structTypePrototype, bool allowConstruct,
-      HandleIdVector ids, HandleValueVector fieldTypeObjs,
-      Vector<StructFieldProps>& fieldProps);
+      JSContext* cx, HandleObject structTypePrototype, HandleIdVector ids,
+      HandleValueVector fieldTypeObjs, Vector<StructFieldProps>& fieldProps);
 
   // Properties and methods to be installed on StructType.prototype,
   // and hence inherited by all struct type objects:
@@ -754,67 +722,12 @@ MOZ_MUST_USE bool IsBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
 MOZ_MUST_USE bool IsBoxableWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Usage: BoxWasmAnyRef(Value) -> Object
- *
- * Return a new WasmValueBox that holds `value`.  The value can be any value at
- * all.
- */
-MOZ_MUST_USE bool BoxWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
-
-/*
  * Usage: UnboxBoxedWasmAnyRef(Object) -> Value
  *
  * The object must be a value for which IsBoxedWasmAnyRef returns true.
  * Return the value stored in the box.
  */
 MOZ_MUST_USE bool UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: Store_int8(targetDatum, targetOffset, value)
- *        ...
- *        Store_uint8(targetDatum, targetOffset, value)
- *        ...
- *        Store_float32(targetDatum, targetOffset, value)
- *        Store_float64(targetDatum, targetOffset, value)
- *
- * Intrinsic function. Stores `value` into the memory referenced by
- * `targetDatum` at the offset `targetOffset`.
- *
- * Assumes (and asserts) that:
- * - `targetDatum` is attached
- * - `targetOffset` is a valid offset within the bounds of `targetDatum`
- * - `value` is a number
- */
-#define JS_STORE_SCALAR_CLASS_DEFN(_constant, T, _name)                     \
-  class StoreScalar##T {                                                    \
-   public:                                                                  \
-    static MOZ_MUST_USE bool Func(JSContext* cx, unsigned argc, Value* vp); \
-    static const JSJitInfo JitInfo;                                         \
-  };
-
-/*
- * Usage: Store_Any(targetDatum, targetOffset, fieldName, value)
- *        Store_Object(targetDatum, targetOffset, fieldName, value)
- *        Store_string(targetDatum, targetOffset, fieldName, value)
- *
- * Intrinsic function. Stores `value` into the memory referenced by
- * `targetDatum` at the offset `targetOffset`.
- *
- * Assumes (and asserts) that:
- * - `targetDatum` is attached
- * - `targetOffset` is a valid offset within the bounds of `targetDatum`
- * - `value` is an object or null (`Store_Object`) or string (`Store_string`).
- */
-#define JS_STORE_REFERENCE_CLASS_DEFN(_constant, T, _name)                  \
-  class StoreReference##_name {                                             \
-   private:                                                                 \
-    static MOZ_MUST_USE bool store(JSContext* cx, T* heap, const Value& v,  \
-                                   TypedObject* obj, jsid id);              \
-                                                                            \
-   public:                                                                  \
-    static MOZ_MUST_USE bool Func(JSContext* cx, unsigned argc, Value* vp); \
-    static const JSJitInfo JitInfo;                                         \
-  };
 
 /*
  * Usage: LoadScalar(targetDatum, targetOffset, value)
@@ -851,11 +764,8 @@ MOZ_MUST_USE bool UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
 
 // I was using templates for this stuff instead of macros, but ran
 // into problems with the Unagi compiler.
-JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_STORE_SCALAR_CLASS_DEFN)
 JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_LOAD_SCALAR_CLASS_DEFN)
-JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_STORE_SCALAR_CLASS_DEFN)
 JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_LOAD_SCALAR_CLASS_DEFN)
-JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_STORE_REFERENCE_CLASS_DEFN)
 JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_DEFN)
 
 inline bool IsTypedObjectClass(const JSClass* class_) {
