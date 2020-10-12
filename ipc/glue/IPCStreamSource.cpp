@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCStreamSource.h"
+
 #include "BackgroundParent.h"  // for AssertIsOnBackgroundThread
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIAsyncInputStream.h"
@@ -180,7 +182,7 @@ void IPCStreamSource::DoRead() {
   static_assert(kMaxBytesPerMessage <= static_cast<uint64_t>(UINT32_MAX),
                 "kMaxBytesPerMessage must cleanly cast to uint32_t");
 
-  char buffer[kMaxBytesPerMessage];
+  UniquePtr<char[]> buffer(new char[kMaxBytesPerMessage]);
 
   while (true) {
     // It should not be possible to transition to closed state without
@@ -196,7 +198,7 @@ void IPCStreamSource::DoRead() {
     }
 
     uint32_t bytesRead = 0;
-    rv = mStream->Read(buffer, kMaxBytesPerMessage, &bytesRead);
+    rv = mStream->Read(buffer.get(), kMaxBytesPerMessage, &bytesRead);
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       MOZ_ASSERT(bytesRead == 0);
@@ -217,7 +219,7 @@ void IPCStreamSource::DoRead() {
     }
 
     // We read some data from the stream, send it across.
-    SendData(ByteBuffer(bytesRead, reinterpret_cast<uint8_t*>(buffer)));
+    SendData(ByteBuffer(bytesRead, reinterpret_cast<uint8_t*>(buffer.get())));
   }
 }
 
