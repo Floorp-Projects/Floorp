@@ -162,8 +162,20 @@ class MessagePayload extends Component {
     // sockjs payload
     const sockJSPayload = parseSockJS(payload);
     if (sockJSPayload) {
+      let formattedData = sockJSPayload.data;
+
+      if (sockJSPayload.type === "message") {
+        if (Array.isArray(formattedData)) {
+          formattedData = formattedData.map(
+            message => parseStompJs(message) || message
+          );
+        } else {
+          formattedData = parseStompJs(formattedData) || formattedData;
+        }
+      }
+
       return {
-        formattedData: sockJSPayload,
+        formattedData,
         formattedDataTitle: "SockJS",
       };
     }
@@ -185,7 +197,7 @@ class MessagePayload extends Component {
     }
 
     // json payload
-    const { json } = parseJSON(payload);
+    let { json } = parseJSON(payload);
     if (json) {
       const actionCablePayload = this.parseActionCable(json);
       if (actionCablePayload) {
@@ -194,6 +206,11 @@ class MessagePayload extends Component {
           formattedDataTitle: "Action Cable",
         };
       }
+
+      if (Array.isArray(json)) {
+        json = json.map(message => parseStompJs(message) || message);
+      }
+
       return {
         formattedData: json,
         formattedDataTitle: "JSON",
