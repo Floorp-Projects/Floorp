@@ -58,7 +58,7 @@ int32_t LiveMappedBufferCount();
 //
 //
 // - JSObject
-//   - TypedObject (declared in builtin/TypedObject.h)
+//   - TypedObject (declared in wasm/TypedObject.h)
 //   - NativeObject
 //     - ArrayBufferObjectMaybeShared
 //       - ArrayBufferObject
