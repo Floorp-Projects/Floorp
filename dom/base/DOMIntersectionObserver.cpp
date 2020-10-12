@@ -499,9 +499,10 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   if (mRoot && mRoot->IsElement()) {
     if ((rootFrame = mRoot->AsElement()->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
-      if (nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame)) {
+      if (rootFrame->IsScrollFrame()) {
         // rootRectRelativeToRootFrame should be the content rect of rootFrame,
         // not including the scrollbars.
+        nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
         rootRectRelativeToRootFrame = scrollFrame->GetScrollPortRect();
       } else {
         // rootRectRelativeToRootFrame should be the border rect of rootFrame.
@@ -531,11 +532,9 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       // there's any OOP iframe in between `rootDocument` and `aDocument`, to
       // handle the OOP iframe positions.
       if (PresShell* presShell = rootDocument->GetPresShell()) {
-        rootFrame = presShell->GetRootFrame();
-        // We use the root scrollable frame's scroll port to account the
-        // scrollbars in rootRect, if needed.
-        if (nsIScrollableFrame* scrollFrame =
-                presShell->GetRootScrollFrameAsScrollable()) {
+        rootFrame = presShell->GetRootScrollFrame();
+        if (rootFrame) {
+          nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
           rootRect = scrollFrame->GetScrollPortRect();
         }
       }
@@ -564,53 +563,33 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   // processed in the same order that observe() was called on each target:
   for (Element* target : mObservationTargets) {
     nsIFrame* targetFrame = target->GetPrimaryFrame();
+    // 2.2. If the intersection root is not the implicit root, and target is not
+    // in the same Document as the intersection root, skip further processing
+    // for target.
+    if (mRoot && mRoot->OwnerDoc() != target->OwnerDoc()) {
+      continue;
+    }
+
+    nsRect rootBounds;
+    if (rootFrame && targetFrame) {
+      // FIXME(emilio): Why only if there are frames?
+      rootBounds = rootRect;
+    }
+
     BrowsingContextOrigin origin = SimilarOrigin(*target, root);
+    if (origin == BrowsingContextOrigin::Similar) {
+      rootBounds.Inflate(rootMargin);
+    }
 
     Maybe<nsRect> intersectionRect;
     nsRect targetRect;
-    nsRect rootBounds;
-
-    const bool canComputeIntersection = [&] {
-      if (!targetFrame || !rootFrame) {
-        return false;
-      }
-
+    if (targetFrame && rootFrame) {
       // 2.1. If the intersection root is not the implicit root and target is
       // not a descendant of the intersection root in the containing block
       // chain, skip further processing for target.
-      //
-      // NOTE(emilio): We don't just "skip further processing" because that
-      // violates the invariant that there's at least one observation for a
-      // target (though that is also violated by 2.2), but it also causes
-      // different behavior when `target` is `display: none`, or not, which is
-      // really really odd, see:
-      // https://github.com/w3c/IntersectionObserver/issues/457
-      //
-      // NOTE(emilio): We also do this if target is the implicit root, pending
-      // clarification in
-      // https://github.com/w3c/IntersectionObserver/issues/456.
-      if (!nsLayoutUtils::IsAncestorFrameCrossDoc(rootFrame, targetFrame)) {
-        return false;
-      }
-
-      // 2.2. If the intersection root is not the implicit root, and target is
-      // not in the same Document as the intersection root, skip further
-      // processing for target.
-      //
-      // NOTE(emilio): We don't just "skip further processing", because that
-      // doesn't match reality and other browsers, see
-      // https://github.com/w3c/IntersectionObserver/issues/457.
-      if (mRoot && mRoot->OwnerDoc() != target->OwnerDoc()) {
-        return false;
-      }
-
-      return true;
-    }();
-
-    if (canComputeIntersection) {
-      rootBounds = rootRect;
-      if (origin == BrowsingContextOrigin::Similar) {
-        rootBounds.Inflate(rootMargin);
+      if (mRoot && !nsLayoutUtils::IsProperAncestorFrameCrossDoc(rootFrame,
+                                                                 targetFrame)) {
+        continue;
       }
 
       // 2.3. Let targetRect be a DOMRectReadOnly obtained by running the
