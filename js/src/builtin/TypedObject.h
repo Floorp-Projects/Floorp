@@ -337,12 +337,6 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
 // an associated `prototype` property.
 class ComplexTypeDescr : public TypeDescr {
  public:
-  // Returns the prototype that instances of this type descriptor
-  // will have.
-  TypedProto& instancePrototype() const {
-    return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
-  }
-
   bool allowConstruct() const {
     return getReservedSlot(JS_DESCR_SLOT_FLAGS).toInt32() &
            JS_DESCR_FLAG_ALLOW_CONSTRUCT;
@@ -533,8 +527,6 @@ class TypedObjectModuleObject : public NativeObject {
 
 /* Base type for typed objects. */
 class TypedObject : public JSObject {
-  static const bool IsTypedObjectClass = true;
-
   static MOZ_MUST_USE bool obj_getArrayElement(JSContext* cx,
                                                Handle<TypedObject*> typedObj,
                                                Handle<TypeDescr*> typeDescr,
@@ -678,11 +670,6 @@ class OutlineTypedObject : public TypedObject {
   static OutlineTypedObject* createDerived(JSContext* cx, HandleTypeDescr type,
                                            Handle<TypedObject*> typedContents,
                                            uint32_t offset);
-
-  static OutlineTypedObject* createOpaque(JSContext* cx, HandleTypeDescr descr,
-                                          Handle<TypedObject*> target,
-                                          uint32_t offset);
-
  private:
   // Use this method when `buffer` is the owner of the memory.
   void attach(ArrayBufferObject& buffer, uint32_t offset);
@@ -732,19 +719,7 @@ class InlineTypedObject : public TypedObject {
 
   static InlineTypedObject* create(JSContext* cx, HandleTypeDescr descr,
                                    gc::InitialHeap heap = gc::DefaultHeap);
-  static InlineTypedObject* createCopy(
-      JSContext* cx, Handle<InlineTypedObject*> templateObject,
-      gc::InitialHeap heap);
 };
-
-/*
- * Usage: NewOpaqueTypedObject(typeObj, newDatum, newOffset)
- *
- * Constructs a new, unattached instance of `Handle`, and then moves the new
- * instance to point at the memory referenced by `newDatum` with the offset
- * `newOffset`.
- */
-MOZ_MUST_USE bool NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: NewDerivedTypedObject(typeObj, owner, offset)
@@ -768,35 +743,12 @@ MOZ_MUST_USE bool ObjectIsTypeDescr(JSContext* cx, unsigned argc, Value* vp);
  */
 MOZ_MUST_USE bool ObjectIsTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
-// Predicates on type descriptor objects.  In all cases, 'obj' must be a type
-// descriptor.
-
-MOZ_MUST_USE bool TypeDescrIsSimpleType(JSContext*, unsigned argc, Value* vp);
-
-/*
- * Usage: TypedObjectTypeDescr(obj)
- *
- * Given a TypedObject `obj`, returns the object's type descriptor.
- */
-MOZ_MUST_USE bool TypedObjectTypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
 /*
  * Usage: ClampToUint8(v)
  *
  * Same as the C function ClampDoubleToUint8. `v` must be a number.
  */
 MOZ_MUST_USE bool ClampToUint8(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetTypedObjectModule()
- *
- * Returns the global "typed object" module, which provides access
- * to the various builtin type descriptors. These are currently
- * exported as immutable properties so it is safe for self-hosted code
- * to access them; eventually this should be linked into the module
- * system.
- */
-MOZ_MUST_USE bool GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: IsBoxedWasmAnyRef(Object) -> bool
