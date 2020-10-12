@@ -146,7 +146,7 @@ function closeConnection(httpChannelId, wasClean, code, reason) {
  * - +Infinity | -Infinity: move to the start or end of the list
  */
 function selectMessageDelta(delta) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const state = getState();
     const messages = getDisplayedMessages(state);
 
