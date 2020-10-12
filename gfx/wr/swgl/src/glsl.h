@@ -83,6 +83,10 @@ SI I32 if_then_else(I32 c, int32_t t, int32_t e) {
   return (c & I32(t)) | (~c & I32(e));
 }
 
+SI U32 if_then_else(I32 c, U32 t, U32 e) {
+  return bit_cast<U32>((c & bit_cast<I32>(t)) | (~c & bit_cast<I32>(e)));
+}
+
 SI Float if_then_else(I32 c, Float t, Float e) {
   return bit_cast<Float>((c & bit_cast<I32>(t)) | (~c & bit_cast<I32>(e)));
 }
@@ -1805,7 +1809,7 @@ bvec4 greaterThanEqual(vec4 x, vec4 y) {
                greaterThanEqual(x.z, y.z), greaterThanEqual(x.w, y.w));
 }
 
-enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8, RG8 };
+enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8, RG8, YUV422 };
 
 enum TextureFilter { NEAREST, LINEAR };
 
@@ -2327,6 +2331,30 @@ SI vec4 texelFetchFloat(sampler2DArray sampler, ivec3 P) {
   return fetchOffsetsFloat(sampler, offset);
 }
 
+template <typename S>
+SI vec4 fetchOffsetsYUV422(S sampler, I32 offset) {
+  // Layout is 2 pixel chunks (occupying 4 bytes) organized as: G0, B, G1, R.
+  // Offset is aligned to a chunk rather than a pixel, and selector specifies
+  // pixel within the chunk.
+  I32 selector = offset & 1;
+  offset &= ~1;
+  uint16_t* buf = (uint16_t*)sampler->buf;
+  U32 pixels = {*(uint32_t*)&buf[offset.x], *(uint32_t*)&buf[offset.y],
+                *(uint32_t*)&buf[offset.z], *(uint32_t*)&buf[offset.w]};
+  Float b = CONVERT((pixels >> 8) & 0xFF, Float) * (1.0f / 255.0f);
+  Float r = CONVERT((pixels >> 24), Float) * (1.0f / 255.0f);
+  Float g =
+      CONVERT(if_then_else(-selector, pixels >> 16, pixels) & 0xFF, Float) *
+      (1.0f / 255.0f);
+  return vec4(r, g, b, 1.0f);
+}
+
+template <typename S>
+vec4 texelFetchYUV422(S sampler, ivec2 P) {
+  I32 offset = P.x + P.y * sampler->stride;
+  return fetchOffsetsYUV422(sampler, offset);
+}
+
 vec4 texelFetch(sampler2D sampler, ivec2 P, int lod) {
   assert(lod == 0);
   P = clamp2D(P, sampler);
@@ -2339,6 +2367,8 @@ vec4 texelFetch(sampler2D sampler, ivec2 P, int lod) {
       return texelFetchR8(sampler, P);
     case TextureFormat::RG8:
       return texelFetchRG8(sampler, P);
+    case TextureFormat::YUV422:
+      return texelFetchYUV422(sampler, P);
     default:
       assert(false);
       return vec4();
@@ -2424,6 +2454,8 @@ vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
       return texelFetchR8(sampler, P);
     case TextureFormat::RG8:
       return texelFetchRG8(sampler, P);
+    case TextureFormat::YUV422:
+      return texelFetchYUV422(sampler, P);
     default:
       assert(false);
       return vec4();
@@ -2958,6 +2990,86 @@ vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
   return pixel_float_to_vec4(c0, c1, c2, c3);
 }
 
+template <typename S>
+vec4 textureLinearYUV422(S sampler, vec2 P, int32_t zoffset = 0) {
+  assert(sampler->format == TextureFormat::YUV422);
+
+  ivec2 i(linearQuantize(P, 128, sampler));
+  ivec2 frac = i & (I32)0x7F;
+  i >>= 7;
+
+  I32 row0 = clampCoord(i.x, sampler->width) +
+             clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
+  // Layout is 2 pixel chunks (occupying 4 bytes) organized as: G0, B, G1, R.
+  // Get the selector for the pixel within the chunk.
+  I32 selector = row0 & 1;
+  // Align the row index to the chunk.
+  row0 &= ~1;
+  I32 row1 = row0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
+                     I32(sampler->stride));
+  // G only needs to be clamped to a pixel boundary for safe interpolation,
+  // whereas the BR fraction needs to be clamped 1 extra pixel inside to a chunk
+  // boundary.
+  frac.x &= (i.x >= 0);
+  auto fracx = CONVERT(combine(frac.x & (i.x < int32_t(sampler->width) - 1),
+                               ((frac.x >> 1) | (selector << 6)) &
+                                   (i.x < int32_t(sampler->width) - 2)),
+                       V8<int16_t>);
+  I16 fracy = CONVERT(frac.y, I16);
+
+  uint16_t* buf = (uint16_t*)sampler->buf;
+
+  // Load bytes for two adjacent chunks - g0,b,g1,r,G0,B,G1,R
+  // We always need to interpolate between (b,r) and (B,R).
+  // Depending on selector we need to either interpolate between g0 and g1
+  // or between g1 and G0. So for now we just interpolate both cases for g
+  // and will select the appropriate one on output.
+  auto a0 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row0.x]), V8<int16_t>);
+  auto a1 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row1.x]), V8<int16_t>);
+  // Combine with next row.
+  a0 += ((a1 - a0) * fracy.x) >> 7;
+
+  auto b0 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row0.y]), V8<int16_t>);
+  auto b1 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row1.y]), V8<int16_t>);
+  b0 += ((b1 - b0) * fracy.y) >> 7;
+
+  auto c0 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row0.z]), V8<int16_t>);
+  auto c1 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row1.z]), V8<int16_t>);
+  c0 += ((c1 - c0) * fracy.z) >> 7;
+
+  auto d0 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row0.w]), V8<int16_t>);
+  auto d1 = CONVERT(unaligned_load<V8<uint8_t>>(&buf[row1.w]), V8<int16_t>);
+  d0 += ((d1 - d0) * fracy.w) >> 7;
+
+  // Shuffle things around so we end up with g0,g0,g0,g0,b,b,b,b and
+  // g1,g1,g1,g1,r,r,r,r.
+  auto abl = zipLow(a0, b0);
+  auto cdl = zipLow(c0, d0);
+  auto g0b = zip2Low(abl, cdl);
+  auto g1r = zip2High(abl, cdl);
+
+  // Need to zip g1,B,G0,R. Instead of using a bunch of complicated masks and
+  // and shifts, just shuffle here instead... We finally end up with
+  // g1,g1,g1,g1,B,B,B,B and G0,G0,G0,G0,R,R,R,R.
+  auto abh = SHUFFLE(a0, b0, 2, 10, 5, 13, 4, 12, 7, 15);
+  auto cdh = SHUFFLE(c0, d0, 2, 10, 5, 13, 4, 12, 7, 15);
+  auto g1B = zip2Low(abh, cdh);
+  auto G0R = zip2High(abh, cdh);
+
+  // Finally interpolate between adjacent columns.
+  g0b += ((g1B - g0b) * fracx) >> 7;
+  g1r += ((G0R - g1r) * fracx) >> 7;
+
+  auto g0bf = CONVERT(V8<uint16_t>(g0b), V8<float>);
+  auto g1rf = CONVERT(V8<uint16_t>(g1r), V8<float>);
+
+  // Choose either g0 or g1 based on selector.
+  return vec4(
+      highHalf(g1rf) * (1.0f / 255.0f),
+      if_then_else(-selector, lowHalf(g1rf), lowHalf(g0bf)) * (1.0f / 255.0f),
+      highHalf(g0bf) * (1.0f / 255.0f), 1.0f);
+}
+
 SI vec4 texture(sampler2D sampler, vec2 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
     switch (sampler->format) {
@@ -2969,6 +3081,8 @@ SI vec4 texture(sampler2D sampler, vec2 P) {
         return textureLinearR8(sampler, P);
       case TextureFormat::RG8:
         return textureLinearRG8(sampler, P);
+      case TextureFormat::YUV422:
+        return textureLinearYUV422(sampler, P);
       default:
         assert(false);
         return vec4();
@@ -2988,6 +3102,8 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
         return textureLinearR8(sampler, P);
       case TextureFormat::RG8:
         return textureLinearRG8(sampler, P);
+      case TextureFormat::YUV422:
+        return textureLinearYUV422(sampler, P);
       default:
         assert(false);
         return vec4();
