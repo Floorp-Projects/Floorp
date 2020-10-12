@@ -9,7 +9,7 @@
 #include "jsapi.h"
 
 #include "debugger/DebugAPI.h"
-#include "frontend/ParserAtom.h"
+#include "frontend/CompilationInfo.h"
 #include "js/Object.h"  // JS::GetReservedSlot
 #include "proxy/DeadObjectProxy.h"
 
@@ -95,11 +95,11 @@ static bool StringToInstrumentationKind(JSContext* cx, HandleString str,
 
 /* static */
 const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
-    JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      return parserAtoms
+      return compilationInfo.stencil.parserAtoms
           .internAscii(cx, instrumentationNames[i],
                        strlen(instrumentationNames[i]))
           .unwrapOr(nullptr);

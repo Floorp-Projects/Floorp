@@ -63,18 +63,18 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
 
   struct Matcher {
     JSContext* cx;
-    CompilationAtomCache& atomCache;
-    CompilationStencil& stencil;
+    CompilationInfo& compilationInfo;
     CompilationGCOutput& gcOutput;
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
 
     bool operator()(const ScriptAtom& data) {
-      JSAtom* atom = data->toJSAtom(cx, atomCache);
-      if (!atom) {
+      auto maybeAtom = data->toJSAtom(cx, compilationInfo);
+      if (maybeAtom.isErr()) {
         return false;
       }
-      output[i] = JS::GCCellPtr(atom);
+      MOZ_ASSERT(maybeAtom.unwrap());
+      output[i] = JS::GCCellPtr(maybeAtom.unwrap());
       return true;
     }
 
@@ -84,7 +84,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const BigIntIndex& index) {
-      BigIntStencil& data = stencil.bigIntData[index];
+      BigIntStencil& data = compilationInfo.stencil.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);
       if (!bi) {
         return false;
@@ -94,7 +94,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const RegExpIndex& rindex) {
-      RegExpStencil& data = stencil.regExpData[rindex];
+      RegExpStencil& data = compilationInfo.stencil.regExpData[rindex];
       RegExpObject* regexp = data.createRegExp(cx);
       if (!regexp) {
         return false;
@@ -104,8 +104,8 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ObjLiteralIndex& index) {
-      ObjLiteralStencil& data = stencil.objLiteralData[index];
-      JSObject* obj = data.create(cx, atomCache);
+      ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData[index];
+      JSObject* obj = data.create(cx, compilationInfo);
       if (!obj) {
         return false;
       }
@@ -131,12 +131,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
   };
 
   for (uint32_t i = 0; i < objects.length(); i++) {
-    Matcher m{cx,
-              compilationInfo.input.atomCache,
-              compilationInfo.stencil,
-              gcOutput,
-              i,
-              output};
+    Matcher m{cx, compilationInfo, gcOutput, i, output};
     if (!objects[i].match(m)) {
       return false;
     }
@@ -184,8 +179,8 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
 }
 
 JSObject* ObjLiteralStencil::create(JSContext* cx,
-                                    CompilationAtomCache& atomCache) const {
-  return InterpretObjLiteral(cx, atomCache, atoms_, writer_);
+                                    CompilationInfo& compilationInfo) const {
+  return InterpretObjLiteral(cx, compilationInfo, atoms_, writer_);
 }
 
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum)

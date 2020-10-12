@@ -2480,7 +2480,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, compilationInfo.stencil.parserAtoms, body)) {
+  if (!NameFunctions(cx, compilationInfo, body)) {
     return false;
   }
 
@@ -2560,7 +2560,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   }
 
   if (isTopLevel == TopLevelFunction::Yes) {
-    if (!NameFunctions(cx, compilationInfo.stencil.parserAtoms, funNode)) {
+    if (!NameFunctions(cx, compilationInfo, funNode)) {
       return false;
     }
   }
@@ -8652,8 +8652,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
-          const ParserAtom* keyAtom = key->as<NumericLiteral>().toAtom(
-              cx, compilationInfo.stencil.parserAtoms);
+          const ParserAtom* keyAtom =
+              key->as<NumericLiteral>().toAtom(cx, compilationInfo);
           if (!keyAtom) {
             return false;
           }
@@ -9263,7 +9263,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
         MOZ_CRASH("Invalid private method accessor type");
     }
     const ParserAtom* storedMethodAtom =
-        storedMethodName.finishParserAtom(compilationInfo.stencil.parserAtoms);
+        storedMethodName.finishParserAtom(compilationInfo);
 
     // Emit the private method body and store it as a lexical var.
     if (!emitFunction(&propdef->as<ClassMethod>().method())) {
@@ -10482,7 +10482,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
   //            [stack] CALLBACK UNDEFINED
 
   const ParserAtom* atom = RealmInstrumentation::getInstrumentationKindName(
-      cx, compilationInfo.stencil.parserAtoms, kind);
+      cx, compilationInfo, kind);
   if (!atom) {
     return false;
   }

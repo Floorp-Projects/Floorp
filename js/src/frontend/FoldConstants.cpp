@@ -34,7 +34,7 @@ using mozilla::PositiveInfinity;
 
 struct FoldInfo {
   JSContext* cx;
-  ParserAtomsTable& parserAtoms;
+  CompilationInfo& compilationInfo;
   FullParseHandler* handler;
 };
 
@@ -477,7 +477,7 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::StringExpr:
         if (pn->isKind(ParseNodeKind::NumberExpr)) {
           const ParserAtom* atom =
-              pn->as<NumericLiteral>().toAtom(info.cx, info.parserAtoms);
+              pn->as<NumericLiteral>().toAtom(info.cx, info.compilationInfo);
           if (!atom) {
             return false;
           }
@@ -1108,7 +1108,7 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
       // Optimization 2: We have something like expr[3.14]. The number
       // isn't an array index, so it converts to a string ("3.14"),
       // enabling optimization 3 below.
-      const ParserAtom* atom = numeric->toAtom(info.cx, info.parserAtoms);
+      const ParserAtom* atom = numeric->toAtom(info.cx, info.compilationInfo);
       if (!atom) {
         return false;
       }
@@ -1243,7 +1243,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       if (accum.length() > 1) {
         // Construct the concatenated atom.
         const ParserAtom* combination =
-            info.parserAtoms
+            info.compilationInfo.stencil.parserAtoms
                 .concatAtoms(info.cx,
                              mozilla::Range(accum.begin(), accum.length()))
                 .unwrapOr(nullptr);
@@ -1300,17 +1300,17 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   using Base = RewritingParseNodeVisitor;
 
   JSContext* cx;
-  ParserAtomsTable& parserAtoms;
+  CompilationInfo& compilationInfo;
   FullParseHandler* handler;
 
-  FoldInfo info() const { return FoldInfo{cx, parserAtoms, handler}; }
+  FoldInfo info() const { return FoldInfo{cx, compilationInfo, handler}; }
 
  public:
-  explicit FoldVisitor(JSContext* cx, ParserAtomsTable& parserAtoms,
+  explicit FoldVisitor(JSContext* cx, CompilationInfo& compilationInfo,
                        FullParseHandler* handler)
       : RewritingParseNodeVisitor(cx),
         cx(cx),
-        parserAtoms(parserAtoms),
+        compilationInfo(compilationInfo),
         handler(handler) {}
 
   bool visitElemExpr(ParseNode*& pn) {
@@ -1556,19 +1556,19 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, ParserAtomsTable& parserAtoms,
+static bool Fold(JSContext* cx, CompilationInfo& compilationInfo,
                  FullParseHandler* handler, ParseNode** pnp) {
-  FoldVisitor visitor(cx, parserAtoms, handler);
+  FoldVisitor visitor(cx, compilationInfo, handler);
   return visitor.visit(*pnp);
 }
 static bool Fold(FoldInfo info, ParseNode** pnp) {
-  return Fold(info.cx, info.parserAtoms, info.handler, pnp);
+  return Fold(info.cx, info.compilationInfo, info.handler, pnp);
 }
 
-bool frontend::FoldConstants(JSContext* cx, ParserAtomsTable& parserAtoms,
+bool frontend::FoldConstants(JSContext* cx, CompilationInfo& compilationInfo,
                              ParseNode** pnp, FullParseHandler* handler) {
   AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
                         TraceLogger_BytecodeFoldConstants);
 
-  return Fold(cx, parserAtoms, handler, pnp);
+  return Fold(cx, compilationInfo, handler, pnp);
 }

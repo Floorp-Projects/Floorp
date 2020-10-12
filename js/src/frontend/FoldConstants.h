@@ -30,16 +30,16 @@ class PerHandlerParser;
 //    if (!pn) {
 //        return false;
 //    }
-//    if (!FoldConstants(cx, parserAtoms, &pn, parser)) {
+//    if (!FoldConstants(cx, &pn, parser)) {
 //        return false;
 //    }
 extern MOZ_MUST_USE bool FoldConstants(JSContext* cx,
-                                       ParserAtomsTable& parserAtoms,
+                                       CompilationInfo& compilationInfo,
                                        ParseNode** pnp,
                                        FullParseHandler* handler);
 
 inline MOZ_MUST_USE bool FoldConstants(JSContext* cx,
-                                       ParserAtomsTable& parserAtoms,
+                                       CompilationInfo& compilationInfo,
                                        typename SyntaxParseHandler::Node* pnp,
                                        SyntaxParseHandler* handler) {
   return true;

@@ -23,7 +23,6 @@
 namespace js {
 namespace frontend {
 
-struct CompilationAtomCache;
 struct CompilationInfo;
 class ParserAtom;
 class ParserName;
@@ -35,7 +34,7 @@ class ParserAtomsTable;
 
 mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx);
 
-// An index into CompilationAtomCache.
+// An index into CompilationInfo.atoms.
 // This is local to the current compilation.
 using AtomIndex = TypedIndex<JSAtom*>;
 
@@ -106,7 +105,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // Mapping into from ParserAtoms to JSAtoms.
   enum class AtomIndexKind : uint8_t {
     Unresolved,  // Not yet resolved
-    AtomIndex,   // Index into CompilationAtomCache
+    AtomIndex,   // Index into CompilationInfo atoms map
     WellKnown,   // WellKnownAtomId to index into cx->names() set
     Static1,     // Index into StaticStrings length-1 set
     Static2,     // Index into StaticStrings length-2 set
@@ -235,7 +234,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
  public:
   // Convert this entry to a js-atom.  The first time this method is called
   // the entry will cache the JSAtom pointer to return later.
-  JSAtom* toJSAtom(JSContext* cx, CompilationAtomCache& atomCache) const;
+  JS::Result<JSAtom*, OOM> toJSAtom(JSContext* cx,
+                                    CompilationInfo& compilationInfo) const;
 
   // Convert this entry to a number.
   bool toNumber(JSContext* cx, double* result) const;

@@ -13,8 +13,8 @@
 #include <new>
 
 #include "builtin/ModuleObject.h"
-#include "frontend/CompilationInfo.h"  // CompiltionAtomCache, CompilationInput, CompilationStencil, CompilationGCOutput
-#include "frontend/Parser.h"           // Copy*ScopeData
+#include "frontend/CompilationInfo.h"
+#include "frontend/Parser.h"  // Copy*ScopeData
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
@@ -150,7 +150,7 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
 }
 
 Shape* js::CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
     uint32_t numSlots, uint32_t baseShapeFlags) {
   RootedShape shape(cx,
@@ -164,10 +164,11 @@ Shape* js::CreateEnvironmentShape(
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      name = bi.name()->toJSAtom(cx, atomCache);
-      if (!name) {
+      auto mbJSAtom = bi.name()->toJSAtom(cx, compilationInfo);
+      if (mbJSAtom.isErr()) {
         return nullptr;
       }
+      name = mbJSAtom.unwrap();
       MOZ_ASSERT(name);
       cx->markAtom(name);
       shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), stackBase,
@@ -295,7 +296,7 @@ static UniquePtr<AbstractScopeData<ConcreteScope, AtomT>> NewEmptyScopeData(
 
 template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     ParserScopeData<ConcreteScope>* data) {
   using ConcreteData = typename ConcreteScope::Data;
 
@@ -310,7 +311,7 @@ static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
   for (size_t i = 0; i < length; i++) {
     JSAtom* jsatom = nullptr;
     if (names[i].name()) {
-      jsatom = names[i].name()->toJSAtom(cx, atomCache);
+      jsatom = names[i].name()->toJSAtom(cx, compilationInfo).unwrapOr(nullptr);
       if (jsatom == nullptr) {
         return nullptr;
       }
@@ -2201,20 +2202,20 @@ bool ScopeStencil::createForWithScope(JSContext* cx,
 
 template <typename SpecificScopeT>
 UniquePtr<typename SpecificScopeT::Data> ScopeStencil::createSpecificScopeData(
-    JSContext* cx, CompilationAtomCache& atomCache,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
-  return LiftParserScopeData<SpecificScopeT>(cx, atomCache,
+  return LiftParserScopeData<SpecificScopeT>(cx, compilationInfo,
                                              &data<SpecificScopeT>());
 }
 
 template <>
 UniquePtr<FunctionScope::Data>
 ScopeStencil::createSpecificScopeData<FunctionScope>(
-    JSContext* cx, CompilationAtomCache& atomCache,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
   // Allocate a new vm function-scope.
   UniquePtr<FunctionScope::Data> data = LiftParserScopeData<FunctionScope>(
-      cx, atomCache, &this->data<FunctionScope>());
+      cx, compilationInfo, &this->data<FunctionScope>());
   if (!data) {
     return nullptr;
   }
@@ -2227,11 +2228,11 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
 
 template <>
 UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
-    JSContext* cx, CompilationAtomCache& atomCache,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
   // Allocate a new vm module-scope.
   UniquePtr<ModuleScope::Data> data = LiftParserScopeData<ModuleScope>(
-      cx, atomCache, &this->data<ModuleScope>());
+      cx, compilationInfo, &this->data<ModuleScope>());
   if (!data) {
     return nullptr;
   }
@@ -2245,36 +2246,37 @@ UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
 // WithScope does not use binding data.
 template <>
 Scope* ScopeStencil::createSpecificScope<WithScope, std::nullptr_t>(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
-  RootedScope enclosingScope(cx, enclosingExistingScope(input, gcOutput));
+  RootedScope enclosingScope(
+      cx, enclosing(compilationInfo).existingScope(gcOutput));
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
 // GlobalScope has bindings but no environment shape.
 template <>
 Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const {
   Rooted<UniquePtr<GlobalScope::Data>> rootedData(
-      cx, createSpecificScopeData<GlobalScope>(cx, input.atomCache, gcOutput));
+      cx, createSpecificScopeData<GlobalScope>(cx, compilationInfo, gcOutput));
   if (!rootedData) {
     return nullptr;
   }
 
-  MOZ_ASSERT(!enclosing_);
-  MOZ_ASSERT(!input.enclosingScope);
+  MOZ_ASSERT(enclosing(compilationInfo).isNullptr());
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<GlobalScope>(cx, kind(), nullptr, nullptr, &rootedData);
 }
 
 template <typename SpecificScopeT, typename SpecificEnvironmentT>
-Scope* ScopeStencil::createSpecificScope(JSContext* cx, CompilationInput& input,
+Scope* ScopeStencil::createSpecificScope(JSContext* cx,
+                                         CompilationInfo& compilationInfo,
                                          CompilationGCOutput& gcOutput) const {
   Rooted<UniquePtr<typename SpecificScopeT::Data>> rootedData(
       cx,
-      createSpecificScopeData<SpecificScopeT>(cx, input.atomCache, gcOutput));
+      createSpecificScopeData<SpecificScopeT>(cx, compilationInfo, gcOutput));
   if (!rootedData) {
     return nullptr;
   }
@@ -2285,7 +2287,8 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx, CompilationInput& input,
     return nullptr;
   }
 
-  RootedScope enclosingScope(cx, enclosingExistingScope(input, gcOutput));
+  RootedScope enclosingScope(
+      cx, enclosing(compilationInfo).existingScope(gcOutput));
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<SpecificScopeT>(cx, kind(), enclosingScope, shape,
@@ -2293,19 +2296,21 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx, CompilationInput& input,
 }
 
 template Scope* ScopeStencil::createSpecificScope<FunctionScope, CallObject>(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const;
 template Scope*
 ScopeStencil::createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const;
-template Scope* ScopeStencil::createSpecificScope<
-    EvalScope, VarEnvironmentObject>(JSContext* cx, CompilationInput& input,
-                                     CompilationGCOutput& gcOutput) const;
-template Scope* ScopeStencil::createSpecificScope<
-    VarScope, VarEnvironmentObject>(JSContext* cx, CompilationInput& input,
-                                    CompilationGCOutput& gcOutput) const;
+template Scope*
+ScopeStencil::createSpecificScope<EvalScope, VarEnvironmentObject>(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) const;
+template Scope*
+ScopeStencil::createSpecificScope<VarScope, VarEnvironmentObject>(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) const;
 template Scope*
 ScopeStencil::createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput) const;
