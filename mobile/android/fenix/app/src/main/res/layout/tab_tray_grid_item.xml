@@ -47,7 +47,7 @@
         <TextView
             android:id="@+id/mozac_browser_tabstray_title"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:layout_alignParentTop="true"
             android:ellipsize="none"
             android:fadingEdgeLength="25dp"
