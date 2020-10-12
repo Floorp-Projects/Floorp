@@ -36,6 +36,27 @@ const MEMORY_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)( \(([-+]?)([0-9.,]+)(GB|MB|KB|B
 const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ms)\)/;
 //Example: "13% (4,470ms)"
 
+function promiseTabSwitched() {
+  return new Promise(resolve => {
+    gBrowser.addEventListener(
+      "TabSwitchDone",
+      function() {
+        TestUtils.executeSoon(() => resolve(gBrowser.selectedTab));
+      },
+      { once: true }
+    );
+  });
+}
+
+function promiseAboutProcessesUpdated({ doc, tbody }) {
+  new Promise(resolve => {
+    let observer = new doc.ownerGlobal.MutationObserver(() => {
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(tbody, { childList: true });
+  });
+}
 function isCloseEnough(value, expected) {
   if (value < 0 || expected < 0) {
     throw new Error(`Invalid isCloseEnough(${value}, ${expected})`);
@@ -262,6 +283,21 @@ function extractProcessDetails(row) {
   return process;
 }
 
+async function findProcess({ doc, tbody, predicate }) {
+  for (let i = 0; i < 3; ++i) {
+    let row = tbody.firstChild;
+    while (row) {
+      if (predicate(row)) {
+        return row;
+      }
+      row = row.nextSibling;
+      // If we're too early, we may need to wait for an update.
+      await promiseAboutProcessesUpdated({ doc, tbody });
+    }
+  }
+  return null;
+}
+
 add_task(async function testAboutProcesses() {
   info("Setting up about:processes");
 
@@ -348,13 +384,7 @@ add_task(async function testAboutProcesses() {
       info("Waiting for the second update of about:processes");
       // And wait for another update using a mutation observer, to give our newly created test tab some time
       // to burn some CPU.
-      await new Promise(resolve => {
-        let observer = new doc.ownerGlobal.MutationObserver(() => {
-          observer.disconnect();
-          resolve();
-        });
-        observer.observe(tbody, { childList: true });
-      });
+      await promiseAboutProcessesUpdated({ doc, tbody });
 
       info("Looking at the contents of about:processes");
       let processesToBeFound = [
@@ -373,7 +403,7 @@ add_task(async function testAboutProcesses() {
         },
         // Any non-hung process
         {
-          name: "hung",
+          name: "non-hung",
           type: ["web", "webIsolated"],
           predicate: row =>
             !row.classList.contains("hung") &&
@@ -383,13 +413,11 @@ add_task(async function testAboutProcesses() {
       ];
       for (let finder of processesToBeFound) {
         info(`Running sanity tests on ${finder.name}`);
-        let row = tbody.firstChild;
-        while (row) {
-          if (finder.predicate(row)) {
-            break;
-          }
-          row = row.nextSibling;
-        }
+        let row = await findProcess({
+          doc,
+          tbody,
+          predicate: finder.predicate,
+        });
         Assert.ok(row, `found a table row for ${finder.name}`);
         let {
           memoryResidentContent,
@@ -516,6 +544,111 @@ add_task(async function testAboutProcesses() {
         Assert.equal(typeContent, row.process.type);
         Assert.equal(Number.parseInt(pidContent), row.process.pid);
       }
+
+      await promiseAboutProcessesUpdated({ doc, tbody });
+
+      info("Double-clicking on a tab");
+      let whenTabSwitchedToWeb = promiseTabSwitched();
+      await SpecialPowers.spawn(
+        tabAboutProcesses.linkedBrowser,
+        [],
+        async () => {
+          // Locate and double-click on the representation of `tabHung`.
+          let tbody = content.document.getElementById("process-tbody");
+          let foundTab = false;
+          for (let row of tbody.getElementsByClassName("tab")) {
+            if (row.parentNode.win.documentURI.spec != "http://example.com/") {
+              continue;
+            }
+            // Simulate double-click.
+            row.scrollIntoView();
+            let evt = new content.window.MouseEvent("dblclick", {
+              bubbles: true,
+              cancelable: true,
+              view: content.window,
+            });
+            row.dispatchEvent(evt);
+            foundTab = true;
+            break;
+          }
+          Assert.ok(foundTab, "We should have found the hung tab");
+        }
+      );
+
+      info("Waiting for tab switch");
+      await whenTabSwitchedToWeb;
+      while (
+        gBrowser.selectedTab.linkedBrowser.currentURI.spec !=
+        tabHung.linkedBrowser.currentURI.spec
+      ) {
+        // Sometimes, when running the test, we seem to catch another tab switched event, so let's try that again.
+        info(
+          `...waiting some more, we're currently on ${gBrowser.selectedTab.linkedBrowser.currentURI.spec}`
+        );
+        info("Double-clicking on a tab (again)");
+        whenTabSwitchedToWeb = promiseTabSwitched();
+        await SpecialPowers.spawn(
+          tabAboutProcesses.linkedBrowser,
+          [],
+          async () => {
+            // Locate and double-click on the representation of `tabHung`.
+            let tbody = content.document.getElementById("process-tbody");
+            let foundTab = false;
+            for (let row of tbody.getElementsByClassName("tab")) {
+              // Simulate double-click.
+              row.scrollIntoView();
+              let evt = new content.window.MouseEvent("dblclick", {
+                bubbles: true,
+                cancelable: true,
+                view: content.window,
+              });
+              row.dispatchEvent(evt);
+              foundTab = true;
+            }
+            Assert.ok(foundTab, "We should have found the hung tab");
+          }
+        );
+        await whenTabSwitchedToWeb;
+      }
+      Assert.equal(
+        gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+        tabHung.linkedBrowser.currentURI.spec,
+        "We should have focused the hung tab"
+      );
+      gBrowser.selectedTab = tabAboutProcesses;
+
+      info("Double-clicking on the extensions process");
+      let whenTabSwitchedToAddons = promiseTabSwitched();
+      await SpecialPowers.spawn(
+        tabAboutProcesses.linkedBrowser,
+        [],
+        async () => {
+          let extensionsRow = content.document.getElementsByClassName(
+            "extensions"
+          )[0];
+          Assert.ok(
+            !!extensionsRow,
+            "We should have found the extensions process"
+          );
+          extensionsRow.scrollIntoView();
+          let evt = new content.window.MouseEvent("dblclick", {
+            bubbles: true,
+            cancelable: true,
+            view: content.window,
+          });
+          extensionsRow.dispatchEvent(evt);
+        }
+      );
+      info("Waiting for tab switch");
+      await whenTabSwitchedToAddons;
+      Assert.equal(
+        gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+        "about:addons",
+        "We should now see the addon tab"
+      );
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+      info("Cleaning up tabs");
       BrowserTestUtils.removeTab(tabAboutProcesses);
       BrowserTestUtils.removeTab(tabHung);
     }
