@@ -549,3 +549,6 @@ ER3(SEC_ERROR_LEGACY_DATABASE, (SEC_ERROR_BASE + 177),
 
 ER3(SEC_ERROR_APPLICATION_CALLBACK_ERROR, (SEC_ERROR_BASE + 178),
     "The certificate was rejected by extra checks in the application.")
+
+ER3(SEC_ERROR_INVALID_STATE, (SEC_ERROR_BASE + 179),
+    "The attempted operation is invalid for the current state.")
