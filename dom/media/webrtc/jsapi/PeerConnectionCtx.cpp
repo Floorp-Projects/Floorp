@@ -354,7 +354,7 @@ nsresult PeerConnectionCtx::Cleanup() {
 
   mQueuedJSEPOperations.Clear();
   mGMPService = nullptr;
-  mTransportHandler->Destroy();
+  mTransportHandler = nullptr;
   return NS_OK;
 }
 
