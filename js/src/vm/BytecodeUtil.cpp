@@ -1800,6 +1800,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         if (result) {
           return write(result.get());
         }
+
+        // If it fails, do not return parameter name and let the caller
+        // fallback.
+        return write("(intermediate value)");
       }
 
       JSAtom* atom = getArg(slot);
