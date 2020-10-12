@@ -7335,8 +7335,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
         default:
           MOZ_CRASH("Invalid private method accessor type");
       }
-      const ParserAtom* storedMethodAtom =
-          storedMethodName.finishParserAtom(this->compilationInfo_);
+      const ParserAtom* storedMethodAtom = storedMethodName.finishParserAtom(
+          this->compilationInfo_.stencil.parserAtoms);
       if (!storedMethodAtom) {
         return false;
       }
