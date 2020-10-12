@@ -287,6 +287,12 @@ class Front extends Pool {
    * Handler for incoming packets from the client's actor.
    */
   onPacket(packet) {
+    if (this.isDestroyed()) {
+      // If the Front was already destroyed, all the requests have been purged
+      // and rejected with detailed error messages in purgeRequestsForDestroy.
+      return;
+    }
+
     // Pick off event packets
     const type = packet.type || undefined;
     if (this._clientSpec.events && this._clientSpec.events.has(type)) {
