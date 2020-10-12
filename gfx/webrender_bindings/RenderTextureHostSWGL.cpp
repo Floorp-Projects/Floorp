@@ -41,6 +41,9 @@ bool RenderTextureHostSWGL::UpdatePlanes(wr::ImageRendering aRendering) {
       case gfx::SurfaceFormat::NV12:
         format = planeCount == 2 && i > 0 ? LOCAL_GL_RG8 : LOCAL_GL_R8;
         break;
+      case gfx::SurfaceFormat::YUV422:
+        format = LOCAL_GL_RGB_RAW_422_APPLE;
+        break;
       default:
         MOZ_RELEASE_ASSERT(false, "Unhandled external image format");
         break;
@@ -133,7 +136,8 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
   }
   switch (mPlanes[0].mFormat) {
     case gfx::SurfaceFormat::YUV:
-    case gfx::SurfaceFormat::NV12: {
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::YUV422: {
       aInfo->yuv_planes = mPlanes.size();
       auto colorSpace = GetYUVColorSpace();
       MOZ_ASSERT(colorSpace != gfx::YUVColorSpace::UNKNOWN);

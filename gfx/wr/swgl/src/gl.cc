@@ -133,6 +133,8 @@ static int bytes_for_internal_format(GLenum internal_format) {
     case GL_DEPTH_COMPONENT24:
     case GL_DEPTH_COMPONENT32:
       return 4;
+    case GL_RGB_RAW_422_APPLE:
+      return 2;
     default:
       debugf("internal format: %x\n", internal_format);
       assert(0);
@@ -154,6 +156,8 @@ static TextureFormat gl_format_to_texture_format(int type) {
       return TextureFormat::R8;
     case GL_RG8:
       return TextureFormat::RG8;
+    case GL_RGB_RAW_422_APPLE:
+      return TextureFormat::YUV422;
     default:
       assert(0);
       return TextureFormat::RGBA8;
@@ -1172,6 +1176,7 @@ static const char* const extensions[] = {
     "GL_ARB_draw_instanced",      "GL_ARB_explicit_attrib_location",
     "GL_ARB_instanced_arrays",    "GL_ARB_invalidate_subdata",
     "GL_ARB_texture_storage",     "GL_EXT_timer_query",
+    "GL_APPLE_rgb_422",
 };
 
 void GetIntegerv(GLenum pname, GLint* params) {
@@ -1611,6 +1616,8 @@ static GLenum remap_internal_format(GLenum format) {
       return GL_R8;
     case GL_RG:
       return GL_RG8;
+    case GL_RGB_422_APPLE:
+      return GL_RGB_RAW_422_APPLE;
     default:
       return format;
   }
@@ -1683,6 +1690,9 @@ GLenum internal_format_for_data(GLenum format, GLenum ty) {
     return GL_RGBA32I;
   } else if (format == GL_RG && ty == GL_UNSIGNED_BYTE) {
     return GL_RG8;
+  } else if (format == GL_RGB_422_APPLE &&
+             ty == GL_UNSIGNED_SHORT_8_8_REV_APPLE) {
+    return GL_RGB_RAW_422_APPLE;
   } else {
     debugf("unknown internal format for format %x, type %x\n", format, ty);
     assert(false);
