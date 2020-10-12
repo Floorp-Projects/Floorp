@@ -437,12 +437,6 @@ void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
   }
 }
 
-static void NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing,
-                                       const JS::AutoRequireNoGC& nogc) {
-  TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
-  trc->onChild(aThing);
-}
-
 /*
  * The cycle collection participant for a Zone is intended to produce the same
  * results as if all of the gray GCthings in a zone were merged into a single
@@ -917,7 +911,7 @@ void CycleCollectedJSRuntime::TraverseZone(
    * unnecessary loop edges to the graph (bug 842137).
    */
   TraversalTracer trc(mJSRuntime, aCb);
-  js::VisitGrayWrapperTargets(aZone, NoteJSChildGrayWrapperShim, &trc);
+  js::TraceGrayWrapperTargets(&trc, aZone);
 
   /*
    * To find C++ children of things in the zone, we scan every JS Object in
