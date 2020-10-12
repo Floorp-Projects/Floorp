@@ -342,6 +342,10 @@
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Уласная калекцыя дадаткаў</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Скасаваць</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Назва калекцыі</string>
     <!-- Hint displayed on input field for custom collection user ID-->
@@ -538,6 +542,14 @@
     <string name="recently_closed_empty_message">Тут няма нядаўна закрытых картак</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Карткі</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Выгляд карткі</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Спіс</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Сетка</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Закрываць карткі</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -800,6 +812,8 @@
     <string name="preference_phone_feature_location">Месцазнаходжанне</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Абвестка</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Пастаяннае сховішча</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Запытваць дазвол</string>
     <!-- Label that indicates that a permission must be blocked -->

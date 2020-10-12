@@ -344,6 +344,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">การแจ้งเตือน</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">ชุดสะสมส่วนเสริมที่กำหนดเอง</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ตกลง</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">ยกเลิก</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">ชื่อชุดสะสม</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">เจ้าของชุดสะสม (ไอดีผู้ใช้)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">ชุดสะสมส่วนเสริมได้ถูกแก้ไขแล้ว ออกจากแอปพลิเคชันเพื่อใช้การเปลี่ยนแปลง…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ซิงค์ตอนนี้</string>
@@ -526,6 +540,14 @@
     <string name="recently_closed_empty_message">ไม่มีแท็บที่ปิดล่าสุด</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">แท็บ</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">มุมมองแท็บ</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">รายการ</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">เส้นตาราง</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ปิดแท็บ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -642,6 +664,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">ลบ %1$d รายการ</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">วันนี้</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">เมื่อวาน</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 ชั่วโมงที่ผ่านมา</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -780,6 +806,8 @@
     <string name="preference_phone_feature_location">ตำแหน่งที่ตั้ง</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">การแจ้งเตือน</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">ที่เก็บถาวร</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">ถามเพื่ออนุญาต</string>
     <!-- Label that indicates that a permission must be blocked -->

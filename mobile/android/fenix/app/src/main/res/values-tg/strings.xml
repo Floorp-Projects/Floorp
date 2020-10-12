@@ -1510,6 +1510,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Хуш омадед ба барномаи комилан нави %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Шуморо браузери комилан аз нав тарҳрезишуда интизор аст, ки ба шумо бо самаранокӣ ва хусусиятҳои такмилёфта барои кори бештар дар Интернет кумак мерасонад.\n\nЛутфан, интизор шавед, то мо %s-ро навсозӣ кунем, аз он ҷумла</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s нав шуда истодааст...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

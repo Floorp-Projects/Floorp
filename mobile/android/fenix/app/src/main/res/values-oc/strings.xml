@@ -342,6 +342,13 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificacions</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">D’acòrdi</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Anullar</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Nom de la collecion</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ara</string>
@@ -528,6 +535,14 @@
     <string name="recently_closed_empty_message">Cap d’onglets pas tampats recentament</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Onglets</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Vista onglet</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lista</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grasilha</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Tampar los onglets</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -644,6 +659,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Suprimir %1$d elements</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Uèi</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Ièr</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Las darrièras 24 oras</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -787,6 +806,8 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notificacion</string>
 
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Emmagazinatge persistent</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Demandar per autorizar</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1239,6 +1260,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Bibliotècas liuras</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Traçador per redireccion</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Assisténcia</string>
