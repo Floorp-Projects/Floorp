@@ -126,6 +126,8 @@ namespace gc {
 
 void FinishGC(JSContext* cx, JS::GCReason = JS::GCReason::FINISH_GC);
 
+void WaitForBackgroundTasks(JSContext* cx);
+
 /*
  * Merge all contents of source into target. This can only be used if source is
  * the only realm in its zone.
