@@ -749,8 +749,6 @@ class GCRuntime {
   IncrementalProgress endSweepingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
   IncrementalProgress sweepTypeInformation(JSFreeOp* fop, SliceBudget& budget);
-  IncrementalProgress releaseSweptEmptyArenas(JSFreeOp* fop,
-                                              SliceBudget& budget);
   void startSweepingAtomsTable();
   IncrementalProgress sweepAtomsTable(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress sweepWeakCaches(JSFreeOp* fop, SliceBudget& budget);
