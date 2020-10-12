@@ -467,10 +467,11 @@ android-x86_64-tests:
 
 android-x86_64-qr-tests:
     - crashtest
-    - reftest
+    - geckoview-junit
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
+    - reftest
 
 android-hw-aarch64-opt-unittests:
     - jittest
