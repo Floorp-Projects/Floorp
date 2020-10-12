@@ -10,9 +10,9 @@
 
 #include "jsnum.h"
 
-#include "frontend/CompilationInfo.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
+#include "frontend/ParserAtom.h"
 #include "frontend/SharedContext.h"
 #include "vm/BigIntType.h"
 #include "vm/Printer.h"
@@ -392,9 +392,9 @@ BigInt* BigIntLiteral::create(JSContext* cx) {
 
 bool BigIntLiteral::isZero() { return stencil_.bigIntData[index_].isZero(); }
 
-const ParserAtom* NumericLiteral::toAtom(
-    JSContext* cx, CompilationInfo& compilationInfo) const {
-  return NumberToParserAtom(cx, compilationInfo, value());
+const ParserAtom* NumericLiteral::toAtom(JSContext* cx,
+                                         ParserAtomsTable& parserAtoms) const {
+  return NumberToParserAtom(cx, parserAtoms, value());
 }
 
 RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {
