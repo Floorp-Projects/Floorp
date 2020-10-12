@@ -235,6 +235,16 @@ enum DetourResultCode : uint32_t {
   DETOUR_PATCHER_INVALID_TRAMPOLINE,
   DETOUR_PATCHER_WRITE_POINTER_ERROR,
   DETOUR_PATCHER_CREATE_TRAMPOLINE_ERROR,
+  FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
+  MMPOLICY_RESERVE_INVALIDARG,
+  MMPOLICY_RESERVE_ZERO_RESERVATIONSIZE,
+  MMPOLICY_RESERVE_CREATEFILEMAPPING,
+  MMPOLICY_RESERVE_MAPVIEWOFFILE,
+  MMPOLICY_RESERVE_NOBOUND_RESERVE_ERROR,
+  MMPOLICY_RESERVE_FINDREGION_INVALIDLEN,
+  MMPOLICY_RESERVE_FINDREGION_INVALIDRANGE,
+  MMPOLICY_RESERVE_FINDREGION_VIRTUALQUERY_ERROR,
+  MMPOLICY_RESERVE_FINAL_RESERVE_ERROR,
 };
 
 #if defined(NIGHTLY_BUILD)
@@ -245,6 +255,12 @@ struct DetourError {
   uint8_t mOrigBytes[16];
   explicit DetourError(DetourResultCode aError)
       : mErrorCode(aError), mOrigBytes{} {}
+  DetourError(DetourResultCode aError, DWORD aWin32Error)
+      : mErrorCode(aError), mOrigBytes{} {
+    static_assert(sizeof(mOrigBytes) >= sizeof(aWin32Error),
+                  "Can't fit a DWORD in mOrigBytes");
+    *reinterpret_cast<DWORD*>(mOrigBytes) = aWin32Error;
+  }
   operator WindowsError() const {
     return WindowsError::FromHResult(mErrorCode);
   }

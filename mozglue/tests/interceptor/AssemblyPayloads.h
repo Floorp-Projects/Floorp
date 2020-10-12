@@ -177,6 +177,16 @@ __declspec(dllexport) __attribute__((naked)) void DoubleJump() {
       : "i"(JumpDestination));
 }
 #  endif
+
+#  if !defined(_M_ARM64)
+__declspec(dllexport) __attribute__((naked)) void UnsupportedOp() {
+  asm volatile(
+      "ud2;"
+      "nop;nop;nop;nop;nop;nop;nop;nop;"
+      "nop;nop;nop;nop;nop;nop;nop;nop;");
+}
+#  endif  // !defined(_M_ARM64)
+
 #endif  // defined(__clang__)
 
 }  // extern "C"
