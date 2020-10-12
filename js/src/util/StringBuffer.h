@@ -19,7 +19,7 @@ namespace js {
 namespace frontend {
 
 class ParserAtom;
-struct CompilationInfo;
+class ParserAtomsTable;
 
 }  // namespace frontend
 
@@ -320,7 +320,7 @@ class StringBuffer {
   /* Identical to finishString() except that an atom is created. */
   JSAtom* finishAtom();
   const frontend::ParserAtom* finishParserAtom(
-      frontend::CompilationInfo& compilationInfo);
+      frontend::ParserAtomsTable& parserAtoms);
 
   /*
    * Creates a raw string from the characters in this buffer.  The string is
