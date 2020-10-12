@@ -7,7 +7,6 @@
 #include "jit/BaselineJIT.h"
 
 #include "mozilla/BinarySearch.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -39,7 +38,6 @@
 #include "vm/Stack-inl.h"
 
 using mozilla::BinarySearchIf;
-using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 
 using namespace js;
