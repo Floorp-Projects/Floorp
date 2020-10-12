@@ -109,7 +109,6 @@ using mozilla::dom::PermitUnloadResult from "mozilla/dom/DocShellMessageUtils.h"
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
 using base::SharedMemoryHandle from "base/shared_memory.h";
-using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
 using FontVisibility from "gfxFontEntry.h";
@@ -1337,7 +1336,7 @@ parent:
      *   In a typical case, there will be a handful of blocks altogether, so
      *   each content process only needs to make this request a few times.
      * @returns aHandle
-     *   Handle that can be used to construct a SharedMemoryBasic that maps the
+     *   Handle that can be used to construct a SharedMemory that maps the
      *   requested block of memory.
      *   If aGeneration does not match the parent's font list generation ID, or
      *   if requesting a block that does not exist (i.e. with aIndex greater
@@ -1447,7 +1446,7 @@ parent:
      * @param aLoaded
      *   Returns the size in bytes of the resource.
      */
-    sync GetHyphDict(nsIURI aURI) returns (Handle aHandle, uint32_t aSize);
+    sync GetHyphDict(nsIURI aURI) returns (SharedMemoryHandle aHandle, uint32_t aSize);
 
     async CreateWindow(PBrowser aThisTab,
                        MaybeDiscardedBrowsingContext aParent,
