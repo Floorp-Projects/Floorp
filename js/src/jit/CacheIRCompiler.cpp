@@ -2251,9 +2251,10 @@ bool CacheIRCompiler::emitGuardStringToIndex(StringOperandId strId,
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
+    using Fn = int32_t (*)(JSString * str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+    masm.callWithABI<Fn, GetIndexFromString>();
     masm.storeCallInt32Result(output);
 
     LiveRegisterSet ignore;
@@ -3918,9 +3919,10 @@ bool CacheIRCompiler::emitIsCallableResult(ValOperandId inputId) {
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSObject * obj);
     masm.setupUnalignedABICall(scratch2);
     masm.passABIArg(scratch1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsCallable));
+    masm.callWithABI<Fn, ObjectIsCallable>();
     masm.storeCallBoolResult(scratch2);
 
     LiveRegisterSet ignore;
@@ -3951,9 +3953,10 @@ bool CacheIRCompiler::emitIsConstructorResult(ObjOperandId objId) {
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSObject * obj);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsConstructor));
+    masm.callWithABI<Fn, ObjectIsConstructor>();
     masm.storeCallBoolResult(scratch);
 
     LiveRegisterSet ignore;
@@ -4838,12 +4841,13 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
     masm.bind(&fallback);
     masm.PushRegsInMask(liveSet);
 
+    using Fn = void* (*)(JSContext * cx, bool requestMinorGC);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
     masm.move32(Imm32(attemptNursery), result);
     masm.passABIArg(result);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::AllocateBigIntNoGC));
+    masm.callWithABI<Fn, jit::AllocateBigIntNoGC>();
     masm.storeCallPointerResult(result);
 
     masm.PopRegsInMask(liveSet);
@@ -5701,11 +5705,12 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
+    using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.movePtr(ImmPtr(cx_->runtime()), scratch);
     masm.passABIArg(scratch);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, TypeOfObject));
+    masm.callWithABI<Fn, TypeOfObject>();
     masm.mov(ReturnReg, scratch);
 
     LiveRegisterSet ignore;
@@ -5799,9 +5804,10 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult(ObjOperandId objId) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
+    using Fn = bool (*)(JSObject * obj);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+    masm.callWithABI<Fn, js::EmulatesUndefined>();
     masm.convertBoolToInt32(ReturnReg, scratch);
     masm.xor32(Imm32(1), scratch);
 
@@ -5889,9 +5895,10 @@ bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
         volatileRegs.takeUnchecked(output);
         masm.PushRegsInMask(volatileRegs);
 
+        using Fn = bool (*)(JSObject * obj);
         masm.setupUnalignedABICall(scratch2);
         masm.passABIArg(obj);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+        masm.callWithABI<Fn, js::EmulatesUndefined>();
         masm.storeCallBoolResult(scratch2);
 
         masm.PopRegsInMask(volatileRegs);
@@ -6093,7 +6100,7 @@ bool CacheIRCompiler::emitCompareBigIntResult(JSOp op, BigIntOperandId lhsId,
     fn = jit::BigIntCompare<ComparisonKind::GreaterThanOrEqual>;
   }
 
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
+  masm.callWithABI(DynamicFunction<Fn>(fn));
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
@@ -6279,45 +6286,43 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
   using FnNumberBigInt = bool (*)(double, BigInt*);
-  void* fun;
   switch (op) {
     case JSOp::Eq: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::Equal>>();
       break;
     }
     case JSOp::Ne: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::NotEqual>>();
       break;
     }
     case JSOp::Lt: {
-      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Gt: {
-      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnNumberBigInt,
+                       jit::NumberBigIntCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Le: {
-      FnNumberBigInt fn =
-          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnNumberBigInt,
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     case JSOp::Ge: {
-      FnBigIntNumber fn =
-          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnBigIntNumber,
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     default:
       MOZ_CRASH("unhandled op");
   }
 
-  masm.callWithABI(fun);
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
@@ -6362,45 +6367,43 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult(JSOp op,
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
   using FnNumberBigInt = bool (*)(double, BigInt*);
-  void* fun;
   switch (op) {
     case JSOp::Eq: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::Equal>>();
       break;
     }
     case JSOp::Ne: {
-      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::NotEqual>>();
       break;
     }
     case JSOp::Lt: {
-      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnNumberBigInt,
+                       jit::NumberBigIntCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Gt: {
-      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberCompare<ComparisonKind::LessThan>>();
       break;
     }
     case JSOp::Le: {
-      FnBigIntNumber fn =
-          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnBigIntNumber,
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     case JSOp::Ge: {
-      FnNumberBigInt fn =
-          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
-      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      masm.callWithABI<
+          FnNumberBigInt,
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>>();
       break;
     }
     default:
       MOZ_CRASH("unhandled op");
   }
 
-  masm.callWithABI(fun);
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;
@@ -6724,10 +6727,11 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   masm.passABIArg(obj);
   if (maybeIndex != InvalidReg) {
     masm.passABIArg(maybeIndex);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(
-        void*, (PostWriteElementBarrier<IndexInBounds::Yes>)));
+    using Fn = void (*)(JSRuntime * rt, JSObject * obj, int32_t index);
+    masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Yes>>();
   } else {
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+    using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
+    masm.callWithABI<Fn, PostWriteBarrier>();
   }
   masm.PopRegsInMask(save);
 
@@ -6754,11 +6758,12 @@ bool CacheIRCompiler::emitWrapResult() {
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
+  using Fn = JSObject* (*)(JSContext * cx, JSObject * obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, WrapObjectPure));
+  masm.callWithABI<Fn, WrapObjectPure>();
   masm.mov(ReturnReg, obj);
 
   LiveRegisterSet ignore;
@@ -6805,17 +6810,16 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(idVal);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
   masm.passABIArg(idVal.scratchReg());
   if (handleMissing) {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<true>)));
+    masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<true>>();
   } else {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<false>)));
+    masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<false>>();
   }
   masm.mov(ReturnReg, scratch);
   masm.PopRegsInMask(volatileRegs);
@@ -6865,17 +6869,16 @@ bool CacheIRCompiler::emitMegamorphicHasPropResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(idVal);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
   masm.passABIArg(idVal.scratchReg());
   if (hasOwn) {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
+    masm.callWithABI<Fn, HasNativeDataPropertyPure<true>>();
   } else {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
+    masm.callWithABI<Fn, HasNativeDataPropertyPure<false>>();
   }
   masm.mov(ReturnReg, scratch);
   masm.PopRegsInMask(volatileRegs);
@@ -6920,13 +6923,15 @@ bool CacheIRCompiler::emitCallObjectHasSparseElementResult(
   volatileRegs.takeUnchecked(index);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn =
+      bool (*)(JSContext * cx, NativeObject * obj, int32_t index, Value * vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
   masm.passABIArg(obj);
   masm.passABIArg(index);
   masm.passABIArg(scratch2);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeElementPure));
+  masm.callWithABI<Fn, HasNativeElementPure>();
   masm.mov(ReturnReg, scratch1);
   masm.PopRegsInMask(volatileRegs);
 
@@ -7100,6 +7105,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(scratch3);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn =
+      bool (*)(JSContext * cx, JSObject * obj, PropertyName * name, Value * vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7108,11 +7115,9 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   masm.passABIArg(scratch2);
   masm.passABIArg(scratch3);
   if (handleMissing) {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<true>)));
+    masm.callWithABI<Fn, GetNativeDataPropertyPure<true>>();
   } else {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<false>)));
+    masm.callWithABI<Fn, GetNativeDataPropertyPure<false>>();
   }
   masm.mov(ReturnReg, scratch2);
   masm.PopRegsInMask(volatileRegs);
@@ -7155,6 +7160,8 @@ bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   volatileRegs.takeUnchecked(val);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyName * name,
+                      Value * val);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7163,11 +7170,9 @@ bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   masm.passABIArg(scratch2);
   masm.passABIArg(val.scratchReg());
   if (needsTypeBarrier) {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<true>)));
+    masm.callWithABI<Fn, SetNativeDataPropertyPure<true>>();
   } else {
-    masm.callWithABI(
-        JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
+    masm.callWithABI<Fn, SetNativeDataPropertyPure<false>>();
   }
   masm.mov(ReturnReg, scratch1);
   masm.PopRegsInMask(volatileRegs);
@@ -7199,13 +7204,14 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   volatileRegs.takeUnchecked(scratch2);
   masm.PushRegsInMask(volatileRegs);
 
+  using Fn = bool (*)(JSContext* cx, JSObject* obj, Shape* propShape);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
   masm.passABIArg(obj);
   emitLoadStubField(shape, scratch2);
   masm.passABIArg(scratch2);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
+  masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
   masm.mov(ReturnReg, scratch1);
   masm.PopRegsInMask(volatileRegs);
 

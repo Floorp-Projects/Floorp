@@ -10,6 +10,8 @@
 #[macro_use]
 extern crate arrayref;
 extern crate memmap;
+#[macro_use]
+extern crate log;
 
 use std::slice;
 use std::str;

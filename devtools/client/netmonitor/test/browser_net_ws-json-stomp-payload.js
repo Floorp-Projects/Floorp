@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Test that WebSocket payloads containing a STOMP formatted message are parsed
+ * Test that WebSocket payloads containing an array of STOMP messages are parsed
  * correctly and displayed in a user friendly way
  */
 
@@ -26,7 +26,7 @@ add_task(async function() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection(0);
     content.wrappedJSObject.sendData(
-      `SEND\nx-firefox-test:true\ncontent-length:17\n\n[{"key":"value"}]\u0000\n`
+      `[\"SEND\\nx-firefox-test:true\\ncontent-length:17\\n\\n[{\\\"key\\\":\\\"value\\\"}]\\u0000\"]`
     );
   });
   await onNetworkEvents;
@@ -69,8 +69,8 @@ add_task(async function() {
 
   is(
     document.querySelector("#message-formattedData-header").innerText,
-    "STOMP",
-    "The STOMP payload panel should be displayed"
+    "JSON",
+    "The JSON payload panel should be displayed"
   );
 
   ok(
@@ -79,15 +79,15 @@ add_task(async function() {
   );
 
   ok(
-    document.getElementById("/command"),
+    document.getElementById("/0/command"),
     "The message 'command' should be displayed"
   );
   ok(
-    document.getElementById("/headers"),
+    document.getElementById("/0/headers"),
     "The message 'headers' should be displayed"
   );
   ok(
-    document.getElementById("/body"),
+    document.getElementById("/0/body"),
     "The message 'body' should be displayed"
   );
 

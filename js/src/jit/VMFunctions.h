@@ -601,7 +601,18 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
 
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
+void* AllocateString(JSContext* cx);
+void* AllocateFatInlineString(JSContext* cx);
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
+void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
+                                     int32_t count);
+
+void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
+                                    size_t nDynamicSlots);
+#ifdef JS_GC_PROBES
+void TraceCreateObject(JSObject* obj);
+#endif
+
 bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res);
 
 #if JS_BITS_PER_WORD == 32
@@ -653,6 +664,8 @@ AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 
+bool GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v);
+
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
 void Printf0(const char* output);
@@ -666,5 +679,12 @@ extern const VMFunctionData& GetVMFunction(TailCallVMFunctionId id);
 
 }  // namespace jit
 }  // namespace js
+
+#if defined(JS_CODEGEN_ARM)
+extern "C" {
+extern MOZ_EXPORT int64_t __aeabi_idivmod(int, int);
+extern MOZ_EXPORT int64_t __aeabi_uidivmod(int, int);
+}
+#endif
 
 #endif /* jit_VMFunctions_h */
