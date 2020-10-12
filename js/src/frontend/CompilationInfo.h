@@ -91,16 +91,22 @@ struct ScopeContext {
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
 
-// Input of the compilation, including source and enclosing context.
-struct CompilationInput {
-  const JS::ReadOnlyCompileOptions& options;
-
+struct CompilationAtomCache {
   // Atoms lowered into or converted from CompilationStencil.parserAtoms.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
   // etc), and having 2 vectors in both input/output is error prone.
   JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy> atoms;
+
+  void trace(JSTracer* trc);
+} JS_HAZ_GC_POINTER;
+
+// Input of the compilation, including source and enclosing context.
+struct CompilationInput {
+  const JS::ReadOnlyCompileOptions& options;
+
+  CompilationAtomCache atomCache;
 
   BaseScript* lazy = nullptr;
 
@@ -387,9 +393,6 @@ struct CompilationInfo {
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
 
-  JSAtom* liftParserAtomToJSAtom(JSContext* cx, const ParserAtom* parserAtom) {
-    return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);
-  }
   const ParserAtom* lowerJSAtomToParserAtom(JSContext* cx, JSAtom* atom) {
     auto result = stencil.parserAtoms.internJSAtom(cx, *this, atom);
     return result.unwrapOr(nullptr);

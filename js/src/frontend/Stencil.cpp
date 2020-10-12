@@ -202,7 +202,7 @@ static JSFunction* CreateFunction(JSContext* cx,
   RootedAtom displayAtom(cx);
   if (script.functionAtom) {
     displayAtom.set(
-        compilationInfo.liftParserAtomToJSAtom(cx, script.functionAtom));
+        script.functionAtom->toJSAtom(cx, compilationInfo.input.atomCache));
     if (!displayAtom) {
       return nullptr;
     }
@@ -272,8 +272,8 @@ static bool MaybeInstantiateModule(JSContext* cx,
       return false;
     }
 
-    if (!compilationInfo.stencil.moduleMetadata.initModule(cx, compilationInfo,
-                                                           gcOutput.module)) {
+    if (!compilationInfo.stencil.moduleMetadata.initModule(
+            cx, compilationInfo.input.atomCache, gcOutput.module)) {
       return false;
     }
   }
@@ -372,8 +372,8 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
       JSAtom* funcAtom = nullptr;
       if (scriptStencil.functionFlags.hasInferredName() ||
           scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = compilationInfo.liftParserAtomToJSAtom(
-            cx, scriptStencil.functionAtom);
+        funcAtom = scriptStencil.functionAtom->toJSAtom(
+            cx, compilationInfo.input.atomCache);
         if (!funcAtom) {
           return false;
         }

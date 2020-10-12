@@ -1175,11 +1175,13 @@ bool frontend::CompilationInput::initScriptSource(JSContext* cx) {
 }
 
 void CompilationInput::trace(JSTracer* trc) {
-  atoms.trace(trc);
+  atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
   source_.trace(trc);
   TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
 }
+
+void CompilationAtomCache::trace(JSTracer* trc) { atoms.trace(trc); }
 
 void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
 
