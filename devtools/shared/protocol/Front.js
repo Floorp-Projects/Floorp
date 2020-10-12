@@ -87,6 +87,9 @@ class Front extends Pool {
     // the front is destroyed.
     while (this._requests && this._requests.length > 0) {
       const { deferred, to, type, stack } = this._requests.shift();
+      // Note: many tests are ignoring `Connection closed` promise rejections,
+      // via PromiseTestUtils.allowMatchingRejectionsGlobally.
+      // Do not update the message without updating the tests.
       const msg =
         "Connection closed, pending request to " +
         to +
