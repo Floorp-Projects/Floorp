@@ -203,7 +203,6 @@
 
 #include "jspubtd.h"
 
-#include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/Token.h"
@@ -1509,12 +1508,11 @@ class TokenStreamCharsShared {
   CharBuffer charBuffer;
 
   /** Information for parsing with a lifetime longer than the parser itself. */
-  CompilationInfo* compilationInfo;
+  ParserAtomsTable* parserAtoms;
 
  protected:
-  explicit TokenStreamCharsShared(JSContext* cx,
-                                  CompilationInfo* compilationInfo)
-      : cx(cx), charBuffer(cx), compilationInfo(compilationInfo) {}
+  explicit TokenStreamCharsShared(JSContext* cx, ParserAtomsTable* parserAtoms)
+      : cx(cx), charBuffer(cx), parserAtoms(parserAtoms) {}
 
   MOZ_MUST_USE bool appendCodePointToCharBuffer(uint32_t codePoint);
 
@@ -1533,8 +1531,8 @@ class TokenStreamCharsShared {
 
   const ParserAtom* drainCharBufferIntoAtom() {
     // Add to parser atoms table.
-    auto maybeId = this->compilationInfo->stencil.parserAtoms.internChar16(
-        cx, charBuffer.begin(), charBuffer.length());
+    auto maybeId = this->parserAtoms->internChar16(cx, charBuffer.begin(),
+                                                   charBuffer.length());
     if (maybeId.isErr()) {
       return nullptr;
     }
@@ -1584,7 +1582,7 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
   // End of fields.
 
  protected:
-  TokenStreamCharsBase(JSContext* cx, CompilationInfo* compilationInfo,
+  TokenStreamCharsBase(JSContext* cx, ParserAtomsTable* parserAtoms,
                        const Unit* units, size_t length, size_t startOffset);
 
   /**
@@ -1691,8 +1689,7 @@ template <>
 MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->compilationInfo->stencil.parserAtoms
-      .internChar16(cx, units.data(), units.size())
+  return this->parserAtoms->internChar16(cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }
 
@@ -1700,8 +1697,7 @@ template <>
 /* static */ MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->compilationInfo->stencil.parserAtoms
-      .internUtf8(cx, units.data(), units.size())
+  return this->parserAtoms->internUtf8(cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }
 
@@ -2461,7 +2457,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   friend class TokenStreamPosition;
 
  public:
-  TokenStreamSpecific(JSContext* cx, CompilationInfo* compilationInfo,
+  TokenStreamSpecific(JSContext* cx, ParserAtomsTable* parserAtoms,
                       const JS::ReadOnlyCompileOptions& options,
                       const Unit* units, size_t length);
 
@@ -2906,12 +2902,12 @@ class MOZ_STACK_CLASS TokenStream
   using Unit = char16_t;
 
  public:
-  TokenStream(JSContext* cx, CompilationInfo* compilationInfo,
+  TokenStream(JSContext* cx, ParserAtomsTable* parserAtoms,
               const JS::ReadOnlyCompileOptions& options, const Unit* units,
               size_t length, StrictModeGetter* smg)
       : TokenStreamAnyChars(cx, options, smg),
         TokenStreamSpecific<Unit, TokenStreamAnyCharsAccess>(
-            cx, compilationInfo, options, units, length) {}
+            cx, parserAtoms, options, units, length) {}
 };
 
 class MOZ_STACK_CLASS DummyTokenStream final : public TokenStream {
