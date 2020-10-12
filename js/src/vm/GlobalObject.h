@@ -873,7 +873,7 @@ class GlobalObject : public NativeObject {
   static bool initRequestedModuleProto(JSContext* cx,
                                        Handle<GlobalObject*> global);
 
-  // Implemented in builtin/TypedObject.cpp
+  // Implemented in wasm/TypedObject.cpp
   static bool initTypedObjectModule(JSContext* cx,
                                     Handle<GlobalObject*> global);
 

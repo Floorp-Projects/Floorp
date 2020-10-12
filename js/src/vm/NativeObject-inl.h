@@ -12,7 +12,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
@@ -21,6 +20,7 @@
 #include "vm/JSContext.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/TypedObject.h"
 
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
