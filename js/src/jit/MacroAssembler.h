@@ -207,6 +207,10 @@
 #  define IMM32_16ADJ(X) (X)
 #endif
 
+namespace JS {
+struct ExpandoAndGeneration;
+}
+
 namespace js {
 
 class TypedArrayObject;
@@ -3891,6 +3895,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void setIsCrossRealmArrayConstructor(Register obj, Register output);
 
   void setIsDefinitelyTypedArrayConstructor(Register obj, Register output);
+
+  void loadDOMExpandoValueGuardGeneration(
+      Register obj, ValueOperand output,
+      JS::ExpandoAndGeneration* expandoAndGeneration, uint64_t generation,
+      Label* fail);
 
  private:
   void isCallableOrConstructor(bool isCallable, Register obj, Register output,

@@ -5365,6 +5365,40 @@ void LIRGenerator::visitGetDOMMember(MGetDOMMember* ins) {
   }
 }
 
+void LIRGenerator::visitLoadDOMExpandoValue(MLoadDOMExpandoValue* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  auto* lir =
+      new (alloc()) LLoadDOMExpandoValue(useRegisterAtStart(ins->proxy()));
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitLoadDOMExpandoValueGuardGeneration(
+    MLoadDOMExpandoValueGuardGeneration* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  auto* lir = new (alloc())
+      LLoadDOMExpandoValueGuardGeneration(useRegisterAtStart(ins->proxy()));
+  assignSnapshot(lir, BailoutKind::DOMExpandoValueGenerationGuard);
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitLoadDOMExpandoValueIgnoreGeneration(
+    MLoadDOMExpandoValueIgnoreGeneration* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  auto* lir = new (alloc())
+      LLoadDOMExpandoValueIgnoreGeneration(useRegisterAtStart(ins->proxy()));
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitGuardDOMExpandoMissingOrGuardShape(
+    MGuardDOMExpandoMissingOrGuardShape* ins) {
+  MOZ_ASSERT(ins->expando()->type() == MIRType::Value);
+  auto* lir = new (alloc())
+      LGuardDOMExpandoMissingOrGuardShape(useBox(ins->expando()), temp());
+  assignSnapshot(lir, BailoutKind::DOMExpandoMissingOrShapeGuard);
+  add(lir, ins);
+  redefine(ins, ins->expando());
+}
+
 void LIRGenerator::visitRecompileCheck(MRecompileCheck* ins) {
   LRecompileCheck* lir = new (alloc()) LRecompileCheck(temp());
   add(lir, ins);
