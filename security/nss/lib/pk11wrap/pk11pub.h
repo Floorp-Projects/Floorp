@@ -9,6 +9,7 @@
 #include "secdert.h"
 #include "keythi.h"
 #include "certt.h"
+#include "pk11hpke.h"
 #include "pkcs11t.h"
 #include "secmodt.h"
 #include "seccomon.h"
@@ -713,6 +714,36 @@ CK_BBOOL PK11_HasAttributeSet(PK11SlotInfo *slot,
                               CK_OBJECT_HANDLE id,
                               CK_ATTRIBUTE_TYPE type,
                               PRBool haslock /* must be set to PR_FALSE */);
+
+/**********************************************************************
+ *                   Hybrid Public Key Encryption  (draft-05)
+ **********************************************************************/
+/*
+ * NOTE: All HPKE functions will fail with SEC_ERROR_INVALID_ALGORITHM
+ * unless NSS is compiled with NSS_ENABLE_DRAFT_HPKE while spec (and
+ * implementation) is in draft. The eventual RFC number is an input to
+ * the key schedule, so applications opting into this MUST be prepared for
+ * outputs to change when the implementation is updated or finalized. */
+
+/* Some of the various HPKE arguments would ideally be const, but the
+ * underlying PK11 functions take them as non-const. To avoid lying to
+ * the application with a cast, this idiosyncrasy is exposed. */
+SECStatus PK11_HPKE_ValidateParameters(HpkeKemId kemId, HpkeKdfId kdfId, HpkeAeadId aeadId);
+HpkeContext *PK11_HPKE_NewContext(HpkeKemId kemId, HpkeKdfId kdfId, HpkeAeadId aeadId,
+                                  PK11SymKey *psk, const SECItem *pskId);
+SECStatus PK11_HPKE_Deserialize(const HpkeContext *cx, const PRUint8 *enc,
+                                unsigned int encLen, SECKEYPublicKey **outPubKey);
+void PK11_HPKE_DestroyContext(HpkeContext *cx, PRBool freeit);
+const SECItem *PK11_HPKE_GetEncapPubKey(const HpkeContext *cx);
+SECStatus PK11_HPKE_ExportSecret(const HpkeContext *cx, const SECItem *info, unsigned int L,
+                                 PK11SymKey **outKey);
+SECStatus PK11_HPKE_Open(HpkeContext *cx, const SECItem *aad, const SECItem *ct, SECItem **outPt);
+SECStatus PK11_HPKE_Seal(HpkeContext *cx, const SECItem *aad, const SECItem *pt, SECItem **outCt);
+SECStatus PK11_HPKE_Serialize(const SECKEYPublicKey *pk, PRUint8 *buf, unsigned int *len, unsigned int maxLen);
+SECStatus PK11_HPKE_SetupS(HpkeContext *cx, const SECKEYPublicKey *pkE, SECKEYPrivateKey *skE,
+                           SECKEYPublicKey *pkR, const SECItem *info);
+SECStatus PK11_HPKE_SetupR(HpkeContext *cx, const SECKEYPublicKey *pkR, SECKEYPrivateKey *skR,
+                           const SECItem *enc, const SECItem *info);
 
 /**********************************************************************
  *                   Sign/Verify
