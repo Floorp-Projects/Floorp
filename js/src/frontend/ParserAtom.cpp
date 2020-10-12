@@ -213,11 +213,11 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
-                                  CompilationAtomCache& atomCache) const {
+JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
+    JSContext* cx, CompilationInfo& compilationInfo) const {
   switch (atomIndexKind_) {
     case AtomIndexKind::AtomIndex:
-      return atomCache.atoms[atomIndex_];
+      return compilationInfo.input.atoms[atomIndex_];
 
     case AtomIndexKind::WellKnown:
       return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
@@ -241,13 +241,11 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
     atom = AtomizeChars(cx, twoByteChars(), length());
   }
   if (!atom) {
-    js::ReportOutOfMemory(cx);
-    return nullptr;
+    return RaiseParserAtomsOOMError(cx);
   }
-  auto index = atomCache.atoms.length();
-  if (!atomCache.atoms.append(atom)) {
-    js::ReportOutOfMemory(cx);
-    return nullptr;
+  auto index = compilationInfo.input.atoms.length();
+  if (!compilationInfo.input.atoms.append(atom)) {
+    return RaiseParserAtomsOOMError(cx);
   }
 
   const_cast<ParserAtomEntry*>(this)->setAtomIndex(AtomIndex(index));
@@ -510,8 +508,8 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
   if (id->atomIndexKind_ == ParserAtomEntry::AtomIndexKind::Unresolved) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
-    auto index = AtomIndex(compilationInfo.input.atomCache.atoms.length());
-    if (!compilationInfo.input.atomCache.atoms.append(atom)) {
+    auto index = AtomIndex(compilationInfo.input.atoms.length());
+    if (!compilationInfo.input.atoms.append(atom)) {
       return RaiseParserAtomsOOMError(cx);
     }
 
@@ -519,7 +517,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(id->toJSAtom(cx, compilationInfo.input.atomCache) == atom);
+  MOZ_ASSERT(id->toJSAtom(cx, compilationInfo).unwrap() == atom);
 
   return id;
 }

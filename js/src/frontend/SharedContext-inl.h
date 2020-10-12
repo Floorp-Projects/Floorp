@@ -18,7 +18,7 @@ inline Directives::Directives(ParseContext* parent)
 
 inline JSAtom* SharedContext::liftParserAtomToJSAtom(JSContext* cx,
                                                      const ParserAtom* atomId) {
-  return atomId->toJSAtom(cx, compilationInfo_.input.atomCache);
+  return compilationInfo_.liftParserAtomToJSAtom(cx, atomId);
 }
 inline const ParserAtom* SharedContext::lowerJSAtomToParserAtom(JSContext* cx,
                                                                 JSAtom* atom) {

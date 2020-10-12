@@ -26,7 +26,8 @@
 #include "jstypes.h"
 
 #include "double-conversion/double-conversion.h"
-#include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomsTable
+#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
+#include "frontend/ParserAtom.h"       // frontend::ParserAtom
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
@@ -848,7 +849,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
 }
 
 const frontend::ParserAtom* js::Int32ToParserAtom(
-    JSContext* cx, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, int32_t si) {
   char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
   size_t length;
   char* start = BackfillInt32InBuffer(
@@ -859,7 +860,8 @@ const frontend::ParserAtom* js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return parserAtoms.internAscii(cx, start, length).unwrapOr(nullptr);
+  return compilationInfo.stencil.parserAtoms.internAscii(cx, start, length)
+      .unwrapOr(nullptr);
 }
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
@@ -1649,10 +1651,10 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
 }
 
 const frontend::ParserAtom* js::NumberToParserAtom(
-    JSContext* cx, frontend::ParserAtomsTable& parserAtoms, double d) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, double d) {
   int32_t si;
   if (NumberEqualsInt32(d, &si)) {
-    return Int32ToParserAtom(cx, parserAtoms, si);
+    return Int32ToParserAtom(cx, compilationInfo, si);
   }
 
   ToCStringBuf cbuf;
@@ -1665,7 +1667,8 @@ const frontend::ParserAtom* js::NumberToParserAtom(
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
-  return parserAtoms.internAscii(cx, numStr, length).unwrapOr(nullptr);
+  return compilationInfo.stencil.parserAtoms.internAscii(cx, numStr, length)
+      .unwrapOr(nullptr);
 }
 
 JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
