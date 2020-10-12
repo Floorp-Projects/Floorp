@@ -37,12 +37,51 @@ void CheckTracedThing(JSTracer* trc, T thing);
 }  // namespace js
 
 /*** Callback Tracer Dispatch ***********************************************/
+
+static inline bool DispatchToOnEdge(GenericTracer* trc, JSObject** objp) {
+  return trc->onObjectEdge(objp);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, JSString** strp) {
+  return trc->onStringEdge(strp);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, JS::Symbol** symp) {
+  return trc->onSymbolEdge(symp);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, JS::BigInt** bip) {
+  return trc->onBigIntEdge(bip);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc,
+                                    js::BaseScript** scriptp) {
+  return trc->onScriptEdge(scriptp);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, js::Shape** shapep) {
+  return trc->onShapeEdge(shapep);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc,
+                                    js::ObjectGroup** groupp) {
+  return trc->onObjectGroupEdge(groupp);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, js::BaseShape** basep) {
+  return trc->onBaseShapeEdge(basep);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc,
+                                    js::jit::JitCode** codep) {
+  return trc->onJitCodeEdge(codep);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc, js::Scope** scopep) {
+  return trc->onScopeEdge(scopep);
+}
+static inline bool DispatchToOnEdge(GenericTracer* trc,
+                                    js::RegExpShared** sharedp) {
+  return trc->onRegExpSharedEdge(sharedp);
+}
+
 template <typename T>
 bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   JS::AutoTracingName ctx(trc, name);
 
-  return trc->dispatchToOnEdge(thingp);
+  return DispatchToOnEdge(trc, thingp);
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
   template bool DoCallback<type>(GenericTracer*, type**, const char*);
