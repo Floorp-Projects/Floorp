@@ -11,9 +11,9 @@
 #include "mozilla/Sprintf.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationInfo.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
+#include "frontend/ParserAtom.h"
 #include "frontend/SharedContext.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
@@ -29,7 +29,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
   static const size_t MaxParents = 100;
 
-  CompilationInfo& compilationInfo_;
+  ParserAtomsTable& parserAtoms_;
   const ParserAtom* prefix_;
 
   // Number of nodes in the parents array.
@@ -240,7 +240,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
           !buf_.append(funbox->displayAtom())) {
         return false;
       }
-      *retId = buf_.finishParserAtom(compilationInfo_);
+      *retId = buf_.finishParserAtom(parserAtoms_);
       return !!*retId;
     }
 
@@ -315,7 +315,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
       return true;
     }
 
-    *retId = buf_.finishParserAtom(compilationInfo_);
+    *retId = buf_.finishParserAtom(parserAtoms_);
     if (!*retId) {
       return false;
     }
@@ -440,9 +440,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     return internalVisitSpecList(pn);
   }
 
-  explicit NameResolver(JSContext* cx, CompilationInfo& compilationInfo)
+  explicit NameResolver(JSContext* cx, ParserAtomsTable& parserAtoms)
       : ParseNodeVisitor(cx),
-        compilationInfo_(compilationInfo),
+        parserAtoms_(parserAtoms),
         prefix_(nullptr),
         nparents_(0),
         buf_(cx) {}
@@ -476,10 +476,10 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 } /* anonymous namespace */
 
-bool frontend::NameFunctions(JSContext* cx, CompilationInfo& compilationInfo,
+bool frontend::NameFunctions(JSContext* cx, ParserAtomsTable& parserAtoms,
                              ParseNode* pn) {
   AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
                         TraceLogger_BytecodeNameFunctions);
-  NameResolver nr(cx, compilationInfo);
+  NameResolver nr(cx, parserAtoms);
   return nr.visit(pn);
 }
