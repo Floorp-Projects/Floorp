@@ -597,10 +597,10 @@ var UrlbarTestUtils = {
     if (!urlbar.hasAttribute("breakout-extend") && clickClose) {
       if (waitForSearch) {
         let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-        urlbar.setSearchMode({});
+        urlbar.searchMode = null;
         await searchPromise;
       } else {
-        urlbar.setSearchMode({});
+        urlbar.searchMode = null;
       }
       return;
     }

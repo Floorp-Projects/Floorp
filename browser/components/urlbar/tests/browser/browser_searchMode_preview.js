@@ -322,11 +322,11 @@ add_task(async function fullSearchMode_oneOff_downArrow() {
     value: "",
   });
   let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
-  let oneOffButtons = oneOffs.getSelectableButtons(true);
   await TestUtils.waitForCondition(
     () => !oneOffs._rebuilding,
     "Waiting for one-offs to finish rebuilding"
   );
+  let oneOffButtons = oneOffs.getSelectableButtons(true);
 
   await UrlbarTestUtils.enterSearchMode(window);
   let expectedSearchMode = getExpectedSearchMode(oneOffButtons[0], false);

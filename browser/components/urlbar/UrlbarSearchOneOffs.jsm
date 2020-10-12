@@ -142,7 +142,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         source: button.source,
         entry: "oneoff",
       };
-      this.input.setSearchMode(expectedSearchMode);
+      this.input.searchMode = expectedSearchMode;
     } else if (this.input.searchMode) {
       // Restore the previous state. We do this only if we're in search mode, as
       // an optimization in the common case of cycling through normal results.
@@ -241,11 +241,10 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       return;
     }
 
-    this.selectedButton = null;
     // Handle opening search mode in either the current tab or in a new tab.
     switch (where) {
       case "current": {
-        this.input.setSearchMode(searchMode);
+        this.input.searchMode = searchMode;
         this.input.startQuery(startQueryParams);
         break;
       }
@@ -256,7 +255,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         searchMode.isPreview = false;
 
         let newTab = this.input.window.gBrowser.addTrustedTab("about:newtab");
-        this.input.setSearchModeForBrowser(searchMode, newTab.linkedBrowser);
+        this.input.setSearchMode(searchMode, newTab.linkedBrowser);
         if (userTypedSearchString) {
           // Set the search string for the new tab.
           newTab.linkedBrowser.userTypedValue = this.input.value;
@@ -268,11 +267,14 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         break;
       }
       default: {
-        this.input.setSearchMode(searchMode);
+        this.input.searchMode = searchMode;
         this.input.startQuery(startQueryParams);
         this.input.select();
+        break;
       }
     }
+
+    this.selectedButton = null;
   }
 
   /**

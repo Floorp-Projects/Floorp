@@ -99,7 +99,6 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.formHistoryName = DEFAULT_FORM_HISTORY_NAME;
     this.lastQueryContextPromise = Promise.resolve();
-    this.searchMode = null;
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
     this._lastSearchString = "";
@@ -109,6 +108,22 @@ class UrlbarInput {
     this._suppressStartQuery = false;
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
+
+    // Search modes are per browser and are stored in this map.  For a given
+    // browser, search mode can be in preview mode, non-preview mode, or both.
+    // Typically, search mode is entered in preview mode with a particular
+    // source and is promoted to non-preview mode with the same source once a
+    // query starts.  It's also possible for a non-preview mode to be replaced
+    // with a preview mode with a different source, and in those cases, we need
+    // to be able to restore the non-preview mode when preview mode is exited.
+    // In addition, only non-preview mode should be restored across sessions.
+    // We therefore need to keep track of both the current non-preview and
+    // preview modes, per browser.
+    //
+    // For each browser with a search mode, this maps the browser to an object
+    // like this: { preview, nonPreview }.  Both `preview` and `nonPreview` are
+    // search mode objects; see the setSearchMode documentation.  Either one may
+    // be undefined if that particular mode is not active for the browser.
     this._searchModesByBrowser = new WeakMap();
 
     this.QueryInterface = ChromeUtils.generateQI([
@@ -359,7 +374,7 @@ class UrlbarInput {
     if (dueToTabSwitch) {
       this.restoreSearchModeState();
     } else if (valid) {
-      this.setSearchMode({});
+      this.searchMode = null;
     }
   }
 
@@ -606,7 +621,7 @@ class UrlbarInput {
   handleRevert() {
     this.window.gBrowser.userTypedValue = null;
     // Nullify search mode before setURI so it won't try to restore it.
-    this.setSearchMode({});
+    this.searchMode = null;
     this.setURI(null, true);
     if (this.value && this.focused) {
       this.select();
@@ -743,7 +758,7 @@ class UrlbarInput {
         if (result.payload.keywordOffer) {
           let searchModeParams = this._searchModeForResult(result);
           if (searchModeParams) {
-            this.setSearchMode(searchModeParams);
+            this.searchMode = searchModeParams;
             this.search("");
           } else {
             // We only record an engagement event if update2 is disabled.
@@ -929,7 +944,7 @@ class UrlbarInput {
    */
   onPrefChanged(changedPref) {
     if (changedPref == "update2" && !UrlbarPrefs.get("update2")) {
-      this.setSearchMode({});
+      this.searchMode = null;
     }
   }
 
@@ -962,7 +977,7 @@ class UrlbarInput {
       result?.payload.keywordOffer != UrlbarUtils.KEYWORD_OFFER.SHOW &&
       !this.view.oneOffSearchButtons.selectedButton
     ) {
-      this.setSearchMode({});
+      this.searchMode = null;
     }
 
     if (!result) {
@@ -996,7 +1011,7 @@ class UrlbarInput {
         });
         if (!enteredSearchMode) {
           this._setValue(this._getValueFromResult(result), true);
-          this.setSearchMode({});
+          this.searchMode = null;
         }
       } else {
         // If the url is trimmed but it's invalid (for example it has an unknown
@@ -1249,7 +1264,7 @@ class UrlbarInput {
 
     if (searchMode) {
       searchMode.entry = searchModeEntry;
-      this.setSearchMode(searchMode);
+      this.searchMode = searchMode;
       // Remove the restriction token/alias from the string to be searched for
       // in search mode.
       value = value.replace(tokens[0], "");
@@ -1261,7 +1276,7 @@ class UrlbarInput {
       this.inputField.value = value;
       this._revertOnBlurValue = this.value;
     } else if (Object.values(UrlbarTokenizer.RESTRICT).includes(tokens[0])) {
-      this.setSearchMode({});
+      this.searchMode = null;
       // If the entire value is a restricted token, append a space.
       if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
         value += " ";
@@ -1313,154 +1328,142 @@ class UrlbarInput {
   }
 
   /**
-   * Sets search mode and shows the search mode indicator, or exits search mode.
+   * Gets the search mode for a specific browser instance.
    *
-   * @param {*} value
-   *   A value of one of the following types:
-   * @param {string} engineName
+   * @param {Browser} browser
+   *   The search mode for this browser will be returned.
+   * @param {boolean} [nonPreviewOnly]
+   *   Normally, if the browser has both preview and non-preview modes, preview
+   *   mode will be returned since it takes precedence.  If this argument is
+   *   true, then only non-preview mode will be returned, or null if non-preview
+   *   mode isn't active.
+   * @returns {object}
+   *   A search mode object.  See setSearchMode documentation.  If the browser
+   *   is not in search mode, then null is returned.
+   */
+  getSearchMode(browser, nonPreviewOnly = false) {
+    let modes = this._searchModesByBrowser.get(browser);
+
+    // Return copies so that callers don't modify the stored values.
+    if (!nonPreviewOnly && modes?.preview) {
+      return { ...modes.preview };
+    }
+    if (modes?.nonPreview) {
+      return { ...modes.nonPreview };
+    }
+    return null;
+  }
+
+  /**
+   * Sets search mode for a specific browser instance.  If the given browser is
+   * selected, then this will also enter search mode.
+   *
+   * @param {object} searchMode
+   *   A search mode object.
+   * @param {string} searchMode.engineName
    *   The name of the search engine to restrict to.
-   * @param {UrlbarUtils.RESULT_SOURCE} source
+   * @param {UrlbarUtils.RESULT_SOURCE} searchMode.source
    *   A result source to restrict to.
-   * @param {string} entry
+   * @param {string} searchMode.entry
    *   How search mode was entered. This is recorded in event telemetry. One of
    *   the values in UrlbarUtils.SEARCH_MODE_ENTRY.
-   * @param {boolean} [isPreview]
+   * @param {boolean} [searchMode.isPreview]
    *   If true, we will preview search mode. Search mode preview does not record
    *   telemetry and has slighly different UI behavior. The preview is exited in
    *   favor of full search mode when a query is executed. False should be
    *   passed if the caller needs to enter search mode but expects it will not
    *   be interacted with right away. Defaults to true.
+   * @param {Browser} browser
+   *   The browser for which to set search mode.
    */
-  setSearchMode({ engineName, source, entry, isPreview = true }) {
+  async setSearchMode(searchMode, browser) {
+    let currentSearchMode = this.getSearchMode(browser);
+    let areSearchModesSame =
+      (!currentSearchMode && !searchMode) ||
+      ObjectUtils.deepEqual(currentSearchMode, searchMode);
+
     // Exit search mode if update2 is disabled or the passed-in engine is
     // invalid or hidden.
-    let engine;
-    if (engineName) {
-      engine = Services.search.getEngineByName(engineName);
-    }
-    if (
-      !UrlbarPrefs.get("update2") ||
-      (engineName && (!engine || engine.hidden))
-    ) {
-      engineName = null;
-      source = null;
-    }
-
-    // As an optimization, bail if the given search mode is already active.
-    // Otherwise browser_preferences_usage.js fails due to accessing the
-    // browser.urlbar.placeholderName pref (via BrowserSearch.initPlaceHolder
-    // below) too many times.  That test does not enter search mode, but it
-    // triggers many calls to this method with an empty object via setURI.
-    if (
-      (!this.searchMode && !engineName && !source) ||
-      ObjectUtils.deepEqual(this.searchMode, { engineName, source })
-    ) {
-      return;
+    if (!UrlbarPrefs.get("update2")) {
+      searchMode = null;
+    } else if (searchMode?.engineName) {
+      if (!Services.search.isInitialized) {
+        await Services.search.init();
+      }
+      let engine = Services.search.getEngineByName(searchMode.engineName);
+      if (!engine || engine.hidden) {
+        searchMode = null;
+      }
     }
 
-    this._searchModeIndicatorTitle.textContent = "";
-    this._searchModeLabel.textContent = "";
-    this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
-    this._searchModeLabel.removeAttribute("data-l10n-id");
+    let { engineName, source, entry, isPreview = true } = searchMode || {};
+
+    searchMode = null;
 
     if (engineName) {
-      this.searchMode = { engineName };
+      searchMode = { engineName };
       if (source) {
-        this.searchMode.source = source;
+        searchMode.source = source;
       } else if (UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)) {
         // History results for general-purpose search engines are often not
         // useful, so we hide them in search mode. See bug 1658646 for
         // discussion.
-        this.searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+        searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
       }
-      // Set text content for the search mode indicator.
-      this._searchModeIndicatorTitle.textContent = engineName;
-      this._searchModeLabel.textContent = engineName;
-      this.document.l10n.setAttributes(
-        this.inputField,
-        UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
-          ? "urlbar-placeholder-search-mode-web-2"
-          : "urlbar-placeholder-search-mode-other-engine",
-        { name: engineName }
-      );
     } else if (source) {
       let sourceName = UrlbarUtils.getResultSourceName(source);
-      if (!sourceName) {
-        Cu.reportError(`Unrecognized source: ${source}`);
-        this.searchMode = null;
+      if (sourceName) {
+        searchMode = { source };
       } else {
-        this.searchMode = { source };
-        let l10nID = `urlbar-search-mode-${sourceName}`;
-        this.document.l10n.setAttributes(
-          this._searchModeIndicatorTitle,
-          l10nID
-        );
-        this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
-        this.document.l10n.setAttributes(
-          this.inputField,
-          `urlbar-placeholder-search-mode-other-${sourceName}`
-        );
+        Cu.reportError(`Unrecognized source: ${source}`);
       }
-    } else {
-      // Exit search mode.
-      this.searchMode = null;
-      this.window.BrowserSearch.initPlaceHolder(true);
     }
 
-    if (this.searchMode) {
-      if (!UrlbarUtils.SEARCH_MODE_ENTRY.has(entry)) {
+    if (searchMode) {
+      searchMode.isPreview = isPreview;
+      if (UrlbarUtils.SEARCH_MODE_ENTRY.has(entry)) {
+        searchMode.entry = entry;
+      } else {
         // If we see this value showing up in telemetry, we should review
         // search mode's entry points.
-        this.searchMode.entry = "other";
-      } else {
-        this.searchMode.entry = entry;
+        searchMode.entry = "other";
       }
 
-      this.searchMode.isPreview = true;
-      if (!isPreview) {
-        this.promoteSearchMode();
-      }
-      this.toggleAttribute("searchmode", true);
-      // Clear autofill.
-      if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
-        this.value = this.window.gBrowser.userTypedValue;
-      }
-      // Search mode should only be active when pageproxystate is invalid.
-      if (this.getAttribute("pageproxystate") == "valid") {
-        this.value = "";
-        this.setPageProxyState("invalid", true);
+      // Add the search mode to the map.
+      if (!searchMode.isPreview) {
+        this._searchModesByBrowser.set(browser, {
+          nonPreview: searchMode,
+        });
+      } else {
+        let modes = this._searchModesByBrowser.get(browser) || {};
+        modes.preview = searchMode;
+        this._searchModesByBrowser.set(browser, modes);
       }
     } else {
-      this.removeAttribute("searchmode");
-      this._searchModesByBrowser.delete(this.window.gBrowser.selectedBrowser);
+      this._searchModesByBrowser.delete(browser);
     }
-  }
 
-  /**
-   * Sets search mode for a specific browser instance.
-   *
-   * @param {object} searchMode
-   *   A search mode object. See setSearchMode documentation.
-   * @param {Browser} browser
-   *   The browser for which to set search mode.
-   */
-  setSearchModeForBrowser(searchMode, browser) {
+    // Enter search mode if the browser is selected.
     if (browser == this.window.gBrowser.selectedBrowser) {
-      this.setSearchMode(searchMode);
-      return;
+      this._updateSearchModeUI(searchMode);
+      if (searchMode && !searchMode.isPreview && !areSearchModesSame) {
+        try {
+          BrowserUsageTelemetry.recordSearchMode(searchMode);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
     }
-
-    this._searchModesByBrowser.set(browser, searchMode);
   }
 
   /**
    * Restores the current browser search mode from a previously stored state.
    */
   restoreSearchModeState() {
-    let state = this._searchModesByBrowser.get(
+    let modes = this._searchModesByBrowser.get(
       this.window.gBrowser.selectedBrowser
     );
-    this.setSearchMode(state || {});
+    this.searchMode = modes?.nonPreview;
   }
 
   /**
@@ -1472,11 +1475,11 @@ class UrlbarInput {
     if (this.view.oneOffsRefresh) {
       // We restrict to search results when entering search mode from this
       // shortcut to honor historical behaviour.
-      this.setSearchMode({
+      this.searchMode = {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
         entry: "shortcut",
-      });
+      };
       this.search("");
     } else {
       this.search(UrlbarTokenizer.RESTRICT.SEARCH);
@@ -1487,36 +1490,13 @@ class UrlbarInput {
    * Promotes the current search mode from preview mode to full search mode.
    */
   promoteSearchMode() {
-    if (!this.searchMode.isPreview) {
-      return;
-    }
+    let searchMode = this.searchMode;
+    if (searchMode?.isPreview) {
+      searchMode.isPreview = false;
+      this.searchMode = searchMode;
 
-    this.searchMode.isPreview = false;
-    let previousSearchMode = this._searchModesByBrowser.get(
-      this.window.gBrowser.selectedBrowser
-    );
-
-    if (ObjectUtils.deepEqual(previousSearchMode, this.searchMode)) {
-      // If we already have an exact match of this.searchMode in the cache, then
-      // we are restoring search mode for this tab. There is no need to
-      // overwrite _searchModesByBrowser or record telemetry again.
-      return;
-    }
-
-    this._searchModesByBrowser.set(
-      this.window.gBrowser.selectedBrowser,
-      this.searchMode
-    );
-
-    // Unselect the one-off search button to ensure UI consistency.
-    // Do this after updating the searchModes map, or we may start a race
-    // condition with the one-off buttons selection change handler.
-    this.view.oneOffSearchButtons.selectedButton = null;
-
-    try {
-      BrowserUsageTelemetry.recordSearchMode(this.searchMode);
-    } catch (ex) {
-      Cu.reportError(ex);
+      // Unselect the one-off search button to ensure UI consistency.
+      this.view.oneOffSearchButtons.selectedButton = null;
     }
   }
 
@@ -1548,6 +1528,14 @@ class UrlbarInput {
 
   get lastSearchString() {
     return this._lastSearchString;
+  }
+
+  get searchMode() {
+    return this.getSearchMode(this.window.gBrowser.selectedBrowser);
+  }
+
+  set searchMode(searchMode) {
+    this.setSearchMode(searchMode, this.window.gBrowser.selectedBrowser);
   }
 
   async updateLayoutBreakout() {
@@ -1714,7 +1702,7 @@ class UrlbarInput {
       return false;
     }
 
-    this.setSearchMode(searchMode);
+    this.searchMode = searchMode;
     this._setValue(result.payload.query?.trimStart() || "", false);
     if (startQuery) {
       this.startQuery({ allowAutofill: false });
@@ -1725,15 +1713,17 @@ class UrlbarInput {
   observe(subject, topic, data) {
     switch (topic) {
       case SearchUtils.TOPIC_ENGINE_MODIFIED: {
-        subject.QueryInterface(Ci.nsISearchEngine);
         switch (data) {
           case SearchUtils.MODIFIED_TYPE.CHANGED:
-          case SearchUtils.MODIFIED_TYPE.REMOVED:
-            if (this.searchMode?.engineName == subject.name) {
-              // We exit search mode if the current search mode engine was removed.
-              this.setSearchMode(this.searchMode);
+          case SearchUtils.MODIFIED_TYPE.REMOVED: {
+            let searchMode = this.searchMode;
+            let engine = subject.QueryInterface(Ci.nsISearchEngine);
+            if (searchMode?.engineName == engine.name) {
+              // Exit search mode if the current search mode engine was removed.
+              this.searchMode = searchMode;
             }
             break;
+          }
         }
         break;
       }
@@ -1741,6 +1731,7 @@ class UrlbarInput {
   }
 
   // Private methods below.
+
   _addObservers() {
     UrlbarPrefs.addObserver(this);
     Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED, true);
@@ -2510,6 +2501,75 @@ class UrlbarInput {
   }
 
   /**
+   * Updates the UI so that search mode is either entered or exited.
+   *
+   * @param {object} searchMode
+   *   See setSearchMode documentation.  If null, then search mode is exited.
+   */
+  _updateSearchModeUI(searchMode) {
+    let { engineName, source } = searchMode || {};
+
+    // As an optimization, bail if the given search mode is null but search mode
+    // is already inactive.  Otherwise browser_preferences_usage.js fails due to
+    // accessing the browser.urlbar.placeholderName pref (via the call to
+    // BrowserSearch.initPlaceHolder below) too many times.  That test does not
+    // enter search mode, but it triggers many calls to this method with a null
+    // search mode, via setURI.
+    if (!engineName && !source && !this.hasAttribute("searchmode")) {
+      return;
+    }
+
+    this._searchModeIndicatorTitle.textContent = "";
+    this._searchModeLabel.textContent = "";
+    this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
+    this._searchModeLabel.removeAttribute("data-l10n-id");
+
+    if (!engineName && !source) {
+      try {
+        // This will throw before DOMContentLoaded in
+        // PrivateBrowsingUtils.privacyContextFromWindow because
+        // aWindow.docShell is null.
+        this.window.BrowserSearch.initPlaceHolder(true);
+      } catch (ex) {}
+      this.removeAttribute("searchmode");
+      return;
+    }
+
+    if (engineName) {
+      // Set text content for the search mode indicator.
+      this._searchModeIndicatorTitle.textContent = engineName;
+      this._searchModeLabel.textContent = engineName;
+      this.document.l10n.setAttributes(
+        this.inputField,
+        UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
+          ? "urlbar-placeholder-search-mode-web-2"
+          : "urlbar-placeholder-search-mode-other-engine",
+        { name: engineName }
+      );
+    } else if (source) {
+      let sourceName = UrlbarUtils.getResultSourceName(source);
+      let l10nID = `urlbar-search-mode-${sourceName}`;
+      this.document.l10n.setAttributes(this._searchModeIndicatorTitle, l10nID);
+      this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
+      this.document.l10n.setAttributes(
+        this.inputField,
+        `urlbar-placeholder-search-mode-other-${sourceName}`
+      );
+    }
+
+    this.toggleAttribute("searchmode", true);
+    // Clear autofill.
+    if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
+      this.value = this.window.gBrowser.userTypedValue;
+    }
+    // Search mode should only be active when pageproxystate is invalid.
+    if (this.getAttribute("pageproxystate") == "valid") {
+      this.value = "";
+      this.setPageProxyState("invalid", true);
+    }
+  }
+
+  /**
    * Determines if we should select all the text in the Urlbar based on the
    *  Urlbar state, and whether the selection is empty.
    */
@@ -2567,7 +2627,7 @@ class UrlbarInput {
     // We exit previewed search mode on blur since the result previewing it is
     // implictly unselected.
     if (this.searchMode?.isPreview) {
-      this.setSearchMode({});
+      this.searchMode = null;
     }
 
     this.formatValue();
@@ -2616,7 +2676,7 @@ class UrlbarInput {
     }
 
     if (event.target == this._searchModeIndicatorClose && event.button != 2) {
-      this.setSearchMode({});
+      this.searchMode = null;
       this.view.oneOffSearchButtons.selectedButton = null;
       if (this.view.isOpen) {
         this.startQuery({
