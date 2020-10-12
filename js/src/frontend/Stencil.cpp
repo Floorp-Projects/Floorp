@@ -634,20 +634,22 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
     return false;
   }
 
-  if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
-    MOZ_ASSERT(input.enclosingScope == nullptr);
-    input.enclosingScope = &cx->global()->emptyGlobalScope();
-    MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
-               ModuleScope::EnclosingEnvironmentChainLength);
-  }
-
   if (input.lazy) {
+    MOZ_ASSERT(!stencil.scriptData[CompilationInfo::TopLevelIndex].isModule());
+
     FunctionsFromExistingLazy(*this, gcOutput);
 
 #ifdef DEBUG
     AssertDelazificationFieldsMatch(*this, gcOutput);
 #endif
   } else {
+    if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+      MOZ_ASSERT(input.enclosingScope == nullptr);
+      input.enclosingScope = &cx->global()->emptyGlobalScope();
+      MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
+                 ModuleScope::EnclosingEnvironmentChainLength);
+    }
+
     if (!InstantiateScriptSourceObject(cx, *this, gcOutput)) {
       return false;
     }
@@ -683,7 +685,7 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
 
   UpdateEmittedInnerFunctions(*this, gcOutput);
 
-  if (input.lazy == nullptr) {
+  if (!input.lazy) {
     LinkEnclosingLazyScript(*this, gcOutput);
   }
 
