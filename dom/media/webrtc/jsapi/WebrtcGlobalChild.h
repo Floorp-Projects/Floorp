@@ -18,15 +18,15 @@ class WebrtcGlobalChild : public PWebrtcGlobalChild {
   MOZ_IMPLICIT WebrtcGlobalChild();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvGetStatsRequest(
-      const int& aRequestId, const nsString& aPcIdFilter) override;
-  virtual mozilla::ipc::IPCResult RecvClearStatsRequest() override;
+  virtual mozilla::ipc::IPCResult RecvGetStats(
+      const nsString& aPcIdFilter, GetStatsResolver&& aResolve) override;
+  virtual mozilla::ipc::IPCResult RecvClearStats() override;
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we can't do MOZ_CAN_RUN_SCRIPT in
   // ipdl-generated things yet.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual mozilla::ipc::IPCResult RecvGetLogRequest(
-      const int& aReqestId, const nsCString& aPattern) override;
-  virtual mozilla::ipc::IPCResult RecvClearLogRequest() override;
+  virtual mozilla::ipc::IPCResult RecvGetLog(
+      const nsCString& aPattern, GetLogResolver&& aResolve) override;
+  virtual mozilla::ipc::IPCResult RecvClearLog() override;
   virtual mozilla::ipc::IPCResult RecvSetAecLogging(
       const bool& aEnable) override;
   virtual mozilla::ipc::IPCResult RecvSetDebugMode(const int& aLevel) override;
