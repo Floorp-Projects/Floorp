@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  line-height: 24px;
+  line-height: 22px;
   display: contents;
+  word-break: break-word;
 }
 
 :host * {
@@ -14,13 +15,12 @@
 label {
   text-align: end;
   margin-inline-end: 0;
-  color: var(--in-content-text-color);
-  font-weight: 700;
+  color: var(--in-content-deemphasized-text);
+  font-weight: 600;
   font-size: 1em;
 }
 
-.long-hex {
-  max-width: 100%;
+.hex {
   overflow: hidden;
   word-break: break-all;
   text-overflow: ellipsis;
@@ -33,12 +33,12 @@ label {
 }
 
 .long-hex:hover {
-  border-block: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(0, 0, 0, 0.06);
+  border-block: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-box-background-hover);
   padding: 0px;
 }
 
-.long-hex-open {
+.hex-open {
   white-space: normal;
 }
 
