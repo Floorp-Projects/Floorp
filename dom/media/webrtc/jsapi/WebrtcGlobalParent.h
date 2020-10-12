@@ -6,7 +6,6 @@
 #define _WEBRTC_GLOBAL_PARENT_H_
 
 #include "mozilla/dom/PWebrtcGlobalParent.h"
-#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsISupportsImpl.h"
 
@@ -26,18 +25,6 @@ class WebrtcGlobalParent : public PWebrtcGlobalParent {
 
   static WebrtcGlobalParent* Alloc();
   static bool Dealloc(WebrtcGlobalParent* aActor);
-
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we can't do MOZ_CAN_RUN_SCRIPT in
-  // ipdl-generated things yet.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual mozilla::ipc::IPCResult RecvGetStatsResult(
-      const int& aRequestId,
-      nsTArray<RTCStatsReportInternal>&& aStats) override;
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we can't do MOZ_CAN_RUN_SCRIPT in
-  // ipdl-generated things yet.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual mozilla::ipc::IPCResult RecvGetLogResult(
-      const int& aRequestId, const WebrtcGlobalLog& aLog) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
