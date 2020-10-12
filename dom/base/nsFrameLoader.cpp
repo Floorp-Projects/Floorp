@@ -177,6 +177,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mChildID(0),
       mRemoteType(NOT_REMOTE_TYPE),
       mDepthTooGreat(false),
+      mIsTopLevelContent(false),
       mDestroyCalled(false),
       mNeedsAsyncDestroy(false),
       mInSwap(false),
@@ -868,7 +869,7 @@ void nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
       CheckDocShellType(mOwnerContent, aItem, TypeAttrName(mOwnerContent)),
       "Correct ItemType should be set when creating BrowsingContext");
 
-  if (mPendingBrowsingContext->IsTopContent()) {
+  if (mIsTopLevelContent) {
     bool is_primary = mOwnerContent->AttrValueIs(
         kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
     if (aOwner) {
@@ -1237,11 +1238,13 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  bool ourHasHistory = mPendingBrowsingContext->IsTop() &&
-                       mPendingBrowsingContext->GetHasSessionHistory();
+  bool ourHasHistory =
+      mIsTopLevelContent && ourContent->IsXULElement(nsGkAtoms::browser) &&
+      !ourContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory);
   bool otherHasHistory =
-      aOther->mPendingBrowsingContext->IsTop() &&
-      aOther->mPendingBrowsingContext->GetHasSessionHistory();
+      aOther->mIsTopLevelContent &&
+      otherContent->IsXULElement(nsGkAtoms::browser) &&
+      !otherContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory);
   if (ourHasHistory != otherHasHistory) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1859,8 +1862,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   bool dynamicSubframeRemoval = false;
   if (mOwnerContent) {
     doc = mOwnerContent->OwnerDoc();
-    dynamicSubframeRemoval =
-        mPendingBrowsingContext->IsFrame() && !doc->InUnlinkOrDeletion();
+    dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
     doc->SetSubDocumentFor(mOwnerContent, nullptr);
     MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
     SetOwnerContent(nullptr);
@@ -1885,7 +1887,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   }
 
   // Let the tree owner know we're gone.
-  if (mPendingBrowsingContext->IsTopContent()) {
+  if (mIsTopLevelContent) {
     if (GetDocShell()) {
       nsCOMPtr<nsIDocShellTreeItem> parentItem;
       GetDocShell()->GetInProcessParent(getter_AddRefs(parentItem));
@@ -2126,7 +2128,9 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
   InvokeBrowsingContextReadyCallback();
 
-  if (mPendingBrowsingContext->IsTopContent()) {
+  mIsTopLevelContent = mPendingBrowsingContext->IsTopContent();
+
+  if (mIsTopLevelContent) {
     // Manually add ourselves to our parent's docshell, as BrowsingContext won't
     // have done this for us.
     //
@@ -2189,8 +2193,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   NS_ENSURE_STATE(mOwnerContent);
 
   // If we are an in-process browser, we want to set up our session history.
-  if (mPendingBrowsingContext->IsTopContent() &&
-      mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
+  if (mIsTopLevelContent && mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
     // XXX(nika): Set this up more explicitly?
     mPendingBrowsingContext->InitSessionHistory();
@@ -2897,8 +2900,7 @@ nsresult nsFrameLoader::EnsureMessageManager() {
     return NS_OK;
   }
 
-  if (!mPendingBrowsingContext->IsTopContent() && !OwnerIsMozBrowserFrame() &&
-      !IsRemoteFrame() &&
+  if (!mIsTopLevelContent && !OwnerIsMozBrowserFrame() && !IsRemoteFrame() &&
       !(mOwnerContent->IsXULElement() &&
         mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                    nsGkAtoms::forcemessagemanager,
