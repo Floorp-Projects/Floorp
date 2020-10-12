@@ -42,24 +42,23 @@
 #define JS_DESCR_SLOT_ALIGNMENT 2    // Alignment in bytes
 #define JS_DESCR_SLOT_SIZE 3         // Size in bytes, else 0
 #define JS_DESCR_SLOT_TYPROTO 4      // Prototype for instances, if any
-#define JS_DESCR_SLOT_ARRAYPROTO 5   // Lazily created prototype for arrays
-#define JS_DESCR_SLOT_TRACE_LIST 6   // List of references for use in tracing
+#define JS_DESCR_SLOT_TRACE_LIST 5   // List of references for use in tracing
 
 // Slots on scalars, references
-#define JS_DESCR_SLOT_TYPE 7  // Type code
+#define JS_DESCR_SLOT_TYPE 6  // Type code
 
 // Slots on array descriptors
-#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE 7
-#define JS_DESCR_SLOT_ARRAY_LENGTH 8
+#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE 6
+#define JS_DESCR_SLOT_ARRAY_LENGTH 7
 
 // Slots on struct type objects
-#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 7
-#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 8
-#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 9
-#define JS_DESCR_SLOT_STRUCT_FIELD_MUTS 10
+#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 6
+#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 7
+#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 8
+#define JS_DESCR_SLOT_STRUCT_FIELD_MUTS 9
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS 11
+#define JS_DESCR_SLOTS 10
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
