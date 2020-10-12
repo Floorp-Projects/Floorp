@@ -43,6 +43,18 @@ window.addEventListener("load", function onload(event) {
   }
 });
 
+function prefsTable(data) {
+  return sortedArrayFromObject(data).map(function([name, value]) {
+    return $.new("tr", [
+      $.new("td", name, "pref-name"),
+      // Very long preference values can cause users problems when they
+      // copy and paste them into some text editors.  Long values generally
+      // aren't useful anyway, so truncate them to a reasonable length.
+      $.new("td", String(value).substr(0, 120), "pref-value"),
+    ]);
+  });
+}
+
 // Fluent uses lisp-case IDs so this converts
 // the SentenceCase info IDs to lisp-case.
 const FLUENT_IDENT_REGEX = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
@@ -370,29 +382,27 @@ var snapshotFormatters = {
   },
 
   modifiedPreferences(data) {
-    $.append(
-      $("prefs-tbody"),
-      sortedArrayFromObject(data).map(function([name, value]) {
-        return $.new("tr", [
-          $.new("td", name, "pref-name"),
-          // Very long preference values can cause users problems when they
-          // copy and paste them into some text editors.  Long values generally
-          // aren't useful anyway, so truncate them to a reasonable length.
-          $.new("td", String(value).substr(0, 120), "pref-value"),
-        ]);
-      })
-    );
+    $.append($("prefs-tbody"), prefsTable(data));
   },
 
   lockedPreferences(data) {
-    $.append(
-      $("locked-prefs-tbody"),
-      sortedArrayFromObject(data).map(function([name, value]) {
-        return $.new("tr", [
-          $.new("td", name, "pref-name"),
-          $.new("td", String(value).substr(0, 120), "pref-value"),
-        ]);
-      })
+    $.append($("locked-prefs-tbody"), prefsTable(data));
+  },
+
+  printingPreferences(data) {
+    if (AppConstants.platform == "android") {
+      return;
+    }
+    const tbody = $("support-printing-prefs-tbody");
+    $.append(tbody, prefsTable(data));
+    $("support-printing-clear-settings-button").addEventListener(
+      "click",
+      function() {
+        for (let name in data) {
+          Services.prefs.clearUserPref(name);
+        }
+        tbody.textContent = "";
+      }
     );
   },
 
