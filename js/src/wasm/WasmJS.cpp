@@ -4363,7 +4363,7 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
     }
   }
 
-  if (GcTypesAvailable(cx) && !InitTypedObjectNamespace(cx, wasm)) {
+  if (GcTypesAvailable(cx) && !InitTypedObjectSlots(cx, wasm)) {
     return false;
   }
 
