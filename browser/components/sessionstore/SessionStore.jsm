@@ -1477,6 +1477,18 @@ var SessionStoreInternal = {
         } else if (
           data.reason != RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE
         ) {
+          let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
+
+          // Wait for restoreTabContentComplete to restore search mode and its
+          // search string in userTypedValue.  At this point, it's still
+          // possible for onLocationChange to be fired for the browser, which
+          // nulls userTypedValue and calls gURLBar.setURI().  If that happens,
+          // gURLBar.value is set to the empty string, and the user's search
+          // string is lost.
+          if (tabData.searchMode) {
+            break;
+          }
+
           // If the user was typing into the URL bar when we crashed, but hadn't hit
           // enter yet, then we just need to write that value to the URL bar without
           // loading anything. This must happen after the load, as the load will clear
@@ -1485,7 +1497,6 @@ var SessionStoreInternal = {
           // Note that we only want to do that if we're restoring state for reasons
           // _other_ than a navigateAndRestore remoteness-flip, as such a flip
           // implies that the user was navigating.
-          let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
           if (
             tabData.userTypedValue &&
             !tabData.userTypedClear &&
@@ -1504,7 +1515,22 @@ var SessionStoreInternal = {
           });
         }
         break;
-      case "SessionStore:restoreTabContentComplete":
+      case "SessionStore:restoreTabContentComplete": {
+        // Restore search mode and its search string in userTypedValue, if
+        // appropriate.
+        let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
+        if (tabData.searchMode) {
+          win.gURLBar.setSearchMode(tabData.searchMode, browser);
+          browser.userTypedValue = tabData.userTypedValue;
+          if (tab.selected) {
+            win.gURLBar.setURI();
+          }
+          TabStateCache.update(browser, {
+            searchMode: null,
+            userTypedValue: null,
+          });
+        }
+
         // This callback is used exclusively by tests that want to
         // monitor the progress of network loads.
         if (gDebuggingEnabled) {
@@ -1521,6 +1547,7 @@ var SessionStoreInternal = {
           "sessionstore-one-or-no-tab-restored"
         );
         break;
+      }
       case "SessionStore:crashedTabRevived":
         // The browser was revived by navigating to a different page
         // manually, so we remove it from the ignored browser set.
@@ -4789,6 +4816,7 @@ var SessionStoreInternal = {
       // collect it in TabState._collectBaseTabData().
       image: tabData.image || "",
       iconLoadingPrincipal: tabData.iconLoadingPrincipal || null,
+      searchMode: tabData.searchMode || null,
       userTypedValue: tabData.userTypedValue || "",
       userTypedClear: tabData.userTypedClear || 0,
     });
