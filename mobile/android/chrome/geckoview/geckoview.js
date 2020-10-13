@@ -651,7 +651,16 @@ function startup() {
     {
       name: "GeckoViewScroll",
       onEnable: {
-        frameScript: "chrome://geckoview/content/GeckoViewScrollChild.js",
+        actors: {
+          ScrollDelegate: {
+            child: {
+              moduleURI: "resource:///actors/ScrollDelegateChild.jsm",
+              events: {
+                mozvisualscroll: { mozSystemGroup: true },
+              },
+            },
+          },
+        },
       },
     },
     {
