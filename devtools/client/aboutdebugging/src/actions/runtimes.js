@@ -85,7 +85,7 @@ function connectRuntime(id) {
   // Create a random connection id to track the connection attempt in telemetry.
   const connectionId = (Math.random() * 100000) | 0;
 
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: CONNECT_RUNTIME_START, connectionId, id });
 
     // The preferences test-connection-timing-out-delay and test-connection-cancel-delay
@@ -200,7 +200,7 @@ function connectRuntime(id) {
 }
 
 function createThisFirefoxRuntime() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const thisFirefoxRuntime = {
       id: RUNTIMES.THIS_FIREFOX,
       isConnecting: false,
@@ -220,7 +220,7 @@ function createThisFirefoxRuntime() {
 }
 
 function disconnectRuntime(id, shouldRedirect = false) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: DISCONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
@@ -250,7 +250,7 @@ function disconnectRuntime(id, shouldRedirect = false) {
 }
 
 function updateConnectionPromptSetting(connectionPromptEnabled) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_START });
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
@@ -278,7 +278,7 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
 }
 
 function watchRuntime(id) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: WATCH_RUNTIME_START });
 
     try {
@@ -312,7 +312,7 @@ function watchRuntime(id) {
 }
 
 function unwatchRuntime(id) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const runtime = findRuntimeById(id, getState().runtimes);
 
     dispatch({ type: UNWATCH_RUNTIME_START, runtime });
@@ -394,7 +394,7 @@ function _isRuntimeValid(runtime, runtimes) {
 }
 
 function updateRemoteRuntimes(runtimes, type) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const currentRuntime = getCurrentRuntime(getState().runtimes);
 
     // Check if the updated remote runtimes should trigger a navigation out of the current
@@ -486,7 +486,7 @@ function updateRemoteRuntimes(runtimes, type) {
  * before leaving about:debugging.
  */
 function removeRuntimeListeners() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const allRuntimes = getAllRuntimes(getState().runtimes);
     const remoteRuntimes = allRuntimes.filter(
       r => r.type !== RUNTIMES.THIS_FIREFOX

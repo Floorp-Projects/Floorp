@@ -116,7 +116,7 @@ Synchronous actions are regular Redux actions. Their type is defined in the gene
 
 ```js
 function fooAction() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: FOO_START });
 
     try {

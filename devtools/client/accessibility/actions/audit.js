@@ -12,15 +12,15 @@ const {
   FILTERS,
 } = require("devtools/client/accessibility/constants");
 
-exports.filterToggle = filter => dispatch =>
+exports.filterToggle = filter => ({ dispatch }) =>
   dispatch({ filter, type: FILTER_TOGGLE });
 
-exports.auditing = filter => dispatch => {
+exports.auditing = filter => ({ dispatch }) => {
   const auditing = filter === FILTERS.ALL ? Object.values(FILTERS) : [filter];
   return dispatch({ auditing, type: AUDITING });
 };
 
-exports.audit = (auditFunc, filter) => dispatch =>
+exports.audit = (auditFunc, filter) => ({ dispatch }) =>
   auditFunc(filter, progress =>
     dispatch({ type: AUDIT_PROGRESS, progress })
   ).then(({ error, ancestries }) => {

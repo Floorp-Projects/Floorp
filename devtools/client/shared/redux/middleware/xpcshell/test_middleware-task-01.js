@@ -40,7 +40,7 @@ add_task(async function() {
 });
 
 function fetch1(data) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     equal(
       getState().length,
       0,

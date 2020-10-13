@@ -9,7 +9,7 @@ const {
 } = require("devtools/client/memory/constants");
 
 exports.toggleRecordingAllocationStacks = function(front) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     dispatch({ type: actions.TOGGLE_RECORD_ALLOCATION_STACKS_START });
 
     if (getState().recordingAllocationStacks) {
