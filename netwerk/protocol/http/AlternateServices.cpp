@@ -643,6 +643,8 @@ class WellKnownChecker {
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
     loadInfo->SetOriginAttributes(mCI->GetOriginAttributes());
+    // allow deprecated HTTP request from SystemPrincipal
+    loadInfo->SetAllowDeprecatedSystemRequests(true);
 
     RefPtr<nsHttpChannel> chan = new nsHttpChannel();
     nsresult rv;
