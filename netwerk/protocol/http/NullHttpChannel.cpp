@@ -143,6 +143,13 @@ NullHttpChannel::SetRequestHeader(const nsACString& aHeader,
 }
 
 NS_IMETHODIMP
+NullHttpChannel::SetNewReferrerInfo(const nsACString& aUrl,
+                                    nsIReferrerInfo::ReferrerPolicyIDL aPolicy,
+                                    bool aSendReferrer) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::SetEmptyRequestHeader(const nsACString& aHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -194,6 +194,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
                               nsACString& aValue) override;
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader,
                               const nsACString& aValue, bool aMerge) override;
+  NS_IMETHOD SetNewReferrerInfo(const nsACString& aUrl,
+                                nsIReferrerInfo::ReferrerPolicyIDL aPolicy,
+                                bool aSendReferrer) override;
   NS_IMETHOD SetEmptyRequestHeader(const nsACString& aHeader) override;
   NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor* visitor) override;
   NS_IMETHOD VisitNonDefaultRequestHeaders(

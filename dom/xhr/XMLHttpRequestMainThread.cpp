@@ -4032,6 +4032,12 @@ void RequestHeaders::ApplyToChannel(nsIHttpChannel* aChannel,
          header.mName.LowerCaseEqualsASCII("content-location"))) {
       continue;
     }
+    // Update referrerInfo to override referrer header in system privileged.
+    if (header.mName.LowerCaseEqualsASCII("referer")) {
+      DebugOnly<nsresult> rv = aChannel->SetNewReferrerInfo(
+          header.mValue, nsIReferrerInfo::ReferrerPolicyIDL::UNSAFE_URL, true);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
     if (header.mValue.IsEmpty()) {
       DebugOnly<nsresult> rv = aChannel->SetEmptyRequestHeader(header.mName);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
