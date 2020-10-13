@@ -134,7 +134,8 @@ use std::ops::Range;
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, raster_rect_to_device_pixels, ScaleOffset};
 use crate::filterdata::{FilterDataHandle};
-use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext, FrameVisibilityState};
+use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext};
+use crate::visibility::{VisibilityState, FrameVisibilityState};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
 #[cfg(feature = "capture")]
@@ -1733,10 +1734,10 @@ impl TileDescriptor {
 /// Stores both the world and devices rects for a single dirty rect.
 #[derive(Debug, Clone)]
 pub struct DirtyRegionRect {
-    /// World rect of this dirty region
-    pub world_rect: WorldRect,
     /// Bitfield for picture render tasks that draw this dirty region.
     pub visibility_mask: PrimitiveVisibilityMask,
+    /// The dirty region in space of the picture cache
+    pub rect_in_pic_space: PictureRect,
 }
 
 /// Represents the dirty region of a tile cache picture.
@@ -1747,30 +1748,51 @@ pub struct DirtyRegion {
 
     /// The overall dirty rect, a combination of dirty_rects
     pub combined: WorldRect,
+
+    /// Spatial node of the picture cache this region represents
+    spatial_node_index: SpatialNodeIndex,
 }
 
 impl DirtyRegion {
     /// Construct a new dirty region tracker.
     pub fn new(
+        spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         DirtyRegion {
             dirty_rects: Vec::with_capacity(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS),
             combined: WorldRect::zero(),
+            spatial_node_index,
         }
     }
 
     /// Reset the dirty regions back to empty
-    pub fn clear(&mut self) {
+    pub fn reset(
+        &mut self,
+        spatial_node_index: SpatialNodeIndex,
+    ) {
         self.dirty_rects.clear();
         self.combined = WorldRect::zero();
+        self.spatial_node_index = spatial_node_index;
     }
 
     /// Add a dirty region to the tracker. Returns the visibility mask that corresponds to
     /// this region in the tracker.
     pub fn add_dirty_region(
         &mut self,
-        world_rect: WorldRect,
+        rect_in_pic_space: PictureRect,
+        spatial_tree: &SpatialTree,
     ) -> PrimitiveVisibilityMask {
+        let map_pic_to_world = SpaceMapper::new_with_target(
+            ROOT_SPATIAL_NODE_INDEX,
+            self.spatial_node_index,
+            WorldRect::max_rect(),
+            spatial_tree,
+        );
+
+        let world_rect = map_pic_to_world
+            .map(&rect_in_pic_space)
+            .expect("bug");
+
         // Include this in the overall dirty rect
         self.combined = self.combined.union(&world_rect);
 
@@ -1781,8 +1803,8 @@ impl DirtyRegion {
             visibility_mask.set_visible(dirty_region_index);
 
             self.dirty_rects.push(DirtyRegionRect {
-                world_rect,
                 visibility_mask,
+                rect_in_pic_space,
             });
         } else {
             // If we run out of dirty regions, then force the last dirty region to
@@ -1793,7 +1815,7 @@ impl DirtyRegion {
             visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
 
             let combined_region = self.dirty_rects.last_mut().unwrap();
-            combined_region.world_rect = combined_region.world_rect.union(&world_rect);
+            combined_region.rect_in_pic_space = combined_region.rect_in_pic_space.union(&rect_in_pic_space);
         }
 
         visibility_mask
@@ -1804,29 +1826,43 @@ impl DirtyRegion {
     pub fn inflate(
         &self,
         inflate_amount: f32,
+        spatial_tree: &SpatialTree,
     ) -> DirtyRegion {
+        let map_pic_to_world = SpaceMapper::new_with_target(
+            ROOT_SPATIAL_NODE_INDEX,
+            self.spatial_node_index,
+            WorldRect::max_rect(),
+            spatial_tree,
+        );
+
         let mut dirty_rects = Vec::with_capacity(self.dirty_rects.len());
         let mut combined = WorldRect::zero();
 
         for rect in &self.dirty_rects {
-            let world_rect = rect.world_rect.inflate(inflate_amount, inflate_amount);
+            let rect_in_pic_space = rect.rect_in_pic_space.inflate(inflate_amount, inflate_amount);
+
+            let world_rect = map_pic_to_world
+                .map(&rect_in_pic_space)
+                .expect("bug");
+
             combined = combined.union(&world_rect);
             dirty_rects.push(DirtyRegionRect {
-                world_rect,
                 visibility_mask: rect.visibility_mask,
+                rect_in_pic_space,
             });
         }
 
         DirtyRegion {
             dirty_rects,
             combined,
+            spatial_node_index: self.spatial_node_index,
         }
     }
 
     /// Creates a record of this dirty region for exporting to test infrastructure.
     pub fn record(&self) -> RecordedDirtyRegion {
-        let mut rects: Vec<WorldRect> =
-            self.dirty_rects.iter().map(|r| r.world_rect).collect();
+        let mut rects: Vec<PictureRect> =
+            self.dirty_rects.iter().map(|r| r.rect_in_pic_space).collect();
         rects.sort_unstable_by_key(|r| (r.origin.y as usize, r.origin.x as usize));
         RecordedDirtyRegion { rects }
     }
@@ -1835,7 +1871,7 @@ impl DirtyRegion {
 /// A recorded copy of the dirty region for exporting to test infrastructure.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct RecordedDirtyRegion {
-    pub rects: Vec<WorldRect>,
+    pub rects: Vec<PictureRect>,
 }
 
 impl ::std::fmt::Display for RecordedDirtyRegion {
@@ -2357,7 +2393,7 @@ impl TileCacheInstance {
             spatial_node_comparer: SpatialNodeComparer::new(),
             color_bindings: FastHashMap::default(),
             old_color_bindings: FastHashMap::default(),
-            dirty_region: DirtyRegion::new(),
+            dirty_region: DirtyRegion::new(params.spatial_node_index),
             tile_size: PictureSize::zero(),
             tile_rect: TileRect::zero(),
             tile_bounds_p0: TileOffset::zero(),
@@ -3205,7 +3241,6 @@ impl TileCacheInstance {
         &mut self,
         prim_instance: &mut PrimitiveInstance,
         prim_spatial_node_index: SpatialNodeIndex,
-        prim_clip_chain: &ClipChainInstance,
         local_prim_rect: LayoutRect,
         frame_context: &FrameVisibilityContext,
         data_stores: &DataStores,
@@ -3215,10 +3250,11 @@ impl TileCacheInstance {
         color_bindings: &ColorBindingStorage,
         surface_stack: &[SurfaceIndex],
         composite_state: &mut CompositeState,
-    ) -> Option<PrimitiveVisibilityFlags> {
+    ) {
         // This primitive exists on the last element on the current surface stack.
         profile_scope!("update_prim_dependencies");
         let prim_surface_index = *surface_stack.last().unwrap();
+        let prim_clip_chain = &prim_instance.vis.clip_chain;
 
         self.map_local_to_surface.set_target_spatial_node(
             prim_spatial_node_index,
@@ -3228,12 +3264,12 @@ impl TileCacheInstance {
         // Map the primitive local rect into picture space.
         let prim_rect = match self.map_local_to_surface.map(&local_prim_rect) {
             Some(rect) => rect,
-            None => return None,
+            None => return,
         };
 
         // If the rect is invalid, no need to create dependencies.
         if prim_rect.size.is_empty() {
-            return None;
+            return;
         }
 
         // If the primitive is directly drawn onto this picture cache surface, then
@@ -3273,7 +3309,7 @@ impl TileCacheInstance {
                         rect.inflate(surface.inflation_factor, surface.inflation_factor)
                     }
                     None => {
-                        return None;
+                        return;
                     }
                 };
 
@@ -3289,7 +3325,7 @@ impl TileCacheInstance {
         // If the primitive is outside the tiling rects, it's known to not
         // be visible.
         if p0.x == p1.x || p0.y == p1.y {
-            return None;
+            return;
         }
 
         // Build the list of resources that this primitive has dependencies on.
@@ -3631,7 +3667,10 @@ impl TileCacheInstance {
             }
         }
 
-        Some(vis_flags)
+        prim_instance.vis.flags = vis_flags;
+        prim_instance.vis.state = VisibilityState::Coarse {
+            rect_in_pic_space: pic_clip_rect,
+        };
     }
 
     /// Print debug information about this picture cache to a tree printer.
@@ -3708,7 +3747,7 @@ impl TileCacheInstance {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
-        self.dirty_region.clear();
+        self.dirty_region.reset(self.spatial_node_index);
         self.subpixel_mode = self.calculate_subpixel_mode();
 
         let map_pic_to_world = SpaceMapper::new_with_target(
@@ -5298,7 +5337,10 @@ impl PicturePrimitive {
                             // Get the visibility mask bit(s) for this tile from the dirty region tracker. This must be done
                             // outside the if statement below, so that we include in the dirty region tiles that are handled
                             // by a background color only (no surface allocation).
-                            let tile_vis_mask = tile_cache.dirty_region.add_dirty_region(world_dirty_rect);
+                            let tile_vis_mask = tile_cache.dirty_region.add_dirty_region(
+                                tile.local_dirty_rect,
+                                frame_context.spatial_tree,
+                            );
 
                             // Ensure that this texture is allocated.
                             if let TileSurface::Texture { ref mut descriptor, ref mut visibility_mask } = tile.surface.as_mut().unwrap() {
@@ -5581,7 +5623,10 @@ impl PicturePrimitive {
         }
 
         if inflation_factor > 0.0 {
-            let inflated_region = frame_state.current_dirty_region().inflate(inflation_factor);
+            let inflated_region = frame_state.current_dirty_region().inflate(
+                inflation_factor,
+                frame_context.spatial_tree,
+            );
             frame_state.push_dirty_region(inflated_region);
             dirty_region_count += 1;
         }

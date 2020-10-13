@@ -398,9 +398,12 @@ impl FrameBuilder {
         // Push a default dirty region which culls primitives
         // against the screen world rect, in absence of any
         // other dirty regions.
-        let mut default_dirty_region = DirtyRegion::new();
+        let mut default_dirty_region = DirtyRegion::new(
+            ROOT_SPATIAL_NODE_INDEX,
+        );
         default_dirty_region.add_dirty_region(
-            frame_context.global_screen_world_rect,
+            frame_context.global_screen_world_rect.cast_unit(),
+            frame_context.spatial_tree,
         );
         frame_state.push_dirty_region(default_dirty_region);
 

@@ -30,7 +30,7 @@ use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
-use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags};
+use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, TransformedRectKind};
@@ -750,10 +750,6 @@ impl BatchBuilder {
                 continue;
             }
             for prim_instance in &pic.prim_list.prim_instances[cluster.prim_range()] {
-                if !prim_instance.is_visible() {
-                    continue;
-                }
-
                 // Add each run in this picture to the batch.
                 self.add_prim_to_batch(
                     prim_instance,
@@ -786,6 +782,7 @@ impl BatchBuilder {
         &mut self,
         prim_rect: LayoutRect,
         prim_info: &PrimitiveVisibility,
+        prim_vis_mask: PrimitiveVisibilityMask,
         z_id: ZBufferId,
         transform_id: TransformPaletteId,
         batch_features: BatchFeatures,
@@ -820,7 +817,6 @@ impl BatchBuilder {
 
         let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
         let transform_kind = transform_id.transform_kind();
-        let prim_vis_mask = prim_info.visibility_mask;
 
         self.add_segmented_prim_to_batch(
             None,
@@ -859,11 +855,21 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
+        let prim_vis_mask = match prim_instance.vis.state {
+            VisibilityState::Culled => {
+                return;
+            }
+            VisibilityState::Unset | VisibilityState::Coarse { .. } => {
+                panic!("bug: invalid visibility state");
+            }
+            VisibilityState::Detailed { visibility_mask } => {
+                visibility_mask
+            }
+        };
+
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
 
-        assert!(prim_instance.is_visible(),
-            "Invisible primitive {:?} shouldn't be added to the batch", prim_instance);
         let is_chased = prim_instance.is_chased();
 
         let transform_id = transforms
@@ -906,7 +912,6 @@ impl BatchBuilder {
             batch_features |= BatchFeatures::ANTIALIASING;
         }
 
-        let prim_vis_mask = prim_info.visibility_mask;
         let clip_task_address = ctx.get_prim_clip_task_address(
             prim_info.clip_task_index,
             render_tasks,
@@ -1375,6 +1380,11 @@ impl BatchBuilder {
                             };
                             let pic = &ctx.prim_store.pictures[child_pic_index.0];
 
+                            let child_visibility_mask = match child_prim_info.state {
+                                VisibilityState::Detailed { visibility_mask } => visibility_mask,
+                                _ => panic!("bug: culled prim should not be in child list"),
+                            };
+
                             // Get clip task, if set, for the picture primitive.
                             let child_clip_task_address = ctx.get_prim_clip_task_address(
                                 child_prim_info.clip_task_index,
@@ -1428,7 +1438,7 @@ impl BatchBuilder {
                                 z_id,
                                 prim_header_index,
                                 child.gpu_address,
-                                child_prim_info.visibility_mask,
+                                child_visibility_mask,
                             );
                         }
                     }
@@ -2135,6 +2145,7 @@ impl BatchBuilder {
                 if is_compositor_surface {
                     self.emit_placeholder(prim_rect,
                                           prim_info,
+                                          prim_vis_mask,
                                           z_id,
                                           transform_id,
                                           batch_features,
@@ -2258,6 +2269,7 @@ impl BatchBuilder {
                 if is_compositor_surface {
                     self.emit_placeholder(prim_rect,
                                           prim_info,
+                                          prim_vis_mask,
                                           z_id,
                                           transform_id,
                                           batch_features,

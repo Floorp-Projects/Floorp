@@ -35,7 +35,7 @@ use crate::segment::SegmentBuilder;
 use crate::space::SpaceMapper;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
 use crate::util::{clamp_to_scale_factor, pack_as_float, raster_rect_to_device_pixels};
-use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility};
+use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState, PrimitiveVisibilityMask};
 
 
 const MAX_MASK_SIZE: f32 = 4096.0;
@@ -72,32 +72,44 @@ pub fn prepare_primitives(
             let prim_instance_index = cluster.prim_range.start + idx;
 
             // First check for coarse visibility (if this primitive was completely off-screen)
-            // TODO(gw): Remove the coarse calculations based on world rect - we can use the
-            //           tile bounds calculated during prim deps instead.
-            if !prim_instance.is_visible() {
-                continue;
-            }
-
-            // The original clipped world rect was calculated during the initial visibility pass.
-            // However, it's possible that the dirty rect has got smaller, if tiles were not
-            // dirty. Intersecting with the dirty rect here eliminates preparing any primitives
-            // outside the dirty rect, and reduces the size of any off-screen surface allocations
-            // for clip masks / render tasks that we make.
-
-            // Clear the current visibiilty mask, and build a more detailed one based on the dirty rect
-            // regions below.
-            prim_instance.clear_visibility();
-            let dirty_region = frame_state.current_dirty_region();
-
-            for dirty_region in &dirty_region.dirty_rects {
-                if prim_instance.vis.clipped_world_rect.intersects(&dirty_region.world_rect) {
-                    prim_instance.vis.visibility_mask.include(dirty_region.visibility_mask);
+            match prim_instance.vis.state {
+                VisibilityState::Unset => {
+                    panic!("bug: invalid vis state");
                 }
-            }
+                VisibilityState::Culled => {
+                    continue;
+                }
+                VisibilityState::Coarse { ref rect_in_pic_space } => {
+                    // The original coarse state was calculated during the initial visibility pass.
+                    // However, it's possible that the dirty rect has got smaller, if tiles were not
+                    // dirty. Intersecting with the dirty rect here eliminates preparing any primitives
+                    // outside the dirty rect, and reduces the size of any off-screen surface allocations
+                    // for clip masks / render tasks that we make.
 
-            // Check again if the prim is now visible after considering the current dirty regions.
-            if !prim_instance.is_visible() {
-                continue;
+                    // Clear the current visibiilty mask, and build a more detailed one based on the dirty rect
+                    // regions below.
+                    let dirty_region = frame_state.current_dirty_region();
+                    let mut visibility_mask = PrimitiveVisibilityMask::empty();
+
+                    for dirty_region in &dirty_region.dirty_rects {
+                        if rect_in_pic_space.intersects(&dirty_region.rect_in_pic_space) {
+                            visibility_mask.include(dirty_region.visibility_mask);
+                        }
+                    }
+
+                    // Check again if the prim is now visible after considering the current dirty regions.
+                    if visibility_mask.is_empty() {
+                        prim_instance.clear_visibility();
+                        continue;
+                    } else {
+                        prim_instance.vis.state = VisibilityState::Detailed {
+                            visibility_mask,
+                        }
+                    }
+                }
+                VisibilityState::Detailed { .. } => {
+                    // Was already set to detailed (picture caching disabled or a root element)
+                }
             }
 
             let plane_split_anchor = PlaneSplitAnchor::new(cluster_index, prim_instance_index);
