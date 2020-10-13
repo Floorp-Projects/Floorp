@@ -249,8 +249,25 @@ int AndroidHardwareBuffer::Lock(uint64_t aUsage, const ARect* aRect,
                                                aRect, aOutVirtualAddress);
 }
 
-int AndroidHardwareBuffer::Unlock(int32_t* aFence) {
-  return AndroidHardwareBufferApi::Get()->Unlock(mNativeBuffer, aFence);
+int AndroidHardwareBuffer::Unlock() {
+  int rawFd = -1;
+  // XXX All tested recent Android devices did not return valid fence.
+  int ret = AndroidHardwareBufferApi::Get()->Unlock(mNativeBuffer, &rawFd);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ipc::FileDescriptor acquireFenceFd;
+  // The value -1 indicates that unlocking has already completed before
+  // the function returned and no further operations are necessary.
+  if (rawFd >= 0) {
+    acquireFenceFd = ipc::FileDescriptor(UniqueFileHandle(rawFd));
+  }
+
+  if (acquireFenceFd.IsValid()) {
+    SetAcquireFence(std::move(acquireFenceFd));
+  }
+  return 0;
 }
 
 int AndroidHardwareBuffer::SendHandleToUnixSocket(int aSocketFd) {
