@@ -252,9 +252,24 @@ class WebExecutorTest {
     }
 
     @Test
-    fun testAnonymous() {
+    fun testAnonymousSendCookies() {
+        val uptimeMillis = SystemClock.uptimeMillis()
+        val response = fetch(WebRequest("$TEST_ENDPOINT/cookies/set/uptimeMillis/$uptimeMillis"), GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS)
+
+        // We get redirected to /cookies which returns the cookies that were sent in the request
+        assertThat("URI should match", response.uri, equalTo("$TEST_ENDPOINT/cookies"))
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+
+        val body = response.getJSONBody()
+        assertThat("Cookies should not be set for the test server",
+                body.getJSONObject("cookies").length(),
+                equalTo(0))
+    }
+
+    @Test
+    fun testAnonymousGetCookies() {
         // Ensure a cookie is set for the test server
-        testCookies();
+        testCookies()
 
         val response = fetch(WebRequest("$TEST_ENDPOINT/cookies"),
                 GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS)
@@ -262,6 +277,31 @@ class WebExecutorTest {
         assertThat("Status code should match", response.statusCode, equalTo(200))
         val cookies = response.getJSONBody().getJSONObject("cookies")
         assertThat("Cookies should be empty", cookies.length(), equalTo(0))
+    }
+
+    @Test
+    fun testPrivateCookies() {
+        val uptimeMillis = SystemClock.uptimeMillis()
+        val response = fetch(WebRequest("$TEST_ENDPOINT/cookies/set/uptimeMillis/$uptimeMillis"), GeckoWebExecutor.FETCH_FLAGS_PRIVATE)
+
+        // We get redirected to /cookies which returns the cookies that were sent in the request
+        assertThat("URI should match", response.uri, equalTo("$TEST_ENDPOINT/cookies"))
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+
+        val body = response.getJSONBody()
+        assertThat("Cookies should be set for the test server",
+                body.getJSONObject("cookies").getString("uptimeMillis"),
+                equalTo(uptimeMillis.toString()))
+
+        val anotherBody = fetch(WebRequest("$TEST_ENDPOINT/cookies"), GeckoWebExecutor.FETCH_FLAGS_PRIVATE).getJSONBody()
+        assertThat("Body should match",
+                anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
+                equalTo(uptimeMillis.toString()))
+
+        val yetAnotherBody = fetch(WebRequest("$TEST_ENDPOINT/cookies")).getJSONBody()
+        assertThat("Cookies set in private session are not supposed to be seen in normal download",
+                yetAnotherBody.getJSONObject("cookies").length(),
+                equalTo(0))
     }
 
     @Test

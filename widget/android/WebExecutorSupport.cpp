@@ -25,6 +25,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Preferences.h"
 #include "GeckoViewStreamListener.h"
+#include "nsIPrivateBrowsingChannel.h"
 
 #include "nsNetUtil.h"  // for NS_NewURI, NS_NewChannel, NS_NewStreamLoader
 
@@ -376,6 +377,12 @@ nsresult WebExecutorSupport::CreateStreamLoader(
 
   if (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_ANONYMOUS) {
     channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
+  }
+
+  if (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_PRIVATE) {
+    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+    NS_ENSURE_TRUE(pbChannel, NS_ERROR_FAILURE);
+    pbChannel->SetPrivate(true);
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
