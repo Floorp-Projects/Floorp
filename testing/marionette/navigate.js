@@ -327,18 +327,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
         checkDone({ finished: true });
       };
 
-      // Certain commands like clickElement can cause a navigation. Setup a timer
-      // to check if a "beforeunload" event has been emitted within the given
-      // time frame. If not resolve the Promise.
-      if (!requireBeforeUnload) {
-        unloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        unloadTimer.initWithCallback(
-          onTimer,
-          TIMEOUT_BEFOREUNLOAD_EVENT,
-          Ci.nsITimer.TYPE_ONE_SHOT
-        );
-      }
-
       chromeWindow.addEventListener("TabClose", onUnload);
       chromeWindow.addEventListener("unload", onUnload);
       driver.dialogObserver.add(onDialogOpened);
@@ -347,6 +335,18 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
       try {
         await callback();
+
+        // Certain commands like clickElement can cause a navigation. Setup a timer
+        // to check if a "beforeunload" event has been emitted within the given
+        // time frame. If not resolve the Promise.
+        if (!requireBeforeUnload) {
+          unloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          unloadTimer.initWithCallback(
+            onTimer,
+            TIMEOUT_BEFOREUNLOAD_EVENT,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
+        }
       } catch (e) {
         checkDone({ finished: true, error: e });
       }
