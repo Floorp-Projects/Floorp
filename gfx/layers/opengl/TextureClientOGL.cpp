@@ -322,7 +322,7 @@ AndroidHardwareBufferTextureData::BorrowDrawTarget() {
 
 void AndroidHardwareBufferTextureData::OnForwardedToHost() {
   if (mIsLocked) {
-    mAndroidHardwareBuffer->Unlock(nullptr);
+    mAndroidHardwareBuffer->Unlock();
     mAddress = nullptr;
     mIsLocked = false;
   }

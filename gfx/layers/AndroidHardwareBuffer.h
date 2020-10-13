@@ -103,7 +103,7 @@ class AndroidHardwareBuffer
   virtual ~AndroidHardwareBuffer();
 
   int Lock(uint64_t aUsage, const ARect* aRect, void** aOutVirtualAddress);
-  int Unlock(int32_t* aFence);
+  int Unlock();
 
   int SendHandleToUnixSocket(int aSocketFd);
 
