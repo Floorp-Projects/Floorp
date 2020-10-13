@@ -36,8 +36,8 @@ class JSActorManager : public nsISupports {
    * Handle receiving a raw message from the other side.
    */
   void ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
-                         ipc::StructuredCloneData&& aData,
-                         ipc::StructuredCloneData&& aStack);
+                         Maybe<ipc::StructuredCloneData>&& aData,
+                         Maybe<ipc::StructuredCloneData>&& aStack);
 
  protected:
   /**

@@ -39,10 +39,9 @@ void JSProcessActorParent::Init(const nsACString& aName,
 
 JSProcessActorParent::~JSProcessActorParent() { MOZ_ASSERT(!mManager); }
 
-void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
-                                          ipc::StructuredCloneData&& aData,
-                                          ipc::StructuredCloneData&& aStack,
-                                          ErrorResult& aRv) {
+void JSProcessActorParent::SendRawMessage(
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError(
         nsPrintfCString("Actor '%s' cannot send message '%s' during shutdown.",
@@ -51,8 +50,14 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
-  if (NS_WARN_IF(
-          !AllowMessage(aMeta, aData.DataLength() + aStack.DataLength()))) {
+  size_t length = 0;
+  if (aData) {
+    length += aData->DataLength();
+  }
+  if (aStack) {
+    length += aStack->DataLength();
+  }
+  if (NS_WARN_IF(!AllowMessage(aMeta, length))) {
     aRv.ThrowDataError(nsPrintfCString(
         "Actor '%s' cannot send message '%s': message too long.",
         PromiseFlatCString(aMeta.actorName()).get(),
@@ -71,21 +76,31 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   }
 
   // Cross-process case - send data over ContentParent to other side.
-  ClonedMessageData msgData;
-  ClonedMessageData stackData;
-  if (NS_WARN_IF(
-          !aData.BuildClonedMessageDataForParent(contentParent, msgData)) ||
-      NS_WARN_IF(
-          !aStack.BuildClonedMessageDataForParent(contentParent, stackData))) {
-    aRv.ThrowDataCloneError(
-        nsPrintfCString("Actor '%s' cannot send message '%s': cannot clone.",
-                        PromiseFlatCString(aMeta.actorName()).get(),
-                        NS_ConvertUTF16toUTF8(aMeta.messageName()).get()));
-    return;
+  Maybe<ClonedMessageData> msgData;
+  if (aData) {
+    msgData.emplace();
+    if (NS_WARN_IF(
+            !aData->BuildClonedMessageDataForParent(contentParent, *msgData))) {
+      aRv.ThrowDataCloneError(
+          nsPrintfCString("Actor '%s' cannot send message '%s': cannot clone.",
+                          PromiseFlatCString(aMeta.actorName()).get(),
+                          NS_ConvertUTF16toUTF8(aMeta.messageName()).get()));
+      return;
+    }
+  }
+
+  Maybe<ClonedMessageData> stackData;
+  if (aStack) {
+    stackData.emplace();
+    if (!aStack->BuildClonedMessageDataForParent(contentParent, *stackData)) {
+      stackData.reset();
+    }
   }
 
   if (NS_WARN_IF(!contentParent->SendRawMessage(aMeta, msgData, stackData))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowOperationError(
+        nsPrintfCString("JSProcessActorParent send error in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 }
