@@ -295,8 +295,8 @@ mochitest-media:
             default: built-projects
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: ['socketprocess']
-            macosx.*64-ccov/.*: []
             default: ['fission', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size: large
@@ -374,6 +374,7 @@ mochitest-webgl1-core:
     virtualization: virtual-with-gpu
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: []
             macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
@@ -404,8 +405,8 @@ mochitest-webgl1-ext:
     virtualization: virtual-with-gpu
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: []
-            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -436,8 +437,8 @@ mochitest-webgl2-core:
     virtualization: virtual-with-gpu
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: []
-            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -466,6 +467,7 @@ mochitest-webgl2-ext:
     virtualization: virtual-with-gpu
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: []
             macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
@@ -491,6 +493,7 @@ mochitest-webgl2-deqp:
     virtualization: virtual-with-gpu
     variants:
         by-test-platform:
+            .*-ccov/.*: []
             android.*: []
             default: ['webgl-ipc']
     chunks: 4
