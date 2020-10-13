@@ -40,7 +40,7 @@ const {
 const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 function selectPage(page, runtimeId) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: SELECT_PAGE_START });
 
     try {
@@ -97,13 +97,13 @@ function updateDebugTargetCollapsibility(key, isCollapsed) {
 }
 
 function addNetworkLocation(location) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     NetworkLocationsModule.addNetworkLocation(location);
   };
 }
 
 function removeNetworkLocation(location) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     NetworkLocationsModule.removeNetworkLocation(location);
   };
 }
@@ -133,7 +133,7 @@ function updateAdbReady(isAdbReady) {
 }
 
 function updateNetworkLocations(locations) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: NETWORK_LOCATIONS_UPDATE_START });
     try {
       await dispatch(Actions.updateNetworkRuntimes(locations));
@@ -145,7 +145,7 @@ function updateNetworkLocations(locations) {
 }
 
 function installAdbAddon() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: ADB_ADDON_INSTALL_START });
 
     try {
@@ -160,7 +160,7 @@ function installAdbAddon() {
 }
 
 function uninstallAdbAddon() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: ADB_ADDON_UNINSTALL_START });
 
     try {
@@ -173,7 +173,7 @@ function uninstallAdbAddon() {
 }
 
 function scanUSBRuntimes() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     // do not re-scan if we are already doing it
     if (getState().ui.isScanningUsb) {
       return;

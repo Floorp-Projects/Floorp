@@ -21,7 +21,7 @@ const {
  * Toggle diffing mode on or off.
  */
 exports.toggleDiffing = function() {
-  return function(dispatch, getState) {
+  return function({ dispatch, getState }) {
     dispatch({
       type: actions.CHANGE_VIEW,
       newViewState: getState().diffing ? viewState.CENSUS : viewState.DIFFING,
@@ -58,7 +58,7 @@ const takeCensusDiff = (exports.takeCensusDiff = function(
   first,
   second
 ) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     assert(
       snapshotIsDiffable(first),
       `First snapshot must be in a diffable state, found ${first.state}`
@@ -142,7 +142,7 @@ const takeCensusDiff = (exports.takeCensusDiff = function(
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshDiffing = (exports.refreshDiffing = function(heapWorker) {
-  return function(dispatch, getState) {
+  return function({ dispatch, getState }) {
     if (getState().diffing.secondSnapshotId === null) {
       return;
     }
@@ -171,7 +171,7 @@ const refreshDiffing = (exports.refreshDiffing = function(heapWorker) {
  * @param {snapshotModel} snapshot
  */
 exports.selectSnapshotForDiffingAndRefresh = function(heapWorker, snapshot) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     assert(
       getState().diffing,
       "If we are selecting for diffing, we must be in diffing mode"

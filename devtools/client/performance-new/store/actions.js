@@ -63,7 +63,7 @@ exports.reportProfilerReady = (isSupportedPlatform, recordingState) => ({
  * @return {ThunkAction<void>}
  */
 function _dispatchAndUpdatePreferences(action) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     if (typeof action !== "object") {
       throw new Error(
         "This function assumes that the dispatched action is a simple object and " +
@@ -107,7 +107,7 @@ exports.changeEntries = entries =>
  * @return {ThunkAction<void>}
  */
 exports.changeFeatures = features => {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     let promptEnvRestart = null;
     if (selectors.getPageContext(getState()) === "aboutprofiling") {
       // TODO Bug 1615431 - The popup supported restarting the browser, but
@@ -189,7 +189,7 @@ exports.initializeStore = values => {
  * @return {ThunkAction<void>}
  */
 exports.startRecording = () => {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const recordingSettings = selectors.getRecordingSettings(getState());
     const perfFront = selectors.getPerfFront(getState());
     // In the case of the profiler popup, the startProfiler can be synchronous.
@@ -205,7 +205,7 @@ exports.startRecording = () => {
  * @return {ThunkAction<void>}
  */
 exports.getProfileAndStopProfiler = () => {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const perfFront = selectors.getPerfFront(getState());
     dispatch(changeRecordingState("request-to-get-profile-and-stop-profiler"));
     const profile = await perfFront.getProfileAndStopProfiler();
@@ -222,7 +222,7 @@ exports.getProfileAndStopProfiler = () => {
  * @return {ThunkAction<void>}
  */
 exports.stopProfilerAndDiscardProfile = () => {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const perfFront = selectors.getPerfFront(getState());
     dispatch(changeRecordingState("request-to-stop-profiler"));
 

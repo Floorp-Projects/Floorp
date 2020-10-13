@@ -8,7 +8,7 @@ const { actions } = require("devtools/client/memory/constants");
 const { refresh } = require("devtools/client/memory/actions/refresh");
 
 exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     dispatch(setCensusDisplay(display));
     await dispatch(refresh(heapWorker));
   };
