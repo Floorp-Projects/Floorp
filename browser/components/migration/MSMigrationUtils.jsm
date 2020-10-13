@@ -449,6 +449,7 @@ Bookmarks.prototype = {
     }
 
     if (
+      !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
       !MigrationUtils.isStartupMigration &&
       PlacesUtils.getChildCountForFolder(aDestFolderGuid) >
         PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
