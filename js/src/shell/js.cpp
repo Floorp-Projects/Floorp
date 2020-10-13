@@ -1846,6 +1846,9 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
   }
   if (v.isObject()) {
     RootedObject infoObject(cx, CreateScriptPrivate(cx));
+    if (!infoObject) {
+      return false;
+    }
     RootedValue elementValue(cx, v);
     if (!JS_WrapValue(cx, &elementValue)) {
       return false;
