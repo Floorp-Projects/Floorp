@@ -1,3 +1,115 @@
+# 5.3.1 (2020-07-31)
+
+Bug Fixes:
+- Fix `pip-20.2` compatibility issue that caused `pip-tools` to sometime fail to
+stabilize in a constant number of rounds
+([1194](https://github.com/jazzband/pip-tools/pull/1194)). Thanks @vphilippon
+
+# 5.3.0 (2020-07-26)
+
+Features:
+- Add `-h` alias for `--help` option to `pip-sync` and `pip-compile`
+([1163](https://github.com/jazzband/pip-tools/pull/1163)). Thanks @jan25
+- Add `pip>=20.2` support
+([1168](https://github.com/jazzband/pip-tools/pull/1168)). Thanks @atugushev
+- `pip-sync` now exists with code `1` on `--dry-run`
+([1172](https://github.com/jazzband/pip-tools/pull/1172)). Thanks @francisbrito
+- `pip-compile` now doesn't resolve constraints from `-c constraints.txt`that are not
+(yet) requirements
+ ([1175](https://github.com/jazzband/pip-tools/pull/1175)). Thanks @clslgrnc
+- Add `--reuse-hashes/--no-reuse-hashes` options to `pip-compile`
+ ([1177](https://github.com/jazzband/pip-tools/pull/1177)). Thanks @graingert
+
+# 5.2.1 (2020-06-09)
+
+Bug Fixes:
+- Fix a bug where `pip-compile` would lose some dependencies on update
+a `requirements.txt`
+([1159](https://github.com/jazzband/pip-tools/pull/1159)). Thanks @richafrank
+
+
+# 5.2.0 (2020-05-27)
+
+Features:
+- Show basename of URLs when `pip-compile` generates hashes in a verbose mode 
+([1113](https://github.com/jazzband/pip-tools/pull/1113)). Thanks @atugushev
+- Add `--emit-index-url/--no-emit-index-url` options to `pip-compile`
+([1130](https://github.com/jazzband/pip-tools/pull/1130)). Thanks @atugushev
+
+Bug Fixes:
+- Fix a bug where `pip-compile` would ignore some of package versions when
+`PIP_PREFER_BINARY` is set on
+([1119](https://github.com/jazzband/pip-tools/pull/1119)). Thanks @atugushev
+- Fix leaked URLs with credentials in the debug output of `pip-compile`.
+([1146](https://github.com/jazzband/pip-tools/pull/1146)). Thanks @atugushev
+- Fix a bug where URL requirements would have name collisions
+([1149](https://github.com/jazzband/pip-tools/pull/1149)). Thanks @geokala
+
+Deprecations:
+- Deprecate `--index/--no-index` in favor of `--emit-index-url/--no-emit-index-url`
+options in `pip-compile`
+([1130](https://github.com/jazzband/pip-tools/pull/1130)). Thanks @atugushev
+
+Other Changes:
+
+- Switch to `setuptools` declarative syntax through `setup.cfg`
+([1141](https://github.com/jazzband/pip-tools/pull/1141)). Thanks @jdufresne
+
+# 5.1.2 (2020-05-05)
+
+Bug Fixes:
+- Fix grouping of editables and non-editables requirements
+([1132](https://github.com/jazzband/pip-tools/pull/1132)). Thanks @richafrank
+
+# 5.1.1 (2020-05-01)
+
+Bug Fixes:
+- Fix a bug where `pip-compile` would generate hashes for `*.egg` files
+([#1122](https://github.com/jazzband/pip-tools/pull/1122)). Thanks @atugushev
+
+# 5.1.0 (2020-04-27)
+
+Features:
+- Show progress bar when downloading packages in `pip-compile` verbose mode
+([#949](https://github.com/jazzband/pip-tools/pull/949)). Thanks @atugushev
+- `pip-compile` now gets hashes from `PyPI` JSON API (if available) which significantly
+increases the speed of hashes generation
+([#1109](https://github.com/jazzband/pip-tools/pull/1109)). Thanks @atugushev
+
+# 5.0.0 (2020-04-16)
+
+Backwards Incompatible Changes:
+- `pip-tools` now requires `pip>=20.0` (previosly `8.1.x` - `20.0.x`). Windows users,
+  make sure to use `python -m pip install pip-tools` to avoid issues with `pip`
+  self-update from now on
+([#1055](https://github.com/jazzband/pip-tools/pull/1055)). Thanks @atugushev
+- `--build-isolation` option now set on by default for `pip-compile`
+([#1060](https://github.com/jazzband/pip-tools/pull/1060)). Thanks @hramezani
+
+Features:
+- Exclude requirements with non-matching markers from `pip-sync`
+([#927](https://github.com/jazzband/pip-tools/pull/927)). Thanks @AndydeCleyre
+- Add `pre-commit` hook for `pip-compile`
+([#976](https://github.com/jazzband/pip-tools/pull/976)). Thanks @atugushev
+- `pip-compile` and `pip-sync` now pass anything provided to the new `--pip-args` option on to `pip`
+([#1080](https://github.com/jazzband/pip-tools/pull/1080)). Thanks @AndydeCleyre
+- `pip-compile` output headers are now more accurate when `--` is used to escape filenames
+([#1080](https://github.com/jazzband/pip-tools/pull/1080)). Thanks @AndydeCleyre
+- Add `pip>=20.1` support
+([#1088](https://github.com/jazzband/pip-tools/pull/1088)). Thanks @atugushev
+
+Bug Fixes:
+- Fix a bug where editables that are both direct requirements and constraints wouldn't appear in `pip-compile` output
+([#1093](https://github.com/jazzband/pip-tools/pull/1093)). Thanks @richafrank
+- `pip-compile` now sorts format controls (`--no-binary/--only-binary`) to ensure consistent results
+([#1098](https://github.com/jazzband/pip-tools/pull/1098)). Thanks @richafrank
+
+Improved Documentation:
+- Add cross-environment usage documentation to `README`
+([#651](https://github.com/jazzband/pip-tools/pull/651)). Thanks @vphilippon
+- Add versions compatibility table to `README`
+([#1106](https://github.com/jazzband/pip-tools/pull/1106)). Thanks @atugushev
+
 # 4.5.1 (2020-02-26)
 
 Bug Fixes:

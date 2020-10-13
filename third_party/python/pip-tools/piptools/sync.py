@@ -4,8 +4,10 @@ import sys
 import tempfile
 from subprocess import check_call  # nosec
 
+from pip._internal.commands.freeze import DEV_PKGS
+from pip._internal.utils.compat import stdlib_pkgs
+
 from . import click
-from ._compat import DEV_PKGS, stdlib_pkgs
 from .exceptions import IncompatibleRequirements
 from .utils import (
     flat_map,
@@ -80,18 +82,19 @@ def merge(requirements, ignore_conflicts):
         # Limitation: URL requirements are merged by precise string match, so
         # "file:///example.zip#egg=example", "file:///example.zip", and
         # "example==1.0" will not merge with each other
-        key = key_from_ireq(ireq)
+        if ireq.match_markers():
+            key = key_from_ireq(ireq)
 
-        if not ignore_conflicts:
-            existing_ireq = by_key.get(key)
-            if existing_ireq:
-                # NOTE: We check equality here since we can assume that the
-                # requirements are all pinned
-                if ireq.specifier != existing_ireq.specifier:
-                    raise IncompatibleRequirements(ireq, existing_ireq)
+            if not ignore_conflicts:
+                existing_ireq = by_key.get(key)
+                if existing_ireq:
+                    # NOTE: We check equality here since we can assume that the
+                    # requirements are all pinned
+                    if ireq.specifier != existing_ireq.specifier:
+                        raise IncompatibleRequirements(ireq, existing_ireq)
 
-        # TODO: Always pick the largest specifier in case of a conflict
-        by_key[key] = ireq
+            # TODO: Always pick the largest specifier in case of a conflict
+            by_key[key] = ireq
     return by_key.values()
 
 
@@ -155,10 +158,12 @@ def sync(
     """
     Install and uninstalls the given sets of modules.
     """
+    exit_code = 0
+
     if not to_uninstall and not to_install:
         if verbose:
             click.echo("Everything up-to-date")
-        return 0
+        return exit_code
 
     pip_flags = []
     if not verbose:
@@ -170,16 +175,19 @@ def sync(
     if dry_run:
         if to_uninstall:
             click.echo("Would uninstall:")
-            for pkg in to_uninstall:
+            for pkg in sorted(to_uninstall):
                 click.echo("  {}".format(pkg))
 
         if to_install:
             click.echo("Would install:")
-            for ireq in to_install:
+            for ireq in sorted(to_install, key=key_from_ireq):
                 click.echo("  {}".format(format_requirement(ireq)))
+
+        exit_code = 1
 
     if ask and click.confirm("Would you like to proceed with these changes?"):
         dry_run = False
+        exit_code = 0
 
     if not dry_run:
         if to_uninstall:
@@ -212,4 +220,4 @@ def sync(
             finally:
                 os.unlink(tmp_req_file.name)
 
-    return 0
+    return exit_code
