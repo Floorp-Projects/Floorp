@@ -62,12 +62,6 @@ BrowserDOMWindow.prototype = {
   get tabCount() {
     return 1;
   },
-
-  isTabContentWindow(win) {
-    // This method is probably not needed anymore: bug 1602915
-    // In any case this gives us the default behavior.
-    return false;
-  },
 };
 
 window.browserDOMWindow = new BrowserDOMWindow();
