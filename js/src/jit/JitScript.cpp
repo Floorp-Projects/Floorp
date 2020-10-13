@@ -7,6 +7,7 @@
 #include "jit/JitScript-inl.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ScopeExit.h"
 
@@ -36,6 +37,8 @@
 
 using namespace js;
 using namespace js::jit;
+
+using mozilla::CheckedInt;
 
 /* static */
 size_t JitScript::NumTypeSets(JSScript* script) {
