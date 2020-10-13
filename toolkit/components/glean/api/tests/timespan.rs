@@ -38,6 +38,7 @@ fn smoke_test_timespan() {
 #[test]
 fn timespan_ipc() {
     let _lock = lock_test();
+    let _t = setup_glean(None);
 
     let common = CommonMetricData {
         name: "timespan_metric".into(),
