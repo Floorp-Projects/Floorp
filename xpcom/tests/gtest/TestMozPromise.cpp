@@ -256,6 +256,36 @@ TEST(MozPromise, PromiseAllResolve)
   });
 }
 
+TEST(MozPromise, PromiseAllResolveAsync)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  RunOnTaskQueue(queue, [queue]() -> void {
+    nsTArray<RefPtr<TestPromise>> promises;
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(22, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(32, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(42, __func__);
+    }));
+
+    TestPromise::All(queue, promises)
+        ->Then(
+            queue, __func__,
+            [queue](const CopyableTArray<int>& aResolveValues) -> void {
+              EXPECT_EQ(aResolveValues.Length(), 3UL);
+              EXPECT_EQ(aResolveValues[0], 22);
+              EXPECT_EQ(aResolveValues[1], 32);
+              EXPECT_EQ(aResolveValues[2], 42);
+              queue->BeginShutdown();
+            },
+            []() { EXPECT_TRUE(false); });
+  });
+}
+
 TEST(MozPromise, PromiseAllReject)
 {
   AutoTaskQueue atq;
@@ -275,6 +305,107 @@ TEST(MozPromise, PromiseAllReject)
               EXPECT_EQ(aRejectValue, 32.0);
               queue->BeginShutdown();
             });
+  });
+}
+
+TEST(MozPromise, PromiseAllRejectAsync)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  RunOnTaskQueue(queue, [queue]() -> void {
+    nsTArray<RefPtr<TestPromise>> promises;
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(22, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndReject(32.0, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(42, __func__);
+    }));
+    // Ensure that more than one rejection doesn't cause a crash (bug #1207312)
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndReject(52.0, __func__);
+    }));
+
+    TestPromise::All(queue, promises)
+        ->Then(
+            queue, __func__, []() { EXPECT_TRUE(false); },
+            [queue](float aRejectValue) -> void {
+              EXPECT_EQ(aRejectValue, 32.0);
+              queue->BeginShutdown();
+            });
+  });
+}
+
+TEST(MozPromise, PromiseAllSettled)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  RunOnTaskQueue(queue, [queue]() -> void {
+    nsTArray<RefPtr<TestPromise>> promises;
+    promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
+    promises.AppendElement(TestPromise::CreateAndReject(32.0, __func__));
+    promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
+    promises.AppendElement(TestPromise::CreateAndReject(52.0, __func__));
+
+    TestPromise::AllSettled(queue, promises)
+        ->Then(
+            queue, __func__,
+            [queue](const TestPromise::AllSettledPromiseType::ResolveValueType&
+                        aResolveValues) -> void {
+              EXPECT_EQ(aResolveValues.Length(), 4UL);
+              EXPECT_TRUE(aResolveValues[0].IsResolve());
+              EXPECT_EQ(aResolveValues[0].ResolveValue(), 22);
+              EXPECT_FALSE(aResolveValues[1].IsResolve());
+              EXPECT_EQ(aResolveValues[1].RejectValue(), 32.0);
+              EXPECT_TRUE(aResolveValues[2].IsResolve());
+              EXPECT_EQ(aResolveValues[2].ResolveValue(), 42);
+              EXPECT_FALSE(aResolveValues[3].IsResolve());
+              EXPECT_EQ(aResolveValues[3].RejectValue(), 52.0);
+              queue->BeginShutdown();
+            },
+            []() { EXPECT_TRUE(false); });
+  });
+}
+
+TEST(MozPromise, PromiseAllSettledAsync)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+
+  RunOnTaskQueue(queue, [queue]() -> void {
+    nsTArray<RefPtr<TestPromise>> promises;
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(22, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndReject(32.0, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndResolve(42, __func__);
+    }));
+    promises.AppendElement(InvokeAsync(queue, __func__, []() {
+      return TestPromise::CreateAndReject(52.0, __func__);
+    }));
+
+    TestPromise::AllSettled(queue, promises)
+        ->Then(
+            queue, __func__,
+            [queue](const TestPromise::AllSettledPromiseType::ResolveValueType&
+                        aResolveValues) -> void {
+              EXPECT_EQ(aResolveValues.Length(), 4UL);
+              EXPECT_TRUE(aResolveValues[0].IsResolve());
+              EXPECT_EQ(aResolveValues[0].ResolveValue(), 22);
+              EXPECT_FALSE(aResolveValues[1].IsResolve());
+              EXPECT_EQ(aResolveValues[1].RejectValue(), 32.0);
+              EXPECT_TRUE(aResolveValues[2].IsResolve());
+              EXPECT_EQ(aResolveValues[2].ResolveValue(), 42);
+              EXPECT_FALSE(aResolveValues[3].IsResolve());
+              EXPECT_EQ(aResolveValues[3].RejectValue(), 52.0);
+              queue->BeginShutdown();
+            },
+            []() { EXPECT_TRUE(false); });
   });
 }
 
