@@ -123,6 +123,29 @@ add_task(async function test_setCanaryClientIDs() {
   Assert.equal(KNOWN_UUID, clientID);
 });
 
+add_task(async function test_resetEcosystemClientID() {
+  await ClientID._reset();
+
+  let firstClientID = await ClientID.getClientID();
+  let firstEcosystemClientID = await ClientID.getEcosystemClientID();
+  Assert.ok(firstClientID);
+  Assert.ok(firstEcosystemClientID);
+
+  // We should reset the ecosystem client id, but not the main client id.
+  await ClientID.resetEcosystemClientID();
+  let secondClientID = await ClientID.getClientID();
+  let secondEcosystemClientID = await ClientID.getEcosystemClientID();
+  Assert.equal(firstClientID, secondClientID);
+  Assert.notEqual(firstEcosystemClientID, secondEcosystemClientID);
+
+  // The new id should have been persisted to disk.
+  await ClientID._reset();
+  let thirdClientID = await ClientID.getClientID();
+  let thirdEcosystemClientID = await ClientID.getEcosystemClientID();
+  Assert.equal(thirdClientID, secondClientID);
+  Assert.equal(thirdEcosystemClientID, secondEcosystemClientID);
+});
+
 add_task(async function test_removeClientIDs() {
   // We should get a valid UUID after reset
   await ClientID._reset();
