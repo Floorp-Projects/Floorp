@@ -6359,10 +6359,6 @@ nsBrowserAccess.prototype = {
     );
   },
 
-  isTabContentWindow(aWindow) {
-    return gBrowser.browsers.some(browser => browser.contentWindow == aWindow);
-  },
-
   canClose() {
     return CanCloseWindow();
   },
