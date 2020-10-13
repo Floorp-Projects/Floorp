@@ -898,6 +898,7 @@ static const unsigned MaxFunctionBytes = 7654321;
 
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
+static const unsigned MaxArgsForJitInlineCall = 8;
 static const unsigned MaxResultsForJitEntry = 1;
 static const unsigned MaxResultsForJitExit = 1;
 static const unsigned MaxResultsForJitInlineCall = MaxResultsForJitEntry;
