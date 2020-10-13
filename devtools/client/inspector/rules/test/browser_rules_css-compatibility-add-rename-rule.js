@@ -14,7 +14,7 @@ const TEST_URI = `
 <style>
   body {
     user-select: none;
-    -moz-appearance: none;
+    text-decoration-skip: none;
     clip: auto;
   }
 </style>
@@ -32,7 +32,7 @@ const TEST_DATA_INITIAL = [
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
         },
-        "-moz-appearance": {
+        "text-decoration-skip": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
         },
@@ -73,7 +73,7 @@ const TEST_DATA_ADD_RULE = [
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
         },
-        "-moz-appearance": {
+        "text-decoration-skip": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
         },
@@ -113,7 +113,7 @@ const TEST_DATA_RENAME_RULE = [
         "background-color": {
           value: "green",
         },
-        "-moz-appearance": {
+        "text-decoration-skip": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
         },
