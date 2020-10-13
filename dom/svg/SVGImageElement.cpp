@@ -147,6 +147,10 @@ nsresult SVGImageElement::LoadSVGImage(bool aForce, bool aNotify) {
   return LoadImage(href, aForce, aNotify, eImageLoadType_Normal);
 }
 
+bool SVGImageElement::ShouldLoadImage() const {
+  return LoadingEnabled() && OwnerDoc()->ShouldLoadImages();
+}
+
 //----------------------------------------------------------------------
 // EventTarget methods:
 
@@ -180,7 +184,9 @@ nsresult SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aName == nsGkAtoms::href && (aNamespaceID == kNameSpaceID_None ||
                                    aNamespaceID == kNameSpaceID_XLink)) {
     if (aValue) {
-      LoadSVGImage(true, aNotify);
+      if (ShouldLoadImage()) {
+        LoadSVGImage(true, aNotify);
+      }
     } else {
       CancelImageRequests(aNotify);
     }
@@ -209,8 +215,9 @@ nsresult SVGImageElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   nsImageLoadingContent::BindToTree(aContext, aParent);
 
-  if (mStringAttributes[HREF].IsExplicitlySet() ||
-      mStringAttributes[XLINK_HREF].IsExplicitlySet()) {
+  if ((mStringAttributes[HREF].IsExplicitlySet() ||
+       mStringAttributes[XLINK_HREF].IsExplicitlySet()) &&
+      ShouldLoadImage()) {
     nsContentUtils::AddScriptRunner(
         NewRunnableMethod("dom::SVGImageElement::MaybeLoadSVGImage", this,
                           &SVGImageElement::MaybeLoadSVGImage));
