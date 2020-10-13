@@ -9518,6 +9518,14 @@ if (AppConstants.NIGHTLY_BUILD) {
         return;
       }
 
+      const openNonFissionWindowOption = Services.prefs.getBoolPref(
+        "fission.openNonFissionWindowOption",
+        false
+      );
+      if (!openNonFissionWindowOption) {
+        return;
+      }
+
       let newFissionWindow = document.getElementById("Tools:FissionWindow");
       let newNonFissionWindow = document.getElementById(
         "Tools:NonFissionWindow"

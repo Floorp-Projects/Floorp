@@ -3612,6 +3612,13 @@
   value: true
   mirror: always
 
+# If true, show option for opening a non-Fission window in a menu, when Fission
+# is enabled.
+- name: fission.openNonFissionWindowOption
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
