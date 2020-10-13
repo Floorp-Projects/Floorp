@@ -8,6 +8,7 @@ import {
   MIN_RICH_FAVICON_SIZE,
   TOP_SITES_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS,
+  TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SOURCE,
 } from "./TopSitesConstants";
@@ -316,7 +317,10 @@ export class TopSite extends React.PureComponent {
       value.card_type = "search";
       value.search_vendor = this.props.link.hostname;
     }
-    if (this.props.link.type === SPOC_TYPE) {
+    if (
+      this.props.link.type === SPOC_TYPE ||
+      this.props.link.sponsored_position
+    ) {
       value.card_type = "spoc";
     }
     return { value };
@@ -404,10 +408,16 @@ export class TopSite extends React.PureComponent {
     const { link } = props;
     const isContextMenuOpen = props.activeIndex === props.index;
     const title = link.label || link.hostname;
-    const menuOptions =
-      link.type !== SPOC_TYPE
-        ? TOP_SITES_CONTEXT_MENU_OPTIONS
-        : TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS;
+    let menuOptions;
+    if (link.sponsored_position) {
+      menuOptions = TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS;
+    } else if (link.searchTopSite) {
+      menuOptions = TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS;
+    } else if (link.type === SPOC_TYPE) {
+      menuOptions = TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS;
+    } else {
+      menuOptions = TOP_SITES_CONTEXT_MENU_OPTIONS;
+    }
 
     return (
       <TopSiteLink
@@ -429,11 +439,7 @@ export class TopSite extends React.PureComponent {
               dispatch={props.dispatch}
               index={props.index}
               onUpdate={this.onMenuUpdate}
-              options={
-                link.searchTopSite
-                  ? TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS
-                  : menuOptions
-              }
+              options={menuOptions}
               site={link}
               shouldSendImpressionStats={link.type === SPOC_TYPE}
               siteInfo={this._getTelemetryInfo()}
