@@ -41,7 +41,7 @@ function test() {
     function(win) {
       is(
         win.document.getElementById("location").value,
-        "text/csv;foo,bar,foobar",
+        ".csv",
         "file name of download should match"
       );
       win.close();
