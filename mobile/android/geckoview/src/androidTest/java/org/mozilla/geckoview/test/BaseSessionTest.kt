@@ -188,6 +188,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         promise.value
     }
 
+    fun GeckoSession.flushApzRepaints() = sessionRule.flushApzRepaints(this)
+
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
 

@@ -35,6 +35,9 @@ const APIS = {
   SetResolutionAndScaleTo({ resolution }) {
     return browser.test.setResolutionAndScaleTo(resolution);
   },
+  FlushApzRepaints({ tab }) {
+    return browser.test.flushApzRepaints(tab.id);
+  },
 };
 
 port.onMessage.addListener(async message => {

@@ -8,7 +8,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -30,6 +29,7 @@ class PanZoomControllerTest : BaseSessionTest() {
             override fun onFirstContentfulPaint(session: GeckoSession) {
             }
         })
+        sessionRule.session.flushApzRepaints()
     }
 
     private fun waitForScroll(offset: Double, timeout: Double, param: String) {
@@ -244,6 +244,7 @@ class PanZoomControllerTest : BaseSessionTest() {
             override fun onFirstContentfulPaint(session: GeckoSession) {
             }
         })
+        sessionRule.session.flushApzRepaints()
     }
 
     private fun sendDownEvent(x: Float, y: Float): GeckoResult<Int> {
@@ -261,7 +262,6 @@ class PanZoomControllerTest : BaseSessionTest() {
         return result
     }
 
-    @Ignore // Intermittent failures, Bug 1660357
     @WithDisplay(width = 100, height = 100)
     @Test
     fun touchEventForResult() {

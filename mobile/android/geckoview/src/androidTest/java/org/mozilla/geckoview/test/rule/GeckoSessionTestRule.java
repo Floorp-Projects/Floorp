@@ -2135,6 +2135,13 @@ public class GeckoSessionTestRule implements TestRule {
         });
     }
 
+    /**
+     * Invokes nsIDOMWindowUtils.flushApzRepaints.
+     */
+    public void flushApzRepaints(final GeckoSession session) {
+        webExtensionApiCall(session, "FlushApzRepaints", null);
+    }
+
     private Object webExtensionApiCall(final @NonNull String apiName, final @NonNull SetArgs argsSetter) {
         return webExtensionApiCall(null, apiName, argsSetter);
     }
