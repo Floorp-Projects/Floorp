@@ -458,6 +458,11 @@ class nsFlexContainerFrame::FlexItem final {
   // Indicates whether this item's computed cross-size property is 'auto'.
   bool IsCrossSizeAuto() const;
 
+  // Indicates whether the cross-size property is set to something definite,
+  // for the purpose of intrinsic aspect ratio calculations.
+  bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
+                           const FlexboxAxisTracker& aAxisTracker) const;
+
   // Indicates whether this item's cross-size has been stretched (from having
   // "align-self: stretch" with an auto cross-size and no auto margins in the
   // cross axis).
@@ -1397,46 +1402,6 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
 
 // Static helper-functions for ResolveAutoFlexBasisAndMinSize():
 // -------------------------------------------------------------
-// Indicates whether the cross-size property is set to something definite,
-// for the purpose of intrinsic ratio calculations.
-// The logic here should be similar to the logic for isAutoISize/isAutoBSize
-// in nsContainerFrame::ComputeSizeWithIntrinsicDimensions().
-static bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
-                                const FlexboxAxisTracker& aAxisTracker) {
-  const nsStylePosition* pos = aItemReflowInput.mStylePosition;
-  const WritingMode containerWM = aAxisTracker.GetWritingMode();
-
-  if (aAxisTracker.IsColumnOriented()) {
-    // Column-oriented means cross axis is container's inline axis.
-    return !pos->ISize(containerWM).IsAuto();
-  }
-  // Else, we're row-oriented, which means cross axis is container's block
-  // axis. We need to use IsAutoBSize() to catch e.g. %-BSize applied to
-  // indefinite container BSize, which counts as auto.
-  nscoord cbBSize = aItemReflowInput.mCBReflowInput->ComputedBSize();
-  return !nsLayoutUtils::IsAutoBSize(pos->BSize(containerWM), cbBSize);
-}
-
-// If aFlexItem has a definite cross size, this function returns it, for usage
-// (in combination with an intrinsic ratio) for resolving the item's main size
-// or main min-size.
-static nscoord SpecifiedCrossSizeIfDefinite(
-    const FlexItem& aFlexItem, const ReflowInput& aItemReflowInput,
-    const FlexboxAxisTracker& aAxisTracker) {
-  if (aFlexItem.IsStretched()) {
-    // Definite cross-size, imposed via 'align-self:stretch' & flex container.
-    return aFlexItem.CrossSize();
-  }
-
-  if (IsCrossSizeDefinite(aItemReflowInput, aAxisTracker)) {
-    // Definite cross size.
-    return aFlexItem.CrossSize();
-  }
-
-  // Indefinite cross-size.
-  return NS_UNCONSTRAINEDSIZE;
-}
-
 // Convenience function; returns a main-size, given a cross-size and an
 // intrinsic ratio. The caller is responsible for ensuring that the passed-in
 // intrinsic ratio is not zero.
@@ -1545,15 +1510,11 @@ static nscoord PartiallyResolveAutoMinSize(
   // through the aspect ratio (if the item has an aspect ratio and a definite
   // cross size).
   nscoord transferredSizeSuggestion = nscoord_MAX;
-  if (aFlexItem.HasIntrinsicRatio()) {
+  if (aFlexItem.HasIntrinsicRatio() &&
+      aFlexItem.IsCrossSizeDefinite(aItemReflowInput, aAxisTracker)) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    const nscoord crossSize =
-        SpecifiedCrossSizeIfDefinite(aFlexItem, aItemReflowInput, aAxisTracker);
-
-    if (crossSize != NS_UNCONSTRAINEDSIZE) {
-      transferredSizeSuggestion = MainSizeFromAspectRatio(
-          crossSize, aFlexItem.IntrinsicRatio(), aAxisTracker);
-    }
+    transferredSizeSuggestion = MainSizeFromAspectRatio(
+        aFlexItem.CrossSize(), aFlexItem.IntrinsicRatio(), aAxisTracker);
 
     // Clamp the transferred size suggestion by any definite min and max
     // cross size converted through the aspect ratio.
@@ -1583,17 +1544,13 @@ static bool ResolveAutoFlexBasisFromRatio(
   //  - a definite cross size
   // then the flex base size is calculated from its inner cross size and the
   // flex item’s intrinsic aspect ratio.
-  if (aFlexItem.IntrinsicRatio()) {
+  if (aFlexItem.HasIntrinsicRatio() &&
+      aFlexItem.IsCrossSizeDefinite(aItemReflowInput, aAxisTracker)) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    const nscoord crossSize =
-        SpecifiedCrossSizeIfDefinite(aFlexItem, aItemReflowInput, aAxisTracker);
-    if (crossSize != NS_UNCONSTRAINEDSIZE) {
-      // We have a definite cross-size
-      nscoord mainSizeFromRatio = MainSizeFromAspectRatio(
-          crossSize, aFlexItem.IntrinsicRatio(), aAxisTracker);
-      aFlexItem.SetFlexBaseSizeAndMainSize(mainSizeFromRatio);
-      return true;
-    }
+    nscoord mainSizeFromRatio = MainSizeFromAspectRatio(
+        aFlexItem.CrossSize(), aFlexItem.IntrinsicRatio(), aAxisTracker);
+    aFlexItem.SetFlexBaseSizeAndMainSize(mainSizeFromRatio);
+    return true;
   }
   return false;
 }
@@ -2274,6 +2231,30 @@ bool FlexItem::IsCrossSizeAuto() const {
   // terms of our own WritingMode, mWM.)
   return IsInlineAxisCrossAxis() ? stylePos->ISize(mWM).IsAuto()
                                  : stylePos->BSize(mWM).IsAuto();
+}
+
+bool FlexItem::IsCrossSizeDefinite(
+    const ReflowInput& aItemReflowInput,
+    const FlexboxAxisTracker& aAxisTracker) const {
+  if (IsStretched()) {
+    // Definite cross-size, imposed via 'align-self:stretch' & flex container.
+    return true;
+  }
+
+  const nsStylePosition* pos = aItemReflowInput.mStylePosition;
+  const WritingMode containerWM = aAxisTracker.GetWritingMode();
+
+  // The logic here should be similar to the logic for isAutoISize/isAutoBSize
+  // in nsContainerFrame::ComputeSizeWithIntrinsicDimensions().
+  if (aAxisTracker.IsColumnOriented()) {
+    // Column-oriented means cross axis is container's inline axis.
+    return !pos->ISize(containerWM).IsAuto();
+  }
+  // Else, we're row-oriented, which means cross axis is container's block
+  // axis. We need to use IsAutoBSize() to catch e.g. %-BSize applied to
+  // indefinite container BSize, which counts as auto.
+  nscoord cbBSize = aItemReflowInput.mCBReflowInput->ComputedBSize();
+  return !nsLayoutUtils::IsAutoBSize(pos->BSize(containerWM), cbBSize);
 }
 
 uint32_t FlexItem::NumAutoMarginsInAxis(LogicalAxis aAxis) const {
