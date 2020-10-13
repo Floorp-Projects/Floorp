@@ -276,6 +276,8 @@
     <string name="preferences_override_fxa_server">Уласны сервер уліковых запісаў Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Уласны сервер сінхранізацыі</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Сервер уліковага запісу Firefox/сінхранізацыі зменены. Выхад з праграмы, каб прымяніць змены…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Уліковы запіс</string>
     <!-- Preference shown on banner to sign into account -->
@@ -489,9 +491,9 @@
     <string name="preference_gestures_website_pull_to_refresh">Пацягніце, каб абнавіць</string>
 
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Пракруціце, каб схаваць панэль інструментаў</string>
+    <string name="preference_gestures_dynamic_toolbar">Пракруціць, каб схаваць панэль інструментаў</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Пасуньце ўбок панэль інструментаў, каб пераключыць карткі</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Пасунуць убок панэль інструментаў, каб пераключыць карткі</string>
 
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Пасуньце ўверх панэль інструментаў, каб адкрыць карткі</string>
@@ -1275,6 +1277,8 @@
     <string name="etp_social_media_trackers_description">Абмяжоўвае мажлівасць сацыяльных сетак асочваць вашу дзейнасць у сеціве.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Міжсайтавыя кукі асочвання</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Блакуе файлы cookie, якія рэкламныя сеткі і аналітычныя кампаніі выкарыстоўваюць, каб аб’яднаць звесткі аглядання з многіх сайтаў.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Майнеры крыптавалют</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1467,7 +1471,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Маштабаванне на ўсіх сайтах</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Актываваць, каб дазволіць маштабаванне нават на тых вэб-сайтах, якія гэта забараняюць.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Уключыце, каб дазволіць маштабаванне нават на тых сайтах, якія гэта забараняюць.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Назва (А-Я)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1630,7 +1634,7 @@
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Паказаць найбольш наведаныя сайты</string>
+    <string name="top_sites_toggle_top_frecent_sites">Паказваць найбольш наведаныя сайты</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Выдаліць</string>
@@ -1645,4 +1649,6 @@
     <string name="no_collections_description1">Групуйце падобныя пошукі, сайты і карткі для хуткага доступу.</string>
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">Вы ўвайшлі як %s у іншым браўзеры Firefox на гэтым тэлефоне. Ці хочаце аўтарызавацца з дапамогай гэтага ўліковага запісу?</string>
-    </resources>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Вы можаце лёгка дадаць гэты вэб-сайт на хатні экран свайго тэлефона, каб мець да яго імгненны доступ і аглядаць хутчэй, нібыта гэта асобная праграма.</string>
+</resources>

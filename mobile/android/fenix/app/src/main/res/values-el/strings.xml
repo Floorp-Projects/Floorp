@@ -351,12 +351,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ειδοποιήσεις</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Προσαρμοσμένη συλλογή προσθέτων</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Ακύρωση</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Όνομα συλλογής</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Κάτοχος συλλογής (ID χρήστη)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Η συλλογή προσθέτων τροποποιήθηκε. Κλείσιμο εφαρμογής για εφαρμογή αλλαγών…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -810,6 +818,8 @@
     <string name="preference_phone_feature_location">Τοποθεσία</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Ειδοποιήσεις</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Μόνιμη αποθήκευση</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Ερώτηση για αποδοχή</string>
     <!-- Label that indicates that a permission must be blocked -->
