@@ -9,27 +9,12 @@ const { Ci, Cu } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
-const {
-  highlighterSpec,
-  customHighlighterSpec,
-} = require("devtools/shared/specs/highlighters");
+const { customHighlighterSpec } = require("devtools/shared/specs/highlighters");
 
 loader.lazyRequireGetter(
   this,
   "isXUL",
   "devtools/server/actors/highlighters/utils/markup",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isDocumentReady",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "BoxModelHighlighter",
-  "devtools/server/actors/highlighters/box-model",
   true
 );
 
@@ -66,146 +51,6 @@ const register = (typeName, modulePath) => {
 exports.register = register;
 
 /**
- * The Highlighter is the server-side entry points for any tool that wishes to
- * highlight elements in some way in the content document.
- *
- * A little bit of vocabulary:
- * - <something>HighlighterActor classes are the actors that can be used from
- *   the client. They do very little else than instantiate a given
- *   <something>Highlighter and use it to highlight elements.
- * - <something>Highlighter classes aren't actors, they're just JS classes that
- *   know how to create and attach the actual highlighter elements on top of the
- *   content
- *
- * The most used highlighter actor is the HighlighterActor which can be
- * conveniently retrieved via the InspectorActor's 'getHighlighter' method.
- * The InspectorActor will always return the same instance of
- * HighlighterActor if asked several times and this instance is used in the
- * toolbox to highlighter elements's box-model from the markup-view,
- * box model view, console, debugger, ... as well as select elements with the
- * pointer (pick).
- *
- * Other types of highlighter actors exist and can be accessed via the
- * InspectorActor's 'getHighlighterByType' method.
- */
-
-/**
- * The HighlighterActor class
- */
-exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
-  initialize: function(inspector, autohide) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this._inspector = inspector;
-    this._targetActor = this._inspector.targetActor;
-    this._highlighterEnv = new HighlighterEnvironment();
-    this._highlighterEnv.initFromTargetActor(this._targetActor);
-
-    this._onNavigate = this._onNavigate.bind(this);
-    // Listen to navigation events to switch from the BoxModelHighlighter to the
-    // SimpleOutlineHighlighter, and back, if the top level window changes.
-    this._targetActor.on("navigate", this._onNavigate);
-  },
-
-  get conn() {
-    return this._inspector && this._inspector.conn;
-  },
-
-  /**
-   * Get an instance of the box model highlighter.
-   */
-  get instance() {
-    return this._highlighter;
-  },
-
-  form: function() {
-    return {
-      actor: this.actorID,
-    };
-  },
-
-  initializeInstance() {
-    // _createHighlighter will resolve this promise once the highlighter
-    // instance is created.
-    const onInitialized = new Promise(resolve => {
-      this._initialized = resolve;
-    });
-    // Only try to create the highlighter instance when the document is loaded,
-    // otherwise, wait for the navigate event to fire.
-    const doc = this._targetActor.window.document;
-    if (doc.documentElement && isDocumentReady(doc)) {
-      this._createHighlighter();
-    }
-
-    return onInitialized;
-  },
-
-  _createHighlighter: function() {
-    this._highlighter = new BoxModelHighlighter(
-      this._highlighterEnv,
-      this._inspector
-    );
-    this._initialized();
-  },
-
-  _destroyHighlighter: function() {
-    if (this._highlighter) {
-      this._highlighter.destroy();
-      this._highlighter = null;
-    }
-  },
-
-  _onNavigate: function({ isTopLevel }) {
-    // Skip navigation events for non top-level windows, or if the document
-    // doesn't exist anymore.
-    if (!isTopLevel || !this._targetActor.window.document.documentElement) {
-      return;
-    }
-
-    this._destroyHighlighter();
-    this._createHighlighter();
-  },
-
-  destroy: function() {
-    protocol.Actor.prototype.destroy.call(this);
-
-    this.hideBoxModel();
-    this._destroyHighlighter();
-    this._targetActor.off("navigate", this._onNavigate);
-
-    this._highlighterEnv.destroy();
-    this._highlighterEnv = null;
-
-    this._inspector = null;
-    this._targetActor = null;
-  },
-
-  /**
-   * Display the box model highlighting on a given NodeActor.
-   * There is only one instance of the box model highlighter, so calling this
-   * method several times won't display several highlighters, it will just move
-   * the highlighter instance to these nodes.
-   *
-   * @param NodeActor The node to be highlighted
-   * @param Options See the request part for existing options. Note that not
-   * all options may be supported by all types of highlighters.
-   */
-  showBoxModel: function(node, options = {}) {
-    if (!node || !this._highlighter.show(node.rawNode, options)) {
-      this._highlighter.hide();
-    }
-  },
-
-  /**
-   * Hide the box model highlighting if it was shown before
-   */
-  hideBoxModel: function() {
-    if (this._highlighter) {
-      this._highlighter.hide();
-    }
-  },
-});
-
 /**
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
