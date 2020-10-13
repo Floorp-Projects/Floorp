@@ -29,17 +29,17 @@ add_task(async function test_close_indicator() {
   info("Opening first tab");
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   info("Sharing camera, microphone and screen");
-  await shareDevices(tab1.linkedBrowser, true, true, true);
+  await shareDevices(tab1.linkedBrowser, true, true, SHARE_SCREEN);
 
   info("Opening second tab");
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   info("Sharing camera and screen");
-  await shareDevices(tab2.linkedBrowser, true, false, true);
+  await shareDevices(tab2.linkedBrowser, true, false, SHARE_SCREEN);
 
   info("Opening third tab");
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   info("Sharing screen");
-  await shareDevices(tab3.linkedBrowser, false, false, true);
+  await shareDevices(tab3.linkedBrowser, false, false, SHARE_SCREEN);
 
   info("Opening fourth tab");
   let tab4 = await BrowserTestUtils.openNewForegroundTab(

@@ -486,13 +486,18 @@ const WebRTCIndicator = {
     } else if (type == "Microphone") {
       activeStreams = webrtcUI.getActiveStreams(false, true, false);
     } else if (type == "Screen") {
-      activeStreams = webrtcUI.getActiveStreams(false, false, true);
+      activeStreams = webrtcUI.getActiveStreams(false, false, true, true);
       type = webrtcUI.showScreenSharingIndicator;
     }
 
     let bundle = Services.strings.createBundle(
       "chrome://browser/locale/webrtcIndicator.properties"
     );
+
+    if (!activeStreams.length) {
+      event.preventDefault();
+      return;
+    }
 
     if (activeStreams.length == 1) {
       let stream = activeStreams[0];

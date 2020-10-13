@@ -42,6 +42,9 @@ const INDICATOR_PATH = USING_LEGACY_INDICATOR
 
 const IS_MAC = AppConstants.platform == "macosx";
 
+const SHARE_SCREEN = 1;
+const SHARE_WINDOW = 2;
+
 let observerTopics = [
   "getUserMedia:response:allow",
   "getUserMedia:revoke",
@@ -976,11 +979,12 @@ async function runTests(tests, options = {}) {
  * @param {<xul:browser} browser - The browser to share devices with.
  * @param {boolean} camera - True to share a camera device.
  * @param {boolean} mic - True to share a microphone device.
- * @param {boolean} screen - True to share a display device.
+ * @param {Number} [screenOrWin] - One of either SHARE_WINDOW or SHARE_SCREEN
+ *   to share a window or screen. Defaults to neither.
  * @return {Promise}
  * @resolves {undefined} - Once the sharing is complete.
  */
-async function shareDevices(browser, camera, mic, screen) {
+async function shareDevices(browser, camera, mic, screenOrWin = 0) {
   if (camera || mic) {
     let promise = promisePopupNotificationShown(
       "webRTC-shareDevices",
@@ -1003,7 +1007,7 @@ async function shareDevices(browser, camera, mic, screen) {
     await promise;
   }
 
-  if (screen) {
+  if (screenOrWin) {
     let promise = promisePopupNotificationShown(
       "webRTC-shareDevices",
       null,
@@ -1017,9 +1021,29 @@ async function shareDevices(browser, camera, mic, screen) {
 
     let document = window.document;
 
-    // Select one of the windows / screens. It doesn't really matter which.
     let menulist = document.getElementById("webRTC-selectWindow-menulist");
-    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
+    let displayMediaSource;
+
+    if (screenOrWin == SHARE_SCREEN) {
+      displayMediaSource = "screen";
+    } else if (screenOrWin == SHARE_WINDOW) {
+      displayMediaSource = "window";
+    } else {
+      throw new Error("Got an invalid argument to shareDevices.");
+    }
+
+    let menuitem = null;
+    for (let i = 0; i < menulist.itemCount; ++i) {
+      let current = menulist.getItemAtIndex(i);
+      if (current.mediaSource == displayMediaSource) {
+        menuitem = current;
+        break;
+      }
+    }
+
+    Assert.ok(menuitem, "Should have found an appropriate display menuitem");
+    menuitem.doCommand();
+
     let notification = window.PopupNotifications.panel.firstElementChild;
 
     let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");

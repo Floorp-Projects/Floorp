@@ -42,7 +42,7 @@ add_task(async function test_stop_sharing() {
       browser,
       true /* camera */,
       true /* microphone */,
-      true /* screen */
+      SHARE_SCREEN
     );
 
     let indicator = await indicatorPromise;
@@ -76,12 +76,12 @@ add_task(async function test_stop_sharing_multiple() {
   info("Opening first tab");
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   info("Sharing camera, microphone and screen");
-  await shareDevices(tab1.linkedBrowser, true, true, true);
+  await shareDevices(tab1.linkedBrowser, true, true, SHARE_SCREEN);
 
   info("Opening second tab");
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   info("Sharing camera and screen");
-  await shareDevices(tab2.linkedBrowser, true, false, true);
+  await shareDevices(tab2.linkedBrowser, true, false, SHARE_SCREEN);
 
   let indicator = await indicatorPromise;
 
