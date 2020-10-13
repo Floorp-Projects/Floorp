@@ -5,13 +5,14 @@
 package mozilla.components.feature.search
 
 import android.content.Context
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Contains use cases related to the search feature.
@@ -23,7 +24,7 @@ import mozilla.components.browser.state.store.BrowserStore
 class SearchUseCases(
     context: Context,
     store: BrowserStore,
-    searchEngineManager: SearchEngineManager,
+    defaultSearchEngineProvider: DefaultSearchEngineProvider,
     sessionManager: SessionManager,
     onNoSession: (String) -> Session = { url ->
         Session(url).apply { sessionManager.add(this) }
@@ -43,10 +44,12 @@ class SearchUseCases(
     class DefaultSearchUseCase(
         private val context: Context,
         private val store: BrowserStore,
-        private val searchEngineManager: SearchEngineManager,
+        private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
         private val sessionManager: SessionManager,
         private val onNoSession: (String) -> Session
     ) : SearchUseCase {
+        private val logger = Logger("DefaultSearchUseCase")
+
         /**
          * Triggers a search in the currently selected session.
          */
@@ -73,7 +76,12 @@ class SearchUseCases(
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
-            } ?: searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
+            } ?: defaultSearchEngineProvider.getDefaultSearchEngine()?.buildSearchUrl(searchTerms)
+
+            if (searchUrl == null) {
+                logger.warn("No default search engine available to perform search")
+                return
+            }
 
             val searchSession = session ?: onNoSession.invoke(searchUrl)
 
@@ -89,10 +97,12 @@ class SearchUseCases(
     class NewTabSearchUseCase(
         private val context: Context,
         private val store: BrowserStore,
-        private val searchEngineManager: SearchEngineManager,
+        private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
         private val sessionManager: SessionManager,
         private val isPrivate: Boolean
     ) : SearchUseCase {
+        private val logger = Logger("NewTabSearchUseCase")
+
         override fun invoke(
             searchTerms: String,
             searchEngine: SearchEngine?,
@@ -129,7 +139,12 @@ class SearchUseCases(
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
-            } ?: searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
+            } ?: defaultSearchEngineProvider.getDefaultSearchEngine()?.buildSearchUrl(searchTerms)
+
+            if (searchUrl == null) {
+                logger.warn("No default search engine available to perform search")
+                return
+            }
 
             val session = Session(searchUrl, private, source)
             session.searchTerms = searchTerms
@@ -144,14 +159,14 @@ class SearchUseCases(
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(context, store, searchEngineManager, sessionManager, onNoSession)
+        DefaultSearchUseCase(context, store, defaultSearchEngineProvider, sessionManager, onNoSession)
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(context, store, searchEngineManager, sessionManager, false)
+        NewTabSearchUseCase(context, store, defaultSearchEngineProvider, sessionManager, false)
     }
 
     val newPrivateTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(context, store, searchEngineManager, sessionManager, true)
+        NewTabSearchUseCase(context, store, defaultSearchEngineProvider, sessionManager, true)
     }
 }

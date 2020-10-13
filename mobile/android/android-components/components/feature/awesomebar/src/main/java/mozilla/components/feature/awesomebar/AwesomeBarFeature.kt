@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.view.View
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.state.store.BrowserStore
@@ -121,7 +122,7 @@ class AwesomeBarFeature(
     @Suppress("LongParameterList")
     fun addSearchProvider(
         context: Context,
-        searchEngineManager: SearchEngineManager,
+        defaultSearchEngineProvider: DefaultSearchEngineProvider,
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
         limit: Int = 15,
@@ -131,7 +132,7 @@ class AwesomeBarFeature(
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchSuggestionProvider(
             context,
-            searchEngineManager,
+            defaultSearchEngineProvider,
             searchUseCase,
             fetchClient,
             limit,
@@ -152,13 +153,13 @@ class AwesomeBarFeature(
      * @param showDescription whether or not to add the search engine name as description.
      */
     fun addSearchActionProvider(
-        searchEngineGetter: suspend () -> SearchEngine,
+        defaultSearchEngineProvider: DefaultSearchEngineProvider,
         searchUseCase: SearchUseCases.SearchUseCase,
         icon: Bitmap? = null,
         showDescription: Boolean = false
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchActionProvider(
-            searchEngineGetter,
+            defaultSearchEngineProvider,
             searchUseCase,
             icon,
             showDescription

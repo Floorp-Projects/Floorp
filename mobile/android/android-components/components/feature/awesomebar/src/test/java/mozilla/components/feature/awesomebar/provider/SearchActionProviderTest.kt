@@ -5,6 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.search.DefaultSearchEngineProvider
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -29,7 +31,10 @@ class SearchActionProviderTest {
     @Test
     fun `provider returns suggestion matching input`() {
         val provider = SearchActionProvider(
-            searchEngineGetter = { mock() },
+            defaultSearchEngineProvider = object : DefaultSearchEngineProvider {
+                override fun getDefaultSearchEngine(): SearchEngine? = mock()
+                override suspend fun retrieveDefaultSearchEngine(): SearchEngine? = mock()
+            },
             searchUseCase = mock()
         )
         val suggestions = runBlocking { provider.onInputChanged("firefox") }

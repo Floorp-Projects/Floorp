@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.SearchEngineParser
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -103,7 +104,11 @@ class SearchSuggestionClientTest {
                 "google", "searchplugins/google-b-m.xml")
 
         val searchEngineManager: SearchEngineManager = mock()
-        val client = SearchSuggestionClient(testContext, searchEngineManager, GOOGLE_MOCK_RESPONSE)
+        val client = SearchSuggestionClient(
+            testContext,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            GOOGLE_MOCK_RESPONSE
+        )
 
         runBlocking {
             `when`(searchEngineManager.getDefaultSearchEngineAsync(testContext)).thenReturn(searchEngine)

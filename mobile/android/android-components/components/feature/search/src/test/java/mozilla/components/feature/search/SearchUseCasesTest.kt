@@ -12,6 +12,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -40,7 +41,12 @@ class SearchUseCasesTest {
         searchEngineManager = mock()
         sessionManager = mock()
         store = mock()
-        useCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
+        useCases = SearchUseCases(
+            testContext,
+            store,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            sessionManager
+        )
     }
 
     @Test
@@ -82,7 +88,12 @@ class SearchUseCasesTest {
 
         var sessionCreatedForUrl: String? = null
 
-        val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager) { url ->
+        val searchUseCases = SearchUseCases(
+            testContext,
+            store,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            sessionManager
+        ) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }

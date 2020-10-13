@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.graphics.Bitmap
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.search.SearchUseCases
@@ -16,7 +17,7 @@ private const val FIXED_ID = "@@@search.action.provider.fixed.id@@"
  * entered text and invokes a search with the given [SearchEngine] if clicked.
  */
 class SearchActionProvider(
-    private val searchEngineGetter: suspend () -> SearchEngine,
+    private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
     private val searchUseCase: SearchUseCases.SearchUseCase,
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true
@@ -28,7 +29,8 @@ class SearchActionProvider(
             return emptyList()
         }
 
-        val searchEngine = searchEngineGetter()
+        val searchEngine = defaultSearchEngineProvider.retrieveDefaultSearchEngine()
+            ?: return emptyList()
 
         return listOf(AwesomeBar.Suggestion(
             provider = this,

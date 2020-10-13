@@ -5,8 +5,9 @@
 package mozilla.components.browser.search.suggestions
 
 import android.content.Context
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
+import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
 import java.io.IOException
 
@@ -19,22 +20,22 @@ typealias SearchSuggestionFetcher = suspend (url: String) -> String?
  *  Provides an interface to get search suggestions from a given SearchEngine.
  */
 class SearchSuggestionClient {
-
     private val context: Context?
     private val fetcher: SearchSuggestionFetcher
+    private val logger = Logger("SearchSuggestionClient")
 
-    val searchEngineManager: SearchEngineManager?
+    val defaultSearchEngineProvider: DefaultSearchEngineProvider?
     var searchEngine: SearchEngine? = null
         private set
 
     internal constructor(
         context: Context?,
-        searchEngineManager: SearchEngineManager?,
+        defaultSearchEngineProvider: DefaultSearchEngineProvider?,
         searchEngine: SearchEngine?,
         fetcher: SearchSuggestionFetcher
     ) {
         this.context = context
-        this.searchEngineManager = searchEngineManager
+        this.defaultSearchEngineProvider = defaultSearchEngineProvider
         this.searchEngine = searchEngine
         this.fetcher = fetcher
     }
@@ -42,8 +43,11 @@ class SearchSuggestionClient {
     constructor(searchEngine: SearchEngine, fetcher: SearchSuggestionFetcher) :
         this (null, null, searchEngine, fetcher)
 
-    constructor(context: Context, searchEngineManager: SearchEngineManager, fetcher: SearchSuggestionFetcher) :
-        this (context, searchEngineManager, null, fetcher)
+    constructor(
+        context: Context,
+        defaultSearchEngineProvider: DefaultSearchEngineProvider,
+        fetcher: SearchSuggestionFetcher
+    ) : this (context, defaultSearchEngineProvider, null, fetcher)
 
     /**
      * Exception types for errors caught while getting a list of suggestions
@@ -56,10 +60,16 @@ class SearchSuggestionClient {
      */
     suspend fun getSuggestions(query: String): List<String>? {
         val searchEngine = searchEngine ?: run {
-            requireNotNull(searchEngineManager)
+            requireNotNull(defaultSearchEngineProvider)
             requireNotNull(context)
-            searchEngineManager.getDefaultSearchEngineAsync(context).also {
-                searchEngine = it
+
+            val searchEngine = defaultSearchEngineProvider.retrieveDefaultSearchEngine()
+            if (searchEngine == null) {
+                logger.warn("No default search engine for fetching suggestions")
+                return emptyList()
+            } else {
+                this.searchEngine = searchEngine
+                searchEngine
             }
         }
 

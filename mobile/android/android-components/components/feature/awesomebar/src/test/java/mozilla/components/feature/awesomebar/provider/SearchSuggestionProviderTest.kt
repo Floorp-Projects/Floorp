@@ -12,6 +12,7 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -520,7 +521,13 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
             val engine: Engine = mock()
-            val provider = SearchSuggestionProvider(testContext, searchEngineManager, mock(), HttpURLConnectionClient(), engine = engine)
+            val provider = SearchSuggestionProvider(
+                testContext,
+                searchEngineManager.toDefaultSearchEngineProvider(testContext),
+                mock(),
+                HttpURLConnectionClient(),
+                engine = engine
+            )
 
             try {
                 val suggestions = provider.onInputChanged("fire")

@@ -7,6 +7,7 @@ package mozilla.components.feature.awesomebar.provider
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
@@ -96,7 +97,7 @@ class SearchSuggestionProvider private constructor(
      */
     constructor(
         context: Context,
-        searchEngineManager: SearchEngineManager,
+        defaultSearchEngineProvider: DefaultSearchEngineProvider,
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
         limit: Int = 15,
@@ -106,7 +107,7 @@ class SearchSuggestionProvider private constructor(
         showDescription: Boolean = true,
         filterExactMatch: Boolean = false
     ) : this (
-        SearchSuggestionClient(context, searchEngineManager) { url -> fetch(fetchClient, url) },
+        SearchSuggestionClient(context, defaultSearchEngineProvider) { url -> fetch(fetchClient, url) },
         searchUseCase,
         limit,
         mode,

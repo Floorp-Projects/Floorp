@@ -14,6 +14,7 @@ import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import mozilla.components.feature.search.SearchFeature
+import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
@@ -53,8 +54,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
 
-        val applicationContext = requireContext().applicationContext
-
         AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView, components.icons)
             .addHistoryProvider(
                 components.historyStorage,
@@ -67,14 +66,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.tabsUseCases.selectTab
             )
             .addSearchActionProvider(
-                searchEngineGetter = suspend {
-                    components.searchEngineManager.getDefaultSearchEngine(applicationContext)
-                },
+                components.store.toDefaultSearchEngineProvider(),
                 searchUseCase = components.searchUseCases.defaultSearch
             )
             .addSearchProvider(
                 requireContext(),
-                components.searchEngineManager,
+                components.store.toDefaultSearchEngineProvider(),
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,

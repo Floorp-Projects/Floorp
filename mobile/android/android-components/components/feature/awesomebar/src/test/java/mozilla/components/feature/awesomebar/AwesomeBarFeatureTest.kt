@@ -15,6 +15,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -127,11 +128,12 @@ class AwesomeBarFeatureTest {
 
         val context = testContext
         val searchEngineManager: SearchEngineManager = mock()
-        feature.addSearchProvider(context, searchEngineManager, mock(), mock())
+        val searchEngineProvider = searchEngineManager.toDefaultSearchEngineProvider(context)
+        feature.addSearchProvider(context, searchEngineProvider, mock(), mock())
 
         val provider = argumentCaptor<SearchSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
-        assertSame(searchEngineManager, provider.value.client.searchEngineManager)
+        assertSame(searchEngineProvider, provider.value.client.defaultSearchEngineProvider)
     }
 
     @Test

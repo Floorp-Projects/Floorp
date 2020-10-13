@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -48,7 +49,12 @@ class TabIntentProcessorTest {
     private val session = mock<Session>()
     private val sessionUseCases = SessionUseCases(store, sessionManager)
     private val searchEngineManager = mock<SearchEngineManager>()
-    private val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
+    private val searchUseCases = SearchUseCases(
+        testContext,
+        store,
+        searchEngineManager.toDefaultSearchEngineProvider(testContext),
+        sessionManager
+    )
 
     @Before
     fun setup() {
@@ -255,7 +261,12 @@ class TabIntentProcessorTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
 
-        val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
+        val searchUseCases = SearchUseCases(
+            testContext,
+            store,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            sessionManager
+        )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
         val searchTerms = "mozilla android"
@@ -326,7 +337,12 @@ class TabIntentProcessorTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
 
-        val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
+        val searchUseCases = SearchUseCases(
+            testContext,
+            store,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            sessionManager
+        )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
         val searchTerms = "mozilla android"
@@ -385,7 +401,12 @@ class TabIntentProcessorTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
 
-        val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
+        val searchUseCases = SearchUseCases(
+            testContext,
+            store,
+            searchEngineManager.toDefaultSearchEngineProvider(testContext),
+            sessionManager
+        )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
         val searchTerms = "mozilla android"
