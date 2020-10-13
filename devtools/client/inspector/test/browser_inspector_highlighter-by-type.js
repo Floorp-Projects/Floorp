@@ -12,21 +12,10 @@ const TEST_URL = "data:text/html;charset=utf-8,custom highlighters";
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
-  await onlyOneInstanceOfMainHighlighter(inspector);
   await manyInstancesOfCustomHighlighters(inspector);
   await showHideMethodsAreAvailable(inspector);
   await unknownHighlighterTypeShouldntBeAccepted(inspector);
 });
-
-async function onlyOneInstanceOfMainHighlighter({ inspectorFront }) {
-  info("Check that the inspector always sends back the same main highlighter");
-
-  const h1 = await inspectorFront.getHighlighter(false);
-  const h2 = await inspectorFront.getHighlighter(false);
-  is(h1, h2, "The same highlighter front was returned");
-
-  is(h1.typeName, "highlighter", "The right front type was returned");
-}
 
 async function manyInstancesOfCustomHighlighters({ inspectorFront }) {
   const h1 = await inspectorFront.getHighlighterByType("BoxModelHighlighter");
