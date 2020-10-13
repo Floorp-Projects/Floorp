@@ -2,7 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests search mode and session store.
+ * Tests search mode and session store.  Also tests that search mode is
+ * duplicated when duplicating tabs, since tab duplication is handled by session
+ * store.
  */
 
 "use strict";
@@ -219,6 +221,55 @@ async function doTest({
 
   await BrowserTestUtils.closeWindow(win);
 }
+
+// Tests that search mode is duplicated when duplicating tabs.  Note that tab
+// duplication is handled by session store.
+add_task(async function duplicateTabs() {
+  // Enter search mode with a search string in the current tab.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: SEARCH_STRING,
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.enterSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+  });
+
+  // Now duplicate the current tab using the context menu item.  First we need
+  // to set TabContextMenu.contextTab because that's how the menu item's command
+  // determines which tab to duplicate.
+  window.TabContextMenu.contextTab = gBrowser.selectedTab;
+  let tabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    gBrowser.currentURI.spec
+  );
+  let menuitem = document.getElementById("context_duplicateTab");
+  menuitem.click();
+  let newTab = await tabPromise;
+  Assert.equal(
+    gBrowser.selectedTab,
+    newTab,
+    "Sanity check: The duplicated tab is now the selected tab"
+  );
+
+  // Wait for search mode, then check it and the input value.
+  await TestUtils.waitForCondition(
+    () => gURLBar.searchMode,
+    "Waiting for search mode to be duplicated/restored"
+  );
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "oneoff",
+  });
+  Assert.equal(
+    gURLBar.value,
+    SEARCH_STRING,
+    "Search string should be duplicated/restored"
+  );
+
+  BrowserTestUtils.removeTab(newTab);
+  gURLBar.handleRevert();
+});
 
 /**
  * Opens a new browser window with the given URLs, calls a callback, and then
