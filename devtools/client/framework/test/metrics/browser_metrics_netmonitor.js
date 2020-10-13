@@ -40,7 +40,6 @@ add_task(async function() {
   //   "resource://devtools/client/netmonitor/src/constants.js",
   //   "resource://devtools/client/netmonitor/src/middleware/batching.js",
   //   "resource://devtools/client/netmonitor/src/middleware/prefs.js",
-  //   "resource://devtools/client/netmonitor/src/middleware/thunk.js",
   //   "resource://devtools/client/netmonitor/src/middleware/recording.js",
   //   "resource://devtools/client/netmonitor/src/selectors/index.js",
   //   "resource://devtools/client/netmonitor/src/selectors/requests.js",

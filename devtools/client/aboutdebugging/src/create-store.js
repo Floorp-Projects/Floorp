@@ -49,7 +49,7 @@ function configureStore() {
   };
 
   const middleware = applyMiddleware(
-    thunk,
+    thunk(),
     debugTargetListenerMiddleware,
     errorLoggingMiddleware,
     eventRecordingMiddleware,
