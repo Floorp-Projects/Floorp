@@ -104,6 +104,7 @@ class SVGImageElement : public SVGImageElementBase,
 
  protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
+  bool ShouldLoadImage() const;
 
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()

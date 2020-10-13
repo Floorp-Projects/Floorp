@@ -70,8 +70,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   virtual EventStates IntrinsicState() const override;
   virtual void DestroyContent() override;
 
-  void Notify(imgIRequest* aRequest, int32_t aType,
-              const nsIntRect* aData) override;
+  NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // Override for nsIImageLoadingContent.
   NS_IMETHOD_(void) FrameCreated(nsIFrame* aFrame) override;
@@ -84,6 +83,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
 
  private:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
+  bool ShouldLoadImage() const;
 
  protected:
   virtual bool ProducesSRGB() override { return true; }
