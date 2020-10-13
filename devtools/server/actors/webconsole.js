@@ -1789,10 +1789,20 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       Ci.nsIRequest.LOAD_ANONYMOUS;
 
     channel.requestMethod = method;
-
     if (headers) {
       for (const { name, value } of headers) {
-        channel.setRequestHeader(name, value, false);
+        if (name.toLowerCase() == "referer") {
+          // The referer header and referrerInfo object should always match. So
+          // if we want to set the header from privileged context, we should set
+          // referrerInfo. The referrer header will get set internally.
+          channel.setNewReferrerInfo(
+            value,
+            Ci.nsIReferrerInfo.UNSAFE_URL,
+            true
+          );
+        } else {
+          channel.setRequestHeader(name, value, false);
+        }
       }
     }
 
