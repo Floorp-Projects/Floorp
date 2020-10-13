@@ -38,7 +38,7 @@ function configureStore(telemetry, sessionId) {
   };
 
   const middleware = applyMiddleware(
-    thunk,
+    thunk(),
     eventTelemetryMiddleware(telemetry, sessionId)
   );
 

@@ -10,9 +10,6 @@ const {
 } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const {
-  thunkWithOptions,
-} = require("devtools/client/shared/redux/middleware/thunk-with-options");
-const {
   waitUntilService,
 } = require("devtools/client/shared/redux/middleware/wait-service");
 const { task } = require("devtools/client/shared/redux/middleware/task");
@@ -51,7 +48,7 @@ const createStoreWithMiddleware = (opts = {}) => {
     middleware.push(task);
   }
   middleware.push(
-    opts.thunkOptions ? thunkWithOptions.bind(null, opts.thunkOptions) : thunk,
+    thunk(opts.thunkOptions),
     promise,
 
     // Order is important: services must go last as they always

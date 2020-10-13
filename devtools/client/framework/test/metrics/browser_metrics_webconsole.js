@@ -45,7 +45,7 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/react-dom-factories.js",
     "resource://devtools/client/shared/vendor/react-redux.js",
     "resource://devtools/client/shared/vendor/redux.js",
-    "resource://devtools/client/shared/redux/middleware/thunk-with-options.js",
+    "resource://devtools/client/shared/redux/middleware/thunk.js",
   ];
   runDuplicatedModulesTest(loaders, allowedDupes);
 

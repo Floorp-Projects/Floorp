@@ -18,7 +18,7 @@ const Footer = React.createFactory(
 
 describe("Footer component", () => {
   it("renders", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({});
     const connectWrapper = shallow(Footer({ store }));
     const targetComponent = connectWrapper.dive();

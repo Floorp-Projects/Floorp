@@ -18,7 +18,7 @@ const CompatibilityApp = createFactory(
 
 describe("CompatibilityApp component", () => {
   it("renders zero issues", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
         selectedNodeIssues: [],
@@ -33,7 +33,7 @@ describe("CompatibilityApp component", () => {
   });
 
   it("renders with settings", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
         isSettingsVisibile: true,
