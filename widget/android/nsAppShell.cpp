@@ -737,8 +737,11 @@ already_AddRefed<nsIURI> nsAppShell::ResolveURI(const nsCString& aUriStr) {
   }
 
   nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
-  if (fixup && NS_SUCCEEDED(fixup->CreateFixupURI(aUriStr, 0, nullptr,
-                                                  getter_AddRefs(uri)))) {
+  nsCOMPtr<nsIURIFixupInfo> fixupInfo;
+  if (fixup &&
+      NS_SUCCEEDED(fixup->GetFixupURIInfo(aUriStr, nsIURIFixup::FIXUP_FLAG_NONE,
+                                          getter_AddRefs(fixupInfo))) &&
+      NS_SUCCEEDED(fixupInfo->GetPreferredURI(getter_AddRefs(uri)))) {
     return uri.forget();
   }
   return nullptr;

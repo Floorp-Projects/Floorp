@@ -339,10 +339,9 @@ var gConnectionsDialog = {
     var autoURL = document.getElementById("networkProxyAutoconfigURL");
     var autoURLPref = Preferences.get("network.proxy.autoconfig_url");
     try {
-      autoURLPref.value = autoURL.value = Services.uriFixup.createFixupURI(
-        autoURL.value,
-        0
-      ).spec;
+      autoURLPref.value = autoURL.value = Services.uriFixup.getFixupURIInfo(
+        autoURL.value
+      ).preferredURI.spec;
     } catch (ex) {}
   },
 

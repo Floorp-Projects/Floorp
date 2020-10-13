@@ -5949,14 +5949,12 @@ nsDocShell::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
 }
 
 already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
-    const nsACString& aKeyword, bool aIsPrivateContext,
-    nsIInputStream** aPostData) {
+    const nsACString& aKeyword, bool aIsPrivateContext) {
   nsCOMPtr<nsIURIFixupInfo> info;
   if (!XRE_IsContentProcess()) {
     nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
     if (uriFixup) {
-      uriFixup->KeywordToURI(aKeyword, aIsPrivateContext, aPostData,
-                             getter_AddRefs(info));
+      uriFixup->KeywordToURI(aKeyword, aIsPrivateContext, getter_AddRefs(info));
     }
   }
   return info.forget();
@@ -6166,8 +6164,7 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
         nsCOMPtr<nsIURIFixupInfo> info;
         // only send non-qualified hosts to the keyword server
         if (aOriginalURIString && !aOriginalURIString->IsEmpty()) {
-          info = KeywordToURI(*aOriginalURIString, aUsePrivateBrowsing,
-                              getter_AddRefs(newPostData));
+          info = KeywordToURI(*aOriginalURIString, aUsePrivateBrowsing);
         } else {
           //
           // If this string was passed through nsStandardURL by
@@ -6185,11 +6182,10 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
               do_GetService(NS_IDNSERVICE_CONTRACTID);
           if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
               NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
-            info = KeywordToURI(utf8Host, aUsePrivateBrowsing,
-                                getter_AddRefs(newPostData));
+            info = KeywordToURI(utf8Host, aUsePrivateBrowsing);
+
           } else {
-            info = KeywordToURI(host, aUsePrivateBrowsing,
-                                getter_AddRefs(newPostData));
+            info = KeywordToURI(host, aUsePrivateBrowsing);
           }
         }
         if (info) {
@@ -6197,6 +6193,7 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
           if (newURI) {
             info->GetKeywordAsSent(keywordAsSent);
             info->GetKeywordProviderName(keywordProviderName);
+            info->GetPostData(getter_AddRefs(newPostData));
           }
         }
       }
@@ -6244,9 +6241,13 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
       keywordAsSent.Truncate();
       nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
       if (uriFixup) {
-        uriFixup->CreateFixupURI(
-            oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-            getter_AddRefs(newPostData), getter_AddRefs(newURI));
+        nsCOMPtr<nsIURIFixupInfo> fixupInfo;
+        uriFixup->GetFixupURIInfo(oldSpec,
+                                  nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+                                  getter_AddRefs(fixupInfo));
+        if (fixupInfo) {
+          fixupInfo->GetPreferredURI(getter_AddRefs(newURI));
+        }
       }
     }
   } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&

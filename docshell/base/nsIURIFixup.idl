@@ -65,6 +65,11 @@ interface nsIURIFixupInfo : nsISupports
    * The original input
    */
   attribute AUTF8String originalInput;
+
+  /**
+   * The POST data to submit with the returned URI (see nsISearchSubmission).
+   */
+  attribute nsIInputStream postData;
 };
 
 
@@ -103,31 +108,18 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
 
     /**
-     * Converts the specified string into a URI, first attempting
-     * to correct any errors in the syntax or other vagaries. Returns
-     * a wellformed URI or nullptr if it can't.
-     *
-     * @param aURIText    Candidate URI.
-     * @param aFixupFlags Flags that govern ways the URI may be fixed up.
-     * @param aPostData   The POST data to submit with the returned
-     *                    URI (see nsISearchSubmission).
-     */
-    nsIURI createFixupURI(in AUTF8String aURIText, in unsigned long aFixupFlags,
-                          [optional] out nsIInputStream aPostData);
-
-    /**
-     * Same as createFixupURI, but returns information about what it corrected
+     * Tries to converts the specified string into a URI, first attempting
+     * to correct any errors in the syntax or other vagaries.
+     * It returns information about what it corrected
      * (e.g. whether we could rescue the URI or "just" generated a keyword
      * search URI instead).
      *
      * @param aURIText    Candidate URI.
      * @param aFixupFlags Flags that govern ways the URI may be fixed up.
-     * @param aPostData   The POST data to submit with the returned
-     *                    URI (see nsISearchSubmission).
+     *                    Defaults to FIXUP_FLAG_NONE.
      */
     nsIURIFixupInfo getFixupURIInfo(in AUTF8String aURIText,
-                                    in unsigned long aFixupFlags,
-                                    [optional] out nsIInputStream aPostData);
+                                    [optional] in unsigned long aFixupFlags);
 
     /**
      * Convert load flags from nsIWebNavigation to URI fixup flags for use in
@@ -147,15 +139,9 @@ interface nsIURIFixup : nsISupports
      *
      * @param aKeyword  The keyword string to convert into a URI
      * @param aIsPrivateContext Whether this is invoked from a private context.
-     * @param aPostData The POST data to submit to the returned URI
-     *                  (see nsISearchSubmission).
-     *
-     * @throws NS_ERROR_FAILURE if the resulting URI requires submission of POST
-     *         data and aPostData is null.
      */
     nsIURIFixupInfo keywordToURI(in AUTF8String aKeyword,
-                                 [optional] in boolean aIsPrivateContext,
-                                 [optional] out nsIInputStream aPostData);
+                                 [optional] in boolean aIsPrivateContext);
 
     /**
      * Returns true if the specified domain is known and false otherwise.

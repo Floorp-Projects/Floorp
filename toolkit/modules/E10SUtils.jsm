@@ -379,10 +379,7 @@ var E10SUtils = {
 
     let uri;
     try {
-      uri = Services.uriFixup.createFixupURI(
-        aURL,
-        Ci.nsIURIFixup.FIXUP_FLAG_NONE
-      );
+      uri = Services.uriFixup.getFixupURIInfo(aURL).preferredURI;
     } catch (e) {
       // If we have an invalid URI, it's still possible that it might get
       // fixed-up into a valid URI later on. However, we don't want to return
@@ -886,7 +883,9 @@ var E10SUtils = {
       if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
         fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
-      uriObject = Services.uriFixup.createFixupURI(uri, fixupFlags);
+
+      uriObject = Services.uriFixup.getFixupURIInfo(uri, fixupFlags)
+        .preferredURI;
       // Note that I had thought that we could set uri = uriObject.spec here, to
       // save on fixup later on, but that changes behavior and breaks tests.
       requiredRemoteType = this.getRemoteTypeForURIObject(

@@ -604,13 +604,15 @@ class UrlbarInput {
           if (this.isPrivate) {
             flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
           }
-          let postData = {};
-          let uri = Services.uriFixup.createFixupURI(url, flags, postData);
+          let {
+            preferredURI: uri,
+            postData,
+          } = Services.uriFixup.getFixupURIInfo(url, flags);
           if (
             where != "current" ||
             browser.lastLocationChange == lastLocationChange
           ) {
-            openParams.postData = postData.value;
+            openParams.postData = postData;
             this._loadURL(uri.spec, where, openParams, null, browser);
           }
         }

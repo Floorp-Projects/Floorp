@@ -1264,18 +1264,15 @@ var PlacesToolbarHelper = {
         this.addManagedBookmarks(submenupopup, entry.children);
       } else if (entry.name && entry.url) {
         // It's bookmark.
-        let uri = Services.uriFixup.createFixupURI(
-          entry.url,
-          Ci.nsIURIFixup.FIXUP_FLAG_NONE
-        );
+        let { preferredURI } = Services.uriFixup.getFixupURIInfo(entry.url);
         let menuitem = document.createXULElement("menuitem");
         menuitem.setAttribute("label", entry.name);
-        menuitem.setAttribute("image", "page-icon:" + uri.spec);
+        menuitem.setAttribute("image", "page-icon:" + preferredURI.spec);
         menuitem.setAttribute(
           "class",
           "menuitem-iconic bookmark-item menuitem-with-favicon"
         );
-        menuitem.link = uri.spec;
+        menuitem.link = preferredURI.spec;
         menu.appendChild(menuitem);
       }
     }

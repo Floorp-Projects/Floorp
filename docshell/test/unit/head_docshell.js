@@ -8,6 +8,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -21,6 +22,9 @@ const kSearchEngineURL = "https://www.example.org/?search={searchTerms}";
 const kPrivateSearchEngineID = "test_urifixup_search_engine_private";
 const kPrivateSearchEngineURL =
   "https://www.example.org/?private={searchTerms}";
+const kPostSearchEngineID = "test_urifixup_search_engine_post";
+const kPostSearchEngineURL = "https://www.example.org/";
+const kPostSearchEngineData = "q={searchTerms}";
 
 const SEARCH_CONFIG = [
   {
@@ -64,8 +68,8 @@ async function addTestEngines() {
     description: "urifixup search engine",
     chrome_settings_overrides: {
       search_provider: {
-        name: "test_urifixup_search_engine",
-        search_url: "https://www.example.org/?search={searchTerms}",
+        name: kSearchEngineID,
+        search_url: kSearchEngineURL,
       },
     },
   });
@@ -73,8 +77,18 @@ async function addTestEngines() {
     description: "urifixup private search engine",
     chrome_settings_overrides: {
       search_provider: {
-        name: "test_urifixup_search_engine_private",
-        search_url: "https://www.example.org/?private={searchTerms}",
+        name: kPrivateSearchEngineID,
+        search_url: kPrivateSearchEngineURL,
+      },
+    },
+  });
+  await Services.search.addPolicyEngine({
+    description: "urifixup POST search engine",
+    chrome_settings_overrides: {
+      search_provider: {
+        name: kPostSearchEngineID,
+        search_url: kPostSearchEngineURL,
+        search_url_post_params: kPostSearchEngineData,
       },
     },
   });

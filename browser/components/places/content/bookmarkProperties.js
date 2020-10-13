@@ -456,7 +456,7 @@ var BookmarkPropertiesPanel = {
     try {
       var value = this._element(aTextboxID).value;
       if (value) {
-        PlacesUIUtils.createFixedURI(value);
+        Services.uriFixup.getFixupURIInfo(value);
         return true;
       }
     } catch (e) {}

@@ -256,11 +256,7 @@ URIFixup.prototype = {
     return FIXUP_FLAG_FIX_SCHEME_TYPOS;
   },
 
-  createFixupURI(uriString, fixupFlags = FIXUP_FLAG_NONE, postData) {
-    return this.getFixupURIInfo(uriString, fixupFlags, postData).preferredURI;
-  },
-
-  getFixupURIInfo(uriString, fixupFlags = FIXUP_FLAG_NONE, postData) {
+  getFixupURIInfo(uriString, fixupFlags = FIXUP_FLAG_NONE) {
     let isPrivateContext = fixupFlags & FIXUP_FLAG_PRIVATE_CONTEXT;
 
     // Eliminate embedded newlines, which single-line text fields now allow,
@@ -278,11 +274,9 @@ URIFixup.prototype = {
 
     let scheme = extractScheme(uriString);
     if (scheme == "view-source") {
-      info.preferredURI = info.fixedURI = fixupViewSource(
-        uriString,
-        fixupFlags,
-        postData
-      );
+      let { preferredURI, postData } = fixupViewSource(uriString, fixupFlags);
+      info.preferredURI = info.fixedURI = preferredURI;
+      info.postData = postData;
       return info;
     }
 
@@ -363,7 +357,7 @@ URIFixup.prototype = {
       scheme &&
       !canHandleProtocol
     ) {
-      tryKeywordFixupForURIInfo(uriString, info, isPrivateContext, postData);
+      tryKeywordFixupForURIInfo(uriString, info, isPrivateContext);
     }
 
     if (info.fixedURI) {
@@ -419,7 +413,7 @@ URIFixup.prototype = {
       fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol &&
       !checkSuffix(info).suffix &&
-      keywordURIFixup(uriString, info, isPrivateContext, postData)
+      keywordURIFixup(uriString, info, isPrivateContext)
     ) {
       return info;
     }
@@ -434,12 +428,7 @@ URIFixup.prototype = {
     // If we still haven't been able to construct a valid URI, try to force a
     // keyword match.
     if (keywordEnabled && fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
-      tryKeywordFixupForURIInfo(
-        info.originalInput,
-        info,
-        isPrivateContext,
-        postData
-      );
+      tryKeywordFixupForURIInfo(info.originalInput, info, isPrivateContext);
     }
 
     if (!info.preferredURI) {
@@ -473,7 +462,7 @@ URIFixup.prototype = {
     return fixupFlags;
   },
 
-  keywordToURI(keyword, isPrivateContext, postData) {
+  keywordToURI(keyword, isPrivateContext) {
     if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
       // There's no search service in the content process, thus all the calls
       // from it that care about keywords conversion should go through the
@@ -518,20 +507,7 @@ URIFixup.prototype = {
     }
     let submissionPostDataStream = submission.postData;
     if (submissionPostDataStream) {
-      if (postData) {
-        // TODO (Bug 1626016): instead of having postData as an optional out
-        // argument, it could be part of URIFixupInfo.
-        postData.value = submissionPostDataStream;
-      } else {
-        // The submission specifies POST data (i.e. the search
-        // engine's "method" is POST), but our caller didn't allow
-        // passing post data back. No point passing back a URL that
-        // won't load properly.
-        throw new Components.Exception(
-          "Didn't request POST data",
-          Cr.NS_ERROR_NOT_AVAILABLE
-        );
-      }
+      info.postData = submissionPostDataStream;
     }
 
     info.keywordProviderName = engine.name;
@@ -606,6 +582,13 @@ URIFixupInfo.prototype = {
   },
   get originalInput() {
     return this._originalInput || "";
+  },
+
+  set postData(postData) {
+    this._postData = postData;
+  },
+  get postData() {
+    return this._postData || null;
   },
 
   classID: Components.ID("{33d75835-722f-42c0-89cc-44f328e56a86}"),
@@ -734,17 +717,11 @@ function checkAndFixPublicSuffix(info) {
   return { suffix: "", hasUnknownSuffix: true };
 }
 
-function tryKeywordFixupForURIInfo(
-  uriString,
-  fixupInfo,
-  isPrivateContext,
-  postData
-) {
+function tryKeywordFixupForURIInfo(uriString, fixupInfo, isPrivateContext) {
   try {
     let keywordInfo = Services.uriFixup.keywordToURI(
       uriString,
-      isPrivateContext,
-      postData
+      isPrivateContext
     );
     fixupInfo.keywordProviderName = keywordInfo.keywordProviderName;
     fixupInfo.keywordAsSent = keywordInfo.keywordAsSent;
@@ -891,7 +868,7 @@ function fixupURIProtocol(uriString) {
  * @param {nsIInputStream} postData optional POST data for the search
  * @returns {boolean} Whether the keyword fixup was succesful.
  */
-function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
+function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
   // Here is a few examples of strings that should be searched:
   // "what is mozilla"
   // "what is mozilla?"
@@ -913,8 +890,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,
       fixupInfo,
-      isPrivateContext,
-      postData
+      isPrivateContext
     );
   }
 
@@ -951,8 +927,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,
       fixupInfo,
-      isPrivateContext,
-      postData
+      isPrivateContext
     );
   }
 
@@ -976,10 +951,10 @@ function extractScheme(uriString) {
  * @param {string} uriString The original string to fixup
  * @param {integer} fixupFlags The original fixup flags
  * @param {nsIInputStream} postData Optional POST data for the search
- * @returns {nsIURI} a fixed URI
+ * @returns {object} {preferredURI, postData} The fixed URI and relative postData
  * @throws if it's not possible to fixup the url
  */
-function fixupViewSource(uriString, fixupFlags, postData) {
+function fixupViewSource(uriString, fixupFlags) {
   // We disable keyword lookup and alternate URIs so that small typos don't
   // cause us to look at very different domains.
   let newFixupFlags =
@@ -998,16 +973,15 @@ function fixupViewSource(uriString, fixupFlags, postData) {
     );
   }
 
-  let info = Services.uriFixup.getFixupURIInfo(
-    innerURIString,
-    newFixupFlags,
-    postData
-  );
+  let info = Services.uriFixup.getFixupURIInfo(innerURIString, newFixupFlags);
   if (!info.preferredURI) {
     throw new Components.Exception(
       "Couldn't build a valid uri",
       Cr.NS_ERROR_MALFORMED_URI
     );
   }
-  return Services.io.newURI("view-source:" + info.preferredURI.spec);
+  return {
+    preferredURI: Services.io.newURI("view-source:" + info.preferredURI.spec),
+    postData: info.postData,
+  };
 }
