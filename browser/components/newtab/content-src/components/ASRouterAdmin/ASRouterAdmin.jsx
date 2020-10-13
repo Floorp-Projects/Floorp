@@ -1461,7 +1461,8 @@ export class ASRouterAdminInner extends React.PureComponent {
           different attribution parameters, enter them in the text boxes. If you
           wish to try a different addon with the Return To AMO flow, make sure
           the 'content' text box has the addon GUID, then click 'Force
-          Attribution'.
+          Attribution'. Clicking on 'Force Attribution' with blank text boxes
+          reset attribution data.
         </p>
         <table>
           <tr>
