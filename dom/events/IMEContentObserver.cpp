@@ -476,6 +476,9 @@ nsPresContext* IMEContentObserver::GetPresContext() const {
 void IMEContentObserver::Destroy() {
   // WARNING: When you change this method, you have to check Unlink() too.
 
+  // Note that don't send any notifications later from here.  I.e., notify
+  // IMEStateManager of the blur synchronously because IMEStateManager needs to
+  // stop notifying the main process if this is requested by the main process.
   NotifyIMEOfBlur();
   UnregisterObservers();
   Clear();
