@@ -218,6 +218,8 @@ static gboolean window_state_event_cb(GtkWidget* widget,
                                       GdkEventWindowState* event);
 static void settings_changed_cb(GtkSettings* settings, GParamSpec* pspec,
                                 nsWindow* data);
+static void settings_xft_dpi_changed_cb(GtkSettings* settings,
+                                        GParamSpec* pspec, nsWindow* data);
 static void check_resize_cb(GtkContainer* container, gpointer user_data);
 static void screen_composited_changed_cb(GdkScreen* screen, gpointer user_data);
 static void widget_composited_changed_cb(GtkWidget* widget, gpointer user_data);
@@ -715,8 +717,7 @@ void nsWindow::Destroy() {
 
   ClearCachedResources();
 
-  g_signal_handlers_disconnect_by_func(
-      gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), this);
+  g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   if (rollupListener) {
@@ -4690,6 +4691,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                            G_CALLBACK(settings_changed_cb), this);
     g_signal_connect_after(default_settings, "notify::gtk-decoration-layout",
                            G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
+                           G_CALLBACK(settings_xft_dpi_changed_cb), this);
   }
 
   if (mContainer) {
@@ -6819,6 +6822,16 @@ static void settings_changed_cb(GtkSettings* settings, GParamSpec* pspec,
                                 nsWindow* data) {
   RefPtr<nsWindow> window = data;
   window->ThemeChanged();
+}
+
+static void settings_xft_dpi_changed_cb(GtkSettings* gtk_settings,
+                                        GParamSpec* pspec, nsWindow* data) {
+  RefPtr<nsWindow> window = data;
+  window->OnDPIChanged();
+  // Even though the window size in screen pixels has not changed,
+  // nsViewManager stores the dimensions in app units.
+  // DispatchResized() updates those.
+  window->DispatchResized();
 }
 
 static void check_resize_cb(GtkContainer* container, gpointer user_data) {

@@ -271,6 +271,7 @@ class nsWindow final : public nsBaseWidget {
   void OnCheckResize(void);
   void OnCompositedChanged(void);
   void OnScaleChanged(GtkAllocation* aAllocation);
+  void DispatchResized();
 
 #ifdef MOZ_X11
   Window mOldFocusWindow;
@@ -429,7 +430,6 @@ class nsWindow final : public nsBaseWidget {
   // event handling code
   void DispatchActivateEvent(void);
   void DispatchDeactivateEvent(void);
-  void DispatchResized();
   void MaybeDispatchResized();
 
   virtual void RegisterTouchWindow() override;
