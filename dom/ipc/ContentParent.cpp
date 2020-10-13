@@ -1786,6 +1786,9 @@ void ContentParent::MarkAsDead() {
 
 #ifdef MOZ_WIDGET_ANDROID
   if (mLifecycleState == LifecycleState::ALIVE) {
+    // We're intentionally killing the content process at this point to ensure
+    // that we never have a "dead" content process sitting around and occupying
+    // an Android Service.
     nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
     MOZ_ASSERT(launcherThread);
 
@@ -2139,8 +2142,19 @@ void ContentParent::NotifyTabDestroying() {
   // even if the PBrowsers themselves never finish destroying.
   ++mNumDestroyingTabs;
 
+  /**
+   * We intentionally skip this code on Android:
+   * 1. Android has a fixed upper bound on the number of content processes, so
+   *    we prefer to re-use them whenever possible (as opposed to letting an
+   *    old process wind down while we launch a new one).
+   * 2. GeckoView always hard-kills content processes (and if it does not,
+   *    Android itself will), so we don't concern ourselves with the ForceKill
+   *    timer either.
+   */
+#if !defined(MOZ_WIDGET_ANDROID)
   MaybeBeginShutDown(/* aExpectedBrowserCount */ mNumDestroyingTabs,
                      /* aSendShutDown */ false);
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 }
 
 void ContentParent::AddKeepAlive() {
