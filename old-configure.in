@@ -1797,7 +1797,7 @@ case $target in
 i?86-*-mingw*|x86_64-*-mingw*|aarch64-*-mingw*)
   MOZ_CRASHREPORTER=1
   ;;
-i?86-apple-darwin*|x86_64-apple-darwin*)
+i?86-apple-darwin*|x86_64-apple-darwin*|aarch64-apple-darwin*)
   MOZ_CRASHREPORTER=1
   ;;
 *-android*|*-linuxandroid*)
