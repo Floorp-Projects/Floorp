@@ -75,8 +75,8 @@ child:
   async AddBlockedFrameNodeByClassifier(MaybeDiscardedBrowsingContext aNode);
 
 both:
-  async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
-                   ClonedMessageData aStack);
+  async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
+                   ClonedMessageData? aStack);
 
 parent:
   // Load the given URI load state into the current owner process of the given

@@ -32,44 +32,11 @@ void JSWindowActorParent::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
-namespace {
-
-class AsyncMessageToChild : public Runnable {
- public:
-  AsyncMessageToChild(const JSActorMessageMeta& aMetadata,
-                      ipc::StructuredCloneData&& aData,
-                      ipc::StructuredCloneData&& aStack,
-                      WindowGlobalParent* aManager)
-      : mozilla::Runnable("WindowGlobalChild::HandleAsyncMessage"),
-        mMetadata(aMetadata),
-        mData(std::move(aData)),
-        mStack(std::move(aStack)),
-        mManager(aManager) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
-    RefPtr<WindowGlobalChild> child = mManager->GetChildActor();
-    if (child) {
-      child->ReceiveRawMessage(mMetadata, std::move(mData), std::move(mStack));
-    }
-    return NS_OK;
-  }
-
- private:
-  JSActorMessageMeta mMetadata;
-  ipc::StructuredCloneData mData;
-  ipc::StructuredCloneData mStack;
-  RefPtr<WindowGlobalParent> mManager;
-};
-
-}  // anonymous namespace
-
-void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
-                                         ipc::StructuredCloneData&& aData,
-                                         ipc::StructuredCloneData&& aStack,
-                                         ErrorResult& aRv) {
+void JSWindowActorParent::SendRawMessage(
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("JSWindowActorParent cannot send at the moment");
     return;
   }
 
@@ -80,25 +47,50 @@ void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
-  if (NS_WARN_IF(
-          !AllowMessage(aMeta, aData.DataLength() + aStack.DataLength()))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  size_t length = 0;
+  if (aData) {
+    length += aData->DataLength();
+  }
+  if (aStack) {
+    length += aStack->DataLength();
+  }
+
+  if (NS_WARN_IF(!AllowMessage(aMeta, length))) {
+    aRv.ThrowDataCloneError(
+        nsPrintfCString("JSWindowActorParent serialization error: data too "
+                        "large, in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 
   // Cross-process case - send data over WindowGlobalParent to other side.
-  ClonedMessageData msgData;
-  ClonedMessageData stackData;
   RefPtr<BrowserParent> browserParent = mManager->GetBrowserParent();
   ContentParent* cp = browserParent->Manager();
-  if (NS_WARN_IF(!aData.BuildClonedMessageDataForParent(cp, msgData)) ||
-      NS_WARN_IF(!aStack.BuildClonedMessageDataForParent(cp, stackData))) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
-    return;
+
+  Maybe<ClonedMessageData> msgData;
+  if (aData) {
+    msgData.emplace();
+    if (NS_WARN_IF(!aData->BuildClonedMessageDataForParent(cp, *msgData))) {
+      aRv.ThrowDataCloneError(
+          nsPrintfCString("JSWindowActorParent serialization error: cannot "
+                          "clone, in actor '%s'",
+                          PromiseFlatCString(aMeta.actorName()).get()));
+      return;
+    }
+  }
+
+  Maybe<ClonedMessageData> stackData;
+  if (aStack) {
+    stackData.emplace();
+    if (!aStack->BuildClonedMessageDataForParent(cp, *stackData)) {
+      stackData.reset();
+    }
   }
 
   if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, msgData, stackData))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowOperationError(
+        nsPrintfCString("JSWindowActorParent send error in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 }
