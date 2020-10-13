@@ -1076,10 +1076,6 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   rv = CheckFTPSubresourceLoad(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG
-  nsContentSecurityUtils::AssertReferrerHeaderMatchesReferrerInfo(aChannel);
-#endif
-
   // now lets set the initialSecurityFlag for subsequent calls
   loadInfo->SetInitialSecurityCheckDone(true);
 
