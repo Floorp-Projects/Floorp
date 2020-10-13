@@ -29,11 +29,14 @@ exclude: true
 - Added [`GeckoRuntime.ActivityDelegate`][83.4] which allows applications to handle
   starting external Activities on behalf of GeckoView. Currently this is used to integrate
   FIDO support for WebAuthn.
+- Added ['GeckoWebExecutor#FETCH_FLAG_PRIVATE'][83.5]. This new flag allows for private browsing downloads using WebExecutor.
+  ([bug 1665426]({{bugzilla}}1665426))
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 [83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
 [83.3]: {{javadoc_uri}}/ContentBlocking.SafeBrowsingProvider.html
 [83.4]: {{javadoc_uri}}/GeckoRuntime.ActivityDelegate.html
+[83.5]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAG_PRIVATE
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -823,4 +826,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d3186b70503f71a6476c765f76c6d49f9a1fb282
+[api-version]: b55b29412d4d11b9a62dfd71f60568d1286b1e7b
