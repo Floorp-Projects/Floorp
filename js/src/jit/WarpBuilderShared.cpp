@@ -22,7 +22,10 @@ WarpBuilderShared::WarpBuilderShared(WarpSnapshot& snapshot,
       current(current_) {}
 
 bool WarpBuilderShared::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
-  MOZ_ASSERT(ins->isEffectful());
+  // resumeAfter should only be used with effectful instructions. The only
+  // exception is MInt64ToBigInt, it's used to convert the result of a call into
+  // Wasm code so we attach the resume point to that instead of to the call.
+  MOZ_ASSERT(ins->isEffectful() || ins->isInt64ToBigInt());
 
   MResumePoint* resumePoint = MResumePoint::New(
       alloc(), ins->block(), loc.toRawBytecode(), MResumePoint::ResumeAfter);

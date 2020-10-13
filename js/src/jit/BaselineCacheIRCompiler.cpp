@@ -3412,6 +3412,14 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitCallWasmFunction(ObjOperandId calleeId,
+                                                   Int32OperandId argcId,
+                                                   CallFlags flags,
+                                                   uint32_t funcExportOffset,
+                                                   uint32_t instanceOffset) {
+  return emitCallScriptedFunction(calleeId, argcId, flags);
+}
+
 bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                       Int32OperandId argcId,
                                                       uint32_t icScriptOffset,

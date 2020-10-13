@@ -1570,6 +1570,17 @@
     argc: Int32Id
     flags: CallFlagsImm
 
+- name: CallWasmFunction
+  shared: false
+  transpile: true
+  cost_estimate: 3
+  args:
+    callee: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+    funcExport: RawPointerField
+    instance: ObjectField
+
 - name: CallNativeFunction
   shared: false
   transpile: true
