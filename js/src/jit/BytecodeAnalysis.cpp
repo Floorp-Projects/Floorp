@@ -248,10 +248,10 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
     result.usesEnvironmentChain = true;
   }
 
-  jsbytecode const* pcEnd = script->codeEnd();
-  for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
-    JSOp op = JSOp(*pc);
-    switch (op) {
+  AllBytecodesIterable iterator(script);
+
+  for (const BytecodeLocation& location : iterator) {
+    switch (location.getOp()) {
       case JSOp::SetArg:
         result.modifiesArguments = true;
         break;
