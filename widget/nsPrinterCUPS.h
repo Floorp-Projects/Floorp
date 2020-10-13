@@ -36,9 +36,11 @@ class nsPrinterCUPS final : public nsPrinterBase {
 
   nsPrinterCUPS() = delete;
 
-  nsPrinterCUPS(const nsCUPSShim& aShim, nsString aDisplayName,
+  nsPrinterCUPS(const mozilla::CommonPaperInfoArray* aArray,
+                const nsCUPSShim& aShim, nsString aDisplayName,
                 cups_dest_t* aPrinter)
-      : mShim(aShim),
+      : nsPrinterBase(aArray),
+        mShim(aShim),
         mDisplayName(std::move(aDisplayName)),
         mPrinter(aPrinter),
         mPrinterInfoMutex("nsPrinterCUPS::mPrinterInfoMutex") {}

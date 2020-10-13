@@ -18,13 +18,14 @@ using namespace mozilla;
 static constexpr Array<const char* const, 1> requestedAttributes{
     "cups-version"};
 
-static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
-  const double kPointsPerHundredthMillimeter = 72.0 / 2540.0;
-  // XXX Do we actually have the guarantee that these are utf-8?
+static constexpr double kPointsPerHundredthMillimeter = 72.0 / 2540.0;
+
+static PaperInfo MakePaperInfo(const nsAString& aName,
+                               const cups_size_t& aMedia) {
+  // XXX Do we actually have the guarantee that this is utf-8?
   NS_ConvertUTF8toUTF16 paperId(aMedia.media);  // internal paper name/ID
-  NS_ConvertUTF8toUTF16 paperName(aName);       // localized human-friendly name
   return PaperInfo(
-      paperId, paperName,
+      paperId, aName,
       {aMedia.width * kPointsPerHundredthMillimeter,
        aMedia.length * kPointsPerHundredthMillimeter},
       Some(gfx::MarginDouble{aMedia.top * kPointsPerHundredthMillimeter,
@@ -123,7 +124,18 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
     };
   }
 
-  const char* localizedName = nullptr;
+  // Check if this is a localized fallback paper size, in which case we can
+  // avoid using the CUPS localization methods.
+  const gfx::SizeDouble sizeDouble{
+      media.width * kPointsPerHundredthMillimeter,
+      media.length * kPointsPerHundredthMillimeter};
+  if (const PaperInfo* const paperInfo = FindCommonPaperSize(sizeDouble)) {
+    return PrintSettingsInitializer{
+        std::move(printerName),
+        MakePaperInfo(paperInfo->mName, media),
+        SupportsColor(),
+    };
+  }
 
   // blocking call
   http_t* connection = mShim.cupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
@@ -134,8 +146,11 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
                                              /* callback */ nullptr,
                                              /* user_data */ nullptr);
 
+  // XXX Do we actually have the guarantee that this is utf-8?
+  NS_ConvertUTF8toUTF16 localizedName{
+      connection ? LocalizeMediaName(*connection, media) : ""};
+
   if (connection) {
-    localizedName = LocalizeMediaName(*connection, media);
     mShim.httpClose(connection);
   }
 
@@ -281,18 +296,28 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
   nsTArray<PaperInfo> paperList;
   nsTHashtable<nsCharPtrHashKey> paperSet(std::max(paperCount, 0));
 
+  paperList.SetCapacity(paperCount);
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t media;
-    int getInfoSucceeded = mShim.cupsGetDestMediaByIndex(
+    const int getInfoSucceeded = mShim.cupsGetDestMediaByIndex(
         connection, mPrinter, printerInfo, i, CUPS_MEDIA_FLAGS_DEFAULT, &media);
 
     if (!getInfoSucceeded || !paperSet.EnsureInserted(media.media)) {
       continue;
     }
-
-    const char* mediaName =
-        connection ? LocalizeMediaName(*connection, media) : media.media;
-    paperList.AppendElement(MakePaperInfo(mediaName, media));
+    // Check if this is a PWG paper size, in which case we can avoid using the
+    // CUPS localization methods.
+    const gfx::SizeDouble sizeDouble{
+        media.width * kPointsPerHundredthMillimeter,
+        media.length * kPointsPerHundredthMillimeter};
+    if (const PaperInfo* const paperInfo = FindCommonPaperSize(sizeDouble)) {
+      paperList.AppendElement(MakePaperInfo(paperInfo->mName, media));
+    } else {
+      const char* const mediaName =
+          connection ? LocalizeMediaName(*connection, media) : media.media;
+      paperList.AppendElement(
+          MakePaperInfo(NS_ConvertUTF8toUTF16(mediaName), media));
+    }
   }
 
   if (connection) {
