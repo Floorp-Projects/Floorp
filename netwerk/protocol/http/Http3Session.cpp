@@ -271,27 +271,6 @@ nsresult Http3Session::ProcessInput(uint32_t* aCountRead) {
   return rv;
 }
 
-nsresult Http3Session::ProcessSingleTransactionRead(Http3Stream* stream,
-                                                    uint32_t count,
-                                                    uint32_t* countWritten) {
-  nsresult rv = stream->WriteSegments(this, count, countWritten);
-
-  if (ASpdySession::SoftStreamError(rv) || stream->Done()) {
-    LOG3(("Http3Session::ProcessSingleTransactionRead session=%p stream=%p 0x%" PRIx64
-          " cleanup stream rv=0x%" PRIx32 " done=%d.\n",
-          this, stream, stream->StreamId(), static_cast<uint32_t>(rv),
-          stream->Done()));
-    CloseStream(stream,
-                (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED : NS_OK);
-    return NS_OK;
-  }
-
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    return rv;
-  }
-  return NS_OK;
-}
-
 nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id,
                                               uint32_t count,
                                               uint32_t* countWritten) {
@@ -310,19 +289,23 @@ nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id,
 nsresult Http3Session::ProcessTransactionRead(Http3Stream* stream,
                                               uint32_t count,
                                               uint32_t* countWritten) {
-  nsresult rv = NS_OK;
-  uint32_t countWrittenSingle = 0;
-  do {
-    countWrittenSingle = 0;
-    rv = ProcessSingleTransactionRead(stream, count, &countWrittenSingle);
-    *countWritten += countWrittenSingle;
+  nsresult rv = stream->WriteSegments(stream, count, countWritten);
 
-    // There have been buffered bytes successfully fed into the
-    // formerly blocked consumer. Repeat until buffer empty or
-    // consumer is blocked again.
-  } while (NS_SUCCEEDED(rv) && (countWrittenSingle > 0) && !stream->Done());
+  if (ASpdySession::SoftStreamError(rv) || stream->Done()) {
+    LOG3(
+        ("Http3Session::ProcessSingleTransactionRead session=%p stream=%p "
+         "0x%" PRIx64 " cleanup stream rv=0x%" PRIx32 " done=%d.\n",
+         this, stream, stream->StreamId(), static_cast<uint32_t>(rv),
+         stream->Done()));
+    CloseStream(stream,
+                (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED : NS_OK);
+    return NS_OK;
+  }
 
-  return rv;
+  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult Http3Session::ProcessEvents(uint32_t count) {

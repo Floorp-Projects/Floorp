@@ -118,8 +118,6 @@ class Http3Session final : public nsAHttpTransaction,
   nsresult ProcessInput(uint32_t* aCountRead);
   nsresult ProcessEvents(uint32_t count);
 
-  nsresult ProcessSingleTransactionRead(Http3Stream* stream, uint32_t count,
-                                        uint32_t* countWritten);
   nsresult ProcessTransactionRead(uint64_t stream_id, uint32_t count,
                                   uint32_t* countWritten);
   nsresult ProcessTransactionRead(Http3Stream* stream, uint32_t count,

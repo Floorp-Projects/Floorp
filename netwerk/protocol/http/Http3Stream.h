@@ -53,10 +53,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   nsAHttpTransaction* Transaction() { return mTransaction; }
   bool RecvdFin() const { return mFin; }
   bool RecvdReset() const { return mResetRecv; }
-  void SetRecvdReset() {
-    mResetRecv = true;
-    mRecvState = RECEIVED_RESET;
-  }
+  void SetRecvdReset() { mResetRecv = true; }
 
   void StopSending();
 
@@ -125,7 +122,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
     READING_HEADERS,
     READING_DATA,
     RECEIVED_FIN,
-    RECEIVED_RESET,
     RECV_DONE
   } mRecvState;
 
