@@ -203,6 +203,7 @@ static bool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
   bool handleExternally = false;
   uint32_t disp;
   nsresult rv = aChannel->GetContentDisposition(&disp);
+  bool gotFileNameFromURI = false;
   if (NS_SUCCEEDED(rv)) {
     aChannel->GetContentDispositionFilename(aFileName);
     if (disp == nsIChannel::DISPOSITION_ATTACHMENT) handleExternally = true;
@@ -229,6 +230,7 @@ static bool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     nsAutoCString leafName;
     url->GetFileName(leafName);
     if (!leafName.IsEmpty()) {
+      gotFileNameFromURI = true;
       rv = UnescapeFragment(leafName, url, aFileName);
       if (NS_FAILED(rv)) {
         CopyUTF8toUTF16(leafName, aFileName);  // use escaped name
@@ -236,14 +238,14 @@ static bool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     }
   }
 
-  // Extract Extension, if we have a filename; otherwise,
-  // truncate the string
-  if (aExtension.IsEmpty()) {
-    if (!aFileName.IsEmpty()) {
-      // Windows ignores terminating dots. So we have to as well, so
-      // that our security checks do "the right thing"
-      aFileName.Trim(".", false);
+  // If we have a filename and no extension, remove trailing dots from the
+  // filename and extract the extension if that is possible.
+  if (aExtension.IsEmpty() && !aFileName.IsEmpty()) {
+    // Windows ignores terminating dots. So we have to as well, so
+    // that our security checks do "the right thing"
+    aFileName.Trim(".", false);
 
+    if (!gotFileNameFromURI || aAllowURLExtension) {
       // XXX RFindCharInReadable!!
       nsAutoString fileNameStr(aFileName);
       int32_t idx = fileNameStr.RFindChar(char16_t('.'));
@@ -1291,12 +1293,32 @@ nsExternalAppHandler::nsExternalAppHandler(
   mSuggestedFileName.CompressWhitespace();
   mTempFileExtension.CompressWhitespace();
 
-  // Append after removing trailing whitespaces from the name.
-  if (originalFileExt.FindCharInSet(
-          KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS) != kNotFound) {
-    // The file extension contains invalid characters and using it would
-    // generate an unusable file, thus use mTempFileExtension instead.
-    mSuggestedFileName.Append(mTempFileExtension);
+  // After removing trailing whitespaces from the name, if we have a
+  // temp file extension, replace the file extension with it if:
+  // - there is no extant file extension (or it only consists of ".")
+  // - the extant file extension contains invalid characters, or
+  // - the extant file extension is not known by the mimetype.
+  bool knownExtension = false;
+  // Note that originalFileExt is either empty or consists of an
+  // extension *including the dot* which we need to remove:
+  bool haveBogusExtension =
+      mMimeInfo && !originalFileExt.IsEmpty() &&
+      NS_SUCCEEDED(mMimeInfo->ExtensionExists(
+          Substring(NS_ConvertUTF16toUTF8(originalFileExt), 1),
+          &knownExtension)) &&
+      !knownExtension;
+  if (!mTempFileExtension.IsEmpty() &&
+      (originalFileExt.Length() == 0 || originalFileExt.EqualsLiteral(".") ||
+       originalFileExt.FindCharInSet(
+           KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS) != kNotFound ||
+       haveBogusExtension)) {
+    int32_t pos = mSuggestedFileName.RFindChar('.');
+    if (pos != kNotFound) {
+      mSuggestedFileName =
+          Substring(mSuggestedFileName, 0, pos) + mTempFileExtension;
+    } else {
+      mSuggestedFileName.Append(mTempFileExtension);
+    }
     originalFileExt = mTempFileExtension;
   }
 
