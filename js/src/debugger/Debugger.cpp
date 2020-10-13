@@ -42,7 +42,6 @@
 #include "frontend/NameAnalysisTypes.h"  // for ParseGoal, ParseGoal::Script
 #include "frontend/ParseContext.h"       // for UsedNameTracker
 #include "frontend/Parser.h"             // for Parser
-#include "gc/Barrier.h"                  // for GCPtrNativeObject
 #include "gc/FreeOp.h"                   // for JSFreeOp
 #include "gc/GC.h"                       // for IterateScripts
 #include "gc/GCMarker.h"                 // for GCMarker
