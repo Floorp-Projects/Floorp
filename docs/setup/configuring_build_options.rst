@@ -321,7 +321,7 @@ directory within each repository.
    needed. The production builds aren't really appropriate for local
    builds."
 
--  .. rubric:: Firefox, `Debugging Build (Mac OS X
+-  .. rubric:: Firefox, `Debugging Build (macOS
       64bits) <http://hg.mozilla.org/mozilla-central/file/tip/browser/config/mozconfigs/macosx64/debug>`__
       :name: Firefox.2C_Default_Release_Configuration
 
