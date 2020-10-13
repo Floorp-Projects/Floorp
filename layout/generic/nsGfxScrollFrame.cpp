@@ -2432,8 +2432,9 @@ void ScrollFrameHelper::ScrollToWithOrigin(
   if (aOrigin != ScrollOrigin::Restore) {
     // If we're doing a non-restore scroll, we don't want to later
     // override it by restoring our saved scroll position.
-    SCROLLRESTORE_LOG("%p: Clearing mRestorePos (cur=%d, dst=%d)\n", this,
-                      GetScrollPosition().y, aScrollPosition.y);
+    SCROLLRESTORE_LOG("%p: Clearing mRestorePos (cur=%s, dst=%s)\n", this,
+                      ToString(GetScrollPosition()).c_str(),
+                      ToString(aScrollPosition).c_str());
     mRestorePos.x = mRestorePos.y = -1;
   }
 
@@ -4981,12 +4982,14 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
   nsPoint logicalLayoutScrollPos = GetLogicalScrollPosition();
 
   SCROLLRESTORE_LOG(
-      "%p: ScrollToRestoredPosition (mRestorePos.y=%d, mLastPos.y=%d, "
-      "layoutRestorePos.y=%d, visualRestorePos.y=%d, "
-      "logicalLayoutScrollPos.y=%d, "
-      "GetLogicalVisualViewportOffset().y=%d)\n",
-      this, mRestorePos.y, mLastPos.y, layoutRestorePos.y, visualRestorePos.y,
-      logicalLayoutScrollPos.y, GetLogicalVisualViewportOffset().y);
+      "%p: ScrollToRestoredPosition (mRestorePos=%s, mLastPos=%s, "
+      "layoutRestorePos=%s, visualRestorePos=%s, "
+      "logicalLayoutScrollPos=%s, "
+      "GetLogicalVisualViewportOffset()=%s)\n",
+      this, ToString(mRestorePos).c_str(), ToString(mLastPos).c_str(),
+      ToString(layoutRestorePos).c_str(), ToString(visualRestorePos).c_str(),
+      ToString(logicalLayoutScrollPos).c_str(),
+      ToString(GetLogicalVisualViewportOffset()).c_str());
 
   // if we didn't move, we still need to restore
   if (GetLogicalVisualViewportOffset() == mLastPos ||
@@ -7164,8 +7167,9 @@ UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
     pt = mDestination;
     allowScrollOriginDowngrade = false;
   }
-  SCROLLRESTORE_LOG("%p: SaveState, pt.y=%d, mLastPos.y=%d, mRestorePos.y=%d\n",
-                    this, pt.y, mLastPos.y, mRestorePos.y);
+  SCROLLRESTORE_LOG("%p: SaveState, pt=%s, mLastPos=%s, mRestorePos=%s\n", this,
+                    ToString(pt).c_str(), ToString(mLastPos).c_str(),
+                    ToString(mRestorePos).c_str());
   if (mRestorePos.y != -1 && pt == mLastPos) {
     pt = mRestorePos;
   }
@@ -7194,8 +7198,8 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
   mLastScrollOrigin = ScrollOrigin::Other;
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalVisualViewportOffset() : nsPoint(0, 0);
-  SCROLLRESTORE_LOG("%p: RestoreState, set mRestorePos.y=%d mLastPos.y=%d\n",
-                    this, mRestorePos.y, mLastPos.y);
+  SCROLLRESTORE_LOG("%p: RestoreState, set mRestorePos=%s mLastPos=%s\n", this,
+                    ToString(mRestorePos).c_str(), ToString(mLastPos).c_str());
 
   // Resolution properties should only exist on root scroll frames.
   MOZ_ASSERT(mIsRoot || aState->resolution() == 1.0);
