@@ -29,6 +29,7 @@ dependencies {
     implementation project(':concept-storage')
 
     implementation project(':browser-search')
+    implementation project(':browser-session')
     implementation project(':browser-state')
     implementation project(':browser-icons')
 
