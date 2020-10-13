@@ -158,9 +158,11 @@ add_task(async function clearURLs() {
     let loadedPromise = BrowserTestUtils.browserLoaded(browser, false, loadUrl);
     BrowserTestUtils.loadURI(browser, loadUrl);
     await loadedPromise;
-    await TestUtils.waitForCondition(
-      () => win.gURLBar.getAttribute("pageproxystate") == "valid"
-    );
+    if (win.gURLBar.getAttribute("pageproxystate") != "valid") {
+      await TestUtils.waitForCondition(
+        () => win.gURLBar.getAttribute("pageproxystate") == "valid"
+      );
+    }
     await searchAndCheckState({ input: "", token });
   }
 });
