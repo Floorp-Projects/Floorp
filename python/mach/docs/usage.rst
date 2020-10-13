@@ -78,7 +78,7 @@ then edit ~/.zshrc and add:
 
 .. code-block:: shell
 
-    fpath += ~/.zfunc
+    fpath+=~/.zfunc
     autoload -U compinit && compinit
 
 You can use any directory of your choosing.
