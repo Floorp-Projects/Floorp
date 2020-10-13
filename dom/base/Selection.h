@@ -246,7 +246,6 @@ class Selection final : public nsSupportsWeakReference,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // WebIDL methods
   nsINode* GetAnchorNode() const {
     const RangeBoundary& anchor = AnchorRef();
     return anchor.IsSet() ? anchor.Container() : nullptr;
@@ -266,6 +265,38 @@ class Selection final : public nsSupportsWeakReference,
     const Maybe<uint32_t> offset =
         focus.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
     return offset ? *offset : 0;
+  }
+
+  // WebIDL methods
+  nsINode* GetAnchorNodeJS() const {
+    nsINode* anchor = GetAnchorNode();
+    if (!anchor || !anchor->ChromeOnlyAccess()) {
+      return anchor;
+    }
+    // anchor is nsIContent as ChromeOnlyAccess is nsIContent-only
+    return anchor->AsContent()->FindFirstNonChromeOnlyAccessContent();
+  }
+  uint32_t AnchorOffsetJS() const {
+    const RangeBoundary& anchor = AnchorRef();
+    if (!anchor.IsSet() || !anchor.Container()->ChromeOnlyAccess()) {
+      return AnchorOffset();
+    }
+    return 0;
+  }
+  nsINode* GetFocusNodeJS() const {
+    nsINode* focus = GetFocusNode();
+    if (!focus || !focus->ChromeOnlyAccess()) {
+      return focus;
+    }
+    // focus is nsIContent as ChromeOnlyAccess is nsIContent-only
+    return focus->AsContent()->FindFirstNonChromeOnlyAccessContent();
+  }
+  uint32_t FocusOffsetJS() const {
+    const RangeBoundary& focus = FocusRef();
+    if (!focus.IsSet() || !focus.Container()->ChromeOnlyAccess()) {
+      return FocusOffset();
+    }
+    return 0;
   }
 
   nsIContent* GetChildAtAnchorOffset() {

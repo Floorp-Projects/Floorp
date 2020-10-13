@@ -1363,6 +1363,7 @@ class nsINode : public mozilla::dom::EventTarget {
   bool HasBeenInUAWidget() const { return HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET); }
 
   // True for native anonymous content and for content in UA widgets.
+  // Only nsIContent can fulfill this condition.
   bool ChromeOnlyAccess() const {
     return HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
                    NODE_HAS_BEEN_IN_UA_WIDGET);
