@@ -91,7 +91,8 @@ class RemoteWebNavigation {
       if (isBrowserPrivate) {
         fixupFlags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
-      uri = Services.uriFixup.createFixupURI(aURI, fixupFlags);
+
+      uri = Services.uriFixup.getFixupURIInfo(aURI, fixupFlags).preferredURI;
 
       // We know the url is going to be loaded, let's start requesting network
       // connection before the content process asks.

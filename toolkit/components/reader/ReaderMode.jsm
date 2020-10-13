@@ -193,10 +193,7 @@ var ReaderMode = {
     if (originalUrl) {
       let uriObj;
       try {
-        uriObj = Services.uriFixup.createFixupURI(
-          originalUrl,
-          Services.uriFixup.FIXUP_FLAG_NONE
-        );
+        uriObj = Services.uriFixup.getFixupURIInfo(originalUrl).preferredURI;
       } catch (ex) {
         return null;
       }

@@ -719,17 +719,30 @@ add_task(async function run_test() {
     }
   }
   Assert.equal(affectedTests.length, 0);
-  do_single_test_run();
+  await do_single_test_run();
   gSingleWordDNSLookup = true;
-  do_single_test_run();
+  await do_single_test_run();
+  gSingleWordDNSLookup = false;
+  await Services.search.setDefault(
+    Services.search.getEngineByName(kPostSearchEngineID)
+  );
+  await do_single_test_run();
 });
 
-function do_single_test_run() {
+async function do_single_test_run() {
   Services.prefs.setBoolPref(kForceDNSLookup, gSingleWordDNSLookup);
 
   let relevantTests = gSingleWordDNSLookup
     ? testcases.filter(t => t.keywordLookup)
     : testcases;
+
+  let engine = await Services.search.getDefault();
+  let engineUrl =
+    engine.name == kPostSearchEngineID
+      ? kPostSearchEngineURL
+      : kSearchEngineURL;
+  let privateEngine = await Services.search.getDefaultPrivate();
+  let privateEngineUrl = kPrivateSearchEngineURL;
 
   for (let {
     input: testInput,
@@ -762,32 +775,13 @@ function do_single_test_run() {
       );
 
       let URIInfo;
-      let fixupURIOnly = null;
-      try {
-        fixupURIOnly = Services.uriFixup.createFixupURI(testInput, flags);
-      } catch (ex) {
-        info("Caught exception: " + ex);
-        Assert.equal(expectedFixedURI, null);
-      }
-
       try {
         URIInfo = Services.uriFixup.getFixupURIInfo(testInput, flags);
       } catch (ex) {
         // Both APIs should return an error in the same cases.
         info("Caught exception: " + ex);
         Assert.equal(expectedFixedURI, null);
-        Assert.equal(fixupURIOnly, null);
         continue;
-      }
-
-      // Both APIs should then also be using the same spec.
-      Assert.equal(!!fixupURIOnly, !!URIInfo.preferredURI);
-      if (fixupURIOnly) {
-        Assert.equal(
-          fixupURIOnly.spec,
-          URIInfo.preferredURI.spec,
-          "Fixed and preferred URI should match"
-        );
       }
 
       // Check the fixedURI:
@@ -841,18 +835,14 @@ function do_single_test_run() {
             }
             let isPrivate =
               flags & Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-            let searchEngineUrl = isPrivate
-              ? kPrivateSearchEngineURL
-              : kSearchEngineURL;
+            let searchEngineUrl = isPrivate ? privateEngineUrl : engineUrl;
             let searchURL = searchEngineUrl.replace(
               "{searchTerms}",
               urlparamInput
             );
             let spec = URIInfo.preferredURI.spec.replace(/%27/g, "'");
             Assert.equal(spec, searchURL, "should get correct search URI");
-            let providerName = isPrivate
-              ? kPrivateSearchEngineID
-              : kSearchEngineID;
+            let providerName = isPrivate ? privateEngine.name : engine.name;
             Assert.equal(
               URIInfo.keywordProviderName,
               providerName,
@@ -864,6 +854,19 @@ function do_single_test_run() {
               isPrivate
             );
             Assert.equal(kwInfo.providerName, URIInfo.providerName);
+            if (providerName == kPostSearchEngineID) {
+              Assert.ok(kwInfo.postData);
+              let submission = engine.getSubmission(urlparamInput);
+              let enginePostData = NetUtil.readInputStreamToString(
+                submission.postData,
+                submission.postData.available()
+              );
+              let postData = NetUtil.readInputStreamToString(
+                kwInfo.postData,
+                kwInfo.postData.available()
+              );
+              Assert.equal(postData, enginePostData);
+            }
           } else {
             Assert.equal(
               URIInfo.preferredURI,
