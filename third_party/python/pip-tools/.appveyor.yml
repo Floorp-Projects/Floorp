@@ -3,126 +3,28 @@ environment:
       PYTHON: "C:\\Python36"
 
     matrix:
-        - TOXENV: py27-pip8.1.1-coverage
-          PIP: 8.1.1
-        - TOXENV: py27-pip9.0.1
-          PIP: 9.0.1
-        - TOXENV: py27-pip9.0.3
-          PIP: 9.0.3
-        - TOXENV: py27-pip10.0.1
-          PIP: 10.0.1
-        - TOXENV: py27-pip18.0
-          PIP: 18.0
-        - TOXENV: py27-pip19.0.3
-          PIP: 19.0.3
-        - TOXENV: py27-pip19.1
-          PIP: 19.1
-        - TOXENV: py27-pip19.2.3
-          PIP: 19.2.3
-        - TOXENV: py27-pip19.3
-          PIP: 19.3
-        - TOXENV: py27-pip20.0
+        - TOXENV: py27-pip20.0-coverage
           PIP: 20.0
-        - TOXENV: py27-pipmaster
-          PIP: master
         - TOXENV: py27-piplatest-coverage
           PIP: latest
 
-        - TOXENV: py35-pip8.1.1
-          PIP: 8.1.1
-        - TOXENV: py35-pip9.0.1
-          PIP: 9.0.1
-        - TOXENV: py35-pip9.0.3
-          PIP: 9.0.3
-        - TOXENV: py35-pip10.0.1
-          PIP: 10.0.1
-        - TOXENV: py35-pip18.0-coverage
-          PIP: 18.0
-        - TOXENV: py35-pip19.0.3
-          PIP: 19.0.3
-        - TOXENV: py35-pip19.1
-          PIP: 19.1
-        - TOXENV: py35-pip19.2.3
-          PIP: 19.2.3
-        - TOXENV: py35-pip19.3
-          PIP: 19.3
         - TOXENV: py35-pip20.0
           PIP: 20.0
-        - TOXENV: py35-pipmaster
-          PIP: master
         - TOXENV: py35-piplatest
           PIP: latest
 
-        - TOXENV: py36-pip8.1.1
-          PIP: 8.1.1
-        - TOXENV: py36-pip9.0.1
-          PIP: 9.0.1
-        - TOXENV: py36-pip9.0.3
-          PIP: 9.0.3
-        - TOXENV: py36-pip10.0.1
-          PIP: 10.0.1
-        - TOXENV: py36-pip18.0
-          PIP: 18.0
-        - TOXENV: py36-pip19.0.3-coverage
-          PIP: 19.0.3
-        - TOXENV: py36-pip19.1
-          PIP: 19.1
-        - TOXENV: py36-pip19.2.3
-          PIP: 19.2.3
-        - TOXENV: py36-pip19.3
-          PIP: 19.3
         - TOXENV: py36-pip20.0
           PIP: 20.0
-        - TOXENV: py36-pipmaster
-          PIP: master
         - TOXENV: py36-piplatest
           PIP: latest
 
-        - TOXENV: py37-pip8.1.1
-          PIP: 8.1.1
-        - TOXENV: py37-pip9.0.1
-          PIP: 9.0.1
-        - TOXENV: py37-pip9.0.3
-          PIP: 9.0.3
-        - TOXENV: py37-pip10.0.1
-          PIP: 10.0.1
-        - TOXENV: py37-pip18.0
-          PIP: 18.0
-        - TOXENV: py37-pip19.0.3
-          PIP: 19.0.3
-        - TOXENV: py37-pip19.1-coverage
-          PIP: 19.1
-        - TOXENV: py37-pip19.2.3
-          PIP: 19.2.3
-        - TOXENV: py37-pip19.3
-          PIP: 19.3
         - TOXENV: py37-pip20.0
           PIP: 20.0
-        - TOXENV: py37-pipmaster-coverage
-          PIP: master
-        - TOXENV: py37-piplatest-coverage
+        - TOXENV: py37-piplatest
           PIP: latest
 
-        - TOXENV: py38-pip9.0.1
-          PIP: 9.0.1
-        - TOXENV: py38-pip9.0.3
-          PIP: 9.0.3
-        - TOXENV: py38-pip10.0.1
-          PIP: 10.0.1
-        - TOXENV: py38-pip18.0
-          PIP: 18.0
-        - TOXENV: py38-pip19.0.3
-          PIP: 19.0.3
-        - TOXENV: py38-pip19.1
-          PIP: 19.1
-        - TOXENV: py38-pip19.2.3-coverage
-          PIP: 19.2.3
-        - TOXENV: py38-pip19.3-coverage
-          PIP: 19.3
-        - TOXENV: py38-pip20.0
+        - TOXENV: py38-pip20.0-coverage
           PIP: 20.0
-        - TOXENV: py38-pipmaster-coverage
-          PIP: master
         - TOXENV: py38-piplatest-coverage
           PIP: latest
 
@@ -130,19 +32,10 @@ matrix:
   fast_finish: true
   allow_failures:
     - PIP: master
-  exclude:
-    # platform.linux_distribution() is removed in Python 3.8 (bpo-28167).
-    - TOXENV: py38-pip8.1.1
 
 install:
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-
-    # Temporary workaround to prevent tests failing.
-    # See GH-983 for the details.
-    # TODO remove this after tox>3.14.0 being released
-    - pip install "virtualenv>=16.0.0"
-
-    - pip install tox
+    - python -m pip install -U tox virtualenv
 
 build: false
 
