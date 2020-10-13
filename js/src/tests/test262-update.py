@@ -77,7 +77,7 @@ def tryParseTestFile(test262parser, source, testName):
     Returns the result of test262parser.parseTestRecord() or None if a parser
     error occured.
 
-    See <https://github.com/tc39/test262/blob/master/INTERPRETING.md> for an
+    See <https://github.com/tc39/test262/blob/main/INTERPRETING.md> for an
     overview of the returned test attributes.
     """
     try:
@@ -232,7 +232,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     """
 
     # The test record dictionary, its contents are explained in depth at
-    # <https://github.com/tc39/test262/blob/master/INTERPRETING.md>.
+    # <https://github.com/tc39/test262/blob/main/INTERPRETING.md>.
     testRec = tryParseTestFile(test262parser, testSource.decode("utf-8"), testName)
 
     # jsreftest meta data
@@ -454,7 +454,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
                 continue
 
             # Files ending with "_FIXTURE.js" are fixture files:
-            # https://github.com/tc39/test262/blob/master/INTERPRETING.md#modules
+            # https://github.com/tc39/test262/blob/main/INTERPRETING.md#modules
             isFixtureFile = fileName.endswith("_FIXTURE.js")
 
             # Read the original test source and preprocess it for the jstests harness.
@@ -493,7 +493,7 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
     """
     import subprocess
 
-    # TOOD: fail if it's in the master branch? or require a branch name?
+    # TODO: fail if it's in the default branch? or require a branch name?
 
     # Checks for unstaged or non committed files. A clean branch provides a clean status.
     status = subprocess.check_output(
@@ -512,26 +512,26 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
 
     # Fetches the file names to import
     files = subprocess.check_output(
-        ("git -C %s diff master --diff-filter=ACMR --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=ACMR --name-only" % srcDir).split(" ")
     )
 
     # Fetches the deleted files to print an output log. This can be used to
     # set up the skip list, if necessary.
     deletedFiles = subprocess.check_output(
-        ("git -C %s diff master --diff-filter=D --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=D --name-only" % srcDir).split(" ")
     )
 
     # Fetches the modified files as well for logging to support maintenance
     # in the skip list.
     modifiedFiles = subprocess.check_output(
-        ("git -C %s diff master --diff-filter=M --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=M --name-only" % srcDir).split(" ")
     )
 
     # Fetches the renamed files for the same reason, this avoids duplicate
     # tests if running the new local folder and the general imported Test262
     # files.
     renamedFiles = subprocess.check_output(
-        ("git -C %s diff master --diff-filter=R --summary" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=R --summary" % srcDir).split(" ")
     )
 
     # Print some friendly output
@@ -730,7 +730,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update the test262 test suite.")
     parser.add_argument("--url", default="git://github.com/tc39/test262.git",
                         help="URL to git repository (default: %(default)s)")
-    parser.add_argument("--branch", default="master",
+    parser.add_argument("--branch", default="main",
                         help="Git branch (default: %(default)s)")
     parser.add_argument("--revision", default="HEAD",
                         help="Git revision (default: %(default)s)")
