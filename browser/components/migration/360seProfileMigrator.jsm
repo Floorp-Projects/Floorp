@@ -206,6 +206,7 @@ Bookmarks.prototype = {
           MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
         let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
         if (
+          !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
           !MigrationUtils.isStartupMigration &&
           PlacesUtils.getChildCountForFolder(
             PlacesUtils.bookmarks.toolbarGuid
