@@ -60,9 +60,25 @@ function makeChan(uri) {
   return chan;
 }
 
+add_task(async function test_response_without_body() {
+  let chan = makeChan("https://foo.example.com/no_body");
+  let listener = new Http3Listener();
+  listener.expectedAmount = 0;
+  await chanPromise(chan, listener);
+});
+
 add_task(async function test_response_without_content_length() {
   let chan = makeChan("https://foo.example.com/no_content_length");
   let listener = new Http3Listener();
+  listener.expectedAmount = 4000;
+  await chanPromise(chan, listener);
+});
+
+add_task(async function test_content_length_smaller_than_data_len() {
+  let chan = makeChan("https://foo.example.com/content_length_smaller");
+  let listener = new Http3Listener();
+  // content-lentgth is 4000, but data length is 8000.
+  // We should return an error here - bug 1670086.
   listener.expectedAmount = 4000;
   await chanPromise(chan, listener);
 });
