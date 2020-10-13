@@ -40,6 +40,7 @@ class ReaderView {
   show(doc, url, options = {fontSize: 4, fontType: "sans-serif", colorScheme: "light"}) {
     let result = new Readability(doc, {classesToPreserve: preservedClasses}).parse();
     result.language = doc.documentElement.lang;
+    document.title = result.title;
 
     let article = Object.assign(
       result,
@@ -55,8 +56,6 @@ class ReaderView {
     this.setFontSize(options.fontSize);
     this.setFontType(options.fontType);
     this.setColorScheme(options.colorScheme);
-
-    document.title = article.title;
   }
 
   /**
