@@ -37,6 +37,8 @@
 #  define JS_CODELABEL_LINKMODE
 #endif
 
+using mozilla::CheckedInt;
+
 namespace js {
 namespace jit {
 
@@ -271,8 +273,6 @@ struct Address {
 #if JS_BITS_PER_WORD == 32
 
 static inline Address LowWord(const Address& address) {
-  using mozilla::CheckedInt;
-
   CheckedInt<int32_t> offset =
       CheckedInt<int32_t>(address.offset) + INT64LOW_OFFSET;
   MOZ_ALWAYS_TRUE(offset.isValid());
@@ -280,8 +280,6 @@ static inline Address LowWord(const Address& address) {
 }
 
 static inline Address HighWord(const Address& address) {
-  using mozilla::CheckedInt;
-
   CheckedInt<int32_t> offset =
       CheckedInt<int32_t>(address.offset) + INT64HIGH_OFFSET;
   MOZ_ALWAYS_TRUE(offset.isValid());
@@ -312,8 +310,6 @@ struct BaseIndex {
 #if JS_BITS_PER_WORD == 32
 
 static inline BaseIndex LowWord(const BaseIndex& address) {
-  using mozilla::CheckedInt;
-
   CheckedInt<int32_t> offset =
       CheckedInt<int32_t>(address.offset) + INT64LOW_OFFSET;
   MOZ_ALWAYS_TRUE(offset.isValid());
@@ -321,8 +317,6 @@ static inline BaseIndex LowWord(const BaseIndex& address) {
 }
 
 static inline BaseIndex HighWord(const BaseIndex& address) {
-  using mozilla::CheckedInt;
-
   CheckedInt<int32_t> offset =
       CheckedInt<int32_t>(address.offset) + INT64HIGH_OFFSET;
   MOZ_ALWAYS_TRUE(offset.isValid());
