@@ -48,6 +48,23 @@ function setResolutionAndScaleToFrameScript(resolution) {
 }
 
 this.test = class extends ExtensionAPI {
+  onStartup() {
+    ChromeUtils.registerWindowActor("TestSupport", {
+      child: {
+        moduleURI:
+          "resource://android/assets/web_extensions/test-support/TestSupportChild.jsm",
+      },
+      allFrames: true,
+    });
+  }
+
+  onShutdown(isAppShutdown) {
+    if (isAppShutdown) {
+      return;
+    }
+    ChromeUtils.unregisterWindowActor("TestSupport");
+  }
+
   getAPI(context) {
     return {
       test: {
@@ -161,6 +178,21 @@ this.test = class extends ExtensionAPI {
               "PanZoomControllerTest:SetResolutionAndScaleTo"
             );
           });
+        },
+
+        async flushApzRepaints(tabId) {
+          const tab = context.extension.tabManager.get(tabId);
+          const { browsingContext } = tab.browser;
+
+          // TODO: Note that `waitUntilApzStable` in apz_test_utils.js does
+          // flush APZ repaints in the parent process (i.e. calling
+          // nsIDOMWindowUtils.flushApzRepaints for the parent process) before
+          // flushApzRepaints is called for the target content document, if we
+          // still meet intermittent failures, we might want to do it here as
+          // well.
+          await browsingContext.currentWindowGlobal
+            .getActor("TestSupport")
+            .sendQuery("FlushApzRepaints");
         },
       },
     };

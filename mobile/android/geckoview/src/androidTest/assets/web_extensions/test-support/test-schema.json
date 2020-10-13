@@ -144,6 +144,18 @@
             "name": "tabId"
           }
         ]
+      },
+      {
+        "name": "flushApzRepaints",
+        "type": "function",
+        "async": true,
+        "description": "Invokes nsIDOMWindowUtils.flushApzRepaints for the document of the tabId.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
       }
     ]
   }
