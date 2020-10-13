@@ -62,6 +62,13 @@ def set_artifact_map(config, tasks):
 
 @transforms.add
 def add_version(config, tasks):
+    version = get_version()
+    nightly_version = get_nightly_version(config, version)
+
     for task in tasks:
-        task["worker"]["version"] = get_version()
+        task["worker"]["version"] = craft_path_version(
+            version,
+            task["attributes"]["build-type"],
+            nightly_version)
+        )
         yield task
