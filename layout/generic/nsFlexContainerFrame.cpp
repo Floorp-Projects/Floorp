@@ -1380,6 +1380,36 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       childRI, flexGrow, flexShrink, flexBaseSize, mainMinSize, mainMaxSize,
       tentativeCrossSize, crossMinSize, crossMaxSize, aAxisTracker);
 
+  // We may be about to do computations based on our item's cross-size
+  // (e.g. using it as a constraint when measuring our content in the
+  // main axis, or using it with the intrinsic ratio to obtain a main size).
+  // BEFORE WE DO THAT, we need let the item "pre-stretch" its cross size (if
+  // it's got 'align-self:stretch'), for a certain case where the spec says
+  // the stretched cross size is considered "definite". That case is if we
+  // have a single-line (nowrap) flex container which itself has a definite
+  // cross-size.  Otherwise, we'll wait to do stretching, since (in other
+  // cases) we don't know how much the item should stretch yet.
+  const bool isSingleLine =
+      StyleFlexWrap::Nowrap == aParentReflowInput.mStylePosition->mFlexWrap;
+  if (isSingleLine) {
+    // XXXdholbert Maybe this should share logic with ComputeCrossSize()...
+    // Alternately, maybe tentative container cross size should be passed down.
+    nscoord containerCrossSize = GET_CROSS_COMPONENT_LOGICAL(
+        aAxisTracker, aAxisTracker.GetWritingMode(),
+        aParentReflowInput.ComputedISize(), aParentReflowInput.ComputedBSize());
+    // Is container's cross size "definite"?
+    // - If it's column-oriented, then "yes", because its cross size is its
+    // inline-size which is always definite from its descendants' perspective.
+    // - Otherwise (if it's row-oriented), then we check the actual size
+    // and call it definite if it's not NS_UNCONSTRAINEDSIZE.
+    if (aAxisTracker.IsColumnOriented() ||
+        containerCrossSize != NS_UNCONSTRAINEDSIZE) {
+      // Container's cross size is "definite", so we can resolve the item's
+      // stretched cross size using that.
+      item->ResolveStretchedCrossSize(containerCrossSize);
+    }
+  }
+
   // If we're inflexible, we can just freeze to our hypothetical main-size
   // up-front. Similarly, if we're a fixed-size widget, we only have one
   // valid size, so we freeze to keep ourselves from flexing.
@@ -1577,37 +1607,6 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
   FLEX_LOGV("Resolving auto main size or main min size for flex item %p",
             aFlexItem.Frame());
 
-  // We may be about to do computations based on our item's cross-size
-  // (e.g. using it as a constraint when measuring our content in the
-  // main axis, or using it with the intrinsic ratio to obtain a main size).
-  // BEFORE WE DO THAT, we need let the item "pre-stretch" its cross size (if
-  // it's got 'align-self:stretch'), for a certain case where the spec says
-  // the stretched cross size is considered "definite". That case is if we
-  // have a single-line (nowrap) flex container which itself has a definite
-  // cross-size.  Otherwise, we'll wait to do stretching, since (in other
-  // cases) we don't know how much the item should stretch yet.
-  const ReflowInput* flexContainerRI = aItemReflowInput.mParentReflowInput;
-  MOZ_ASSERT(flexContainerRI,
-             "flex item's reflow input should have ptr to container's state");
-  if (StyleFlexWrap::Nowrap == flexContainerRI->mStylePosition->mFlexWrap) {
-    // XXXdholbert Maybe this should share logic with ComputeCrossSize()...
-    // Alternately, maybe tentative container cross size should be passed down.
-    nscoord containerCrossSize = GET_CROSS_COMPONENT_LOGICAL(
-        aAxisTracker, aAxisTracker.GetWritingMode(),
-        flexContainerRI->ComputedISize(), flexContainerRI->ComputedBSize());
-    // Is container's cross size "definite"?
-    // - If it's column-oriented, then "yes", because its cross size is its
-    // inline-size which is always definite from its descendants' perspective.
-    // - Otherwise (if it's row-oriented), then we check the actual size
-    // and call it definite if it's not NS_UNCONSTRAINEDSIZE.
-    if (aAxisTracker.IsColumnOriented() ||
-        containerCrossSize != NS_UNCONSTRAINEDSIZE) {
-      // Container's cross size is "definite", so we can resolve the item's
-      // stretched cross size using that.
-      aFlexItem.ResolveStretchedCrossSize(containerCrossSize);
-    }
-  }
-
   nscoord resolvedMinSize;  // (only set/used if isMainMinSizeAuto==true)
   bool minSizeNeedsToMeasureContent = false;  // assume the best
   if (isMainMinSizeAuto) {
@@ -1663,9 +1662,10 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
           !flexBasisNeedsToMeasureContent;  // Are we *only* measuring it for
                                             // 'min-block-size:auto'?
 
+      const ReflowInput& flexContainerRI = *aItemReflowInput.mParentReflowInput;
       nscoord contentBSize =
           MeasureFlexItemContentBSize(aFlexItem, forceBResizeForMeasuringReflow,
-                                      aHasLineClampEllipsis, *flexContainerRI);
+                                      aHasLineClampEllipsis, flexContainerRI);
       if (minSizeNeedsToMeasureContent) {
         contentSizeSuggestion = contentBSize;
       }
