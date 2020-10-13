@@ -12,7 +12,6 @@ const {
   registerFront,
 } = require("devtools/shared/protocol.js");
 const { inspectorSpec } = require("devtools/shared/specs/inspector");
-loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
 const TELEMETRY_EYEDROPPER_OPENED_MENU =
@@ -48,7 +47,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     this.initialized = await Promise.all([
       this._getWalker(),
-      this._getHighlighter(),
       this._getPageStyle(),
     ]);
 
@@ -72,11 +70,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // so that their parent is the NodeFront of the <iframe>
     // element, coming from another process/target/WalkerFront.
     await this.walker.reparentRemoteFrame();
-  }
-
-  async _getHighlighter() {
-    const autohide = !flags.testing;
-    this.highlighter = await this.getHighlighter(autohide);
   }
 
   hasHighlighter(type) {
