@@ -3899,9 +3899,13 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aEvent, RelativeTo{topLevel->PresShell()->GetRootFrame()});
 
-  nsSize size(CSSPixel::ToAppUnits(width), CSSPixel::ToAppUnits(height));
-  nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x),
-                  CSSPixel::ToAppUnits(aCursor.mHotspot.y));
+  // The cursor size won't be affected by our full zoom in the parent process,
+  // so undo that before checking the rect.
+  float zoom = topLevel->GetFullZoom();
+  nsSize size(CSSPixel::ToAppUnits(width / zoom),
+              CSSPixel::ToAppUnits(height / zoom));
+  nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x / zoom),
+                  CSSPixel::ToAppUnits(aCursor.mHotspot.y / zoom));
 
   nsRect cursorRect(point - hotspot, size);
   return !topLevel->GetVisibleArea().Contains(cursorRect);
