@@ -56,6 +56,12 @@ class nsContentSecurityUtils {
 
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
+
+  /*
+   * Helper function to ensure referrer header should match the referrer which
+   * was computed in referrerInfo.
+   */
+  static void AssertReferrerHeaderMatchesReferrerInfo(nsIChannel* aChannel);
 #endif
 
   static bool ValidateScriptFilename(const char* aFilename,
