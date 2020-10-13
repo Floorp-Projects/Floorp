@@ -18,6 +18,7 @@
 
 #include "wasm/WasmInstance.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 
 #include <algorithm>
@@ -46,7 +47,9 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+
 using mozilla::BitwiseCast;
+using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 
 using CheckedU32 = CheckedInt<uint32_t>;

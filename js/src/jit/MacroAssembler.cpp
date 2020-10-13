@@ -56,6 +56,8 @@ using namespace js::jit;
 using JS::GenericNaN;
 using JS::ToInt32;
 
+using mozilla::CheckedInt;
+
 template <typename T>
 static void EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond,
                           const T& src, TypeSet::Type type, Label* label) {

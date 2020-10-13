@@ -6,6 +6,7 @@
 
 #include "ctypes/CTypes.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
@@ -60,6 +61,7 @@
 
 using std::numeric_limits;
 
+using mozilla::CheckedInt;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 
