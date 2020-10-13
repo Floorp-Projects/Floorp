@@ -146,6 +146,17 @@ interface nsIHttpChannel : nsIIdentChannel
                                      in boolean aMerge);
 
     /**
+     * Creates and sets new ReferrerInfo object
+     * @param aUrl          referrer url
+     * @param aPolicy       referrer policy of the created object
+     * @param aSendReferrer indicates if the referrer should not be sent or not
+     *                      even when it's available.
+     */
+    [must_use] void setNewReferrerInfo(in ACString aUrl,
+                                       in nsIReferrerInfo_ReferrerPolicyIDL aPolicy,
+                                       in boolean aSendReferrer);
+
+    /**
      * Set a request header with empty value.
      *
      * This should be used with caution in the cases where the behavior of

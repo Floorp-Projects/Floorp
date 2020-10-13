@@ -14,6 +14,7 @@
 #include "HttpBaseChannel.h"
 #include "HttpLog.h"
 #include "LoadInfo.h"
+#include "ReferrerInfo.h"
 #include "mozIThirdPartyUtil.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
@@ -1702,6 +1703,23 @@ HttpBaseChannel::SetRequestHeader(const nsACString& aHeader,
   }
 
   return mRequestHead.SetHeader(aHeader, flatValue, aMerge);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetNewReferrerInfo(const nsACString& aUrl,
+                                    nsIReferrerInfo::ReferrerPolicyIDL aPolicy,
+                                    bool aSendReferrer) {
+  nsresult rv;
+  // Create URI from string
+  nsCOMPtr<nsIURI> aURI;
+  rv = NS_NewURI(getter_AddRefs(aURI), aUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Create new ReferrerInfo and initialize it.
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo();
+  rv = referrerInfo->Init(aPolicy, aSendReferrer, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Set ReferrerInfo
+  return SetReferrerInfo(referrerInfo);
 }
 
 NS_IMETHODIMP

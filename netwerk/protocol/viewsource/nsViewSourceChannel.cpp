@@ -808,6 +808,15 @@ nsViewSourceChannel::SetRequestHeader(const nsACString& aHeader,
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::SetNewReferrerInfo(
+    const nsACString& aUrl, nsIReferrerInfo::ReferrerPolicyIDL aPolicy,
+    bool aSendReferrer) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->SetNewReferrerInfo(aUrl, aPolicy, aSendReferrer);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::SetEmptyRequestHeader(const nsACString& aHeader) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->SetEmptyRequestHeader(aHeader);
