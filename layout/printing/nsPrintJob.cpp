@@ -280,6 +280,8 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
     }
 
     RefPtr<Document> doc = docShell->GetDocument();
+    MOZ_DIAGNOSTIC_ASSERT(doc);
+    MOZ_DIAGNOSTIC_ASSERT(doc->IsStaticDocument());
 
     auto childPO = MakeUnique<nsPrintObject>();
     nsresult rv = childPO->InitAsNestedObject(docShell, doc, aParentPO.get());
