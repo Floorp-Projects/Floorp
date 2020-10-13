@@ -32,7 +32,8 @@ import mozilla.components.support.base.log.Log
  */
 class WebExtensionBrowserMenuItem(
     internal var action: Action,
-    internal val listener: () -> Unit
+    internal val listener: () -> Unit,
+    internal val id: String = ""
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

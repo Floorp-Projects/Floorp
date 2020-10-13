@@ -71,8 +71,8 @@ class WebExtensionBrowserMenu internal constructor(
         internal fun getOrUpdateWebExtensionMenuItems(
             state: BrowserState,
             tab: SessionState? = null
-        ): List<BrowserMenuItem> {
-            val menuItems = ArrayList<BrowserMenuItem>()
+        ): List<WebExtensionBrowserMenuItem> {
+            val menuItems = ArrayList<WebExtensionBrowserMenuItem>()
             val extensions = state.extensions.values.toList()
             extensions.filter { it.enabled }.sortedBy { it.name }
                 .forEach { extension ->
@@ -107,7 +107,7 @@ class WebExtensionBrowserMenu internal constructor(
             extension: WebExtensionState,
             globalAction: Action,
             tabAction: Action?,
-            menuItems: ArrayList<BrowserMenuItem>,
+            menuItems: ArrayList<WebExtensionBrowserMenuItem>,
             isPageAction: Boolean = false
         ): Boolean {
             val actionMap = if (isPageAction) webExtensionPageActions else webExtensionBrowserActions
@@ -120,7 +120,8 @@ class WebExtensionBrowserMenu internal constructor(
                 }
                 val browserMenuItem = WebExtensionBrowserMenuItem(
                     action = globalAction,
-                    listener = listener
+                    listener = listener,
+                    id = extension.id
                 )
                 browserMenuItem
             }

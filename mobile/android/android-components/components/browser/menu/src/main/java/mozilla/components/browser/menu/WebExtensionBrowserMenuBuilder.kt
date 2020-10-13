@@ -10,6 +10,7 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.NO_ID
 import mozilla.components.browser.menu.item.ParentBrowserMenuItem
+import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 
@@ -43,7 +44,21 @@ class WebExtensionBrowserMenuBuilder(
         val extensionMenuItems =
             WebExtensionBrowserMenu.getOrUpdateWebExtensionMenuItems(store.state, store.state.selectedTab)
 
-        val webExtMenuItem = if (extensionMenuItems.isNotEmpty()) {
+        val finalList = items.toMutableList()
+
+        val filteredExtensionMenuItems = extensionMenuItems.filter { webExtensionBrowserMenuItem ->
+            // Check if we have a placeholder
+            val index = finalList.indexOfFirst { browserMenuItem ->
+                (browserMenuItem as? WebExtensionPlaceholderMenuItem)?.id == webExtensionBrowserMenuItem.id
+            }
+            // Replace placeholder with corresponding web extension, and remove it from extensions menu list
+            if (index != -1) {
+                finalList[index] = webExtensionBrowserMenuItem
+            }
+            index == -1
+        }
+
+        val webExtMenuItem = if (filteredExtensionMenuItems.isNotEmpty()) {
             val backPressMenuItem = BackPressMenuItem(
                 label = context.getString(R.string.mozac_browser_menu_addons),
                 imageResource = R.drawable.mozac_ic_back,
@@ -60,12 +75,12 @@ class WebExtensionBrowserMenuBuilder(
 
             val webExtSubMenuItems = if (appendExtensionSubMenuAtStart) {
                 listOf(backPressMenuItem) + BrowserMenuDivider() +
-                extensionMenuItems +
-                BrowserMenuDivider() + addonsManagerMenuItem
+                    filteredExtensionMenuItems +
+                    BrowserMenuDivider() + addonsManagerMenuItem
             } else {
                 listOf(addonsManagerMenuItem) + BrowserMenuDivider() +
-                extensionMenuItems +
-                BrowserMenuDivider() + backPressMenuItem
+                    filteredExtensionMenuItems +
+                    BrowserMenuDivider() + backPressMenuItem
             }
 
             val webExtBrowserMenuAdapter = BrowserMenuAdapter(context, webExtSubMenuItems)
@@ -90,9 +105,9 @@ class WebExtensionBrowserMenuBuilder(
 
         val menuItems =
             if (appendExtensionSubMenuAtStart) {
-                listOf(webExtMenuItem) + items
+                listOf(webExtMenuItem) + finalList
             } else {
-                items + webExtMenuItem
+                finalList + webExtMenuItem
             }
 
         val adapter = BrowserMenuAdapter(context, menuItems)

@@ -19,7 +19,7 @@ import org.json.JSONObject
 object WebCompatReporterFeature {
     private val logger = Logger("mozac-webcompat-reporter")
 
-    internal const val WEBCOMPAT_REPORTER_EXTENSION_ID = "webcompat-reporter@mozilla.org"
+    const val WEBCOMPAT_REPORTER_EXTENSION_ID = "webcompat-reporter@mozilla.org"
     internal const val WEBCOMPAT_REPORTER_EXTENSION_URL = "resource://android/assets/extensions/webcompat-reporter/"
     internal const val WEBCOMPAT_REPORTER_MESSAGING_ID = "mozacWebcompatReporter"
 

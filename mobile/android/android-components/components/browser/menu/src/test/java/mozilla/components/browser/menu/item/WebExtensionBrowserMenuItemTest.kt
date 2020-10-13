@@ -82,7 +82,7 @@ class WebExtensionBrowserMenuItemTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val action = WebExtensionBrowserMenuItem(browserAction) {}
+        val action = WebExtensionBrowserMenuItem(browserAction, {})
         action.bind(mock(), view)
         testDispatcher.advanceUntilIdle()
 
@@ -115,7 +115,7 @@ class WebExtensionBrowserMenuItemTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val action = WebExtensionBrowserMenuItem(browserAction) {}
+        val action = WebExtensionBrowserMenuItem(browserAction, {})
         action.bind(mock(), view)
         testDispatcher.advanceUntilIdle()
 
@@ -155,7 +155,7 @@ class WebExtensionBrowserMenuItemTest {
                 badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val action = WebExtensionBrowserMenuItem(browserAction) {}
+        val action = WebExtensionBrowserMenuItem(browserAction, {})
         action.bind(mock(), view)
         testDispatcher.advanceUntilIdle()
 
@@ -186,7 +186,7 @@ class WebExtensionBrowserMenuItemTest {
                 badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val action = WebExtensionBrowserMenuItem(browserAction) {}
+        val action = WebExtensionBrowserMenuItem(browserAction, {})
         action.bind(mock(), view)
         testDispatcher.advanceUntilIdle()
 
@@ -219,9 +219,7 @@ class WebExtensionBrowserMenuItemTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val item = WebExtensionBrowserMenuItem(browserAction) {
-            callbackInvoked = true
-        }
+        val item = WebExtensionBrowserMenuItem(browserAction, { callbackInvoked = true })
 
         val menu: WebExtensionBrowserMenu = mock()
 
@@ -258,7 +256,7 @@ class WebExtensionBrowserMenuItemTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val item = WebExtensionBrowserMenuItem(browserAction) {}
+        val item = WebExtensionBrowserMenuItem(browserAction, {})
 
         val menu: WebExtensionBrowserMenu = mock()
 

@@ -17,7 +17,6 @@ import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExte
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExtensionPageActions
 import mozilla.components.browser.menu.facts.BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -191,13 +190,13 @@ class WebExtensionBrowserMenuTest {
         var actionMenu = browserMenuItems[0]
         assertEquals(
             "overridden_browser_action_title",
-            (actionMenu as WebExtensionBrowserMenuItem).action.title
+            actionMenu.action.title
         )
 
         actionMenu = browserMenuItems[1]
         assertEquals(
             "overridden_page_action_title",
-            (actionMenu as WebExtensionBrowserMenuItem).action.title
+            actionMenu.action.title
         )
     }
 
@@ -244,12 +243,12 @@ class WebExtensionBrowserMenuTest {
         var menuAction = browserMenuItems[0]
         assertEquals(
             "enabled_browser_action",
-            (menuAction as WebExtensionBrowserMenuItem).action.title
+            menuAction.action.title
         )
         menuAction = browserMenuItems[1]
         assertEquals(
             "enabled_page_action",
-            (menuAction as WebExtensionBrowserMenuItem).action.title
+            menuAction.action.title
         )
     }
 
@@ -391,8 +390,8 @@ class WebExtensionBrowserMenuTest {
         val browserState = BrowserState(extensions = browserExtensions)
         val actionItems = getOrUpdateWebExtensionMenuItems(browserState, tabSessionState)
         assertEquals(2, actionItems.size)
-        assertEquals(actionExt1, (actionItems[0] as WebExtensionBrowserMenuItem).action)
-        assertEquals(actionExt2, (actionItems[1] as WebExtensionBrowserMenuItem).action)
+        assertEquals(actionExt1, actionItems[0].action)
+        assertEquals(actionExt2, actionItems[1].action)
     }
 
     @Test
@@ -432,7 +431,7 @@ class WebExtensionBrowserMenuTest {
             )
 
         val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
-        val menuItem = browserMenuItems[1] as WebExtensionBrowserMenuItem
+        val menuItem = browserMenuItems[1]
         val menu: WebExtensionBrowserMenu = mock()
 
         menuItem.bind(menu, view)
@@ -482,6 +481,6 @@ class WebExtensionBrowserMenuTest {
         val browserStateAllowedInPrivateBrowsing = BrowserState(extensions = browserExtensionsAllowedInPrivateBrowsing)
         val actionItemsAllowedInPrivateBrowsing = getOrUpdateWebExtensionMenuItems(browserStateAllowedInPrivateBrowsing, tabSessionState)
         assertEquals(1, actionItemsAllowedInPrivateBrowsing.size)
-        assertEquals(actionExt1, (actionItemsAllowedInPrivateBrowsing[0] as WebExtensionBrowserMenuItem).action)
+        assertEquals(actionExt1, actionItemsAllowedInPrivateBrowsing[0].action)
     }
 }
