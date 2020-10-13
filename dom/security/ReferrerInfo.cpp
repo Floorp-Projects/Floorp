@@ -944,7 +944,8 @@ HashNumber ReferrerInfo::Hash() const {
 
 NS_IMETHODIMP
 ReferrerInfo::Init(nsIReferrerInfo::ReferrerPolicyIDL aReferrerPolicy,
-                   bool aSendReferrer, nsIURI* aOriginalReferrer) {
+                   bool aSendReferrer, nsIURI* aOriginalReferrer,
+                   JSContext* aCx) {
   MOZ_ASSERT(!mInitialized);
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;

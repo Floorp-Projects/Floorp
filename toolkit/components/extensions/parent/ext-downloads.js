@@ -701,19 +701,7 @@ this.downloads = class extends ExtensionAPI {
 
               if (options.headers) {
                 for (let { name, value } of options.headers) {
-                  if (name.toLowerCase() == "referer") {
-                    // The referer header and referrerInfo object should always
-                    // match. So if we want to set the header from privileged
-                    // context, we should set referrerInfo. The referrer header
-                    // will get set internally.
-                    channel.setNewReferrerInfo(
-                      value,
-                      Ci.nsIReferrerInfo.UNSAFE_URL,
-                      true
-                    );
-                  } else {
-                    channel.setRequestHeader(name, value, false);
-                  }
+                  channel.setRequestHeader(name, value, false);
                 }
               }
 
