@@ -13,33 +13,29 @@ import six
 
 from collections import OrderedDict
 
-import mozpack.path as mozpath
-
-from mozbuild.artifact_builds import JOB_CHOICES
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
     SubCommand,
 )
-
+from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
 )
-
 from mozbuild.util import ensureParentDir
+import mozpack.path as mozpath
+import mozversioncontrol
 
 
 _COULD_NOT_FIND_ARTIFACTS_TEMPLATE = (
-    'Could not find artifacts for a toolchain build named `{build}`. Local '
-    'commits, dirty/stale files, and other changes in your checkout may cause '
-    'this error. Make sure you are on a fresh, current checkout of '
-    'mozilla-central. If you are already, you may be able to avoid this error '
-    'by running `mach clobber python`. Beware that commands like `mach '
-    'bootstrap` and `mach artifact` are unlikely to work on any versions of '
-    'the code besides recent revisions of mozilla-central.')
+    'ERROR!!!!!! Could not find artifacts for a toolchain build named '
+    '`{build}`. Local commits, dirty/stale files, and other changes in your '
+    'checkout may cause this error. Make sure you are on a fresh, current '
+    'checkout of mozilla-central. Beware that commands like `mach bootstrap` '
+    'and `mach artifact` are unlikely to work on any versions of the code '
+    'besides recent revisions of mozilla-central.')
 
 
 class SymbolsAction(argparse.Action):
@@ -348,6 +344,16 @@ class PackageFrontend(MachCommandBase):
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              _COULD_NOT_FIND_ARTIFACTS_TEMPLATE)
+                    # Get and print some helpful info for diagnosis.
+                    repo = mozversioncontrol.get_repository_object(
+                        self.topsrcdir)
+                    changed_files = (set(repo.get_outgoing_files()) |
+                                     set(repo.get_changed_files()))
+                    if changed_files:
+                        self.log(logging.ERROR, 'artifact', {},
+                                 'Hint: consider reverting your local changes '
+                                 'to the following files: %s' %
+                                 sorted(changed_files))
                     if 'TASKCLUSTER_ROOT_URL' in os.environ:
                         self.log(logging.ERROR, 'artifact', {'build': user_value},
                                  'Due to the environment variable TASKCLUSTER_ROOT_URL '
