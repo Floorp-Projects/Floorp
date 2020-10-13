@@ -113,17 +113,6 @@ Currently, we're able to trigger this action via `Treeherder`_; we sometimes use
 
 This requires being signed in with the right scopes. On `Release Promotion Projects`_, there's a dropdown in the top right of a given revision. Choose ``Custom Push Action``, then ``Release Promotion``. The inputs are specifiable as raw yaml on the left hand column.
 
-Triggering the release promotion action via releaserunner3
-----------------------------------------------------------
-
-`Releaserunner3`_ is our current method of triggering the release promotion action from Ship It in production. Examples of how to run this are in the `releasewarrior docs`_.
-
-To deal with the above ``previous_graph_ids`` logic, we allow for a ``decision_task_id`` in `trigger_action.py`_. As of 2018-03-14, this script assumes we want to download ``parameters.yml`` from the same decision task that we get ``actions.json`` from. At some point, we'd like the `trigger_action.py`_ call to happen automatically once we push a button on Ship It.
-
-The action task that's generated from ``actions.json`` matches the `.taskcluster.yml`_ template. This is important; Chain of Trust (v2) requires that the task definition be reproducible from `.taskcluster.yml`_.
-
-.. _taskid vs taskgroupid:
-
 Release promotion action taskId and taskGroupId
 -----------------------------------------------
 
@@ -164,7 +153,6 @@ The ``parameters.yml`` file is downloadable from a previous decision or action t
 .. _release promotion action: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/actions/release_promotion.py
 .. _Treeherder: https://treeherder.mozilla.org
 .. _Release Promotion Projects: https://searchfox.org/mozilla-central/search?q=RELEASE_PROMOTION_PROJECTS&path=taskcluster/taskgraph/util/attributes.py
-.. _Releaserunner3: https://hg.mozilla.org/build/tools/file/tip/buildfarm/release
 .. _releasewarrior docs: https://github.com/mozilla-releng/releasewarrior-2.0/blob/master/docs/release-promotion/desktop/howto.md#how
 .. _trigger_action.py: https://searchfox.org/build-central/source/tools/buildfarm/release/trigger_action.py#118
 .. _.taskcluster.yml: https://searchfox.org/mozilla-central/source/.taskcluster.yml
