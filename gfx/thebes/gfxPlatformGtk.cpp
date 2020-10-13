@@ -245,22 +245,15 @@ gfxPlatformFontList* gfxPlatformGtk::CreatePlatformFontList() {
   return nullptr;
 }
 
-// FIXME(emilio, bug 1554850): This should be invalidated somehow, right now
-// requires a restart.
-static int32_t sDPI = 0;
-
 int32_t gfxPlatformGtk::GetFontScaleDPI() {
-  if (MOZ_UNLIKELY(!sDPI)) {
-    // Make sure init is run so we have a resolution
-    GdkScreen* screen = gdk_screen_get_default();
-    gtk_settings_get_for_screen(screen);
-    sDPI = int32_t(round(gdk_screen_get_resolution(screen)));
-    if (sDPI <= 0) {
-      // Fall back to something sane
-      sDPI = 96;
-    }
+  GdkScreen* screen = gdk_screen_get_default();
+  gtk_settings_get_for_screen(screen);
+  int32_t dpi = int32_t(round(gdk_screen_get_resolution(screen)));
+  if (dpi <= 0) {
+    // Fall back to something sane
+    dpi = 96;
   }
-  return sDPI;
+  return dpi;
 }
 
 double gfxPlatformGtk::GetFontScaleFactor() {
