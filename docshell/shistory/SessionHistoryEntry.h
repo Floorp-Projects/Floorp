@@ -74,7 +74,10 @@ class SessionHistoryInfo {
     return mScrollRestorationIsManual;
   }
   const nsAString& GetTitle() { return mTitle; }
-  void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
+  void SetTitle(const nsAString& aTitle) {
+    mTitle = aTitle;
+    MaybeUpdateTitleFromURI();
+  }
 
   const nsAString& GetName() { return mName; }
   void SetName(const nsAString& aName) { mName = aName; }
