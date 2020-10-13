@@ -22,17 +22,128 @@
 # Changelog is reviewable by anyone on any team
 /docs/changelog.md @mozilla-mobile
 
-# Glean telemetry library and sample
-/components/service/glean/ @mozilla-mobile/telemetry
-/samples/glean/ @mozilla-mobile/telemetry
-
-# Experiments library
-/components/service/experiments/ @mozilla-mobile/telemetry
-
 # Release Engineering pipeline
 /.cron.yml /@mozilla-mobile/releng @mozilla-mobile/act
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
 /CODEOWNERS @mozilla-mobile/releng @mozilla-mobile/act
 
-# Nearby component
-/components/lib/nearby @espertus @mozilla-mobile/act
+/components/browser/awesomebar/             @pocmo
+/components/browser/domains/                @csadilek
+/components/browser/engine-gecko-beta/      @pocmo @csadilek @amejia481
+/components/browser/engine-gecko-nightly/   @pocmo @csadilek @amejia481
+/components/browser/engine-gecko/           @pocmo @csadilek @amejia481
+/components/browser/engine-system/          @amejia481
+/components/browser/errorpages/             @mozilla-mobile/act
+/components/browser/icons/                  @pocmo
+/components/browser/menu/                   @mozilla-mobile/act
+/components/browser/menu2/                  @mozilla-mobile/act
+/components/browser/search/                 @boek @pocmo
+/components/browser/session/                @pocmo @csadilek
+/components/browser/state/                  @pocmo @csadilek
+/components/browser/storage-memory/         @grigoryk
+/components/browser/storage-sync/           @grigoryk
+/components/browser/tabstray/               @jonalmeida @boek
+/components/browser/thumbnails/             @jonalmeida @gabrielluong
+/components/browser/toolbar/                @pocmo
+
+/components/concept/awesomebar/             @pocmo @csadilek
+/components/concept/base/                   @pocmo
+/components/concept/engine/                 @pocmo @csadilek
+/components/concept/fetch/                  @pocmo @csadilek
+/components/concept/menu/                   @mozilla-mobile/act
+/components/concept/push/                   @jonalmeida
+/components/concept/storage/                @grigoryk
+/components/concept/sync/                   @grigoryk
+/components/concept/tabstray/               @jonalmeida @boek
+/components/concept/toolbar/                @pocmo
+
+/components/feature/accounts-push/          @jonalmeida
+/components/feature/accounts/               @grigoryk
+/components/feature/addons/                 @csadilek @amejia481
+/components/feature/app-links/              @rocketsroger
+/components/feature/awesomebar/             @csadilek
+/components/feature/containers/             @gabrielluong
+/components/feature/contextmenu/            @pocmo
+/components/feature/customtabs/             @jonalmeida
+/components/feature/downloads/              @Amejia481 @csadilek
+/components/feature/findinpage/             @Amejia481
+/components/feature/intent/                 @mozilla-mobile/act
+/components/feature/media/                  @pocmo
+/components/feature/p2p/                    @espertus @jonalmeida
+/components/feature/privatemode/            @mozilla-mobile/act
+/components/feature/prompts/                @amejia481 @ekager
+/components/feature/push/                   @jonalmeida @grigoryk
+/components/feature/pwa/                    @mozilla-mobile/act
+/components/feature/qr/                     @csadilek
+/components/feature/readerview/             @csadilek
+/components/feature/recentlyclosed/         @ekager
+/components/feature/search/                 @pocmo
+/components/feature/session/                @pocmo @csadilek
+/components/feature/share/                  @mozilla-mobile/act
+/components/feature/sitepermissions/        @amejia481
+/components/feature/syncedtabs/             @jonalmeida @eoger
+/components/feature/tab-collections/        @pocmo
+/components/feature/tabs/                   @jonalmeida @boek
+/components/feature/toolbar/                @pocmo
+/components/feature/top-sites/              @gabrielluong @grigoryk
+/components/feature/webcompat-reporter/     @mozilla-mobile/Webcompat
+/components/feature/webcompat/              @mozilla-mobile/Webcompat
+/components/feature/webnotifications/       @jonalmeida @rocketsroger
+
+/components/lib/crash/                      @pocmo @rocketsroger
+/components/lib/dataprotect/                @grigoryk
+/components/lib/fetch-httpurlconnection/    @pocmo
+/components/lib/fetch-okhttp/               @pocmo
+/components/lib/jexl/                       @pocmo
+/components/lib/nearby/                     @espertus @jonalmeida
+/components/lib/publicsuffixlist/           @pocmo
+/components/lib/push-amazon/                @jonalmeida
+/components/lib/push-firebase/              @jonalmeida
+/components/lib/state/                      @pocmo @csadilek
+
+/components/service/digitalassetlinks/      @mozilla-mobile/act
+/components/service/experiments/            @mozilla-mobile/telemetry
+/components/service/firefox-accounts/       @grigoryk
+/components/service/fretboard/              @pocmo
+/components/service/glean/                  @mozilla-mobile/telemetry
+/components/service/location/               @pocmo
+/components/service/nimbus/                 @mozilla-mobile/telemetry @mozilla-mobile/ast
+/components/service/pocket/                 @mcomella
+/components/service/sync-logins/            @grigoryk @ekager
+
+/components/support/android-test/           @amejia481
+/components/support/base/                   @pocmo @amejia481
+/components/support/images/                 @mozilla-mobile/act
+/components/support/ktx/                    @amejia481
+/components/support/locale/                 @amejia481
+/components/support/migration/              @pocmo @grigoryk
+/components/support/rusthttp/               @eoger
+/components/support/rustlog/                @eoger
+/components/support/sync-telemetry/         @grigoryk
+/components/support/test-appservices/       @pocmo
+/components/support/test-libstate/          @pocmo @csadilek
+/components/support/test/                   @amejia481
+/components/support/utils/                  @mozilla-mobile/act
+/components/support/webextensions/          @csadilek @amejia481 @psymoon
+
+/components/tooling/detekt/
+/components/tooling/fetch-tests/            @csadilek
+/components/tooling/glean-gradle-plugin/    @mozilla-mobile/telemetry
+/components/tooling/lint/                   @ekager
+
+/components/ui/autocomplete/                @mozilla-mobile/act
+/components/ui/colors/                      @mozilla-mobile/act
+/components/ui/fonts/                       @mozilla-mobile/act
+/components/ui/icons/                       @mozilla-mobile/act
+/components/ui/tabcounter/                  @mozilla-mobile/act
+/components/ui/widgets/                     @mozilla-mobile/act
+
+/samples/browser/                           @csadilek @amejia481
+/samples/crash/                             @pocmo @rocketsroger
+/samples/dataprotect/                       @mozilla-mobile/act
+/samples/firefox-accounts/                  @grigoryk
+/samples/glean/                             @mozilla-mobile/telemetry
+/samples/nearby-chat/                       @jonalmeida
+/samples/sync-logins/                       @ekager
+/samples/sync/                              @grigoryk
+/samples/toolbar/                           @pocmo
