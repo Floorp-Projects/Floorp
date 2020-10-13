@@ -527,7 +527,10 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     Maybe<bool>& aReloadActiveEntry) {
   MOZ_DIAGNOSTIC_ASSERT(!aLoadState);
 
+  aCanReload = true;
   nsISHistory* shistory = GetSessionHistory();
+  NS_ENSURE_TRUE_VOID(shistory);
+
   shistory->NotifyOnHistoryReload(&aCanReload);
   if (!aCanReload) {
     return;
