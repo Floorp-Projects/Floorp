@@ -107,9 +107,10 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
     }                                      \
   } while (0)
 
-void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
-                                       ipc::StructuredCloneData&& aData,
-                                       ipc::StructuredCloneData&& aStack) {
+void JSActorManager::ReceiveRawMessage(
+    const JSActorMessageMeta& aMetadata,
+    Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   CrashReporter::AutoAnnotateCrashReport autoActorName(
@@ -134,9 +135,13 @@ void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
   Maybe<JS::AutoSetAsyncStackForNewCalls> stackSetter;
   {
     JS::Rooted<JS::Value> stackVal(cx);
-    aStack.Read(cx, &stackVal, error);
-    if (error.Failed()) {
-      return;
+    if (aStack) {
+      aStack->Read(cx, &stackVal, error);
+      if (error.Failed()) {
+        error.SuppressException();
+        JS_ClearPendingException(cx);
+        stackVal.setUndefined();
+      }
     }
 
     if (stackVal.isObject()) {
@@ -156,10 +161,12 @@ void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
   }
 
   JS::Rooted<JS::Value> data(cx);
-  aData.Read(cx, &data, error);
-  if (error.Failed()) {
-    CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
-    return;
+  if (aData) {
+    aData->Read(cx, &data, error);
+    if (error.Failed()) {
+      CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+      return;
+    }
   }
 
   switch (aMetadata.kind()) {
