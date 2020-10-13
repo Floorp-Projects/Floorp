@@ -2340,6 +2340,9 @@ HttpChannelChild::SetupFallbackChannel(const char* aFallbackKey) {
   DROP_DEAD();
 }
 
+NS_IMETHODIMP
+HttpChannelChild::GetIsAuthChannel(bool* aIsAuthChannel) { DROP_DEAD(); }
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsICacheInfoChannel
 //-----------------------------------------------------------------------------
