@@ -52,7 +52,6 @@ const createStoreWithMiddleware = (opts = {}) => {
   }
   middleware.push(
     opts.thunkOptions ? thunkWithOptions.bind(null, opts.thunkOptions) : thunk,
-    thunk,
     promise,
 
     // Order is important: services must go last as they always

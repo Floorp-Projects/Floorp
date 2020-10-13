@@ -36,7 +36,7 @@ function receiveProperties(grip, response, error) {
  * when they are received.
  */
 function fetchProperties(grip) {
-  return async dispatch => {
+  return async ({ dispatch }) => {
     try {
       // Use 'DomProvider' object exposed from the chrome scope.
       const response = await DomProvider.getPrototypeAndProperties(grip);

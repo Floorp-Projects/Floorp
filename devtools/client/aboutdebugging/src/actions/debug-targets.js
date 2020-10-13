@@ -79,7 +79,7 @@ function getTabForUrl(url) {
 }
 
 function inspectDebugTarget(type, id) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const runtime = getCurrentRuntime(getState().runtimes);
     id = encodeURIComponent(id);
 
@@ -128,7 +128,7 @@ function installTemporaryExtension() {
   const message = l10n.getString(
     "about-debugging-tmp-extension-install-message"
   );
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: TEMPORARY_EXTENSION_INSTALL_START });
     const file = await openTemporaryExtension(window, message);
     try {
@@ -141,7 +141,7 @@ function installTemporaryExtension() {
 }
 
 function pushServiceWorker(id, registrationFront) {
-  return async (_, getState) => {
+  return async ({ dispatch, getState }) => {
     try {
       // The push button is only available if canDebugServiceWorkers is true,
       // which is only true if dom.serviceWorkers.parent_intercept is true.
@@ -155,7 +155,7 @@ function pushServiceWorker(id, registrationFront) {
 }
 
 function reloadTemporaryExtension(id) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: TEMPORARY_EXTENSION_RELOAD_START, id });
     const clientWrapper = getCurrentClient(getState().runtimes);
 
@@ -181,7 +181,7 @@ function removeTemporaryExtension(id) {
 }
 
 function requestTabs() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: REQUEST_TABS_START });
 
     const runtime = getCurrentRuntime(getState().runtimes);
@@ -213,7 +213,7 @@ function requestTabs() {
 }
 
 function requestExtensions() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: REQUEST_EXTENSIONS_START });
 
     const runtime = getCurrentRuntime(getState().runtimes);
@@ -253,7 +253,7 @@ function requestExtensions() {
 }
 
 function requestProcesses() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: REQUEST_PROCESSES_START });
 
     const clientWrapper = getCurrentClient(getState().runtimes);
@@ -274,7 +274,7 @@ function requestProcesses() {
 }
 
 function requestWorkers() {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     dispatch({ type: REQUEST_WORKERS_START });
 
     const clientWrapper = getCurrentClient(getState().runtimes);
@@ -317,7 +317,7 @@ function requestWorkers() {
 }
 
 function startServiceWorker(registrationFront) {
-  return async (_, getState) => {
+  return async () => {
     try {
       await registrationFront.start();
     } catch (e) {
@@ -327,7 +327,7 @@ function startServiceWorker(registrationFront) {
 }
 
 function unregisterServiceWorker(registrationFront) {
-  return async (_, getState) => {
+  return async () => {
     try {
       await registrationFront.unregister();
     } catch (e) {

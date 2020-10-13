@@ -11,7 +11,7 @@ const { refresh } = require("devtools/client/memory/actions/refresh");
  * census.
  */
 exports.setTreeMapAndRefresh = function(heapWorker, display) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     dispatch(setTreeMap(display));
     await dispatch(refresh(heapWorker));
   };

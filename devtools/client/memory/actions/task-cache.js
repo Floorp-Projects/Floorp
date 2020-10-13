@@ -66,7 +66,7 @@ TaskCache.declareCacheableTask = function({ getCacheKey, task }) {
   const cache = new TaskCache();
 
   return function(...args) {
-    return async function(dispatch, getState) {
+    return async function({ dispatch, getState }) {
       const key = getCacheKey(...args);
 
       const extantResult = cache.get(key);

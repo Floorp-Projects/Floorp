@@ -10,7 +10,7 @@ const { UPDATE_DETAILS } = require("devtools/client/accessibility/constants");
  *
  * @param {Object} accessible front
  */
-exports.updateDetails = accessible => async dispatch => {
+exports.updateDetails = accessible => async ({ dispatch }) => {
   const { walker: domWalker } = await accessible.targetFront.getFront(
     "inspector"
   );

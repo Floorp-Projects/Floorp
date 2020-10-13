@@ -14,7 +14,7 @@ const snapshot = require("devtools/client/memory/actions/snapshot");
  * @param {HeapAnalysesWorker} heapWorker
  */
 exports.refresh = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     switch (getState().view.state) {
       case viewState.DIFFING:
         assert(

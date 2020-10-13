@@ -38,7 +38,7 @@ const TaskCache = require("devtools/client/memory/actions/task-cache");
  * @param {Object}
  */
 exports.takeSnapshotAndCensus = function(front, heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     const id = await dispatch(takeSnapshot(front));
     if (id === null) {
       return;
@@ -65,7 +65,7 @@ const computeSnapshotData = (exports.computeSnapshotData = function(
   heapWorker,
   id
 ) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     if (getSnapshot(getState(), id).state !== states.READ) {
       return;
     }
@@ -91,7 +91,7 @@ const computeSnapshotData = (exports.computeSnapshotData = function(
  * @param {snapshotId} id
  */
 exports.selectSnapshotAndRefresh = function(heapWorker, id) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     if (getState().diffing || getState().individuals) {
       dispatch(view.changeView(viewState.CENSUS));
     }
@@ -108,7 +108,7 @@ exports.selectSnapshotAndRefresh = function(heapWorker, id) {
  * @returns {Number|null}
  */
 const takeSnapshot = (exports.takeSnapshot = function(front) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     if (getState().diffing || getState().individuals) {
       dispatch(view.changeView(viewState.CENSUS));
     }
@@ -364,7 +364,7 @@ const fetchIndividuals = (exports.fetchIndividuals = function(
   censusBreakdown,
   reportLeafIndex
 ) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     if (getState().view.state !== viewState.INDIVIDUALS) {
       dispatch(view.changeView(viewState.INDIVIDUALS));
     }
@@ -446,7 +446,7 @@ const fetchIndividuals = (exports.fetchIndividuals = function(
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.refreshIndividuals = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     assert(
       getState().view.state === viewState.INDIVIDUALS,
       "Should be in INDIVIDUALS view."
@@ -493,7 +493,7 @@ exports.refreshIndividuals = function(heapWorker) {
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.refreshSelectedCensus = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
@@ -521,7 +521,7 @@ exports.refreshSelectedCensus = function(heapWorker) {
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.refreshSelectedTreeMap = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
@@ -755,7 +755,7 @@ const computeAndFetchDominatorTree = (exports.computeAndFetchDominatorTree = Tas
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.refreshSelectedDominatorTree = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     const snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot) {
       return;
@@ -804,7 +804,7 @@ const selectSnapshot = (exports.selectSnapshot = function(id) {
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.clearSnapshots = function(heapWorker) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     const snapshots = getState().snapshots.filter(s => {
       const snapshotReady = s.state === states.READ || s.state === states.ERROR;
       const censusReady =
@@ -845,7 +845,7 @@ exports.clearSnapshots = function(heapWorker) {
  * @param {snapshotModel} snapshot
  */
 exports.deleteSnapshot = function(heapWorker, snapshot) {
-  return async function(dispatch, getState) {
+  return async function({ dispatch, getState }) {
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids: [snapshot.id] });
 
     try {
