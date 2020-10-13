@@ -120,9 +120,17 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
   }
 
   if (!gid) {
-    // if there's no glyph for &nbsp;, just use the space glyph instead
-    if (unicode == 0xA0) {
-      gid = mFont->GetSpaceGlyph();
+    switch (unicode) {
+      case 0xA0:
+        // if there's no glyph for &nbsp;, just use the space glyph instead.
+        gid = mFont->GetSpaceGlyph();
+        break;
+      case 0x2010:
+      case 0x2011:
+        // For Unicode HYPHEN and NON-BREAKING HYPHEN, fall back to the ASCII
+        // HYPHEN-MINUS as a substitute.
+        gid = GetNominalGlyph('-');
+        break;
     }
   }
 
