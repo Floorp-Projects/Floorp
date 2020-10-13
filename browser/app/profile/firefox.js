@@ -803,11 +803,7 @@ pref("browser.preferences.experimental", false);
 pref("browser.preferences.experimental.hidden", false);
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
-#if defined(NIGHTLY_BUILD)
 pref("browser.preferences.exposeHTTPSOnly", true);
-#else
-pref("browser.preferences.exposeHTTPSOnly", false);
-#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
