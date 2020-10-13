@@ -56,7 +56,7 @@ class OutputWriter(object):
         click_ctx,
         dry_run,
         emit_header,
-        emit_index,
+        emit_index_url,
         emit_trusted_host,
         annotate,
         generate_hashes,
@@ -73,7 +73,7 @@ class OutputWriter(object):
         self.click_ctx = click_ctx
         self.dry_run = dry_run
         self.emit_header = emit_header
-        self.emit_index = emit_index
+        self.emit_index_url = emit_index_url
         self.emit_trusted_host = emit_trusted_host
         self.annotate = annotate
         self.generate_hashes = generate_hashes
@@ -101,7 +101,7 @@ class OutputWriter(object):
             yield comment("#")
 
     def write_index_options(self):
-        if self.emit_index:
+        if self.emit_index_url:
             for index, index_url in enumerate(dedup(self.index_urls)):
                 if index_url.rstrip("/") == self.default_index_url:
                     continue
@@ -114,9 +114,9 @@ class OutputWriter(object):
                 yield "--trusted-host {}".format(trusted_host)
 
     def write_format_controls(self):
-        for nb in dedup(self.format_control.no_binary):
+        for nb in dedup(sorted(self.format_control.no_binary)):
             yield "--no-binary {}".format(nb)
-        for ob in dedup(self.format_control.only_binary):
+        for ob in dedup(sorted(self.format_control.only_binary)):
             yield "--only-binary {}".format(ob)
 
     def write_find_links(self):

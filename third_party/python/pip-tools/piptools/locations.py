@@ -1,7 +1,8 @@
 import os
 from shutil import rmtree
 
-from ._compat import user_cache_dir
+from pip._internal.utils.appdirs import user_cache_dir
+
 from .click import secho
 
 # The user_cache_dir helper comes straight from pip itself

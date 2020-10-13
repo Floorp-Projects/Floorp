@@ -1,5 +1,0 @@
--e .
-mock
-pytest!=5.1.2
-pytest-rerunfailures
-wheel

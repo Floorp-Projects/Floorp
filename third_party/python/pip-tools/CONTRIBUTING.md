@@ -7,6 +7,7 @@ and follow the [guidelines](https://jazzband.co/about/guidelines).
 ## Project Contribution Guidelines
 
 Here are a few additional or emphasized guidelines to follow when contributing to pip-tools:
+- Install pip-tools in development mode and its test dependencies with `pip install -e .[testing]`.
 - Check with `tox -e checkqa` to see your changes are not breaking the style conventions.
 - Always provide tests for your changes.
 - Give a clear one-line description in the PR (that the maintainers can add to [CHANGELOG](CHANGELOG.md) afterwards).

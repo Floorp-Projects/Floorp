@@ -10,57 +10,23 @@ python:
 
 env:
   # NOTE: keep this in sync with envlist in tox.ini for tox-travis.
-  - PIP=8.1.1
-  - PIP=9.0.1
-  - PIP=9.0.3
-  - PIP=10.0.1
-  - PIP=18.0
-  - PIP=19.0.3
-  - PIP=19.1
-  - PIP=19.2.3
-  - PIP=19.3
-  - PIP=20.0
   - PIP=latest
-  - PIP=master
+  - PIP=20.2  # TODO: update to 20.1 after pip-20.2 being released
+  - PIP=20.0
 
 cache: false
 install:
-  - travis_retry pip install tox-travis
+  - travis_retry python -m pip install -U tox-travis virtualenv
 script:
   - tox
 
 stages:
-- baseline
 - test
 - name: deploy
   if: repo = jazzband/pip-tools AND tag IS present
 
 jobs:
-  exclude:
-    - python: "pypy3.5-6.0"
-      env: PIP=8.1.1
-    # platform.linux_distribution() is removed in Python 3.8 (bpo-28167).
-    - python: "3.8"
-      env: PIP=8.1.1
-
-    # Baseline jobs (included there/below).
-    - env: PIP=latest
-      python: "3.8"
-    - env: PIP=latest
-      python: "3.7"
-    - env: PIP=latest
-      python: "2.7"
-
   include:
-    # Baseline stage to abort early.
-    - stage: baseline
-      env: PIP=latest
-      python: "3.8"
-    - env: PIP=latest
-      python: "3.7"
-    - env: PIP=latest
-      python: "2.7"
-
     # QA checks.
     - env: TOXENV=checkqa
       python: 3.7
