@@ -39,7 +39,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::util::Recycler;
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityMask};
+use crate::visibility::PrimitiveVisibility;
 
 pub mod backdrop;
 pub mod borders;
@@ -1056,19 +1056,11 @@ impl PrimitiveInstance {
 
     // Reset any pre-frame state for this primitive.
     pub fn reset(&mut self) {
-        self.clear_visibility();
-    }
-
-    pub fn is_visible(&self) -> bool {
-        !self.vis.visibility_mask.is_empty()
+        self.vis.reset();
     }
 
     pub fn clear_visibility(&mut self) {
-        self.set_visibility(PrimitiveVisibilityMask::empty());
-    }
-
-    pub fn set_visibility(&mut self, mask: PrimitiveVisibilityMask) {
-        self.vis.visibility_mask = mask;
+        self.vis.reset();
     }
 
     #[cfg(debug_assertions)]
