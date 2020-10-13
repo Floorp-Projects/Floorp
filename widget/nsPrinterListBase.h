@@ -75,7 +75,17 @@ class nsPrinterListBase : public nsIPrinterList {
   // for actual printer drivers the list is retrieved from nsIPrinter.
   nsTArray<RefPtr<nsPaper>> FallbackPaperList() const;
 
+  // Constructs mCommonPaperInfo by localizing the sizes in
+  // nsPaper::kCommonPaperSizes and creating corresponding PaperInfo.
+  void EnsureCommonPaperInfo(JSContext* aCx);
+
   RefPtr<Promise> mPrintersPromise;
+  // PaperInfo for our fallback sizes and common size localization.
+  // This field contains the same data for every instance of this class.
+  // It's unfortunate that this needs to be a member rather than static data
+  // like nsPaper::kCommonPaperSizes, but that's because PaperInfo contains
+  // localized data, and we need a JSContext to do the localization.
+  RefPtr<const mozilla::CommonPaperInfoArray> mCommonPaperInfo;
 };
 
 #endif
