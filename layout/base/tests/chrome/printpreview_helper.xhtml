@@ -700,6 +700,83 @@ async function runTest29() {
     expectDifference: true,
   });
 
+  requestAnimationFrame(() => setTimeout(runTest30));
+}
+
+// Helper function to test trivial/unsupported pages-per-sheet values which we
+// just treat as 1 page-per-sheet (as if the attribute were unset.)
+// NOTE: The second data-URI's explicit "<body>" tag is not meant to affect the
+// rendering -- it's just a hack to ensure that the URIs themselves are
+// different, so that compareFiles() sees the two URIs as different and gets
+// the "load" notification that it depends on after switching between them.
+async function checkTrivialPagesPerSheetValue(numPages) {
+  await compareFiles("data:text/html,Page", "data:text/html,<body>Page", {
+    test: {
+      settings: {
+        numPagesPerSheet: numPages,
+      },
+    },
+    ref: { settings: {} },
+  });
+}
+
+async function runTest30() {
+  await checkTrivialPagesPerSheetValue(1);
+  await checkTrivialPagesPerSheetValue(0);
+  await checkTrivialPagesPerSheetValue(-5);
+  await checkTrivialPagesPerSheetValue(7);
+  await checkTrivialPagesPerSheetValue(500);
+
+  // XXXdholbert These ones are unsupported (& treated as 1) for now, but we
+  // intend to support them in bug 1669905. After that, we'll want to give them
+  // real tiling tests like we have for the other supported values.
+  await checkTrivialPagesPerSheetValue(2);
+  await checkTrivialPagesPerSheetValue(6);
+
+  requestAnimationFrame(() => setTimeout(runTest31));
+}
+
+// Helper function to test supported pages-per-sheet values that actually do
+// tiling (i.e. values greater than 1).  We render the testcase and reference
+// case with zero page-margins and zero unwritable margins. (This makes it
+// tractable to create a reference case without having to account for margins
+// that are outside of the content area.)
+async function checkSupportedPagesPerSheetValue(src1, src2, numPages) {
+  await compareFiles(src1, src2, {
+    test: {
+      settings: {
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+        numPagesPerSheet: numPages,
+      },
+    },
+    ref: {
+      settings: {
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+      },
+    },
+  });
+}
+// Pages-per-sheet: supported values (4, 9, 16)
+// And eventually 2 and 6, per bug 1669905.
+// (NOTE: tests for values 9 and 16 are coming in the next patch.)
+async function runTest31() {
+  await checkSupportedPagesPerSheetValue("printpreview_pps4.html",
+                                         "printpreview_pps4_ref.html", 4);
+
   finish();
 }
 
