@@ -68,12 +68,10 @@ class DebuggerEnvironment;
 class PromiseObject;
 namespace gc {
 struct Cell;
-}
+} /* namespace gc */
 namespace wasm {
 class Instance;
-}
-template <typename T>
-struct GCManagedDeletePolicy;
+} /* namespace wasm */
 } /* namespace js */
 
 /*
@@ -604,11 +602,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   };
 
  private:
-  GCPtrNativeObject object; /* The Debugger object. Strong reference. */
+  HeapPtrNativeObject object; /* The Debugger object. Strong reference. */
   WeakGlobalObjectSet
       debuggees; /* Debuggee globals. Cross-compartment weak references. */
   JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
-  js::GCPtrObject uncaughtExceptionHook; /* Strong reference. */
+  HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
   bool allowUnobservedAsmJS;
 
   // Whether to enable code coverage on the Debuggee.
@@ -860,7 +858,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static void traceObject(JSTracer* trc, JSObject* obj);
 
   void trace(JSTracer* trc);
-  friend struct js::GCManagedDeletePolicy<Debugger>;
 
   void traceForMovingGC(JSTracer* trc);
   void traceCrossCompartmentEdges(JSTracer* tracer);
@@ -1099,8 +1096,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   Debugger(JSContext* cx, NativeObject* dbg);
   ~Debugger();
 
-  inline const js::GCPtrNativeObject& toJSObject() const;
-  inline js::GCPtrNativeObject& toJSObjectRef();
+  inline const js::HeapPtrNativeObject& toJSObject() const;
+  inline js::HeapPtrNativeObject& toJSObjectRef();
   static inline Debugger* fromJSObject(const JSObject* obj);
 
 #ifdef DEBUG
@@ -1563,12 +1560,12 @@ Breakpoint* Debugger::firstBreakpoint() const {
   return &(*breakpoints.begin());
 }
 
-const js::GCPtrNativeObject& Debugger::toJSObject() const {
+const js::HeapPtrNativeObject& Debugger::toJSObject() const {
   MOZ_ASSERT(object);
   return object;
 }
 
-js::GCPtrNativeObject& Debugger::toJSObjectRef() {
+js::HeapPtrNativeObject& Debugger::toJSObjectRef() {
   MOZ_ASSERT(object);
   return object;
 }
@@ -1616,13 +1613,5 @@ bool ParseResumptionValue(JSContext* cx, HandleValue rval,
   JS_FN(Name, CallData::ToNative<&CallData::Method>, NumArgs, 0)
 
 } /* namespace js */
-
-namespace JS {
-
-template <>
-struct DeletePolicy<js::Debugger>
-    : public js::GCManagedDeletePolicy<js::Debugger> {};
-
-} /* namespace JS */
 
 #endif /* debugger_Debugger_h */

@@ -1167,7 +1167,6 @@ using PreBarrieredValue = PreBarriered<Value>;
 
 using GCPtrNativeObject = GCPtr<NativeObject*>;
 using GCPtrArrayObject = GCPtr<ArrayObject*>;
-using GCPtrBaseShape = GCPtr<BaseShape*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
 using GCPtrFunction = GCPtr<JSFunction*>;
@@ -1178,7 +1177,6 @@ using GCPtrString = GCPtr<JSString*>;
 using GCPtrShape = GCPtr<Shape*>;
 using GCPtrUnownedBaseShape = GCPtr<UnownedBaseShape*>;
 using GCPtrObjectGroup = GCPtr<ObjectGroup*>;
-using GCPtrScope = GCPtr<Scope*>;
 using GCPtrValue = GCPtr<Value>;
 using GCPtrId = GCPtr<jsid>;
 
@@ -1198,6 +1196,7 @@ using WeakHeapPtrWasmInstanceObject = WeakHeapPtr<WasmInstanceObject*>;
 using WeakHeapPtrWasmTableObject = WeakHeapPtr<WasmTableObject*>;
 
 using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
+using HeapPtrNativeObject = HeapPtr<NativeObject*>;
 using HeapPtrObject = HeapPtr<JSObject*>;
 using HeapPtrRegExpShared = HeapPtr<RegExpShared*>;
 using HeapPtrValue = HeapPtr<Value>;
