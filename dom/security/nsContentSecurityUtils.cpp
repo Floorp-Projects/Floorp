@@ -948,43 +948,6 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   MOZ_ASSERT(!foundUnsafeInline,
              "about: page must not contain a CSP including 'unsafe-inline'");
 }
-
-/* static */
-void nsContentSecurityUtils::AssertReferrerHeaderMatchesReferrerInfo(
-    nsIChannel* aChannel) {
-  MOZ_ASSERT(aChannel);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (!httpChannel) {
-    return;
-  }
-
-  nsAutoCString referrerHeader;
-  Unused << httpChannel->GetRequestHeader("Referer"_ns, referrerHeader);
-
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
-  if (!referrerInfo) {
-    // We should never send out referrer if there's no referrerInfo.
-    MOZ_ASSERT(referrerHeader.IsEmpty(),
-               "Referrer header should not be sent if there's no referrerInfo");
-    return;
-  }
-
-  nsCOMPtr<nsIURI> computedReferrer = referrerInfo->GetComputedReferrer();
-  // We should never send out referrer if there's no computedReferrer or
-  // malformed computedReferrer.
-  if (!computedReferrer) {
-    MOZ_ASSERT(
-        referrerHeader.IsEmpty(),
-        "Referrer header should not be sent if computedReferrer is null");
-    return;
-  }
-
-  nsAutoCString computedSpec;
-  Unused << computedReferrer->GetSpec(computedSpec);
-  MOZ_ASSERT(computedSpec.Equals(referrerHeader),
-             "Referrer header should match computed referrer spec");
-}
 #endif
 
 /* static */
