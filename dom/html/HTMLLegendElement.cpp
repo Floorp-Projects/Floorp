@@ -106,10 +106,7 @@ bool HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
 }
 
 already_AddRefed<HTMLFormElement> HTMLLegendElement::GetForm() {
-  Element* form = GetFormElement();
-  MOZ_ASSERT_IF(form, form->IsHTMLElement(nsGkAtoms::form));
-  RefPtr<HTMLFormElement> ret = static_cast<HTMLFormElement*>(form);
-  return ret.forget();
+  return do_AddRef(GetFormElement());
 }
 
 JSObject* HTMLLegendElement::WrapNode(JSContext* aCx,

@@ -42,7 +42,7 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  Element* GetFormElement() const {
+  HTMLFormElement* GetFormElement() const {
     nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
 
     return fieldsetControl ? fieldsetControl->GetFormElement() : nullptr;
