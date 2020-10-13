@@ -77,7 +77,13 @@ class JSAPITest {
   bool knownFail;
   JSAPITestString msgs;
 
-  JSAPITest() : cx(nullptr), knownFail(false) {
+  // Whether this test is willing to skip its init() and reuse a global (and
+  // JSContext etc.) from a previous test that also has reuseGlobal=true. It
+  // also means this test is willing to skip its uninit() if it is followed by
+  // another reuseGlobal test.
+  bool reuseGlobal;
+
+  JSAPITest() : cx(nullptr), knownFail(false), reuseGlobal(false) {
     next = list;
     list = this;
   }
@@ -87,7 +93,19 @@ class JSAPITest {
     MOZ_RELEASE_ASSERT(!global);
   }
 
-  virtual bool init();
+  // Initialize this test, possibly with the cx from a previously run test.
+  bool init(JSContext* maybeReusedContext);
+
+  // If this test is ok with its cx and global being reused, release this
+  // test's cx to be reused by another test.
+  JSContext* maybeForgetContext();
+
+  static void MaybeFreeContext(JSContext* maybeCx);
+
+  // The real initialization happens in init(JSContext*), above, but this
+  // method may be overridden to perform additional initialization after the
+  // JSContext and global have been created.
+  virtual bool init() { return true; }
   virtual void uninit();
 
   virtual const char* name() = 0;
@@ -351,12 +369,6 @@ class JSAPITest {
     JS::SetWarningReporter(cx, &reportWarning);
     setNativeStackQuota(cx);
     return cx;
-  }
-
-  virtual void destroyContext() {
-    MOZ_RELEASE_ASSERT(cx);
-    JS_DestroyContext(cx);
-    cx = nullptr;
   }
 
   static void reportWarning(JSContext* cx, JSErrorReport* report) {
