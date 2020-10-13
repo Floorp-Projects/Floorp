@@ -5125,8 +5125,11 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupConn(
     // completion. Afterwards the connection will be 100% ready for the next
     // transaction to use it. Make an exception for SSL tunneled HTTP proxy as
     // the NullHttpTransaction does not know how to drive Connect
-    if (mEnt->mConnInfo->FirstHopSSL() && !mEnt->mUrgentStartQ.Length() &&
-        !mEnt->PendingQLength() && !mEnt->mConnInfo->UsingConnect()) {
+    // Http3 cannot be dispatched using OnMsgReclaimConnection (see below),
+    // therefore we need to use a Nulltransaction.
+    if (!connTCP ||
+        (mEnt->mConnInfo->FirstHopSSL() && !mEnt->mUrgentStartQ.Length() &&
+         !mEnt->PendingQLength() && !mEnt->mConnInfo->UsingConnect())) {
       LOG(
           ("nsHalfOpenSocket::SetupConn null transaction will "
            "be used to finish SSL handshake on conn %p\n",
