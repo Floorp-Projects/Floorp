@@ -32,9 +32,9 @@ export class _LinkMenu extends React.PureComponent {
 
     // Handle special case of default site
     const propOptions =
-      !site.isDefault || site.searchTopSite
-        ? props.options
-        : DEFAULT_SITE_MENU_OPTIONS;
+      site.isDefault && !site.searchTopSite && !site.sponsored_position
+        ? DEFAULT_SITE_MENU_OPTIONS
+        : props.options;
 
     const options = propOptions
       .map(o =>
