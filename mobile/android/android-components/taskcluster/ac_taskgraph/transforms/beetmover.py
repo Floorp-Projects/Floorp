@@ -69,6 +69,6 @@ def add_version(config, tasks):
         task["worker"]["version"] = craft_path_version(
             version,
             task["attributes"]["build-type"],
-            nightly_version)
+            nightly_version
         )
         yield task
