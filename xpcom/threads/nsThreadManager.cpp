@@ -630,6 +630,8 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  TimeStamp startTime = TimeStamp::Now();
+
   RefPtr<ThreadEventQueue> queue =
       new ThreadEventQueue(MakeUnique<EventQueue>());
   RefPtr<nsThread> thr =
@@ -651,6 +653,12 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
     }
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  PROFILER_MARKER_TEXT(
+      "NewThread", OTHER,
+      MarkerOptions({MarkerStack::Capture(),
+                     MarkerTiming::IntervalUntilNowFrom(startTime)}),
+      aName);
 
   thr.forget(aResult);
   return NS_OK;
