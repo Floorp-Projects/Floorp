@@ -16,7 +16,6 @@
 
 #include "debugger/DebugAPI.h"    // for DebugAPI
 #include "debugger/Debugger.h"    // for JSBreakpointSite, Breakpoint
-#include "gc/Barrier.h"           // for GCPtrNativeObject, WriteBarriered
 #include "gc/Cell.h"              // for TenuredCell
 #include "gc/FreeOp.h"            // for JSFreeOp
 #include "gc/GCEnum.h"            // for MemoryUse, MemoryUse::BreakpointSite

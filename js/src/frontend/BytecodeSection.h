@@ -26,7 +26,6 @@
 #include "frontend/ParseNode.h"         // BigIntLiteral
 #include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"           // Stencils
-#include "gc/Barrier.h"                 // GCPtrObject, GCPtrScope, GCPtrValue
 #include "gc/Rooting.h"                 // JS::Rooted
 #include "js/GCVariant.h"               // GCPolicy<mozilla::Variant>
 #include "js/GCVector.h"                // GCVector

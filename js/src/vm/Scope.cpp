@@ -382,13 +382,6 @@ static XDRResult XDRTrailingName(XDRState<XDR_DECODE>* xdr, void* bindingName,
   return Ok();
 }
 
-template <typename ConcreteScopeData>
-static void DeleteScopeData(ConcreteScopeData* data) {
-  // Some scope Data classes have GCManagedDeletePolicy because then contain
-  // GCPtrs. Dispose of them in the appropriate way.
-  JS::DeletePolicy<ConcreteScopeData>()(data);
-}
-
 template <typename ConcreteScope, XDRMode mode>
 /* static */
 XDRResult Scope::XDRSizedBindingNames(
@@ -415,7 +408,7 @@ XDRResult Scope::XDRSizedBindingNames(
 
   auto dataGuard = mozilla::MakeScopeExit([&]() {
     if (mode == XDR_DECODE) {
-      DeleteScopeData(data.get());
+      js_delete(data.get());
       data.set(nullptr);
     }
   });
@@ -916,8 +909,6 @@ FunctionScope* FunctionScope::createWithData(
   MOZ_ASSERT(data);
   MOZ_ASSERT(fun->isTenured());
 
-  // FunctionScope::Data has GCManagedDeletePolicy because it contains a
-  // GCPtr. Destruction of |data| below may trigger calls into the GC.
   RootedShape envShape(cx);
 
   if (!prepareForScopeCreation<JSAtom>(cx, data, hasParameterExprs,
@@ -951,9 +942,6 @@ FunctionScope* FunctionScope::clone(JSContext* cx, Handle<FunctionScope*> scope,
                                     HandleFunction fun, HandleScope enclosing) {
   MOZ_ASSERT(fun != scope->canonicalFunction());
 
-  // FunctionScope::Data has GCManagedDeletePolicy because it contains a
-  // GCPtr. Destruction of |dataClone| below may trigger calls into the GC.
-
   RootedShape envShape(cx);
   if (scope->environmentShape()) {
     envShape = scope->maybeCloneEnvironmentShape(cx);
@@ -969,7 +957,7 @@ FunctionScope* FunctionScope::clone(JSContext* cx, Handle<FunctionScope*> scope,
     return nullptr;
   }
 
-  dataClone->canonicalFunction.init(fun);
+  dataClone->canonicalFunction = fun;
 
   return Scope::create<FunctionScope>(cx, scope->kind(), enclosing, envShape,
                                       &dataClone);
@@ -1478,9 +1466,6 @@ static void InitializeNextTrailingName(const Rooted<UniquePtr<Data>>& data,
 /* static */
 WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
                                              WasmInstanceObject* instance) {
-  // WasmInstanceScope::Data has GCManagedDeletePolicy because it contains a
-  // GCPtr. Destruction of |data| below may trigger calls into the GC.
-
   size_t namesCount = 0;
   if (instance->instance().memory()) {
     namesCount++;
@@ -2219,7 +2204,7 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
     return nullptr;
   }
 
-  // Initialize the GCPtrs in the FunctionScope::Data.
+  // Initialize the HeapPtr in the FunctionScope::Data.
   data->canonicalFunction = gcOutput.functions[*functionIndex_];
 
   return data;
@@ -2236,7 +2221,7 @@ UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
     return nullptr;
   }
 
-  // Initialize the GCPtrs in the ModuleScope::Data.
+  // Initialize the HeapPtr in the ModuleScope::Data.
   data->module = gcOutput.module;
 
   return data;

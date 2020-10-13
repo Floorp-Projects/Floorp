@@ -12,7 +12,6 @@
 
 #include <stddef.h>
 
-#include "gc/DeletePolicy.h"
 #include "gc/Policy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
@@ -310,10 +309,10 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
 
   // If there are any aliased bindings, the shape for the
   // EnvironmentObject. Otherwise nullptr.
-  const GCPtrShape environmentShape_;
+  const HeapPtr<Shape*> environmentShape_;
 
   // The enclosing scope or nullptr.
-  GCPtrScope enclosingScope_;
+  HeapPtr<Scope*> enclosingScope_;
 
   Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
       : TenuredCellWithNonGCPointer(nullptr),
@@ -578,7 +577,7 @@ class FunctionScope : public Scope {
     // The canonical function of the scope, as during a scope walk we
     // often query properties of the JSFunction (e.g., is the function an
     // arrow).
-    GCPtrFunction canonicalFunction = {};
+    HeapPtr<JSFunction*> canonicalFunction = {};
 
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
@@ -952,7 +951,7 @@ class ModuleScope : public Scope {
   template <typename NameT>
   struct AbstractData : public AbstractBaseScopeData<NameT> {
     // The module of the scope.
-    GCPtr<ModuleObject*> module = {};
+    HeapPtr<ModuleObject*> module = {};
 
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
@@ -1020,7 +1019,7 @@ class WasmInstanceScope : public Scope {
   template <typename NameT>
   struct AbstractData : public AbstractBaseScopeData<NameT> {
     // The wasm instance of the scope.
-    GCPtr<WasmInstanceObject*> instance = {};
+    HeapPtr<WasmInstanceObject*> instance = {};
 
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
     // scope.
@@ -1671,20 +1670,6 @@ DEFINE_SCOPE_DATA_GCPOLICY(js::ModuleScope::Data);
 DEFINE_SCOPE_DATA_GCPOLICY(js::WasmFunctionScope::Data);
 
 #undef DEFINE_SCOPE_DATA_GCPOLICY
-
-// Scope data that contain GCPtrs must use the correct DeletePolicy.
-
-template <>
-struct DeletePolicy<js::FunctionScope::Data>
-    : public js::GCManagedDeletePolicy<js::FunctionScope::Data> {};
-
-template <>
-struct DeletePolicy<js::ModuleScope::Data>
-    : public js::GCManagedDeletePolicy<js::ModuleScope::Data> {};
-
-template <>
-struct DeletePolicy<js::WasmInstanceScope::Data>
-    : public js::GCManagedDeletePolicy<js::WasmInstanceScope::Data> {};
 
 namespace ubi {
 

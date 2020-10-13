@@ -44,12 +44,12 @@ enum class InstrumentationKind {
 
 class RealmInstrumentation {
   // Callback invoked on instrumentation operations.
-  const GCPtrObject callback;
+  const HeapPtrObject callback;
 
   // Debugger with which the instrumentation is associated. This debugger's
   // Debugger.Script instances store instrumentation IDs for scripts in the
   // realm.
-  const GCPtrObject dbgObject;
+  const HeapPtrObject dbgObject;
 
   // Mask of the InstrumentationKind operations which should be instrumented.
   uint32_t kinds = 0;
@@ -105,13 +105,5 @@ bool InstrumentationScriptIdOperation(JSContext* cx, HandleScript script,
                                       MutableHandleValue rv);
 
 }  // namespace js
-
-namespace JS {
-
-template <>
-struct DeletePolicy<js::RealmInstrumentation>
-    : public js::GCManagedDeletePolicy<js::RealmInstrumentation> {};
-
-} /* namespace JS */
 
 #endif /* vm_Instrumentation_h */
