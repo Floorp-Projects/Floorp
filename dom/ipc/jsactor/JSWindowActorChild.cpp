@@ -35,12 +35,11 @@ void JSWindowActorChild::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
-void JSWindowActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
-                                        ipc::StructuredCloneData&& aData,
-                                        ipc::StructuredCloneData&& aStack,
-                                        ErrorResult& aRv) {
+void JSWindowActorChild::SendRawMessage(
+    const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
+    Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
   if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("JSWindowActorChild cannot send at the moment");
     return;
   }
 
@@ -51,24 +50,48 @@ void JSWindowActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
-  if (NS_WARN_IF(
-          !AllowMessage(aMeta, aData.DataLength() + aStack.DataLength()))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  size_t length = 0;
+  if (aData) {
+    length += aData->DataLength();
+  }
+  if (aStack) {
+    length += aStack->DataLength();
+  }
+
+  if (NS_WARN_IF(!AllowMessage(aMeta, length))) {
+    aRv.ThrowDataCloneError(
+        nsPrintfCString("JSWindowActorChild serialization error: data too "
+                        "large, in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 
   // Cross-process case - send data over WindowGlobalChild to other side.
-  ClonedMessageData msgData;
-  ClonedMessageData stackData;
   ContentChild* cc = ContentChild::GetSingleton();
-  if (NS_WARN_IF(!aData.BuildClonedMessageDataForChild(cc, msgData)) ||
-      NS_WARN_IF(!aStack.BuildClonedMessageDataForChild(cc, stackData))) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
-    return;
+  Maybe<ClonedMessageData> msgData;
+  if (aData) {
+    msgData.emplace();
+    if (NS_WARN_IF(!aData->BuildClonedMessageDataForChild(cc, *msgData))) {
+      aRv.ThrowDataCloneError(
+          nsPrintfCString("JSWindowActorChild serialization error: cannot "
+                          "clone, in actor '%s'",
+                          PromiseFlatCString(aMeta.actorName()).get()));
+      return;
+    }
+  }
+
+  Maybe<ClonedMessageData> stackData;
+  if (aStack) {
+    stackData.emplace();
+    if (!aStack->BuildClonedMessageDataForChild(cc, *stackData)) {
+      stackData.reset();
+    }
   }
 
   if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, msgData, stackData))) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowOperationError(
+        nsPrintfCString("JSWindowActorChild send error in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 }

@@ -4361,12 +4361,18 @@ already_AddRefed<JSActor> ContentChild::InitJSActor(
 }
 
 IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                       const ClonedMessageData& aData,
-                                       const ClonedMessageData& aStack) {
-  StructuredCloneData data;
-  data.BorrowFromClonedMessageDataForChild(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForChild(aStack);
+                                       const Maybe<ClonedMessageData>& aData,
+                                       const Maybe<ClonedMessageData>& aStack) {
+  Maybe<StructuredCloneData> data;
+  if (aData) {
+    data.emplace();
+    data->BorrowFromClonedMessageDataForChild(*aData);
+  }
+  Maybe<StructuredCloneData> stack;
+  if (aStack) {
+    stack.emplace();
+    stack->BorrowFromClonedMessageDataForChild(*aStack);
+  }
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
 }

@@ -471,8 +471,8 @@ both:
     async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
                                      MaybeDiscardedBrowsingContext aContext);
 
-    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
-                     ClonedMessageData aStack);
+    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
+                     ClonedMessageData? aStack);
 
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);

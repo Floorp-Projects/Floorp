@@ -156,36 +156,28 @@ void JSActor::SetName(const nsACString& aName) {
   mName = aName;
 }
 
-static ipc::StructuredCloneData CloneOrUndefined(
-    JSContext* aCx, JS::Handle<JS::Value> aValue,
-    FunctionRef<void()> aOnError = nullptr) {
-  ipc::StructuredCloneData data;
+static Maybe<ipc::StructuredCloneData> TryClone(JSContext* aCx,
+                                                JS::Handle<JS::Value> aValue) {
+  Maybe<ipc::StructuredCloneData> data{std::in_place};
 
   // Try to directly serialize the passed-in data, and return it to our caller.
   IgnoredErrorResult rv;
-  data.Write(aCx, aValue, rv);
+  data->Write(aCx, aValue, rv);
   if (rv.Failed()) {
-    rv.SuppressException();
+    // Serialization failed, return `Nothing()` instead.
     JS_ClearPendingException(aCx);
-    if (aOnError) {
-      aOnError();
-    }
-
-    // If the serialization failed, write out `undefined` instead.
-    data = ipc::StructuredCloneData();
-    data.Write(aCx, JS::UndefinedHandleValue, rv);
-    MOZ_RELEASE_ASSERT(!rv.Failed(), "OOM while serializing 'undefined'");
+    data.reset();
   }
   return data;
 }
 
-static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
-                                             JS::Handle<JSObject*> aStack) {
+static Maybe<ipc::StructuredCloneData> CloneJSStack(
+    JSContext* aCx, JS::Handle<JSObject*> aStack) {
   JS::Rooted<JS::Value> stackVal(aCx, JS::ObjectOrNullValue(aStack));
-  return CloneOrUndefined(aCx, stackVal);
+  return TryClone(aCx, stackVal);
 }
 
-static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
+static Maybe<ipc::StructuredCloneData> CaptureJSStack(JSContext* aCx) {
   JS::Rooted<JSObject*> stack(aCx, nullptr);
   if (JS::IsAsyncStackCaptureEnabledForRealm(aCx) &&
       !JS::CaptureCurrentStack(aCx, &stack)) {
@@ -197,9 +189,9 @@ static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
 
 void JSActor::SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                                JS::Handle<JS::Value> aObj, ErrorResult& aRv) {
-  ipc::StructuredCloneData data;
+  Maybe<ipc::StructuredCloneData> data{std::in_place};
   if (!nsFrameMessageManager::GetParamsForMessage(
-          aCx, aObj, JS::UndefinedHandleValue, data)) {
+          aCx, aObj, JS::UndefinedHandleValue, *data)) {
     aRv.ThrowDataCloneError(nsPrintfCString(
         "Failed to serialize message '%s::%s'",
         NS_LossyConvertUTF16toASCII(aMessageName).get(), mName.get()));
@@ -218,9 +210,9 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
                                              const nsAString& aMessageName,
                                              JS::Handle<JS::Value> aObj,
                                              ErrorResult& aRv) {
-  ipc::StructuredCloneData data;
+  Maybe<ipc::StructuredCloneData> data{std::in_place};
   if (!nsFrameMessageManager::GetParamsForMessage(
-          aCx, aObj, JS::UndefinedHandleValue, data)) {
+          aCx, aObj, JS::UndefinedHandleValue, *data)) {
     aRv.ThrowDataCloneError(nsPrintfCString(
         "Failed to serialize message '%s::%s'",
         NS_LossyConvertUTF16toASCII(aMessageName).get(), mName.get()));
@@ -347,8 +339,8 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
 }
 
 void JSActor::SendRawMessageInProcess(const JSActorMessageMeta& aMeta,
-                                      ipc::StructuredCloneData&& aData,
-                                      ipc::StructuredCloneData&& aStack,
+                                      Maybe<ipc::StructuredCloneData>&& aData,
+                                      Maybe<ipc::StructuredCloneData>&& aStack,
                                       OtherSideCallback&& aGetOtherSide) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -400,7 +392,8 @@ void JSActor::QueryHandler::RejectedCallback(JSContext* aCx,
     }
   }
 
-  auto onerror = [&]() {
+  Maybe<ipc::StructuredCloneData> data = TryClone(aCx, value);
+  if (!data) {
     // Failed to clone the rejection value. Make sure that this
     // rejection is reported, despite being "handled". This is done by
     // creating a new promise in the rejected state, and throwing it
@@ -408,9 +401,9 @@ void JSActor::QueryHandler::RejectedCallback(JSContext* aCx,
     if (!JS::CallOriginalPromiseReject(aCx, aValue)) {
       JS_ClearPendingException(aCx);
     }
-  };
-  SendReply(aCx, JSActorMessageKind::QueryReject,
-            CloneOrUndefined(aCx, value, onerror));
+  }
+
+  SendReply(aCx, JSActorMessageKind::QueryReject, std::move(data));
 }
 
 void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
@@ -419,11 +412,11 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  ipc::StructuredCloneData data;
-  data.InitScope(JS::StructuredCloneScope::DifferentProcess);
+  Maybe<ipc::StructuredCloneData> data{std::in_place};
+  data->InitScope(JS::StructuredCloneScope::DifferentProcess);
 
   IgnoredErrorResult error;
-  data.Write(aCx, aValue, error);
+  data->Write(aCx, aValue, error);
   if (NS_WARN_IF(error.Failed())) {
     JS_ClearPendingException(aCx);
 
@@ -449,7 +442,7 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
 }
 
 void JSActor::QueryHandler::SendReply(JSContext* aCx, JSActorMessageKind aKind,
-                                      ipc::StructuredCloneData&& aData) {
+                                      Maybe<ipc::StructuredCloneData>&& aData) {
   MOZ_ASSERT(mActor);
 
   JSActorMessageMeta meta;
