@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       // Get the sequence number of the last paint on the compositor side.
       // We do this before converting the APZ test data because the conversion
       // loses the order of the paints.
-      SimpleTest.ok(compositorTestData.paints.length > 0,
+      ok(compositorTestData.paints.length > 0,
                     "expected at least one paint in compositor test data");
       var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
       var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
@@ -48,13 +48,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       // which either is the RCD with no child APZCs (e10s/B2G case) or has a
       // single child APZC which is for the RCD (fennec case).
       var rcd = findRcdNode(apzcTree);
-      SimpleTest.ok(rcd != null, "found the RCD node");
-      SimpleTest.is(rcd.children.length, 0, "expected no children on the RCD");
-
-      window.opener.finishTest();
+      ok(rcd != null, "found the RCD node");
+      is(rcd.children.length, 0, "expected no children on the RCD");
     }
-
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663);
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663).finally(subtestDone);
   </script>
 </head>
 <body>
