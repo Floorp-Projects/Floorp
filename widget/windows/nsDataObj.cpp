@@ -430,14 +430,11 @@ STDMETHODIMP nsDataObj::CMemStream::Stat(STATSTG* statstg, DWORD dwFlags) {
   memset((void*)statstg, 0, sizeof(STATSTG));
 
   if (dwFlags != STATFLAG_NONAME) {
-    const nsString& wideFileName = EmptyString();
-
-    uint32_t nMaxNameLength = (wideFileName.Length() * 2) + 2;
-    void* retBuf = CoTaskMemAlloc(nMaxNameLength);  // freed by caller
+    constexpr size_t kMaxNameLength = sizeof(wchar_t);
+    void* retBuf = CoTaskMemAlloc(kMaxNameLength);  // freed by caller
     if (!retBuf) return STG_E_INSUFFICIENTMEMORY;
 
-    ZeroMemory(retBuf, nMaxNameLength);
-    memcpy(retBuf, wideFileName.get(), wideFileName.Length() * 2);
+    ZeroMemory(retBuf, kMaxNameLength);
     statstg->pwcsName = (LPOLESTR)retBuf;
   }
 
