@@ -23,9 +23,18 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
         binary_path = self.config["binary"]
         LOG.info("binary_path: {}".format(binary_path))
 
-        if self.config["app"] == "chrome":
-            return ["--browser", self.config["app"], "--chrome.binaryPath", binary_path]
-        return ["--browser", self.config["app"], "--firefox.binaryPath", binary_path]
+        args_list = ["--viewPort", "1024x768"]
+
+        if self.config["app"] in ("chrome", "chromium",):
+            return args_list + [
+                "--browser",
+                "chrome",
+                "--chrome.binaryPath",
+                binary_path,
+                "--xvfbParams.display",
+                "0",
+            ]
+        return args_list + ["--browser", self.config["app"], "--firefox.binaryPath", binary_path]
 
     def setup_chrome_args(self, test):
         # Setup required chrome arguments
@@ -33,7 +42,7 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
 
         # Add this argument here, it's added by mozrunner
         # for raptor
-        chrome_args.append("--no-first-run")
+        chrome_args.extend(["--no-first-run"])
 
         btime_chrome_args = []
         for arg in chrome_args:

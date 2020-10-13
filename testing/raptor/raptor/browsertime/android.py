@@ -53,11 +53,13 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
     @property
     def browsertime_args(self):
+        args_list = ["--viewPort", "1366x695"]
+
         if self.config['app'] == 'chrome-m':
-            args_list = [
+            args_list.extend([
                 '--browser', 'chrome',
                 '--android',
-            ]
+            ])
         else:
             activity = self.config["activity"]
             if self.config["app"] == "fenix":
@@ -67,7 +69,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 )
                 activity = "mozilla.telemetry.glean.debug.GleanDebugActivity"
 
-            args_list = [
+            args_list.extend([
                 "--browser", "firefox",
                 "--android",
                 # Work around a `selenium-webdriver` issue where Browsertime
@@ -76,7 +78,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 "--firefox.binaryPath", self.browsertime_node,
                 "--firefox.android.package", self.config["binary"],
                 "--firefox.android.activity", activity,
-            ]
+            ])
 
         # Setup power testing
         if self.config["power_test"]:

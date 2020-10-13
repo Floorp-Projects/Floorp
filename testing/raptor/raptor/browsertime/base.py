@@ -125,7 +125,10 @@ class Browsertime(Perftest):
             self.driver_paths.extend(
                 ["--firefox.geckodriverPath", self.browsertime_geckodriver]
             )
-        if self.browsertime_chromedriver and self.config["app"] in ["chrome", "chrome-m"]:
+        if (
+            self.browsertime_chromedriver and
+            self.config["app"] in ("chrome", "chrome-m", "chromium",)
+        ):
             if (
                 not self.config.get("run_local", None)
                 or "{}" in self.browsertime_chromedriver
@@ -214,7 +217,6 @@ class Browsertime(Perftest):
         browsertime_options = [
             "--firefox.profileTemplate", str(self.profile.profile),
             "--skipHar",
-            "--viewPort", "1366x695",
             "--pageLoadStrategy", "none",
             "--firefox.disableBrowsertimeExtension", "true",
             "--pageCompleteCheckStartWait", "5000",
@@ -230,15 +232,15 @@ class Browsertime(Perftest):
             browsertime_options.append("-vvv")
 
         if self.browsertime_video:
-            # For now, capturing video with Firefox always uses the window recorder/composition
-            # recorder.  In the future we'd like to be able to selectively use Android's `adb
-            # screenrecord` as well.  (There's no harm setting Firefox options for other browsers.)
             browsertime_options.extend([
                 "--video", "true",
                 "--visualMetrics", "true" if self.browsertime_visualmetrics else "false",
             ])
 
-            if self.browsertime_no_ffwindowrecorder:
+            if (
+                self.browsertime_no_ffwindowrecorder or
+                self.config["app"] in ("chromium", "chrome-m", "chrome",)
+            ):
                 browsertime_options.extend([
                     "--firefox.windowRecorder", "false",
                 ])

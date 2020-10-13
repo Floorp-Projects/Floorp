@@ -1123,12 +1123,36 @@ def setup_browsertime(config, tasks):
             ],
         }
 
-        if '--app=chrome' in extra_options \
-           or '--app=chromium' in extra_options \
-           or '--app=chrome-m' in extra_options:
-            # Only add the chromedriver fetches when chrome/chromium is running
+        chromium_fetches = {
+            'linux.*': ['linux64-chromium'],
+            'macosx.*': ['mac-chromium'],
+            'windows.*aarch64.*': ['win32-chromium'],
+            'windows.*-32.*': ['win32-chromium'],
+            'windows.*-64.*': ['win64-chromium'],
+        }
+
+        cd_extracted_name = {
+            'windows': '{}chromedriver.exe',
+            'mac': '{}chromedriver',
+            'default': '{}chromedriver',
+        }
+
+        if '--app=chrome' in extra_options or '--app=chrome-m' in extra_options:
+            # Only add the chromedriver fetches when chrome is running
             for platform in cd_fetches:
                 fs['by-test-platform'][platform].extend(cd_fetches[platform])
+        if '--app=chromium' in extra_options:
+            for platform in chromium_fetches:
+                fs['by-test-platform'][platform].extend(chromium_fetches[platform])
+
+            # The chromedrivers for chromium are repackaged into the archives
+            # that we get the chromium binary from so we always have a compatible
+            # version.
+            cd_extracted_name = {
+                'windows': 'chrome-win/chromedriver.exe',
+                'mac': 'chrome-mac/chromedriver',
+                'default': 'chrome-linux/chromedriver',
+            }
 
         # Disable the Raptor install step
         if '--app=chrome-m' in extra_options:
@@ -1148,7 +1172,7 @@ def setup_browsertime(config, tasks):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver.exe',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/{}chromedriver.exe',
+                 '$MOZ_FETCHES_DIR/' + cd_extracted_name['windows'],
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.1-win64-static/bin/ffmpeg.exe',
                  ],
@@ -1158,7 +1182,7 @@ def setup_browsertime(config, tasks):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/{}chromedriver',
+                 '$MOZ_FETCHES_DIR/' + cd_extracted_name['mac'],
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.1-macos64-static/bin/ffmpeg',
                  ],
@@ -1168,7 +1192,7 @@ def setup_browsertime(config, tasks):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/{}chromedriver',
+                 '$MOZ_FETCHES_DIR/' + cd_extracted_name['default'],
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.4-i686-static/ffmpeg',
                  ],
