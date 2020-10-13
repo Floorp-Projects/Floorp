@@ -7109,12 +7109,14 @@ pub fn get_raster_rects(
     );
 
     let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
-
     let clipped_world_rect = unclipped_world_rect.intersection(&prim_bounding_rect)?;
 
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
-
-    let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
+    // We don't have to be able to do the back-projection from world into raster.
+    // Rendering only cares one way, so if that fails, we fall back to the full rect.
+    let clipped_raster_rect = match map_to_world.unmap(&clipped_world_rect) {
+        Some(rect) => rect.intersection(&unclipped_raster_rect)?,
+        None => return Some((unclipped, unclipped)),
+    };
 
     let clipped = raster_rect_to_device_pixels(
         clipped_raster_rect,

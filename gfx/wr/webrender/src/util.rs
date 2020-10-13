@@ -385,14 +385,21 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
         self.m21 * self.m21 + self.m22 * self.m22 > limit2
     }
 
+    /// Find out a point in `Src` that would be projected into the `target`.
     fn inverse_project(&self, target: &Point2D<f32, Dst>) -> Option<Point2D<f32, Src>> {
-        let m: Transform2D<f32, Src, Dst>;
-        m = Transform2D::new(
+        // form the linear equation for the hyperplane intersection
+        let m = Transform2D::<f32, Src, Dst>::new(
             self.m11 - target.x * self.m14, self.m12 - target.y * self.m14,
             self.m21 - target.x * self.m24, self.m22 - target.y * self.m24,
             self.m41 - target.x * self.m44, self.m42 - target.y * self.m44,
         );
-        m.inverse().map(|inv| Point2D::new(inv.m31, inv.m32))
+        let inv = m.inverse()?;
+        // we found the point, now check if it maps to the positive hemisphere
+        if inv.m31 * self.m14 + inv.m32 * self.m24 + self.m44 > 0.0 {
+            Some(Point2D::new(inv.m31, inv.m32))
+        } else {
+            None
+        }
     }
 
     fn inverse_rect_footprint(&self, rect: &Rect<f32, Dst>) -> Option<Rect<f32, Src>> {
@@ -609,8 +616,8 @@ use euclid::vec3;
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use euclid::default::{Point2D, Transform3D};
-    use euclid::Angle;
+    use euclid::default::{Point2D, Rect, Size2D, Transform3D};
+    use euclid::{Angle, approxeq::ApproxEq};
     use std::f32::consts::PI;
 
     #[test]
@@ -622,6 +629,50 @@ pub mod test {
         let m1 = Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-PI / 3.0));
         // rotation by 60 degrees would imply scaling of X component by a factor of 2
         assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
+    }
+
+    #[test]
+    fn inverse_project_footprint() {
+        let m = Transform3D::new(
+            0.477499992, 0.135000005, -1.0, 0.000624999986,
+            -0.642787635, 0.766044438, 0.0, 0.0,
+            0.766044438, 0.642787635, 0.0, 0.0,
+            1137.10986, 113.71286, 402.0, 0.748749971,
+        );
+        let r = Rect::new(Point2D::zero(), Size2D::new(804.0, 804.0));
+        {
+            let points = &[
+                r.origin,
+                r.top_right(),
+                r.bottom_left(),
+                r.bottom_right(),
+            ];
+            let mi = m.inverse().unwrap();
+            // In this section, we do the forward and backward transformation
+            // to confirm that its bijective.
+            // We also do the inverse projection path, and confirm it functions the same way.
+            println!("Points:");
+            for p in points {
+                let pp = m.transform_point2d_homogeneous(*p);
+                let p3 = pp.to_point3d().unwrap();
+                let pi = mi.transform_point3d_homogeneous(p3);
+                let px = pi.to_point2d().unwrap();
+                let py = m.inverse_project(&pp.to_point2d().unwrap()).unwrap();
+                println!("\t{:?} -> {:?} -> {:?} -> ({:?} -> {:?}, {:?})", p, pp, p3, pi, px, py);
+                assert!(px.approx_eq_eps(p, &Point2D::new(0.001, 0.001)));
+                assert!(py.approx_eq_eps(p, &Point2D::new(0.001, 0.001)));
+            }
+        }
+        // project
+        let rp = project_rect(&m, &r, &Rect::new(Point2D::zero(), Size2D::new(1000.0, 1000.0))).unwrap();
+        println!("Projected {:?}", rp);
+        // one of the points ends up in the negative hemisphere
+        assert_eq!(m.inverse_project(&rp.origin), None);
+        // inverse
+        if let Some(ri) = m.inverse_rect_footprint(&rp) {
+            // inverse footprint should be larger, since it doesn't know the original Z
+            assert!(ri.contains_rect(&r), "Inverse {:?}", ri);
+        }
     }
 
     fn validate_convert(xref: &LayoutTransform) {
