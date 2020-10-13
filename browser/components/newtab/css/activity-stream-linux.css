@@ -220,6 +220,11 @@ body {
     width: 12px; }
     .icon.icon-pin-small:dir(rtl) {
       transform: scaleX(-1); }
+  .icon.icon-sponsored-small {
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg");
+    background-size: 12px;
+    height: 12px;
+    width: 12px; }
   .icon.icon-check {
     background-image: url("chrome://global/skin/icons/check.svg"); }
   .icon.icon-download {
@@ -676,7 +681,7 @@ main {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap; }
-    .top-site-outer .title.pinned span {
+    .top-site-outer .title.has-icon span {
       padding: 0 13px; }
   .top-site-outer .edit-button {
     background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
