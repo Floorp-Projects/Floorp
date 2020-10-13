@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Adapted from https://github.com/tc39/test262/blob/master/tools/generation/test/run.py
+# Adapted from https://github.com/tc39/test262/blob/main/tools/generation/test/run.py
 
 import shutil
 import subprocess
