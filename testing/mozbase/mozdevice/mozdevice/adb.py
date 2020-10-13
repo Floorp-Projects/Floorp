@@ -180,7 +180,7 @@ class ADBCommand(object):
         self._adb_host = adb_host
         self._adb_port = adb_port
         self._timeout = timeout
-        self._polling_interval = 0.1
+        self._polling_interval = 0.001
         self._adb_version = ''
 
         self._logger.debug("%s: %s" % (self.__class__.__name__,
