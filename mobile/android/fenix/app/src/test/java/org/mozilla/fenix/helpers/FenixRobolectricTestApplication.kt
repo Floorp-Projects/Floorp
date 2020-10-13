@@ -5,6 +5,7 @@
 package org.mozilla.fenix.helpers
 
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.TestComponents
 
 /**
@@ -13,6 +14,11 @@ import org.mozilla.fenix.components.TestComponents
  * "Crash handler service must run in a separate process".
  */
 class FenixRobolectricTestApplication : FenixApplication() {
+
+    override fun onCreate() {
+        super.onCreate()
+        setTheme(R.style.NormalTheme)
+    }
 
     override val components = TestComponents(this)
 
