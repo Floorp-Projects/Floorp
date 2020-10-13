@@ -136,7 +136,7 @@ add_task(function test_fix_unknown_schemes() {
     if (item.inPrivateBrowsing) {
       flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
     }
-    let result = Services.uriFixup.createFixupURI(item.wrong, flags).spec;
-    Assert.equal(result, item.fixed);
+    let { preferredURI } = Services.uriFixup.getFixupURIInfo(item.wrong, flags);
+    Assert.equal(preferredURI.spec, item.fixed);
   }
 });

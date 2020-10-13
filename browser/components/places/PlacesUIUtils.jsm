@@ -234,19 +234,6 @@ let InternalFaviconLoader = {
 var PlacesUIUtils = {
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
 
-  /**
-   * Makes a URI from a spec, and do fixup
-   * @param   aSpec
-   *          The string spec of the URI
-   * @return A URI object for the spec.
-   */
-  createFixedURI: function PUIU_createFixedURI(aSpec) {
-    return Services.uriFixup.createFixupURI(
-      aSpec,
-      Ci.nsIURIFixup.FIXUP_FLAG_NONE
-    );
-  },
-
   getFormattedString: function PUIU_getFormattedString(key, params) {
     return bundle.formatStringFromName(key, params);
   },
@@ -525,7 +512,9 @@ var PlacesUIUtils = {
    * TRANSITION_LINK.
    */
   markPageAsTyped: function PUIU_markPageAsTyped(aURL) {
-    PlacesUtils.history.markPageAsTyped(this.createFixedURI(aURL));
+    PlacesUtils.history.markPageAsTyped(
+      Services.uriFixup.getFixupURIInfo(aURL).preferredURI
+    );
   },
 
   /**
@@ -536,7 +525,9 @@ var PlacesUIUtils = {
    * If this is not called visits will be marked as TRANSITION_LINK.
    */
   markPageAsFollowedBookmark: function PUIU_markPageAsFollowedBookmark(aURL) {
-    PlacesUtils.history.markPageAsFollowedBookmark(this.createFixedURI(aURL));
+    PlacesUtils.history.markPageAsFollowedBookmark(
+      Services.uriFixup.getFixupURIInfo(aURL).preferredURI
+    );
   },
 
   /**
@@ -546,7 +537,9 @@ var PlacesUIUtils = {
    * so automatic visits can be correctly ignored.
    */
   markPageAsFollowedLink: function PUIU_markPageAsFollowedLink(aURL) {
-    PlacesUtils.history.markPageAsFollowedLink(this.createFixedURI(aURL));
+    PlacesUtils.history.markPageAsFollowedLink(
+      Services.uriFixup.getFixupURIInfo(aURL).preferredURI
+    );
   },
 
   /**

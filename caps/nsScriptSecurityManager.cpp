@@ -1100,8 +1100,11 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
     if (aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {
       fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
     }
-    rv = fixup->CreateFixupURI(aTargetURIStr, fixupFlags, nullptr,
-                               getter_AddRefs(target));
+    nsCOMPtr<nsIURIFixupInfo> fixupInfo;
+    rv = fixup->GetFixupURIInfo(aTargetURIStr, fixupFlags,
+                                getter_AddRefs(fixupInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = fixupInfo->GetPreferredURI(getter_AddRefs(target));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags, 0);

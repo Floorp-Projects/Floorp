@@ -600,10 +600,7 @@ var BrowserUtils = {
 
         if (delimitedAtStart && delimitedAtEnd) {
           try {
-            url = Services.uriFixup.createFixupURI(
-              linkText,
-              Services.uriFixup.FIXUP_FLAG_NONE
-            );
+            url = Services.uriFixup.getFixupURIInfo(linkText).preferredURI;
           } catch (ex) {}
         }
       }
