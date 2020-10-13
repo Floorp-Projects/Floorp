@@ -31,6 +31,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsServiceManagerUtils.h"
 #include <algorithm>
+#include <limits>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -46,6 +47,72 @@ nsPageSequenceFrame* NS_NewPageSequenceFrame(PresShell* aPresShell,
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageSequenceFrame)
+
+static const nsPagesPerSheetInfo kSupportedPagesPerSheet[] = {
+    {1, 1, 1},  // Note: we default to this if no match is found.
+    // {2, ... }, // XXXdholbert Coming in bug 1669905.
+    {4, 2, 2},
+    // {6, ... }, // XXXdholbert Coming in bug 1669905.
+    {9, 3, 3},
+    {16, 4, 4},
+};
+
+inline void SanityCheckPagesPerSheetInfo() {
+#ifdef DEBUG
+  // Sanity-checks:
+  MOZ_ASSERT(ArrayLength(kSupportedPagesPerSheet) > 0,
+             "Should have at least one pages-per-sheet option.");
+  MOZ_ASSERT(kSupportedPagesPerSheet[0].mNumPages == 1,
+             "The 0th index is reserved for default 1-page-per-sheet entry");
+
+  uint16_t prevInfoPPS = 0;
+  for (const auto& info : kSupportedPagesPerSheet) {
+    MOZ_ASSERT(info.mNumPages > prevInfoPPS,
+               "page count field should be nonzero & monotonically increase");
+    // The uint32_t cast here is to ensure this assertion is robust even if the
+    // mNumRows * mNumCols multiplication would overflow past the maximum
+    // representable uint16_t value. That overflow would be bad because it
+    // could result in us incorrectly passing this assertion.  We prevent this
+    // problem by doing the operation in 32-bit number space; that way, the
+    // multiplication (of two known-to-be-16-bit values) can't overflow.
+    MOZ_ASSERT(
+        (uint32_t)info.mNumRows * (uint32_t)info.mNumCols == info.mNumPages,
+        "page count should match rows*cols");
+    prevInfoPPS = info.mNumPages;
+  }
+#endif
+}
+
+const nsPagesPerSheetInfo& nsPagesPerSheetInfo::LookupInfo(int32_t aPPS) {
+  SanityCheckPagesPerSheetInfo();
+
+  // Walk the array, looking for a match:
+  for (const auto& info : kSupportedPagesPerSheet) {
+    if (aPPS == info.mNumPages) {
+      return info;
+    }
+  }
+
+  NS_WARNING("Unsupported pages-per-sheet value");
+  // If no match was found, return the first entry (for 1 page per sheet).
+  return kSupportedPagesPerSheet[0];
+}
+
+const nsPagesPerSheetInfo* nsSharedPageData::PagesPerSheetInfo() {
+  if (mPagesPerSheetInfo) {
+    return mPagesPerSheetInfo;
+  }
+
+  int32_t pagesPerSheet;
+  if (!mPrintSettings ||
+      NS_FAILED(mPrintSettings->GetNumPagesPerSheet(&pagesPerSheet))) {
+    // If we can't read the value from print settings, just fall back to 1.
+    pagesPerSheet = 1;
+  }
+
+  mPagesPerSheetInfo = &nsPagesPerSheetInfo::LookupInfo(pagesPerSheet);
+  return mPagesPerSheetInfo;
+}
 
 nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
                                          nsPresContext* aPresContext)
