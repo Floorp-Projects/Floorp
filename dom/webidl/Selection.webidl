@@ -12,9 +12,13 @@
 
 [Exposed=Window]
 interface Selection {
+  [BinaryName="AnchorNodeJS"]
   readonly attribute Node?         anchorNode;
+  [BinaryName="AnchorOffsetJS"]
   readonly attribute unsigned long anchorOffset;
+  [BinaryName="FocusNodeJS"]
   readonly attribute Node?         focusNode;
+  [BinaryName="FocusOffsetJS"]
   readonly attribute unsigned long focusOffset;
   readonly attribute boolean       isCollapsed;
   /**
@@ -102,7 +106,7 @@ partial interface Selection {
 
   /**
    * Return array of ranges intersecting with the given DOM interval.
-   */  
+   */
   [ChromeOnly,Throws,Pref="dom.testing.selection.GetRangesForInterval"]
   sequence<Range> GetRangesForInterval(Node beginNode, long beginOffset, Node endNode, long endOffset,
                                        boolean allowAdjacent);
