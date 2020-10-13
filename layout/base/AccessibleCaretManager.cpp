@@ -1438,12 +1438,6 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     init.mSelectionVisible = true;
   }
 
-  // The rect computed above is relative to rootFrame, which is the (layout)
-  // viewport frame. However, the consumers of this event expect the bounds
-  // of the selection relative to the screen (visual viewport origin), so
-  // translate between the two.
-  rect -= mPresShell->GetVisualViewportOffsetRelativeToLayoutViewport();
-
   domRect->SetLayoutRect(rect);
 
   // Send isEditable info w/ event detail. This info can help determine
