@@ -27,9 +27,7 @@ const { ignore } = require("devtools/client/shared/redux/middleware/ignore");
 const eventTelemetry = require("devtools/client/webconsole/middleware/event-telemetry");
 const historyPersistence = require("devtools/client/webconsole/middleware/history-persistence");
 const performanceMarker = require("devtools/client/webconsole/middleware/performance-marker");
-const {
-  thunkWithOptions,
-} = require("devtools/client/shared/redux/middleware/thunk-with-options");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 
 // Enhancers
 const enableBatching = require("devtools/client/webconsole/enhancers/batching");
@@ -97,7 +95,7 @@ function configureStore(webConsoleUI, options = {}) {
   const middleware = applyMiddleware(
     performanceMarker(sessionId),
     ignore,
-    thunkWithOptions.bind(null, {
+    thunk({
       prefsService,
       ...options.thunkArgs,
     }),

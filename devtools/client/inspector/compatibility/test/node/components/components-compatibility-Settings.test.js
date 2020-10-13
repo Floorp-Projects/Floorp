@@ -24,7 +24,7 @@ const DEFAULT_BROWSERS = [
 
 describe("Settings component", () => {
   it("renders default browsers with no selected browsers", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
         defaultTargetBrowsers: DEFAULT_BROWSERS,
@@ -38,7 +38,7 @@ describe("Settings component", () => {
   });
 
   it("renders default browsers with a selected browsers", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
         defaultTargetBrowsers: DEFAULT_BROWSERS,
@@ -52,7 +52,7 @@ describe("Settings component", () => {
   });
 
   it("renders default browsers with full selected browsers", () => {
-    const mockStore = configureStore([thunk]);
+    const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
         defaultTargetBrowsers: DEFAULT_BROWSERS,

@@ -4,16 +4,20 @@
 "use strict";
 
 /**
- * A middleware that allows thunks (functions) to be dispatched.
- * If it's a thunk, it is called with `dispatch` and `getState`,
- * allowing the action to create multiple actions (most likely
- * asynchronously).
+ * A middleware that allows thunks (functions) to be dispatched
+ * If it's a thunk, it is called with an argument that will be an object
+ * containing `dispatch` and `getState` properties, plus any additional properties
+ * defined in the `options` parameters.
+ * This allows the action to create multiple actions (most likely asynchronously).
  */
-function thunk({ dispatch, getState }) {
-  return next => action => {
-    return typeof action === "function"
-      ? action({ dispatch, getState })
-      : next(action);
+function thunk(options = {}) {
+  return function({ dispatch, getState }) {
+    return next => action => {
+      return typeof action === "function"
+        ? action({ dispatch, getState, ...options })
+        : next(action);
+    };
   };
 }
+
 exports.thunk = thunk;
