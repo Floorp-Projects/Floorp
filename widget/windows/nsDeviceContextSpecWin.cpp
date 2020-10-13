@@ -586,7 +586,7 @@ Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::PrinterBySystemName(
 }
 
 RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {
-  return nsPrinterWin::Create(std::move(aInfo.mName));
+  return nsPrinterWin::Create(mCommonPaperInfo, std::move(aInfo.mName));
 }
 
 nsresult nsPrinterListWin::SystemDefaultPrinterName(nsAString& aName) const {
