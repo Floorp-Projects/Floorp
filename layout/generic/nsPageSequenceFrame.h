@@ -6,6 +6,8 @@
 #ifndef nsPageSequenceFrame_h___
 #define nsPageSequenceFrame_h___
 
+#include <tuple>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
@@ -21,6 +23,27 @@ class HTMLCanvasElement;
 
 }  // namespace dom
 }  // namespace mozilla
+
+//-----------------------------------------------
+// This class is used to manage some static data about the layout
+// characteristics of our various "Pages Per Sheet" options.
+struct nsPagesPerSheetInfo {
+  static const nsPagesPerSheetInfo& LookupInfo(int32_t aPPS);
+
+  uint16_t mNumPages;
+  uint16_t mNumRows;
+  uint16_t mNumCols;
+
+  std::tuple<uint16_t, uint16_t> GetRowAndColFromIdx(
+      uint16_t aIdxOnSheet) const {
+    // Compute the row index by *dividing* the item's ordinal position by how
+    // many items fit in each row (i.e. the number of columns), and flooring.
+    // Compute the column index by getting the remainder of that division:
+    // Notably, mNumRows is irrelevant to this computation; that's because
+    // we're adding new items column-by-column rather than row-by-row.
+    return {aIdxOnSheet / mNumCols, aIdxOnSheet % mNumCols};
+  }
+};
 
 /**
  * This class maintains various shared data that is used by printing-related
@@ -69,6 +92,16 @@ class nsSharedPageData {
 
   // True if the current print operation uses one or more print ranges:
   bool mDoingPageRange = false;
+
+  // Lazy getter, to look up our pages-per-sheet info based on mPrintSettings
+  // (if it's available).  The result is stored in our mPagesPerSheetInfo
+  // member-var to speed up subsequent lookups.
+  // This API is infallible; in failure cases, it just returns the info struct
+  // that corresponds to 1 page per sheet.
+  const nsPagesPerSheetInfo* PagesPerSheetInfo();
+
+ private:
+  const nsPagesPerSheetInfo* mPagesPerSheetInfo = nullptr;
 };
 
 // Page sequence frame class. Manages a series of pages, in paginated mode.

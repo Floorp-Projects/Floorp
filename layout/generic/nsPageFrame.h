@@ -65,6 +65,11 @@ class nsPageFrame final : public nsContainerFrame {
     return mPageContentMargin;
   }
 
+  uint32_t IndexOnSheet() const { return mIndexOnSheet; }
+  void SetIndexOnSheet(uint32_t aIndexOnSheet) {
+    mIndexOnSheet = aIndexOnSheet;
+  }
+
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();
@@ -94,7 +99,12 @@ class nsPageFrame final : public nsContainerFrame {
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
   static constexpr int32_t kPageNumUnset = -1;
+  // 1-based page-num
   int32_t mPageNum = kPageNumUnset;
+
+  // 0-based index on the sheet that we belong to. Unused/meaningless if this
+  // page has frame state bit NS_PAGE_SKIPPED_BY_CUSTOM_RANGE.
+  uint32_t mIndexOnSheet = 0;
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
