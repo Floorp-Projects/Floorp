@@ -41,6 +41,7 @@ nsPrintSettings::nsPrintSettings()
       mResolution(0),
       mDuplex(0),
       mNumCopies(1),
+      mNumPagesPerSheet(1),
       mPrintToFile(false),
       mOutputFormat(kOutputFormatNative),
       mIsInitedFromPrinter(false),
@@ -209,6 +210,16 @@ NS_IMETHODIMP nsPrintSettings::GetNumCopies(int32_t* aNumCopies) {
 }
 NS_IMETHODIMP nsPrintSettings::SetNumCopies(int32_t aNumCopies) {
   mNumCopies = aNumCopies;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::GetNumPagesPerSheet(int32_t* aNumPagesPerSheet) {
+  NS_ENSURE_ARG_POINTER(aNumPagesPerSheet);
+  *aNumPagesPerSheet = mNumPagesPerSheet;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetNumPagesPerSheet(int32_t aNumPagesPerSheet) {
+  mNumPagesPerSheet = aNumPagesPerSheet;
   return NS_OK;
 }
 
@@ -786,6 +797,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mResolution = rhs.mResolution;
   mDuplex = rhs.mDuplex;
   mNumCopies = rhs.mNumCopies;
+  mNumPagesPerSheet = rhs.mNumPagesPerSheet;
   mPrinter = rhs.mPrinter;
   mPrintToFile = rhs.mPrintToFile;
   mToFileName = rhs.mToFileName;

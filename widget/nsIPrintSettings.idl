@@ -197,6 +197,14 @@ interface nsIPrintSettings : nsISupports
   attribute long    orientation;   /*  see orientation consts */
   attribute long    numCopies;
 
+  /**
+   * For numPagesPerSheet, we support these values: 1, 2, 4, 6, 9, 16.
+   *
+   * Unsupported values will be treated internally as 1 page per sheet, and
+   * will trigger assertion failures in debug builds.
+   */
+  attribute long    numPagesPerSheet;
+
   attribute AString printerName;   /* name of destination printer */
 
   attribute boolean printToFile;

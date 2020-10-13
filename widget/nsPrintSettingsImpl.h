@@ -113,6 +113,7 @@ class nsPrintSettings : public nsIPrintSettings {
   int32_t mResolution;
   int32_t mDuplex;
   int32_t mNumCopies;
+  int32_t mNumPagesPerSheet;
   nsString mPrinter;
   bool mPrintToFile;
   nsString mToFileName;
