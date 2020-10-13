@@ -35,6 +35,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.ThemeManager
+import java.lang.ref.WeakReference
 import java.util.concurrent.CancellationException
 
 /**
@@ -169,7 +170,15 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     private fun showInstallationDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingAddonInstallationDialogFragment()) {
             requireComponents.analytics.metrics.track(Event.AddonInstalled(addon.id))
-            val addonCollectionProvider = requireContext().components.addonCollectionProvider
+            val context = requireContext()
+            val addonCollectionProvider = context.components.addonCollectionProvider
+
+            // Fragment may not be attached to the context anymore during onConfirmButtonClicked handling,
+            // but we still want to be able to process user selection of the 'allowInPrivateBrowsing' pref.
+            // This is a best-effort attempt to do so - retain a weak reference to the application context
+            // (to avoid a leak), which we attempt to use to access addonManager.
+            // See https://github.com/mozilla-mobile/fenix/issues/15816
+            val weakApplicationContext: WeakReference<Context> = WeakReference(context)
 
             val dialog = AddonInstallationDialogFragment.newInstance(
                 addon = addon,
@@ -189,7 +198,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 ),
                 onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
                     if (allowInPrivateBrowsing) {
-                        requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
+                        weakApplicationContext.get()?.components?.addonManager?.setAddonAllowedInPrivateBrowsing(
                             addon,
                             allowInPrivateBrowsing,
                             onSuccess = {
