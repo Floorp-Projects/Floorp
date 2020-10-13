@@ -7,13 +7,13 @@ The subsets from the dataset required by the Compatibility panel are:
 * browsers: [https://github.com/mdn/browser-compat-data/tree/master/browsers](https://github.com/mdn/browser-compat-data/tree/master/browsers)
 * css.properties: [https://github.com/mdn/browser-compat-data/tree/master/css](https://github.com/mdn/browser-compat-data/tree/master/css).
 
-The MDN compatibility data is available as a node package ([mdn-browser-compat-data](https://www.npmjs.com/package/mdn-browser-compat-data)).
+The MDN compatibility data is available as a node package ([@mdn/browser-compat-data](https://www.npmjs.com/package/@mdn/browser-compat-data)).
 The following node program is a sample of how to download `browsers.json` and `css-properties.json` using the node package.
 
 ```javascript
 'use strict';
 
-const compatData = require("mdn-browser-compat-data");
+const compatData = require("@mdn/browser-compat-data")
 const fs = require("fs")
 const path = require("path")
 
