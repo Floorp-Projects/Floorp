@@ -24,6 +24,7 @@
       "parent": {
         "scopes": ["addon_parent"],
         "script": "test-api.js",
+        "events": ["startup"],
         "paths": [["test"]]
       }
     }
