@@ -435,7 +435,7 @@ SessionHistoryEntry::GetTitle(nsAString& aTitle) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetTitle(const nsAString& aTitle) {
-  mInfo->mTitle = aTitle;
+  mInfo->SetTitle(aTitle);
   return NS_OK;
 }
 
