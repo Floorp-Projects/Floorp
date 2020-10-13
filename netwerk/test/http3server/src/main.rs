@@ -118,6 +118,37 @@ fn process_events(server: &mut Http3Server) {
                                     .set_response(&default_headers, &default_ret)
                                     .unwrap(),
                             }
+                        } else if path == "/no_body" {
+                            request
+                                .set_response(
+                                    &[
+                                        (String::from(":status"), String::from("200")),
+                                        (String::from("Cache-Control"), String::from("no-cache")),
+                                    ],
+                                    &[],
+                                )
+                                .unwrap();
+                        } else if path == "/no_content_length" {
+                            request
+                                .set_response(
+                                    &[
+                                        (String::from(":status"), String::from("200")),
+                                        (String::from("Cache-Control"), String::from("no-cache")),
+                                    ],
+                                    &vec![b'a'; 4000],
+                                )
+                                .unwrap();
+                        } else if path == "/content_length_smaller" {
+                            request
+                                .set_response(
+                                    &[
+                                        (String::from(":status"), String::from("200")),
+                                        (String::from("Cache-Control"), String::from("no-cache")),
+                                        (String::from("content-length"), 4000.to_string()),
+                                    ],
+                                    &vec![b'a'; 8000],
+                                )
+                                .unwrap();
                         } else {
                             match path.trim_matches(|p| p == '/').parse::<usize>() {
                                 Ok(v) => request
