@@ -1,4 +1,4 @@
-componentsVersion: 63.0.0
+componentsVersion: 63.0.0-TESTING
 projects:
   concept-awesomebar:
     path: components/concept/awesomebar
