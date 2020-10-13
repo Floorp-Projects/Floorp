@@ -176,13 +176,6 @@ interface nsIBrowserDOMWindow : nsISupports
                  in AString aName);
 
   /**
-   * @param  aWindow the window to test.
-   * @return whether the window is the main content window for any
-   *         currently open tab in this toplevel browser window.
-   */
-  boolean isTabContentWindow(in nsIDOMWindow aWindow);
-
-  /**
    * This function is responsible for calling
    * nsIContentViewer::PermitUnload on each frame in the window. It
    * returns true if closing the window is allowed. See canClose() in
