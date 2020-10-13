@@ -478,7 +478,8 @@ body {
       color: var(--welcome-button-text-color);
       fill: currentColor;
       position: relative;
-      z-index: 1; }
+      z-index: 1;
+      border: 1px solid transparent; }
       .multistageContainer button.primary:focus {
         background: var(--welcome-button-background-hover-color);
         box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
@@ -528,6 +529,7 @@ body {
       margin-inline-start: 4px;
       background: var(--grey-subtitle-1);
       border-radius: 5px;
+      border: 1px solid transparent;
       opacity: 0.25; }
       .multistageContainer .steps .indicator.current {
         opacity: 1; }
