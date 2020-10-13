@@ -101,8 +101,8 @@ class TestMemoryUsage(AwsyTestCase):
         # setup the results array
         results = [[] for _ in range(self.iterations())]
 
-        def create_checkpoint(name, iteration):
-            checkpoint = self.do_memory_report(name, iteration)
+        def create_checkpoint(name, iteration, minimize=False):
+            checkpoint = self.do_memory_report(name, iteration, minimize)
             self.assertIsNotNone(checkpoint, "Checkpoint was recorded")
             results[iteration].append(checkpoint)
 
@@ -113,9 +113,7 @@ class TestMemoryUsage(AwsyTestCase):
         self.set_preallocated_process_enabled_state(False)
         self.settle()
         self.settle()
-        self.assertTrue(self.do_full_gc())
-        self.settle()
-        create_checkpoint("TabsOpenForceGC", 0)
+        create_checkpoint("TabsOpenForceGC", 0, minimize=True)
         self.set_preallocated_process_enabled_state(True)
         # (If we wanted to do something after the preallocated process has been
         # recreated, we should call self.settle() again to wait for it.)
