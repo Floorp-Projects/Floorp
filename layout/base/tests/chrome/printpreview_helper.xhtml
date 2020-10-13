@@ -772,10 +772,21 @@ async function checkSupportedPagesPerSheetValue(src1, src2, numPages) {
 }
 // Pages-per-sheet: supported values (4, 9, 16)
 // And eventually 2 and 6, per bug 1669905.
-// (NOTE: tests for values 9 and 16 are coming in the next patch.)
 async function runTest31() {
   await checkSupportedPagesPerSheetValue("printpreview_pps4.html",
                                          "printpreview_pps4_ref.html", 4);
+
+  requestAnimationFrame(() => setTimeout(runTest32));
+}
+async function runTest32() {
+  await checkSupportedPagesPerSheetValue("printpreview_pps9.html",
+                                         "printpreview_pps9_ref.html", 9);
+
+  requestAnimationFrame(() => setTimeout(runTest33));
+}
+async function runTest33() {
+  await checkSupportedPagesPerSheetValue("printpreview_pps16.html",
+                                         "printpreview_pps16_ref.html", 16);
 
   finish();
 }
