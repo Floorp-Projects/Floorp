@@ -101,14 +101,10 @@ BEGIN_TEST(testHelperThreadOOM) {
 }
 
 bool init() override {
-  JSAPITest::uninit();              // Discard the just-created JSContext.
-  js::DestroyHelperThreadsState();  // The test creates this state.
+  js::DestroyHelperThreadsState();
   return true;
 }
-void uninit() override {
-  // Leave things initialized after this test finishes.
-  js::CreateHelperThreadsState();
-}
+void uninit() override { js::CreateHelperThreadsState(); }
 
 END_TEST(testHelperThreadOOM)
 

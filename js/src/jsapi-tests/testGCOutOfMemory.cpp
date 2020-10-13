@@ -73,4 +73,6 @@ virtual JSContext* createContext() override {
   return cx;
 }
 
+virtual void destroyContext() override { JS_DestroyContext(cx); }
+
 END_TEST(testGCOutOfMemory)
