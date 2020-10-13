@@ -129,7 +129,7 @@ indications what went wrong.
    ``js/src/jsutil.h``.
 
 [*] Note that due to the way addressing works on x86-64, if the crash
-address is 0x0 for a Linux/OS X crash report, or 0xffffffffffffffff for
+address is 0x0 for a Linux/macOS crash report, or 0xffffffffffffffff for
 a Windows crash report, it's highly likely that the value is incorrect.
 (There is a `bug
 report <https://bugzilla.mozilla.org/show_bug.cgi?id=1493342>`__ open

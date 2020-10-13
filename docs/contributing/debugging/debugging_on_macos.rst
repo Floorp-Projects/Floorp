@@ -1,16 +1,11 @@
-Debugging On Mac Os X
-=====================
+Debugging On macOS
+==================
 
-+--------------------------------------------------------------------+
-| This page is an import from MDN and the contents might be outdated |
-+--------------------------------------------------------------------+
-
-This document explains how to debug Gecko based applications such as
+This document explains how to debug Gecko-based applications such as
 Firefox, Thunderbird, and SeaMonkey on macOS using Xcode. If you want to
 debug from the terminal see :ref:`Debugging Mozilla with
 lldb <Debugging Firefox with LLDB>`. For specific
-information on a way to debug hangs, see :ref:`Debugging a hang on OS
-X <Debugging A Hang On OS X>`.
+information on a way to debug hangs, see :ref:`Debugging a hang on macOS <Debugging A Hang On macOS>`.
 
 Creating a debuggable build
 ---------------------------
@@ -38,7 +33,7 @@ Debugging Firefox on macOS 10.14+
 macOS 10.14 introduced Notarization and Hardened Runtime features for
 improved application security. macOS 10.15 went further, requiring
 applications to be Notarized with Hardened Runtime enabled in order to
-launch (ignoring workarounds.) When run on earlier macOS versions,
+launch (ignoring workarounds). When run on earlier macOS versions,
 Notarization and Hardened Runtime settings have no effect.
 
 Official Builds
@@ -114,9 +109,8 @@ the project to finish setting it up.
 Note also that since Xcode 7.3.1 it doesn't seem to be possible to
 have the Xcode project live outside the source tree. If you try to do
 that then Xcode will simply **copy** the source files under the
-project directory rather than link to them (still the case in Xcode
-10?) which breaks debugging and the possibility to
-modify-rebuild-relaunch from inside Xcode.
+project directory rather than link to them which breaks debugging and the
+possibility to modify-rebuild-relaunch from inside Xcode.
 
 These steps were last updated for Xcode 10.3:
 
@@ -176,12 +170,12 @@ correct line.
 Setting up lldb
 ---------------
 
-``lldb`` is the debugger XCode provides/uses.
+``lldb`` is the debugger Xcode provides/uses.
 
 .. warning::
 
    One important issue that the Mozilla .lldbinit file fixes is that by
-   default some breakpoints will be listed as "pending", and XCode will
+   default some breakpoints will be listed as "pending", and Xcode will
    not stop at them. If you don't include the Mozilla's .lldbinit, you
    must at least put
    ``settings set target.inline-breakpoint-strategy always`` in your
@@ -298,7 +292,7 @@ debugger will break there, and you will be able to debug it.
 .. warning::
 
    Note that with the default configuration, some breakpoints will be
-   listed as "pending", and XCode will not stop at them. If you don't
+   listed as "pending", and Xcode will not stop at them. If you don't
    include the Mozilla's .lldbinit, you must at least put
    ``settings set target.inline-breakpoint-strategy always`` in your
    ``$HOME/.lldbinit`` as recommended on :ref:`Debugging Mozilla with
@@ -309,16 +303,16 @@ Using Firefox-specific lldb commands
 
 If you included the .lldbinit when `Setting up
 lldb <#setting-up-lldb>`__, you can use Mozilla-specific lldb commands
-in the console, located in the Debug area of XCode. For example, type
+in the console, located in the Debug area of Xcode. For example, type
 ``js`` to see the JavaScript stack. For more information, see :ref:`Debugging
 Mozilla with lldb <Debugging Firefox with LLDB>`.
 
 Debugging e10s child processes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using XCode to debug child processes created by an e10s-enabled browser
+Using Xcode to debug child processes created by an e10s-enabled browser
 is a little trickier than debugging a single-process browser, but it can
-be done. These directions were written using XCode 6.3.1
+be done. These directions were written using Xcode 6.3.1
 
 #. Complete all the steps above under "Creating the Project"
 #. From the "Product" menu, ensure the scheme you created is selected
@@ -342,7 +336,7 @@ Now you're ready to start debugging:
 #. Click the "Run" button. The information area at the top of the window
    will show "Waiting for plugin-container to launch"
 #. From a command line, run your build of Firefox. When that launches a
-   child process (for example, when you start to load a webpage), XCode
+   child process (for example, when you start to load a webpage), Xcode
    will notice and attach to that child process. You can then debug the
    child process like you would any other process.
 #. When you are done debugging, click the "Stop" button and quit the

@@ -1,30 +1,26 @@
 Debugging Firefox with LLDB
 ===========================
 
-+--------------------------------------------------------------------+
-| This page is an import from MDN and the contents might be outdated |
-+--------------------------------------------------------------------+
-
 See http://lldb.llvm.org/index.html.
 
 Mozilla-specific lldb settings
 ------------------------------
 
 There's an
-```.lldbinit`` <http://mxr.mozilla.org/mozilla-central/source/.lldbinit>`__
-file in the Mozilla source tree, which applies recommended settings and
+``.lldbinit`` `file <http://mxr.mozilla.org/mozilla-central/source/.lldbinit>`_
+in the Mozilla source tree, which applies recommended settings and
 includes a few type summaries and Mozilla-specific debugging commands
 via the lldbutils module (see
 `python/lldbutils/README.txt <http://mxr.mozilla.org/mozilla-central/source/python/lldbutils/README.txt>`__).
-For information about available features see the links above and `Using
+For information about available features see the links above and the `Using
 LLDB to debug Gecko <http://mcc.id.au/blog/2014/01/lldb-gecko>`__ blog
 post.
 
 The in-tree ``.lldbinit`` should be loaded automatically in most cases
 when running lldb from the command line (e.g. using
 :ref:`mach`), but **not**
-when using XCode. See :ref:`Debugging on Mac OS X` for information on setting up
-XCode.
+when using Xcode. See :ref:`Debugging on macOS` for information on setting up
+Xcode.
 
 .. warning::
 
