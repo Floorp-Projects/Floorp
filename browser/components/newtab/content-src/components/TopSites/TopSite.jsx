@@ -261,8 +261,15 @@ export class TopSiteLink extends React.PureComponent {
                 />
               )}
             </div>
-            <div className={`title ${link.isPinned ? "pinned" : ""}`}>
+            <div
+              className={`title${
+                link.isPinned || link.sponsored_position ? " has-icon" : ""
+              }${link.isPinned ? " pinned" : ""}`}
+            >
               {link.isPinned && <div className="icon icon-pin-small" />}
+              {link.sponsored_position && (
+                <div className="icon icon-sponsored-small" />
+              )}
               <span dir="auto">{title}</span>
             </div>
             {link.type === SPOC_TYPE ? (
