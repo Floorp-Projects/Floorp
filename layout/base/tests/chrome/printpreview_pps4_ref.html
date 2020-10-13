@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- This is a reference case for a "4-pages-per-sheet" scenario. The width
+     and height of each "swatch" is 1/2 the width and height of the page. -->
+<style>
+html, body { margin: 0; height: 100%; }
+body {
+  display: flex;
+  flex-flow: row wrap;
+}
+.swatch {
+  box-sizing: border-box;
+  border: 60px solid;
+  /* The height will be automatically set to the flex container's row height,
+     via default 'align-self' behavior (which ends up as 'stretch') */
+  flex: 1 50%;
+}
+.swatch:nth-child(1) { border-color: cyan; }
+.swatch:nth-child(2) { border-color: yellow; }
+.swatch:nth-child(3) { border-color: pink; }
+.swatch:nth-child(4) { border-color: orange; }
+</style>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
