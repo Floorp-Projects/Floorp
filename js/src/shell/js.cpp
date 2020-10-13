@@ -8415,6 +8415,11 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   JS::SetReservedSlot(target, DOM_OBJECT_SLOT,
                       JS::GetReservedSlot(source, DOM_OBJECT_SLOT));
   JS::SetReservedSlot(source, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+  if (JS::GetClass(source) == GetDomClass()) {
+    JS::SetReservedSlot(target, DOM_OBJECT_SLOT2,
+                        JS::GetReservedSlot(source, DOM_OBJECT_SLOT2));
+    JS::SetReservedSlot(source, DOM_OBJECT_SLOT2, UndefinedValue());
+  }
 
   source = JS_TransplantObject(cx, source, target);
   if (!source) {
