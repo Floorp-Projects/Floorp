@@ -2667,8 +2667,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void pseudoMaxFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  // Widening/pairwise integer dot product (experimental as of August, 2020)
-  // https://github.com/WebAssembly/simd/pull/127
+  // Widening/pairwise integer dot product
 
   inline void widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);

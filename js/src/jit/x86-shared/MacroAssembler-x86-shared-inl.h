@@ -2013,6 +2013,8 @@ void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhs,
   vmovapd(scratch, lhsDest);
 }
 
+// Widening/pairwise integer dot product
+
 void MacroAssembler::widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpmaddwd(Operand(rhs), lhsDest, lhsDest);
 }

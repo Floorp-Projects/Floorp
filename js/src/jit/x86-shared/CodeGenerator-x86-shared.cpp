@@ -2606,7 +2606,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::F64x2PMin:
       masm.pseudoMinFloat64x2(rhs, lhsDest);
       break;
-    case wasm::SimdOp::I32x4DotSI16x8Experimental:
+    case wasm::SimdOp::I32x4DotSI16x8:
       masm.widenDotInt16x8(rhs, lhsDest);
       break;
     default:
