@@ -163,6 +163,12 @@ class FontList {
   void SearchForLocalFace(const nsACString& aName, Family** aFamily,
                           Face** aFace);
 
+  /**
+   * Return the localized name for the given family in the current system
+   * locale (if multiple localizations are available).
+   */
+  nsCString LocalizedFamilyName(const Family* aFamily);
+
   bool Initialized() { return mBlocks.Length() > 0 && NumFamilies() > 0; }
 
   uint32_t NumFamilies() { return GetHeader().mFamilyCount; }

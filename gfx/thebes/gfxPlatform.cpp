@@ -1814,18 +1814,11 @@ nsAutoCString gfxPlatform::GetDefaultFontName(
   // this one variable:
   nsAutoCString result;
 
-  FamilyAndGeneric fam =
-      gfxPlatformFontList::PlatformFontList()->GetDefaultFontFamily(
-          aLangGroup, aGenericFamily);
-  if (fam.mFamily.mIsShared) {
-    if (fam.mFamily.mShared) {
-      fontlist::FontList* fontList =
-          gfxPlatformFontList::PlatformFontList()->SharedFontList();
-      result = fam.mFamily.mShared->DisplayName().AsString(fontList);
-    }
-  } else if (fam.mFamily.mUnshared) {
-    fam.mFamily.mUnshared->LocalizedName(result);
-  }  // (else, leave 'result' empty)
+  auto* pfl = gfxPlatformFontList::PlatformFontList();
+  FamilyAndGeneric fam = pfl->GetDefaultFontFamily(aLangGroup, aGenericFamily);
+  if (!pfl->GetLocalizedFamilyName(fam.mFamily, result)) {
+    NS_WARNING("missing default font-family name");
+  }
 
   return result;
 }

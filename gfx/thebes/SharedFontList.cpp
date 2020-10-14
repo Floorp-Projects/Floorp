@@ -86,12 +86,10 @@ Family::Family(FontList* aList, const InitData& aData)
       mIndex(aData.mIndex),
       mVisibility(aData.mVisibility),
       mIsSimple(false),
+      mIsBundled(aData.mBundled),
       mIsBadUnderlineFamily(aData.mBadUnderline),
       mIsForceClassic(aData.mForceClassic),
-      mIsAltLocale(aData.mAltLocale) {
-  MOZ_ASSERT(aData.mIndex <= 0x7fffffffu);
-  mIndex = aData.mIndex | (aData.mBundled ? 0x80000000u : 0u);
-}
+      mIsAltLocale(aData.mAltLocale) {}
 
 class SetCharMapRunnable : public mozilla::Runnable {
  public:
@@ -787,7 +785,8 @@ void FontList::SetAliases(
   for (auto i = aAliasTable.Iter(); !i.Done(); i.Next()) {
     aliasArray.AppendElement(Family::InitData(
         i.Key(), i.Data()->mBaseFamily, i.Data()->mIndex, i.Data()->mVisibility,
-        i.Data()->mBundled, i.Data()->mBadUnderline, i.Data()->mForceClassic));
+        i.Data()->mBundled, i.Data()->mBadUnderline, i.Data()->mForceClassic,
+        true));
   }
   aliasArray.Sort();
 
@@ -877,6 +876,33 @@ void FontList::SetLocalNames(
   }
   header.mLocalFaces = ptr;
   header.mLocalFaceCount.store(count);
+}
+
+nsCString FontList::LocalizedFamilyName(const Family* aFamily) {
+  // If the given family was created for an alternate locale or legacy name,
+  // search for a standard family that corresponds to it. This is a linear
+  // search of the font list, but (a) this is only used to show names in
+  // Preferences, so is not performance-critical for layout etc.; and (b) few
+  // such family names are normally present anyway, the vast majority of fonts
+  // just have a single family name and we return it directly.
+  if (aFamily->IsAltLocaleFamily()) {
+    // Currently only the Windows backend actually does this; on other systems,
+    // the family index is unused and will be kNoIndex for all fonts.
+    if (aFamily->Index() != Family::kNoIndex) {
+      const Family* families = Families();
+      for (uint32_t i = 0; i < NumFamilies(); ++i) {
+        if (families[i].Index() == aFamily->Index() &&
+            families[i].IsBundled() == aFamily->IsBundled() &&
+            !families[i].IsAltLocaleFamily()) {
+          return families[i].DisplayName().AsString(this);
+        }
+      }
+    }
+  }
+
+  // For standard families (or if we failed to find the expected standard
+  // family for some reason), just return the DisplayName.
+  return aFamily->DisplayName().AsString(this);
 }
 
 Family* FontList::FindFamily(const nsCString& aName) {
