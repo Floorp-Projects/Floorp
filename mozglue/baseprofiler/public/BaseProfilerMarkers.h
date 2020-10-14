@@ -154,6 +154,15 @@ struct Text {
                                    const ProfilerString8View& aText) {
     aWriter.StringProperty("name", aText);
   }
+  static mozilla::MarkerSchema MarkerTypeDisplay() {
+    using MS = mozilla::MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.SetChartLabel("{marker.name} - {marker.data.name}");
+    schema.SetTableLabel("{marker.name} - {marker.data.name}");
+    schema.AddKeyLabelFormat("name", "Details",
+                             mozilla::MarkerSchema::Format::string);
+    return schema;
+  }
 };
 }  // namespace mozilla::baseprofiler::markers
 
