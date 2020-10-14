@@ -8,7 +8,7 @@ description: Checks handling of invalid value for the style option to the Segmen
 info: |
     Intl.Segmenter ([ locales [ , options ]])
 
-    13. Let granularity be ? GetOption(options, "granularity", "string", « "grapheme", "word", "sentence", "line" », "grapheme").
+    13. Let granularity be ? GetOption(options, "granularity", "string", « "grapheme", "word", "sentence" », "grapheme").
     14. Set segmenter.[[SegmenterGranularity]] to granularity.
 features: [Intl.Segmenter]
 ---*/
@@ -27,6 +27,7 @@ const invalidOptions = [
   "Sentence",
   "SENTENCE",
   "sentence\0",
+  "line",
   "Line",
   "LINE",
   "line\0",
