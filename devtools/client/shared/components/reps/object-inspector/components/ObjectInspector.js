@@ -14,7 +14,6 @@ require("./ObjectInspector.css");
 
 const ObjectInspectorItem = createFactory(require("./ObjectInspectorItem"));
 
-const classnames = require("classnames");
 
 const Utils = require("../utils");
 const { renderRep, shouldRenderRootsInReps } = Utils;
@@ -268,12 +267,16 @@ class ObjectInspector extends Component {
       inline,
     } = this.props;
 
+    const classNames = ["object-inspector"];
+    if (inline) {
+      classNames.push("inline");
+    }
+    if (disableWrap) {
+      classNames.push("nowrap");
+    }
+
     return Tree({
-      className: classnames({
-        inline,
-        nowrap: disableWrap,
-        "object-inspector": true,
-      }),
+      className: classNames.join(" "),
 
       autoExpandAll,
       autoExpandDepth,

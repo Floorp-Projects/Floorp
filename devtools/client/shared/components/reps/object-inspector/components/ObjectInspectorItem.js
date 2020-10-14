@@ -9,7 +9,6 @@ import Services from "devtools-services";
 const { appinfo } = Services;
 const isMacOS = appinfo.OS === "Darwin";
 
-const classnames = require("classnames");
 const { MODE } = require("../../reps/constants");
 
 const Utils = require("../utils");
@@ -163,18 +162,28 @@ class ObjectInspectorItem extends Component {
       onContextMenu,
     } = this.props;
 
+    const classNames = ["node", "object-node"];
+    if (focused) {
+      classNames.push("focused");
+    }
+
+    if (nodeIsBlock(item)) {
+      classNames.push("block");
+    }
+
+    if (
+      !expanded &&
+      (nodeIsDefaultProperties(item) ||
+        nodeIsPrototype(item) ||
+        nodeIsGetter(item) ||
+        nodeIsSetter(item) ||
+        (dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0))
+    ) {
+      classNames.push("lessen");
+    }
+
     const parentElementProps = {
-      className: classnames("node object-node", {
-        focused,
-        lessen:
-          !expanded &&
-          (nodeIsDefaultProperties(item) ||
-            nodeIsPrototype(item) ||
-            nodeIsGetter(item) ||
-            nodeIsSetter(item) ||
-            (dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0)),
-        block: nodeIsBlock(item),
-      }),
+      className: classNames.join(" "),
       onClick: e => {
         if (
           onCmdCtrlClick &&
