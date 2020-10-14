@@ -1436,7 +1436,6 @@ pub extern "C" fn wr_window_new(
     support_low_priority_transactions: bool,
     support_low_priority_threadpool: bool,
     allow_texture_swizzling: bool,
-    enable_picture_caching: bool,
     allow_scissored_cache_clears: bool,
     start_debug_server: bool,
     swgl_context: *mut c_void,
@@ -1593,7 +1592,6 @@ pub extern "C" fn wr_window_new(
         clear_color: Some(color),
         precache_flags,
         namespace_alloc_by_client: true,
-        enable_picture_caching,
         allow_pixel_local_storage_support: false,
         // SWGL doesn't support the GL_ALWAYS depth comparison function used by
         // `clear_caches_with_quads`, but scissored clears work well.
