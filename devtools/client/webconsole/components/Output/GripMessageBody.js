@@ -16,11 +16,12 @@ const {
 const actions = require("devtools/client/webconsole/actions/index");
 
 loader.lazyGetter(this, "objectInspector", function() {
-  return require("devtools/client/shared/components/reps/reps").objectInspector;
+  return require("devtools/client/shared/components/reps/index")
+    .objectInspector;
 });
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 GripMessageBody.displayName = "GripMessageBody";

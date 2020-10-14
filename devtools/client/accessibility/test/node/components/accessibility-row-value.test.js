@@ -18,7 +18,7 @@ const {
 const Badges = require("devtools/client/accessibility/components/Badges");
 const {
   REPS: { Rep },
-} = require("devtools/client/shared/components/reps/reps");
+} = require("devtools/client/shared/components/reps/index");
 const AuditController = require("devtools/client/accessibility/components/AuditController");
 
 const AccessibilityRowValueClass = require("devtools/client/accessibility/components/AccessibilityRowValue");

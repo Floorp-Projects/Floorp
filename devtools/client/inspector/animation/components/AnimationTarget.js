@@ -12,7 +12,7 @@ const {
   translateNodeFrontToGrip,
 } = require("devtools/client/inspector/shared/utils");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const { REPS, MODE } = require("devtools/client/shared/components/reps/index");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
 

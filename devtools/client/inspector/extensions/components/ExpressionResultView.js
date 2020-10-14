@@ -20,7 +20,7 @@ const {
   REPS: { Grip },
   MODE,
   objectInspector: { ObjectInspector: ObjectInspectorClass },
-} = require("devtools/client/shared/components/reps/reps");
+} = require("devtools/client/shared/components/reps/index");
 
 loader.lazyRequireGetter(
   this,
