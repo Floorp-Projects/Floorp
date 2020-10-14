@@ -152,7 +152,7 @@ var State = {
    *
    * @return {Promise}
    */
-  async update() {
+  async update(force = false) {
     // If the buffer is empty, add one value for bootstraping purposes.
     if (!this._buffer.length) {
       this._latest = await this._promiseSnapshot();
@@ -165,7 +165,7 @@ var State = {
     // If we haven't sampled in a while, add a sample to the buffer.
     let latestInBuffer = this._buffer[this._buffer.length - 1];
     let deltaT = now - latestInBuffer.date;
-    if (deltaT > BUFFER_SAMPLING_RATE_MS) {
+    if (force || deltaT > BUFFER_SAMPLING_RATE_MS) {
       this._latest = await this._promiseSnapshot();
       this._buffer.push(this._latest);
     }
@@ -374,7 +374,11 @@ var State = {
 
 var View = {
   _fragment: document.createDocumentFragment(),
+  // Processes, tabs and subframes that we killed during the previous iteration.
+  // Array<{pid:Number} | {windowId:Number}>
+  _killedRecently: [],
   async commit() {
+    this._killedRecently.length = 0;
     let tbody = document.getElementById("process-tbody");
 
     // Force translation to happen before we insert the new content in the DOM
@@ -547,6 +551,34 @@ var View = {
       });
     }
 
+    // Column: Kill button – but not for all processes.
+    let killButton = this._addCell(row, {
+      content: "",
+      classes: ["action-icon"],
+    });
+
+    if (["web", "webIsolated", "webLargeAllocation"].includes(data.type)) {
+      // This type of process can be killed.
+      if (this._killedRecently.some(kill => kill.pid && kill.pid == data.pid)) {
+        // We're racing between the "kill" action and the visual refresh.
+        // In a few cases, we could end up with the visual refresh showing
+        // a process as un-killed while we actually just killed it.
+        //
+        // We still want to display the process in case something actually
+        // went bad and the user needs the information to realize this.
+        // But we also want to make it visible that the process is being
+        // killed.
+        row.classList.add("killed");
+      } else {
+        // Otherwise, let's display the kill button.
+        killButton.classList.add("close-icon");
+        document.l10n.setAttributes(
+          killButton,
+          "about-processes-shutdown-process"
+        );
+      }
+    }
+
     this._fragment.appendChild(row);
     return row;
   },
@@ -580,6 +612,12 @@ var View = {
     this._addCell(row, {
       content: "",
       classes: ["cpu"],
+    });
+
+    // Column: action
+    this._addCell(row, {
+      content: "",
+      classes: ["action-icon"],
     });
 
     this._fragment.appendChild(row);
@@ -652,6 +690,34 @@ var View = {
       classes: ["cpu"],
     });
 
+    // Column: action
+    let killButton = this._addCell(row, {
+      content: "",
+      classes: ["action-icon"],
+    });
+
+    if (data.tab && data.tab.tabbrowser) {
+      // A tab. We want to be able to close it.
+      if (
+        this._killedRecently.some(
+          kill => kill.windowId && kill.windowId == data.outerWindowId
+        )
+      ) {
+        // We're racing between the "kill" action and the visual refresh.
+        // In a few cases, we could end up with the visual refresh showing
+        // a window as un-killed while we actually just killed it.
+        //
+        // We still want to display the window in case something actually
+        // went bad and the user needs the information to realize this.
+        // But we also want to make it visible that the window is being
+        // killed.
+        row.classList.add("killed");
+      } else {
+        // Otherwise, let's display the kill button.
+        killButton.classList.add("close-icon");
+        document.l10n.setAttributes(killButton, "about-processes-shutdown-tab");
+      }
+    }
     this._fragment.appendChild(row);
     return row;
   },
@@ -693,6 +759,12 @@ var View = {
         classes: ["cpu"],
       });
     }
+
+    // Column: Buttons (empty)
+    this._addCell(row, {
+      content: "",
+      classes: [],
+    });
 
     this._fragment.appendChild(row);
     return row;
@@ -865,16 +937,11 @@ var Control = {
       // Handle showing or hiding subitems of a row.
       let target = event.target;
       if (target.classList.contains("twisty")) {
-        let row = target.parentNode.parentNode;
-        let id = row.process.pid;
-        if (target.classList.toggle("open")) {
-          this._openItems.add(id);
-          this._showThreads(row);
-          View.insertAfterRow(row);
-        } else {
-          this._openItems.delete(id);
-          this._removeSubtree(row);
-        }
+        this._handleTwisty(target);
+        return;
+      }
+      if (target.classList.contains("close-icon")) {
+        this._handleKill(target);
         return;
       }
 
@@ -995,8 +1062,8 @@ var Control = {
       { once: true }
     );
   },
-  async update() {
-    await State.update();
+  async update(force = false) {
+    await State.update(force);
 
     if (document.hidden) {
       return;
@@ -1004,7 +1071,7 @@ var Control = {
 
     await wait(0);
 
-    await this._updateDisplay();
+    await this._updateDisplay(force);
   },
 
   // The force parameter can force a full update even when the mouse has been
@@ -1211,6 +1278,87 @@ var Control = {
       // Other special processes before preallocated.
       default:
         return RANK_UTILITY;
+    }
+  },
+
+  // Open/close list of threads.
+  _handleTwisty(target) {
+    let row = target.parentNode.parentNode;
+    let id = row.process.pid;
+    if (target.classList.toggle("open")) {
+      this._openItems.add(id);
+      this._showThreads(row);
+      View.insertAfterRow(row);
+    } else {
+      this._openItems.delete(id);
+      this._removeSubtree(row);
+    }
+  },
+
+  // Kill process/close tab/close subframe
+  _handleKill(target) {
+    let row = target.parentNode;
+    if (row.process) {
+      // Kill process immediately.
+      let pid = row.process.pid;
+
+      // Make sure that the user can't click twice on the kill button.
+      // Otherwise, chaos might ensue. Plus we risk crashing under Windows.
+      View._killedRecently.push({ pid });
+
+      // Discard tab contents and show that the process and all its contents are getting killed.
+      row.classList.add("killing");
+      for (
+        let childRow = row.nextSibling;
+        childRow && !childRow.classList.contains("process");
+        childRow = childRow.nextSibling
+      ) {
+        childRow.classList.add("killing");
+        let win = childRow.win;
+        if (win) {
+          View._killedRecently.push({ pid: win.outerWindowId });
+          if (win.tab && win.tab.tabbrowser) {
+            win.tab.tabbrowser.discardBrowser(
+              win.tab.tab,
+              /* aForceDiscard = */ true
+            );
+          }
+        }
+      }
+
+      // Finally, kill the process.
+      const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
+        Ci.nsIProcessToolsService
+      );
+      ProcessTools.kill(pid);
+    } else if (row.win && row.win.tab && row.win.tab.tabbrowser) {
+      // This is a tab, close it.
+      row.win.tab.tabbrowser.removeTab(row.win.tab.tab, {
+        skipPermitUnload: true,
+        animate: true,
+      });
+      View._killedRecently.push({ outerWindowId: row.win.outerWindowId });
+      row.classList.add("killing");
+
+      // If this was the only root window of the process, show that the process is also getting killed.
+      if (row.previousSibling.classList.contains("process")) {
+        let parentRow = row.previousSibling;
+        let roots = 0;
+        for (let win of parentRow.process.windows) {
+          if (win.isProcessRoot) {
+            roots += 1;
+          }
+        }
+        if (roots <= 1) {
+          // Yes, we're the only process root, so the process is dying.
+          //
+          // It might actually become a preloaded process rather than
+          // dying. That's an acceptable error. Even if we display incorrectly
+          // that the process is dying, this error will last only one refresh.
+          View._killedRecently.push({ pid: parentRow.process.pid });
+          parentRow.classList.add("killing");
+        }
+      }
     }
   },
 };

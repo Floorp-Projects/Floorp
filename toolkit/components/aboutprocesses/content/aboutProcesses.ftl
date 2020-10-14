@@ -5,6 +5,13 @@
 # Page title
 about-processes-title = Process Manager
 
+## Tooltips
+
+about-processes-shutdown-process =
+    .title = Unload tabs and kill process
+about-processes-shutdown-tab =
+    .title = Close tab
+
 ## Column headers
 
 about-processes-column-name = Name
@@ -35,7 +42,7 @@ about-processes-socket-process-name = Network (process { $pid })
 about-processes-remoteSandboxBroker-process-name = Remote Sandbox Broker (process { $pid })
 about-processes-forkServer-process-name = Fork Server (process { $pid })
 about-processes-preallocated-process-name = Preallocated (process { $pid })
-about-processes-unknown-process-name = Other ({$ type }, process { $pid })
+about-processes-unknown-process-name = Other ({ $type }, process { $pid })
 
 
 # Process
