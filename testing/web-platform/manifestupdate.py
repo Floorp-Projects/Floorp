@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import errno
 import hashlib
 import imp
 import os
@@ -129,7 +130,14 @@ def ensure_manifest_directories(logger, test_paths):
         manifest_dir = os.path.dirname(paths["manifest_path"])
         if not os.path.exists(manifest_dir):
             logger.info("Creating directory %s" % manifest_dir)
-            os.makedirs(manifest_dir)
+            # Even though we just checked the path doesn't exist, there's a chance
+            # of race condition with another process or thread having created it in
+            # between. This happens during tests.
+            try:
+                os.makedirs(manifest_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         elif not os.path.isdir(manifest_dir):
             raise IOError("Manifest directory is a file")
 
@@ -146,7 +154,14 @@ def read_local_config(wpt_dir):
 def generate_config(logger, repo_root, wpt_dir, dest_path, force_rewrite=False):
     """Generate the local wptrunner.ini file to use locally"""
     if not os.path.exists(dest_path):
-        os.makedirs(dest_path)
+        # Even though we just checked the path doesn't exist, there's a chance
+        # of race condition with another process or thread having created it in
+        # between. This happens during tests.
+        try:
+            os.makedirs(dest_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     dest_config_path = os.path.join(dest_path, 'wptrunner.local.ini')
 
