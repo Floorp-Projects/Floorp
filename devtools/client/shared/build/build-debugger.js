@@ -42,7 +42,6 @@ const mappingValues = Object.values(mappings);
 
 // Add two additional mappings that cannot be reused when creating the
 // webpack bundles.
-mappings["devtools-reps"] = "devtools/client/shared/components/reps/reps.js";
 mappings["devtools-source-map"] = "devtools/client/shared/source-map/index.js";
 
 function isRequire(t, node) {
@@ -103,8 +102,6 @@ function transformMC({ types: t }) {
         }
 
         // Handle require() to files mapped to other mozilla-central files.
-        // e.g. require("devtools-reps")
-        //   -> require("devtools/client/shared/components/reps/reps.js")
         if (Object.keys(mappings).includes(value)) {
           path.replaceWith(t.stringLiteral(mappings[value]));
           return;

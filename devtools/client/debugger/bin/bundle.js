@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const {
-  tools: { makeBundle, copyFile }
+  tools: { makeBundle, copyFile },
 } = require("devtools-launchpad/index");
 
 const sourceMapAssets = require("devtools-source-map/assets");
@@ -35,7 +35,7 @@ async function bundle() {
     projectPath,
     watch,
     updateAssets,
-    onFinish: () => onBundleFinish()
+    onFinish: () => onBundleFinish(),
   })
     .then(() => {
       console.log("[copy-assets] bundle is done");
@@ -69,18 +69,6 @@ function onBundleFinish() {
   moveFile(
     path.join(bundlePath, "source-map-index.js"),
     path.join(clientPath, "shared/source-map/index.js"),
-    { cwd: projectPath }
-  );
-
-  moveFile(
-    path.join(bundlePath, "reps.js"),
-    path.join(clientPath, "shared/components/reps/reps.js"),
-    { cwd: projectPath }
-  );
-
-  moveFile(
-    path.join(bundlePath, "reps.css"),
-    path.join(clientPath, "shared/components/reps/reps.css"),
     { cwd: projectPath }
   );
 
