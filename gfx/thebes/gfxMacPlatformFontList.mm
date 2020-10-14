@@ -980,8 +980,8 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
       NS_ConvertUTF16toUTF8 name(name16);
       nsAutoCString key;
       GenerateFontListKey(name, key);
-      families.AppendElement(
-          fontlist::Family::InitData(key, name, 0, GetVisibilityForFamily(name)));
+      families.AppendElement(fontlist::Family::InitData(key, name, fontlist::Family::kNoIndex,
+                                                        GetVisibilityForFamily(name)));
     }
     CFRelease(familyNames);
     SharedFontList()->SetFamilyNames(families);

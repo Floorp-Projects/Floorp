@@ -828,7 +828,7 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
         // XXX TODO: filter families for aGenericFamily, if supported by
         // platform
         aListOfFonts.AppendElement(
-            NS_ConvertUTF8toUTF16(f.DisplayName().AsString(list)));
+            NS_ConvertUTF8toUTF16(list->LocalizedFamilyName(&f)));
       }
     }
     return;
@@ -1451,12 +1451,21 @@ bool gfxPlatformFontList::GetStandardFamilyName(const nsCString& aFontName,
   if (family.IsNull()) {
     return false;
   }
-  if (family.mIsShared) {
-    aFamilyName = family.mShared->DisplayName().AsString(SharedFontList());
+  return GetLocalizedFamilyName(FindFamily(aFontName), aFamilyName);
+}
+
+bool gfxPlatformFontList::GetLocalizedFamilyName(const FontFamily& aFamily,
+                                                 nsACString& aFamilyName) {
+  if (aFamily.mIsShared) {
+    if (aFamily.mShared) {
+      aFamilyName = SharedFontList()->LocalizedFamilyName(aFamily.mShared);
+      return true;
+    }
+  } else if (aFamily.mUnshared) {
+    aFamily.mUnshared->LocalizedName(aFamilyName);
     return true;
   }
-  family.mUnshared->LocalizedName(aFamilyName);
-  return true;
+  return false;  // leaving the aFamilyName outparam untouched
 }
 
 FamilyAndGeneric gfxPlatformFontList::GetDefaultFontFamily(

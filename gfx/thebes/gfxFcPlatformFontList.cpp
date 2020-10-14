@@ -1602,7 +1602,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
         FontVisibility visibility =
             aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
         families.AppendElement(fontlist::Family::InitData(
-            keyName, aFamilyName, /*index*/ 0, visibility,
+            keyName, aFamilyName, fontlist::Family::kNoIndex, visibility,
             /*bundled*/ aAppFont, /*badUnderline*/ false));
       }
       faceListPtr = faceList.Data().get();
@@ -1660,7 +1660,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
         FontVisibility visibility =
             aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
         families.AppendElement(fontlist::Family::InitData(
-            keyName, otherFamilyName, /*index*/ 0, visibility,
+            keyName, otherFamilyName, fontlist::Family::kNoIndex, visibility,
             /*bundled*/ aAppFont, /*badUnderline*/ false));
       }
       faceList.Data()->AppendElement(fontlist::Face::InitData{
