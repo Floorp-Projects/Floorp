@@ -39,6 +39,16 @@ SI VectorType<T, 16> combine(VectorType<T, 8> a, VectorType<T, 8> b) {
 }
 
 template <typename T>
+SI VectorType<T, 2> lowHalf(VectorType<T, 4> a) {
+  return __builtin_shufflevector(a, a, 0, 1);
+}
+
+template <typename T>
+SI VectorType<T, 2> highHalf(VectorType<T, 4> a) {
+  return __builtin_shufflevector(a, a, 2, 3);
+}
+
+template <typename T>
 SI VectorType<T, 4> lowHalf(VectorType<T, 8> a) {
   return __builtin_shufflevector(a, a, 0, 1, 2, 3);
 }
@@ -343,6 +353,12 @@ struct VectorType<T, 2> {
     };
     T elements[2];
   };
+
+  SI VectorType wrap(const data_type& data) {
+    VectorType v;
+    v.data = data;
+    return v;
+  }
 };
 
 #  define CONVERT(vector, type) ((type)(vector))
