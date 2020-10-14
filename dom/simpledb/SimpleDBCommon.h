@@ -9,51 +9,27 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-// SimpleDB equivalents of QM_TRY and QM_DEBUG_TRY.
+// SimpleDB equivalents of QM_TRY.
 #define SDB_TRY_GLUE(...) \
   QM_TRY_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
 #define SDB_TRY(...) SDB_TRY_GLUE(__VA_ARGS__)
 
-#ifdef DEBUG
-#  define SDB_DEBUG_TRY(...) SDB_TRY(__VA_ARGS__)
-#else
-#  define SDB_DEBUG_TRY(...)
-#endif
-
-// SimpleDB equivalents of QM_TRY_VAR, QM_TRY_INSPECT and QM_DEBUG_TRY_VAR.
+// SimpleDB equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
 #define SDB_TRY_VAR_GLUE(accessFunction, ...)                        \
   QM_TRY_VAR_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
                   accessFunction, ##__VA_ARGS__)
 #define SDB_TRY_UNWRAP(...) SDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 #define SDB_TRY_INSPECT(...) SDB_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
-#ifdef DEBUG
-#  define SDB_DEBUG_TRY_UNWRAP(...) SDB_TRY_UNWRAP(__VA_ARGS__)
-#else
-#  define SDB_DEBUG_TRY_UNWRAP(...)
-#endif
-
-// SimpleDB equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
+// SimpleDB equivalents of QM_TRY_RETURN.
 #define SDB_TRY_RETURN_GLUE(...)                                        \
   QM_TRY_RETURN_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
                      ##__VA_ARGS__)
 #define SDB_TRY_RETURN(...) SDB_TRY_RETURN_GLUE(__VA_ARGS__)
 
-#ifdef DEBUG
-#  define SDB_DEBUG_TRY_RETURN(...) SDB_TRY_RETURN(__VA_ARGS__)
-#else
-#  define SDB_DEBUG_TRY_RETURN(...)
-#endif
-
-// SimpleDB equivalents of QM_FAIL and QM_DEBUG_FAIL.
+// SimpleDB equivalents of QM_FAIL.
 #define SDB_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::simpledb, ##__VA_ARGS__)
 #define SDB_FAIL(...) SDB_FAIL_GLUE(__VA_ARGS__)
-
-#ifdef DEBUG
-#  define SDB_DEBUG_FAIL(...) SDB_FAIL(__VA_ARGS__)
-#else
-#  define SDB_DEBUG_FAIL(...)
-#endif
 
 namespace mozilla {
 namespace dom {

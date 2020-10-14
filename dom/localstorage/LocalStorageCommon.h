@@ -186,54 +186,29 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsString.h"
 
-// LocalStorage equivalents of QM_TRY and QM_DEBUG_TRY.
+// LocalStorage equivalents of QM_TRY.
 #define LS_TRY_GLUE(...)                                             \
   QM_TRY_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
               ##__VA_ARGS__)
 #define LS_TRY(...) LS_TRY_GLUE(__VA_ARGS__)
 
-#ifdef DEBUG
-#  define LS_DEBUG_TRY(...) LS_TRY(__VA_ARGS__)
-#else
-#  define LS_DEBUG_TRY(...)
-#endif
-
-// LocalStorage equivalents of QM_TRY_VAR, QM_TRY_INSPECT and
-// QM_DEBUG_TRY_VAR.
+// LocalStorage equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
 #define LS_TRY_VAR_GLUE(accessFunction, ...)                             \
   QM_TRY_VAR_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
                   accessFunction, ##__VA_ARGS__)
 #define LS_TRY_UNWRAP(...) LS_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
 #define LS_TRY_INSPECT(...) LS_TRY_VAR_GLUE(inspect, __VA_ARGS__)
 
-#ifdef DEBUG
-#  define LS_DEBUG_TRY_UNWRAP(...) LS_TRY_UNWRAP(__VA_ARGS__)
-#else
-#  define LS_DEBUG_TRY_UNWRAP(...)
-#endif
-
-// LocalStorage equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
+// LocalStorage equivalents of QM_TRY_RETURN.
 #define LS_TRY_RETURN_GLUE(...)                                             \
   QM_TRY_RETURN_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
                      ##__VA_ARGS__)
 #define LS_TRY_RETURN(...) LS_TRY_RETURN_GLUE(__VA_ARGS__)
 
-#ifdef DEBUG
-#  define LS_DEBUG_TRY_RETURN(...) LS_TRY_RETURN(__VA_ARGS__)
-#else
-#  define LS_DEBUG_TRY_RETURN(...)
-#endif
-
-// LocalStorage equivalents of QM_FAIL and QM_DEBUG_FAIL.
+// LocalStorage equivalents of QM_FAIL.
 #define LS_FAIL_GLUE(...) \
   QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
 #define LS_FAIL(...) LS_FAIL_GLUE(__VA_ARGS__)
-
-#ifdef DEBUG
-#  define LS_DEBUG_FAIL(...) LS_FAIL(__VA_ARGS__)
-#else
-#  define LS_DEBUG_FAIL(...)
-#endif
 
 namespace mozilla {
 
