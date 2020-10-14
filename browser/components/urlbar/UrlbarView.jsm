@@ -1064,6 +1064,8 @@ class UrlbarView {
       item.setAttribute("type", "dynamic");
       this._updateRowForDynamicType(item, result);
       return;
+    } else if (result.providerName == "TabToSearch") {
+      item.setAttribute("type", "tabtosearch");
     } else {
       item.removeAttribute("type");
     }

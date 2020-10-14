@@ -107,7 +107,7 @@ class ProviderTabToSearch extends UrlbarProvider {
           engine: engine.name,
           url,
           keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-          icon: engine.iconURI?.spec,
+          icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
           query: "",
         })
       );
