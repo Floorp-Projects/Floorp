@@ -1,8 +1,5 @@
-commit e0ef80b9678b844a3d902148e3d86480a18d046f
-Merge: f6a9847c73 c46be192bb
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Thu Jul 30 15:19:38 2020 -0700
+commit 9c754bc3ce1d29448ce66841f5bb92a8d421d87e
+Author: ExE Boss <3889017+ExE-Boss@users.noreply.github.com>
+Date:   Sun Jun 7 19:30:00 2020 +0200
 
-    Merge pull request #2712 from shvaikalesh/intl402-intl-object-tostringtag
-    
-    Add Intl[@@toStringTag] coverage
+    Add tests for cross‑realm and subclass calls of legacy static accessors

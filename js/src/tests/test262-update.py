@@ -26,6 +26,7 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Segmenter",
     "top-level-await",
     "Atomics.waitAsync",
+    "legacy-regexp",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
