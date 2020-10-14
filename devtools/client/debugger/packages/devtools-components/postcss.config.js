@@ -21,8 +21,7 @@ module.exports = ({ file, options, env }) => {
     return {};
   }
 
-  // This will be used when creating a bundle for mozilla-central (from devtools-reps
-  // or debugger.html).
+  // This will be used when creating a bundle for mozilla-central.
   if (env === "production") {
     return {
       plugins: [mapUrl(mapUrlProduction)],
