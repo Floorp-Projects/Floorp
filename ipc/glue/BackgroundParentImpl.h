@@ -336,10 +336,8 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual already_AddRefed<PGamepadEventChannelParent>
   AllocPGamepadEventChannelParent() override;
 
-  virtual PGamepadTestChannelParent* AllocPGamepadTestChannelParent() override;
-
-  virtual bool DeallocPGamepadTestChannelParent(
-      PGamepadTestChannelParent* aActor) override;
+  virtual already_AddRefed<PGamepadTestChannelParent>
+  AllocPGamepadTestChannelParent() override;
 
   virtual PWebAuthnTransactionParent* AllocPWebAuthnTransactionParent()
       override;
