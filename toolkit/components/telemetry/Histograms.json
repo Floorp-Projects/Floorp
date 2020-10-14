@@ -15101,6 +15101,21 @@
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
     "releaseChannelCollection": "opt-out"
   },
+  "MEDIA_CONTROL_SETTING_CHANGE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "bvandyk@mozilla.com",
+      "cchang@mozilla.com"
+    ],
+    "bug_numbers": [1667454],
+    "expires_in_version": "90",
+    "kind": "categorical",
+    "labels": ["EnableFromUI", "EnableTotal", "DisableFromUI", "DisableTotal"],
+    "description": "Counts the number of times a user enable or disable the media control feature via UI button, and the total number of times media control feature is enabled and disabled, which allow us to calculate the number of times a user changes setting via modifying the preference directly.",
+    "releaseChannelCollection": "opt-out"
+  },
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
