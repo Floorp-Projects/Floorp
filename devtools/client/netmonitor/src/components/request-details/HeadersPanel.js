@@ -57,10 +57,10 @@ loader.lazyGetter(this, "MDNLink", function() {
   return createFactory(require("devtools/client/shared/components/MdnLink"));
 });
 loader.lazyGetter(this, "Rep", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS.Rep;
+  return require("devtools/client/shared/components/reps/index").REPS.Rep;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 loader.lazyGetter(this, "TreeRow", function() {
   return createFactory(

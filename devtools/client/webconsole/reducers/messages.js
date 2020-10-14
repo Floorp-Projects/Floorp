@@ -15,7 +15,7 @@ const { DEFAULT_FILTERS, FILTERS, MESSAGE_TYPE, MESSAGE_SOURCE } = constants;
 loader.lazyRequireGetter(
   this,
   "getGripPreviewItems",
-  "devtools/client/shared/components/reps/reps",
+  "devtools/client/shared/components/reps/index",
   true
 );
 loader.lazyRequireGetter(

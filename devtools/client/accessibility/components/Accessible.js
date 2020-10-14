@@ -41,7 +41,7 @@ const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")
 );
 // Reps
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const { REPS, MODE } = require("devtools/client/shared/components/reps/index");
 const { Rep, ElementNode, Accessible: AccessibleRep, Obj } = REPS;
 
 const {

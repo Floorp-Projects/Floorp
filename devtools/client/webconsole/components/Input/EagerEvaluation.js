@@ -15,10 +15,10 @@ const {
 const actions = require("devtools/client/webconsole/actions/index");
 
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS;
+  return require("devtools/client/shared/components/reps/index").REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 loader.lazyRequireGetter(
   this,

@@ -22,7 +22,7 @@ const TreeRow = createFactory(
 );
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 

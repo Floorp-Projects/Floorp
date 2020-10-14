@@ -47,7 +47,7 @@ const SearchBox = createFactory(
 );
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 const { div } = dom;

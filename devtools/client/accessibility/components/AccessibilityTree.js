@@ -17,7 +17,7 @@ const TreeView = createFactory(
   require("devtools/client/shared/components/tree/TreeView")
 );
 // Reps
-const { MODE } = require("devtools/client/shared/components/reps/reps");
+const { MODE } = require("devtools/client/shared/components/reps/index");
 
 const {
   fetchChildren,

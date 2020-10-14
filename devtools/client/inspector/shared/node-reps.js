@@ -5,16 +5,15 @@
 "use strict";
 
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/debugger/packages/devtools-reps/src/reps/constants")
-    .MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 loader.lazyGetter(this, "ElementNode", function() {
-  return require("devtools/client/debugger/packages/devtools-reps/src/reps/element-node");
+  return require("devtools/client/shared/components/reps/reps/element-node");
 });
 
 loader.lazyGetter(this, "TextNode", function() {
-  return require("devtools/client/debugger/packages/devtools-reps/src/reps/text-node");
+  return require("devtools/client/shared/components/reps/reps/text-node");
 });
 
 loader.lazyRequireGetter(
