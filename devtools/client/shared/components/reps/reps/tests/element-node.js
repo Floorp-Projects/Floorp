@@ -636,7 +636,7 @@ describe("ElementNode - Cursor style", () => {
 
 async function createWindowForCursorTest() {
   const path = require("path");
-  const css = await readTextFile(path.resolve(__dirname, "..", "reps.css"));
+  const css = await readTextFile(path.resolve(__dirname, "../..", "reps.css"));
   const html = `
     <body>
       <style>${css}</style>
