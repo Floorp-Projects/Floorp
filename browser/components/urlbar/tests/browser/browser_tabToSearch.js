@@ -106,3 +106,76 @@ add_task(async function basic() {
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
 });
+
+// Tests that we do not set aria-activedescendant after tabbing to a
+// tab-to-search result when the pref
+// browser.urlbar.accessibility.tabToSearch.announceResults is true. If that
+// pref is true, the result was already announced while the user was typing.
+add_task(async function activedescendant_tab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.accessibility.tabToSearch.announceResults", true]],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_ENGINE_DOMAIN.slice(0, 4),
+  });
+  let tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(
+    window,
+    1
+  );
+  Assert.equal(
+    tabToSearchRow.result.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+
+  EventUtils.synthesizeKey("KEY_Tab");
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: TEST_ENGINE_NAME,
+    entry: "tabtosearch",
+    isPreview: true,
+  });
+  let aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.ok(!aadID, "aria-activedescendant was not set.");
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests that we set aria-activedescendant after accessing a tab-to-search
+// result with the arrow keys.
+add_task(async function activedescendant_arrow() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_ENGINE_DOMAIN.slice(0, 4),
+  });
+  let tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(
+    window,
+    1
+  );
+  Assert.equal(
+    tabToSearchRow.result.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: TEST_ENGINE_NAME,
+    entry: "tabtosearch",
+    isPreview: true,
+  });
+  let aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.equal(
+    aadID,
+    tabToSearchRow.id,
+    "aria-activedescendant was set to the tab-to-search result."
+  );
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
