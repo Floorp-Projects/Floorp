@@ -4863,6 +4863,26 @@ void nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow) {
   SetFocusedBrowsingContext(aWindow ? aWindow->GetBrowsingContext() : nullptr);
 }
 
+void nsFocusManager::NotifyOfReFocus(nsIContent& aContent) {
+  nsPIDOMWindowOuter* window = GetCurrentWindow(&aContent);
+  if (!window || window != mFocusedWindow) {
+    return;
+  }
+  nsIDocShell* docShell = window->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+  IMEStateManager::OnReFocus(presContext, aContent);
+}
+
 void nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration) {
   if (!sInstance) {
     return;

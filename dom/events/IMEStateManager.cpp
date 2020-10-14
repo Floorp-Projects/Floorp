@@ -807,6 +807,28 @@ void IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase) {
   sActiveIMEContentObserver->SuppressNotifyingIME();
 }
 
+void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
+                                nsIContent& aContent) {
+  MOZ_LOG(
+      sISMLog, LogLevel::Info,
+      ("OnReFocus(aPresContext=0x%p, aContent=0x%p)", aPresContext, &aContent));
+
+  if (NS_WARN_IF(!sWidget) || NS_WARN_IF(sWidget->Destroyed())) {
+    return;
+  }
+
+  if (!UserActivation::IsHandlingUserInput()) {
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget(sWidget);
+
+  InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+                            InputContextAction::FOCUS_NOT_CHANGED);
+  IMEState newState = GetNewIMEState(aPresContext, &aContent);
+  SetIMEState(newState, aPresContext, &aContent, widget, action, sOrigin);
+}
+
 // static
 void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                      nsIContent* aContent,
