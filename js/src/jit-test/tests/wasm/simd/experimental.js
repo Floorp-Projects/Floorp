@@ -67,9 +67,9 @@ function V128StoreExpr(addr, v) {
 }
 
 // Pseudo-min/max, https://github.com/WebAssembly/simd/pull/122
-var fxs = [5, 1, -4, 2];
+var fxs = [5, 1, -4, NaN];
 var fys = [6, 0, -7, 3];
-var dxs = [5, 1];
+var dxs = [5, NaN];
 var dys = [6, 0];
 
 for ( let [opcode, xs, ys, operator] of [[F32x4PMinCode, fxs, fys, pmin],
