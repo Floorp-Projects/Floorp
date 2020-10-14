@@ -229,6 +229,7 @@ static bool IsImmediateType(ValType vt) {
       switch (vt.refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           return true;
         case RefType::TypeIndex:
           return false;
@@ -257,6 +258,8 @@ static unsigned EncodeImmediateType(ValType vt) {
           return 5;
         case RefType::Extern:
           return 6;
+        case RefType::Eq:
+          return 7;
         case RefType::TypeIndex:
           break;
       }
@@ -986,11 +989,14 @@ UniqueChars wasm::ToString(ValType type) {
     case ValType::Ref:
       if (type.isNullable() && !type.isTypeIndex()) {
         switch (type.refTypeKind()) {
+          case RefType::Func:
+            literal = "funcref";
+            break;
           case RefType::Extern:
             literal = "externref";
             break;
-          case RefType::Func:
-            literal = "funcref";
+          case RefType::Eq:
+            literal = "eqref";
             break;
           case RefType::TypeIndex:
             MOZ_ASSERT_UNREACHABLE();
@@ -998,11 +1004,14 @@ UniqueChars wasm::ToString(ValType type) {
       } else {
         const char* heapType = nullptr;
         switch (type.refTypeKind()) {
+          case RefType::Func:
+            heapType = "func";
+            break;
           case RefType::Extern:
             heapType = "extern";
             break;
-          case RefType::Func:
-            heapType = "func";
+          case RefType::Eq:
+            heapType = "eq";
             break;
           case RefType::TypeIndex:
             return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",

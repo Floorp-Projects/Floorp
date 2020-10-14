@@ -2667,6 +2667,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
       switch (value.type().refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           MOZ_ASSERT(value.ref().isNull());
           result = f.nullRefConstant();
           break;
