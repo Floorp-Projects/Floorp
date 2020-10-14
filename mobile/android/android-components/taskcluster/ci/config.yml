@@ -54,7 +54,7 @@ workers:
             provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover
             os: scriptworker
-            worker-type: 'mobile-{level}-beetmover-dev'
+            worker-type: 'mobile-{level}-beetmover'
 
 scriptworker:
     scope-prefix: project:mobile:android-components:releng
