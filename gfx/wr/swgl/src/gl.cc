@@ -2916,7 +2916,7 @@ static inline WideR8 span_mask(uint8_t*, int span) {
   return span_mask_R8(span);
 }
 
-UNUSED static inline PackedRG8 span_mask_RG8(int span) {
+static inline PackedRG8 span_mask_RG8(int span) {
   return bit_cast<PackedRG8>(I16(span) < I16{1, 2, 3, 4});
 }
 
