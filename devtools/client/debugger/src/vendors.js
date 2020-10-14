@@ -16,8 +16,6 @@
  * Both are fine, but cannot be mixed for the same module.
  */
 
-// Modules imported with destructuring
-import * as devtoolsComponents from "devtools-components";
 // $FlowIgnore
 import * as devtoolsEnvironment from "devtools-environment";
 import * as devtoolsUtils from "devtools-utils";
@@ -36,7 +34,6 @@ import move from "lodash-move";
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 export const vendored = {
   classnames,
-  "devtools-components": devtoolsComponents,
   "devtools-environment": devtoolsEnvironment,
   "devtools-splitter": devtoolsSplitter,
   "devtools-utils": devtoolsUtils,

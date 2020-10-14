@@ -52,7 +52,6 @@ function isRequire(t, node) {
 // Should be synchronized with vendors.js
 const VENDORS = [
   "classnames",
-  "devtools-components",
   "devtools-environment",
   "devtools-splitter",
   "devtools-utils",
