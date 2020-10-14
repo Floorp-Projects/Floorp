@@ -52,3 +52,23 @@ add_task(async function test_disable_commands() {
     );
   }
 });
+
+/**
+ * When buttons are connected to a command, they should not get
+ * disabled just because we move them.
+ */
+add_task(async function test_dont_disable_when_moving() {
+  await startCustomizing();
+  CustomizableUI.addWidgetToArea("print-button", "nav-bar");
+  ok(
+    !document.getElementById("print-button").hasAttribute("disabled"),
+    "Should not have disabled attribute when moving via API in customize mode"
+  );
+
+  await gCustomizeMode.reset();
+  ok(
+    !document.getElementById("print-button").hasAttribute("disabled"),
+    "Should not have disabled attribute when resetting in customize mode"
+  );
+  await endCustomizing();
+});
