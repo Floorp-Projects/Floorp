@@ -2,19 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow } = require("enzyme");
 
-const { lengthBubble } = require("../../shared/grip-length-bubble");
+const {
+  lengthBubble,
+} = require("devtools/client/shared/components/reps/shared/grip-length-bubble");
 const {
   maxLengthMap: arrayLikeMaxLengthMap,
   getLength: getArrayLikeLength,
-} = require("../grip-array");
+} = require("devtools/client/shared/components/reps/reps/grip-array");
 const {
   maxLengthMap: mapMaxLengths,
   getLength: getMapLength,
-} = require("../grip-map");
-const { getGripPreviewItems } = require("../rep-utils");
-const nodeConstants = require("../../shared/dom-node-constants");
+} = require("devtools/client/shared/components/reps/reps/grip-map");
+const {
+  getGripPreviewItems,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const nodeConstants = require("devtools/client/shared/components/reps/shared/dom-node-constants");
 
 /**
  * Get an array of all the items from the grip in parameter (including the grip

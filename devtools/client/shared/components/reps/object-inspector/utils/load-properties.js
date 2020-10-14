@@ -10,7 +10,7 @@ const {
   enumSymbols,
   getFullText,
   getProxySlots,
-} = require("./client");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/client");
 
 const {
   getClosestGripNode,
@@ -27,7 +27,7 @@ const {
   nodeIsProxy,
   nodeNeedsNumericalBuckets,
   nodeIsLongString,
-} = require("./node");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 
 function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);

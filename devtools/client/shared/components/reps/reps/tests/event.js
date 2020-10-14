@@ -2,17 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 /* global jest */
 const { shallow } = require("enzyme");
-const { REPS, getRep } = require("../rep");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
 const { Event } = REPS;
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-} = require("./test-helpers");
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
 
-const { MODE } = require("../constants");
-const stubs = require("../stubs/event");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/event");
 
 describe("Event - beforeprint", () => {
   const object = stubs.get("testEvent");

@@ -9,8 +9,8 @@ const {
   nodeIsEntries,
   nodeIsMapEntry,
   nodeIsPrototype,
-} = require("../../utils/node");
-const gripArrayStubs = require("../../../reps/stubs/grip-array");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
 
 const root = {
   path: "root",
@@ -227,7 +227,7 @@ describe("makeNodesForProperties", () => {
   });
 
   it("object with entries", () => {
-    const gripMapStubs = require("../../../reps/stubs/grip-map");
+    const gripMapStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
 
     const mapNode = createNode({
       name: "map",

@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { maybeEscapePropertyName } = require("../../reps/rep-utils");
-const ArrayRep = require("../../reps/array");
-const GripArrayRep = require("../../reps/grip-array");
-const GripMap = require("../../reps/grip-map");
-const GripMapEntryRep = require("../../reps/grip-map-entry");
-const ErrorRep = require("../../reps/error");
-const BigIntRep = require("../../reps/big-int");
-const { isLongString } = require("../../reps/string");
+const { maybeEscapePropertyName } = require("devtools/client/shared/components/reps/reps/rep-utils");
+const ArrayRep = require("devtools/client/shared/components/reps/reps/array");
+const GripArrayRep = require("devtools/client/shared/components/reps/reps/grip-array");
+const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
+const GripMapEntryRep = require("devtools/client/shared/components/reps/reps/grip-map-entry");
+const ErrorRep = require("devtools/client/shared/components/reps/reps/error");
+const BigIntRep = require("devtools/client/shared/components/reps/reps/big-int");
+const { isLongString } = require("devtools/client/shared/components/reps/reps/string");
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 

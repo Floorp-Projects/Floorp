@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { loadItemProperties } = require("./utils/load-properties");
+const { loadItemProperties } = require("devtools/client/shared/components/reps/object-inspector/utils/load-properties");
 const {
   getPathExpression,
   getParentFront,
@@ -10,8 +10,8 @@ const {
   getValue,
   nodeIsBucket,
   getFront,
-} = require("./utils/node");
-const { getLoadedProperties, getWatchpoints } = require("./reducer");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+const { getLoadedProperties, getWatchpoints } = require("devtools/client/shared/components/reps/object-inspector/reducer");
 
 /**
  * This action is responsible for expanding a given node, which also means that
