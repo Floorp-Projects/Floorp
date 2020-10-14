@@ -211,8 +211,8 @@ struct ModuleEnvironment {
 #  ifdef ENABLE_WASM_GC
       // gc can only be enabled if function-references is enabled
       if (gcTypesEnabled()) {
-        // Structs are subtypes of ExternRef.
-        if (isStructType(one) && two.isExtern()) {
+        // Structs are subtypes of EqRef.
+        if (isStructType(one) && two.isEq()) {
           return true;
         }
         // Struct One is a subtype of struct Two if Two is a prefix of One.
@@ -716,6 +716,14 @@ class Decoder {
         return true;
       }
 #endif
+#ifdef ENABLE_WASM_GC
+      case uint8_t(TypeCode::EqRef):
+        if (!features.gcTypes) {
+          return fail("gc types not enabled");
+        }
+        *type = RefType::fromTypeCode(TypeCode(code), true);
+        return true;
+#endif
       default:
         return fail("bad type");
     }
@@ -749,6 +757,14 @@ class Decoder {
         case uint8_t(TypeCode::ExternRef):
           *type = RefType::fromTypeCode(TypeCode(code), nullable);
           return true;
+#ifdef ENABLE_WASM_GC
+        case uint8_t(TypeCode::EqRef):
+          if (!features.gcTypes) {
+            return fail("gc types not enabled");
+          }
+          *type = RefType::fromTypeCode(TypeCode(code), nullable);
+          return true;
+#endif
         default:
           return fail("invalid heap type");
       }

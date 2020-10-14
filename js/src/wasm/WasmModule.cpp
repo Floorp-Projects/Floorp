@@ -1203,6 +1203,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
     case ValType::Ref:
       switch (v.refTypeKind()) {
         case RefType::TypeIndex:
+        case RefType::Eq:
           t = GlobalObject::getOrCreateReferenceTypeDescr(
               cx, cx->global(), ReferenceType::TYPE_OBJECT);
           break;
