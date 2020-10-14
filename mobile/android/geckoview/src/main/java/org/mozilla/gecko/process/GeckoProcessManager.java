@@ -619,7 +619,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     @WrapForJNI
-    private static void markAsDead(final Selector selector) {
+    private static void shutdownProcess(final Selector selector) {
         XPCOMEventTarget.assertOnLauncherThread();
         final ChildConnection conn = INSTANCE.mConnections.getExistingConnection(selector);
         if (conn == null) {

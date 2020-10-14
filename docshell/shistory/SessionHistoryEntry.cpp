@@ -38,11 +38,6 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
           /* FIXME Is this correct? */
           aLoadState->TypeHint())) {
   MaybeUpdateTitleFromURI();
-  bool isNoStore = false;
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
-    Unused << httpChannel->IsNoStoreResponse(&isNoStore);
-    mPersist = !isNoStore;
-  }
 }
 
 SessionHistoryInfo::SessionHistoryInfo(
@@ -68,6 +63,39 @@ SessionHistoryInfo::SessionHistoryInfo(
   mSharedState.Get()->mContentType = aContentType;
 
   MaybeUpdateTitleFromURI();
+}
+
+SessionHistoryInfo::SessionHistoryInfo(
+    nsIChannel* aChannel, uint32_t aLoadType,
+    nsIPrincipal* aPartitionedPrincipalToInherit,
+    nsIContentSecurityPolicy* aCsp) {
+  aChannel->GetURI(getter_AddRefs(mURI));
+  mLoadType = aLoadType;
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+  loadInfo->GetResultPrincipalURI(getter_AddRefs(mResultPrincipalURI));
+  loadInfo->GetTriggeringPrincipal(
+      getter_AddRefs(mSharedState.Get()->mTriggeringPrincipal));
+  loadInfo->GetPrincipalToInherit(
+      getter_AddRefs(mSharedState.Get()->mPrincipalToInherit));
+
+  mSharedState.Get()->mPartitionedPrincipalToInherit =
+      aPartitionedPrincipalToInherit;
+  mSharedState.Get()->mCsp = aCsp;
+  aChannel->GetContentType(mSharedState.Get()->mContentType);
+  aChannel->GetOriginalURI(getter_AddRefs(mOriginalURI));
+
+  uint32_t loadFlags;
+  aChannel->GetLoadFlags(&loadFlags);
+  mLoadReplace = !!(loadFlags & nsIChannel::LOAD_REPLACE);
+
+  MaybeUpdateTitleFromURI();
+
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
+    mReferrerInfo = httpChannel->GetReferrerInfo();
+  }
 }
 
 void SessionHistoryInfo::Reset(nsIURI* aURI, const nsID& aDocShellID,
@@ -291,13 +319,7 @@ nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>*
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
     SessionHistoryEntry* aEntry)
     : mInfo(aEntry->Info()), mLoadId(++gLoadingSessionHistoryInfoLoadId) {
-  if (!SessionHistoryEntry::sLoadIdToEntry) {
-    SessionHistoryEntry::sLoadIdToEntry =
-        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
-  }
-  MOZ_LOG(gSHLog, LogLevel::Verbose,
-          ("SHEntry::AddLoadId(%" PRIu64 " - %p", mLoadId, aEntry));
-  SessionHistoryEntry::sLoadIdToEntry->Put(mLoadId, aEntry);
+  SessionHistoryEntry::SetByLoadId(mLoadId, aEntry);
 }
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
@@ -328,6 +350,19 @@ SessionHistoryEntry* SessionHistoryEntry::GetByLoadId(uint64_t aLoadId) {
   }
 
   return sLoadIdToEntry->Get(aLoadId);
+}
+
+void SessionHistoryEntry::SetByLoadId(uint64_t aLoadId,
+                                      SessionHistoryEntry* aEntry) {
+  if (!sLoadIdToEntry) {
+    sLoadIdToEntry =
+        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
+  }
+
+  MOZ_LOG(
+      gSHLog, LogLevel::Verbose,
+      ("SessionHistoryEntry::SetByLoadId(%" PRIu64 " - %p", aLoadId, aEntry));
+  sLoadIdToEntry->Put(aLoadId, aEntry);
 }
 
 void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {

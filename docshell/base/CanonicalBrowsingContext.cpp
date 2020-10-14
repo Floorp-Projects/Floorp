@@ -20,6 +20,7 @@
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
@@ -389,6 +390,40 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   return loadingInfo;
 }
 
+UniquePtr<LoadingSessionHistoryInfo>
+CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
+    LoadingSessionHistoryInfo* aInfo, nsIChannel* aChannel) {
+  MOZ_ASSERT(aInfo);
+  MOZ_ASSERT(aChannel);
+
+  UniquePtr<SessionHistoryInfo> newInfo = MakeUnique<SessionHistoryInfo>(
+      aChannel, aInfo->mInfo.LoadType(),
+      aInfo->mInfo.GetPartitionedPrincipalToInherit(), aInfo->mInfo.GetCsp());
+
+  RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(newInfo.get());
+  if (IsTop()) {
+    // Only top level pages care about Get/SetPersist.
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetURI(getter_AddRefs(uri));
+    newEntry->SetPersist(nsDocShell::ShouldAddToSessionHistory(uri, aChannel));
+  }
+  newEntry->SetDocshellID(GetHistoryID());
+  newEntry->SetIsDynamicallyAdded(CreatedDynamically());
+  newEntry->SetForInitialLoad(true);
+
+  // Replacing the old entry.
+  SessionHistoryEntry::SetByLoadId(aInfo->mLoadId, newEntry);
+
+  for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
+    if (mLoadingEntries[i].mLoadId == aInfo->mLoadId) {
+      mLoadingEntries[i].mEntry = newEntry;
+      break;
+    }
+  }
+
+  return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
+}
+
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                     const nsID& aChangeID,
                                                     uint32_t aLoadType) {
@@ -709,6 +744,10 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
   if (mTabMediaController) {
     mTabMediaController->Shutdown();
     mTabMediaController = nullptr;
+  }
+
+  if (IsTop()) {
+    BackgroundSessionStorageManager::RemoveManager(Id());
   }
 }
 

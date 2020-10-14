@@ -2394,12 +2394,20 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     return NS_OK;
   }
 
-  if (GetDocumentBrowsingContext() && !net::ChannelIsPost(aOldChannel)) {
-    AddURIVisit(aOldChannel, 0);
+  if (GetDocumentBrowsingContext()) {
+    if (mLoadingSessionHistoryInfo) {
+      mLoadingSessionHistoryInfo =
+          GetDocumentBrowsingContext()
+              ->ReplaceLoadingSessionHistoryEntryForLoad(
+                  mLoadingSessionHistoryInfo.get(), aNewChannel);
+    }
+    if (!net::ChannelIsPost(aOldChannel)) {
+      AddURIVisit(aOldChannel, 0);
 
-    nsCOMPtr<nsIURI> oldURI;
-    aOldChannel->GetURI(getter_AddRefs(oldURI));
-    nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
+      nsCOMPtr<nsIURI> oldURI;
+      aOldChannel->GetURI(getter_AddRefs(oldURI));
+      nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
+    }
   }
   mHaveVisibleRedirect |= true;
 

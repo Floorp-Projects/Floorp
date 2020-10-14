@@ -78,6 +78,10 @@ var Policy = {
   getEcosystemClientId() {
     return ClientID.getEcosystemClientID();
   },
+  // Returns a promise that resolves when the ecosystem client id has been reset.
+  resetEcosystemClientId() {
+    return ClientID.resetEcosystemClientID();
+  },
 };
 
 var EcosystemTelemetry = {
@@ -233,9 +237,14 @@ var EcosystemTelemetry = {
         // state.
         // Returns the promise for tests.
         return this._submitPing(this.Reason.LOGOUT)
-          .then(() => {
+          .then(async () => {
             // Ensure _promiseEcosystemAnonId() is now going to resolve as null.
             this.prepareEcosystemAnonId();
+            // Change the ecosystemClientId value on logout, so that if a different user signs in
+            // we cannot link the two anon_id values together via a shared client_id.
+            // (We are still confirming approval to perform such linking between accounts, and
+            // this code can be removed once confirmed).
+            await Policy.resetEcosystemClientId();
           })
           .catch(e => {
             log.error("ONLOGOUT promise chain failed", e);

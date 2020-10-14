@@ -15,40 +15,50 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import errno
-import json
 import os
 import shutil
 import subprocess
 import requests
 import tempfile
 
-NEWEST_BASE_URL = 'https://download-chromium.appspot.com/'
-NEWREV_DOWNLOAD_URL = NEWEST_BASE_URL + 'dl/%s?type=snapshots'
-NEWREV_REVISION_URL = NEWEST_BASE_URL + 'rev/%s?type=snapshots'
 
-OLDREV_BASE_URL = 'http://commondatastorage.googleapis.com/chromium-browser-snapshots/'
-OLDREV_DOWNLOAD_URL = OLDREV_BASE_URL + '%s/%s/%s'  # (platform/revision/archive)
+LAST_CHANGE_URL = (
+    # formatted with platform
+    'https://www.googleapis.com/download/storage/v1/b/'
+    'chromium-browser-snapshots/o/{}%2FLAST_CHANGE?alt=media'
+)
+
+CHROMIUM_BASE_URL = (
+    # formatted with (platform/revision/archive)
+    'https://www.googleapis.com/download/storage/v1/b/'
+    'chromium-browser-snapshots/o/{}%2F{}%2F{}?alt=media'
+)
+
 
 CHROMIUM_INFO = {
     'linux': {
         'platform': 'Linux_x64',
-        'archive': 'chrome-linux.zip',
-        'result': 'chromium-linux.tar.bz2'
+        'chromium': 'chrome-linux.zip',
+        'result': 'chromium-linux.tar.bz2',
+        'chromedriver': 'chromedriver_linux64.zip',
     },
     'win32': {
-        'platform': 'Win_x64',
-        'archive': 'chrome-win.zip',
-        'result': 'chromium-win32.tar.bz2'
+        'platform': 'Win',
+        'chromium': 'chrome-win.zip',
+        'result': 'chromium-win32.tar.bz2',
+        'chromedriver': 'chromedriver_win32.zip',
     },
     'win64': {
-        'platform': 'Win_x64',
-        'archive': 'chrome-win.zip',
-        'result': 'chromium-win64.tar.bz2'
+        'platform': 'Win',
+        'chromium': 'chrome-win.zip',
+        'result': 'chromium-win64.tar.bz2',
+        'chromedriver': 'chromedriver_win32.zip',
     },
     'mac': {
         'platform': 'Mac',
-        'archive': 'chrome-mac.zip',
-        'result': 'chromium-mac.tar.bz2'
+        'chromium': 'chrome-mac.zip',
+        'result': 'chromium-mac.tar.bz2',
+        'chromedriver': 'chromedriver_mac64.zip',
     }
 }
 
@@ -68,46 +78,43 @@ def fetch_file(url, filepath):
             fd.write(chunk)
 
 
+def unzip(zippath, target):
+    '''Unzips an archive to the target location.'''
+    log('Unpacking archive at: %s to: %s' % (zippath, target))
+    unzip_command = ['unzip', '-q', '-o', zippath, '-d', target]
+    subprocess.check_call(unzip_command)
+
+
 def fetch_chromium_revision(platform):
     '''Get the revision of the latest chromium build. '''
     chromium_platform = CHROMIUM_INFO[platform]['platform']
-    revision_url = NEWREV_REVISION_URL % chromium_platform
+    revision_url = LAST_CHANGE_URL.format(chromium_platform)
 
     log(
         'Getting revision number for latest %s chromium build...' %
         chromium_platform
     )
 
-    # Expects a JSON of the form:
-    # {
-    #   'content': '<REVNUM>',
-    #   'last-modified': '<DATE>'
-    # }
+    # Expecting a file with a single number indicating the latest
+    # chromium build with a chromedriver that we can download
     r = requests.get(revision_url, timeout=30)
     r.raise_for_status()
 
-    chromium_revision = json.loads(
-        r.content.decode('utf-8')
-    )['content']
-
-    return chromium_revision
+    chromium_revision = r.content.decode('utf-8')
+    return chromium_revision.strip()
 
 
 def fetch_chromium_build(platform, revision, zippath):
     '''Download a chromium build for a given revision, or the latest. '''
-    use_oldrev = True
     if not revision:
-        use_oldrev = False
         revision = fetch_chromium_revision(platform)
 
     download_platform = CHROMIUM_INFO[platform]['platform']
-    if use_oldrev:
-        chromium_archive = CHROMIUM_INFO[platform]['archive']
-        download_url = OLDREV_DOWNLOAD_URL % (
-            download_platform, revision, chromium_archive
-        )
-    else:
-        download_url = NEWREV_DOWNLOAD_URL % download_platform
+    download_url = CHROMIUM_BASE_URL.format(
+        download_platform,
+        revision,
+        CHROMIUM_INFO[platform]['chromium']
+    )
 
     log(
         'Downloading %s chromium build revision %s...' %
@@ -116,6 +123,36 @@ def fetch_chromium_build(platform, revision, zippath):
 
     fetch_file(download_url, zippath)
     return revision
+
+
+def fetch_chromedriver(platform, revision, chromium_dir):
+    '''Get the chromedriver for the given revision and repackage it.'''
+    download_url = CHROMIUM_BASE_URL.format(
+        CHROMIUM_INFO[platform]['platform'],
+        revision,
+        CHROMIUM_INFO[platform]['chromedriver']
+    )
+
+    tmpzip = os.path.join(tempfile.mkdtemp(), 'cd-tmp.zip')
+    log('Downloading chromedriver from %s' % download_url)
+    fetch_file(download_url, tmpzip)
+
+    tmppath = tempfile.mkdtemp()
+    unzip(tmpzip, tmppath)
+
+    # Find the chromedriver then copy it to the chromium directory
+    cd_path = None
+    for dirpath, _, filenames in os.walk(tmppath):
+        for filename in filenames:
+            if filename == 'chromedriver' or filename == 'chromedriver.exe':
+                cd_path = os.path.join(dirpath, filename)
+                break
+        if cd_path is not None:
+            break
+    if cd_path is None:
+        raise Exception('Could not find chromedriver binary in %s' % tmppath)
+    log('Copying chromedriver from: %s to: %s' % (cd_path, chromium_dir))
+    shutil.copy(cd_path, chromium_dir)
 
 
 def build_chromium_archive(platform, revision=None):
@@ -141,10 +178,9 @@ def build_chromium_archive(platform, revision=None):
 
     revision = fetch_chromium_build(platform, revision, tmpzip)
 
-    # Unpack archive in `tmpzip` to store the revision number
-    log('Unpacking archive at: %s to: %s' % (tmpzip, tmppath))
-    unzip_command = ['unzip', '-q', '-o', tmpzip, '-d', tmppath]
-    subprocess.check_call(unzip_command)
+    # Unpack archive in `tmpzip` to store the revision number and
+    # the chromedriver
+    unzip(tmpzip, tmppath)
 
     dirs = [
         d for d in os.listdir(tmppath)
@@ -153,11 +189,11 @@ def build_chromium_archive(platform, revision=None):
 
     if len(dirs) > 1:
         raise Exception(
-            "Too many directories starting with 'chrome-' after extracting."
+            'Too many directories starting with `chrome-` after extracting.'
         )
     elif len(dirs) == 0:
         raise Exception(
-            "Could not find any directories after extraction of chromium zip."
+            'Could not find any directories after extraction of chromium zip.'
         )
 
     chromium_dir = os.path.join(tmppath, dirs[0])
@@ -165,11 +201,12 @@ def build_chromium_archive(platform, revision=None):
     with open(revision_file, 'w+') as f:
         f.write(str(revision))
 
+    # Get and store the chromedriver
+    fetch_chromedriver(platform, revision, chromium_dir)
+
     tar_file = CHROMIUM_INFO[platform]['result']
     tar_command = ['tar', 'cjf', tar_file, '-C', tmppath, dirs[0]]
-    log(
-        "Added revision to %s file." % revision_file
-    )
+    log('Added revision to %s file.' % revision_file)
 
     log('Tarring with the command: %s' % str(tar_command))
     subprocess.check_call(tar_command)

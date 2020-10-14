@@ -11,9 +11,11 @@ FINAL_TARGET_FILES.actors += [
     'ContentDelegateParent.jsm',
     'GeckoViewContentChild.jsm',
     'GeckoViewContentParent.jsm',
+    'GeckoViewPromptChild.jsm',
     'GeckoViewSettingsChild.jsm',
     'LoadURIDelegateChild.jsm',
     'ProgressDelegateChild.jsm',
     'ProgressDelegateParent.jsm',
+    'ScrollDelegateChild.jsm',
     'WebBrowserChromeChild.jsm',
 ]

@@ -17,6 +17,7 @@ add_task(async function setup() {
   });
 });
 
+// Enters search mode using the one-off buttons.
 add_task(async function switchTabs() {
   // Open three tabs.  We'll enter search mode in tabs 0 and 2.
   let tabs = [];
@@ -57,6 +58,11 @@ add_task(async function switchTabs() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     entry: "oneoff",
   });
+  Assert.equal(
+    gURLBar.value,
+    "test",
+    "Value should remain the search string after switching back"
+  );
 
   // Switch to tab 2.  Search mode should be exited.
   await BrowserTestUtils.switchTab(gBrowser, tabs[2]);
@@ -81,6 +87,11 @@ add_task(async function switchTabs() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     entry: "oneoff",
   });
+  Assert.equal(
+    gURLBar.value,
+    "test",
+    "Value should remain the search string after switching back"
+  );
 
   // Switch to tab 1.  Search mode should be exited.
   await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
@@ -94,6 +105,11 @@ add_task(async function switchTabs() {
     source: UrlbarUtils.RESULT_SOURCE.TABS,
     entry: "oneoff",
   });
+  Assert.equal(
+    gURLBar.value,
+    "test tab 2",
+    "Value should remain the search string after switching back"
+  );
 
   // Exit search mode.
   await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
@@ -106,6 +122,11 @@ add_task(async function switchTabs() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     entry: "oneoff",
   });
+  Assert.equal(
+    gURLBar.value,
+    "test",
+    "Value should remain the search string after switching back"
+  );
 
   // Switch back to tab 2.  We should do a search but search mode should be
   // inactive.
@@ -113,6 +134,11 @@ add_task(async function switchTabs() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[2]);
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, null);
+  Assert.equal(
+    gURLBar.value,
+    "test tab 2",
+    "Value should remain the search string after switching back"
+  );
 
   // Switch back to tab 0.  We should do a search and re-enter search mode.
   searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
@@ -122,6 +148,11 @@ add_task(async function switchTabs() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     entry: "oneoff",
   });
+  Assert.equal(
+    gURLBar.value,
+    "test",
+    "Value should remain the search string after switching back"
+  );
 
   // Exit search mode.
   await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
@@ -132,6 +163,11 @@ add_task(async function switchTabs() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[2]);
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, null);
+  Assert.equal(
+    gURLBar.value,
+    "test tab 2",
+    "Value should remain the search string after switching back"
+  );
 
   // Switch back to tab 0.  We should do a search but search mode should be
   // inactive.
@@ -139,9 +175,69 @@ add_task(async function switchTabs() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, null);
+  Assert.equal(
+    gURLBar.value,
+    "test",
+    "Value should remain the search string after switching back"
+  );
 
   await UrlbarTestUtils.promisePopupClose(window);
   for (let tab of tabs) {
     BrowserTestUtils.removeTab(tab);
   }
 });
+
+// Enters search mode by typing a restriction char with no search string.
+// Search mode and the search string should be restored after switching back to
+// the tab.
+add_task(async function userTypedValue_empty() {
+  await doUserTypedValueTest("");
+});
+
+// Enters search mode by typing a restriction char followed by a search string.
+// Search mode and the search string should be restored after switching back to
+// the tab.
+add_task(async function userTypedValue_nonEmpty() {
+  await doUserTypedValueTest("foo bar");
+});
+
+/**
+ * Enters search mode by typing a restriction char followed by a search string,
+ * opens a new tab and immediately closes it so we switch back to the search
+ * mode tab, and checks the search mode state and input value.
+ *
+ * @param {string} searchString
+ *   The search string to enter search mode with.
+ */
+async function doUserTypedValueTest(searchString) {
+  let value = `${UrlbarTokenizer.RESTRICT.BOOKMARK} ${searchString}`;
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value,
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "typed",
+  });
+  Assert.equal(
+    gURLBar.value,
+    searchString,
+    "Sanity check: Value is the search string"
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
+  BrowserTestUtils.removeTab(tab);
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "typed",
+  });
+  Assert.equal(
+    gURLBar.value,
+    searchString,
+    "Value should remain the search string after switching back"
+  );
+
+  gURLBar.handleRevert();
+}

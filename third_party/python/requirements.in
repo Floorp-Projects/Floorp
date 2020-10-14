@@ -33,7 +33,7 @@ json-e==2.7.0
 mozilla-version==0.3.4
 pathlib2==2.3.2
 pathspec==0.8
-pip-tools==4.5.1
+pip-tools==5.3.1
 ply==3.10
 psutil==5.7.0
 pyasn1==0.4.8
@@ -47,6 +47,5 @@ requests==2.9.1
 responses==0.10.6
 sentry-sdk==0.14.3
 six==1.13.0
-virtualenv==16.7.8
 voluptuous==0.11.5
 yamllint==1.23

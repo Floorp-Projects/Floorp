@@ -1,7 +1,9 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import contextlib
 import logging
+import sys
 
 from . import click
 
@@ -11,12 +13,17 @@ logging.basicConfig()
 
 
 class LogContext(object):
-    def __init__(self, verbosity=0):
-        self.verbosity = verbosity
+    stream = sys.stderr
 
-    def log(self, *args, **kwargs):
+    def __init__(self, verbosity=0, indent_width=2):
+        self.verbosity = verbosity
+        self.current_indent = 0
+        self._indent_width = indent_width
+
+    def log(self, message, *args, **kwargs):
         kwargs.setdefault("err", True)
-        click.secho(*args, **kwargs)
+        prefix = " " * self.current_indent
+        click.secho(prefix + message, *args, **kwargs)
 
     def debug(self, *args, **kwargs):
         if self.verbosity >= 1:
@@ -33,6 +40,23 @@ class LogContext(object):
     def error(self, *args, **kwargs):
         kwargs.setdefault("fg", "red")
         self.log(*args, **kwargs)
+
+    def _indent(self):
+        self.current_indent += self._indent_width
+
+    def _dedent(self):
+        self.current_indent -= self._indent_width
+
+    @contextlib.contextmanager
+    def indentation(self):
+        """
+        Increase indentation.
+        """
+        self._indent()
+        try:
+            yield
+        finally:
+            self._dedent()
 
 
 log = LogContext()

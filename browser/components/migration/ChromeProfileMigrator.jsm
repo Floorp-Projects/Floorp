@@ -251,6 +251,7 @@ async function GetBookmarksResource(
             errorGatherer
           );
           if (
+            !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
             !MigrationUtils.isStartupMigration &&
             PlacesUtils.getChildCountForFolder(
               PlacesUtils.bookmarks.toolbarGuid
@@ -276,6 +277,7 @@ async function GetBookmarksResource(
           let parentGuid = PlacesUtils.bookmarks.menuGuid;
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
           if (
+            !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
             !MigrationUtils.isStartupMigration &&
             PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.menuGuid) >
               PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE

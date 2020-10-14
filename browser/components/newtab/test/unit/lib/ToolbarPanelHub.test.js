@@ -213,6 +213,20 @@ describe("ToolbarPanelHub", () => {
         checkbox.checked
       );
     });
+    it("should report telemetry with the checkbox value", () => {
+      let sendUserEventTelemetryStub = sandbox.stub(
+        instance,
+        "sendUserEventTelemetry"
+      );
+      let event = { target: { checked: true, ownerGlobal: fakeWindow } };
+
+      instance.toggleWhatsNewPref(event);
+
+      assert.calledOnce(sendUserEventTelemetryStub);
+      const { args } = sendUserEventTelemetryStub.firstCall;
+      assert.equal(args[1], "WNP_PREF_TOGGLE");
+      assert.propertyVal(args[3].value, "prefValue", true);
+    });
   });
   describe("#enableAppmenuButton", () => {
     it("should registerCallback on enableAppmenuButton() if there are messages", async () => {

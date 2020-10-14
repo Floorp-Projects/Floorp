@@ -26,6 +26,7 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Segmenter",
     "top-level-await",
     "Atomics.waitAsync",
+    "legacy-regexp",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
@@ -256,14 +257,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # before the actual test source code.
     raw = "raw" in testRec
 
-    # Async tests are marked with the "async" attribute. It is an error for a
-    # test to use the $DONE function without specifying the "async" attribute.
-    isAsync = "async" in testRec
-    assert b"$DONE" not in testSource or isAsync, "Missing async attribute in: %s" % testName
-
-    # When the "module" attribute is set, the source code is module code.
-    isModule = "module" in testRec
-
     # Negative tests have additional meta-data to specify the error type and
     # when the error is issued (runtime error or early parse error). We're
     # currently ignoring the error phase attribute.
@@ -272,10 +265,24 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     assert not isNegative or type(testRec["negative"]) == dict
     errorType = testRec["negative"]["type"] if isNegative else None
 
-    # Test262 contains tests both marked "negative" and "async". In this case
-    # "negative" is expected to overrule the "async" attribute.
-    if isNegative and isAsync:
-        isAsync = False
+    # Async tests are marked with the "async" attribute.
+    isAsync = "async" in testRec
+
+    # Test262 tests cannot be both "negative" and "async".  (In principle a
+    # negative async test is permitted when the error phase is not "parse" or
+    # the error type is not SyntaxError, but no such tests exist now.)
+    assert not (isNegative and isAsync), \
+           "Can't have both async and negative attributes: %s" % testName
+
+    # Only async tests may use the $DONE function.  However, negative parse
+    # tests may "use" the $DONE function (of course they don't actually use it!)
+    # without specifying the "async" attribute.  Otherwise, $DONE must not
+    # appear in the test.
+    assert b"$DONE" not in testSource or isAsync or isNegative, \
+           "Missing async attribute in: %s" % testName
+
+    # When the "module" attribute is set, the source code is module code.
+    isModule = "module" in testRec
 
     # CanBlockIsFalse is set when the test expects that the implementation
     # cannot block on the main thread.
@@ -313,7 +320,8 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
             shellOptions = {SHELL_OPTIONS[f] for f in testRec["features"] if f in SHELL_OPTIONS}
             if shellOptions:
                 refTestSkipIf.append(("!xulRuntime.shell", "requires shell-options"))
-                refTestOptions.extend("shell-option({})".format(opt) for opt in shellOptions)
+                refTestOptions.extend(("shell-option({})".format(opt)
+                                       for opt in shellOptions))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all

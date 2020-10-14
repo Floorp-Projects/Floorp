@@ -170,18 +170,6 @@ class ErrorReportMixin : public StrictModeGetter {
 
     return result;
   }
-  MOZ_MUST_USE bool warningWithNotes(UniquePtr<JSErrorNotes> notes,
-                                     unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = warningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(Current()), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
   MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...) {
     va_list args;
     va_start(args, errorNumber);
@@ -193,37 +181,12 @@ class ErrorReportMixin : public StrictModeGetter {
 
     return result;
   }
-  MOZ_MUST_USE bool warningWithNotesAt(UniquePtr<JSErrorNotes> notes,
-                                       uint32_t offset, unsigned errorNumber,
-                                       ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = warningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(offset), errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
   MOZ_MUST_USE bool warningNoOffset(unsigned errorNumber, ...) {
     va_list args;
     va_start(args, errorNumber);
 
     bool result = warningWithNotesAtVA(nullptr, mozilla::AsVariant(NoOffset()),
                                        errorNumber, &args);
-
-    va_end(args);
-
-    return result;
-  }
-  MOZ_MUST_USE bool warningWithNotesNoOffset(UniquePtr<JSErrorNotes> notes,
-                                             unsigned errorNumber, ...) {
-    va_list args;
-    va_start(args, errorNumber);
-
-    bool result = warningWithNotesAtVA(
-        std::move(notes), mozilla::AsVariant(NoOffset()), errorNumber, &args);
 
     va_end(args);
 

@@ -88,11 +88,11 @@ Relation HTMLRadioButtonAccessible::ComputeGroupAttributes(
   RefPtr<nsContentList> inputElms;
 
   nsCOMPtr<nsIFormControl> formControlNode(do_QueryInterface(mContent));
-  dom::Element* formElm = formControlNode->GetFormElement();
-  if (formElm)
+  if (dom::Element* formElm = formControlNode->GetFormElement()) {
     inputElms = NS_GetContentList(formElm, namespaceId, tagName);
-  else
+  } else {
     inputElms = NS_GetContentList(mContent->OwnerDoc(), namespaceId, tagName);
+  }
   NS_ENSURE_TRUE(inputElms, rel);
 
   uint32_t inputCount = inputElms->Length(false);

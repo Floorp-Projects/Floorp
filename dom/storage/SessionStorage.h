@@ -27,6 +27,10 @@ class SessionStorage final : public Storage {
                  SessionStorageManager* aManager, const nsAString& aDocumentURI,
                  bool aIsPrivate);
 
+  void AssertIsOnOwningThread() const {
+    NS_ASSERT_OWNINGTHREAD(SessionStorage);
+  }
+
   StorageType Type() const override { return eSessionStorage; }
 
   SessionStorageManager* Manager() const { return mManager; }
@@ -64,11 +68,18 @@ class SessionStorage final : public Storage {
                                    const nsAString& aOldValue,
                                    const nsAString& aNewValue);
 
+  void MaybeScheduleStableStateCallback();
+
+  void StableStateCallback();
+
+  nsresult EnsureCacheLoadedOrCloned() const;
+
   RefPtr<SessionStorageCache> mCache;
   RefPtr<SessionStorageManager> mManager;
 
   nsString mDocumentURI;
   bool mIsPrivate;
+  bool mHasPendingStableStateCallback;
 };
 
 }  // namespace dom

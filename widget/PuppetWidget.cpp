@@ -743,6 +743,8 @@ NativeIMEContext PuppetWidget::GetNativeIMEContext() {
 
 nsresult PuppetWidget::NotifyIMEOfFocusChange(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
+
   if (!mBrowserChild) {
     return NS_ERROR_FAILURE;
   }
@@ -789,6 +791,8 @@ nsresult PuppetWidget::NotifyIMEOfFocusChange(
 
 nsresult PuppetWidget::NotifyIMEOfCompositionUpdate(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
+
   if (NS_WARN_IF(!mBrowserChild)) {
     return NS_ERROR_FAILURE;
   }
@@ -804,8 +808,10 @@ nsresult PuppetWidget::NotifyIMEOfCompositionUpdate(
 
 nsresult PuppetWidget::NotifyIMEOfTextChange(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
   MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
              "Passed wrong notification");
+
   if (!mBrowserChild) {
     return NS_ERROR_FAILURE;
   }
@@ -835,6 +841,7 @@ nsresult PuppetWidget::NotifyIMEOfTextChange(
 
 nsresult PuppetWidget::NotifyIMEOfSelectionChange(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
   MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE,
              "Passed wrong notification");
   if (!mBrowserChild) {
@@ -862,6 +869,7 @@ nsresult PuppetWidget::NotifyIMEOfSelectionChange(
 
 nsresult PuppetWidget::NotifyIMEOfMouseButtonEvent(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
   if (!mBrowserChild) {
     return NS_ERROR_FAILURE;
   }
@@ -883,6 +891,7 @@ nsresult PuppetWidget::NotifyIMEOfMouseButtonEvent(
 
 nsresult PuppetWidget::NotifyIMEOfPositionChange(
     const IMENotification& aIMENotification) {
+  MOZ_ASSERT(IMEStateManager::CanSendNotificationToTheMainProcess());
   if (NS_WARN_IF(!mBrowserChild)) {
     return NS_ERROR_FAILURE;
   }

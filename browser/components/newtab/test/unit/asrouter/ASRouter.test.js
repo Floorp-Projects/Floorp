@@ -146,6 +146,8 @@ describe("ASRouter", () => {
       allowedCodeKeys: ["foo", "bar", "baz"],
       _clearCache: () => sinon.stub(),
       getAttrDataAsync: () => Promise.resolve({ content: "addonID" }),
+      deleteFileAsync: () => Promise.resolve(),
+      writeAttributionFile: () => Promise.resolve(),
     };
     FakeBookmarkPanelHub = {
       init: sandbox.stub(),
@@ -186,6 +188,7 @@ describe("ASRouter", () => {
       AttributionCode: fakeAttributionCode,
       SnippetsTestMessageProvider,
       PanelTestProvider,
+      MacAttribution: { applicationPath: "" },
       BookmarkPanelHub: FakeBookmarkPanelHub,
       ToolbarBadgeHub: FakeToolbarBadgeHub,
       ToolbarPanelHub: FakeToolbarPanelHub,
@@ -2846,6 +2849,7 @@ describe("ASRouter", () => {
         assert.calledWithExactly(Router.forceAttribution, msg.data.data);
       });
       it("should force attribution and update providers", async () => {
+        sandbox.stub(AppConstants, "platform").value("");
         sandbox.stub(Router, "_updateMessageProviders");
         sandbox.stub(Router, "loadMessagesFromAllProviders");
         sandbox.stub(fakeAttributionCode, "_clearCache");
@@ -2862,13 +2866,13 @@ describe("ASRouter", () => {
         assert.calledOnce(Router.loadMessagesFromAllProviders);
       });
       it("should double encode on windows", async () => {
-        sandbox.stub(Router, "_writeAttributionFile");
+        sandbox.stub(fakeAttributionCode, "writeAttributionFile");
 
         Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
         assert.notCalled(setReferrerUrl);
         assert.calledWithMatch(
-          Router._writeAttributionFile,
+          fakeAttributionCode.writeAttributionFile,
           "foo%3DFOO!%26bar%3DBAR%253F"
         );
       });

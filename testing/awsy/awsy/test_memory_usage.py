@@ -189,8 +189,8 @@ class TestMemoryUsage(AwsyTestCase):
         # setup the results array
         results = [[] for _ in range(self.iterations())]
 
-        def create_checkpoint(name, iteration):
-            checkpoint = self.do_memory_report(name, iteration)
+        def create_checkpoint(name, iteration, minimize=False):
+            checkpoint = self.do_memory_report(name, iteration, minimize)
             self.assertIsNotNone(checkpoint, "Checkpoint was recorded")
             results[iteration].append(checkpoint)
 
@@ -206,8 +206,7 @@ class TestMemoryUsage(AwsyTestCase):
             create_checkpoint("TabsOpen", itr)
             self.settle()
             create_checkpoint("TabsOpenSettled", itr)
-            self.assertTrue(self.do_full_gc())
-            create_checkpoint("TabsOpenForceGC", itr)
+            create_checkpoint("TabsOpenForceGC", itr, minimize=True)
 
             # Close all tabs
             self.reset_state()
@@ -228,8 +227,7 @@ class TestMemoryUsage(AwsyTestCase):
             create_checkpoint("TabsClosed", itr)
             self.settle()
             create_checkpoint("TabsClosedSettled", itr)
-            self.assertTrue(self.do_full_gc(), "GC ran")
-            create_checkpoint("TabsClosedForceGC", itr)
+            create_checkpoint("TabsClosedForceGC", itr, minimize=True)
 
         # TODO(ER): Temporary hack until bug 1121139 lands
         self.logger.info("setting results")

@@ -365,12 +365,6 @@ struct PostMessageData
     uint64_t innerWindowId;
 };
 
-struct KeyValuePair
-{
-    nsString key;
-    nsString value;
-};
-
 union SyncedContextInitializer
 {
     BrowsingContextInitializer;
@@ -477,8 +471,8 @@ both:
     async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
                                      MaybeDiscardedBrowsingContext aContext);
 
-    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
-                     ClonedMessageData aStack);
+    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
+                     ClonedMessageData? aStack);
 
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
@@ -1790,13 +1784,6 @@ both:
                             ClonedOrErrorMessageData aMessage,
                             PostMessageData aData);
 
-    /**
-     * Move sessionStorage data between parent and content processes. See
-     * SessionStorageManager documentation for more details.
-     */
-    async SessionStorageData(uint64_t aTopContextId, nsCString aOriginAttrs,
-                             nsCString aOriginKey, KeyValuePair[] aDefaultData,
-                             KeyValuePair[] aSessionData);
     async CommitWindowContextTransaction(MaybeDiscardedWindowContext aContext,
                                          WindowContextTransaction aTransaction,
                                          uint64_t aEpoch);

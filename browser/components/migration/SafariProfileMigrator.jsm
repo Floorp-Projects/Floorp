@@ -150,6 +150,7 @@ Bookmarks.prototype = {
       case this.MENU_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.menuGuid;
         if (
+          !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
           !MigrationUtils.isStartupMigration &&
           PlacesUtils.getChildCountForFolder(folderGuid) >
             PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
@@ -166,6 +167,7 @@ Bookmarks.prototype = {
       case this.TOOLBAR_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.toolbarGuid;
         if (
+          !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
           !MigrationUtils.isStartupMigration &&
           PlacesUtils.getChildCountForFolder(folderGuid) >
             PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE

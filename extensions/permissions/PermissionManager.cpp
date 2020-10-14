@@ -2690,8 +2690,19 @@ nsresult PermissionManager::Read(const MonitorAutoLock& aProofOfLock) {
   auto data = mThreadBoundData.Access();
 
   nsresult rv;
-
+  bool hasResult;
   nsCOMPtr<mozIStorageStatement> stmt;
+
+  // Let's retrieve the last used ID.
+  rv = data->mDBConn->CreateStatement(
+      nsLiteralCString("SELECT MAX(id) FROM moz_perms"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    int64_t id = stmt->AsInt64(0);
+    mLargestID = id;
+  }
+
   rv = data->mDBConn->CreateStatement(
       nsLiteralCString(
           "SELECT id, origin, type, permission, expireType, "
@@ -2706,7 +2717,6 @@ nsresult PermissionManager::Read(const MonitorAutoLock& aProofOfLock) {
   rv = stmt->BindInt64ByIndex(1, EXPIRY_NOW);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool hasResult;
   bool readError = false;
 
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -2715,7 +2725,7 @@ nsresult PermissionManager::Read(const MonitorAutoLock& aProofOfLock) {
     // explicitly set our entry id counter for use in AddInternal(),
     // and keep track of the largest id so we know where to pick up.
     entry.mId = stmt->AsInt64(0);
-    if (entry.mId > mLargestID) mLargestID = entry.mId;
+    MOZ_ASSERT(entry.mId <= mLargestID);
 
     rv = stmt->GetUTF8String(1, entry.mOrigin);
     if (NS_FAILED(rv)) {

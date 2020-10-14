@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
+  RemoteSecuritySettings:
+    "resource://gre/modules/psm/RemoteSecuritySettings.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher", () =>
@@ -649,7 +651,16 @@ function startup() {
     {
       name: "GeckoViewScroll",
       onEnable: {
-        frameScript: "chrome://geckoview/content/GeckoViewScrollChild.js",
+        actors: {
+          ScrollDelegate: {
+            child: {
+              moduleURI: "resource:///actors/ScrollDelegateChild.jsm",
+              events: {
+                mozvisualscroll: { mozSystemGroup: true },
+              },
+            },
+          },
+        },
       },
     },
     {
@@ -725,6 +736,10 @@ function startup() {
     // while GeckoView started up.
     InitLater(() => {
       Services.obs.notifyObservers(window, "extensions-late-startup");
+    });
+
+    InitLater(() => {
+      RemoteSecuritySettings.init();
     });
 
     // This should always go last, since the idle tasks (except for the ones with

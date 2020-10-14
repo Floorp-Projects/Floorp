@@ -535,11 +535,6 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 
   // nsIBrowserDOMWindow.
-  isTabContentWindow(aWindow) {
-    return this.browser.contentWindow === aWindow;
-  }
-
-  // nsIBrowserDOMWindow.
   canClose() {
     debug`canClose`;
     return true;

@@ -14,13 +14,26 @@
 // universally compatible alias "-webkit-user-select" exists
 // alongside.
 
+const TARGET_BROWSERS = [
+  {
+    // Chrome doesn't need any prefix for both user-select and text-size-adjust.
+    id: "chrome",
+    version: "84",
+  },
+  {
+    // The safari_ios needs -webkit prefix for both properties.
+    id: "safari_ios",
+    version: "13",
+  },
+];
+
 const TEST_URI = `
 <style>
   div {
     color: green;
     background-color: black;
     user-select: none;
-    -webkit-appearance: none;
+    text-size-adjust: none;
   }
 </style>
 <div>`;
@@ -37,7 +50,7 @@ const TEST_DATA_INITIAL = [
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
         },
-        "-webkit-appearance": {
+        "text-size-adjust": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
         },
@@ -56,7 +69,7 @@ const TEST_DATA_FIX_USER_SELECT = [
         "background-color": { value: "black" },
         "user-select": { value: "none" },
         "-webkit-user-select": { value: "none" },
-        "-webkit-appearance": {
+        "text-size-adjust": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
         },
@@ -65,10 +78,9 @@ const TEST_DATA_FIX_USER_SELECT = [
   },
 ];
 
-// Appearance is an experimental property with aliases.
-// Adding both -webkit and -moz prefix makes it compatible
-// on all platforms but will still show an inline warning
-// for its experimental status.
+// text-size-adjust is an experimental property with aliases.
+// Adding -webkit makes it compatible on all platforms but will
+// still show an inline warning for its experimental status.
 const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
   {
     selector: "div",
@@ -79,11 +91,7 @@ const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
         "background-color": { value: "black" },
         "user-select": { value: "none" },
         "-webkit-user-select": { value: "none" },
-        "-webkit-appearance": {
-          value: "none",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE["experimental-supported"],
-        },
-        "-moz-appearance": {
+        "text-size-adjust": {
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE["experimental-supported"],
         },
@@ -93,6 +101,10 @@ const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
 ];
 
 add_task(async function() {
+  await pushPref(
+    "devtools.inspector.compatibility.target-browsers",
+    JSON.stringify(TARGET_BROWSERS)
+  );
   await pushPref(
     "devtools.inspector.ruleview.inline-compatibility-warning.enabled",
     true
@@ -109,9 +121,9 @@ add_task(async function() {
   await runCSSCompatibilityTests(view, inspector, TEST_DATA_FIX_USER_SELECT);
 
   info(
-    'Add -moz-appearance: "none" fixing issue but leaving an inline warning of an experimental property'
+    'Add -webkit-text-size-adjust: "none" fixing issue but leaving an inline warning of an experimental property'
   );
-  await addProperty(view, 1, "-moz-appearance", "none");
+  await addProperty(view, 1, "-webkit-text-size-adjust", "none");
   await runCSSCompatibilityTests(
     view,
     inspector,

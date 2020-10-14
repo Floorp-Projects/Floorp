@@ -53,6 +53,7 @@ void ResolveOrReject(dom::Promise& aPromise, nsPrinterListBase& aList,
 
 NS_IMETHODIMP nsPrinterListBase::GetPrinters(JSContext* aCx,
                                              Promise** aResult) {
+  EnsureCommonPaperInfo(aCx);
   return mozilla::AsyncPromiseAttributeGetter(*this, mPrintersPromise, aCx,
                                               aResult, "Printers"_ns,
                                               &nsPrinterListBase::Printers);
@@ -61,6 +62,7 @@ NS_IMETHODIMP nsPrinterListBase::GetPrinters(JSContext* aCx,
 NS_IMETHODIMP nsPrinterListBase::GetPrinterByName(const nsAString& aPrinterName,
                                                   JSContext* aCx,
                                                   Promise** aResult) {
+  EnsureCommonPaperInfo(aCx);
   return PrintBackgroundTaskPromise(*this, aCx, aResult, "PrinterByName"_ns,
                                     &nsPrinterListBase::PrinterByName,
                                     nsString{aPrinterName});
@@ -68,6 +70,7 @@ NS_IMETHODIMP nsPrinterListBase::GetPrinterByName(const nsAString& aPrinterName,
 
 NS_IMETHODIMP nsPrinterListBase::GetPrinterBySystemName(
     const nsAString& aPrinterName, JSContext* aCx, Promise** aResult) {
+  EnsureCommonPaperInfo(aCx);
   return PrintBackgroundTaskPromise(
       *this, aCx, aResult, "PrinterBySystemName"_ns,
       &nsPrinterListBase::PrinterBySystemName, nsString{aPrinterName});
@@ -75,6 +78,7 @@ NS_IMETHODIMP nsPrinterListBase::GetPrinterBySystemName(
 
 NS_IMETHODIMP nsPrinterListBase::GetNamedOrDefaultPrinter(
     const nsAString& aPrinterName, JSContext* aCx, Promise** aResult) {
+  EnsureCommonPaperInfo(aCx);
   return PrintBackgroundTaskPromise(
       *this, aCx, aResult, "NamedOrDefaultPrinter"_ns,
       &nsPrinterListBase::NamedOrDefaultPrinter, nsString{aPrinterName});
@@ -97,25 +101,6 @@ Maybe<PrinterInfo> nsPrinterListBase::NamedOrDefaultPrinter(
 
 NS_IMETHODIMP nsPrinterListBase::GetFallbackPaperList(JSContext* aCx,
                                                       Promise** aResult) {
-#define mm *72.0 / 25.4
-#define in *72.0
-  // As paper IDs, we use the PWG standardized names.
-  // The names will be localized using strings in printUI.ftl.
-  static const mozilla::PaperInfo kPapers[] = {
-      {u"iso_a5"_ns, u"a5"_ns, {148 mm, 210 mm}, Some(MarginDouble{})},
-      {u"iso_a4"_ns, u"a4"_ns, {210 mm, 297 mm}, Some(MarginDouble{})},
-      {u"iso_a3"_ns, u"a3"_ns, {297 mm, 420 mm}, Some(MarginDouble{})},
-      {u"iso_b5"_ns, u"b5"_ns, {176 mm, 250 mm}, Some(MarginDouble{})},
-      {u"iso_b4"_ns, u"b4"_ns, {250 mm, 353 mm}, Some(MarginDouble{})},
-      {u"jis_b5"_ns, u"jis-b5"_ns, {182 mm, 257 mm}, Some(MarginDouble{})},
-      {u"jis_b4"_ns, u"jis-b4"_ns, {257 mm, 364 mm}, Some(MarginDouble{})},
-      {u"na_letter"_ns, u"letter"_ns, {8.5 in, 11 in}, Some(MarginDouble{})},
-      {u"na_legal"_ns, u"legal"_ns, {8.5 in, 14 in}, Some(MarginDouble{})},
-      {u"na_ledger"_ns, u"tabloid"_ns, {11 in, 17 in}, Some(MarginDouble{})},
-  };
-#undef mm
-#undef in
-
   ErrorResult rv;
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -124,31 +109,52 @@ NS_IMETHODIMP nsPrinterListBase::GetFallbackPaperList(JSContext* aCx,
     return rv.StealNSResult();
   }
 
-  // Apply localization to the names while constructing the nsIPapers, if
-  // available (otherwise leave them as the internal keys, which are at least
-  // somewhat recognizable).
-  RefPtr<Localization> l10n = Localization::Create(global, true, {});
-  l10n->AddResourceId(u"toolkit/printing/printUI.ftl"_ns);
-
+  EnsureCommonPaperInfo(aCx);
   nsTArray<RefPtr<nsPaper>> papers;
-  papers.SetCapacity(mozilla::ArrayLength(kPapers));
-  for (const auto& info : kPapers) {
-    nsAutoCString key("printui-paper-");
-    AppendUTF16toUTF8(info.mName, key);
-    nsAutoCString name;
-    l10n->FormatValueSync(aCx, key, {}, name, rv);
-    if (rv.Failed() || name.IsEmpty()) {
-      // No localized name found; use original key from the PaperInfo array.
-      papers.AppendElement(MakeRefPtr<nsPaper>(info));
-    } else {
-      // Use the localized paper name.
-      mozilla::PaperInfo locInfo = {info.mId, NS_ConvertUTF8toUTF16(name),
-                                    info.mSize, info.mUnwriteableMargin};
-      papers.AppendElement(MakeRefPtr<nsPaper>(locInfo));
-    }
+  papers.SetCapacity(nsPaper::kNumCommonPaperSizes);
+  for (const auto& info : *mCommonPaperInfo) {
+    papers.AppendElement(MakeRefPtr<nsPaper>(info));
   }
 
   promise->MaybeResolve(papers);
   promise.forget(aResult);
   return NS_OK;
+}
+
+void nsPrinterListBase::EnsureCommonPaperInfo(JSContext* aCx) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+  if (mCommonPaperInfo) {
+    return;
+  }
+  RefPtr<CommonPaperInfoArray> localizedPaperInfo =
+      MakeRefPtr<CommonPaperInfoArray>();
+  CommonPaperInfoArray& paperArray = *localizedPaperInfo;
+  // Apply localization to the names while constructing the PaperInfo, if
+  // available (otherwise leave them as the internal keys, which are at least
+  // somewhat recognizable).
+  IgnoredErrorResult rv;
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  RefPtr<Localization> l10n = Localization::Create(global, true, {});
+  l10n->AddResourceId(u"toolkit/printing/printUI.ftl"_ns);
+
+  for (auto i : IntegerRange(nsPaper::kNumCommonPaperSizes)) {
+    const CommonPaperSize& size = nsPaper::kCommonPaperSizes[i];
+    PaperInfo& info = paperArray[i];
+
+    nsAutoCString key{"printui-paper-"};
+    key.Append(size.mLocalizableNameKey);
+    nsAutoCString name;
+    l10n->FormatValueSync(aCx, key, {}, name, rv);
+
+    // Fill out the info with our PWG size and the localized name.
+    info.mId = size.mPWGName;
+    CopyUTF8toUTF16(
+        (rv.Failed() || name.IsEmpty())
+            ? static_cast<const nsCString&>(size.mLocalizableNameKey)
+            : name,
+        info.mName);
+    info.mSize = size.mSize;
+    info.mUnwriteableMargin = Some(MarginDouble{});
+  }
+  mCommonPaperInfo = std::move(localizedPaperInfo);
 }

@@ -1,3 +1,6 @@
+from pip._internal.utils.misc import redact_auth_from_url
+
+
 class PipToolsError(Exception):
     pass
 
@@ -40,11 +43,14 @@ class NoCandidateFound(PipToolsError):
             source_ireqs = getattr(self.ireq, "_source_ireqs", [])
             lines.extend("  {}".format(ireq) for ireq in source_ireqs)
         else:
+            redacted_urls = tuple(
+                redact_auth_from_url(url) for url in self.finder.index_urls
+            )
             lines.append("No versions found")
             lines.append(
                 "{} {} reachable?".format(
-                    "Were" if len(self.finder.index_urls) > 1 else "Was",
-                    " or ".join(self.finder.index_urls),
+                    "Were" if len(redacted_urls) > 1 else "Was",
+                    " or ".join(redacted_urls),
                 )
             )
         return "\n".join(lines)

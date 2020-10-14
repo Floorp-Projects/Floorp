@@ -13273,7 +13273,12 @@ void nsDocShell::MoveLoadingToActiveEntry() {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
         if (!loadingEntry->mLoadIsFromSessionHistory) {
-          changeID = rootSH->AddPendingHistoryChange();
+          // It is possible that this leads to wrong length temporarily, but
+          // so would not having the check for replace.
+          if (!LOAD_TYPE_HAS_FLAGS(
+                  mLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
+            changeID = rootSH->AddPendingHistoryChange();
+          }
         } else {
           // This is a load from session history, so we can update
           // index and length immediately.

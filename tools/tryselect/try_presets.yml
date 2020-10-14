@@ -21,6 +21,7 @@ builds-debug:
     description: >-
         Run the bare minimum of debug build jobs to ensure builds work on
         all tier-1 platforms.
+    query:
         - "^build- 'debug !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
 
 builds-debugopt:
@@ -28,6 +29,7 @@ builds-debugopt:
     description: >-
         Run the bare minimum of debug and opt build jobs to ensure builds work on
         all tier-1 platforms.
+    query:
         - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
 
 debugger-tests:

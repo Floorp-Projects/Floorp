@@ -1,8 +1,5 @@
-commit e0ef80b9678b844a3d902148e3d86480a18d046f
-Merge: f6a9847c73 c46be192bb
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Thu Jul 30 15:19:38 2020 -0700
+commit 323905b70e644d90faa957235f8ac59eac4ba8ba
+Author: Alexey Shvayka <shvaikalesh@gmail.com>
+Date:   Wed Sep 9 22:59:23 2020 +0300
 
-    Merge pull request #2712 from shvaikalesh/intl402-intl-object-tostringtag
-    
-    Add Intl[@@toStringTag] coverage
+    Improve RegExp.prototype[@@replace] poisoned stdlib test

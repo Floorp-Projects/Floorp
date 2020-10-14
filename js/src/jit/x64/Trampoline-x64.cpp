@@ -678,20 +678,15 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
 
     case Type_Int32:
     case Type_Bool:
+    case Type_Pointer:
       outReg = regs.takeAny();
-      masm.reserveStack(sizeof(int32_t));
+      masm.reserveStack(sizeof(uintptr_t));
       masm.movq(esp, outReg);
       break;
 
     case Type_Double:
       outReg = regs.takeAny();
       masm.reserveStack(sizeof(double));
-      masm.movq(esp, outReg);
-      break;
-
-    case Type_Pointer:
-      outReg = regs.takeAny();
-      masm.reserveStack(sizeof(uintptr_t));
       masm.movq(esp, outReg);
       break;
 
@@ -772,12 +767,12 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
 
     case Type_Int32:
       masm.load32(Address(esp, 0), ReturnReg);
-      masm.freeStack(sizeof(int32_t));
+      masm.freeStack(sizeof(uintptr_t));
       break;
 
     case Type_Bool:
       masm.load8ZeroExtend(Address(esp, 0), ReturnReg);
-      masm.freeStack(sizeof(int32_t));
+      masm.freeStack(sizeof(uintptr_t));
       break;
 
     case Type_Double:

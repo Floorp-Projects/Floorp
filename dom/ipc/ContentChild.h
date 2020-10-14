@@ -649,11 +649,6 @@ class ContentChild final : public PContentChild,
     return mBrowsingContextFieldEpoch;
   }
 
-  mozilla::ipc::IPCResult RecvSessionStorageData(
-      uint64_t aTopContextId, const nsACString& aOriginAttrs,
-      const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
-      const nsTArray<KeyValuePair>& aSessionData);
-
   mozilla::ipc::IPCResult RecvOnAllowAccessFor(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
@@ -798,9 +793,9 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aContext,
       const uint32_t aStopFlags);
 
-  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                         const ClonedMessageData& aData,
-                                         const ClonedMessageData& aStack);
+  mozilla::ipc::IPCResult RecvRawMessage(
+      const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
+      const Maybe<ClonedMessageData>& aStack);
 
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,

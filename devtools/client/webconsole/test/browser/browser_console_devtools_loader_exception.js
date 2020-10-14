@@ -57,16 +57,26 @@ add_task(async function() {
   ok(url.includes("toolbox.js"), "we have the expected view source URL");
   ok(!url.includes("->"), "no -> in the URL given to view-source");
 
+  const isFissionEnabledForBrowserConsole = Services.prefs.getBoolPref(
+    "devtools.browsertoolbox.fission",
+    false
+  );
+
   const { targetList } = bcHud;
-  const onViewSourceTargetAvailable = new Promise(resolve => {
-    const onAvailable = ({ targetFront }) => {
-      if (targetFront.url.includes("view-source:")) {
-        targetList.unwatchTargets([targetList.TYPES.FRAME], onAvailable);
-        resolve();
-      }
-    };
-    targetList.watchTargets([targetList.TYPES.FRAME], onAvailable);
-  });
+  // If Fission is not enabled for the Browser Console (e.g. in Beta at this moment),
+  // the target list won't watch for Frame targets, and as a result we won't have issues
+  // with pending connections to the server that we're observing when attaching the target.
+  const onViewSourceTargetAvailable = !isFissionEnabledForBrowserConsole
+    ? Promise.resolve()
+    : new Promise(resolve => {
+        const onAvailable = ({ targetFront }) => {
+          if (targetFront.url.includes("view-source:")) {
+            targetList.unwatchTargets([targetList.TYPES.FRAME], onAvailable);
+            resolve();
+          }
+        };
+        targetList.watchTargets([targetList.TYPES.FRAME], onAvailable);
+      });
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(
     gBrowser,

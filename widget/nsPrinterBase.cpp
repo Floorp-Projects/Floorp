@@ -15,6 +15,14 @@ using namespace mozilla;
 using mozilla::dom::Promise;
 using mozilla::gfx::MarginDouble;
 
+// The maximum error when considering a paper size equal, in points.
+// There is some variance in the actual sizes returned by printer drivers and
+// print servers for paper sizes. This is a best-guess based on initial
+// telemetry which should catch most near-miss dimensions. This should let us
+// get consistent paper size names even when the size isn't quite exactly the
+// correct size.
+static constexpr double kPaperSizePointsEpsilon = 4.0;
+
 void nsPrinterBase::CachePrintSettingsInitializer(
     const PrintSettingsInitializer& aInitializer) {
   if (mPrintSettingsInitializer.isNothing()) {
@@ -166,5 +174,20 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPrinterBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPrinterBase)
 
-nsPrinterBase::nsPrinterBase() = default;
+nsPrinterBase::nsPrinterBase(const CommonPaperInfoArray* aPaperInfoArray)
+    : mCommonPaperInfo(aPaperInfoArray) {
+  MOZ_DIAGNOSTIC_ASSERT(aPaperInfoArray, "Localized paper info was null");
+}
 nsPrinterBase::~nsPrinterBase() = default;
+
+const PaperInfo* nsPrinterBase::FindCommonPaperSize(
+    const gfx::SizeDouble& aSize) const {
+  for (const PaperInfo& paper : *mCommonPaperInfo) {
+    if (std::abs(paper.mSize.width - aSize.width) <= kPaperSizePointsEpsilon &&
+        std::abs(paper.mSize.height - aSize.height) <=
+            kPaperSizePointsEpsilon) {
+      return &paper;
+    }
+  }
+  return nullptr;
+}

@@ -40,7 +40,7 @@ Similar to ``pip``, ``pip-tools`` must be installed in each of your project's
 .. code-block:: bash
 
     $ source /path/to/venv/bin/activate
-    (venv)$ pip install pip-tools
+    (venv)$ python -m pip install pip-tools
 
 **Note**: all of the remaining example commands assume you've activated your
 project's virtual environment.
@@ -88,8 +88,7 @@ If you have a ``setup.py`` with ``install_requires=['django']``, then run
     sqlparse==0.3.0           # via django
 
 ``pip-compile`` will produce your ``requirements.txt``, with all the Django
-dependencies (and all underlying dependencies) pinned.  You should put
-``requirements.txt`` under version control.
+dependencies (and all underlying dependencies) pinned.
 
 Without ``setup.py``
 --------------------
@@ -119,8 +118,7 @@ Now, run ``pip-compile requirements.in``:
     sqlparse==0.3.0           # via django
 
 And it will produce your ``requirements.txt``, with all the Django dependencies
-(and all underlying dependencies) pinned.  You should put both
-``requirements.in`` and ``requirements.txt`` under version control.
+(and all underlying dependencies) pinned.
 
 .. _it's easy to write one: https://packaging.python.org/guides/distributing-packages-using-setuptools/#configuring-your-project
 
@@ -202,6 +200,16 @@ Or to output to standard output, use ``--output-file=-``:
 
     $ pip-compile --output-file=- > requirements.txt
     $ pip-compile - --output-file=- < requirements.in > requirements.txt
+
+Forwarding options to ``pip``
+-----------------------------
+
+Any valid ``pip`` flags or arguments may be passed on with ``pip-compile``'s
+``--pip-args`` option, e.g.
+
+.. code-block:: bash
+
+    $ pip-compile requirements.in --pip-args '--retries 10 --timeout 30'
 
 Configuration
 -------------
@@ -301,6 +309,34 @@ You can install requirements in development stage by:
     $ pip-sync requirements.txt dev-requirements.txt
 
 
+Version control integration
+---------------------------
+
+You might use ``pip-compile`` as a hook for the `pre-commit <https://github.com/pre-commit/pre-commit>`_.
+See `pre-commit docs <https://pre-commit.com/>`_ for instructions.
+Sample ``.pre-commit-config.yaml``:
+
+.. code-block:: yaml
+
+    repos:
+      - repo: https://github.com/jazzband/pip-tools
+        rev: 5.0.0
+        hooks:
+          - id: pip-compile
+
+You might want to customize ``pip-compile`` args by configuring ``args`` and/or ``files``, for example:
+
+.. code-block:: yaml
+
+    repos:
+      - repo: https://github.com/jazzband/pip-tools
+        rev: 5.0.0
+        hooks:
+          - id: pip-compile
+            files: ^requirements/production\.(in|txt)$
+            args: [--index-url=https://example.com, requirements/production.in]
+
+
 Example usage for ``pip-sync``
 ==============================
 
@@ -342,13 +378,56 @@ line arguments, e.g.
 
 Passing in empty arguments would cause it to default to ``requirements.txt``.
 
+Any valid ``pip install`` flags or arguments may be passed with ``pip-sync``'s
+``--pip-args`` option, e.g.
+
+.. code-block:: bash
+
+    $ pip-sync requirements.txt --pip-args '--no-cache-dir --no-deps'
+
 If you use multiple Python versions, you can run ``pip-sync`` as
 ``py -X.Y -m piptools sync ...`` on Windows and
 ``pythonX.Y -m piptools sync ...`` on other systems.
 
 **Note**: ``pip-sync`` will not upgrade or uninstall packaging tools like
-``setuptools``, ``pip``, or ``pip-tools`` itself. Use ``pip install --upgrade``
+``setuptools``, ``pip``, or ``pip-tools`` itself. Use ``python -m pip install --upgrade``
 to upgrade those packages.
+
+Should I commit ``requirements.in`` and ``requirements.txt`` to source control?
+===============================================================================
+
+Generally, yes. If you want a reproducible environment installation available from your source control,
+then yes, you should commit both ``requirements.in`` and ``requirements.txt`` to source control.
+
+Note that if you are deploying on multiple Python environments (read the section below),
+then you must commit a seperate output file for each Python environment.
+We suggest to use the ``{env}-requirements.txt`` format
+(ex: ``win32-py2.7-requirements.txt``, ``macos-py3.6-requirements.txt``, etc.).
+
+
+Cross-environment usage of ``requirements.in``/``requirements.txt`` and ``pip-compile``
+=======================================================================================
+
+The dependencies of a package can change depending on the Python environment in which it
+is installed.  Here, we define a Python environment as the combination of Operating
+System, Python version (2.7, 3.6, etc.), and Python implementation (CPython, PyPy,
+etc.). For an exact definition, refer to the possible combinations of `PEP 508
+environment markers`_.
+
+As the resulting ``requirements.txt`` can differ for each environment, users must
+execute ``pip-compile`` **on each Python environment separately** to generate a
+``requirements.txt`` valid for each said environment.  The same ``requirements.in`` can
+be used as the source file for all environments, using `PEP 508 environment markers`_ as
+needed, the same way it would be done for regular ``pip`` cross-environment usage.
+
+If the generated ``requirements.txt`` remains exactly the same for all Python
+environments, then it can be used across Python environments safely. **But** users
+should be careful as any package update can introduce environment-dependant
+dependencies, making any newly generated ``requirements.txt`` environment-dependant too.
+As a general rule, it's advised that users should still always execute ``pip-compile``
+on each targeted Python environment to avoid issues.
+
+.. _PEP 508 environment markers: https://www.python.org/dev/peps/pep-0508/#environment-markers
 
 Other useful tools
 ==================
@@ -362,3 +441,26 @@ Other useful tools
 .. _pipdeptree: https://github.com/naiquevin/pipdeptree
 .. _requirements.txt.vim: https://github.com/raimon49/requirements.txt.vim
 .. _Python extension for VS Code: https://marketplace.visualstudio.com/items?itemName=ms-python.python
+
+
+Deprecations
+============
+
+This section lists ``pip-tools`` features that are currently deprecated.
+
+- ``--index/--no-index`` command-line options, use instead
+  ``--emit-index-url/--no-emit-index-url`` (since 5.2.0).
+
+Versions and compatibility
+==========================
+
+The table below summarizes the latest ``pip-tools`` versions with the required ``pip``
+versions.
+
++-----------+-----------------+
+| pip-tools | pip             |
++===========+=================+
+| 4.5.x     | 8.1.3 - 20.0.x  |
++-----------+-----------------+
+| 5.x       | 20.0.x - 20.1.x |
++-----------+-----------------+

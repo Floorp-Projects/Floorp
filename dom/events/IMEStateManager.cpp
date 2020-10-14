@@ -9,6 +9,7 @@
 #include "mozilla/IMEStateManager.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
@@ -76,6 +77,7 @@ InputContext::Origin IMEStateManager::sOrigin = InputContext::ORIGIN_MAIN;
 InputContext IMEStateManager::sActiveChildInputContext;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
+bool IMEStateManager::sCleaningUpForStoppingIMEStateManagement = false;
 
 // static
 void IMEStateManager::Init() {
@@ -202,6 +204,15 @@ void IMEStateManager::StopIMEStateManagement() {
 
   // NOTE: Don't set input context from here since this has already lost
   //       the rights to change input context.
+
+  // The requestee of this method in the main process must destroy its
+  // active IMEContentObserver for making existing composition end and
+  // make it be possible to start new composition in new focused process.
+  // Therefore, we shouldn't notify the main process of any changes which
+  // occurred after here.
+  AutoRestore<bool> restoreStoppingIMEStateManagementState(
+      sCleaningUpForStoppingIMEStateManagement);
+  sCleaningUpForStoppingIMEStateManagement = true;
 
   if (sTextCompositions && sPresContext) {
     NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, sPresContext, nullptr);
@@ -1176,26 +1187,20 @@ static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
   bool willSubmit = false;
   bool isLastElement = false;
   nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
-  Element* formElement = nullptr;
   if (control) {
-    formElement = control->GetFormElement();
+    HTMLFormElement* formElement = control->GetFormElement();
     // is this a form and does it have a default submit element?
     if (formElement) {
-      HTMLFormElement* htmlForm = nullptr;
-      if (formElement->IsHTMLElement(nsGkAtoms::form)) {
-        htmlForm = HTMLFormElement::FromNodeOrNull(formElement);
-        if (htmlForm->IsLastActiveElement(control)) {
-          isLastElement = true;
-        }
+      if (formElement->IsLastActiveElement(control)) {
+        isLastElement = true;
       }
 
-      nsCOMPtr<nsIForm> form = do_QueryInterface(formElement);
-      if (form && form->GetDefaultSubmitElement()) {
+      if (formElement->GetDefaultSubmitElement()) {
         willSubmit = true;
         // is this an html form...
-      } else if (htmlForm) {
+      } else {
         // ... and does it only have a single text input element ?
-        if (!htmlForm->ImplicitSubmissionIsDisabled() ||
+        if (!formElement->ImplicitSubmissionIsDisabled() ||
             // ... or is this the last non-disabled element?
             isLastElement) {
           willSubmit = true;
@@ -1556,12 +1561,14 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
            "aWidget=0x%p, aBrowserParent=0x%p), sFocusedIMEWidget=0x%p, "
            "BrowserParent::GetFocused()=0x%p, sFocusedIMEBrowserParent=0x%p, "
            "aBrowserParent == BrowserParent::GetFocused()=%s, "
-           "aBrowserParent == sFocusedIMEBrowserParent=%s",
+           "aBrowserParent == sFocusedIMEBrowserParent=%s, "
+           "CanSendNotificationToTheMainProcess()=%s",
            ToChar(aNotification.mMessage), aWidget, aBrowserParent,
            sFocusedIMEWidget, BrowserParent::GetFocused(),
            sFocusedIMEBrowserParent.get(),
            GetBoolName(aBrowserParent == BrowserParent::GetFocused()),
-           GetBoolName(aBrowserParent == sFocusedIMEBrowserParent)));
+           GetBoolName(aBrowserParent == sFocusedIMEBrowserParent),
+           GetBoolName(CanSendNotificationToTheMainProcess())));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1571,6 +1578,8 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
 
   switch (aNotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS: {
+      MOZ_ASSERT(CanSendNotificationToTheMainProcess());
+
       // If focus notification comes from a remote browser which already lost
       // focus, we shouldn't accept the focus notification.  Then, following
       // notifications from the process will be ignored.
@@ -1638,7 +1647,10 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
       nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
       sFocusedIMEWidget = nullptr;
       sFocusedIMEBrowserParent = nullptr;
-      return focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+      return CanSendNotificationToTheMainProcess()
+                 ? focusedIMEWidget->NotifyIME(
+                       IMENotification(NOTIFY_IME_OF_BLUR))
+                 : NS_OK;
     }
     case NOTIFY_IME_OF_SELECTION_CHANGE:
     case NOTIFY_IME_OF_TEXT_CHANGE:
@@ -1664,6 +1676,9 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
             sISMLog, LogLevel::Warning,
             ("  NotifyIME(), WARNING, the received content change notification "
              "is ignored because it's not for current focused IME widget"));
+        return NS_OK;
+      }
+      if (!CanSendNotificationToTheMainProcess()) {
         return NS_OK;
       }
       nsCOMPtr<nsIWidget> widget(aWidget);
