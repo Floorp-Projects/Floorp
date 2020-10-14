@@ -128,18 +128,6 @@ Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
   return file;
 }
 
-nsAutoString GetIntString(const int64_t aInteger) {
-  nsAutoString res;
-  res.AppendInt(aInteger);
-  return res;
-}
-
-nsAutoCString GetIntCString(const int64_t aInteger) {
-  nsAutoCString res;
-  res.AppendInt(aInteger);
-  return res;
-}
-
 nsDependentCSubstring GetLeafName(const nsACString& aPath) {
   nsACString::const_iterator start, end;
   aPath.BeginReading(start);
@@ -242,7 +230,7 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
   if (console) {
     NS_ConvertUTF8toUTF16 message(aModule + " failure: '"_ns + aExpr +
                                   "', file "_ns + GetLeafName(aSourceFile) +
-                                  ", line "_ns + GetIntCString(aSourceLine) +
+                                  ", line "_ns + IntToCString(aSourceLine) +
                                   extraInfosString);
 
     // The concatenation above results in a message like:

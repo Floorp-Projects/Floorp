@@ -27,7 +27,6 @@ namespace cache {
 
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
-using mozilla::dom::quota::IntCString;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 
@@ -209,7 +208,7 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
 
   const nsCString directoryLockIdClause =
       aQuotaInfo.mDirectoryLockId >= 0
-          ? "&directoryLockId="_ns + IntCString(aQuotaInfo.mDirectoryLockId)
+          ? "&directoryLockId="_ns + IntToCString(aQuotaInfo.mDirectoryLockId)
           : EmptyCString();
 
   rv = NS_MutateURI(mutator)

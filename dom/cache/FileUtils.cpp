@@ -133,9 +133,7 @@ nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
   // in a single directory.  Mitigate this issue by spreading the body
   // files out into sub-directories.  We use the last byte of the ID for
   // the name of the sub-directory.
-  nsAutoString subDirName;
-  subDirName.AppendInt(aId.m3[7]);
-  rv = (*aCacheDirOut)->Append(subDirName);
+  rv = (*aCacheDirOut)->Append(IntToString(aId.m3[7]));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
