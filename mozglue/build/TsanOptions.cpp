@@ -91,6 +91,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "deadlock:OCSPStaplingServer\n"
          // Bug 1643087 - permanent
          "deadlock:BadCertAndPinningServer\n"
+         // Bug 1606804 - permanent
+         "deadlock:cert_storage::SecurityState::open_db\n"
+         "deadlock:cert_storage::SecurityState::add_certs\n"
 
          // Bug 1153409
          "race:third_party/sqlite3/*\n"
