@@ -31,6 +31,7 @@ DevToolsModules(
   'object-with-url.js',
   'object.js',
   'promise.js',
+  'prop-rep.js',
   'regexp.js',
   'rep-utils.js',
   'rep.js',
