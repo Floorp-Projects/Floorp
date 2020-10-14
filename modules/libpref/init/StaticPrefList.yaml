@@ -249,11 +249,7 @@
 
 - name: apz.allow_zooming
   type: RelaxedAtomicBool
-#if defined(ANDROID)
   value: true
-#else
-  value: @IS_NIGHTLY_BUILD@
-#endif
   mirror: always
 
 - name: apz.allow_zooming_out
@@ -623,7 +619,7 @@
 
 - name: apz.windows.use_direct_manipulation
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.x_skate_highmem_adjust
