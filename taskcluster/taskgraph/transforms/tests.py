@@ -273,7 +273,6 @@ TEST_VARIANTS = {
             'run-on-projects': {
                 'by-test-platform': {
                     'mac.*': ['trunk'],
-                    'win.*': ['trunk'],
                     'default': [],
                 },
             },
