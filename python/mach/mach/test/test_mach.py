@@ -6,16 +6,15 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 
-from mach.test.common import TestBase
 from mozunit import main
 
 
-def test_set_isatty_environ(monkeypatch):
+def test_set_isatty_environ(monkeypatch, get_mach):
     # Make sure the 'MACH_STDOUT_ISATTY' variable gets set.
     monkeypatch.delenv('MACH_STDOUT_ISATTY', raising=False)
     monkeypatch.setattr(os, 'isatty', lambda fd: True)
 
-    m = TestBase.get_mach()
+    m = get_mach()
     orig_run = m._run
     env_is_set = []
 
