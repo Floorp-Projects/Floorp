@@ -57,4 +57,123 @@ static Streaming::Deserializer sDeserializers1Based[DeserializerMax];
 }
 
 }  // namespace base_profiler_markers_detail
+
+void MarkerSchema::Stream(JSONWriter& aWriter,
+                          const Span<const char>& aName) && {
+  // The caller should have started a JSON array, in which we can add an object
+  // that defines a marker schema.
+
+  if (mLocations.empty()) {
+    // SpecialFrontendLocation case, don't output anything for this type.
+    return;
+  }
+
+  aWriter.StartObjectElement();
+  {
+    aWriter.StringProperty("name", aName);
+
+    if (!mTooltipLabel.empty()) {
+      aWriter.StringProperty("tooltipLabel", mTooltipLabel);
+    }
+
+    aWriter.StartArrayProperty("display");
+    {
+      for (Location location : mLocations) {
+        aWriter.StringElement(LocationToStringSpan(location));
+      }
+    }
+    aWriter.EndArray();
+
+    aWriter.StartArrayProperty("data");
+    {
+      for (const DataRow& row : mData) {
+        aWriter.StartObjectElement();
+        {
+          row.match(
+              [&aWriter](const DynamicData& aData) {
+                aWriter.StringProperty("key", aData.mKey);
+                if (aData.mLabel) {
+                  aWriter.StringProperty("label", *aData.mLabel);
+                }
+                aWriter.StringProperty("format",
+                                       FormatToStringSpan(aData.mFormat));
+                if (aData.mSearchable) {
+                  aWriter.BoolProperty(
+                      "searchable",
+                      *aData.mSearchable == Searchable::searchable);
+                }
+              },
+              [&aWriter](const StaticData& aStaticData) {
+                aWriter.StringProperty("label", aStaticData.mLabel);
+                aWriter.StringProperty("value", aStaticData.mValue);
+              });
+        }
+        aWriter.EndObject();
+      }
+    }
+    aWriter.EndArray();
+  }
+  aWriter.EndObject();
+}
+
+/* static */
+Span<const char> MarkerSchema::LocationToStringSpan(
+    MarkerSchema::Location aLocation) {
+  switch (aLocation) {
+    case Location::markerChart:
+      return mozilla::MakeStringSpan("marker-chart");
+    case Location::markerTable:
+      return mozilla::MakeStringSpan("marker-table");
+    case Location::timelineOverview:
+      return mozilla::MakeStringSpan("timeline-overview");
+    case Location::timelineMemory:
+      return mozilla::MakeStringSpan("timeline-memory");
+    case Location::timelineIPC:
+      return mozilla::MakeStringSpan("timeline-ipc");
+    case Location::timelineFileIO:
+      return mozilla::MakeStringSpan("timeline-fileio");
+    case Location::stackChart:
+      return mozilla::MakeStringSpan("stack-chart");
+    default:
+      MOZ_CRASH("Unexpected Location enum");
+      return {};
+  }
+}
+
+/* static */
+Span<const char> MarkerSchema::FormatToStringSpan(
+    MarkerSchema::Format aFormat) {
+  switch (aFormat) {
+    case Format::url:
+      return mozilla::MakeStringSpan("url");
+    case Format::filePath:
+      return mozilla::MakeStringSpan("file-path");
+    case Format::string:
+      return mozilla::MakeStringSpan("string");
+    case Format::duration:
+      return mozilla::MakeStringSpan("duration");
+    case Format::time:
+      return mozilla::MakeStringSpan("time");
+    case Format::seconds:
+      return mozilla::MakeStringSpan("seconds");
+    case Format::milliseconds:
+      return mozilla::MakeStringSpan("milliseconds");
+    case Format::microseconds:
+      return mozilla::MakeStringSpan("microseconds");
+    case Format::nanoseconds:
+      return mozilla::MakeStringSpan("nanoseconds");
+    case Format::bytes:
+      return mozilla::MakeStringSpan("bytes");
+    case Format::percentage:
+      return mozilla::MakeStringSpan("percentage");
+    case Format::integer:
+      return mozilla::MakeStringSpan("integer");
+    case Format::decimal:
+      return mozilla::MakeStringSpan("decimal");
+    default:
+      MOZ_CRASH("Unexpected Format enum");
+      return {};
+  }
+}
+
 }  // namespace mozilla
