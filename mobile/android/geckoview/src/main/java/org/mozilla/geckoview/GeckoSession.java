@@ -1460,35 +1460,268 @@ public class GeckoSession {
      */
     public static final int LOAD_FLAGS_REPLACE_HISTORY = 1 << 6;
 
-    private GeckoBundle additionalHeadersToBundle(final Map<String, String> additionalHeaders) {
-        final GeckoBundle bundle = new GeckoBundle(additionalHeaders.size());
-        for (Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
-            if (entry.getKey() == null) {
-                // Ignore null keys
-                continue;
-            }
-            bundle.putString(entry.getKey(), entry.getValue());
+    /**
+     * Main entry point for loading URIs into a {@link GeckoSession}.
+     *
+     * The simplest use case is loading a URIs with no extra options, this can
+     * be accomplished by specifying the URI in {@link #uri} and then calling
+     * {@link #load}, e.g.
+     *
+     * <pre><code>
+     *     session.load(new Loader().uri("http://mozilla.org"));
+     * </code></pre>
+     *
+     * This class can also be used to load <code>data:</code> URIs, either from
+     * a <code>byte[]</code> array or a <code>String</code> using {@link
+     * #data}, e.g.
+     *
+     * <pre><code>
+     *     session.load(new Loader().data("the data:1234,5678", "text/plain"));
+     * </code></pre>
+     *
+     * This class also allows you to specify some extra data, e.g. you can set
+     * a referrer using {@link #referrer} which can either be a {@link
+     * GeckoSession} or a plain URL string. You can also specify some Load
+     * Flags using {@link #flags}.
+     *
+     * The class is structured as a Builder, so method calls can be easily
+     * chained, e.g.
+     *
+     * <pre><code>
+     *     session.load(new Loader()
+     *          .url("http://mozilla.org")
+     *          .referrer("http://my-referrer.com")
+     *          .flags(...));
+     * </code></pre>
+     */
+    @AnyThread
+    public static class Loader {
+        private String mUri;
+        private GeckoSession mReferrerSession;
+        private String mReferrerUri;
+        private GeckoBundle mHeaders;
+        private @LoadFlags int mLoadFlags = LOAD_FLAGS_NONE;
+        private boolean mIsDataUri;
+
+        private static @NonNull String createDataUri(@NonNull final byte[] bytes,
+                                                    @Nullable final String mimeType) {
+            return String.format("data:%s;base64,%s", mimeType != null ? mimeType : "",
+                    Base64.encodeToString(bytes, Base64.NO_WRAP));
         }
-        return bundle;
+
+        private static @NonNull String createDataUri(@NonNull final String data,
+                                                    @Nullable final String mimeType) {
+            return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
+        }
+
+        /**
+         * Set the URI of the resource to load.
+         * @param uri a String containg the URI
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader uri(final @NonNull String uri) {
+            mUri = uri;
+            mIsDataUri = false;
+            return this;
+        }
+
+        /**
+         * Set the URI of the resource to load.
+         * @param uri a {@link Uri} instance
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader uri(final @NonNull Uri uri) {
+            mUri = uri.toString();
+            mIsDataUri = false;
+            return this;
+        }
+
+        /**
+         * Set the data URI of the resource to load.
+         * @param bytes a <code>byte</code> array containing the data to load.
+         * @param mimeType a <code>String</code> containing the mime type for this
+         *                 data URI, e.g. "text/plain"
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader data(final @NonNull byte[] bytes, final @Nullable String mimeType) {
+            mUri = createDataUri(bytes, mimeType);
+            mIsDataUri = true;
+            return this;
+        }
+
+        /**
+         * Set the data URI of the resource to load.
+         * @param data a <code>String</code> array containing the data to load.
+         * @param mimeType a <code>String</code> containing the mime type for this
+         *                 data URI, e.g. "text/plain"
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader data(final @NonNull String data, final @Nullable String mimeType) {
+            mUri = createDataUri(data, mimeType);
+            mIsDataUri = true;
+            return this;
+        }
+
+        /**
+         * Set the referrer for this load.
+         * @param referrer a <code>GeckoSession</code> that will be used as the referrer
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader referrer(final @NonNull GeckoSession referrer) {
+            mReferrerSession = referrer;
+            return this;
+        }
+
+        /**
+         * Set the referrer for this load.
+         * @param referrerUri a {@link Uri} that will be used as the referrer
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader referrer(final @NonNull Uri referrerUri) {
+            mReferrerUri = referrerUri != null ? referrerUri.toString() : null;
+            return this;
+        }
+
+        /**
+         * Set the referrer for this load.
+         * @param referrerUri a <code>String</code> containing the URI
+         *                 that will be used as the referrer
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader referrer(final @NonNull String referrerUri) {
+            mReferrerUri = referrerUri;
+            return this;
+        }
+
+        /**
+         * Add headers for this load.
+         *
+         * Note: the <code>Host</code> and <code>Connection</code>
+         * headers are ignored.
+         *
+         * @param headers a <code>Map</code> containing headers that will
+         *                be added to this load.
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader additionalHeaders(final @NonNull Map<String, String> headers) {
+            final GeckoBundle bundle = new GeckoBundle(headers.size());
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                if (entry.getKey() == null) {
+                    // Ignore null keys
+                    continue;
+                }
+                bundle.putString(entry.getKey(), entry.getValue());
+            }
+            mHeaders = bundle;
+            return this;
+        }
+
+        /**
+         * Set the load flags for this load.
+         * @param flags the load flags to use, an OR-ed value of
+         *              {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*} that will be used as the referrer
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader flags(final @LoadFlags int flags) {
+            mLoadFlags = flags;
+            return this;
+        }
+    }
+
+    /**
+     * Load page using the {@link Loader} specified.
+     *
+     * @param request Loader for this request.
+     * @see Loader
+     */
+    @AnyThread
+    public void load(final @NonNull Loader request) {
+        if (request.mUri == null) {
+            throw new IllegalArgumentException(
+                    "You need to specify at least one between `uri` and `data`.");
+        }
+
+        if (request.mReferrerUri != null && request.mReferrerSession != null) {
+            throw new IllegalArgumentException(
+                    "Cannot specify both a referrer session and a referrer URI.");
+        }
+
+        final int loadFlags = request.mIsDataUri
+                // If this is a data: load then we need to force allow it.
+                ? request.mLoadFlags | LOAD_FLAGS_FORCE_ALLOW_DATA_URI
+                : request.mLoadFlags;
+
+        // For performance reasons we short-circuit the delegate here
+        // instead of making Gecko call it for direct loadUri calls.
+        final NavigationDelegate.LoadRequest loadRequest =
+                new NavigationDelegate.LoadRequest(
+                        request.mUri,
+                        null, /* triggerUri */
+                        1, /* geckoTarget: OPEN_CURRENTWINDOW */
+                        0, /* flags */
+                        false, /* hasUserGesture */
+                        true /* isDirectNavigation */);
+
+        shouldLoadUri(loadRequest).getOrAccept(allowOrDeny -> {
+            if (allowOrDeny == AllowOrDeny.DENY) {
+                return;
+            }
+
+            final GeckoBundle msg = new GeckoBundle();
+            msg.putString("uri", request.mUri);
+            msg.putInt("flags", loadFlags);
+
+            if (request.mReferrerUri != null) {
+                msg.putString("referrerUri", request.mReferrerUri);
+            }
+
+            if (request.mReferrerSession != null) {
+                msg.putString("referrerSessionId", request.mReferrerSession.mId);
+            }
+
+            if (request.mHeaders != null) {
+                msg.putBundle("headers", request.mHeaders);
+            }
+
+            mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
+        });
     }
 
     /**
      * Load the given URI.
+     *
+     * Convenience method for <pre><code>
+     *     session.load(new Loader().uri(uri));
+     * </code></pre>
+     *
      * @param uri The URI of the resource to load.
      */
     @AnyThread
     public void loadUri(final @NonNull String uri) {
-        loadUri(uri, (GeckoSession)null, LOAD_FLAGS_NONE, (Map<String, String>) null);
+        load(new Loader().uri(uri));
     }
 
     /**
      * Load the given URI with specified HTTP request headers.
      * @param uri The URI of the resource to load.
      * @param additionalHeaders any additional request headers used with the load
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable Map<String, String> additionalHeaders) {
-        loadUri(uri, (GeckoSession)null, LOAD_FLAGS_NONE, additionalHeaders);
+        load(new Loader()
+                .uri(uri)
+                .additionalHeaders(additionalHeaders));
     }
 
     /**
@@ -1496,10 +1729,14 @@ public class GeckoSession {
      *
      * @param uri the URI to load
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @LoadFlags int flags) {
-        loadUri(uri, (GeckoSession)null, flags, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri)
+                .flags(flags));
     }
 
     /**
@@ -1508,11 +1745,16 @@ public class GeckoSession {
      * @param uri the URI to load
      * @param referrer the referrer, may be null
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable String referrer,
                         final @LoadFlags int flags) {
-        loadUri(uri, referrer, flags, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .flags(flags));
     }
 
     /**
@@ -1522,22 +1764,17 @@ public class GeckoSession {
      * @param referrer the referrer, may be null
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      * @param additionalHeaders any additional request headers used with the load
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable String referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        final GeckoBundle msg = new GeckoBundle();
-        msg.putString("uri", uri);
-        msg.putInt("flags", flags);
-
-        if (referrer != null) {
-            msg.putString("referrerUri", referrer);
-        }
-
-        if (additionalHeaders != null) {
-            msg.putBundle("headers", additionalHeadersToBundle(additionalHeaders));
-        }
-        mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .flags(flags)
+                .additionalHeaders(additionalHeaders));
     }
 
     /**
@@ -1548,11 +1785,16 @@ public class GeckoSession {
      * @param uri the URI to load
      * @param referrer the referring GeckoSession, may be null
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
                         final @LoadFlags int flags) {
-        loadUri(uri, referrer, flags, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .flags(flags));
     }
 
     /**
@@ -1564,40 +1806,17 @@ public class GeckoSession {
      * @param referrer the referring GeckoSession, may be null
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      * @param additionalHeaders any additional request headers used with the load
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        // For performance reasons we short-circuit the delegate here
-        // instead of making Gecko call it for direct loadUri calls.
-        final NavigationDelegate.LoadRequest request =
-                new NavigationDelegate.LoadRequest(
-                        uri,
-                        null, /* triggerUri */
-                        1, /* geckoTarget: OPEN_CURRENTWINDOW */
-                        0, /* flags */
-                        false, /* hasUserGesture */
-                        true /* isDirectNavigation */);
-
-        shouldLoadUri(request).getOrAccept(allowOrDeny -> {
-            if (allowOrDeny == AllowOrDeny.DENY) {
-                return;
-            }
-
-            final GeckoBundle msg = new GeckoBundle();
-            msg.putString("uri", uri);
-            msg.putInt("flags", flags);
-
-            if (referrer != null) {
-                msg.putString("referrerSessionId", referrer.mId);
-            }
-
-            if (additionalHeaders != null) {
-                msg.putBundle("headers", additionalHeadersToBundle(additionalHeaders));
-            }
-
-            mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
-        });
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .additionalHeaders(additionalHeaders)
+                .flags(flags));
     }
 
     private GeckoResult<AllowOrDeny> shouldLoadUri(final NavigationDelegate.LoadRequest request) {
@@ -1628,30 +1847,41 @@ public class GeckoSession {
     /**
      * Load the given URI.
      * @param uri The URI of the resource to load.
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull Uri uri) {
-        loadUri(uri.toString(), (GeckoSession)null, LOAD_FLAGS_NONE, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri));
     }
 
     /**
      * Load the given URI with specified HTTP request headers.
      * @param uri The URI of the resource to load.
      * @param additionalHeaders any additional request headers used with the load
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull Uri uri, final @Nullable Map<String, String> additionalHeaders) {
-        loadUri(uri.toString(), (GeckoSession)null, LOAD_FLAGS_NONE, additionalHeaders);
+        load(new Loader()
+                .uri(uri)
+                .additionalHeaders(additionalHeaders));
     }
 
     /**
      * Load the given URI with the specified referrer and load type.
      * @param uri the URI to load
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull Uri uri, final @LoadFlags int flags) {
-        loadUri(uri.toString(), (GeckoSession)null, flags, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri)
+                .flags(flags));
     }
 
     /**
@@ -1659,11 +1889,16 @@ public class GeckoSession {
      * @param uri the URI to load
      * @param referrer the Uri to use as the referrer
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
                         final @LoadFlags int flags) {
-        loadUri(uri.toString(), referrer != null ? referrer.toString() : null, flags, (Map<String, String>) null);
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .flags(flags));
     }
 
     /**
@@ -1672,11 +1907,17 @@ public class GeckoSession {
      * @param referrer the Uri to use as the referrer
      * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
      * @param additionalHeaders any additional request headers used with the load
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        loadUri(uri.toString(), referrer != null ? referrer.toString() : null, flags, additionalHeaders);
+        load(new Loader()
+                .uri(uri)
+                .referrer(referrer)
+                .flags(flags)
+                .additionalHeaders(additionalHeaders));
     }
 
     /**
@@ -1685,15 +1926,12 @@ public class GeckoSession {
      * @param data a String representing the data
      * @param mimeType the mime type of the data, e.g. "text/plain". Maybe be null, in
      *                 which case the type is guessed.
-     *
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadString(@NonNull final String data, @Nullable final String mimeType) {
-        if (data == null) {
-            throw new IllegalArgumentException("data cannot be null");
-        }
-
-        loadUri(createDataUri(data, mimeType), (GeckoSession)null, LOAD_FLAGS_NONE);
+        load(new Loader().data(data, mimeType));
     }
 
     /**
@@ -1702,14 +1940,12 @@ public class GeckoSession {
      * @param bytes    the data to load
      * @param mimeType the mime type of the data, e.g. video/mp4. May be null, in which
      *                 case the type is guessed.
+     * @deprecated Use {@link #load} instead.
      */
     @AnyThread
+    @Deprecated
     public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType) {
-        if (bytes == null) {
-            throw new IllegalArgumentException("data cannot be null");
-        }
-
-        loadUri(createDataUri(bytes, mimeType), (GeckoSession)null, LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
+        load(new Loader().data(bytes, mimeType));
     }
 
     /**
@@ -1719,10 +1955,10 @@ public class GeckoSession {
      * @return a URI String
      */
     @AnyThread
+    @Deprecated
     public static @NonNull String createDataUri(@NonNull final byte[] bytes,
                                                 @Nullable final String mimeType) {
-        return String.format("data:%s;base64,%s", mimeType != null ? mimeType : "",
-                             Base64.encodeToString(bytes, Base64.NO_WRAP));
+        return Loader.createDataUri(bytes, mimeType);
     }
 
     /**
@@ -1732,9 +1968,10 @@ public class GeckoSession {
      * @return a URI String
      */
     @AnyThread
+    @Deprecated
     public static @NonNull String createDataUri(@NonNull final String data,
                                                 @Nullable final String mimeType) {
-        return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
+        return Loader.createDataUri(data, mimeType);
     }
 
     /**

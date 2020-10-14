@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import android.util.Base64
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.filters.MediumTest
@@ -428,6 +429,12 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
+    private fun createDataUri(bytes: ByteArray,
+                              mimeType: String?): String {
+        return String.format("data:%s;base64,%s", mimeType ?: "",
+                Base64.encodeToString(bytes, Base64.NO_WRAP))
+    }
+
     @Test(expected = UiThreadUtils.TimeoutException::class)
     fun handlingLargeDataURIs() {
         sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
@@ -437,7 +444,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         });
 
         val dataBytes = ByteArray(3 * 1024 * 1024)
-        val uri = GeckoSession.createDataUri(dataBytes, "*/*")
+        val uri = createDataUri(dataBytes, "*/*")
 
         sessionRule.session.loadTestPath(DATA_URI_PATH)
         sessionRule.session.waitForPageStop()
@@ -455,7 +462,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         });
 
         val dataBytes = this.getTestBytes("/assets/www/images/test.gif")
-        val uri = GeckoSession.createDataUri(dataBytes, "image/*")
+        val uri = createDataUri(dataBytes, "image/*")
 
         sessionRule.session.loadTestPath(DATA_URI_PATH)
         sessionRule.session.waitForPageStop()
