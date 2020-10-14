@@ -1469,26 +1469,41 @@ var SessionStoreInternal = {
           );
         }
         break;
-      case "SessionStore:restoreTabContentStarted":
-        if (TAB_STATE_FOR_BROWSER.get(browser) == TAB_STATE_NEEDS_RESTORE) {
+      case "SessionStore:restoreTabContentStarted": {
+        let initiatedBySessionStore =
+          TAB_STATE_FOR_BROWSER.get(browser) != TAB_STATE_NEEDS_RESTORE;
+        let isNavigateAndRestore =
+          data.reason == RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE;
+
+        // We need to be careful when restoring the urlbar's search mode because
+        // we race a call to gURLBar.setURI due to the location change.  setURI
+        // will exit search mode and set gURLBar.value to the restored URL,
+        // clobbering any search mode and userTypedValue we restore here.  If
+        // this is a typical restore -- restoring on startup or restoring a
+        // closed tab for example -- then we need to restore search mode after
+        // that setURI call, and so we wait until restoreTabContentComplete, at
+        // which point setURI will have been called.  If this is not a typical
+        // restore -- it was not initiated by session store or it's due to a
+        // remoteness change -- then we do not want to restore search mode at
+        // all, and so we remove it from the tab state cache.  In particular, if
+        // the restore is due to a remoteness change, then the user is loading a
+        // new URL and the current search mode should not be carried over to it.
+        let cacheState = TabStateCache.get(browser);
+        if (cacheState.searchMode) {
+          if (!initiatedBySessionStore || isNavigateAndRestore) {
+            TabStateCache.update(browser, {
+              searchMode: null,
+              userTypedValue: null,
+            });
+          }
+          break;
+        }
+
+        if (!initiatedBySessionStore) {
           // If a load not initiated by sessionstore was started in a
           // previously pending tab. Mark the tab as no longer pending.
           this.markTabAsRestoring(tab);
-        } else if (
-          data.reason != RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE
-        ) {
-          let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
-
-          // Wait for restoreTabContentComplete to restore search mode and its
-          // search string in userTypedValue.  At this point, it's still
-          // possible for onLocationChange to be fired for the browser, which
-          // nulls userTypedValue and calls gURLBar.setURI().  If that happens,
-          // gURLBar.value is set to the empty string, and the user's search
-          // string is lost.
-          if (tabData.searchMode) {
-            break;
-          }
-
+        } else if (!isNavigateAndRestore) {
           // If the user was typing into the URL bar when we crashed, but hadn't hit
           // enter yet, then we just need to write that value to the URL bar without
           // loading anything. This must happen after the load, as the load will clear
@@ -1497,6 +1512,7 @@ var SessionStoreInternal = {
           // Note that we only want to do that if we're restoring state for reasons
           // _other_ than a navigateAndRestore remoteness-flip, as such a flip
           // implies that the user was navigating.
+          let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
           if (
             tabData.userTypedValue &&
             !tabData.userTypedClear &&
@@ -1515,13 +1531,14 @@ var SessionStoreInternal = {
           });
         }
         break;
+      }
       case "SessionStore:restoreTabContentComplete": {
         // Restore search mode and its search string in userTypedValue, if
         // appropriate.
-        let tabData = TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
-        if (tabData.searchMode) {
-          win.gURLBar.setSearchMode(tabData.searchMode, browser);
-          browser.userTypedValue = tabData.userTypedValue;
+        let cacheState = TabStateCache.get(browser);
+        if (cacheState.searchMode) {
+          win.gURLBar.setSearchMode(cacheState.searchMode, browser);
+          browser.userTypedValue = cacheState.userTypedValue;
           if (tab.selected) {
             win.gURLBar.setURI();
           }
