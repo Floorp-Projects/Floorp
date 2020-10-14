@@ -7,9 +7,9 @@ const { createNode, getChildren, makeNodesForEntries } = Utils.node;
 
 const { shouldLoadItemEntries } = Utils.loadProperties;
 
-const gripMapStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
-const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
+const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
 
 describe("shouldLoadItemEntries", () => {
   it("returns true for an entries node", () => {
