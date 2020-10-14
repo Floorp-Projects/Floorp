@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "RepaintRequest.h"
+
+#include <ostream>
+
+namespace mozilla {
+namespace layers {
+
+std::ostream& operator<<(std::ostream& aOut, const RepaintRequest& aRequest) {
+  aOut << "{ scrollId=" << aRequest.mScrollId
+       << ", scrollOffset=" << aRequest.mScrollOffset
+       << ", zoom=" << aRequest.mZoom
+       << ", viewport=" << aRequest.mLayoutViewport
+       << ", scrollUpdateType=" << (int)aRequest.mScrollUpdateType
+       << ", scrollGeneration=" << aRequest.mScrollGeneration
+       << ", dpMargins=" << aRequest.mDisplayPortMargins << "}";
+  return aOut;
+}
+
+}  // namespace layers
+}  // namespace mozilla

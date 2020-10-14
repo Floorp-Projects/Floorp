@@ -7,6 +7,7 @@
 #ifndef GFX_REPAINTREQUEST_H
 #define GFX_REPAINTREQUEST_H
 
+#include <iosfwd>
 #include <stdint.h>  // for uint8_t, uint32_t, uint64_t
 
 #include "FrameMetrics.h"             // for FrameMetrics
@@ -108,6 +109,9 @@ struct RepaintRequest {
   bool operator!=(const RepaintRequest& aOther) const {
     return !operator==(aOther);
   }
+
+  friend std::ostream& operator<<(std::ostream& aOut,
+                                  const RepaintRequest& aRequest);
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
     // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer
