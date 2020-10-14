@@ -697,8 +697,8 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public GeckoDisplay acquireDisplay();
     method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread public void close();
-    method @AnyThread @Deprecated @NonNull public static String createDataUri(@NonNull byte[], @Nullable String);
-    method @AnyThread @Deprecated @NonNull public static String createDataUri(@NonNull String, @Nullable String);
+    method @AnyThread @NonNull public static String createDataUri(@NonNull byte[], @Nullable String);
+    method @AnyThread @NonNull public static String createDataUri(@NonNull String, @Nullable String);
     method @AnyThread public void exitFullScreen();
     method @UiThread @NonNull public SessionAccessibility getAccessibility();
     method @UiThread @Nullable public Autofill.Delegate getAutofillDelegate();
@@ -733,21 +733,20 @@ package org.mozilla.geckoview {
     method @AnyThread public void goForward();
     method @AnyThread public void gotoHistoryIndex(int);
     method @AnyThread public boolean isOpen();
-    method @AnyThread public void load(@NonNull GeckoSession.Loader);
-    method @AnyThread @Deprecated public void loadData(@NonNull byte[], @Nullable String);
-    method @AnyThread @Deprecated public void loadString(@NonNull String, @Nullable String);
+    method @AnyThread public void loadData(@NonNull byte[], @Nullable String);
+    method @AnyThread public void loadString(@NonNull String, @Nullable String);
     method @AnyThread public void loadUri(@NonNull String);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable String, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable String, int, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable GeckoSession, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable GeckoSession, int, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Uri, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable Map<String,String>);
+    method @AnyThread public void loadUri(@NonNull String, int);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable String, int);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable String, int, @Nullable Map<String,String>);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable GeckoSession, int);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable GeckoSession, int, @Nullable Map<String,String>);
+    method @AnyThread public void loadUri(@NonNull Uri);
+    method @AnyThread public void loadUri(@NonNull Uri, @Nullable Map<String,String>);
+    method @AnyThread public void loadUri(@NonNull Uri, int);
+    method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int);
+    method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
     method @UiThread public void open(@NonNull GeckoRuntime);
     method @AnyThread public void purgeHistory();
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
@@ -777,8 +776,6 @@ package org.mozilla.geckoview {
     field public static final int FINDER_FIND_LINKS_ONLY = 8;
     field public static final int FINDER_FIND_MATCH_CASE = 2;
     field public static final int FINDER_FIND_WHOLE_WORD = 4;
-    field public static final int HEADER_FILTER_CORS_SAFELISTED = 1;
-    field public static final int HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
     field public static final int LOAD_FLAGS_ALLOW_POPUPS = 8;
     field public static final int LOAD_FLAGS_BYPASS_CACHE = 1;
     field public static final int LOAD_FLAGS_BYPASS_CLASSIFIER = 16;
@@ -853,20 +850,6 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.HistoryDelegate.HistoryList implements List {
     method @AnyThread default public int getCurrentIndex();
-  }
-
-  @AnyThread public static class GeckoSession.Loader {
-    ctor public Loader();
-    method @NonNull public GeckoSession.Loader additionalHeaders(@NonNull Map<String,String>);
-    method @NonNull public GeckoSession.Loader data(@NonNull byte[], @Nullable String);
-    method @NonNull public GeckoSession.Loader data(@NonNull String, @Nullable String);
-    method @NonNull public GeckoSession.Loader flags(int);
-    method @NonNull public GeckoSession.Loader headerFilter(int);
-    method @NonNull public GeckoSession.Loader referrer(@NonNull GeckoSession);
-    method @NonNull public GeckoSession.Loader referrer(@NonNull Uri);
-    method @NonNull public GeckoSession.Loader referrer(@NonNull String);
-    method @NonNull public GeckoSession.Loader uri(@NonNull String);
-    method @NonNull public GeckoSession.Loader uri(@NonNull Uri);
   }
 
   public static interface GeckoSession.MediaDelegate {
