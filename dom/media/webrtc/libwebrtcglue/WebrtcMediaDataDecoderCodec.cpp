@@ -16,7 +16,7 @@
 namespace mozilla {
 
 WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
-    : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER)),
+    : mThreadPool(GetMediaThreadPool(MediaThreadType::CONTROLLER)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataDecoder::mTaskQueue")),
       mImageContainer(layers::LayerManager::CreateImageContainer(
@@ -170,8 +170,11 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
 
   // We need to wrap our decoder in a MediaDataDecoderProxy so that it always
   // run on an nsISerialEventTarget (which the webrtc code doesn't do)
-  mDecoder =
-      new MediaDataDecoderProxy(decoder.forget(), do_AddRef(mTaskQueue.get()));
+  mDecoder = new MediaDataDecoderProxy(
+      decoder.forget(),
+      MakeAndAddRef<TaskQueue>(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "webrtc decode TaskQueue"));
 
   media::Await(
       do_AddRef(mThreadPool), mDecoder->Init(),
