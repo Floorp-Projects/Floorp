@@ -38,42 +38,46 @@ void CheckTracedThing(JSTracer* trc, T thing);
 
 /*** Callback Tracer Dispatch ***********************************************/
 
-static inline bool DispatchToOnEdge(GenericTracer* trc, JSObject** objp) {
-  return trc->onObjectEdge(objp);
+static inline JSObject* DispatchToOnEdge(GenericTracer* trc, JSObject* obj) {
+  return trc->onObjectEdge(obj);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, JSString** strp) {
-  return trc->onStringEdge(strp);
+static inline JSString* DispatchToOnEdge(GenericTracer* trc, JSString* str) {
+  return trc->onStringEdge(str);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, JS::Symbol** symp) {
-  return trc->onSymbolEdge(symp);
+static inline JS::Symbol* DispatchToOnEdge(GenericTracer* trc,
+                                           JS::Symbol* sym) {
+  return trc->onSymbolEdge(sym);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, JS::BigInt** bip) {
-  return trc->onBigIntEdge(bip);
+static inline JS::BigInt* DispatchToOnEdge(GenericTracer* trc, JS::BigInt* bi) {
+  return trc->onBigIntEdge(bi);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc,
-                                    js::BaseScript** scriptp) {
-  return trc->onScriptEdge(scriptp);
+static inline js::BaseScript* DispatchToOnEdge(GenericTracer* trc,
+                                               js::BaseScript* script) {
+  return trc->onScriptEdge(script);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, js::Shape** shapep) {
-  return trc->onShapeEdge(shapep);
+static inline js::Shape* DispatchToOnEdge(GenericTracer* trc,
+                                          js::Shape* shape) {
+  return trc->onShapeEdge(shape);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc,
-                                    js::ObjectGroup** groupp) {
-  return trc->onObjectGroupEdge(groupp);
+static inline js::ObjectGroup* DispatchToOnEdge(GenericTracer* trc,
+                                                js::ObjectGroup* group) {
+  return trc->onObjectGroupEdge(group);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, js::BaseShape** basep) {
-  return trc->onBaseShapeEdge(basep);
+static inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
+                                              js::BaseShape* base) {
+  return trc->onBaseShapeEdge(base);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc,
-                                    js::jit::JitCode** codep) {
-  return trc->onJitCodeEdge(codep);
+static inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
+                                                 js::jit::JitCode* code) {
+  return trc->onJitCodeEdge(code);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc, js::Scope** scopep) {
-  return trc->onScopeEdge(scopep);
+static inline js::Scope* DispatchToOnEdge(GenericTracer* trc,
+                                          js::Scope* scope) {
+  return trc->onScopeEdge(scope);
 }
-static inline bool DispatchToOnEdge(GenericTracer* trc,
-                                    js::RegExpShared** sharedp) {
-  return trc->onRegExpSharedEdge(sharedp);
+static inline js::RegExpShared* DispatchToOnEdge(GenericTracer* trc,
+                                                 js::RegExpShared* shared) {
+  return trc->onRegExpSharedEdge(shared);
 }
 
 template <typename T>
@@ -81,7 +85,13 @@ bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   JS::AutoTracingName ctx(trc, name);
 
-  return DispatchToOnEdge(trc, thingp);
+  T* thing = *thingp;
+  T* post = DispatchToOnEdge(trc, thing);
+  if (post != thing) {
+    *thingp = post;
+  }
+
+  return post;
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
   template bool DoCallback<type>(GenericTracer*, type**, const char*);
@@ -90,21 +100,29 @@ JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 
 template <typename T>
 bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
+  JS::AutoTracingName ctx(trc, name);
+
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
-  auto thing = MapGCThingTyped(*thingp, [trc, name, &ret](auto t) {
-    if (!DoCallback(trc, &t, name)) {
+  auto thing = MapGCThingTyped(*thingp, [trc, &ret](auto thing) {
+    CheckTracedThing(trc, thing);
+
+    auto* post = DispatchToOnEdge(trc, thing);
+    if (!post) {
       ret = false;
       return TaggedPtr<T>::empty();
     }
-    return TaggedPtr<T>::wrap(t);
+
+    return TaggedPtr<T>::wrap(post);
   });
+
   // Only update *thingp if the value changed, to avoid TSan false positives for
   // template objects when using DumpHeapTracer or UbiNode tracers while Ion
   // compiling off-thread.
   if (thing.isSome() && thing.value() != *thingp) {
     *thingp = thing.value();
   }
+
   return ret;
 }
 template bool DoCallback<JS::Value>(GenericTracer*, JS::Value*, const char*);
