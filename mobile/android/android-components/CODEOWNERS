@@ -23,9 +23,10 @@
 /docs/changelog.md @mozilla-mobile
 
 # Release Engineering pipeline
-/.cron.yml /@mozilla-mobile/releng @mozilla-mobile/act
+/.cron.yml @mozilla-mobile/releng @mozilla-mobile/act
+/.taskcluster.yml @mozilla-mobile/releng @mozilla-mobile/act
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
-/CODEOWNERS @mozilla-mobile/releng @mozilla-mobile/act
+/taskcluster/ @mozilla-mobile/releng @mozilla-mobile/act
 
 /components/browser/awesomebar/             @pocmo
 /components/browser/domains/                @csadilek
