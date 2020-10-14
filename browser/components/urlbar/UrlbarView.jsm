@@ -309,11 +309,27 @@ class UrlbarView {
    * @param {boolean} options.reverse
    *   Set to true to select the previous item. By default the next item
    *   will be selected.
+   * @param {boolean} options.userPressedTab
+   *   Set to true if the user pressed Tab to select a result. Default false.
    */
-  selectBy(amount, { reverse = false } = {}) {
+  selectBy(amount, { reverse = false, userPressedTab = false } = {}) {
     if (!this.isOpen) {
       throw new Error(
         "UrlbarView: Cannot select an item if the view isn't open."
+      );
+    }
+
+    // Do not set aria-activedescendant if the user is moving to a
+    // tab-to-search result with the Tab key. If
+    // accessibility.tabToSearch.announceResults is set, the tab-to-search
+    // result was announced to the user as they typed. We don't set
+    // aria-activedescendant so the user doesn't think they have to press
+    // Enter to enter search mode. See bug 1647929.
+    function isSkippableTabToSearchAnnounce(selectedElt) {
+      return (
+        selectedElt?.result?.providerName == "TabToSearch" &&
+        userPressedTab &&
+        UrlbarPrefs.get("accessibility.tabToSearch.announceResults")
       );
     }
 
@@ -330,9 +346,12 @@ class UrlbarView {
     let lastSelectableElement = this._getLastSelectableElement();
 
     if (!selectedElement) {
-      this._selectElement(
-        reverse ? lastSelectableElement : firstSelectableElement
-      );
+      selectedElement = reverse
+        ? lastSelectableElement
+        : firstSelectableElement;
+      this._selectElement(selectedElement, {
+        setAccessibleFocus: !isSkippableTabToSearchAnnounce(selectedElement),
+      });
       return;
     }
     let endReached = reverse
@@ -346,7 +365,9 @@ class UrlbarView {
           ? lastSelectableElement
           : firstSelectableElement;
       }
-      this._selectElement(selectedElement);
+      this._selectElement(selectedElement, {
+        setAccessibleFocus: !isSkippableTabToSearchAnnounce(selectedElement),
+      });
       return;
     }
 
@@ -362,7 +383,9 @@ class UrlbarView {
       }
       selectedElement = next;
     }
-    this._selectElement(selectedElement);
+    this._selectElement(selectedElement, {
+      setAccessibleFocus: !isSkippableTabToSearchAnnounce(selectedElement),
+    });
   }
 
   removeAccessibleFocus() {
@@ -390,6 +413,7 @@ class UrlbarView {
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
     this._openPanelInstance = null;
+    this._previousTabToSearchEngine = null;
 
     this.input.removeAttribute("open");
     this.input.endLayoutExtend();
@@ -492,6 +516,9 @@ class UrlbarView {
     this._queryWasCancelled = false;
     this._queryUpdatedResults = false;
     this._openPanelInstance = null;
+    if (!queryContext.searchString) {
+      this._previousTabToSearchEngine = null;
+    }
     this._startRemoveStaleRowsTimer();
   }
 
@@ -578,6 +605,25 @@ class UrlbarView {
         updateInput: false,
         setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
       });
+    }
+
+    // Announce tab-to-search results to screen readers as the user types.
+    // Check to make sure we don't announce the same engine multiple times in
+    // a row.
+    let secondResult = queryContext.results[1];
+    if (
+      secondResult?.providerName == "TabToSearch" &&
+      UrlbarPrefs.get("accessibility.tabToSearch.announceResults") &&
+      this._previousTabToSearchEngine != secondResult.payload.engine
+    ) {
+      let engine = secondResult.payload.engine;
+      this.window.A11yUtils.announce({
+        id: UrlbarUtils.WEB_ENGINE_NAMES.has(engine)
+          ? "urlbar-result-action-before-tabtosearch-web"
+          : "urlbar-result-action-before-tabtosearch-other",
+        args: { engine },
+      });
+      this._previousTabToSearchEngine = engine;
     }
 
     // If we update the selected element, a new unique ID is generated for it.

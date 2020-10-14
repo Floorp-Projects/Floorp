@@ -338,7 +338,10 @@ class UrlbarController {
         ) {
           if (executeAction) {
             this.userSelectionBehavior = "tab";
-            this.view.selectBy(1, { reverse: event.shiftKey });
+            this.view.selectBy(1, {
+              reverse: event.shiftKey,
+              userPressedTab: true,
+            });
           }
           event.preventDefault();
         }

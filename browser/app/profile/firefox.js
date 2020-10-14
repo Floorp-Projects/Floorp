@@ -288,6 +288,10 @@ pref("browser.overlink-delay", 80);
 // navigating.
 pref("browser.urlbar.ctrlCanonizesURLs", true);
 
+// Whether we announce to screen readers when tab-to-search results are
+// inserted.
+pref("browser.urlbar.accessibility.tabToSearch.announceResults", true);
+
 // Control autoFill behavior
 pref("browser.urlbar.autoFill", true);
 

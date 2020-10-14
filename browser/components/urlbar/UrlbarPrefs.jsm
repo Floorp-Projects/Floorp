@@ -27,6 +27,10 @@ const PREF_URLBAR_BRANCH = "browser.urlbar.";
 // value, type]].  In the former case, the getter method name is inferred from
 // the typeof the default value.
 const PREF_URLBAR_DEFAULTS = new Map([
+  // Whether we announce to screen readers when tab-to-search results are
+  // inserted.
+  ["accessibility.tabToSearch.announceResults", true],
+
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
   // textbox.  If false, autofill will be disabled.
