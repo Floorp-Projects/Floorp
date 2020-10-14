@@ -528,6 +528,7 @@ UNIFIED_SOURCES += [
     'ProfilerScreenshots.cpp',
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
+    'RepaintRequest.cpp',
     'RotatedBuffer.cpp',
     'SampleTime.cpp',
     'ScreenshotGrabber.cpp',
