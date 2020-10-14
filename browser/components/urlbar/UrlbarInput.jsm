@@ -236,9 +236,10 @@ class UrlbarInput {
       this.window.addEventListener("draggableregionleftmousedown", this);
     }
     this.textbox.addEventListener("mousedown", this);
-    this._inputContainer.addEventListener("click", this);
 
-    this._searchModeIndicatorClose.addEventListener("click", this);
+    // This listener handles clicks from our children too, included the search mode
+    // indicator close button.
+    this._inputContainer.addEventListener("click", this);
 
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
