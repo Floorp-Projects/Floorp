@@ -263,8 +263,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
     }
   }
 
-  isRTAMO(attributionData) {
-    // RTAMO Attribution
+  hasAMOAttribution(attributionData) {
     return (
       attributionData &&
       attributionData.campaign === "non-fx-button" &&
@@ -274,11 +273,14 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   async formatAttributionData(attribution) {
     let result = {};
-    if (this.isRTAMO(attribution)) {
-      result = {
-        template: "return_to_amo",
-        extraProps: await this.getAddonInfo(attribution),
-      };
+    if (this.hasAMOAttribution(attribution)) {
+      let extraProps = await this.getAddonInfo(attribution);
+      if (extraProps) {
+        result = {
+          template: "return_to_amo",
+          extraProps,
+        };
+      }
     }
     return result;
   }
