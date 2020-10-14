@@ -2,11 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow } = require("enzyme");
 
-const { REPS, getRep } = require("../rep");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
 
-const { MODE } = require("../constants");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 const { ArrayRep, Rep } = REPS;
 const { maxLengthMap } = ArrayRep;
 

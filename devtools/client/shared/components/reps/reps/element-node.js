@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // ReactJS
 const {
   button,
@@ -10,9 +12,17 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Utils
-const { isGrip, wrapRender } = require("./rep-utils");
-const { rep: StringRep, isLongString } = require("./string");
-const { MODE } = require("./constants");
+const {
+  isGrip,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const {
+  rep: StringRep,
+  isLongString,
+} = require("devtools/client/shared/components/reps/reps/string");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 const MAX_ATTRIBUTE_LENGTH = 50;

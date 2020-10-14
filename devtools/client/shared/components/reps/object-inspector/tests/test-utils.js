@@ -8,10 +8,10 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
-const { thunk } = require("../../shared/redux/middleware/thunk");
+const { thunk } = require("devtools/client/shared/components/reps/shared/redux/middleware/thunk");
 const {
   waitUntilService,
-} = require("../../shared/redux/middleware/waitUntilService");
+} = require("devtools/client/shared/components/reps/shared/redux/middleware/waitUntilService");
 
 /**
  * Redux store utils
@@ -20,19 +20,19 @@ const {
 
 import { createStore, applyMiddleware } from "redux";
 
-const objectInspector = require("../index");
+const objectInspector = require("devtools/client/shared/components/reps/object-inspector/index");
 const {
   getLoadedProperties,
   getLoadedPropertyKeys,
   getExpandedPaths,
   getExpandedPathKeys,
-} = require("../reducer");
+} = require("devtools/client/shared/components/reps/object-inspector/reducer");
 
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 
 const {
   WAIT_UNTIL_TYPE,
-} = require("../../shared/redux/middleware/waitUntilService");
+} = require("devtools/client/shared/components/reps/shared/redux/middleware/waitUntilService");
 
 /*
  * Takes an Enzyme wrapper (obtained with mount/shallow/…) and

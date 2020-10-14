@@ -3,15 +3,15 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /* global jest */
-const { mountObjectInspector } = require("../test-utils");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
 
-const { MODE } = require("../../../reps/constants");
-const gripStubs = require("../../../reps/stubs/grip");
+const { MODE } = require("devtools/client/shared/components/reps/reps/constants");
+const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
 const stub = gripStubs.get("testProxy");
 const proxySlots = gripStubs.get("testProxySlots");
-const { formatObjectInspector } = require("../test-utils");
+const { formatObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
 
-const ObjectFront = require("../__mocks__/object-front");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 function generateDefaults(overrides) {
   return {
     roots: [

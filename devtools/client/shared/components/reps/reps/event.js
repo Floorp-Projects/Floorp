@@ -2,14 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // ReactJS
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Reps
-const { isGrip, wrapRender } = require("./rep-utils");
+const {
+  isGrip,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-const { MODE } = require("./constants");
-const { rep } = require("./grip");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const { rep } = require("devtools/client/shared/components/reps/reps/grip");
 
 /**
  * Renders DOM event objects.

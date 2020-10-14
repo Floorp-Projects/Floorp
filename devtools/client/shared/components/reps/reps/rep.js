@@ -2,41 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Load all existing rep templates
-const Undefined = require("./undefined");
-const Null = require("./null");
-const StringRep = require("./string");
-const Number = require("./number");
-const ArrayRep = require("./array");
-const Obj = require("./object");
-const SymbolRep = require("./symbol");
-const InfinityRep = require("./infinity");
-const NaNRep = require("./nan");
-const Accessor = require("./accessor");
+const Undefined = require("devtools/client/shared/components/reps/reps/undefined");
+const Null = require("devtools/client/shared/components/reps/reps/null");
+const StringRep = require("devtools/client/shared/components/reps/reps/string");
+const Number = require("devtools/client/shared/components/reps/reps/number");
+const ArrayRep = require("devtools/client/shared/components/reps/reps/array");
+const Obj = require("devtools/client/shared/components/reps/reps/object");
+const SymbolRep = require("devtools/client/shared/components/reps/reps/symbol");
+const InfinityRep = require("devtools/client/shared/components/reps/reps/infinity");
+const NaNRep = require("devtools/client/shared/components/reps/reps/nan");
+const Accessor = require("devtools/client/shared/components/reps/reps/accessor");
 
 // DOM types (grips)
-const Accessible = require("./accessible");
-const Attribute = require("./attribute");
-const BigInt = require("./big-int");
-const DateTime = require("./date-time");
-const Document = require("./document");
-const DocumentType = require("./document-type");
-const Event = require("./event");
-const Func = require("./function");
-const PromiseRep = require("./promise");
-const RegExp = require("./regexp");
-const StyleSheet = require("./stylesheet");
-const CommentNode = require("./comment-node");
-const ElementNode = require("./element-node");
-const TextNode = require("./text-node");
-const ErrorRep = require("./error");
-const Window = require("./window");
-const ObjectWithText = require("./object-with-text");
-const ObjectWithURL = require("./object-with-url");
-const GripArray = require("./grip-array");
-const GripMap = require("./grip-map");
-const GripMapEntry = require("./grip-map-entry");
-const Grip = require("./grip");
+const Accessible = require("devtools/client/shared/components/reps/reps/accessible");
+const Attribute = require("devtools/client/shared/components/reps/reps/attribute");
+const BigInt = require("devtools/client/shared/components/reps/reps/big-int");
+const DateTime = require("devtools/client/shared/components/reps/reps/date-time");
+const Document = require("devtools/client/shared/components/reps/reps/document");
+const DocumentType = require("devtools/client/shared/components/reps/reps/document-type");
+const Event = require("devtools/client/shared/components/reps/reps/event");
+const Func = require("devtools/client/shared/components/reps/reps/function");
+const PromiseRep = require("devtools/client/shared/components/reps/reps/promise");
+const RegExp = require("devtools/client/shared/components/reps/reps/regexp");
+const StyleSheet = require("devtools/client/shared/components/reps/reps/stylesheet");
+const CommentNode = require("devtools/client/shared/components/reps/reps/comment-node");
+const ElementNode = require("devtools/client/shared/components/reps/reps/element-node");
+const TextNode = require("devtools/client/shared/components/reps/reps/text-node");
+const ErrorRep = require("devtools/client/shared/components/reps/reps/error");
+const Window = require("devtools/client/shared/components/reps/reps/window");
+const ObjectWithText = require("devtools/client/shared/components/reps/reps/object-with-text");
+const ObjectWithURL = require("devtools/client/shared/components/reps/reps/object-with-url");
+const GripArray = require("devtools/client/shared/components/reps/reps/grip-array");
+const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
+const GripMapEntry = require("devtools/client/shared/components/reps/reps/grip-map-entry");
+const Grip = require("devtools/client/shared/components/reps/reps/grip");
 
 // List of all registered template.
 // XXX there should be a way for extensions to register a new

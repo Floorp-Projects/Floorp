@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow } = require("enzyme");
 
-const { REPS, getRep } = require("../rep");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
 
 const { InfinityRep, Rep } = REPS;
 
-const stubs = require("../stubs/infinity");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/infinity");
 
 describe("testInfinity", () => {
   const stub = stubs.get("Infinity");

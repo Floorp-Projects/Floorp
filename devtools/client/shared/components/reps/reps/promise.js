@@ -2,15 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // ReactJS
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 // Dependencies
-const { getGripType, isGrip, wrapRender } = require("./rep-utils");
+const {
+  getGripType,
+  isGrip,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-const PropRep = require("./prop-rep");
-const { MODE } = require("./constants");
+const PropRep = require("devtools/client/shared/components/reps/reps/prop-rep");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 /**
  * Renders a DOM Promise object.
@@ -38,7 +46,7 @@ function PromiseRep(props) {
   };
 
   if (props.mode === MODE.TINY) {
-    const { Rep } = require("./rep");
+    const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
 
     return span(
       config,

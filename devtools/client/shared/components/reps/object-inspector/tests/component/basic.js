@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { mountObjectInspector } = require("../test-utils");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
 const { mount } = require("enzyme");
-const { createNode, NODE_TYPES } = require("../../utils/node");
+const { createNode, NODE_TYPES } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 const repsPath = "../../../reps";
 const { MODE } = require(`${repsPath}/constants`);
 const { Rep } = require(`${repsPath}/rep`);
@@ -12,8 +12,8 @@ const {
   formatObjectInspector,
   waitForDispatch,
   waitForLoadedProperties,
-} = require("../test-utils");
-const ObjectFront = require("../__mocks__/object-front");
+} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
 
 function generateDefaults(overrides) {

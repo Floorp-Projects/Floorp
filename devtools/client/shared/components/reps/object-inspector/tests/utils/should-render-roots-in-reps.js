@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const Utils = require("../../utils/index");
+const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
 const { shouldRenderRootsInReps } = Utils;
 
-const nullStubs = require("../../../reps/stubs/null");
-const numberStubs = require("../../../reps/stubs/number");
-const undefinedStubs = require("../../../reps/stubs/undefined");
-const gripStubs = require("../../../reps/stubs/grip");
-const gripArrayStubs = require("../../../reps/stubs/grip-array");
-const symbolStubs = require("../../../reps/stubs/symbol");
-const errorStubs = require("../../../reps/stubs/error");
-const bigIntStubs = require("../../../reps/stubs/big-int");
+const nullStubs = require("devtools/client/shared/components/reps/reps/stubs/null");
+const numberStubs = require("devtools/client/shared/components/reps/reps/stubs/number");
+const undefinedStubs = require("devtools/client/shared/components/reps/reps/stubs/undefined");
+const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
+const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
+const symbolStubs = require("devtools/client/shared/components/reps/reps/stubs/symbol");
+const errorStubs = require("devtools/client/shared/components/reps/reps/stubs/error");
+const bigIntStubs = require("devtools/client/shared/components/reps/reps/stubs/big-int");
 
 describe("shouldRenderRootsInReps", () => {
   it("returns true for a string", () => {

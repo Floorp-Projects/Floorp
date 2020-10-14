@@ -4,9 +4,9 @@
 
 /* global jest */
 
-const { mountObjectInspector } = require("../test-utils");
-const ObjectFront = require("../__mocks__/object-front");
-const { LongStringFront } = require("../__mocks__/string-front");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
+const { LongStringFront } = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/string-front");
 
 const repsPath = "../../../reps";
 const longStringStubs = require(`${repsPath}/stubs/long-string`);

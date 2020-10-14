@@ -2,14 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Dependencies
 const {
   button,
   span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { wrapRender } = require("./rep-utils");
-const { MODE } = require("./constants");
+const {
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 /**
  * Renders an object. An object is represented by a list of its
@@ -31,7 +37,10 @@ function Accessor(props) {
   } = props;
 
   if (evaluation) {
-    const { Rep, Grip } = require("./rep");
+    const {
+      Rep,
+      Grip,
+    } = require("devtools/client/shared/components/reps/reps/rep");
     return span(
       {
         className: "objectBox objectBox-accessor objectTitle",

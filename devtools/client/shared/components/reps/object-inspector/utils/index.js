@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const client = require("./client");
-const loadProperties = require("./load-properties");
-const node = require("./node");
+const client = require("devtools/client/shared/components/reps/object-inspector/utils/client");
+const loadProperties = require("devtools/client/shared/components/reps/object-inspector/utils/load-properties");
+const node = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 const { nodeIsError, nodeIsPrimitive } = node;
-const selection = require("./selection");
+const selection = require("devtools/client/shared/components/reps/object-inspector/utils/selection");
 
-const { MODE } = require("../../reps/constants");
+const { MODE } = require("devtools/client/shared/components/reps/reps/constants");
 const {
   REPS: { Rep, Grip },
-} = require("../../reps/rep");
+} = require("devtools/client/shared/components/reps/reps/rep");
 
 function shouldRenderRootsInReps(roots, props = {}) {
   if (roots.length !== 1) {

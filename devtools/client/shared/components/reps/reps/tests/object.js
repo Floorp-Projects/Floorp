@@ -2,10 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow } = require("enzyme");
-const { REPS, getRep } = require("../rep");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
 const { Obj } = REPS;
-const { MODE } = require("../constants");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 const renderComponent = (object, props) => {
   return shallow(Obj.rep({ object, ...props }));
@@ -210,129 +217,129 @@ describe("Object - noGrip prop", () => {
   });
 
   it("Attribute grip", () => {
-    const stubs = require("../stubs/attribute");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/attribute");
     expect(getRep(stubs.get("Attribute"), undefined, true)).toBe(Obj.rep);
   });
 
   it("CommentNode grip", () => {
-    const stubs = require("../stubs/comment-node");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/comment-node");
     expect(getRep(stubs.get("Comment"), undefined, true)).toBe(Obj.rep);
   });
 
   it("DateTime grip", () => {
-    const stubs = require("../stubs/date-time");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/date-time");
     expect(getRep(stubs.get("DateTime"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Document grip", () => {
-    const stubs = require("../stubs/document");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/document");
     expect(getRep(stubs.get("Document"), undefined, true)).toBe(Obj.rep);
   });
 
   it("ElementNode grip", () => {
-    const stubs = require("../stubs/element-node");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/element-node");
     expect(getRep(stubs.get("BodyNode"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Error grip", () => {
-    const stubs = require("../stubs/error");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/error");
     expect(getRep(stubs.get("SimpleError"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Event grip", () => {
-    const stubs = require("../stubs/event");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/event");
     expect(getRep(stubs.get("testEvent"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Function grip", () => {
-    const stubs = require("../stubs/function");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/function");
     expect(getRep(stubs.get("Named"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Array grip", () => {
-    const stubs = require("../stubs/grip-array");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
     expect(getRep(stubs.get("testMaxProps"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Map grip", () => {
-    const stubs = require("../stubs/grip-map");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
     expect(getRep(stubs.get("testSymbolKeyedMap"), undefined, true)).toBe(
       Obj.rep
     );
   });
 
   it("Object grip", () => {
-    const stubs = require("../stubs/grip");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
     expect(getRep(stubs.get("testMaxProps"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Infinity grip", () => {
-    const stubs = require("../stubs/infinity");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/infinity");
     expect(getRep(stubs.get("Infinity"), undefined, true)).toBe(Obj.rep);
   });
 
   it("LongString grip", () => {
-    const stubs = require("../stubs/long-string");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/long-string");
     expect(getRep(stubs.get("testMultiline"), undefined, true)).toBe(Obj.rep);
   });
 
   it("NaN grip", () => {
-    const stubs = require("../stubs/nan");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/nan");
     expect(getRep(stubs.get("NaN"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Null grip", () => {
-    const stubs = require("../stubs/null");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/null");
     expect(getRep(stubs.get("Null"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Number grip", () => {
-    const stubs = require("../stubs/number");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/number");
     expect(getRep(stubs.get("NegZeroGrip"), undefined, true)).toBe(Obj.rep);
   });
 
   it("ObjectWithText grip", () => {
-    const stubs = require("../stubs/object-with-text");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/object-with-text");
     expect(getRep(stubs.get("ShadowRule"), undefined, true)).toBe(Obj.rep);
   });
 
   it("ObjectWithURL grip", () => {
-    const stubs = require("../stubs/object-with-url");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/object-with-url");
     expect(getRep(stubs.get("ObjectWithUrl"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Promise grip", () => {
-    const stubs = require("../stubs/promise");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/promise");
     expect(getRep(stubs.get("Pending"), undefined, true)).toBe(Obj.rep);
   });
 
   it("RegExp grip", () => {
-    const stubs = require("../stubs/regexp");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/regexp");
     expect(getRep(stubs.get("RegExp"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Stylesheet grip", () => {
-    const stubs = require("../stubs/stylesheet");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/stylesheet");
     expect(getRep(stubs.get("StyleSheet"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Symbol grip", () => {
-    const stubs = require("../stubs/symbol");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/symbol");
     expect(getRep(stubs.get("Symbol"), undefined, true)).toBe(Obj.rep);
   });
 
   it("TextNode grip", () => {
-    const stubs = require("../stubs/text-node");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/text-node");
     expect(getRep(stubs.get("testRendering"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Undefined grip", () => {
-    const stubs = require("../stubs/undefined");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/undefined");
     expect(getRep(stubs.get("Undefined"), undefined, true)).toBe(Obj.rep);
   });
 
   it("Window grip", () => {
-    const stubs = require("../stubs/window");
+    const stubs = require("devtools/client/shared/components/reps/reps/stubs/window");
     expect(getRep(stubs.get("Window"), undefined, true)).toBe(Obj.rep);
   });
 

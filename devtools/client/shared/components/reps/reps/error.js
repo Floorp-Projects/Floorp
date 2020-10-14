@@ -2,15 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // ReactJS
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 // Utils
-const { isGrip, wrapRender } = require("./rep-utils");
-const { cleanFunctionName } = require("./function");
-const { isLongString } = require("./string");
-const { MODE } = require("./constants");
+const {
+  isGrip,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const {
+  cleanFunctionName,
+} = require("devtools/client/shared/components/reps/reps/function");
+const {
+  isLongString,
+} = require("devtools/client/shared/components/reps/reps/string");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
@@ -77,7 +88,7 @@ function ErrorRep(props) {
   }
 
   if (mode !== MODE.TINY) {
-    const { Rep } = require("./rep");
+    const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
     content.push(
       Rep({
         ...props,

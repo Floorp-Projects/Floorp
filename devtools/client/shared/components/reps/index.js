@@ -2,16 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { MODE } = require("./reps/constants");
-const { REPS, getRep } = require("./reps/rep");
-const objectInspector = require("./object-inspector/index");
+"use strict";
+
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
+const objectInspector = require("devtools/client/shared/components/reps/object-inspector/index");
 
 const {
   parseURLEncodedText,
   parseURLParams,
   maybeEscapePropertyName,
   getGripPreviewItems,
-} = require("./reps/rep-utils");
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
 
 module.exports = {
   REPS,

@@ -2,12 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Dependencies
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { maybeEscapePropertyName, wrapRender } = require("./rep-utils");
-const { MODE } = require("./constants");
+const {
+  maybeEscapePropertyName,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 /**
  * Property for Obj (local JS objects), Grip (remote JS objects)
@@ -40,8 +47,8 @@ PropRep.propTypes = {
  */
 
 function PropRep(props) {
-  const Grip = require("./grip");
-  const { Rep } = require("./rep");
+  const Grip = require("devtools/client/shared/components/reps/reps/grip");
+  const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
   const shouldRenderTooltip = props.shouldRenderTooltip;
 
   let { name, mode, equal, suppressQuotes } = props;

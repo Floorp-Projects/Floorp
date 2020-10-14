@@ -2,19 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/* global jest */
+"use strict";
+
+/* global jest, __dirname */
 const { mount, shallow } = require("enzyme");
 const { JSDOM } = require("jsdom");
-const { REPS, getRep } = require("../rep");
-const { MODE } = require("../constants");
-const { MAX_ATTRIBUTE_LENGTH } = require("../element-node");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const {
+  MAX_ATTRIBUTE_LENGTH,
+} = require("devtools/client/shared/components/reps/reps/element-node");
 const { ElementNode } = REPS;
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-} = require("./test-helpers");
-const { ELLIPSIS } = require("../rep-utils");
-const stubs = require("../stubs/element-node");
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
+const {
+  ELLIPSIS,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/element-node");
 
 describe("ElementNode - BodyNode", () => {
   const stub = stubs.get("BodyNode");

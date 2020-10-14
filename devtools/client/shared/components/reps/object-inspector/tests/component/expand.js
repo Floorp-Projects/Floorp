@@ -1,22 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const { mountObjectInspector } = require("../test-utils");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
 
 const repsPath = "../../../reps";
 const { MODE } = require(`${repsPath}/constants`);
-const ObjectFront = require("../__mocks__/object-front");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
-const gripPropertiesStubs = require("../../stubs/grip");
+const gripPropertiesStubs = require("devtools/client/shared/components/reps/object-inspector/stubs/grip");
 const {
   formatObjectInspector,
   storeHasExactExpandedPaths,
   storeHasExpandedPath,
   storeHasLoadedProperty,
   waitForDispatch,
-} = require("../test-utils");
-const { createNode, NODE_TYPES } = require("../../utils/node");
-const { getExpandedPaths } = require("../../reducer");
+} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const { createNode, NODE_TYPES } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+const { getExpandedPaths } = require("devtools/client/shared/components/reps/object-inspector/reducer");
 
 const protoStub = {
   prototype: {
@@ -48,7 +48,7 @@ function generateDefaults(overrides) {
     ...overrides,
   };
 }
-const { LongStringFront } = require("../__mocks__/string-front");
+const { LongStringFront } = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/string-front");
 
 function getClient(overrides = {}) {
   return {

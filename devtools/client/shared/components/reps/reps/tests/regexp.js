@@ -2,12 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow } = require("enzyme");
-const { REPS, getRep } = require("../rep");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
 const { Rep, RegExp } = REPS;
-const { ELLIPSIS } = require("../rep-utils");
-const stubs = require("../stubs/regexp");
-const { expectActorAttribute } = require("./test-helpers");
+const {
+  ELLIPSIS,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/regexp");
+const {
+  expectActorAttribute,
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
 
 describe("test RegExp", () => {
   const stub = stubs.get("RegExp");

@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { createNode } = require("../../utils/node");
-const { waitForDispatch, mountObjectInspector } = require("../test-utils");
+const { createNode } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+const { waitForDispatch, mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
 
-const gripWindowStubs = require("../../../reps/stubs/window");
-const ObjectFront = require("../__mocks__/object-front");
+const gripWindowStubs = require("devtools/client/shared/components/reps/reps/stubs/window");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 const windowNode = createNode({
   name: "window",
   contents: { value: gripWindowStubs.get("Window") },

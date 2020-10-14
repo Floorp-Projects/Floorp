@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Dependencies
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { wrapRender } = require("./rep-utils");
+const {
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
 
 /**
  * Renders null value

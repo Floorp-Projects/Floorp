@@ -2,13 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Dependencies
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 // Utils
-const { wrapRender } = require("./rep-utils");
-const PropRep = require("./prop-rep");
-const { MODE } = require("./constants");
+const {
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const PropRep = require("devtools/client/shared/components/reps/reps/prop-rep");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 /**
  * Renders an map entry. A map entry is represented by its key,
  * a column and its value.

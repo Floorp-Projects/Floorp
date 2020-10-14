@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 /* global jest */
 const { mount } = require("enzyme");
-const { REPS } = require("../rep");
+const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
 const { Rep } = REPS;
-const { getGripLengthBubbleText } = require("./test-helpers");
+const {
+  getGripLengthBubbleText,
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
 
 const renderRep = (string, props) =>
   mount(
@@ -540,7 +544,7 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip array", () => {
-    const object = require("../stubs/grip-array").get(
+    const object = require("devtools/client/shared/components/reps/reps/stubs/grip-array").get(
       '["http://example.com/abcdefghijabcdefghij some other text"]'
     );
     const length = getGripLengthBubbleText(object);
@@ -574,7 +578,7 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip object", () => {
-    const object = require("../stubs/grip").get(
+    const object = require("devtools/client/shared/components/reps/reps/stubs/grip").get(
       '{test: "http://example.com/ some other text"}'
     );
     const openLink = jest.fn();

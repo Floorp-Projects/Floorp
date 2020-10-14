@@ -8,9 +8,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
-const { MODE } = require("../../reps/constants");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
-const Utils = require("../utils/index");
+const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
 
 const {
   getValue,

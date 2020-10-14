@@ -4,16 +4,16 @@
 
 /* global jest */
 
-const { mountObjectInspector } = require("../test-utils");
-const { MODE } = require("../../../reps/constants");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const { MODE } = require("devtools/client/shared/components/reps/reps/constants");
 const {
   formatObjectInspector,
   waitForDispatch,
   waitForLoadedProperties,
-} = require("../test-utils");
-const gripMapRepStubs = require("../../../reps/stubs/grip-map");
-const mapStubs = require("../../stubs/map");
-const ObjectFront = require("../__mocks__/object-front");
+} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const gripMapRepStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
+const mapStubs = require("devtools/client/shared/components/reps/object-inspector/stubs/map");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 
 function generateDefaults(overrides) {
   return {

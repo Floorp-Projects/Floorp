@@ -8,17 +8,17 @@ const {
   createElement,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const actions = require("../actions");
+const actions = require("devtools/client/shared/components/reps/object-inspector/actions");
 
-const selectors = require("../reducer");
+const selectors = require("devtools/client/shared/components/reps/object-inspector/reducer");
 
 import Components from "devtools-components";
 const Tree = createFactory(Components.Tree);
-require("./ObjectInspector.css");
+require("devtools/client/shared/components/reps/object-inspector/components/ObjectInspector.css");
 
-const ObjectInspectorItem = createFactory(require("./ObjectInspectorItem"));
+const ObjectInspectorItem = createFactory(require("devtools/client/shared/components/reps/object-inspector/components/ObjectInspectorItem"));
 
-const Utils = require("../utils/index");
+const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
 const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,

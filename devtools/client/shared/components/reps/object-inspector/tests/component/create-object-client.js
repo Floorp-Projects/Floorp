@@ -4,14 +4,14 @@
 
 /* global jest */
 
-const { mountObjectInspector } = require("../test-utils");
-const ObjectFront = require("../__mocks__/object-front");
+const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
 
 const {
   createNode,
   makeNodesForEntries,
   makeNumericalBuckets,
-} = require("../../utils/node");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 
 const repsPath = "../../../reps";
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
