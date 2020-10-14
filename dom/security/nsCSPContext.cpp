@@ -1550,7 +1550,7 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
   nsCOMPtr<nsIURI> uriClone;
 
   while (ctx) {
-    nsCOMPtr<nsIPrincipal> currentPrincipal;
+    nsCOMPtr<nsIURI> currentURI;
     // Generally permitsAncestry is consulted from within the
     // DocumentLoadListener in the parent process. For loads of type object
     // and embed it's called from the Document in the content process.
@@ -1559,36 +1559,28 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
     if (XRE_IsParentProcess()) {
       WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
       if (window) {
-        // Using the URI of the Principal and not the document because e.g.
-        // about:blank inherits the principal and hence the URI of the
-        // document does not reflect the security context of the document.
-        currentPrincipal = window->DocumentPrincipal();
+        currentURI = window->GetDocumentURI();
       }
     } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
-      currentPrincipal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
+      currentURI = windowOuter->GetDocumentURI();
     }
 
-    if (currentPrincipal) {
-      nsCOMPtr<nsIURI> currentURI;
-      currentPrincipal->GetURI(getter_AddRefs(currentURI));
+    if (currentURI) {
+      nsAutoCString spec;
+      currentURI->GetSpec(spec);
+      // delete the userpass from the URI.
+      rv = NS_MutateURI(currentURI)
+               .SetRef(""_ns)
+               .SetUserPass(""_ns)
+               .Finalize(uriClone);
 
-      if (currentURI) {
-        nsAutoCString spec;
-        currentURI->GetSpec(spec);
-        // delete the userpass from the URI.
-        rv = NS_MutateURI(currentURI)
-                 .SetRef(""_ns)
-                 .SetUserPass(""_ns)
-                 .Finalize(uriClone);
-
-        // If setUserPass fails for some reason, just return a clone of the
-        // current URI
-        if (NS_FAILED(rv)) {
-          rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        ancestorsArray.AppendElement(uriClone);
+      // If setUserPass fails for some reason, just return a clone of the
+      // current URI
+      if (NS_FAILED(rv)) {
+        rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
+        NS_ENSURE_SUCCESS(rv, rv);
       }
+      ancestorsArray.AppendElement(uriClone);
     }
     ctx = ctx->GetParent();
   }
