@@ -16,44 +16,57 @@ namespace base_profiler_markers_detail {
 // work with too-small types.)
 using DeserializerTagAtomic = unsigned;
 
-// Number of currently-registered deserializers.
+// Number of currently-registered deserializers and other marker type functions.
 static Atomic<DeserializerTagAtomic, MemoryOrdering::Relaxed>
     sDeserializerCount{0};
 
-// This needs to be big enough to handle all possible sub-types of
-// ProfilerMarkerPayload. If one day this needs to be higher, the underlying
-// DeserializerTag type will have to be changed.
+// This needs to be big enough to handle all possible marker types. If one day
+// this needs to be higher, the underlying DeserializerTag type will have to be
+// changed.
 static constexpr DeserializerTagAtomic DeserializerMax = 250;
 
 static_assert(
     DeserializerMax <= std::numeric_limits<Streaming::DeserializerTag>::max(),
     "The maximum number of deserializers must fit in the DeserializerTag type");
 
-// Array of deserializer.
+// Array of marker type functions.
 // 1-based, i.e.: [0] -> tag 1, [DeserializerMax - 1] -> tag DeserializerMax.
-static Streaming::Deserializer sDeserializers1Based[DeserializerMax];
+// Elements are added at the next available atomically-incremented
+// `sDeserializerCount` (minus 1) whenever a new marker type is used in a
+// Firefox session; the content is kept between profiler runs in that session.
+// There is theoretically a race between the increment and the time the entry is
+// fully written, but in practice all new elements are written (during
+// profiling, using a marker type for the first time) long before they are read
+// (after profiling is paused).
+static Streaming::MarkerTypeFunctions
+    sMarkerTypeFunctions1Based[DeserializerMax];
 
-/* static */ Streaming::DeserializerTag Streaming::TagForDeserializer(
-    Streaming::Deserializer aDeserializer) {
+/* static */ Streaming::DeserializerTag Streaming::TagForMarkerTypeFunctions(
+    Streaming::MarkerDataDeserializer aDeserializer,
+    Streaming::MarkerTypeNameFunction aMarkerTypeNameFunction,
+    Streaming::MarkerSchemaFunction aMarkerSchemaFunction) {
   MOZ_RELEASE_ASSERT(!!aDeserializer);
+  MOZ_RELEASE_ASSERT(!!aMarkerTypeNameFunction);
+  MOZ_RELEASE_ASSERT(!!aMarkerSchemaFunction);
 
   DeserializerTagAtomic tag = ++sDeserializerCount;
   MOZ_RELEASE_ASSERT(
       tag <= DeserializerMax,
       "Too many deserializers, consider increasing DeserializerMax. "
       "Or is a deserializer stored again and again?");
-  sDeserializers1Based[tag - 1] = aDeserializer;
+  sMarkerTypeFunctions1Based[tag - 1] = {aDeserializer, aMarkerTypeNameFunction,
+                                         aMarkerSchemaFunction};
 
   return static_cast<DeserializerTag>(tag);
 }
 
-/* static */ Streaming::Deserializer Streaming::DeserializerForTag(
+/* static */ Streaming::MarkerDataDeserializer Streaming::DeserializerForTag(
     Streaming::DeserializerTag aTag) {
   MOZ_RELEASE_ASSERT(
       aTag > 0 && static_cast<DeserializerTagAtomic>(aTag) <=
                       static_cast<DeserializerTagAtomic>(sDeserializerCount),
       "Out-of-range tag value");
-  return sDeserializers1Based[aTag - 1];
+  return sMarkerTypeFunctions1Based[aTag - 1].mMarkerDataDeserializer;
 }
 
 }  // namespace base_profiler_markers_detail
