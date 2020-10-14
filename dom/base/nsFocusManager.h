@@ -288,6 +288,13 @@ class nsFocusManager final : public nsIFocusManager,
    */
   static InputContextAction::Cause GetFocusMoveActionCause(uint32_t aFlags);
 
+  /**
+   * Notify of re-focus to same content.
+   *
+   * aContent is focused content.
+   */
+  void NotifyOfReFocus(nsIContent& aContent);
+
   static bool sMouseFocusesFormControl;
 
   static void MarkUncollectableForCCGeneration(uint32_t aGeneration);

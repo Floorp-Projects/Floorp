@@ -372,6 +372,7 @@ void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
   // I.e., `focus({ preventScroll: true})` followed by `focus( { preventScroll:
   // false })` won't re-focus.
   if (fm->CanSkipFocus(this)) {
+    fm->NotifyOfReFocus(*this);
     fm->NeedsFlushBeforeEventHandling(this);
     return;
   }

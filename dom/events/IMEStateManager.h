@@ -215,6 +215,9 @@ class IMEStateManager {
   // destroyed.
   static void OnEditorDestroying(EditorBase& aEditorBase);
 
+  // This method is called when focus is set to same content again.
+  static void OnReFocus(nsPresContext* aPresContext, nsIContent& aContent);
+
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
    * for storing the composition target and ensuring a set of composition
