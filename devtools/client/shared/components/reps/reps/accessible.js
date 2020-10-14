@@ -3,191 +3,200 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 "use strict";
-
-// ReactJS
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  button,
-  span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-
-// Utils
-const {
-  isGrip,
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const {
-  rep: StringRep,
-} = require("devtools/client/shared/components/reps/reps/string");
-
-/**
- * Renders Accessible object.
- */
-
-Accessible.propTypes = {
-  object: PropTypes.object.isRequired,
-  inspectIconTitle: PropTypes.string,
-  nameMaxLength: PropTypes.number,
-  onAccessibleClick: PropTypes.func,
-  onAccessibleMouseOver: PropTypes.func,
-  onAccessibleMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func,
-  roleFirst: PropTypes.bool,
-  separatorText: PropTypes.string,
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function Accessible(props) {
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const {
-    object,
-    inspectIconTitle,
-    nameMaxLength,
-    onAccessibleClick,
-    onInspectIconClick,
-    roleFirst,
-    separatorText,
-  } = props;
+    button,
+    span,
+  } = require("devtools/client/shared/vendor/react-dom-factories");
 
-  const isInTree = object.preview && object.preview.isConnected === true;
-
-  const config = getElementConfig({ ...props, isInTree });
-  const elements = getElements(object, nameMaxLength, roleFirst, separatorText);
-  const inspectIcon = getInspectIcon({
-    object,
-    onInspectIconClick,
-    inspectIconTitle,
-    onAccessibleClick,
-    isInTree,
-  });
-
-  return span(config, ...elements, inspectIcon);
-}
-
-// Get React Config Obj
-function getElementConfig(opts) {
+  // Utils
   const {
-    object,
-    isInTree,
-    onAccessibleClick,
-    onAccessibleMouseOver,
-    onAccessibleMouseOut,
-    shouldRenderTooltip,
-    roleFirst,
-  } = opts;
-  const { name, role } = object.preview;
+    isGrip,
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
+  const {
+    rep: StringRep,
+  } = require("devtools/client/shared/components/reps/reps/string");
 
-  // Initiate config
-  const config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-accessible",
+  /**
+   * Renders Accessible object.
+   */
+
+  Accessible.propTypes = {
+    object: PropTypes.object.isRequired,
+    inspectIconTitle: PropTypes.string,
+    nameMaxLength: PropTypes.number,
+    onAccessibleClick: PropTypes.func,
+    onAccessibleMouseOver: PropTypes.func,
+    onAccessibleMouseOut: PropTypes.func,
+    onInspectIconClick: PropTypes.func,
+    roleFirst: PropTypes.bool,
+    separatorText: PropTypes.string,
+    shouldRenderTooltip: PropTypes.bool,
   };
 
-  if (isInTree) {
-    if (onAccessibleClick) {
-      Object.assign(config, {
-        onClick: _ => onAccessibleClick(object),
-        className: `${config.className} clickable`,
-      });
-    }
+  function Accessible(props) {
+    const {
+      object,
+      inspectIconTitle,
+      nameMaxLength,
+      onAccessibleClick,
+      onInspectIconClick,
+      roleFirst,
+      separatorText,
+    } = props;
 
-    if (onAccessibleMouseOver) {
-      Object.assign(config, {
-        onMouseOver: _ => onAccessibleMouseOver(object),
-      });
-    }
+    const isInTree = object.preview && object.preview.isConnected === true;
 
-    if (onAccessibleMouseOut) {
-      Object.assign(config, {
-        onMouseOut: onAccessibleMouseOut,
-      });
-    }
+    const config = getElementConfig({ ...props, isInTree });
+    const elements = getElements(
+      object,
+      nameMaxLength,
+      roleFirst,
+      separatorText
+    );
+    const inspectIcon = getInspectIcon({
+      object,
+      onInspectIconClick,
+      inspectIconTitle,
+      onAccessibleClick,
+      isInTree,
+    });
+
+    return span(config, ...elements, inspectIcon);
   }
 
-  // If tooltip, build tooltip
-  if (shouldRenderTooltip) {
-    let tooltip;
-    if (!name) {
-      tooltip = role;
-    } else {
-      const quotedName = `"${name}"`;
-      tooltip = `${roleFirst ? role : quotedName}: ${
-        roleFirst ? quotedName : role
-      }`;
+  // Get React Config Obj
+  function getElementConfig(opts) {
+    const {
+      object,
+      isInTree,
+      onAccessibleClick,
+      onAccessibleMouseOver,
+      onAccessibleMouseOut,
+      shouldRenderTooltip,
+      roleFirst,
+    } = opts;
+    const { name, role } = object.preview;
+
+    // Initiate config
+    const config = {
+      "data-link-actor-id": object.actor,
+      className: "objectBox objectBox-accessible",
+    };
+
+    if (isInTree) {
+      if (onAccessibleClick) {
+        Object.assign(config, {
+          onClick: _ => onAccessibleClick(object),
+          className: `${config.className} clickable`,
+        });
+      }
+
+      if (onAccessibleMouseOver) {
+        Object.assign(config, {
+          onMouseOver: _ => onAccessibleMouseOver(object),
+        });
+      }
+
+      if (onAccessibleMouseOut) {
+        Object.assign(config, {
+          onMouseOut: onAccessibleMouseOut,
+        });
+      }
     }
 
-    config.title = tooltip;
+    // If tooltip, build tooltip
+    if (shouldRenderTooltip) {
+      let tooltip;
+      if (!name) {
+        tooltip = role;
+      } else {
+        const quotedName = `"${name}"`;
+        tooltip = `${roleFirst ? role : quotedName}: ${
+          roleFirst ? quotedName : role
+        }`;
+      }
+
+      config.title = tooltip;
+    }
+
+    // Return config obj
+    return config;
   }
 
-  // Return config obj
-  return config;
-}
+  // Get Content Elements
+  function getElements(
+    grip,
+    nameMaxLength,
+    roleFirst = false,
+    separatorText = ": "
+  ) {
+    const { name, role } = grip.preview;
+    const elements = [];
 
-// Get Content Elements
-function getElements(
-  grip,
-  nameMaxLength,
-  roleFirst = false,
-  separatorText = ": "
-) {
-  const { name, role } = grip.preview;
-  const elements = [];
+    // If there's a `name` value in `grip.preview`, render it with the
+    // StringRep and push element into Elements array
 
-  // If there's a `name` value in `grip.preview`, render it with the
-  // StringRep and push element into Elements array
+    if (name) {
+      elements.push(
+        StringRep({
+          className: "accessible-name",
+          object: name,
+          cropLimit: nameMaxLength,
+        }),
+        span({ className: "separator" }, separatorText)
+      );
+    }
 
-  if (name) {
-    elements.push(
-      StringRep({
-        className: "accessible-name",
-        object: name,
-        cropLimit: nameMaxLength,
-      }),
-      span({ className: "separator" }, separatorText)
+    elements.push(span({ className: "accessible-role" }, role));
+    return roleFirst ? elements.reverse() : elements;
+  }
+
+  // Get Icon
+  function getInspectIcon(opts) {
+    const {
+      object,
+      onInspectIconClick,
+      inspectIconTitle,
+      onAccessibleClick,
+      isInTree,
+    } = opts;
+
+    if (!isInTree || !onInspectIconClick) {
+      return null;
+    }
+
+    return button({
+      className: "open-accessibility-inspector",
+      title: inspectIconTitle,
+      onClick: e => {
+        if (onAccessibleClick) {
+          e.stopPropagation();
+        }
+
+        onInspectIconClick(object, e);
+      },
+    });
+  }
+
+  // Registration
+  function supportsObject(object, noGrip = false) {
+    if (noGrip === true || !isGrip(object)) {
+      return false;
+    }
+
+    return (
+      object.preview && object.typeName && object.typeName === "accessible"
     );
   }
 
-  elements.push(span({ className: "accessible-role" }, role));
-  return roleFirst ? elements.reverse() : elements;
-}
-
-// Get Icon
-function getInspectIcon(opts) {
-  const {
-    object,
-    onInspectIconClick,
-    inspectIconTitle,
-    onAccessibleClick,
-    isInTree,
-  } = opts;
-
-  if (!isInTree || !onInspectIconClick) {
-    return null;
-  }
-
-  return button({
-    className: "open-accessibility-inspector",
-    title: inspectIconTitle,
-    onClick: e => {
-      if (onAccessibleClick) {
-        e.stopPropagation();
-      }
-
-      onInspectIconClick(object, e);
-    },
-  });
-}
-
-// Registration
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true || !isGrip(object)) {
-    return false;
-  }
-
-  return object.preview && object.typeName && object.typeName === "accessible";
-}
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(Accessible),
-  supportsObject,
-};
+  // Exports from this module
+  module.exports = {
+    rep: wrapRender(Accessible),
+    supportsObject,
+  };
+});

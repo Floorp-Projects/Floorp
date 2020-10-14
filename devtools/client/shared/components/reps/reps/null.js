@@ -4,53 +4,56 @@
 
 "use strict";
 
-// Dependencies
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // Dependencies
+  const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const {
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+  const {
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-/**
- * Renders null value
- */
+  /**
+   * Renders null value
+   */
 
-Null.PropTypes = {
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function Null(props) {
-  const shouldRenderTooltip = props.shouldRenderTooltip;
-
-  const config = getElementConfig(shouldRenderTooltip);
-
-  return span(config, "null");
-}
-
-function getElementConfig(shouldRenderTooltip) {
-  return {
-    className: "objectBox objectBox-null",
-    title: shouldRenderTooltip ? "null" : null,
+  Null.PropTypes = {
+    shouldRenderTooltip: PropTypes.bool,
   };
-}
 
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true) {
-    return object === null;
+  function Null(props) {
+    const shouldRenderTooltip = props.shouldRenderTooltip;
+
+    const config = getElementConfig(shouldRenderTooltip);
+
+    return span(config, "null");
   }
 
-  if (object && object.type && object.type == "null") {
-    return true;
+  function getElementConfig(shouldRenderTooltip) {
+    return {
+      className: "objectBox objectBox-null",
+      title: shouldRenderTooltip ? "null" : null,
+    };
   }
 
-  return object == null;
-}
+  function supportsObject(object, noGrip = false) {
+    if (noGrip === true) {
+      return object === null;
+    }
 
-// Exports from this module
+    if (object && object.type && object.type == "null") {
+      return true;
+    }
 
-module.exports = {
-  rep: wrapRender(Null),
-  supportsObject,
-};
+    return object == null;
+  }
+
+  // Exports from this module
+
+  module.exports = {
+    rep: wrapRender(Null),
+    supportsObject,
+  };
+});

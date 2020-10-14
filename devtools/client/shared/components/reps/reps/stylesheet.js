@@ -4,73 +4,76 @@
 
 "use strict";
 
-// ReactJS
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-// Reps
-const {
-  getGripType,
-  isGrip,
-  getURLDisplayString,
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+  // Reps
+  const {
+    getGripType,
+    isGrip,
+    getURLDisplayString,
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-/**
- * Renders a grip representing CSSStyleSheet
- */
+  /**
+   * Renders a grip representing CSSStyleSheet
+   */
 
-StyleSheet.propTypes = {
-  object: PropTypes.object.isRequired,
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function StyleSheet(props) {
-  const grip = props.object;
-  const shouldRenderTooltip = props.shouldRenderTooltip;
-  const location = getLocation(grip);
-  const config = getElementConfig({ grip, shouldRenderTooltip, location });
-
-  return span(
-    config,
-    getTitle(grip),
-    span({ className: "objectPropValue" }, location)
-  );
-}
-
-function getElementConfig(opts) {
-  const { grip, shouldRenderTooltip, location } = opts;
-
-  return {
-    "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-object",
-    title: shouldRenderTooltip ? `StyleSheet ${location}` : null,
+  StyleSheet.propTypes = {
+    object: PropTypes.object.isRequired,
+    shouldRenderTooltip: PropTypes.bool,
   };
-}
 
-function getTitle(grip) {
-  const title = "StyleSheet ";
-  return span({ className: "objectBoxTitle" }, title);
-}
+  function StyleSheet(props) {
+    const grip = props.object;
+    const shouldRenderTooltip = props.shouldRenderTooltip;
+    const location = getLocation(grip);
+    const config = getElementConfig({ grip, shouldRenderTooltip, location });
 
-function getLocation(grip) {
-  // Embedded stylesheets don't have URL and so, no preview.
-  const url = grip.preview ? grip.preview.url : "";
-  return url ? getURLDisplayString(url) : "";
-}
-
-// Registration
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true || !isGrip(object)) {
-    return false;
+    return span(
+      config,
+      getTitle(grip),
+      span({ className: "objectPropValue" }, location)
+    );
   }
 
-  return getGripType(object, noGrip) == "CSSStyleSheet";
-}
+  function getElementConfig(opts) {
+    const { grip, shouldRenderTooltip, location } = opts;
 
-// Exports from this module
+    return {
+      "data-link-actor-id": grip.actor,
+      className: "objectBox objectBox-object",
+      title: shouldRenderTooltip ? `StyleSheet ${location}` : null,
+    };
+  }
 
-module.exports = {
-  rep: wrapRender(StyleSheet),
-  supportsObject,
-};
+  function getTitle(grip) {
+    const title = "StyleSheet ";
+    return span({ className: "objectBoxTitle" }, title);
+  }
+
+  function getLocation(grip) {
+    // Embedded stylesheets don't have URL and so, no preview.
+    const url = grip.preview ? grip.preview.url : "";
+    return url ? getURLDisplayString(url) : "";
+  }
+
+  // Registration
+  function supportsObject(object, noGrip = false) {
+    if (noGrip === true || !isGrip(object)) {
+      return false;
+    }
+
+    return getGripType(object, noGrip) == "CSSStyleSheet";
+  }
+
+  // Exports from this module
+
+  module.exports = {
+    rep: wrapRender(StyleSheet),
+    supportsObject,
+  };
+});

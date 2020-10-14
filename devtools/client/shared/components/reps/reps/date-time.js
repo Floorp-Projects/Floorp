@@ -4,94 +4,97 @@
 
 "use strict";
 
-// ReactJS
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-// Reps
-const {
-  getGripType,
-  isGrip,
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+  // Reps
+  const {
+    getGripType,
+    isGrip,
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-/**
- * Used to render JS built-in Date() object.
- */
+  /**
+   * Used to render JS built-in Date() object.
+   */
 
-DateTime.propTypes = {
-  object: PropTypes.object.isRequired,
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function DateTime(props) {
-  const { object: grip, shouldRenderTooltip } = props;
-  let date;
-  try {
-    const dateObject = new Date(grip.preview.timestamp);
-    // Calling `toISOString` will throw if the date is invalid,
-    // so we can render an `Invalid Date` element.
-    dateObject.toISOString();
-
-    const dateObjectString = dateObject.toString();
-
-    const config = getElementConfig({
-      grip,
-      dateObjectString,
-      shouldRenderTooltip,
-    });
-
-    date = span(
-      config,
-      getTitle(grip),
-      span({ className: "Date" }, dateObjectString)
-    );
-  } catch (e) {
-    date = span(
-      {
-        className: "objectBox",
-        title: shouldRenderTooltip ? "Invalid Date" : null,
-      },
-      "Invalid Date"
-    );
-  }
-
-  return date;
-}
-
-function getElementConfig(opts) {
-  const { grip, dateObjectString, shouldRenderTooltip } = opts;
-
-  return {
-    "data-link-actor-id": grip.actor,
-    className: "objectBox",
-    title: shouldRenderTooltip ? `${grip.class} ${dateObjectString}` : null,
+  DateTime.propTypes = {
+    object: PropTypes.object.isRequired,
+    shouldRenderTooltip: PropTypes.bool,
   };
-}
 
-// getTitle() is used to render the `Date ` before the stringified date object,
-// not to render the actual span "title".
+  function DateTime(props) {
+    const { object: grip, shouldRenderTooltip } = props;
+    let date;
+    try {
+      const dateObject = new Date(grip.preview.timestamp);
+      // Calling `toISOString` will throw if the date is invalid,
+      // so we can render an `Invalid Date` element.
+      dateObject.toISOString();
 
-function getTitle(grip) {
-  return span(
-    {
-      className: "objectTitle",
-    },
-    `${grip.class} `
-  );
-}
+      const dateObjectString = dateObject.toString();
 
-// Registration
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true || !isGrip(grip)) {
-    return false;
+      const config = getElementConfig({
+        grip,
+        dateObjectString,
+        shouldRenderTooltip,
+      });
+
+      date = span(
+        config,
+        getTitle(grip),
+        span({ className: "Date" }, dateObjectString)
+      );
+    } catch (e) {
+      date = span(
+        {
+          className: "objectBox",
+          title: shouldRenderTooltip ? "Invalid Date" : null,
+        },
+        "Invalid Date"
+      );
+    }
+
+    return date;
   }
 
-  return getGripType(grip, noGrip) == "Date" && grip.preview;
-}
+  function getElementConfig(opts) {
+    const { grip, dateObjectString, shouldRenderTooltip } = opts;
 
-// Exports from this module
-module.exports = {
-  rep: wrapRender(DateTime),
-  supportsObject,
-};
+    return {
+      "data-link-actor-id": grip.actor,
+      className: "objectBox",
+      title: shouldRenderTooltip ? `${grip.class} ${dateObjectString}` : null,
+    };
+  }
+
+  // getTitle() is used to render the `Date ` before the stringified date object,
+  // not to render the actual span "title".
+
+  function getTitle(grip) {
+    return span(
+      {
+        className: "objectTitle",
+      },
+      `${grip.class} `
+    );
+  }
+
+  // Registration
+  function supportsObject(grip, noGrip = false) {
+    if (noGrip === true || !isGrip(grip)) {
+      return false;
+    }
+
+    return getGripType(grip, noGrip) == "Date" && grip.preview;
+  }
+
+  // Exports from this module
+  module.exports = {
+    rep: wrapRender(DateTime),
+    supportsObject,
+  };
+});
