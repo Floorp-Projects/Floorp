@@ -33,8 +33,9 @@ import eventListenerBreakpoints, {
 import exceptions, { initialExceptionsState } from "./exceptions";
 
 import type { SourceActorsState } from "./source-actors";
-// eslint-disable-next-line import/named
-import { objectInspector } from "devtools-reps";
+
+// $FlowIgnore
+import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 import { createInitial } from "../utils/resource";
 

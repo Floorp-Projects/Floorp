@@ -4,7 +4,7 @@
 
 import React, { Component } from "react";
 
-import Reps from "devtools-reps";
+import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { Rep },
   MODE,
