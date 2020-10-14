@@ -8,9 +8,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Имконоти бештар</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Фаъол кардан баррасии махфӣ</string>
+    <string name="content_description_private_browsing_button">Фаъол кардани тамошокунии махфӣ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">Ғайрифаъол кардан баррасии махфӣ</string>
+    <string name="content_description_disable_private_browsing_button">Ғайрифаъол кардани тамошокунии махфӣ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Нишониеро ҷустуҷӯ кунед ё ворид намоед</string>
     <!-- No Open Tabs Message Description -->
@@ -264,7 +264,7 @@
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Иҷозатҳои сомона</string>
     <!-- Preference for private browsing options -->
-    <string name="preferences_private_browsing_options">Баррасии махфӣ</string>
+    <string name="preferences_private_browsing_options">Тамошокунии махфӣ</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Кушодани пайвандҳо дар варақаи махфӣ</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
@@ -272,7 +272,7 @@
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Агар иҷозат дода шавад, варақаҳои махфӣ низ ҳангоми кушода будани якчанд барнома намоён мешаванд</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Илова кардани миёнбури тамошои махфӣ</string>
+    <string name="preferences_add_private_browsing_shortcut">Илова кардани миёнбури тамошокунии махфӣ</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Қобилияти дастрасӣ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -926,7 +926,7 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Ҷаласаи баррасии махфӣ</string>
+    <string name="notification_pbm_channel_name">Ҷаласаи тамошокунии махфӣ</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">Нест кардани варақаҳои махфӣ</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
@@ -1139,7 +1139,7 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_position_description">Тамошокуниро бо як даст тавассути навори абзорҳои поён кӯшиш кунед ё ин ки наворро ба боло гузоред.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Реҷаи тамошои махфӣ</string>
+    <string name="onboarding_private_browsing_header">Реҷаи тамошокунии махфӣ</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Варақаи махфиро як бор кушоед: Ба нишонии %s зарба занед.</string>

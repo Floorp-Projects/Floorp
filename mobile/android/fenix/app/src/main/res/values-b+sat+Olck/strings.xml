@@ -52,7 +52,7 @@
     <string name="private_browsing_title">ᱟᱢ ᱱᱤᱡᱚᱨᱟᱜ ᱚᱠᱛᱚ ᱨᱮ ᱢᱮᱱᱟᱢ-ᱟ</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s ᱟᱢᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱟᱨ ᱯᱟᱱᱛᱮᱭᱟᱜ ᱦᱤᱛᱟᱹᱞ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱠᱷᱚᱱ ᱯᱷᱟᱨᱪᱟ ᱭᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ ᱩᱱᱠᱩ ᱵᱚᱸᱫᱚ ᱠᱚᱣᱟᱢ ᱟᱨ ᱮᱯ ᱟᱲᱟᱹᱜ ᱟᱢ. ᱱᱚᱣᱟ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱵᱟᱝ ᱵᱮᱱᱟᱣ ᱢᱤᱭᱟᱭ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱟᱨ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱮᱢᱚᱜᱤᱪ ᱠᱷᱚᱱ, ᱱᱚᱣᱟ ᱫᱚ ᱟᱞᱜᱟ ᱵᱮᱱᱟᱣ ᱟᱭ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱛ ᱪᱷᱤ ᱠᱚ ᱟᱢ ᱚᱱᱞᱟᱭᱤᱱ ᱠᱚᱨᱟᱣ ᱫᱟᱢ ᱩᱱᱠᱩ ᱠᱷᱚᱱ ᱡᱟ ᱱᱚᱣᱟ ᱥᱟᱫᱷᱚᱱ ᱵᱮᱵᱷᱟᱨ ᱟᱠᱚ ᱾</string>
+    <string name="private_browsing_placeholder_description_2">%1$s ᱟᱢᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱟᱨ ᱯᱟᱱᱛᱮᱭᱟᱜ ᱦᱤᱛᱟᱹᱞ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱠᱷᱚᱱ ᱯᱷᱟᱨᱪᱟ ᱭᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ ᱩᱱᱠᱩ ᱵᱚᱸᱫᱚ ᱠᱚᱣᱟᱢ ᱟᱨ ᱮᱯ ᱟᱲᱟᱹᱜ ᱟᱢ. ᱱᱚᱶᱟ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱵᱟᱝ ᱵᱮᱱᱟᱣ ᱢᱤᱭᱟᱭ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱟᱨ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱮᱢᱚᱜᱤᱪ ᱠᱷᱚᱱ, ᱱᱚᱶᱟ ᱫᱚ ᱟᱞᱜᱟ ᱵᱮᱱᱟᱣ ᱟᱭ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱛ ᱪᱷᱤ ᱠᱚ ᱟᱢ ᱚᱱᱞᱟᱭᱤᱱ ᱠᱚᱨᱟᱣ ᱫᱟᱢ ᱩᱱᱠᱩ ᱠᱷᱚᱱ ᱡᱟ ᱱᱚᱶᱟ ᱥᱟᱫᱷᱚᱱ ᱵᱮᱵᱷᱟᱨ ᱟᱠᱚ ᱾</string>
     <string name="private_browsing_common_myths">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱨᱟᱣᱡᱤᱝ ᱨᱮᱭᱟᱜ ᱥᱚᱢᱟᱱ ᱮᱰᱮ ᱠᱚ</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ᱚᱠᱛᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
@@ -412,7 +412,7 @@
     <string name="preferences_tracking_protection_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
 
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱱᱚᱣᱟ ᱠᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="preferences_tracking_protection_exceptions_description">ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱱᱚᱶᱟ ᱠᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ᱡᱷᱚᱛᱚ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱱ ᱢᱮ</string>
     <!-- Text displayed when there are no exceptions -->
@@ -435,6 +435,8 @@
     <string name="preferences_marketing_data_description">Leanplum ᱚᱠᱚᱭ ᱫᱚ ᱟᱞᱮᱭᱤᱡ ᱢᱚᱵᱟᱭᱤᱞ ᱢᱟᱨᱠᱮᱴᱤᱝ ᱣᱮᱱᱰᱚᱨ ᱠᱟᱱᱟᱭ ᱩᱱᱤ ᱥᱟᱞᱟᱜ %1$s ᱨᱮ ᱯᱷᱤᱪᱚᱨ ᱵᱟᱵᱚᱛ ᱵᱮᱵᱷᱟᱨᱚᱜ ᱠᱟᱱ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧᱚᱜᱼᱟ ᱾</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ᱵᱤᱰᱟᱣ</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">ᱮᱠᱥᱯᱮᱨᱤᱢᱮᱱᱴᱟᱞ ᱯᱷᱤᱪᱚᱨ ᱞᱟᱹᱜᱤᱫ Mozilla ᱟᱹᱛᱩᱨ ᱟᱨ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ ᱪᱷᱚᱭᱮᱢ</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">ᱨᱟᱹᱯᱩᱫ ᱞᱟᱭ-ᱟᱜ</string>
     <!-- Preference switch for Mozilla location service -->
@@ -906,7 +908,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">ᱵᱩᱡᱷᱟᱹᱣ ᱠᱮᱫᱟ</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">ᱱᱚᱣᱟ ᱮᱯᱯ ᱵᱷᱮᱡᱟ ᱵᱟᱝ ᱜᱟᱱᱚᱜᱼᱟ</string>
+    <string name="share_error_snackbar">ᱱᱚᱶᱟ ᱮᱯᱯ ᱵᱷᱮᱡᱟ ᱵᱟᱝ ᱜᱟᱱᱚᱜᱼᱟ</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱠᱩᱞ ᱢᱮ</string>
 
@@ -968,7 +970,7 @@
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢ-ᱟ?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">ᱱᱚᱣᱟ ᱴᱮᱵ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱭ ᱥᱟᱱᱟᱢ ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣ ᱪᱟᱵᱟᱜ-ᱟ ᱾ ᱚᱠᱟ ᱥᱚᱢᱚᱭ ᱨᱮ ᱦᱚᱸ ᱟᱢ ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱠᱚ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱼᱟᱜ ᱟᱢ ᱾</string>
+    <string name="delete_tab_and_collection_dialog_message">ᱱᱚᱶᱟ ᱴᱮᱵ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱭ ᱥᱟᱱᱟᱢ ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣ ᱪᱟᱵᱟᱜ-ᱟ ᱾ ᱚᱠᱟ ᱥᱚᱢᱚᱭ ᱨᱮ ᱦᱚᱸ ᱟᱢ ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱠᱚ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱼᱟᱜ ᱟᱢ ᱾</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s ᱢᱮᱴᱟᱣᱟ ᱥᱮ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1029,7 +1031,7 @@
     <string name="delete_browsing_data_on_quit_action">ᱟᱲᱟᱹᱜ ᱢᱮ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">ᱱᱚᱣᱟ ᱫᱚ ᱟᱢᱟᱜ ᱥᱟᱱᱟᱢ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱛᱟᱢᱟᱭ ᱾</string>
+    <string name="delete_browsing_data_prompt_message">ᱱᱚᱶᱟ ᱫᱚ ᱟᱢᱟᱜ ᱥᱟᱱᱟᱢ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱛᱟᱢᱟᱭ ᱾</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ᱵᱟᱪᱷᱟᱣᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟᱭ ᱾</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1215,9 +1217,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">ᱵᱟᱝ ᱦᱤᱨᱤᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱠᱚ ᱠᱷᱚᱱ ᱠᱩᱩᱠᱤ ᱠᱚ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ᱡᱷᱚᱛᱚ ᱯᱮᱼᱯᱟᱨᱴᱭ ᱠᱩᱩᱠᱤ ᱠᱚ (ᱱᱚᱣᱟ ᱫᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱨᱟᱹᱯᱩᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ᱡᱷᱚᱛᱚ ᱯᱮᱼᱯᱟᱨᱴᱭ ᱠᱩᱩᱠᱤ ᱠᱚ (ᱱᱚᱶᱟ ᱫᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱨᱟᱹᱯᱩᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ᱠᱷᱚᱛᱚ ᱠᱩᱩᱠᱤ ᱠᱚ (ᱱᱚᱣᱟ ᱫᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱨᱟᱹᱯᱩᱫᱟᱭ)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ᱠᱷᱚᱛᱚ ᱠᱩᱩᱠᱤ ᱠᱚ (ᱱᱚᱶᱟ ᱫᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱨᱟᱹᱯᱩᱫᱟᱭ)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱡᱤᱱᱤᱥ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1244,9 +1246,9 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱡᱤᱱᱤᱥ</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱪᱚᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="etp_panel_on">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱪᱚᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="etp_panel_off">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">ᱱᱚᱶᱟ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟ-ᱟ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
@@ -1346,7 +1348,7 @@
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱠᱚ ᱡᱟ ᱵᱟᱝ ᱥᱟᱸᱪᱟᱣ ᱠᱟᱱᱟ ᱚᱱᱟᱠᱩ ᱱᱚᱰᱮ ᱩᱫᱩᱜᱚᱣᱟ ᱾</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">ᱞᱚᱜᱤᱱᱥ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱫᱚ ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱥᱟᱸᱪᱟᱣᱜᱼᱟ ᱾</string>
+    <string name="preferences_passwords_exceptions_description">ᱞᱚᱜᱤᱱᱥ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱫᱚ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱥᱟᱸᱪᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ᱡᱚᱛᱚ ᱪᱷᱟᱰᱟ ᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Hint for search box in logins list -->
@@ -1366,7 +1368,7 @@
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">ᱥᱟᱸᱪᱟᱣᱠᱟᱱ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">ᱱᱚᱣᱟ ᱡᱩᱲᱟᱹᱣ ᱫᱚ ᱵᱟᱝ ᱴᱷᱤᱠ ᱟ ᱾ ᱞᱚᱜᱤᱱ ᱨᱮ ᱚᱞ ᱮᱢ ᱡᱤᱱᱤᱥ ᱫᱚ ᱠᱚᱢᱯᱨᱚᱢᱟᱭᱤᱡ ᱫᱟᱲᱮᱟᱜᱼᱟ ᱾</string>
+    <string name="logins_insecure_connection_warning">ᱱᱚᱶᱟ ᱡᱩᱲᱟᱹᱣ ᱫᱚ ᱵᱟᱝ ᱴᱷᱤᱠ ᱟ ᱾ ᱞᱚᱜᱤᱱ ᱨᱮ ᱚᱞ ᱮᱢ ᱡᱤᱱᱤᱥ ᱫᱚ ᱠᱚᱢᱯᱨᱚᱢᱟᱭᱤᱡ ᱫᱟᱲᱮᱟᱜᱼᱟ ᱾</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
@@ -1466,9 +1468,9 @@
     <string name="search_delete_search_engine_success_message">%s ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">%s ᱡᱷᱚᱛᱚ ᱱᱟᱣᱟ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
+    <string name="migration_title">%s ᱡᱷᱚᱛᱚ ᱱᱟᱶᱟ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">ᱯᱭᱨᱟ ᱱᱟᱣᱟ ᱨᱤᱰᱤᱭᱟᱭᱤᱸᱰ ᱵᱨᱟᱩᱡᱚᱨ ᱛᱟᱸᱜᱤ ᱟᱠᱟᱫᱟᱭ, ᱵᱮᱥ ᱠᱟᱹᱢᱤ ᱟᱨ ᱯᱷᱤᱪᱚᱨ ᱠᱚ ᱥᱟᱞᱟᱜ ᱛᱮ ᱚᱠᱟ ᱫᱚ ᱟᱨᱦᱚᱸ ᱚᱱᱞᱟᱭᱤᱱ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱢᱮᱟᱭ ᱾ \n\nᱫᱚᱭᱟᱠᱟᱛᱮ ᱛᱟᱸᱜᱤ ᱢᱮ ᱟᱢᱟᱜ %s ᱦᱟᱹᱞᱤᱭᱟᱜ ᱦᱟᱹᱵᱤᱡ</string>
+    <string name="migration_description">ᱯᱭᱨᱟ ᱱᱟᱶᱟ ᱨᱤᱰᱤᱭᱟᱭᱤᱸᱰ ᱵᱨᱟᱩᱡᱚᱨ ᱛᱟᱸᱜᱤ ᱟᱠᱟᱫᱟᱭ, ᱵᱮᱥ ᱠᱟᱹᱢᱤ ᱟᱨ ᱯᱷᱤᱪᱚᱨ ᱠᱚ ᱥᱟᱞᱟᱜ ᱛᱮ ᱚᱠᱟ ᱫᱚ ᱟᱨᱦᱚᱸ ᱚᱱᱞᱟᱭᱤᱱ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱢᱮᱟᱭ ᱾ \n\nᱫᱚᱭᱟᱠᱟᱛᱮ ᱛᱟᱸᱜᱤ ᱢᱮ ᱟᱢᱟᱜ %s ᱦᱟᱹᱞᱤᱭᱟᱜ ᱦᱟᱹᱵᱤᱡ</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s ᱦᱟᱹᱞᱤᱭᱟᱼᱜ ᱠᱟᱱᱟ ...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1496,13 +1498,13 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱡᱷᱚᱛᱚ ᱚᱱᱩᱢᱚᱛᱤ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱢᱮᱴᱟᱣ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
-    <string name="confirm_clear_permission_site">ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱚᱶᱟ ᱚᱱᱩᱢᱚᱛᱤ ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱢᱮᱴᱟᱣ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
+    <string name="confirm_clear_permission_site">ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱚᱶᱟ ᱚᱱᱩᱢᱚᱛᱤ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱢᱮᱴᱟᱣ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">ᱥᱟᱭᱤᱴ ᱨᱮᱭᱟᱜ ᱪᱷᱟᱰᱟ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">ᱵᱮᱥ ᱚᱱᱚᱞ ᱠᱚ</string>
     <!-- Bookmark deletion confirmation -->
-    <string name="bookmark_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱣᱟ ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
+    <string name="bookmark_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">ᱛᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -1513,7 +1515,7 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">ᱥᱟᱯᱲᱟᱣ</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱣᱟ ᱞᱚᱜᱤᱱ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
+    <string name="login_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!--  The saved login options menu description. -->

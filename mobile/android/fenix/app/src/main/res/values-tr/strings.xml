@@ -346,6 +346,16 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Bildirimler</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Özel eklenti koleksiyonu</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Tamam</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Koleksiyon adı</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Eklenti koleksiyonu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Şimdi eşitle</string>
@@ -529,6 +539,12 @@
     <string name="recently_closed_empty_message">Yakın zamanda kapatılmış sekme yok</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Sekmeler</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Sekme görünümü</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Liste</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Sekmeleri kapat</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -645,6 +661,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d öğeyi sil</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Bugün</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Dün</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Son 24 saat</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -782,6 +802,8 @@
     <string name="preference_phone_feature_location">Konum</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Bildirim</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Kalıcı depolama</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">İzin iste</string>
     <!-- Label that indicates that a permission must be blocked -->
