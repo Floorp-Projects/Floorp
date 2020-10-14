@@ -19,15 +19,5 @@ function testMaybeUnboxed() {
     assertEq(v == undefined || v == "10", true);
 }
 
-function testTypedObject() {
-    var {StructType, string} = TypedObject;
-    var S = new StructType({foo: string});
-    var obj = new S({foo: "10"});
-    var v = GetStringDataProperty(obj, "foo");
-    assertEq(v, undefined);
-}
-
 testProxy();
 testMaybeUnboxed();
-if (typeof TypedObject !== "undefined")
-    testTypedObject();
