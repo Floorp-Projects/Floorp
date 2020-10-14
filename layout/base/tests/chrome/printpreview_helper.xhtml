@@ -67,6 +67,10 @@ function printpreview(options = {}) {
   settings.headerStrRight = "";
   settings.footerStrLeft = "";
   settings.footerStrRight = "";
+  settings.unwriteableMarginTop = 0;
+  settings.unwriteableMarginRight = 0;
+  settings.unwriteableMarginLeft = 0;
+  settings.unwriteableMarginBottom = 0;
   if (options.settings) {
     for (let key in options.settings) {
       settings[key] = options.settings[key];
