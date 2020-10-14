@@ -6379,16 +6379,6 @@ nsAutoCString MakeDirectionClause(const IDBCursorDirection aDirection) {
          (IsIncreasingOrder(aDirection) ? " ASC"_ns : " DESC"_ns);
 }
 
-nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
-                     Key* const aLocalizedKey) {
-  MOZ_ASSERT(aLocalizedKey);
-  MOZ_ASSERT(!aLocale.IsEmpty());
-
-  IDB_TRY_UNWRAP(*aLocalizedKey, aBaseKey.ToLocaleAwareKey(aLocale));
-
-  return NS_OK;
-}
-
 enum struct ComparisonOperator {
   LessThan,
   LessOrEquals,
@@ -12590,12 +12580,10 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
         if constexpr (IsIndexCursor) {
           auto localeAwarePosition = Key{};
           if (this->IsLocaleAware()) {
-            const nsresult rv =
-                LocalizeKey(aCurrentKey, this->mLocale, &localeAwarePosition);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              ASSERT_UNLESS_FUZZING();
-              return Err(IPC_FAIL_NO_REASON(this));
-            }
+            IDB_TRY_UNWRAP(localeAwarePosition,
+                           aCurrentKey.ToLocaleAwareKey(this->mLocale),
+                           Err(IPC_FAIL_NO_REASON(this)),
+                           [](const auto&) { ASSERT_UNLESS_FUZZING(); });
           }
           return CursorPosition<CursorType>{aCurrentKey, localeAwarePosition,
                                             aCurrentObjectStoreKey};
@@ -15217,15 +15205,18 @@ nsresult DatabaseOperationBase::MaybeBindKeyToStatement(
   MOZ_ASSERT(aStatement);
 
   if (!aKey.IsUnset()) {
-    nsresult rv;
-    const auto& transformedKey = aKeyTransformation(aKey, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = transformedKey.BindToStatement(aStatement, aParameterName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    // XXX This case distinction could be avoided if IDB_TRY_INSPECT would also
+    // work with a function not returning a Result<V, E> but simply a V (which
+    // is const Key& here) and then assuming it is always a success. Or the
+    // transformation could be changed to return Result<const V&, void> but I
+    // don't think that Result supports that at the moment.
+    if constexpr (std::is_reference_v<
+                      std::invoke_result_t<KeyTransformation, Key>>) {
+      IDB_TRY(
+          aKeyTransformation(aKey).BindToStatement(aStatement, aParameterName));
+    } else {
+      IDB_TRY_INSPECT(const auto& transformedKey, aKeyTransformation(aKey));
+      IDB_TRY(transformedKey.BindToStatement(aStatement, aParameterName));
     }
   }
 
@@ -15240,22 +15231,15 @@ nsresult DatabaseOperationBase::BindTransformedKeyRangeToStatement(
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aStatement);
 
-  nsresult rv =
-      MaybeBindKeyToStatement(aKeyRange.lower(), aStatement,
-                              kStmtParamNameLowerKey, aKeyTransformation);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(MaybeBindKeyToStatement(aKeyRange.lower(), aStatement,
+                                  kStmtParamNameLowerKey, aKeyTransformation));
 
   if (aKeyRange.isOnly()) {
-    return rv;
+    return NS_OK;
   }
 
-  rv = MaybeBindKeyToStatement(aKeyRange.upper(), aStatement,
-                               kStmtParamNameUpperKey, aKeyTransformation);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(MaybeBindKeyToStatement(aKeyRange.upper(), aStatement,
+                                  kStmtParamNameUpperKey, aKeyTransformation));
 
   return NS_OK;
 }
@@ -15265,10 +15249,7 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
     const SerializedKeyRange& aKeyRange,
     mozIStorageStatement* const aStatement) {
   return BindTransformedKeyRangeToStatement(
-      aKeyRange, aStatement, [](const Key& key, nsresult* rv) -> const auto& {
-        *rv = NS_OK;
-        return key;
-      });
+      aKeyRange, aStatement, [](const Key& key) -> const auto& { return key; });
 }
 
 // static
@@ -15278,11 +15259,8 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
   MOZ_ASSERT(!aLocale.IsEmpty());
 
   return BindTransformedKeyRangeToStatement(
-      aKeyRange, aStatement, [&aLocale](const Key& key, nsresult* rv) {
-        Key localizedKey;
-        *rv = LocalizeKey(key, aLocale, &localizedKey);
-        return localizedKey;
-      });
+      aKeyRange, aStatement,
+      [&aLocale](const Key& key) { return key.ToLocaleAwareKey(aLocale); });
 }
 
 // static
