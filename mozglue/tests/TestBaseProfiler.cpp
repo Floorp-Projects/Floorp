@@ -62,6 +62,14 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
 #  endif
 }
 
+MOZ_MAYBE_UNUSED static void WaitUntilTimeStampChanges(
+    const mozilla::TimeStamp& aTimeStampToCompare =
+        mozilla::TimeStamp::NowUnfuzzed()) {
+  while (aTimeStampToCompare == mozilla::TimeStamp::NowUnfuzzed()) {
+    SleepMilli(1);
+  }
+}
+
 using namespace mozilla;
 
 void TestPowerOfTwoMask() {
@@ -767,6 +775,7 @@ static void TestChunkManagerWithLocalLimit() {
     MOZ_RELEASE_ASSERT(!newChunk->GetNext(), "There should only be one chunk");
 
     // Mark previous chunk done and release it.
+    WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
     chunk->MarkDone();
     cm.ReleaseChunks(std::move(chunk));
 
@@ -795,15 +804,18 @@ static void TestChunkManagerWithLocalLimit() {
     ran = true;
     MOZ_RELEASE_ASSERT(!!aChunk, "Chunk request should always work");
     Unused << aChunk->ReserveInitialBlockAsTail(0);
+    WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
     aChunk->MarkDone();
     UniquePtr<ProfileBufferChunk> anotherChunk = cm.GetChunk();
     MOZ_RELEASE_ASSERT(!!anotherChunk);
     Unused << anotherChunk->ReserveInitialBlockAsTail(0);
+    WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
     anotherChunk->MarkDone();
     cm.RequestChunk([&](UniquePtr<ProfileBufferChunk> aChunk) {
       ranInner = true;
       MOZ_RELEASE_ASSERT(!!aChunk, "Chunk request should always work");
       Unused << aChunk->ReserveInitialBlockAsTail(0);
+      WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
       aChunk->MarkDone();
     });
     MOZ_RELEASE_ASSERT(
@@ -825,6 +837,7 @@ static void TestChunkManagerWithLocalLimit() {
 
   // Enough testing! Clean-up.
   Unused << chunk->ReserveInitialBlockAsTail(0);
+  WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
   chunk->MarkDone();
   cm.ForgetUnreleasedChunks();
 
@@ -1237,6 +1250,7 @@ static void TestControlledChunkManagerWithLocalLimit() {
     }
 
     // Mark previous chunk done and release it.
+    WaitUntilTimeStampChanges();  // Force "done" timestamp to change.
     chunk->MarkDone();
     const auto doneTimeStamp = chunk->ChunkHeader().mDoneTimeStamp;
     const auto bufferBytes = chunk->BufferBytes();
