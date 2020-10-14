@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOSTOGL_H
-#define MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOSTOGL_H
+#ifndef MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOST_H
+#define MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOST_H
 
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHostOGL.h"
+#include "RenderTextureHost.h"
 
 namespace mozilla {
 
@@ -16,16 +16,13 @@ namespace wr {
 
 // RenderEGLImageTextureHost is created only for SharedSurface_EGLImage that is
 // created in parent process.
-class RenderEGLImageTextureHost final : public RenderTextureHostOGL {
+class RenderEGLImageTextureHost final : public RenderTextureHost {
  public:
   RenderEGLImageTextureHost(EGLImage aImage, EGLSync aSync, gfx::IntSize aSize);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
-
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
  private:
   virtual ~RenderEGLImageTextureHost();
@@ -43,4 +40,4 @@ class RenderEGLImageTextureHost final : public RenderTextureHostOGL {
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDEREGLIMAGETEXTUREHOST_H

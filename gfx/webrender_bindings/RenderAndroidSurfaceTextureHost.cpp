@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderAndroidSurfaceTextureHostOGL.h"
+#include "RenderAndroidSurfaceTextureHost.h"
 
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace wr {
 
-RenderAndroidSurfaceTextureHostOGL::RenderAndroidSurfaceTextureHostOGL(
+RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, bool aContinuousUpdate)
     : mSurfTex(aSurfTex),
@@ -21,38 +21,23 @@ RenderAndroidSurfaceTextureHostOGL::RenderAndroidSurfaceTextureHostOGL(
       mContinuousUpdate(aContinuousUpdate),
       mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {
-  MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHostOGL,
-                           RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHost, RenderTextureHost);
 
   if (mSurfTex) {
     mSurfTex->IncrementUse();
   }
 }
 
-RenderAndroidSurfaceTextureHostOGL::~RenderAndroidSurfaceTextureHostOGL() {
+RenderAndroidSurfaceTextureHost::~RenderAndroidSurfaceTextureHost() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
-  MOZ_COUNT_DTOR_INHERITED(RenderAndroidSurfaceTextureHostOGL,
-                           RenderTextureHostOGL);
+  MOZ_COUNT_DTOR_INHERITED(RenderAndroidSurfaceTextureHost, RenderTextureHost);
   // The SurfaceTexture gets destroyed when its use count reaches zero.
   if (mSurfTex) {
     mSurfTex->DecrementUse();
   }
 }
 
-GLuint RenderAndroidSurfaceTextureHostOGL::GetGLHandle(
-    uint8_t aChannelIndex) const {
-  if (!mSurfTex) {
-    return 0;
-  }
-  return mSurfTex->GetTexName();
-}
-
-gfx::IntSize RenderAndroidSurfaceTextureHostOGL::GetSize(
-    uint8_t aChannelIndex) const {
-  return mSize;
-}
-
-wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
+wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   MOZ_ASSERT(aChannelIndex == 0);
   MOZ_ASSERT((mPrepareStatus == STATUS_PREPARED) ||
@@ -89,7 +74,7 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
     MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
     // When SurfaceTexture is not single buffer mode, call UpdateTexImage() once
     // just before rendering. During playing video, one SurfaceTexture is used
-    // for all RenderAndroidSurfaceTextureHostOGLs of video.
+    // for all RenderAndroidSurfaceTextureHosts of video.
     mSurfTex->UpdateTexImage();
     mPrepareStatus = STATUS_PREPARED;
   }
@@ -98,9 +83,9 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
                                         mSize.width, mSize.height);
 }
 
-void RenderAndroidSurfaceTextureHostOGL::Unlock() {}
+void RenderAndroidSurfaceTextureHost::Unlock() {}
 
-bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
+bool RenderAndroidSurfaceTextureHost::EnsureAttachedToGLContext() {
   // During handling WebRenderError, GeckoSurfaceTexture should not be attached
   // to GLContext.
   if (RenderThread::Get()->IsHandlingWebRenderError()) {
@@ -137,7 +122,7 @@ bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
   return true;
 }
 
-void RenderAndroidSurfaceTextureHostOGL::PrepareForUse() {
+void RenderAndroidSurfaceTextureHost::PrepareForUse() {
   // When SurfaceTexture is single buffer mode, UpdateTexImage needs to be
   // called only once for each publish. If UpdateTexImage is called more
   // than once, it causes hang on puglish side. And UpdateTexImage needs to
@@ -161,7 +146,7 @@ void RenderAndroidSurfaceTextureHostOGL::PrepareForUse() {
   }
 }
 
-void RenderAndroidSurfaceTextureHostOGL::NotifyForUse() {
+void RenderAndroidSurfaceTextureHost::NotifyForUse() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
 
   if (mPrepareStatus == STATUS_MIGHT_BE_USED_BY_WR) {
@@ -178,7 +163,7 @@ void RenderAndroidSurfaceTextureHostOGL::NotifyForUse() {
   }
 }
 
-void RenderAndroidSurfaceTextureHostOGL::NotifyNotUsed() {
+void RenderAndroidSurfaceTextureHost::NotifyNotUsed() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
 
   if (!mSurfTex) {

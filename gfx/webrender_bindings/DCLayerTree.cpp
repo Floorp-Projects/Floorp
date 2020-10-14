@@ -11,7 +11,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
+#include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/Telemetry.h"
@@ -666,15 +666,15 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
 
   // XXX if software decoded video frame format is nv12, it could be used as
   // video overlay.
-  if (!texture || !texture->AsRenderDXGITextureHostOGL() ||
-      texture->AsRenderDXGITextureHostOGL()->GetFormat() !=
+  if (!texture || !texture->AsRenderDXGITextureHost() ||
+      texture->AsRenderDXGITextureHost()->GetFormat() !=
           gfx::SurfaceFormat::NV12) {
     gfxCriticalNote << "Unsupported RenderTexture for overlay: "
                     << gfx::hexa(texture);
     return;
   }
 
-  gfx::IntSize size = texture->AsRenderDXGITextureHostOGL()->GetSize(0);
+  gfx::IntSize size = texture->AsRenderDXGITextureHost()->GetSize(0);
   if (!mVideoSwapChain || mSwapChainSize != size) {
     ReleaseDecodeSwapChainResources();
     CreateVideoSwapChain(texture);
@@ -719,7 +719,7 @@ bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
     return false;
   }
 
-  gfx::IntSize size = aTexture->AsRenderDXGITextureHostOGL()->GetSize(0);
+  gfx::IntSize size = aTexture->AsRenderDXGITextureHost()->GetSize(0);
   DXGI_ALPHA_MODE alpha_mode =
       mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
 
@@ -782,7 +782,7 @@ bool DCSurfaceVideo::CallVideoProcessorBlt(RenderTextureHost* aTexture) {
   HRESULT hr;
   const auto videoDevice = mDCLayerTree->GetVideoDevice();
   const auto videoContext = mDCLayerTree->GetVideoContext();
-  const auto texture = aTexture->AsRenderDXGITextureHostOGL();
+  const auto texture = aTexture->AsRenderDXGITextureHost();
 
   Maybe<DXGI_COLOR_SPACE_TYPE> sourceColorSpace = GetSourceDXGIColorSpace(
       texture->GetYUVColorSpace(), texture->GetColorRange());

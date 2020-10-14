@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderDMABUFTextureHostOGL.h"
+#include "RenderDMABUFTextureHost.h"
 
 #include "GLContextEGL.h"
 #include "mozilla/gfx/Logging.h"
@@ -12,26 +12,17 @@
 
 namespace mozilla::wr {
 
-RenderDMABUFTextureHostOGL::RenderDMABUFTextureHostOGL(DMABufSurface* aSurface)
+RenderDMABUFTextureHost::RenderDMABUFTextureHost(DMABufSurface* aSurface)
     : mSurface(aSurface) {
-  MOZ_COUNT_CTOR_INHERITED(RenderDMABUFTextureHostOGL, RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderDMABUFTextureHost, RenderTextureHost);
 }
 
-RenderDMABUFTextureHostOGL::~RenderDMABUFTextureHostOGL() {
-  MOZ_COUNT_DTOR_INHERITED(RenderDMABUFTextureHostOGL, RenderTextureHostOGL);
+RenderDMABUFTextureHost::~RenderDMABUFTextureHost() {
+  MOZ_COUNT_DTOR_INHERITED(RenderDMABUFTextureHost, RenderTextureHost);
   DeleteTextureHandle();
 }
 
-GLuint RenderDMABUFTextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
-  return mSurface->GetTexture(aChannelIndex);
-}
-
-gfx::IntSize RenderDMABUFTextureHostOGL::GetSize(uint8_t aChannelIndex) const {
-  return gfx::IntSize(mSurface->GetWidth(aChannelIndex),
-                      mSurface->GetHeight(aChannelIndex));
-}
-
-wr::WrExternalImage RenderDMABUFTextureHostOGL::Lock(
+wr::WrExternalImage RenderDMABUFTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
     if (mGL) {
@@ -69,9 +60,9 @@ wr::WrExternalImage RenderDMABUFTextureHostOGL::Lock(
                                         mSurface->GetHeight(aChannelIndex));
 }
 
-void RenderDMABUFTextureHostOGL::Unlock() {}
+void RenderDMABUFTextureHost::Unlock() {}
 
-void RenderDMABUFTextureHostOGL::DeleteTextureHandle() {
+void RenderDMABUFTextureHost::DeleteTextureHandle() {
   mSurface->ReleaseTextures();
 }
 

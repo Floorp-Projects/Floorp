@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_RenderAndroidHardwareBufferTextureHost_H
 
 #include "GLTypes.h"
-#include "RenderTextureHostOGL.h"
+#include "RenderTextureHost.h"
 
 namespace mozilla {
 
@@ -18,8 +18,7 @@ class AndroidHardwareBuffer;
 
 namespace wr {
 
-class RenderAndroidHardwareBufferTextureHost final
-    : public RenderTextureHostOGL {
+class RenderAndroidHardwareBufferTextureHost final : public RenderTextureHost {
  public:
   explicit RenderAndroidHardwareBufferTextureHost(
       layers::AndroidHardwareBuffer* aAndroidHardwareBuffer);
@@ -27,9 +26,6 @@ class RenderAndroidHardwareBufferTextureHost final
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
-
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
  private:
   virtual ~RenderAndroidHardwareBufferTextureHost();

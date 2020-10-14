@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H
-#define MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H
+#ifndef MOZILLA_GFX_RENDERDMABUFTEXTUREHOST_H
+#define MOZILLA_GFX_RENDERDMABUFTEXTUREHOST_H
 
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHostOGL.h"
+#include "RenderTextureHost.h"
 #include "mozilla/widget/DMABufSurface.h"
 
 namespace mozilla {
@@ -19,19 +19,16 @@ class SurfaceDescriptorDMABuf;
 
 namespace wr {
 
-class RenderDMABUFTextureHostOGL final : public RenderTextureHostOGL {
+class RenderDMABUFTextureHost final : public RenderTextureHost {
  public:
-  explicit RenderDMABUFTextureHostOGL(DMABufSurface* aSurface);
+  explicit RenderDMABUFTextureHost(DMABufSurface* aSurface);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
-
  private:
-  virtual ~RenderDMABUFTextureHostOGL();
+  virtual ~RenderDMABUFTextureHost();
   void DeleteTextureHandle();
 
   RefPtr<DMABufSurface> mSurface;
@@ -41,4 +38,4 @@ class RenderDMABUFTextureHostOGL final : public RenderTextureHostOGL {
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDERDMABUFTEXTUREHOST_H

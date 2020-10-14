@@ -21,8 +21,8 @@ namespace wr {
  * longer than GPUVideoTextureHost and the wrapped TextureHost is used by
  * multiple GPUVideoTextureHosts. This class is used to reduce recreations of
  * the wrappded RenderTextureHost. Initializations of some
- * RenderTextureHosts(RenderDXGITextureHostOGL and
- * RenderDXGIYCbCrTextureHostOGL) have overhead.
+ * RenderTextureHosts(RenderDXGITextureHost and
+ * RenderDXGIYCbCrTextureHost) have overhead.
  */
 class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
  public:
@@ -33,9 +33,8 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   void ClearCachedResources() override;
-  RenderMacIOSurfaceTextureHostOGL* AsRenderMacIOSurfaceTextureHostOGL()
-      override;
-  RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() override;
+  RenderMacIOSurfaceTextureHost* AsRenderMacIOSurfaceTextureHost() override;
+  RenderDXGITextureHost* AsRenderDXGITextureHost() override;
 
   // RenderTextureHostSWGL
   size_t GetPlaneCount() override;

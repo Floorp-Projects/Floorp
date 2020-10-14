@@ -55,22 +55,21 @@ void RenderTextureHostWrapper::ClearCachedResources() {
   }
 }
 
-RenderMacIOSurfaceTextureHostOGL*
-RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHostOGL() {
+RenderMacIOSurfaceTextureHost*
+RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHost() {
   EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }
-  return mTextureHost->AsRenderMacIOSurfaceTextureHostOGL();
+  return mTextureHost->AsRenderMacIOSurfaceTextureHost();
 }
 
-RenderDXGITextureHostOGL*
-RenderTextureHostWrapper::AsRenderDXGITextureHostOGL() {
+RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
   EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }
-  return mTextureHost->AsRenderDXGITextureHostOGL();
+  return mTextureHost->AsRenderDXGITextureHost();
 }
 
 size_t RenderTextureHostWrapper::GetPlaneCount() {

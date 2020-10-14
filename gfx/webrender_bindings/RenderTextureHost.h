@@ -23,10 +23,9 @@ class GLContext;
 
 namespace wr {
 
-class RenderDXGITextureHostOGL;
-class RenderMacIOSurfaceTextureHostOGL;
+class RenderDXGITextureHost;
+class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
-class RenderTextureHostOGL;
 class RenderTextureHostSWGL;
 
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
@@ -53,26 +52,23 @@ class RenderTextureHost {
 
   // Called asynchronouly when corresponding TextureHost's mCompositableCount
   // becomes from 0 to 1. For now, it is used only for
-  // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
+  // SurfaceTextureHost/RenderAndroidSurfaceTextureHost.
   virtual void PrepareForUse() {}
   // Called asynchronouly when corresponding TextureHost's is actually going to
   // be used by WebRender. For now, it is used only for
-  // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
+  // SurfaceTextureHost/RenderAndroidSurfaceTextureHost.
   virtual void NotifyForUse() {}
   // Called asynchronouly when corresponding TextureHost's mCompositableCount
   // becomes 0. For now, it is used only for
-  // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
+  // SurfaceTextureHost/RenderAndroidSurfaceTextureHost.
   virtual void NotifyNotUsed() {}
   // Returns true when RenderTextureHost needs SyncObjectHost::Synchronize()
   // call, before its usage.
   virtual bool SyncObjectNeeded() { return false; }
 
-  virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
-    return nullptr;
-  }
+  virtual RenderDXGITextureHost* AsRenderDXGITextureHost() { return nullptr; }
 
-  virtual RenderMacIOSurfaceTextureHostOGL*
-  AsRenderMacIOSurfaceTextureHostOGL() {
+  virtual RenderMacIOSurfaceTextureHost* AsRenderMacIOSurfaceTextureHost() {
     return nullptr;
   }
 

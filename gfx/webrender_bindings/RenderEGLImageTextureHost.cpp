@@ -21,20 +21,12 @@ RenderEGLImageTextureHost::RenderEGLImageTextureHost(EGLImage aImage,
       mSize(aSize),
       mTextureTarget(LOCAL_GL_TEXTURE_2D),
       mTextureHandle(0) {
-  MOZ_COUNT_CTOR_INHERITED(RenderEGLImageTextureHost, RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderEGLImageTextureHost, RenderTextureHost);
 }
 
 RenderEGLImageTextureHost::~RenderEGLImageTextureHost() {
-  MOZ_COUNT_DTOR_INHERITED(RenderEGLImageTextureHost, RenderTextureHostOGL);
+  MOZ_COUNT_DTOR_INHERITED(RenderEGLImageTextureHost, RenderTextureHost);
   DeleteTextureHandle();
-}
-
-GLuint RenderEGLImageTextureHost::GetGLHandle(uint8_t aChannelIndex) const {
-  return mTextureHandle;
-}
-
-gfx::IntSize RenderEGLImageTextureHost::GetSize(uint8_t aChannelIndex) const {
-  return mSize;
 }
 
 wr::WrExternalImage RenderEGLImageTextureHost::Lock(

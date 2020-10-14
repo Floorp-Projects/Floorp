@@ -20,7 +20,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
+#include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
@@ -964,7 +964,7 @@ bool DXGITextureHostD3D11::AcquireTextureSource(
 
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHostOGL(
+  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mFormat, mYUVColorSpace, mColorRange, mSize);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
@@ -1255,7 +1255,7 @@ bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDXGIYCbCrTextureHostOGL(mHandles, mSize, mSizeCbCr);
+      new wr::RenderDXGIYCbCrTextureHost(mHandles, mSize, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
