@@ -3603,18 +3603,7 @@ bool CacheIRCompiler::emitGuardFunctionIsNonBuiltinCtor(ObjOperandId funId) {
     return false;
   }
 
-  // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
-  // have the SELF_HOSTED flag.
-  // This is equivalent to JSFunction::isNonBuiltinConstructor.
-  constexpr uint32_t mask = FunctionFlags::BASESCRIPT |
-                            FunctionFlags::SELF_HOSTED |
-                            FunctionFlags::CONSTRUCTOR;
-  constexpr uint32_t expected =
-      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
-  masm.load16ZeroExtend(Address(fun, JSFunction::offsetOfFlags()), scratch);
-  masm.and32(Imm32(mask), scratch);
-  masm.branch32(Assembler::NotEqual, scratch, Imm32(expected),
-                failure->label());
+  masm.branchIfNotFunctionIsNonBuiltinCtor(fun, scratch, failure->label());
   return true;
 }
 

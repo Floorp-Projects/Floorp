@@ -5201,6 +5201,16 @@ void CodeGenerator::visitGuardFunctionFlags(LGuardFunctionFlags* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardFunctionIsNonBuiltinCtor(
+    LGuardFunctionIsNonBuiltinCtor* lir) {
+  Register function = ToRegister(lir->function());
+  Register temp = ToRegister(lir->temp());
+
+  Label bail;
+  masm.branchIfNotFunctionIsNonBuiltinCtor(function, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardFunctionKind(LGuardFunctionKind* lir) {
   Register function = ToRegister(lir->function());
   Register temp = ToRegister(lir->temp());

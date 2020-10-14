@@ -8037,6 +8037,21 @@ class LGuardFunctionFlags : public LInstructionHelper<0, 1, 0> {
   MGuardFunctionFlags* mir() { return mir_->toGuardFunctionFlags(); }
 };
 
+class LGuardFunctionIsNonBuiltinCtor : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardFunctionIsNonBuiltinCtor)
+
+  LGuardFunctionIsNonBuiltinCtor(const LAllocation& fun,
+                                 const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, fun);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 class LGuardFunctionKind : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardFunctionKind)

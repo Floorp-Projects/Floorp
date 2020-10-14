@@ -2159,6 +2159,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::ArraySlice:
     case BailoutKind::TagNotEqualGuard:
     case BailoutKind::FunctionFlagsGuard:
+    case BailoutKind::FunctionIsNonBuiltinCtorGuard:
     case BailoutKind::FunctionKindGuard:
     case BailoutKind::FunctionScriptGuard:
     case BailoutKind::PackedArrayGuard:

@@ -4512,6 +4512,17 @@ void LIRGenerator::visitGuardFunctionFlags(MGuardFunctionFlags* ins) {
   redefine(ins, ins->function());
 }
 
+void LIRGenerator::visitGuardFunctionIsNonBuiltinCtor(
+    MGuardFunctionIsNonBuiltinCtor* ins) {
+  MOZ_ASSERT(ins->function()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardFunctionIsNonBuiltinCtor(useRegister(ins->function()), temp());
+  assignSnapshot(lir, BailoutKind::FunctionIsNonBuiltinCtorGuard);
+  add(lir, ins);
+  redefine(ins, ins->function());
+}
+
 void LIRGenerator::visitGuardFunctionKind(MGuardFunctionKind* ins) {
   MOZ_ASSERT(ins->function()->type() == MIRType::Object);
 

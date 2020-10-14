@@ -1448,6 +1448,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestFunctionFlags(Register fun, uint32_t flags,
                                       Condition cond, Label* label);
 
+  inline void branchIfNotFunctionIsNonBuiltinCtor(Register fun,
+                                                  Register scratch,
+                                                  Label* label);
+
   inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing,
                                             Label* label);
   inline void branchIfFunctionHasJitEntry(Register fun, bool isConstructing,

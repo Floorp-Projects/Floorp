@@ -174,8 +174,8 @@ class FunctionFlags {
   bool isConstructor() const { return hasFlags(CONSTRUCTOR); }
 
   bool isNonBuiltinConstructor() const {
-    // Note: keep this in sync with emitGuardFunctionIsNonBuiltinCtor in
-    // {CacheIRCompiler, WarpCacheIRTranspiler}.cpp.
+    // Note: keep this in sync with branchIfNotFunctionIsNonBuiltinCtor in
+    // MacroAssembler.cpp.
     return hasFlags(BASESCRIPT) && hasFlags(CONSTRUCTOR) &&
            !hasFlags(SELF_HOSTED);
   }
