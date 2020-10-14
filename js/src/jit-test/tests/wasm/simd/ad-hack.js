@@ -730,6 +730,29 @@ for ( let [op, memtype, rop, resultmemtype] of
         testIt(a,b);
 }
 
+// Widening integer dot product
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "run")
+      (v128.store (i32.const 0)
+        (i32x4.dot_i16x8_s (v128.load (i32.const 16)) (v128.load (i32.const 32))))))`);
+
+var xs = [5, 1, -4, 2, 20, -15, 12, 3];
+var ys = [6, 0, -7, 3, 8, -1, -3, 7];
+var ans = [xs[0]*ys[0] + xs[1]*ys[1],
+           xs[2]*ys[2] + xs[3]*ys[3],
+           xs[4]*ys[4] + xs[5]*ys[5],
+           xs[6]*ys[6] + xs[7]*ys[7]];
+
+var mem16 = new Int16Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+set(mem16, 8, xs);
+set(mem16, 16, ys);
+ins.exports.run();
+var result = get(mem32, 0, 4);
+assertSame(result, ans);
 
 // Splat, with and without constants (different code paths in ion)
 

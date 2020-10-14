@@ -434,7 +434,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F32x4PMax:
         case SimdOp::F64x2PMin:
         case SimdOp::F64x2PMax:
-        case SimdOp::I32x4DotSI16x8Experimental:
+        case SimdOp::I32x4DotSI16x8:
           WASM_SIMD_OP(OpKind::Binary);
         case SimdOp::I8x16Neg:
         case SimdOp::I16x8Neg:

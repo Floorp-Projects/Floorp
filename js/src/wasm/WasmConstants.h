@@ -612,7 +612,7 @@ enum class SimdOp {
   I32x4MinU = 0xb7,
   I32x4MaxS = 0xb8,
   I32x4MaxU = 0xb9,
-  I32x4DotSI16x8Experimental = 0xba,
+  I32x4DotSI16x8 = 0xba,
   // AvgrU = 0xbb
   // Unused = 0xbc
   // Unused = 0xbd
