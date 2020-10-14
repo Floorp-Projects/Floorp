@@ -2,13 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { shallow } = require("enzyme");
-const { REPS, getRep } = require("../rep");
+"use strict";
 
-const { expectActorAttribute } = require("./test-helpers");
+const { shallow } = require("enzyme");
+const {
+  REPS,
+  getRep,
+} = require("devtools/client/shared/components/reps/reps/rep");
+
+const {
+  expectActorAttribute,
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
 
 const { DocumentType } = REPS;
-const stubs = require("../stubs/document-type");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/document-type");
 
 describe("DocumentType", () => {
   const stub = stubs.get("html");

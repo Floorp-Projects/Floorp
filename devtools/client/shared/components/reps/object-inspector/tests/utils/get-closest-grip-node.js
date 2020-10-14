@@ -7,7 +7,7 @@ const {
   getClosestGripNode,
   makeNodesForEntries,
   makeNumericalBuckets,
-} = require("../../utils/node");
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 
 const repsPath = "../../../reps";
 const gripRepStubs = require(`${repsPath}/stubs/grip`);

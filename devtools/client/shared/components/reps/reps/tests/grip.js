@@ -2,20 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 /* global jest */
 
 const { shallow } = require("enzyme");
-const { getRep, Rep } = require("../rep");
-const Grip = require("../grip");
-const { MODE } = require("../constants");
-const stubs = require("../stubs/grip");
-const gripArrayStubs = require("../stubs/grip-array");
+const {
+  getRep,
+  Rep,
+} = require("devtools/client/shared/components/reps/reps/rep");
+const Grip = require("devtools/client/shared/components/reps/reps/grip");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const stubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
+const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
 
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getGripLengthBubbleText,
-} = require("./test-helpers");
+} = require("devtools/client/shared/components/reps/reps/tests/test-helpers");
 const { maxLengthMap } = Grip;
 
 function shallowRenderRep(object, props = {}) {

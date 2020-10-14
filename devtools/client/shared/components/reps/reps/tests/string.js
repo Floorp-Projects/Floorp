@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const { shallow, mount } = require("enzyme");
-const { ELLIPSIS } = require("../rep-utils");
-const { REPS } = require("../rep");
+const {
+  ELLIPSIS,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const { REPS } = require("devtools/client/shared/components/reps/reps/rep");
 const { Rep } = REPS;
 
 const renderRep = (string, props) =>

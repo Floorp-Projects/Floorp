@@ -2,8 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { MODE } = require("../constants");
-const { maxLengthMap } = require("../grip-map");
+"use strict";
+
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
+const {
+  maxLengthMap,
+} = require("devtools/client/shared/components/reps/reps/grip-map");
 
 const stubs = new Map();
 

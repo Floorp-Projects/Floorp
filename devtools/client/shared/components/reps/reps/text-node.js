@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // ReactJS
 const {
   button,
@@ -10,8 +12,14 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Reps
-const { isGrip, cropString, wrapRender } = require("./rep-utils");
-const { MODE } = require("./constants");
+const {
+  isGrip,
+  cropString,
+  wrapRender,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 
 /**
  * Renders DOM #text node.
