@@ -45,30 +45,43 @@ class DefaultBrowserToolbarControllerTest {
 
     @RelaxedMockK
     private lateinit var activity: HomeActivity
+
     @MockK(relaxUnitFun = true)
     private lateinit var navController: NavController
+
     @RelaxedMockK
     private lateinit var onTabCounterClicked: () -> Unit
+
     @RelaxedMockK
     private lateinit var onCloseTab: (Session) -> Unit
+
     @RelaxedMockK
     private lateinit var sessionManager: SessionManager
+
     @MockK(relaxUnitFun = true)
     private lateinit var engineView: EngineView
+
     @MockK
     private lateinit var currentSession: Session
+
     @RelaxedMockK
     private lateinit var metrics: MetricController
+
     @RelaxedMockK
     private lateinit var searchUseCases: SearchUseCases
+
     @RelaxedMockK
     private lateinit var sessionUseCases: SessionUseCases
+
     @RelaxedMockK
     private lateinit var browserAnimator: BrowserAnimator
+
     @RelaxedMockK
     private lateinit var topSitesUseCase: TopSitesUseCases
+
     @RelaxedMockK
     private lateinit var readerModeController: ReaderModeController
+
     @RelaxedMockK
     private lateinit var homeViewModel: HomeScreenViewModel
 
@@ -233,12 +246,12 @@ class DefaultBrowserToolbarControllerTest {
         val item = TabCounterMenu.Item.NewTab(BrowsingMode.Normal)
 
         every { activity.browsingModeManager } returns browsingModeManager
-        every { navController.popBackStack(R.id.homeFragment, any()) } returns true
+        every { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) } just Runs
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
         assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
-        verify { navController.popBackStack(R.id.homeFragment, false) }
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) }
     }
 
     @Test
@@ -247,12 +260,12 @@ class DefaultBrowserToolbarControllerTest {
         val item = TabCounterMenu.Item.NewTab(BrowsingMode.Private)
 
         every { activity.browsingModeManager } returns browsingModeManager
-        every { navController.popBackStack(R.id.homeFragment, any()) } returns true
+        every { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) } just Runs
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
         assertEquals(BrowsingMode.Private, browsingModeManager.mode)
-        verify { navController.popBackStack(R.id.homeFragment, false) }
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) }
     }
 
     @Test
