@@ -199,4 +199,52 @@ add_task(async function() {
   // When starting typing, as the search mode is promoted from preview,
   // the one-off selection is removed.
   ok(!oneOffs.selectedButton, "There is no any selected one-off button");
+
+  // Clean up
+  gURLBar.value = "";
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
+add_task(async function() {
+  info(
+    "Test search mode after removing current search mode when multiple aliases are written"
+  );
+
+  info("Open the result popup with multiple aliases");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@default testalias @default",
+  });
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: defaultEngine.name,
+    entry: "typed",
+  });
+  Assert.equal(
+    gURLBar.value,
+    "testalias @default",
+    "The value on the urlbar is correct"
+  );
+
+  info("Exit search mode by clicking");
+  const indicator = gURLBar.querySelector("#urlbar-search-mode-indicator");
+  EventUtils.synthesizeMouseAtCenter(indicator, { type: "mouseover" }, window);
+  const closeButton = gURLBar.querySelector(
+    "#urlbar-search-mode-indicator-close"
+  );
+  const searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeMouseAtCenter(closeButton, {}, window);
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: aliasEngine.name,
+    entry: "typed",
+  });
+  Assert.equal(gURLBar.value, "@default", "The value on the urlbar is correct");
+
+  // Clean up
+  gURLBar.value = "";
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
 });
