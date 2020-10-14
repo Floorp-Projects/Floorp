@@ -40,6 +40,7 @@ class GPUVideoTextureHost : public TextureHost {
   }
 
   gfx::YUVColorSpace GetYUVColorSpace() const override;
+  gfx::ColorDepth GetColorDepth() const override;
   gfx::ColorRange GetColorRange() const override;
 
   gfx::IntSize GetSize() const override;
