@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 /* global jest */
 
-import React from "react";
-import { mount } from "enzyme";
-import Components from "../../index";
-import dom from "react-dom-factories";
+const React = require("react");
+const { mount } = require("enzyme");
+const dom = require("react-dom-factories");
 
 const { Component, createFactory } = React;
-const Tree = createFactory(Components.Tree);
+const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 
 function mountTree(overrides = {}) {
   return mount(
