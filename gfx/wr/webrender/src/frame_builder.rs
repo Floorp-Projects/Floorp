@@ -59,8 +59,6 @@ pub struct FrameBuilderConfig {
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
     pub chase_primitive: ChasePrimitive,
-    /// The immutable global picture caching enable from `RendererOptions`
-    pub global_enable_picture_caching: bool,
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
     pub gpu_supports_fast_clears: bool,
@@ -332,7 +330,6 @@ impl FrameBuilder {
             gpu_cache,
             &scene.clip_store,
             data_stores,
-            composite_state,
         );
 
         {
@@ -517,24 +514,8 @@ impl FrameBuilder {
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
 
-        // Determine if we will draw this frame with picture caching enabled. This depends on:
-        // (1) If globally enabled when WR was initialized
-        // (2) If current debug flags allow picture caching
-        // (3) Whether we are currently pinch zooming
-        // (4) If any picture cache spatial nodes are not in the root coordinate system
-        let picture_caching_is_enabled =
-            scene.config.global_enable_picture_caching &&
-            !debug_flags.contains(DebugFlags::DISABLE_PICTURE_CACHING) &&
-            !scene.tile_cache_config.picture_cache_spatial_nodes.iter().any(|spatial_node_index| {
-                let spatial_node = &scene
-                    .spatial_tree
-                    .spatial_nodes[spatial_node_index.0 as usize];
-                spatial_node.is_ancestor_or_self_zooming
-            });
-
         let mut composite_state = CompositeState::new(
             scene.config.compositor_kind,
-            picture_caching_is_enabled,
             global_device_pixel_scale,
             scene.config.max_depth_ids,
             dirty_rects_are_valid,
@@ -1051,12 +1032,6 @@ impl Frame {
 
     // Returns true if this frame doesn't alter what is on screen currently.
     pub fn is_nop(&self) -> bool {
-        // If picture caching is disabled, we don't have enough information
-        // to know if this frame is a nop, so it gets drawn unconditionally.
-        if !self.composite_state.picture_caching_is_enabled {
-            return false;
-        }
-
         // When picture caching is enabled, the first (main framebuffer) pass
         // consists of compositing tiles only (whether via the simple compositor
         // or the native OS compositor). If there are no other passes, that

@@ -230,7 +230,6 @@ impl Wrench {
         size: DeviceIntSize,
         do_rebuild: bool,
         no_subpixel_aa: bool,
-        no_picture_caching: bool,
         verbose: bool,
         no_scissor: bool,
         no_batch: bool,
@@ -264,7 +263,6 @@ impl Wrench {
             precache_flags,
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             chase_primitive,
-            enable_picture_caching: !no_picture_caching,
             testing: true,
             max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             allow_dual_source_blending: !disable_dual_source_blending,

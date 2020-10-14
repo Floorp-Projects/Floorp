@@ -112,7 +112,6 @@ class NewRenderer : public RendererEvent {
     bool supportLowPriorityThreadpool =
         supportLowPriorityTransactions &&
         StaticPrefs::gfx_webrender_enable_low_priority_pool();
-    bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
     char* errorMessage = nullptr;
     int picTileWidth = StaticPrefs::gfx_webrender_picture_tile_width();
@@ -122,8 +121,6 @@ class NewRenderer : public RendererEvent {
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions, supportLowPriorityThreadpool,
             gfx::gfxVars::UseGLSwizzle(),
-            StaticPrefs::gfx_webrender_picture_caching() &&
-                supportPictureCaching,
             gfx::gfxVars::UseWebRenderScissoredCacheClears(),
 #ifdef NIGHTLY_BUILD
             StaticPrefs::gfx_webrender_start_debug_server(),
