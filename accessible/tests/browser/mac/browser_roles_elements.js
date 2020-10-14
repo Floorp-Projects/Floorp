@@ -202,3 +202,21 @@ addAccessibleTask(
     );
   }
 );
+
+addAccessibleTask(`<button>hello world</button>`, async (browser, accDoc) => {
+  const webArea = accDoc.nativeInterface.QueryInterface(
+    Ci.nsIAccessibleMacInterface
+  );
+
+  is(webArea.getAttributeValue("AXRole"), "AXWebArea");
+  is(webArea.getAttributeValue("AXSubrole"), "AXUnknown");
+
+  let roleChanged = waitForMacEvent("AXMozRoleChanged");
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.body.setAttribute("role", "application");
+  });
+  await roleChanged;
+
+  is(webArea.getAttributeValue("AXRole"), "AXGroup");
+  is(webArea.getAttributeValue("AXSubrole"), "AXLandmarkApplication");
+});

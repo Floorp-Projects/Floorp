@@ -15,6 +15,10 @@
 #  include "nsRect.h"
 #endif
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "mozilla/a11y/Role.h"
+#endif
+
 namespace mozilla {
 namespace a11y {
 
@@ -142,6 +146,8 @@ bool LocalizeString(
 class TextRangeData;
 void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
                                    const nsTArray<TextRangeData>& aSelection);
+
+void ProxyRoleChangedEvent(ProxyAccessible* aTarget, const a11y::role& aRole);
 #endif
 
 }  // namespace a11y

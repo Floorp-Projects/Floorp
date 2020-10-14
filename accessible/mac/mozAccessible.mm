@@ -779,6 +779,14 @@ struct RoleDescrComparator {
   return nil;
 }
 
+- (void)handleRoleChanged:(mozilla::a11y::role)newRole {
+  mRole = newRole;
+  mARIARole = nullptr;
+
+  // For testing purposes
+  [self moxPostNotification:@"AXMozRoleChanged"];
+}
+
 - (id)moxEditableAncestor {
   for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
        element = [element moxUnignoredParent]) {
