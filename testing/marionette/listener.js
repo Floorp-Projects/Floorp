@@ -328,20 +328,9 @@ function emitTouchEvent(type, touch) {
 
   const win = curContainer.frame;
   if (win.docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
-    let ev = {
-      index: 0,
-      type,
-      id: touch.identifier,
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      screenX: touch.screenX,
-      screenY: touch.screenY,
-      radiusX: touch.radiusX,
-      radiusY: touch.radiusY,
-      rotation: touch.rotationAngle,
-      force: touch.force,
-    };
-    sendSyncMessage("Marionette:emitTouchEvent", ev);
+    logger.debug(
+      `Cannot emit touch event with asyncPanZoomEnabled and legacyactions.scrolling`
+    );
     return;
   }
 
