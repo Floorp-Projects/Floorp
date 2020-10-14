@@ -908,22 +908,6 @@ void CacheUseDOSDevicePathSyntaxPrefValue();
 
 Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath);
 
-// IntString is deprecated, use GetIntString instead.
-class IntString : public nsAutoString {
- public:
-  explicit IntString(int64_t aInteger) { AppendInt(aInteger); }
-};
-
-// IntCString is deprecated, use GetIntCString instead.
-class IntCString : public nsAutoCString {
- public:
-  explicit IntCString(int64_t aInteger) { AppendInt(aInteger); }
-};
-
-nsAutoString GetIntString(const int64_t aInteger);
-
-nsAutoCString GetIntCString(const int64_t aInteger);
-
 nsDependentCSubstring GetLeafName(const nsACString& aPath);
 
 void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,

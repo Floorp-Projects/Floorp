@@ -81,12 +81,12 @@ static bool IsValidPutResponseStatus(Response& aResponse,
   if ((aPolicy == PutStatusPolicy::RequireOK && !aResponse.Ok()) ||
       aResponse.Status() == 206) {
     nsCString type(ResponseTypeValues::GetString(aResponse.Type()));
-    nsAutoCString status;
-    status.AppendInt(aResponse.Status());
+
     nsAutoString url;
     aResponse.GetUrl(url);
+
     aRv.ThrowTypeError<MSG_CACHE_ADD_FAILED_RESPONSE>(
-        type, status, NS_ConvertUTF16toUTF8(url));
+        type, IntToCString(aResponse.Status()), NS_ConvertUTF16toUTF8(url));
     return false;
   }
 
