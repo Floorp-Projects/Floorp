@@ -4,69 +4,72 @@
 
 "use strict";
 
-// ReactJS
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-// Reps
-const {
-  isGrip,
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
+  // Reps
+  const {
+    isGrip,
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-const String = require("devtools/client/shared/components/reps/reps/string")
-  .rep;
+  const String = require("devtools/client/shared/components/reps/reps/string")
+    .rep;
 
-/**
- * Renders a grip object with textual data.
- */
+  /**
+   * Renders a grip object with textual data.
+   */
 
-ObjectWithText.propTypes = {
-  object: PropTypes.object.isRequired,
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function ObjectWithText(props) {
-  const grip = props.object;
-  const config = getElementConfig(props);
-
-  return span(config, `${getType(grip)} `, getDescription(grip));
-}
-
-function getElementConfig(opts) {
-  const shouldRenderTooltip = opts.shouldRenderTooltip;
-  const grip = opts.object;
-
-  return {
-    "data-link-actor-id": grip.actor,
-    className: `objectTitle objectBox objectBox-${getType(grip)}`,
-    title: shouldRenderTooltip
-      ? `${getType(grip)} "${grip.preview.text}"`
-      : null,
+  ObjectWithText.propTypes = {
+    object: PropTypes.object.isRequired,
+    shouldRenderTooltip: PropTypes.bool,
   };
-}
 
-function getType(grip) {
-  return grip.class;
-}
+  function ObjectWithText(props) {
+    const grip = props.object;
+    const config = getElementConfig(props);
 
-function getDescription(grip) {
-  return String({
-    object: grip.preview.text,
-  });
-}
-
-// Registration
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true || !isGrip(grip)) {
-    return false;
+    return span(config, `${getType(grip)} `, getDescription(grip));
   }
 
-  return grip.preview && grip.preview.kind == "ObjectWithText";
-}
+  function getElementConfig(opts) {
+    const shouldRenderTooltip = opts.shouldRenderTooltip;
+    const grip = opts.object;
 
-// Exports from this module
-module.exports = {
-  rep: wrapRender(ObjectWithText),
-  supportsObject,
-};
+    return {
+      "data-link-actor-id": grip.actor,
+      className: `objectTitle objectBox objectBox-${getType(grip)}`,
+      title: shouldRenderTooltip
+        ? `${getType(grip)} "${grip.preview.text}"`
+        : null,
+    };
+  }
+
+  function getType(grip) {
+    return grip.class;
+  }
+
+  function getDescription(grip) {
+    return String({
+      object: grip.preview.text,
+    });
+  }
+
+  // Registration
+  function supportsObject(grip, noGrip = false) {
+    if (noGrip === true || !isGrip(grip)) {
+      return false;
+    }
+
+    return grip.preview && grip.preview.kind == "ObjectWithText";
+  }
+
+  // Exports from this module
+  module.exports = {
+    rep: wrapRender(ObjectWithText),
+    supportsObject,
+  };
+});

@@ -30,10 +30,6 @@ global.loader = {
   },
 };
 
-global.define = function(fn) {
-  fn(null, global, { exports: global });
-};
-
 global.requestIdleCallback = function() {};
 
 // Used for the HTMLTooltip component.

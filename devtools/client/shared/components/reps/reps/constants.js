@@ -4,10 +4,13 @@
 
 "use strict";
 
-module.exports = {
-  MODE: {
-    TINY: Symbol("TINY"),
-    SHORT: Symbol("SHORT"),
-    LONG: Symbol("LONG"),
-  },
-};
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  module.exports = {
+    MODE: {
+      TINY: Symbol("TINY"),
+      SHORT: Symbol("SHORT"),
+      LONG: Symbol("LONG"),
+    },
+  };
+});

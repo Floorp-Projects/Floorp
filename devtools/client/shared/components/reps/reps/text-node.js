@@ -4,124 +4,127 @@
 
 "use strict";
 
-// ReactJS
-const {
-  button,
-  span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-// Reps
-const {
-  isGrip,
-  cropString,
-  wrapRender,
-} = require("devtools/client/shared/components/reps/reps/rep-utils");
-const {
-  MODE,
-} = require("devtools/client/shared/components/reps/reps/constants");
-
-/**
- * Renders DOM #text node.
- */
-
-TextNode.propTypes = {
-  object: PropTypes.object.isRequired,
-  // @TODO Change this to Object.values when supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: PropTypes.func,
-  onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func,
-  shouldRenderTooltip: PropTypes.bool,
-};
-
-function TextNode(props) {
-  const { object: grip, mode = MODE.SHORT } = props;
-
-  const isInTree = grip.preview && grip.preview.isConnected === true;
-  const config = getElementConfig({ ...props, isInTree });
-  const inspectIcon = getInspectIcon({ ...props, isInTree });
-
-  if (mode === MODE.TINY) {
-    return span(config, getTitle(grip), inspectIcon);
-  }
-
-  return span(
-    config,
-    getTitle(grip),
-    span({ className: "nodeValue" }, " ", `"${getTextContent(grip)}"`),
-    inspectIcon ? inspectIcon : null
-  );
-}
-
-function getElementConfig(opts) {
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
   const {
-    object,
-    isInTree,
-    onDOMNodeMouseOver,
-    onDOMNodeMouseOut,
-    shouldRenderTooltip,
-  } = opts;
+    button,
+    span,
+  } = require("devtools/client/shared/vendor/react-dom-factories");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-  const config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-textNode",
-    title: shouldRenderTooltip ? `#text "${getTextContent(object)}"` : null,
+  // Reps
+  const {
+    isGrip,
+    cropString,
+    wrapRender,
+  } = require("devtools/client/shared/components/reps/reps/rep-utils");
+  const {
+    MODE,
+  } = require("devtools/client/shared/components/reps/reps/constants");
+
+  /**
+   * Renders DOM #text node.
+   */
+
+  TextNode.propTypes = {
+    object: PropTypes.object.isRequired,
+    // @TODO Change this to Object.values when supported in Node's version of V8
+    mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+    onDOMNodeMouseOver: PropTypes.func,
+    onDOMNodeMouseOut: PropTypes.func,
+    onInspectIconClick: PropTypes.func,
+    shouldRenderTooltip: PropTypes.bool,
   };
 
-  if (isInTree) {
-    if (onDOMNodeMouseOver) {
-      Object.assign(config, {
-        onMouseOver: _ => onDOMNodeMouseOver(object),
-      });
+  function TextNode(props) {
+    const { object: grip, mode = MODE.SHORT } = props;
+
+    const isInTree = grip.preview && grip.preview.isConnected === true;
+    const config = getElementConfig({ ...props, isInTree });
+    const inspectIcon = getInspectIcon({ ...props, isInTree });
+
+    if (mode === MODE.TINY) {
+      return span(config, getTitle(grip), inspectIcon);
     }
 
-    if (onDOMNodeMouseOut) {
-      Object.assign(config, {
-        onMouseOut: _ => onDOMNodeMouseOut(object),
-      });
+    return span(
+      config,
+      getTitle(grip),
+      span({ className: "nodeValue" }, " ", `"${getTextContent(grip)}"`),
+      inspectIcon ? inspectIcon : null
+    );
+  }
+
+  function getElementConfig(opts) {
+    const {
+      object,
+      isInTree,
+      onDOMNodeMouseOver,
+      onDOMNodeMouseOut,
+      shouldRenderTooltip,
+    } = opts;
+
+    const config = {
+      "data-link-actor-id": object.actor,
+      className: "objectBox objectBox-textNode",
+      title: shouldRenderTooltip ? `#text "${getTextContent(object)}"` : null,
+    };
+
+    if (isInTree) {
+      if (onDOMNodeMouseOver) {
+        Object.assign(config, {
+          onMouseOver: _ => onDOMNodeMouseOver(object),
+        });
+      }
+
+      if (onDOMNodeMouseOut) {
+        Object.assign(config, {
+          onMouseOut: _ => onDOMNodeMouseOut(object),
+        });
+      }
     }
+
+    return config;
   }
 
-  return config;
-}
-
-function getTextContent(grip) {
-  return cropString(grip.preview.textContent);
-}
-
-function getInspectIcon(opts) {
-  const { object, isInTree, onInspectIconClick } = opts;
-
-  if (!isInTree || !onInspectIconClick) {
-    return null;
+  function getTextContent(grip) {
+    return cropString(grip.preview.textContent);
   }
 
-  return button({
-    className: "open-inspector",
-    draggable: false,
-    // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
-    title: "Click to select the node in the inspector",
-    onClick: e => onInspectIconClick(object, e),
-  });
-}
+  function getInspectIcon(opts) {
+    const { object, isInTree, onInspectIconClick } = opts;
 
-function getTitle(grip) {
-  const title = "#text";
-  return span({}, title);
-}
+    if (!isInTree || !onInspectIconClick) {
+      return null;
+    }
 
-// Registration
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true || !isGrip(grip)) {
-    return false;
+    return button({
+      className: "open-inspector",
+      draggable: false,
+      // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
+      title: "Click to select the node in the inspector",
+      onClick: e => onInspectIconClick(object, e),
+    });
   }
 
-  return grip.preview && grip.class == "Text";
-}
+  function getTitle(grip) {
+    const title = "#text";
+    return span({}, title);
+  }
 
-// Exports from this module
-module.exports = {
-  rep: wrapRender(TextNode),
-  supportsObject,
-};
+  // Registration
+  function supportsObject(grip, noGrip = false) {
+    if (noGrip === true || !isGrip(grip)) {
+      return false;
+    }
+
+    return grip.preview && grip.class == "Text";
+  }
+
+  // Exports from this module
+  module.exports = {
+    rep: wrapRender(TextNode),
+    supportsObject,
+  };
+});

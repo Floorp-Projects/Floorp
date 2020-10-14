@@ -10,5 +10,6 @@ module.exports = {
     "@babel/plugin-proposal-async-generator-functions",
     "@babel/plugin-proposal-optional-chaining",
     "@babel/plugin-proposal-nullish-coalescing-operator",
+    "transform-amd-to-commonjs",
   ],
 };
