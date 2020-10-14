@@ -2355,17 +2355,15 @@ describe("ASRouter", () => {
         let messages = [
           {
             id: "foo1",
-            forReachEvent: { sent: false },
+            forReachEvent: { sent: false, group: "cfr" },
             experimentSlug: "exp01",
             branchSlug: "branch01",
-            group: "cfr",
             template: "simple_template",
             trigger: { id: "foo" },
             content: { title: "Foo1", body: "Foo123-1" },
           },
           {
             id: "foo2",
-            group: "cfr",
             template: "simple_template",
             trigger: { id: "bar" },
             content: { title: "Foo2", body: "Foo123-2" },
@@ -2373,10 +2371,9 @@ describe("ASRouter", () => {
           },
           {
             id: "foo3",
-            forReachEvent: { sent: false },
+            forReachEvent: { sent: false, group: "cfr" },
             experimentSlug: "exp02",
             branchSlug: "branch02",
-            group: "cfr",
             template: "simple_template",
             trigger: { id: "foo" },
             content: { title: "Foo1", body: "Foo123-1" },
@@ -2397,10 +2394,9 @@ describe("ASRouter", () => {
         let messages = [
           {
             id: "foo1",
-            forReachEvent: { sent: true },
+            forReachEvent: { sent: true, group: "cfr" },
             experimentSlug: "exp01",
             branchSlug: "branch01",
-            group: "cfr",
             template: "simple_template",
             trigger: { id: "foo" },
             content: { title: "Foo1", body: "Foo123-1" },
@@ -3868,7 +3864,10 @@ describe("ASRouter", () => {
       assert.equal(result.messages[1].id, "id02");
       assert.equal(result.messages[1].experimentSlug, "exp01");
       assert.equal(result.messages[1].branchSlug, "branch02");
-      assert.deepEqual(result.messages[1].forReachEvent, { sent: false });
+      assert.deepEqual(result.messages[1].forReachEvent, {
+        sent: false,
+        group: "cfr",
+      });
     });
     it("should fetch json from url", async () => {
       let result = await MessageLoaderUtils.loadMessagesForProvider({
