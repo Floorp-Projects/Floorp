@@ -723,7 +723,11 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ChangedToDefaultBrowser -> null
     }
 
-class GleanMetricsService(private val context: Context) : MetricsService {
+class GleanMetricsService(
+    private val context: Context,
+    private val browsersCache: BrowsersCache = BrowsersCache,
+    private val mozillaProductDetector: MozillaProductDetector = MozillaProductDetector
+) : MetricsService {
     override val type = MetricServiceType.Data
 
     private val logger = Logger("GleanMetricsService")
@@ -759,11 +763,11 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     internal fun setStartupMetrics() {
         setPreferenceMetrics()
         Metrics.apply {
-            defaultBrowser.set(BrowsersCache.all(context).isDefaultBrowser)
-            MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
+            defaultBrowser.set(browsersCache.all(context).isDefaultBrowser)
+            mozillaProductDetector.getMozillaBrowserDefault(context)?.also {
                 defaultMozBrowser.set(it)
             }
-            mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+            mozillaProducts.set(mozillaProductDetector.getInstalledMozillaProducts(context))
 
             adjustCampaign.set(context.settings().adjustCampaignId)
             adjustAdGroup.set(context.settings().adjustAdGroup)

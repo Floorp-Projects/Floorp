@@ -4,6 +4,9 @@
 
 package org.mozilla.fenix.components.metrics
 
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -17,6 +20,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.utils.BrowsersCache
 
 @RunWith(FenixRobolectricTestRunner::class)
 class GleanMetricsServiceTest {
@@ -25,20 +29,28 @@ class GleanMetricsServiceTest {
 
     private lateinit var gleanService: GleanMetricsService
 
+    @MockK private lateinit var browsersCache: BrowsersCache
+    @MockK private lateinit var mozillaProductDetector: MozillaProductDetector
+
     @Before
     fun setup() {
-        gleanService = GleanMetricsService(testContext)
+        MockKAnnotations.init(this)
+        gleanService = GleanMetricsService(testContext, browsersCache, mozillaProductDetector)
     }
 
     @Test
     fun `setStartupMetrics sets some base metrics`() {
-        // Set the metrics.
+        val expectedAppName = "org.mozilla.fenix"
+        every { browsersCache.all(any()).isDefaultBrowser } returns true
+        every { mozillaProductDetector.getMozillaBrowserDefault(any()) } returns expectedAppName
+        every { mozillaProductDetector.getInstalledMozillaProducts(any()) } returns listOf(expectedAppName)
+
         gleanService.setStartupMetrics()
 
         // Verify that browser defaults metrics are set.
         assertEquals(true, Metrics.defaultBrowser.testGetValue())
-        assertEquals(true, Metrics.defaultMozBrowser.testHasValue())
-        assertEquals(listOf("org.mozilla.fenix"), Metrics.mozillaProducts.testGetValue())
+        assertEquals(expectedAppName, Metrics.defaultMozBrowser.testGetValue())
+        assertEquals(listOf(expectedAppName), Metrics.mozillaProducts.testGetValue())
 
         // Verify that search engine defaults are NOT set. This test does
         // not mock most of the objects telemetry is collected from.
