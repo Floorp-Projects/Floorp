@@ -418,6 +418,22 @@ void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,
   branchTest32(cond, address, Imm32(bit), label);
 }
 
+void MacroAssembler::branchIfNotFunctionIsNonBuiltinCtor(Register fun,
+                                                         Register scratch,
+                                                         Label* label) {
+  // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
+  // have the SELF_HOSTED flag.
+  // This is equivalent to JSFunction::isNonBuiltinConstructor.
+  constexpr uint32_t mask = FunctionFlags::BASESCRIPT |
+                            FunctionFlags::SELF_HOSTED |
+                            FunctionFlags::CONSTRUCTOR;
+  constexpr uint32_t expected =
+      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
+  load16ZeroExtend(Address(fun, JSFunction::offsetOfFlags()), scratch);
+  and32(Imm32(mask), scratch);
+  branch32(Assembler::NotEqual, scratch, Imm32(expected), label);
+}
+
 void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
                                                    bool isConstructing,
                                                    Label* label) {

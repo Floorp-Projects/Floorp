@@ -155,6 +155,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GuardElementNotHole:
     case MDefinition::Opcode::GuardArrayIsPacked:
     case MDefinition::Opcode::GuardFunctionFlags:
+    case MDefinition::Opcode::GuardFunctionIsNonBuiltinCtor:
     case MDefinition::Opcode::GuardFunctionKind:
     case MDefinition::Opcode::ArgumentsObjectLength:
     case MDefinition::Opcode::FunctionLength:
