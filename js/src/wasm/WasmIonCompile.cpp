@@ -4851,9 +4851,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F32x4Ne):
           case uint32_t(SimdOp::F64x2Eq):
           case uint32_t(SimdOp::F64x2Ne):
-            CHECK(EmitBinarySimd128(f, /* commutative= */ true, SimdOp(op.b1)));
-          case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::I32x4DotSI16x8):
             CHECK(EmitBinarySimd128(f, /* commutative= */ true, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128AndNot):
           case uint32_t(SimdOp::I8x16Sub):

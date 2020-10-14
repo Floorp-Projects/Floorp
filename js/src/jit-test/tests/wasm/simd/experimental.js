@@ -63,35 +63,6 @@ function V128StoreExpr(addr, v) {
             SimdPrefix, V128StoreCode, 4, varU32(0)];
 }
 
-// Widening integer dot product, https://github.com/WebAssembly/simd/pull/127
-
-var ins = wasmEval(moduleWithSections([
-    sigSection([v2vSig]),
-    declSection([0]),
-    memorySection(1),
-    exportSection([{funcIndex: 0, name: "run"},
-                   {memIndex: 0, name: "mem"}]),
-    bodySection([
-        funcBody({locals:[],
-                  body: [...V128StoreExpr(0, [...V128Load(16),
-                                              ...V128Load(32),
-                                              SimdPrefix, varU32(I32x4DotSI16x8Code)])]})])]));
-
-var xs = [5, 1, -4, 2, 20, -15, 12, 3];
-var ys = [6, 0, -7, 3, 8, -1, -3, 7];
-var ans = [xs[0]*ys[0] + xs[1]*ys[1],
-           xs[2]*ys[2] + xs[3]*ys[3],
-           xs[4]*ys[4] + xs[5]*ys[5],
-           xs[6]*ys[6] + xs[7]*ys[7]];
-
-var mem16 = new Int16Array(ins.exports.mem.buffer);
-var mem32 = new Int32Array(ins.exports.mem.buffer);
-set(mem16, 8, xs);
-set(mem16, 16, ys);
-ins.exports.run();
-var result = get(mem32, 0, 4);
-assertSame(result, ans);
-
 // Zero-extending SIMD load, https://github.com/WebAssembly/simd/pull/237
 
 for ( let [opcode, k, log2align, cons, cast] of [[V128Load32ZeroCode, 4, 2, Int32Array, Number],

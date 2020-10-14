@@ -14978,8 +14978,7 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(PMaxF64x2));
           case uint32_t(SimdOp::F64x2PMin):
             CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
-          case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::I32x4DotSI16x8):
             CHECK_NEXT(dispatchVectorBinary(DotI16x8));
           case uint32_t(SimdOp::I8x16Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI8x16));
