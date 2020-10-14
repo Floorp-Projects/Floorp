@@ -89,6 +89,7 @@
 #include <errno.h>
 #include <fstream>
 #include <ostream>
+#include <set>
 #include <sstream>
 #include <type_traits>
 
@@ -2435,6 +2436,27 @@ static void StreamCategories(SpliceableJSONWriter& aWriter) {
 #undef CATEGORY_JSON_END_CATEGORY
 }
 
+static void StreamMarkerSchema(SpliceableJSONWriter& aWriter) {
+  // Get an array view with all registered marker-type-specific functions.
+  Span<const base_profiler_markers_detail::Streaming::MarkerTypeFunctions>
+      markerTypeFunctionsArray =
+          base_profiler_markers_detail::Streaming::MarkerTypeFunctionsArray();
+  // List of streamed marker names, this is used to spot duplicates.
+  std::set<std::string> names;
+  // Stream the display schema for each different one. (Duplications may come
+  // from the same code potentially living in different libraries.)
+  for (const auto& markerTypeFunctions : markerTypeFunctionsArray) {
+    auto name = markerTypeFunctions.mMarkerTypeNameFunction();
+    // std::set.insert(T&&) returns a pair, its `second` is true if the element
+    // was actually inserted (i.e., it was not there yet.)
+    const bool didInsert =
+        names.insert(std::string(name.data(), name.size())).second;
+    if (didInsert) {
+      markerTypeFunctions.mMarkerSchemaFunction().Stream(aWriter, name);
+    }
+  }
+}
+
 // Some meta information that is better recorded before streaming the profile.
 // This is *not* intended to be cached, as some values could change between
 // profiling sessions.
@@ -2538,6 +2560,10 @@ static void StreamMetaJSCustomObject(
 
   aWriter.StartArrayProperty("categories");
   StreamCategories(aWriter);
+  aWriter.EndArray();
+
+  aWriter.StartArrayProperty("markerSchema");
+  StreamMarkerSchema(aWriter);
   aWriter.EndArray();
 
   ActivePS::WriteActiveConfiguration(aLock, aWriter,
