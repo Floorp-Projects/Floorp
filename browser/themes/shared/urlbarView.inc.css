@@ -210,6 +210,25 @@
   visibility: hidden;
 }
 
+.urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  color: #0060df; /* Blue-60 */
+  stroke: #fff;
+  -moz-context-properties: fill, stroke;
+}
+
+.urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  color: #fff;
+  stroke: #0060df;
+}
+
+:root[lwt-toolbar-field-brighttext] .urlbarView-row[type=tabtosearch]:not([selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  color: #0a84ff; /* Blue-50 */
+}
+
+:root[lwt-toolbar-field-brighttext] .urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  stroke: #0a84ff;
+}
+
 /* Type icon */
 
 .urlbarView-type-icon {
