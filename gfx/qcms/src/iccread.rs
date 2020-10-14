@@ -1135,6 +1135,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
         None => null_mut(),
     }
 }
+
 fn profile_create_rgb_with_table(
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
@@ -1145,17 +1146,13 @@ fn profile_create_rgb_with_table(
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
         return None;
     }
-    (*profile).redTRC = Some(curve_from_table(table));
-    (*profile).blueTRC = Some(curve_from_table(table));
-    (*profile).greenTRC = Some(curve_from_table(table));
-    if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
-    {
-        return None;
-    }
-    (*profile).class_type = DISPLAY_DEVICE_PROFILE;
-    (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    (*profile).color_space = RGB_SIGNATURE;
-    (*profile).pcs = XYZ_TYPE;
+    profile.redTRC = Some(curve_from_table(table));
+    profile.blueTRC = Some(curve_from_table(table));
+    profile.greenTRC = Some(curve_from_table(table));
+    profile.class_type = DISPLAY_DEVICE_PROFILE;
+    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+    profile.color_space = RGB_SIGNATURE;
+    profile.pcs = XYZ_TYPE;
     return Some(profile);
 }
 /* from lcms: cmsWhitePointFromTemp */
