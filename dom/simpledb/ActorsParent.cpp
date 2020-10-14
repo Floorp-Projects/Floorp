@@ -1049,12 +1049,8 @@ nsresult OpenOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    auto principalOrErr = PrincipalInfoToPrincipal(principalInfo);
-    if (NS_WARN_IF(principalOrErr.isErr())) {
-      return principalOrErr.unwrapErr();
-    }
-
-    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+    SDB_TRY_INSPECT(const auto& principal,
+                    PrincipalInfoToPrincipal(principalInfo));
 
     nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix,
                                                      &mGroup, &mOrigin);
