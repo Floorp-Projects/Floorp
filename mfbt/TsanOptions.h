@@ -43,6 +43,7 @@ extern "C" const char* __tsan_default_options() {
     "called_from_lib:libatk-1\n"               \
     "called_from_lib:libcairo.so\n"            \
     "called_from_lib:libcairo-gobject\n"       \
+    "called_from_lib:libdconfsettings\n"       \
     "called_from_lib:libgdk-3\n"               \
     "called_from_lib:libgdk_pixbuf\n"          \
     "called_from_lib:libgdk-x11\n"             \
