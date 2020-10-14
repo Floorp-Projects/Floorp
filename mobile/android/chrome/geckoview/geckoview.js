@@ -260,11 +260,6 @@ var ModuleManager = {
         module.impl.onSettingsUpdate();
       }
     });
-
-    this._browser.messageManager.sendAsyncMessage(
-      "GeckoView:UpdateSettings",
-      aSettings
-    );
   },
 
   onMessageFromActor(aActorName, aMessage) {
@@ -492,7 +487,7 @@ class ModuleInfo {
       }
     }
 
-    this._updateContentModuleState(/* includeSettings */ aEnabled);
+    this._updateContentModuleState();
   }
 
   receiveMessage(aMessage) {
@@ -504,20 +499,19 @@ class ModuleInfo {
   }
 
   onContentModuleLoaded() {
-    this._updateContentModuleState(/* includeSettings */ true);
+    this._updateContentModuleState();
 
     if (this._impl) {
       this._impl.onContentModuleLoaded();
     }
   }
 
-  _updateContentModuleState(aIncludeSettings) {
+  _updateContentModuleState() {
     this._manager.messageManager.sendAsyncMessage(
       "GeckoView:UpdateModuleState",
       {
         module: this._name,
         enabled: this.enabled,
-        settings: aIncludeSettings ? this._manager.settings : null,
       }
     );
   }
