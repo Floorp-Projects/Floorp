@@ -8,8 +8,24 @@
     <string name="mozac_feature_addons_permissions_one_site_description">%1$s ᱞᱟᱹᱜᱤᱛ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
     <string name="mozac_feature_addons_permissions_sites_in_domain_description">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱹᱛᱩᱨ ᱢᱮ ᱚᱱᱟ ᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱛ ᱡᱟ %1$s ᱰᱚᱢᱮᱱ ᱨᱮ ᱢᱮᱱᱟ-ᱟ</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">ᱟᱢᱟᱜ ᱰᱟᱴᱟ 1 ᱚᱞᱜᱟ ᱥᱟᱭᱤᱴ ᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
+     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">ᱟᱢᱟᱜ ᱰᱟᱴᱟ %1$d ᱚᱞᱜᱟ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">ᱟᱢᱟᱜ ᱰᱟᱴᱟ 1 ᱚᱞᱜᱟ ᱰᱚᱢᱮᱱ ᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">ᱟᱢᱟᱜ ᱰᱟᱴᱟ %1$d ᱚᱞᱜᱟ ᱰᱚᱢᱮᱱ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ᱵᱨᱟᱩᱡᱚᱨ ᱴᱮᱵ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">ᱟᱸᱱᱞᱭᱴᱮᱰ ᱠᱞᱟᱭᱮᱸᱴ ᱰᱟᱴᱟ ᱫᱚᱦᱚᱭ ᱢᱮ  </string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">ᱵᱨᱟᱩᱡᱟᱹᱨ ᱨᱮᱭᱟᱜ ᱠᱟᱹᱢᱤ ᱟᱹᱛᱩᱨ ᱢᱮ ᱯᱟᱱᱛᱮ ᱜᱷᱚᱰᱤ</string>
     <!-- Description for bookmarks permission. -->
@@ -34,8 +50,12 @@
     <string name="mozac_feature_addons_permissions_history_description">ᱵᱨᱟᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">ᱯᱟᱥᱱᱟᱣ ᱵᱮᱵᱷᱟᱨ ᱨᱮ ᱱᱚᱡᱚᱨ ᱫᱚᱦᱚ ᱟᱨ ᱩᱭᱦᱟᱹᱨ ᱵᱮᱵᱚᱥᱛᱷᱟ</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ᱱᱟᱶᱟ ᱮᱯᱯ ᱪᱷᱟᱰᱤ ᱠᱟᱛᱮ ᱚᱠᱜᱟ ᱮᱯᱯ ᱠᱚᱛᱮ ᱠᱷᱚᱵᱚᱨ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">ᱤᱛᱞᱟᱹᱭ ᱠᱚ ᱩᱫᱩᱜ ᱟᱢᱟᱭ</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">ᱠᱨᱭᱯᱴᱚᱜᱨᱟᱯᱷᱭᱠ ᱚᱛᱷᱮᱱᱴᱤᱠᱮᱥᱚᱱ ᱥᱟᱹᱨᱣᱤᱥ ᱠᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">ᱵᱨᱟᱩᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱤ ᱥᱟᱡᱟᱣ ᱠᱚ ᱥᱟᱢᱲᱟᱣ ᱢᱮ</string>
     <!-- Description for sessions permission. -->
@@ -65,6 +85,8 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱪᱟᱹᱞᱩ ᱪᱷᱚᱭ ᱮᱢ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ᱮᱢ ᱪᱷᱚ</string>
@@ -89,7 +111,7 @@
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s ᱥᱮᱞᱮᱫ ᱟᱢ?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-    <string name="mozac_feature_addons_permissions_dialog_subtitle">ᱱᱚᱣᱟ ᱨᱮ ᱟᱢᱟᱜ ᱚᱱᱩᱢᱚᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱟ:</string>
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">ᱱᱚᱶᱟ ᱨᱮ ᱟᱢᱟᱜ ᱚᱱᱩᱢᱚᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱟ:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -116,6 +138,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">ᱢᱤᱫ ᱴᱟᱝ ᱱᱟᱶᱟ ᱪᱷᱟᱹᱲ ᱨᱮᱭᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">ᱮᱰ-ᱚᱱ ᱨᱮᱭᱟᱜ ᱦᱟᱹᱞᱤᱭᱟᱜ</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">ᱥᱟᱹᱯᱯᱚᱨᱴᱼᱟᱜ ᱮᱰᱰᱼᱚᱱᱥ ᱧᱮᱞᱤᱡ</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">ᱱᱟᱶᱟ ᱮᱰ-ᱚᱱ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
@@ -126,6 +150,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ᱟᱨ %2$s %3$s ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">%1$s ᱨᱮ ᱥᱮᱞᱮᱫ ᱠᱚᱢ</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox ᱮᱰᱼᱚᱱ ᱴᱮᱠᱱᱚᱞᱚᱡᱭ ᱫᱚ ᱢᱚᱰᱮᱱᱚᱜ ᱠᱟᱱᱟ ᱾ ᱱᱚᱣᱟ ᱮᱰᱼᱚᱱ ᱯᱷᱨᱮᱢᱣᱟᱨᱠ ᱠᱚ ᱵᱮᱵᱷᱟᱨᱟᱭ ᱚᱠᱟ ᱫᱚ Firefox 75 ᱟᱨ ᱚᱱᱟ ᱞᱟᱛᱟᱨ ᱵᱷᱟᱹᱥᱚᱱ ᱥᱟᱞᱟᱜ ᱵᱟᱭ ᱠᱟᱹᱢᱤ ᱟᱭ ᱾ </string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ᱮᱰ-ᱚᱱ ᱰᱟᱩᱱᱞᱳᱰ ᱟᱨ ᱧᱮᱞ ᱢᱮᱲᱟᱣ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ ...</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -150,6 +176,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s ᱨᱟᱹᱥ ᱞᱮᱠᱟᱛᱮ ᱚᱪᱚᱜ ᱦᱚᱭᱮᱱᱟ</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s ᱚᱪᱚᱜ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱮᱰᱰᱼᱚᱱ ᱫᱚ ᱢᱟᱲᱟᱝ ᱦᱟᱹᱞᱤᱭᱟᱠ %1$s ᱠᱷᱚᱱ ᱩᱪᱟᱹᱲ ᱠᱟᱱᱟ</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 ᱮᱰ-ᱚᱱ</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->

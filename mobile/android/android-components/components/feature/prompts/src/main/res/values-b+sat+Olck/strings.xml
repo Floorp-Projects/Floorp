@@ -5,7 +5,7 @@
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
-    <string name="mozac_feature_prompts_no_more_dialogs">ᱱᱚᱣᱟ ᱥᱟᱦᱴᱟ ᱟᱠᱚᱴᱮᱢ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱛᱷᱟ ᱵᱮᱱᱟᱣ ᱠᱷᱚᱱ</string>
+    <string name="mozac_feature_prompts_no_more_dialogs">ᱱᱚᱶᱟ ᱥᱟᱦᱴᱟ ᱟᱠᱚᱴᱮᱢ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱛᱷᱟ ᱵᱮᱱᱟᱣ ᱠᱷᱚᱱ</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">ᱥᱟᱡᱟᱣ ᱢᱮ</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -48,7 +48,7 @@
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢ-ᱟ?</string>
     <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
-    <string name="mozac_feature_prompt_before_unload_dialog_body">ᱪᱮᱫ ᱟᱢ ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴ ᱵᱟᱹᱜᱤ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ? ᱰᱟᱴᱟ ᱡᱟᱦᱸᱟ ᱟᱢ ᱟᱫᱮᱨ ᱞᱮᱫᱟᱢ ᱚᱱᱟ ᱥᱟᱸᱪᱟᱣ ᱵᱟᱝ ᱦᱩᱭᱩᱜ-ᱟ</string>
+    <string name="mozac_feature_prompt_before_unload_dialog_body">ᱪᱮᱫ ᱟᱢ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱵᱟᱹᱜᱤ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ? ᱰᱟᱴᱟ ᱡᱟᱦᱸᱟ ᱟᱢ ᱟᱫᱮᱨ ᱞᱮᱫᱟᱢ ᱚᱱᱟ ᱥᱟᱸᱪᱟᱣ ᱵᱟᱝ ᱦᱩᱭᱩᱜ-ᱟ</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
     <string name="mozac_feature_prompts_before_unload_stay">ᱛᱟᱦᱮᱸᱱ ᱢᱮ</string>
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
