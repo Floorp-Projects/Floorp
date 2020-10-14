@@ -57,13 +57,13 @@ async function prepareLogins(logins = []) {
 }
 
 async function formReadyInFrame(url) {
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   iframe.src = url;
   return processedPromise;
 }
 
 async function formReadyInWindow(url) {
-  let processedPromise = promiseFormsProcessed();
+  let processedPromise = promiseFormsProcessedInSameProcess();
   win.location = url;
   return processedPromise;
 }

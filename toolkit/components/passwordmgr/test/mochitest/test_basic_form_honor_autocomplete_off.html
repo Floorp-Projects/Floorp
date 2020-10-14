@@ -82,7 +82,7 @@ async function autoCompleteFieldsFromFirstMatch(form) {
   uname.focus();
   await shownPromise;
 
-  let formFilled = promiseFormsProcessed();
+  let formFilled = promiseFormsProcessedInSameProcess();
   await synthesizeKey("KEY_ArrowDown"); // open
   await synthesizeKey("KEY_Enter");
   await formFilled;

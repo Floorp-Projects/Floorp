@@ -542,8 +542,9 @@ function logoutMasterPassword() {
 
 /**
  * Resolves when a specified number of forms have been processed for (potential) filling.
+ * This relies on the observer service which only notifies observers within the same process.
  */
-function promiseFormsProcessed(expectedCount = 1) {
+function promiseFormsProcessedInSameProcess(expectedCount = 1) {
   var processedCount = 0;
   return new Promise((resolve, reject) => {
     function onProcessedForm(subject, topic, data) {
@@ -561,7 +562,11 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-async function promiseFormsProcessedInChildFrame(expectedCount = 1) {
+/**
+ * Resolves when a form has been processed for (potential) filling.
+ * This works across processes.
+ */
+async function promiseFormsProcessed(expectedCount = 1) {
   var processedCount = 0;
   return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
@@ -593,7 +598,7 @@ async function loadFormIntoWindow(origin, html, win, task) {
     );
   });
 
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   win.location =
     origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
   info(`Waiting for window to load for origin: ${origin}`);

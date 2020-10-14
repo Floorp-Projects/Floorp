@@ -54,7 +54,7 @@ const HTTP_FORM_URL = origin + "/tests/toolkit/components/passwordmgr/test/mochi
 async function setup(formUrl) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   iframe.src = formUrl;
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {

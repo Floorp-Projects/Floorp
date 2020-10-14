@@ -103,7 +103,7 @@ async function testForm(testcase) {
 
   // This could complete before the page finishes loading.
   const numForms = testcase.hostAndRootElementSelectorTuples.length;
-  const formsProcessed = promiseFormsProcessed(numForms);
+  const formsProcessed = promiseFormsProcessedInSameProcess(numForms);
 
   IFRAME.src = testcase.filename;
   info("Waiting for test page to load in the iframe");

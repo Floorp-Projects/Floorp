@@ -79,7 +79,7 @@ async function testForm(testcase) {
   });
 
   // This could complete before the page finishes loading.
-  const formsProcessed = promiseFormsProcessedInChildFrame();
+  const formsProcessed = promiseFormsProcessed();
 
   IFRAME.src = testcase.filename;
   info("Waiting for test page to load in the iframe");

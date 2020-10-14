@@ -115,7 +115,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
 
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   is(pword.value, "dsdp1", "password should match the login that was selected");
   checkLoginForm(uname, "dsdu1", pword, "dsdp1");
 
@@ -130,7 +130,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
 
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   is(pword.value, "dsdp1prime", "Password should match the login that was selected");
   checkLoginForm(uname, "dsdu1", pword, "dsdp1prime");
 });
