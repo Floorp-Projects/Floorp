@@ -5740,18 +5740,15 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     return nsTArray<SerializedStructuredCloneFile>{};
   }
 
-  nsCOMPtr<nsIFile> directory =
+  const nsCOMPtr<nsIFile> directory =
       aDatabase->GetFileManager().GetCheckedDirectory();
-  if (NS_WARN_IF(!directory)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  IDB_TRY(OkIf(directory), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   nsTArray<SerializedStructuredCloneFile> serializedStructuredCloneFiles;
-  if (NS_WARN_IF(!serializedStructuredCloneFiles.SetCapacity(aFiles.Length(),
-                                                             fallible))) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
+  IDB_TRY(OkIf(serializedStructuredCloneFiles.SetCapacity(aFiles.Length(),
+                                                          fallible)),
+          Err(NS_ERROR_OUT_OF_MEMORY));
 
   IDB_TRY(TransformIfAbortOnErr(
       aFiles, MakeBackInserter(serializedStructuredCloneFiles),
@@ -5764,13 +5761,11 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         const int64_t fileId = file.FileInfo().Id();
         MOZ_ASSERT(fileId > 0);
 
-        nsCOMPtr<nsIFile> nativeFile =
+        const nsCOMPtr<nsIFile> nativeFile =
             mozilla::dom::indexedDB::FileManager::GetCheckedFileForId(directory,
                                                                       fileId);
-        if (NS_WARN_IF(!nativeFile)) {
-          IDB_REPORT_INTERNAL_ERR();
-          return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        }
+        IDB_TRY(OkIf(nativeFile), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+                IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
         switch (file.Type()) {
           case StructuredCloneFileBase::eStructuredClone:
@@ -5782,17 +5777,15 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             [[fallthrough]];
 
           case StructuredCloneFileBase::eBlob: {
-            auto impl = CreateFileBlobImpl(*aDatabase, nativeFile,
-                                           file.FileInfo().Id());
+            const auto impl = CreateFileBlobImpl(*aDatabase, nativeFile,
+                                                 file.FileInfo().Id());
 
             IPCBlob ipcBlob;
-            nsresult rv =
-                IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              // This can only fail if the child has crashed.
-              IDB_REPORT_INTERNAL_ERR();
-              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-            }
+
+            // This can only fail if the child has crashed.
+            IDB_TRY(IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob),
+                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
             aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
 
@@ -5805,12 +5798,10 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                   null_t(), StructuredCloneFileBase::eMutableFile};
             }
 
-            RefPtr<MutableFile> actor = MutableFile::Create(
+            const RefPtr<MutableFile> actor = MutableFile::Create(
                 nativeFile, aDatabase.clonePtr(), file.FileInfoPtr());
-            if (!actor) {
-              IDB_REPORT_INTERNAL_ERR();
-              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-            }
+            IDB_TRY(OkIf(actor), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
             // Transfer ownership to IPDL.
             actor->SetActorAlive();
