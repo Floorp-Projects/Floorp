@@ -219,6 +219,15 @@ class MarionetteFrameParent extends JSWindowActorParent {
     return this.sendQuery("MarionetteFrameParent:releaseActions");
   }
 
+  async singleTap(elem, x, y, capabilities) {
+    return this.sendQuery("MarionetteFrameParent:singleTap", {
+      capabilities,
+      elem,
+      x,
+      y,
+    });
+  }
+
   async switchToFrame(id) {
     const {
       browsingContextId,
