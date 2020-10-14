@@ -1135,30 +1135,9 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileSystemRequestConstructor(
 }
 
 // Gamepad API Background IPC
-dom::PGamepadEventChannelParent*
+already_AddRefed<dom::PGamepadEventChannelParent>
 BackgroundParentImpl::AllocPGamepadEventChannelParent() {
-  RefPtr<dom::GamepadEventChannelParent> parent =
-      new dom::GamepadEventChannelParent();
-
-  return parent.forget().take();
-}
-
-bool BackgroundParentImpl::DeallocPGamepadEventChannelParent(
-    dom::PGamepadEventChannelParent* aActor) {
-  MOZ_ASSERT(aActor);
-  RefPtr<dom::GamepadEventChannelParent> parent =
-      dont_AddRef(static_cast<dom::GamepadEventChannelParent*>(aActor));
-  return true;
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPGamepadEventChannelConstructor(
-    PGamepadEventChannelParent* aActor) {
-  MOZ_ASSERT(aActor);
-  if (!static_cast<dom::GamepadEventChannelParent*>(aActor)->Init()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return dom::GamepadEventChannelParent::Create();
 }
 
 dom::PGamepadTestChannelParent*

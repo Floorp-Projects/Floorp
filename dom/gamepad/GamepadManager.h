@@ -119,11 +119,7 @@ class GamepadManager final : public nsIObserver {
   // true when shutdown has begun
   bool mShuttingDown;
 
-  // Gamepad IPDL child
-  // This pointer is only used by this singleton instance and
-  // will be destroyed during the IPDL shutdown chain, so we
-  // don't need to refcount it here.
-  nsTArray<GamepadEventChannelChild*> mChannelChildren;
+  nsTArray<RefPtr<GamepadEventChannelChild>> mChannelChildren;
 
  private:
   nsresult Init();
