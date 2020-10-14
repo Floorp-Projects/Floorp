@@ -16658,98 +16658,70 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
                   quotaManager->EnsureStorageAndOriginIsInitialized(
                       persistenceType, mSuffix, mGroup, mOrigin, Client::IDB));
 
-  nsresult rv =
-      dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
 
-  bool exists;
-  rv = dbDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    IDB_TRY_INSPECT(const bool& exists,
+                    MOZ_TO_RESULT_INVOKE(dbDirectory, Exists));
 
-  if (!exists) {
-    rv = dbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (!exists) {
+      IDB_TRY(dbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755));
     }
-  }
 #ifdef DEBUG
-  else {
-    bool isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(dbDirectory->IsDirectory(&isDirectory)));
-    MOZ_ASSERT(isDirectory);
-  }
+    else {
+      bool isDirectory;
+      MOZ_ASSERT(NS_SUCCEEDED(dbDirectory->IsDirectory(&isDirectory)));
+      MOZ_ASSERT(isDirectory);
+    }
 #endif
+  }
 
   nsAutoString databaseFilenameBase;
   GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
 
-  nsCOMPtr<nsIFile> markerFile;
-  rv = dbDirectory->Clone(getter_AddRefs(markerFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& markerFile,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
 
-  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + databaseFilenameBase);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      markerFile->Append(kIdbDeletionMarkerFilePrefix + databaseFilenameBase));
 
-  rv = markerFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(markerFile, Exists));
 
   if (exists) {
     // Delete the database and directroy since they should be deleted in
     // previous operation.
     // Note: only update usage to the QuotaManager when mEnforcingQuota == true
-    rv = RemoveDatabaseFilesAndDirectory(
+    IDB_TRY(RemoveDatabaseFilesAndDirectory(
         *dbDirectory, databaseFilenameBase,
         mEnforcingQuota ? quotaManager : nullptr, persistenceType, mGroup,
-        mOrigin, databaseName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        mOrigin, databaseName));
   }
 
-  nsCOMPtr<nsIFile> dbFile;
-  rv = dbDirectory->Clone(getter_AddRefs(dbFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& dbFile,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
 
-  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(dbFile->Append(databaseFilenameBase + kSQLiteSuffix));
 
   mTelemetryId = TelemetryIdForFile(dbFile);
 
 #ifdef DEBUG
-  nsString databaseFilePath;
-  rv = dbFile->GetPath(databaseFilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    IDB_TRY_INSPECT(const auto& databaseFilePath,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, dbFile, GetPath));
 
-  MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+  }
 #endif
 
-  nsCOMPtr<nsIFile> fmDirectory;
-  rv = dbDirectory->Clone(getter_AddRefs(fmDirectory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& fmDirectory,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
 
-  rv = fmDirectory->Append(databaseFilenameBase +
-                           kFileManagerDirectoryNameSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(fmDirectory->Append(databaseFilenameBase +
+                              kFileManagerDirectoryNameSuffix));
 
   IDB_TRY_UNWRAP(
       NotNull<nsCOMPtr<mozIStorageConnection>> connection,
@@ -16757,15 +16729,9 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
                               mDirectoryLockId, mTelemetryId));
 
   AutoSetProgressHandler asph;
-  rv = asph.Register(*connection, this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(asph.Register(*connection, this));
 
-  rv = LoadDatabaseInformation(*connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(LoadDatabaseInformation(*connection));
 
   MOZ_ASSERT(mMetadata->mNextObjectStoreId > mMetadata->mObjectStores.Count());
   MOZ_ASSERT(mMetadata->mNextIndexId > 0);
@@ -16776,36 +16742,36 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   if (!mRequestedVersion) {
     // If the requested version was not specified and the database was created,
     // treat it as if version 1 were requested.
-    if (mMetadata->mCommonMetadata.version() == 0) {
-      mRequestedVersion = 1;
-    } else {
-      // Otherwise, treat it as if the current version were requested.
-      mRequestedVersion = mMetadata->mCommonMetadata.version();
-    }
+    // Otherwise, treat it as if the current version were requested.
+    mRequestedVersion = mMetadata->mCommonMetadata.version() == 0
+                            ? 1
+                            : mMetadata->mCommonMetadata.version();
   }
 
-  if (NS_WARN_IF(mMetadata->mCommonMetadata.version() > mRequestedVersion)) {
-    return NS_ERROR_DOM_INDEXEDDB_VERSION_ERR;
-  }
+  IDB_TRY(OkIf(mMetadata->mCommonMetadata.version() <= mRequestedVersion),
+          NS_ERROR_DOM_INDEXEDDB_VERSION_ERR);
 
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  MOZ_ASSERT(mgr);
+  IDB_TRY_UNWRAP(
+      mFileManager,
+      ([this, persistenceType, &databaseName, &fmDirectory,
+        &connection]() -> mozilla::Result<SafeRefPtr<FileManager>, nsresult> {
+        IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
+        MOZ_ASSERT(mgr);
 
-  SafeRefPtr<FileManager> fileManager =
-      mgr->GetFileManager(persistenceType, mOrigin, databaseName);
-  if (!fileManager) {
-    fileManager = MakeSafeRefPtr<FileManager>(persistenceType, mGroup, mOrigin,
-                                              databaseName, mEnforcingQuota);
+        SafeRefPtr<FileManager> fileManager = mgr->GetFileManager(
+            persistenceType, mOrigin, databaseName);
 
-    rv = fileManager->Init(fmDirectory, *connection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        if (!fileManager) {
+          fileManager = MakeSafeRefPtr<FileManager>(
+              persistenceType, mGroup, mOrigin, databaseName, mEnforcingQuota);
 
-    mgr->AddFileManager(fileManager.clonePtr());
-  }
+          IDB_TRY(fileManager->Init(fmDirectory, *connection));
 
-  mFileManager = std::move(fileManager);
+          mgr->AddFileManager(fileManager.clonePtr());
+        }
+
+        return fileManager;
+      }()));
 
   // Must close connection before dispatching otherwise we might race with the
   // connection thread which needs to open the same database.
@@ -16819,10 +16785,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
                ? State::SendingResults
                : State::BeginVersionChange;
 
-  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
