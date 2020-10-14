@@ -3067,13 +3067,14 @@ Toolbox.prototype = {
    */
   onHighlightFrame: async function(frameId) {
     const inspectorFront = await this.target.getFront("inspector");
+    const highlighter = this.getHighlighter();
 
     // Only enable frame highlighting when the top level document is targeted
     if (this.rootFrameSelected) {
-      const frameActor = await inspectorFront.walker.getNodeActorFromWindowID(
+      const nodeFront = await inspectorFront.walker.getNodeActorFromWindowID(
         frameId
       );
-      inspectorFront.highlighter.highlight(frameActor);
+      return highlighter.highlight(nodeFront);
     }
   },
 
