@@ -61,7 +61,7 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer {
   nsrefcnt Release();
 
  private:
-  nsAutoRefCnt mRefCnt;
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
 };
 
 #endif  // nsHtml5OwningUTF16Buffer_h
