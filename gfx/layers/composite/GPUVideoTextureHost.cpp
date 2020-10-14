@@ -147,6 +147,14 @@ gfx::YUVColorSpace GPUVideoTextureHost::GetYUVColorSpace() const {
   return mWrappedTextureHost->GetYUVColorSpace();
 }
 
+gfx::ColorDepth GPUVideoTextureHost::GetColorDepth() const {
+  MOZ_ASSERT(mWrappedTextureHost, "Image isn't valid yet");
+  if (!mWrappedTextureHost) {
+    return TextureHost::GetColorDepth();
+  }
+  return mWrappedTextureHost->GetColorDepth();
+}
+
 gfx::ColorRange GPUVideoTextureHost::GetColorRange() const {
   MOZ_ASSERT(mWrappedTextureHost, "Image isn't valid yet");
   if (!mWrappedTextureHost) {
