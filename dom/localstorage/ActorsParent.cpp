@@ -897,8 +897,8 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
     MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
 
-    nsAutoCString pageCount;
-    pageCount.AppendInt(static_cast<int32_t>(kShadowMaxWALSize / pageSize));
+    const nsAutoCString pageCount =
+        IntToCString(static_cast<int32_t>(kShadowMaxWALSize / pageSize));
 
     rv = aConnection->ExecuteSimpleSQL("PRAGMA wal_autocheckpoint = "_ns +
                                        pageCount);
@@ -908,8 +908,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
     // Set the maximum WAL log size to reduce footprint on mobile (large empty
     // WAL files will be truncated)
-    nsAutoCString sizeLimit;
-    sizeLimit.AppendInt(kShadowJournalSizeLimit);
+    const nsAutoCString sizeLimit = IntToCString(kShadowJournalSizeLimit);
 
     rv = aConnection->ExecuteSimpleSQL("PRAGMA journal_size_limit = "_ns +
                                        sizeLimit);

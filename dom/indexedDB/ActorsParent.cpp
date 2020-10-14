@@ -548,12 +548,6 @@ nsresult ClampResultCode(nsresult aResultCode) {
   return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
 
-nsAutoCString ToAutoCString(const uint32_t aInt) {
-  nsAutoCString result;
-  result.AppendInt(aInt);
-  return result;
-}
-
 void GetDatabaseFilenameBase(const nsAString& aDatabaseName,
                              nsAutoString& aDatabaseFilenameBase) {
   MOZ_ASSERT(aDatabaseFilenameBase.IsEmpty());
@@ -607,7 +601,7 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
   // TelemetryVFS to get corresponding QuotaObject instances for SQLite files.
   const nsCString directoryLockIdClause =
       aDirectoryLockId >= 0
-          ? "&directoryLockId="_ns + IntCString(aDirectoryLockId)
+          ? "&directoryLockId="_ns + IntToCString(aDirectoryLockId)
           : EmptyCString();
 
   IDB_TRY_UNWRAP(
@@ -726,7 +720,7 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
     // WAL mode successfully enabled. Maybe set limits on its size here.
     if (kMaxWALPages >= 0) {
       rv = aConnection.ExecuteSimpleSQL("PRAGMA wal_autocheckpoint = "_ns +
-                                        ToAutoCString(kMaxWALPages));
+                                        IntToCString(kMaxWALPages));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -759,7 +753,7 @@ struct StorageOpenTraits<nsIFileURL> {
       mozIStorageService& aStorageService, nsIFileURL& aFileURL,
       const uint32_t aTelemetryId = 0) {
     const nsAutoCString telemetryFilename =
-        aTelemetryId ? "indexedDB-"_ns + ToAutoCString(aTelemetryId) +
+        aTelemetryId ? "indexedDB-"_ns + IntToCString(aTelemetryId) +
                            NS_ConvertUTF16toUTF8(kSQLiteSuffix)
                      : nsAutoCString();
 
@@ -7358,7 +7352,7 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
       const auto& incrementalVacuumStmt,
       GetCachedStatement(
           "PRAGMA incremental_vacuum("_ns +
-          ToAutoCString(std::max(uint64_t(1), uint64_t(aFreelistCount / 10))) +
+          IntToCString(std::max(uint64_t(1), uint64_t(aFreelistCount / 10))) +
           ");"_ns));
 
   IDB_TRY_INSPECT(const auto& beginImmediateStmt,
@@ -10007,14 +10001,14 @@ void Database::Stringify(nsACString& aResult) const {
   constexpr auto kQuotaGenericDelimiterString = "|"_ns;
 
   aResult.Append(
-      "DirectoryLock:"_ns + ToAutoCString(!!mDirectoryLock) +
+      "DirectoryLock:"_ns + IntToCString(!!mDirectoryLock) +
       kQuotaGenericDelimiterString +
       //
-      "Transactions:"_ns + ToAutoCString(mTransactions.Count()) +
+      "Transactions:"_ns + IntToCString(mTransactions.Count()) +
       kQuotaGenericDelimiterString +
       //
       "OtherProcessActor:"_ns +
-      ToAutoCString(
+      IntToCString(
           BackgroundParent::IsOtherProcessActor(GetBackgroundParent())) +
       kQuotaGenericDelimiterString +
       //
@@ -10024,15 +10018,16 @@ void Database::Stringify(nsACString& aResult) const {
       "PersistenceType:"_ns + PersistenceTypeToString(mPersistenceType) +
       kQuotaGenericDelimiterString +
       //
-      "Closed:"_ns + ToAutoCString(mClosed) + kQuotaGenericDelimiterString +
-      //
-      "Invalidated:"_ns + ToAutoCString(mInvalidated) +
+      "Closed:"_ns + IntToCString(static_cast<bool>(mClosed)) +
       kQuotaGenericDelimiterString +
       //
-      "ActorWasAlive:"_ns + ToAutoCString(mActorWasAlive) +
+      "Invalidated:"_ns + IntToCString(static_cast<bool>(mInvalidated)) +
       kQuotaGenericDelimiterString +
       //
-      "ActorDestroyed:"_ns + ToAutoCString(mActorDestroyed));
+      "ActorWasAlive:"_ns + IntToCString(static_cast<bool>(mActorWasAlive)) +
+      kQuotaGenericDelimiterString +
+      //
+      "ActorDestroyed:"_ns + IntToCString(static_cast<bool>(mActorDestroyed)));
 }
 
 SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
@@ -12659,15 +12654,12 @@ nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aId > 0);
 
-  nsAutoString id;
-  id.AppendInt(aId);
-
   IDB_TRY_UNWRAP(
       auto file,
       MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone),
       nullptr);
 
-  IDB_TRY(file->Append(id), nullptr);
+  IDB_TRY(file->Append(IntToString(aId)), nullptr);
 
   return file;
 }
@@ -13527,7 +13519,7 @@ void QuotaClient::ShutdownTimedOut() {
 
   if (gFactoryOps && !gFactoryOps->IsEmpty()) {
     data.Append("FactoryOperations: "_ns +
-                ToAutoCString(static_cast<uint32_t>(gFactoryOps->Length())) +
+                IntToCString(static_cast<uint32_t>(gFactoryOps->Length())) +
                 " ("_ns);
 
     nsTHashtable<nsCStringHashKey> ids;
@@ -13548,7 +13540,7 @@ void QuotaClient::ShutdownTimedOut() {
 
   if (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) {
     data.Append("LiveDatabases: "_ns +
-                ToAutoCString(gLiveDatabaseHashtable->Count()) + " ("_ns);
+                IntToCString(gLiveDatabaseHashtable->Count()) + " ("_ns);
 
     // TODO: This is a basic join-sequence-of-strings operation. Don't we have
     // that available, i.e. something similar to
@@ -13875,7 +13867,7 @@ void Maintenance::Stringify(nsACString& aResult) const {
   AssertIsOnBackgroundThread();
 
   aResult.Append("DatabaseMaintenances: "_ns +
-                 ToAutoCString(mDatabaseMaintenances.Count()) + " ("_ns);
+                 IntToCString(mDatabaseMaintenances.Count()) + " ("_ns);
 
   nsTHashtable<nsCStringHashKey> ids;
 
@@ -15630,7 +15622,7 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
 MutableFile::MutableFile(nsIFile* aFile, SafeRefPtr<Database> aDatabase,
                          SafeRefPtr<FileInfo> aFileInfo)
     : BackgroundMutableFileParentBase(FILE_HANDLE_STORAGE_IDB, aDatabase->Id(),
-                                      IntString(aFileInfo->Id()), aFile),
+                                      IntToString(aFileInfo->Id()), aFile),
       mDatabase(std::move(aDatabase)),
       mFileInfo(std::move(aFileInfo)) {
   AssertIsOnBackgroundThread();
@@ -17015,10 +17007,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
         nsString name;
         IDB_TRY(stmt.GetString(2, name));
 
-        nsAutoString hashName;
-        hashName.AppendInt(indexId);
-        hashName.Append(':');
-        hashName.Append(name);
+        const nsAutoString hashName = IntToString(indexId) + u":"_ns + name;
 
         if (!usedNames) {
           usedNames.emplace();
@@ -20886,7 +20875,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId +
       MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey) +
       " ORDER BY key ASC"_ns +
-      (mLimit ? kOpenLimit + ToAutoCString(mLimit) : EmptyCString());
+      (mLimit ? kOpenLimit + IntToCString(mLimit) : EmptyCString());
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
@@ -21036,7 +21025,7 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId +
       MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey) +
       " ORDER BY key ASC"_ns +
-      (mLimit ? " LIMIT "_ns + ToAutoCString(mLimit) : EmptyCString());
+      (mLimit ? " LIMIT "_ns + IntToCString(mLimit) : EmptyCString());
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
@@ -21408,7 +21397,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           kStmtParamNameIndexId +
           MaybeGetBindingClauseForKeyRange(mOptionalKeyRange,
                                            kColumnNameValue) +
-          (mLimit ? kOpenLimit + ToAutoCString(mLimit) : EmptyCString())));
+          (mLimit ? kOpenLimit + IntToCString(mLimit) : EmptyCString())));
 
   nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
                                       mMetadata->mCommonMetadata.id());
@@ -21535,7 +21524,7 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       "FROM "_ns +
       indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
       MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameValue) +
-      (mLimit ? kOpenLimit + ToAutoCString(mLimit) : EmptyCString());
+      (mLimit ? kOpenLimit + IntToCString(mLimit) : EmptyCString());
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
@@ -22051,7 +22040,7 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
                                kOpenLimit +
-                               ToAutoCString(1 + GetCursor().mMaxExtraCount);
+                               IntToCString(1 + GetCursor().mMaxExtraCount);
 
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
@@ -22191,7 +22180,7 @@ nsresult OpenOpHelper<IDBCursorType::Index>::DoDatabaseWork(
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
                                kOpenLimit +
-                               ToAutoCString(1 + GetCursor().mMaxExtraCount);
+                               IntToCString(1 + GetCursor().mMaxExtraCount);
 
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
@@ -22441,7 +22430,7 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   // Bind limit.
   nsresult rv = stmt->BindUTF8StringByName(
       kStmtParamNameLimit,
-      ToAutoCString(advanceCount + mCursor->mMaxExtraCount));
+      IntToCString(advanceCount + mCursor->mMaxExtraCount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
