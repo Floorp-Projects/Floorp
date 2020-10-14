@@ -14,8 +14,8 @@ const createRootNode = stub =>
     contents: { value: stub },
   });
 
-const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
-const gripMapStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
+const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
 
 describe("nodeSupportsNumericalBucketing", () => {
   it("returns true for Arrays", () => {

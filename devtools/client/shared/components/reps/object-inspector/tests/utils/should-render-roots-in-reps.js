@@ -5,14 +5,14 @@
 const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
 const { shouldRenderRootsInReps } = Utils;
 
-const nullStubs = require("devtools/client/shared/components/reps/reps/stubs/null");
-const numberStubs = require("devtools/client/shared/components/reps/reps/stubs/number");
-const undefinedStubs = require("devtools/client/shared/components/reps/reps/stubs/undefined");
-const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
-const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
-const symbolStubs = require("devtools/client/shared/components/reps/reps/stubs/symbol");
-const errorStubs = require("devtools/client/shared/components/reps/reps/stubs/error");
-const bigIntStubs = require("devtools/client/shared/components/reps/reps/stubs/big-int");
+const nullStubs = require("devtools/client/shared/components/test/node/stubs/reps/null");
+const numberStubs = require("devtools/client/shared/components/test/node/stubs/reps/number");
+const undefinedStubs = require("devtools/client/shared/components/test/node/stubs/reps/undefined");
+const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
+const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const symbolStubs = require("devtools/client/shared/components/test/node/stubs/reps/symbol");
+const errorStubs = require("devtools/client/shared/components/test/node/stubs/reps/error");
+const bigIntStubs = require("devtools/client/shared/components/test/node/stubs/reps/big-int");
 
 describe("shouldRenderRootsInReps", () => {
   it("returns true for a string", () => {

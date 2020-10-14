@@ -6,8 +6,8 @@ const Utils = require("devtools/client/shared/components/reps/object-inspector/u
 const { createNode } = Utils.node;
 const { shouldLoadItemFullText } = Utils.loadProperties;
 
-const longStringStubs = require("devtools/client/shared/components/reps/reps/stubs/long-string");
-const symbolStubs = require("devtools/client/shared/components/reps/reps/stubs/symbol");
+const longStringStubs = require("devtools/client/shared/components/test/node/stubs/reps/long-string");
+const symbolStubs = require("devtools/client/shared/components/test/node/stubs/reps/symbol");
 
 describe("shouldLoadItemFullText", () => {
   it("returns true for a longString node with unloaded full text", () => {

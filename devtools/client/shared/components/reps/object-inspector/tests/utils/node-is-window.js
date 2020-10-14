@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const gripWindowStubs = require("devtools/client/shared/components/reps/reps/stubs/window");
+const gripWindowStubs = require("devtools/client/shared/components/test/node/stubs/reps/window");
 
-const { createNode, nodeIsWindow } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+const {
+  createNode,
+  nodeIsWindow,
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 
 const createRootNode = value =>
   createNode({ name: "root", contents: { value } });

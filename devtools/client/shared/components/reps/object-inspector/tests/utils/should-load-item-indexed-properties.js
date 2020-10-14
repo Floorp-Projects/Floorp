@@ -15,11 +15,11 @@ const {
 const { shouldLoadItemIndexedProperties } = Utils.loadProperties;
 
 const GripMapEntryRep = require("devtools/client/shared/components/reps/reps/grip-map-entry");
-const accessorStubs = require("devtools/client/shared/components/reps/reps/stubs/accessor");
-const gripMapStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
-const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
-const windowStubs = require("devtools/client/shared/components/reps/reps/stubs/window");
+const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
+const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
+const windowStubs = require("devtools/client/shared/components/test/node/stubs/reps/window");
 
 describe("shouldLoadItemIndexedProperties", () => {
   it("returns true for an array", () => {

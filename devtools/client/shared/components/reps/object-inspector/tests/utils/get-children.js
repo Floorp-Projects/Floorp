@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const accessorStubs = require("devtools/client/shared/components/reps/reps/stubs/accessor");
+const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
 const performanceStubs = require("devtools/client/shared/components/reps/object-inspector/stubs/performance");
-const gripMapStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map");
-const gripArrayStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-array");
-const gripMapEntryStubs = require("devtools/client/shared/components/reps/reps/stubs/grip-map-entry");
-const gripStubs = require("devtools/client/shared/components/reps/reps/stubs/grip");
+const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
+const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
+const gripMapEntryStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map-entry");
+const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
 
 const {
   createNode,
