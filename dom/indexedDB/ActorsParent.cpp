@@ -5198,14 +5198,39 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   Result<nsCOMPtr<nsIFile>, nsresult> GetDirectory(
       PersistenceType aPersistenceType, const nsACString& aOrigin);
 
-  // The aObsoleteFiles will collect files based on the marker files. For now,
-  // InitOrigin() is the only consumer of this argument because it checks those
-  // unfinished deletion and clean them up after that.
-  nsresult GetDatabaseFilenames(
-      nsIFile* aDirectory, const AtomicBool& aCanceled,
-      nsTArray<nsString>& aSubdirsToProcess,
-      nsTHashtable<nsStringHashKey>& aDatabaseFilename,
-      nsTHashtable<nsStringHashKey>* aObsoleteFilenames = nullptr);
+  struct SubdirectoriesToProcessAndDatabaseFilenames {
+    AutoTArray<nsString, 20> subdirsToProcess;
+    nsTHashtable<nsStringHashKey> databaseFilenames{20};
+  };
+
+  struct SubdirectoriesToProcessAndDatabaseFilenamesAndObsoleteFilenames {
+    AutoTArray<nsString, 20> subdirsToProcess;
+    nsTHashtable<nsStringHashKey> databaseFilenames{20};
+    nsTHashtable<nsStringHashKey> obsoleteFilenames{20};
+  };
+
+  enum class ObsoleteFilenamesHandling { Include, Omit };
+
+  template <ObsoleteFilenamesHandling ObsoleteFilenames>
+  using GetDatabaseFilenamesResult = std::conditional_t<
+      ObsoleteFilenames == ObsoleteFilenamesHandling::Include,
+      SubdirectoriesToProcessAndDatabaseFilenamesAndObsoleteFilenames,
+      SubdirectoriesToProcessAndDatabaseFilenames>;
+
+  // Returns a two-part or three-part structure:
+  //
+  // The first part is an array of subdirectories to process.
+  //
+  // The second part is a hashtable of database filenames.
+  //
+  // When ObsoleteFilenames is ObsoleteFilenamesHandling::Include, will also
+  // collect files based on the marker files. For now,
+  // GetUsageForOriginInternal() is the only consumer of this result because it
+  // checks those unfinished deletion and clean them up after that.
+  template <ObsoleteFilenamesHandling ObsoleteFilenames =
+                ObsoleteFilenamesHandling::Omit>
+  Result<GetDatabaseFilenamesResult<ObsoleteFilenames>, nsresult>
+  GetDatabaseFilenames(nsIFile& aDirectory, const AtomicBool& aCanceled);
 
   nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
                                      const nsACString& aGroup,
@@ -13135,15 +13160,9 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
-  AtomicBool dummy(false);
-  AutoTArray<nsString, 20> subdirsToProcess;
-  nsTHashtable<nsStringHashKey> databaseFilenames(20);
-  nsresult rv = GetDatabaseFilenames(aDirectory,
-                                     /* aCanceled */ dummy, subdirsToProcess,
-                                     databaseFilenames);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT((const auto& [subdirsToProcess, databaseFilenames]),
+                  GetDatabaseFilenames(*aDirectory,
+                                       /* aCanceled */ AtomicBool{false}));
 
   for (const nsString& subdirName : subdirsToProcess) {
     // If the directory has the correct suffix then it should exist in
@@ -13176,7 +13195,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
 
     // We do have a database that uses this subdir so we should rename it now.
     nsCOMPtr<nsIFile> subdir;
-    rv = aDirectory->Clone(getter_AddRefs(subdir));
+    nsresult rv = aDirectory->Clone(getter_AddRefs(subdir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -13338,15 +13357,15 @@ nsresult QuotaClient::GetUsageForOriginInternal(
   // are database files then we need to cleanup stored files (if it's needed)
   // and also get the usage.
 
-  AutoTArray<nsString, 20> subdirsToProcess;
-  nsTHashtable<nsStringHashKey> databaseFilenames(20);
-  nsTHashtable<nsStringHashKey> obsoleteFilenames;
-  nsresult rv = GetDatabaseFilenames(directory, aCanceled, subdirsToProcess,
-                                     databaseFilenames, &obsoleteFilenames);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
-    return rv;
-  }
+  // XXX Can we avoid unwrapping into non-const variables here? (Only
+  // databaseFilenames is currently modified below)
+  IDB_TRY_UNWRAP(
+      (auto [subdirsToProcess, databaseFilenames, obsoleteFilenames]),
+      GetDatabaseFilenames<ObsoleteFilenamesHandling::Include>(*directory,
+                                                               aCanceled),
+      QM_PROPAGATE, [](const auto&) {
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
+      });
 
   if (aInitializing) {
     for (const nsString& subdirName : subdirsToProcess) {
@@ -13365,9 +13384,9 @@ nsresult QuotaClient::GetUsageForOriginInternal(
       }
 
       if (obsoleteFilenames.Contains(subdirNameBase)) {
-        rv = RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
-                                             nullptr, aPersistenceType, aGroup,
-                                             aOrigin, u""_ns);
+        nsresult rv = RemoveDatabaseFilesAndDirectory(
+            *directory, subdirNameBase, nullptr, aPersistenceType, aGroup,
+            aOrigin, u""_ns);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           // If we somehow running into here, it probably means we are in a
           // serious situation. e.g. Filesystem corruption.
@@ -13399,7 +13418,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     const auto& databaseFilename = databaseEntry.GetKey();
 
     nsCOMPtr<nsIFile> fmDirectory;
-    rv = directory->Clone(getter_AddRefs(fmDirectory));
+    nsresult rv = directory->Clone(getter_AddRefs(fmDirectory));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone);
       return rv;
@@ -13734,87 +13753,84 @@ Result<nsCOMPtr<nsIFile>, nsresult> QuotaClient::GetDirectory(
   return directory;
 }
 
-nsresult QuotaClient::GetDatabaseFilenames(
-    nsIFile* aDirectory, const AtomicBool& aCanceled,
-    nsTArray<nsString>& aSubdirsToProcess,
-    nsTHashtable<nsStringHashKey>& aDatabaseFilenames,
-    nsTHashtable<nsStringHashKey>* aObsoleteFilenames) {
+template <QuotaClient::ObsoleteFilenamesHandling ObsoleteFilenames>
+Result<QuotaClient::GetDatabaseFilenamesResult<ObsoleteFilenames>, nsresult>
+QuotaClient::GetDatabaseFilenames(nsIFile& aDirectory,
+                                  const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const auto& entries,
+                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                             &aDirectory, GetDirectoryEntries));
 
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
-         file && !aCanceled) {
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  GetDatabaseFilenamesResult<ObsoleteFilenames> result;
 
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  IDB_TRY(CollectEach(
+      [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        if (aCanceled) {
+          return nsCOMPtr<nsIFile>{};
+        }
 
-    if (isDirectory) {
-      aSubdirsToProcess.AppendElement(leafName);
-      continue;
-    }
+        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                  GetNextFile));
+      },
+      [&result](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+        IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
+                                                  nsString, file, GetLeafName));
+        IDB_TRY_INSPECT(const auto& isDirectory,
+                        MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
-    if (aObsoleteFilenames &&
-        StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
-      aObsoleteFilenames->PutEntry(
-          Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
-      continue;
-    }
+        if (isDirectory) {
+          result.subdirsToProcess.AppendElement(leafName);
+          return Ok{};
+        }
 
-    // Skip OS metadata files. These files are only used in different platforms,
-    // but the profile can be shared across different operating systems, so we
-    // check it on all platforms.
-    if (QuotaManager::IsOSMetadata(leafName)) {
-      continue;
-    }
+        if constexpr (ObsoleteFilenames == ObsoleteFilenamesHandling::Include) {
+          if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
+            result.obsoleteFilenames.PutEntry(
+                Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
+            return Ok{};
+          }
+        }
 
-    // Skip files starting with ".".
-    if (QuotaManager::IsDotFile(leafName)) {
-      continue;
-    }
+        // Skip OS metadata files. These files are only used in different
+        // platforms, but the profile can be shared across different operating
+        // systems, so we check it on all platforms.
+        if (QuotaManager::IsOSMetadata(leafName)) {
+          return Ok{};
+        }
 
-    // Skip SQLite temporary files. These files take up space on disk but will
-    // be deleted as soon as the database is opened, so we don't count them
-    // towards quota.
-    if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
-        StringEndsWith(leafName, kSQLiteSHMSuffix)) {
-      continue;
-    }
+        // Skip files starting with ".".
+        if (QuotaManager::IsDotFile(leafName)) {
+          return Ok{};
+        }
 
-    // The SQLite WAL file does count towards quota, but it is handled below
-    // once we find the actual database file.
-    if (StringEndsWith(leafName, kSQLiteWALSuffix)) {
-      continue;
-    }
+        // Skip SQLite temporary files. These files take up space on disk but
+        // will be deleted as soon as the database is opened, so we don't count
+        // them towards quota.
+        if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
+            StringEndsWith(leafName, kSQLiteSHMSuffix)) {
+          return Ok{};
+        }
 
-    nsDependentSubstring leafNameBase;
-    if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
-      UNKNOWN_FILE_WARNING(leafName);
-      continue;
-    }
+        // The SQLite WAL file does count towards quota, but it is handled below
+        // once we find the actual database file.
+        if (StringEndsWith(leafName, kSQLiteWALSuffix)) {
+          return Ok{};
+        }
 
-    aDatabaseFilenames.PutEntry(leafNameBase);
-  }
+        nsDependentSubstring leafNameBase;
+        if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
+          UNKNOWN_FILE_WARNING(leafName);
+          return Ok{};
+        }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        result.databaseFilenames.PutEntry(leafNameBase);
 
-  return NS_OK;
+        return Ok{};
+      }));
+
+  return result;
 }
 
 void QuotaClient::ProcessMaintenanceQueue() {
