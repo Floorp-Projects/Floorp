@@ -23,12 +23,12 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-  <iframe></iframe>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = document.getElementsByTagName("iframe")[0];
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
 
 async function prepareLoginsAndProcessForm(url, logins = []) {
   await LoginManager.removeAllLogins();
@@ -42,7 +42,7 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
   }
 
   let processedPromise = promiseFormsProcessedInChildFrame();
-  iframe.src = url;
+  win.location = url;
   await processedPromise;
 }
 
@@ -59,7 +59,7 @@ add_task(async function test_simpleNoDupesNoAction() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+  await checkLoginFormInFrame(win,
                                    "form-basic-username", "name2",
                                    "form-basic-password", "pass2");
 });
@@ -70,7 +70,7 @@ add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
                                            "form-basic-password", "pass2");
 });
 
@@ -80,7 +80,7 @@ add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
                                            "form-basic-password", "pass2");
 });
 
@@ -90,7 +90,7 @@ add_task(async function test_simpleNoDupesUpgradeActionOnly() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
                                            "form-basic-password", "pass2");
 });
 
@@ -106,7 +106,7 @@ add_task(async function test_dedupe() {
                     "name1", "passHTTPStoHTTP", "uname", "pword"),
   ]);
 
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1",
+  await checkLoginFormInFrame(win, "form-basic-username", "name1",
                                            "form-basic-password", "passHTTPStoHTTPS");
 });
 
@@ -130,11 +130,10 @@ add_task(async function test_dedupe_subdomain() {
                     "name1", "pass1"),
   ]);
 
-  let bc = getIframeBrowsingContext(window, 0);
-  await checkLoginFormInChildFrame(bc, "form-basic-username", "name1",
+  await checkLoginFormInFrame(win, "form-basic-username", "name1",
                                    "form-basic-password", "pass1");
 
-  let filledGUID = await SpecialPowers.spawn(bc, [], function getFilledGUID() {
+  let filledGUID = await SpecialPowers.spawn(win, [], function getFilledGUID() {
     let LMC = this.content.windowGlobalChild.getActor("LoginManager");
     let doc = this.content.document;
     let form = doc.getElementById("form-basic");
@@ -143,7 +142,6 @@ add_task(async function test_dedupe_subdomain() {
   });
   is(filledGUID, loginToFillGUID, "Check the correct login was filled");
 });
-
 </script>
 </pre>
 </body>

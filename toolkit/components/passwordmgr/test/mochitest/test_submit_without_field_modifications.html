@@ -189,7 +189,7 @@ add_task(async function test_empty_form_with_input_handler() {
 add_task(async function test_no_message_on_autofill_without_user_interaction() {
   let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
                                    "form-basic-password", "pass1");
 
@@ -219,7 +219,7 @@ add_task(async function test_message_on_autofill_with_document_interaction() {
 
   let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
                                    "form-basic-password", "pass1");
 
@@ -253,7 +253,7 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
   // there is both document interaction and field modification
   let chromeScript = await setupWithOneLogin(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
-  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
                                    "form-basic-password", "pass1");
 

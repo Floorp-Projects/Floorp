@@ -11,10 +11,10 @@
 Login Manager test: usage prefs collection
 
 <script>
+let DEFAULT_ORIGIN = window.location.origin;
 
 function addLogin() {
-  let origin = window.location.origin;
-  addLoginsInParent([origin, origin, null, "testuser", "testpass", "uname", "pword"]);
+  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "testuser", "testpass", "uname", "pword"]);
 }
 
 async function checkUsagePrefs(hasEntry, lastUsed) {
@@ -71,18 +71,18 @@ async function startTest() {
   addLogin();
   await checkUsagePrefs(true, 0);
 
-  await setFormAndWaitForFieldFilled(`
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
     <form id="form1" action="/">
       <p>This is form 1.</p>
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
+      <input id="username-1" type="text"       name="uname">
+      <input id="password-1" type="password"   name="pword">
 
       <button type="submit" name="submit">Submit</button>
       <button type="reset"> Reset </button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "testuser"});
-
-  is($_(1, "uname").value, "testuser", "Checking for filled username");
-  is($_(1, "pword").value, "testpass", "Checking for filled password");
+    </form>`, win);
+  await checkLoginFormInFrame(win, "username-1", "testuser", "password-1", "testpass");
 
   SimpleTest.finish();
 }

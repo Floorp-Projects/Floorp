@@ -12,6 +12,8 @@ Login Manager test: html5 input types (email, tel, url, etc.)
 <script>
 runChecksAfterCommonInit(() => startTest());
 
+let DEFAULT_ORIGIN = window.location.origin;
+
 runInParent(function setup() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -41,87 +43,6 @@ runInParent(function setup() {
 
 <p id="display"></p>
 <div id="content" style="display: none">
-
-  <form id="form1" action="http://bug600551-1">
-    <input  type="email"    name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form2" action="http://bug600551-2">
-    <input  type="tel"      name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form3" action="http://bug600551-3">
-    <input  type="url"      name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form4" action="http://bug600551-4">
-    <input  type="number"   name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- The following forms should not be filled with usernames -->
-  <form id="form5" action="formtest.js">
-    <input  type="search"   name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form6" action="formtest.js">
-    <input  type="datetime" name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form7" action="formtest.js">
-    <input  type="date"     name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form8" action="formtest.js">
-    <input  type="month" name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form9" action="formtest.js">
-    <input  type="week"     name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form10" action="formtest.js">
-    <input  type="time"     name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form11" action="formtest.js">
-    <input  type="datetime-local" name="uname">
-    <input  type="password"       name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form12" action="formtest.js">
-    <input  type="range"    name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form13" action="formtest.js">
-    <input  type="color"    name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -129,29 +50,112 @@ runInParent(function setup() {
 /* Test for Login Manager: 600551
   (Password manager not working with input type=email)
  */
-function startTest() {
-  checkForm(1, "testuser@example.com", "testpass1");
-  checkForm(2, "555-555-5555", "testpass2");
-  checkForm(3, "http://mozilla.org", "testpass3");
-  checkForm(4, "123456789", "testpass4");
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id="form1" action="http://bug600551-1">
+      <input  type="email"    name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(5, "uname").value, "", "type=search should not be considered a username");
+    <form id="form2" action="http://bug600551-2">
+      <input  type="tel"      name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(6, "uname").value, "", "type=datetime should not be considered a username");
+    <form id="form3" action="http://bug600551-3">
+      <input  type="url"      name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(7, "uname").value, "", "type=date should not be considered a username");
+    <form id="form4" action="http://bug600551-4">
+      <input  type="number"   name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(8, "uname").value, "", "type=month should not be considered a username");
+    <!-- The following forms should not be filled with usernames -->
+    <form id="form5" action="formtest.js">
+      <input  type="search"   name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(9, "uname").value, "", "type=week should not be considered a username");
+    <form id="form6" action="formtest.js">
+      <input  type="datetime" name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(10, "uname").value, "", "type=time should not be considered a username");
+    <form id="form7" action="formtest.js">
+      <input  type="date"     name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(11, "uname").value, "", "type=datetime-local should not be considered a username");
+    <form id="form8" action="formtest.js">
+      <input  type="month" name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(12, "uname").value, "50", "type=range should not be considered a username");
+    <form id="form9" action="formtest.js">
+      <input  type="week"     name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
 
-  is($_(13, "uname").value, "#000000", "type=color should not be considered a username");
+    <form id="form10" action="formtest.js">
+      <input  type="time"     name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
+
+    <form id="form11" action="formtest.js">
+      <input  type="datetime-local" name="uname">
+      <input  type="password"       name="pword">
+      <button type="submit">Submit</button>
+    </form>
+
+    <form id="form12" action="formtest.js">
+      <input  type="range"    name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>
+
+    <form id="form13" action="formtest.js">
+      <input  type="color"    name="uname">
+      <input  type="password" name="pword">
+      <button type="submit">Submit</button>
+    </form>`, win);
+
+  await checkLoginFormInFrameWithElementValues(win, 1, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 2, "555-555-5555", "testpass2");
+  await checkLoginFormInFrameWithElementValues(win, 3, "http://mozilla.org", "testpass3");
+  await checkLoginFormInFrameWithElementValues(win, 4, "123456789", "testpass4");
+
+  info("type=search should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 5, "");
+  info("type=datetime should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 6, "");
+  info("type=date should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 7, "");
+  info("type=month should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 8, "");
+  info("type=week should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 9, "");
+  info("type=time should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 10, "");
+  info("type=datetime-local should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 11, "");
+  info("type=range should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 12, "50");
+  info("type=color should not be considered a username");
+  await checkLoginFormInFrameWithElementValues(win, 13, "#000000");
 
   SimpleTest.finish();
 }

@@ -14,21 +14,24 @@
 let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                                            SpecialPowers.Ci.nsILoginInfo,
                                                                            "init");
-let readyPromise = registerRunTests(1);
+let readyPromise = registerRunTests();
 </script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-  <form id="form1" action="https://autofill" onsubmit="return false;">
-    <input type="text" name="uname">
-    <input type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+let DEFAULT_ORIGIN = window.location.origin;
+let win;
+let html = `
+  <form id="form1" action="https://autofill" onsubmit="return false;">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>`;
 
 async function prepareLogins(logins = []) {
   await LoginManager.removeAllLogins();
@@ -42,10 +45,18 @@ async function prepareLogins(logins = []) {
   is(count, logins.length, "All logins were added");
 }
 
-let origin = window.location.origin;
 const availableLogins = {
-  "exampleUser1": new nsLoginInfo(origin, "https://autofill", null,
+  "exampleUser1": new nsLoginInfo(DEFAULT_ORIGIN, "https://autofill", null,
                               "user1", "pass1", "uname", "pword"),
+}
+
+async function recreateTreeInWindow(formNum) {
+  await SpecialPowers.spawn(win, [formNum], (formNumF) => {
+    // eslint-disable-next-line no-unsanitized/property
+    let form = this.content.document.querySelector(`#form${formNumF}`);
+    // eslint-disable-next-line no-unsanitized/property, no-self-assign
+    form.outerHTML = form.outerHTML;
+  });
 }
 
 const tests = [
@@ -74,6 +85,9 @@ const tests = [
 add_task(async function setup() {
   ok(readyPromise, "check promise is available");
   await readyPromise;
+  win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
 });
 
 async function testResultOfTabInteractions(testData) {
@@ -81,40 +95,48 @@ async function testResultOfTabInteractions(testData) {
     ["signon.autofillForms", testData.autofillEnabled],
   ]});
 
-  await SimpleTest.promiseFocus(window);
+  await SimpleTest.promiseFocus(win);
   let logins = testData.logins.map(name => availableLogins[name]);
   await prepareLogins(logins);
 
   info("recreating form");
-  let processed = promiseFormsProcessed();
-  recreateTree(document.getElementById("form1"));
+  let processed = promiseFormsProcessedInChildFrame();
+  await recreateTreeInWindow(1);
   info("waiting for form processed");
   await processed;
   // check autofill results
-  checkForm(1, testData.expectedAutofillUsername, testData.expectedAutofillPassword);
-  let pword = $_(1, "pword");
-  let uname = $_(1, "uname");
+  await checkLoginFormInFrameWithElementValues(win, 1, testData.expectedAutofillUsername, testData.expectedAutofillPassword);
 
-  SpecialPowers.wrap(pword).setUserInput("");
-  SpecialPowers.wrap(uname).setUserInput("");
+  await SpecialPowers.spawn(win, [testData.typeUsername], async (typeUsername) => {
+    let doc = this.content.document;
+    let pword = doc.querySelector("[name='pword']");
+    let uname = doc.querySelector("[name='uname']");
 
-  info("Placing focus in the username field");
-  uname.focus();
+    pword.setUserInput("");
+    uname.setUserInput("");
 
-  if (testData.typeUsername) {
-    info("Filling username field");
-    await sendString(testData.typeUsername);
-  }
+    info("Placing focus in the username field");
+    uname.focus();
 
-  await synthesizeKey("KEY_Tab"); // blur un, focus pw
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+    if (typeUsername) {
+      info("Filling username field");
+      EventUtils.sendString(typeUsername, this.content);
+    }
 
-  ok($_(1, "pword").matches("input:focus"), "pword field is focused");
-  checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
+    EventUtils.synthesizeKey("KEY_Tab", {}, this.content); // blur un, focus pw
+    await new Promise(resolve => SpecialPowers.executeSoon(resolve));
 
-  recreateTree(document.getElementById("form1"));
-  await promiseFormsProcessed();
-  await synthesizeKey("KEY_Escape");
+    ok(pword.matches("input:focus"), "pword field is focused");
+  });
+
+  await checkLoginFormInFrameWithElementValues(win, 1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
+
+  await recreateTreeInWindow(1);
+  await promiseFormsProcessedInChildFrame();
+
+  await SpecialPowers.spawn(win, [], () => {
+    EventUtils.synthesizeKey("KEY_Escape", {}, this.content);
+  });
 }
 
 for (let testData of tests) {

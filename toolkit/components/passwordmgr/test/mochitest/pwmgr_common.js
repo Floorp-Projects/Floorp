@@ -228,7 +228,7 @@ function checkLoginForm(
   );
 }
 
-function checkLoginFormInChildFrame(
+function checkLoginFormInFrame(
   iframeBC,
   usernameFieldId,
   expectedUsername,
@@ -262,6 +262,113 @@ function checkLoginFormInChildFrame(
         expectedPasswordF,
         "Checking " + formID + " password is: " + expectedPasswordF
       );
+    }
+  );
+}
+
+async function checkUnmodifiedFormInFrame(bc, formNum) {
+  return SpecialPowers.spawn(bc, [formNum], formNumF => {
+    let form = this.content.document.getElementById(`form${formNumF}`);
+    ok(form, "Locating form " + formNumF);
+
+    for (var i = 0; i < form.elements.length; i++) {
+      var ele = form.elements[i];
+
+      // No point in checking form submit/reset buttons.
+      if (ele.type == "submit" || ele.type == "reset") {
+        continue;
+      }
+
+      is(
+        ele.value,
+        ele.defaultValue,
+        "Test to default value of field " + ele.name + " in form " + formNumF
+      );
+    }
+  });
+}
+
+/**
+ * Check a form for expected values even if it is in a different top level window
+ * or process. If an argument is null, a field's expected value will be the default
+ * value.
+ *
+ * Similar to the checkForm helper, but it works across (cross-origin) frames.
+ *
+ * <form id="form#">
+ * checkLoginFormInFrameWithElementValues(#, "foo");
+ */
+async function checkLoginFormInFrameWithElementValues(
+  browsingContext,
+  formNum,
+  ...values
+) {
+  return SpecialPowers.spawn(
+    browsingContext,
+    [formNum, values],
+    function checkFormWithElementValues(formNumF, valuesF) {
+      let [val1F, val2F, val3F] = valuesF;
+      let doc = this.content.document;
+      let e;
+      let form = doc.getElementById("form" + formNumF);
+      ok(form, "Locating form " + formNumF);
+
+      let numToCheck = arguments.length - 1;
+
+      if (!numToCheck--) {
+        return;
+      }
+      e = form.elements[0];
+      if (val1F == null) {
+        is(
+          e.value,
+          e.defaultValue,
+          "Test default value of field " + e.name + " in form " + formNumF
+        );
+      } else {
+        is(
+          e.value,
+          val1F,
+          "Test value of field " + e.name + " in form " + formNumF
+        );
+      }
+
+      if (!numToCheck--) {
+        return;
+      }
+
+      e = form.elements[1];
+      if (val2F == null) {
+        is(
+          e.value,
+          e.defaultValue,
+          "Test default value of field " + e.name + " in form " + formNumF
+        );
+      } else {
+        is(
+          e.value,
+          val2F,
+          "Test value of field " + e.name + " in form " + formNumF
+        );
+      }
+
+      if (!numToCheck--) {
+        return;
+      }
+      e = form.elements[2];
+      if (val3F == null) {
+        is(
+          e.value,
+          e.defaultValue,
+          "Test default value of field " + e.name + " in form " + formNumF
+        );
+      } else {
+        is(
+          e.value,
+          val3F,
+          "Test value of field " + e.name + " in form " + formNumF
+        );
+      }
     }
   );
 }
@@ -471,6 +578,46 @@ async function promiseFormsProcessedInChildFrame(expectedCount = 1) {
       }
     );
   });
+}
+
+async function loadFormIntoWindow(origin, html, win, task) {
+  let loadedPromise = new Promise(resolve => {
+    win.addEventListener(
+      "load",
+      function(event) {
+        if (event.target.location.href.endsWith("blank.html")) {
+          resolve();
+        }
+      },
+      { once: true }
+    );
+  });
+
+  let processedPromise = promiseFormsProcessedInChildFrame();
+  win.location =
+    origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+  info(`Waiting for window to load for origin: ${origin}`);
+  await loadedPromise;
+
+  await SpecialPowers.spawn(win, [html, task?.toString()], function(
+    contentHtml,
+    contentTask = null
+  ) {
+    // eslint-disable-next-line no-unsanitized/property
+    this.content.document.documentElement.innerHTML = contentHtml;
+    // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
+    if (contentTask) {
+      // eslint-disable-next-line no-eval
+      const runnableTask = eval(`
+      (() => {
+        return (${contentTask});
+      })();`);
+      runnableTask.call(this);
+    }
+  });
+
+  info("Waiting for the form to be processed");
+  await processedPromise;
 }
 
 function getTelemetryEvents(options) {

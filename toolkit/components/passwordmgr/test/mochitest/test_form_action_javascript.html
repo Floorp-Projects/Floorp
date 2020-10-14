@@ -21,10 +21,23 @@ runInParent(function setup() {
   Services.logins.addLogin(jslogin);
 });
 
+let DEFAULT_ORIGIN = window.location.origin;
+
 /** Test for Login Manager: JS action URL **/
 
-function startTest() {
-  checkForm(1, "jsuser", "jspass123");
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id='form1' action='javascript:alert("never shows")'> 1
+      <input name="uname">
+      <input name="pword" type="password">
+
+      <button type='submit'>Submit</button>
+      <button type='reset'> Reset </button>
+    </form>`, win);
+
+  await checkLoginFormInFrameWithElementValues(win, 1, "jsuser", "jspass123");
 
   SimpleTest.finish();
 }
@@ -33,16 +46,6 @@ function startTest() {
 <p id="display"></p>
 
 <div id="content" style="display: none">
-
-
-<form id='form1' action='javascript:alert("never shows")'> 1
-    <input name="uname">
-    <input name="pword" type="password">
-
-    <button type='submit'>Submit</button>
-    <button type='reset'> Reset </button>
-</form>
-
 </div>
 
 <pre id="test"></pre>

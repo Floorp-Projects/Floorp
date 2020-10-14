@@ -9,50 +9,53 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script>
-let formFilledPromise = promiseFormsProcessed();
-
 addLoginsInParent(
   [window.location.origin, "https://autofill", null,
               "", "pass1", "", ""]);
+
+let DEFAULT_ORIGIN = window.location.origin;
 </script>
 <body>
 <p id="display"></p>
-
 <div id="content">
-  <form id="form1" action="https://autofill" onsubmit="return false;">
-    <input  type="text"       id="uname">
-    <input  type="password"   id="pword">
-    <button type="submit">Submit</button>
-  </form>
-
 <pre id="test">
 <script>
 add_task(async function test_field_highlight_on_autofill() {
-  await formFilledPromise;
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id="form1" action="https://autofill" onsubmit="return false;">
+      <input  type="text"       id="uname">
+      <input  type="password"   id="pword">
+      <button type="submit">Submit</button>
+    </form>`, win);
 
-  let username = document.getElementById("uname");
-  let password = document.getElementById("pword");
-  is(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
-        "Highlight was not applied to the username field on page load autofill");
-  isnot(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
-        "Highlight was successfully applied to the password field on page load autofill");
+  await SpecialPowers.spawn(win, [], async function() {
+    let EventUtils = ContentTaskUtils.getEventUtils(this.content);
+    let doc = this.content.document;
+    let username = doc.getElementById("uname");
+    let password = doc.getElementById("pword");
+    is(doc.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+          "Highlight was not applied to the username field on page load autofill");
+    isnot(doc.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
+          "Highlight was successfully applied to the password field on page load autofill");
 
-  // Test that initiating a change on the input value will remove the highlight. We check by pressing
-  // the tab key after backspace(by shifting focus to the next element) because the tab key is known to
-  // cause a bug where the highlight is applied once again.
-  username.focus();
-  synthesizeKey("U");
-  synthesizeKey("KEY_Tab");
+    // Test that initiating a change on the input value will remove the highlight. We check by pressing
+    // the tab key after backspace(by shifting focus to the next element) because the tab key is known to
+    // cause a bug where the highlight is applied once again.
+    username.focus();
+    await EventUtils.synthesizeKey("U", {}, this.content);
+    await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
 
-  let computedStyle = document.defaultView.getComputedStyle(username);
-  is(computedStyle.getPropertyValue("filter"), "none", "Highlight is still not present on username element");
+    let computedStyle = doc.defaultView.getComputedStyle(username);
+    is(computedStyle.getPropertyValue("filter"), "none", "Highlight is still not present on username element");
 
-  synthesizeKey("KEY_Backspace");
-  synthesizeKey("KEY_Tab");
-  computedStyle = document.defaultView.getComputedStyle(password);
-  is(computedStyle.getPropertyValue("filter"), "none", "Highlight was successfully removed on change in value of password input element");
+    await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
+    await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
+    computedStyle = doc.defaultView.getComputedStyle(password);
+    is(computedStyle.getPropertyValue("filter"), "none", "Highlight was successfully removed on change in value of password input element");
+  });
 });
 </script>
 </body>
 </html>
-

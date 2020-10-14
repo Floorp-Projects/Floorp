@@ -22,15 +22,15 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-  <iframe></iframe>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
-
 let origin = window.location.origin;
 let suborigin = "http://sub." + window.location.host;
+
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
 
 async function prepareLoginsAndProcessForm(url, logins = []) {
   await LoginManager.removeAllLogins();
@@ -44,7 +44,7 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
   }
 
   let processedPromise = promiseFormsProcessedInChildFrame();
-  iframe.src = url;
+  win.location = url;
   await processedPromise;
 }
 
@@ -54,10 +54,7 @@ add_task(async function test_formActionOrigin_wildcard_should_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
+  await checkLoginFormInFrame(win, "form-basic-username", "name2", "form-basic-password", "pass2");
 });
 
 add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
@@ -66,10 +63,8 @@ add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "", pword, "");
+
+  await checkLoginFormInFrame(win, "form-basic-username", "", "form-basic-password", "");
 });
 
 add_task(async function test_formActionOrigin_subdomain_should_autofill() {
@@ -78,11 +73,7 @@ add_task(async function test_formActionOrigin_subdomain_should_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
-
+  await checkLoginFormInFrame(win, "form-basic-username", "name2", "form-basic-password", "pass2");
 });
 
 add_task(async function test_origin_subdomain_should_not_autofill() {
@@ -91,12 +82,7 @@ add_task(async function test_origin_subdomain_should_not_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-
-  checkLoginForm(uname, "", pword, "");
-
+  await checkLoginFormInFrame(win, "form-basic-username", "", "form-basic-password", "");
 });
 
 </script>

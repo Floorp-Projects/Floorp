@@ -79,7 +79,7 @@ add_task(async function test_autocomplete_https_downgrade() {
   // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
   // we're expecting just login2 as a match
   // Make sure initial form is empty.
-  await checkLoginFormInChildFrame(iframe, "form-basic-username", "name1", "form-basic-password", "pass1");
+  await checkLoginFormInFrame(iframe, "form-basic-username", "name1", "form-basic-password", "pass1");
 
   // Trigger autocomplete popup
   await restoreForm();

@@ -1,6 +1,8 @@
 const OUTER_URL =
   "https://test1.example.com:443" + DIRECTORY_PATH + "form_crossframe.html";
 
+requestLongerTimeout(2);
+
 async function acceptPasswordSave() {
   let notif = await getCaptureDoorhangerThatMayOpen("password-save");
   let promiseNewSavedPassword = TestUtils.topicObserved(
@@ -65,6 +67,30 @@ async function verifyNotifications(notifyPromise, expected) {
       ok(false, "Expected notification '" + expectedItem + "' not sent");
     }
   }
+}
+
+// Make sure there is an autocomplete result for the frame's saved login and select it.
+async function autocompleteLoginInIFrame(
+  browser,
+  iframeBrowsingContext,
+  selector
+) {
+  let popup = document.getElementById("PopupAutoComplete");
+  ok(popup, "Got popup");
+
+  await openACPopup(popup, browser, selector, iframeBrowsingContext);
+
+  let autocompleteLoginResult = popup.querySelector(
+    `[originaltype="loginWithOrigin"]`
+  );
+  ok(autocompleteLoginResult, "Got login richlistitem");
+
+  let promiseHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+
+  await EventUtils.synthesizeKey("KEY_ArrowDown");
+  await EventUtils.synthesizeKey("KEY_Enter");
+
+  await promiseHidden;
 }
 
 /*
@@ -134,6 +160,15 @@ async function submitSomeCrossSiteFrames(locationMode) {
     "FormProcessed: " + innerFrameBC2.id,
   ]);
 
+  // We don't expect the innerFrame to be autofilled with the saved login, since
+  // it is cross-origin with the top level frame, so we autocomplete instead.
+  info("Autocompleting saved login into inner form");
+  await autocompleteLoginInIFrame(
+    secondtab.linkedBrowser,
+    innerFrameBC2,
+    "#inner-username"
+  );
+
   await checkFormFields(outerFrameBC2, "outer", "", "");
   await checkFormFields(innerFrameBC2, "inner", "inner", "innerpass");
 
@@ -170,6 +205,15 @@ async function submitSomeCrossSiteFrames(locationMode) {
     "FormProcessed: " + outerFrameBC3.id,
     "FormProcessed: " + innerFrameBC3.id,
   ]);
+
+  // We don't expect the innerFrame to be autofilled with the saved login, since
+  // it is cross-origin with the top level frame, so we autocomplete instead.
+  info("Autocompleting saved login into inner form");
+  await autocompleteLoginInIFrame(
+    thirdtab.linkedBrowser,
+    innerFrameBC3,
+    "#inner-username"
+  );
 
   await checkFormFields(outerFrameBC3, "outer", "outer2", "outerpass2");
   await checkFormFields(innerFrameBC3, "inner", "inner", "innerpass");

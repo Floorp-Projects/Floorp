@@ -29,18 +29,22 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 <pre id="test">
 <script class="testbody" type="text/javascript">
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
 
 let origin = window.location.origin;
 let otherOrigin = "https://foobar." + window.location.host;
 let oldOrigin = "https://old." + window.location.host;
 
-function checkIframeLoginForm(expectedUsername, expectedPassword) {
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, expectedUsername, pword, expectedPassword);
+async function checkWindowLoginForm(expectedUsername, expectedPassword) {
+  return SpecialPowers.spawn(win, [expectedUsername, expectedPassword], function(un, pw) {
+    let doc = this.content.document;
+    Assert.equal(doc.querySelector("#form-basic-username").value, un, "Check username value");
+    Assert.equal(doc.querySelector("#form-basic-password").value, pw, "Check password value");
+  });
 }
-async function prepareLoginsAndProcessForm(url, logins = []) {
+
+async function prepareLogins(logins = []) {
   await LoginManager.removeAllLogins();
 
   let dates = Date.now();
@@ -50,57 +54,95 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
     login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
     await LoginManager.addLogin(login);
   }
+}
 
+async function formReadyInFrame(url) {
   let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = url;
-  await processedPromise;
+  return processedPromise;
+}
+
+async function formReadyInWindow(url) {
+  let processedPromise = promiseFormsProcessed();
+  win.location = url;
+  return processedPromise;
 }
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_wildcard_formActionOrigin() {
-  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+  await prepareLogins([
     new nsLoginInfo(otherOrigin, "", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
+  await formReadyInWindow(origin + MISSING_ACTION_PATH);
 
-  checkIframeLoginForm("", "");
+  await checkWindowLoginForm("", "");
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_same_domain_formActionOrigin() {
-  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+  await prepareLogins([
     new nsLoginInfo(otherOrigin, origin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
+  await formReadyInWindow(origin + MISSING_ACTION_PATH);
 
-  checkIframeLoginForm("", "");
+  await checkWindowLoginForm("", "");
 });
 
 add_task(async function test_matching_logins_with_different_subdomain_and_matching_domain_should_autofill() {
-  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+  await prepareLogins([
     new nsLoginInfo(origin, origin, null,
                     "name2", "pass2", "uname", "pword"),
     new nsLoginInfo(oldOrigin, origin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
+  await formReadyInWindow(origin + MISSING_ACTION_PATH);
 
-  checkIframeLoginForm("name2", "pass2");
+  await checkWindowLoginForm("name2", "pass2");
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_different_subdomain_formActionOrigin() {
-  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+  await prepareLogins([
     new nsLoginInfo(otherOrigin, otherOrigin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
+  await formReadyInWindow(origin + MISSING_ACTION_PATH);
 
-  checkIframeLoginForm("", "");
+  await checkWindowLoginForm("", "");
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_different_domain_formActionOrigin() {
-  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+  await prepareLogins([
     new nsLoginInfo(otherOrigin, "https://example.net", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
+  await formReadyInWindow(origin + MISSING_ACTION_PATH);
 
-  checkIframeLoginForm("", "");
+  await checkWindowLoginForm("", "");
+});
+
+add_task(async function test_login_with_same_origin_shouldnt_autofill_cross_origin_iframe() {
+  await SimpleTest.promiseFocus(window);
+
+  async function checkIframeLoginForm(expectedUsername, expectedPassword) {
+    return SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [expectedUsername, expectedPassword], function(un, pw) {
+        var u = this.content.document.getElementById("form-basic-username");
+        var p = this.content.document.getElementById("form-basic-password");
+        Assert.equal(u.value, un, "Check username value");
+        Assert.equal(p.value, pw, "Check password value");
+    });
+  }
+
+  // We need an origin that is supported by the test framework to be able to load the
+  // cross-origin form into the iframe.
+  let crossOrigin = "https://test1.example.com";
+  info(`Top level frame origin: ${origin}. Iframe and login origin: ${crossOrigin}.`);
+  await prepareLogins([
+    new nsLoginInfo(crossOrigin, crossOrigin, null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+  await formReadyInFrame(crossOrigin + MISSING_ACTION_PATH);
+
+  await checkIframeLoginForm("", "");
 });
 
 </script>
