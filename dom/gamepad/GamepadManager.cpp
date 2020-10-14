@@ -115,8 +115,9 @@ GamepadManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void GamepadManager::StopMonitoring() {
-  for (uint32_t i = 0; i < mChannelChildren.Length(); ++i) {
-    PGamepadEventChannelChild::Send__delete__(mChannelChildren[i]);
+  for (auto& channelChild : mChannelChildren) {
+    PGamepadEventChannelChild::Send__delete__(channelChild);
+    channelChild = nullptr;
   }
   if (gfx::VRManagerChild::IsCreated()) {
     gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
@@ -149,15 +150,12 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
       return;
     }
 
-    GamepadEventChannelChild* child = new GamepadEventChannelChild();
-    PGamepadEventChannelChild* initedChild =
-        actor->SendPGamepadEventChannelConstructor(child);
-    if (NS_WARN_IF(!initedChild)) {
+    RefPtr<GamepadEventChannelChild> child(GamepadEventChannelChild::Create());
+    if (!actor->SendPGamepadEventChannelConstructor(child.get())) {
       // We are probably shutting down.
       return;
     }
 
-    MOZ_ASSERT(initedChild == child);
     mChannelChildren.AppendElement(child);
 
     if (gfx::VRManagerChild::IsCreated()) {
