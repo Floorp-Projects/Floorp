@@ -467,6 +467,11 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
         return false;
       }
       break;
+    case RefType::Eq:
+      if (!CheckEqRefValue(cx, v, refval)) {
+        return false;
+      }
+      break;
     case RefType::TypeIndex:
       MOZ_CRASH("temporarily unsupported Ref type");
   }
@@ -518,6 +523,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
         case RefType::Func:
           val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
           return true;
+        case RefType::Eq:
         case RefType::Extern:
           val.set(Val(targetType.refType(), any));
           return true;
@@ -557,6 +563,7 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
         case RefType::Func:
           out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
           return true;
+        case RefType::Eq:
         case RefType::Extern:
           out.set(UnboxAnyRef(val.ref()));
           return true;
@@ -2079,6 +2086,26 @@ bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
   return false;
 }
 
+bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
+                           MutableHandleAnyRef vp) {
+  if (v.isNull()) {
+    vp.set(AnyRef::null());
+    return true;
+  }
+
+  if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    if (obj.is<TypedObject>()) {
+      vp.set(AnyRef::fromJSObject(&obj.as<TypedObject>()));
+      return true;
+    }
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_EQREF_VALUE);
+  return false;
+}
+
 Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
   return ExportedFunctionToInstanceObject(fun)->instance();
 }
@@ -2667,6 +2694,15 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     }
     tableType = RefType::extern_();
 #endif
+#ifdef ENABLE_WASM_GC
+  } else if (StringEqualsLiteral(elementLinearStr, "eqref")) {
+    if (!GcTypesAvailable(cx)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_ELEMENT);
+      return false;
+    }
+    tableType = RefType::eq();
+#endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2875,16 +2911,14 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   if (!CheckRefType(cx, table.elemType(), fillValue, &fun, &any)) {
     return false;
   }
-  switch (table.elemType().kind()) {
-    case RefType::Func:
+  switch (table.repr()) {
+    case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
       table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
       break;
-    case RefType::Extern:
+    case TableRepr::Ref:
       table.fillAnyRef(index, 1, any);
       break;
-    case RefType::TypeIndex:
-      MOZ_CRASH("Ref NYI");
   }
 
   args.rval().setUndefined();
@@ -3043,6 +3077,7 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
       switch (global->type().refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           if (!global->cell()->ref.isNull()) {
             // TODO/AnyRef-boxing: With boxed immediates and strings, the write
             // barrier is going to have to be more complicated.
@@ -3107,6 +3142,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
       switch (val.type().refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           MOZ_ASSERT(cell->ref.isNull(), "no prebarriers needed");
           cell->ref = val.ref();
           if (!cell->ref.isNull()) {
@@ -3202,6 +3238,11 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
              StringEqualsLiteral(typeLinearStr, "externref")) {
     globalType = RefType::extern_();
 #endif
+#ifdef ENABLE_WASM_GC
+  } else if (GcTypesAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "eqref")) {
+    globalType = RefType::eq();
+#endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_GLOBAL_TYPE);
@@ -3237,6 +3278,9 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
           break;
         case RefType::Extern:
           globalVal = Val(RefType::extern_(), AnyRef::null());
+          break;
+        case RefType::Eq:
+          globalVal = Val(RefType::eq(), AnyRef::null());
           break;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
@@ -3299,6 +3343,7 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
           args.thisv().toObject().as<WasmGlobalObject>().type().refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
           return true;
         case RefType::TypeIndex:
@@ -3397,7 +3442,8 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
     case ValType::Ref:
       switch (this->type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Extern: {
+        case RefType::Extern:
+        case RefType::Eq: {
           AnyRef prevPtr = cell->ref;
           // TODO/AnyRef-boxing: With boxed immediates and strings, the write
           // barrier is going to have to be more complicated.
@@ -3481,6 +3527,9 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
           return;
         case RefType::Extern:
           outval.set(Val(RefType::extern_(), cell->ref));
+          return;
+        case RefType::Eq:
+          outval.set(Val(RefType::eq(), cell->ref));
           return;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");

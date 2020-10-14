@@ -163,6 +163,8 @@ MOZ_MUST_USE bool DeserializeModule(JSContext* cx, const Bytes& serialized,
 bool IsWasmExportedFunction(JSFunction* fun);
 MOZ_MUST_USE bool CheckFuncRefValue(JSContext* cx, HandleValue v,
                                     MutableHandleFunction fun);
+MOZ_MUST_USE bool CheckEqRefValue(JSContext* cx, HandleValue v,
+                                  MutableHandleAnyRef vp);
 
 Instance& ExportedFunctionToInstance(JSFunction* fun);
 WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);

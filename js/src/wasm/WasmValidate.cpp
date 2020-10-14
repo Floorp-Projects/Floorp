@@ -1695,6 +1695,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         break;
       case ValType::Ref:
         switch (fields[i].type.refTypeKind()) {
+          case RefType::Eq:
           case RefType::TypeIndex:
             offset = layout.addReference(ReferenceType::TYPE_OBJECT);
             break;
@@ -1948,6 +1949,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
       switch (type.refTypeKind()) {
         case RefType::Func:
         case RefType::Extern:
+        case RefType::Eq:
           break;
         case RefType::TypeIndex:
 #ifdef WASM_PRIVATE_REFTYPES

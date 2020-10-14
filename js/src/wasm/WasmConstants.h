@@ -65,6 +65,9 @@ enum class TypeCode {
   // A reference to any host value.
   ExternRef = 0x6f,  // SLEB128(-0x11)
 
+  // A reference to a struct/array value.
+  EqRef = 0x6d,  // SLEB128(-0x12)
+
   // Type constructor for nullable reference types.
   NullableRef = 0x6c,  // SLEB128(-0x14)
 
