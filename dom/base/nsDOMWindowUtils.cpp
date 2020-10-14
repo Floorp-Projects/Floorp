@@ -695,15 +695,6 @@ nsDOMWindowUtils::SendMouseEventCommon(
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
-                                                const nsACString& aValue,
-                                                bool* aRetVal) {
-  NS_ENSURE_ARG_POINTER(aRetVal);
-  *aRetVal = nsContentUtils::IsCORSSafelistedRequestHeader(aName, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
                                  double aDeltaY, double aDeltaZ,
                                  uint32_t aDeltaMode, int32_t aModifiers,
