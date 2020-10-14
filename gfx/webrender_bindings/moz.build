@@ -55,12 +55,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.webrender += [
         'RenderCompositorNative.h',
         'RenderMacIOSurfaceTextureHost.h',
-        'RenderMacIOSurfaceTextureHostSWGL.h',
     ]
     UNIFIED_SOURCES += [
         'RenderCompositorNative.cpp',
         'RenderMacIOSurfaceTextureHost.cpp',
-        'RenderMacIOSurfaceTextureHostSWGL.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

@@ -9,7 +9,7 @@
 
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHost.h"
+#include "RenderTextureHostSWGL.h"
 
 namespace mozilla {
 
@@ -19,7 +19,7 @@ class SurfaceDescriptorMacIOSurface;
 
 namespace wr {
 
-class RenderMacIOSurfaceTextureHost final : public RenderTextureHost {
+class RenderMacIOSurfaceTextureHost final : public RenderTextureHostSWGL {
  public:
   explicit RenderMacIOSurfaceTextureHost(MacIOSurface* aSurface);
 
@@ -35,6 +35,12 @@ class RenderMacIOSurfaceTextureHost final : public RenderTextureHost {
   }
 
   MacIOSurface* GetSurface() { return mSurface; }
+
+  // RenderTextureHostSWGL
+  size_t GetPlaneCount() override;
+  bool MapPlane(uint8_t aChannelIndex, PlaneInfo& aPlaneInfo) override;
+  void UnmapPlanes() override;
+  gfx::YUVColorSpace GetYUVColorSpace() const override;
 
  private:
   virtual ~RenderMacIOSurfaceTextureHost();
