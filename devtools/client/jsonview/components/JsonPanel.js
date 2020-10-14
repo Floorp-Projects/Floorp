@@ -21,10 +21,9 @@ define(function(require, exports, module) {
   );
 
   const {
-    REPS,
     MODE,
-  } = require("devtools/client/shared/components/reps/index");
-  const { Rep } = REPS;
+  } = require("devtools/client/shared/components/reps/reps/constants");
+  const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
 
   const { div } = dom;
 
