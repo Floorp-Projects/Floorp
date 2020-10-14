@@ -11,7 +11,6 @@
 #include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/MatrixMessage.h"
-#include "mozilla/layers/RepaintRequest.h"
 #include "nsRefreshObservers.h"
 
 #include <functional>
@@ -29,6 +28,8 @@ namespace mozilla {
 class PresShell;
 
 namespace layers {
+
+struct RepaintRequest;
 
 typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
     SetAllowedTouchBehaviorCallback;

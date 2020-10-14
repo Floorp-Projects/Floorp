@@ -17,7 +17,6 @@
 #include "mozilla/EventForwards.h"  // for Modifiers
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"        // for MatrixMessage
-#include "mozilla/layers/RepaintRequest.h"       // for RepaintRequest
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, etc
 #include "nsISupportsImpl.h"
 
@@ -26,6 +25,8 @@ namespace mozilla {
 class Runnable;
 
 namespace layers {
+
+struct RepaintRequest;
 
 class GeckoContentController {
  public:
