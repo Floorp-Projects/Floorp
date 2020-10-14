@@ -3781,8 +3781,8 @@ void TestMarkerNoPayload() {
 void TestUserMarker() {
   printf("TestUserMarker...\n");
 
-  // User-defined marker type with text. If there are no `Convert` functions,
-  // it's fine to define it right in the function where it's used.
+  // User-defined marker type with text.
+  // It's fine to define it right in the function where it's used.
   struct MarkerTypeTestMinimal {
     static constexpr Span<const char> MarkerTypeName() {
       return MakeStringSpan("test-minimal");
@@ -3790,6 +3790,14 @@ void TestUserMarker() {
     static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
                                      const std::string& aText) {
       aWriter.StringProperty("text", aText);
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      using MS = mozilla::MarkerSchema;
+      MS schema{MS::Location::markerChart, MS::Location::markerTable};
+      schema.SetTooltipLabel("tooltip for test-minimal");
+      schema.AddKeyLabelFormatSearchable("text", "Text", MS::Format::string,
+                                         MS::Searchable::searchable);
+      return schema;
     }
   };
 
@@ -3858,18 +3866,6 @@ void TestUserMarker() {
 
 void TestPredefinedMarkers() {
   printf("TestPredefinedMarkers...\n");
-
-  // User-defined marker type with text. If there are no `Convert` functions,
-  // it's fine to define it right in the function where it's used.
-  struct MarkerTypeTestMinimal {
-    static constexpr Span<const char> MarkerTypeName() {
-      return MakeStringSpan("test-minimal");
-    }
-    static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                     const std::string& aText) {
-      aWriter.StringProperty("text", aText);
-    }
-  };
 
   mozilla::ProfileBufferChunkManagerSingle chunkManager(1024);
   mozilla::ProfileChunkedBuffer buffer(
