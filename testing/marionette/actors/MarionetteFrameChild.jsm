@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",
   event: "chrome://marionette/content/event.js",
   interaction: "chrome://marionette/content/interaction.js",
+  legacyaction: "chrome://marionette/content/legacyaction.js",
   Log: "chrome://marionette/content/log.js",
   sandbox: "chrome://marionette/content/evaluate.js",
   Sandboxes: "chrome://marionette/content/evaluate.js",
@@ -37,6 +38,17 @@ class MarionetteFrameChild extends JSWindowActorChild {
 
   get innerWindowId() {
     return this.manager.innerWindowId;
+  }
+
+  /**
+   * Lazy getter to create a legacyaction Chain instance for touch events.
+   */
+  get legacyactions() {
+    if (!this._legacyactions) {
+      this._legacyactions = new legacyaction.Chain();
+    }
+
+    return this._legacyactions;
   }
 
   actorCreated() {
@@ -146,6 +158,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:sendKeysToElement":
           result = await this.sendKeysToElement(data);
+          break;
+        case "MarionetteFrameParent:singleTap":
+          result = await this.singleTap(data);
           break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
@@ -474,6 +489,14 @@ class MarionetteFrameChild extends JSWindowActorChild {
     };
 
     return interaction.sendKeysToElement(elem, text, opts);
+  }
+
+  /**
+   * Perform a single tap.
+   */
+  async singleTap(options = {}) {
+    const { capabilities, elem, x, y } = options;
+    return this.legacyactions.singleTap(elem, x, y, capabilities);
   }
 
   /**
