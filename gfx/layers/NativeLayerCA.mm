@@ -21,7 +21,7 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/SurfacePoolCA.h"
-#include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
+#include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
 #include "ScopedGLHelpers.h"
 
 @interface CALayer (PrivateSetContentsOpaque)
@@ -488,8 +488,7 @@ NativeLayerCA::~NativeLayerCA() {
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
-  wr::RenderMacIOSurfaceTextureHostOGL* texture =
-      aExternalImage->AsRenderMacIOSurfaceTextureHostOGL();
+  wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
   MOZ_ASSERT(texture);
   mTextureHost = texture;
   mSize = texture->GetSize(0);

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERD3D11TEXTUREHOSTOGL_H
-#define MOZILLA_GFX_RENDERD3D11TEXTUREHOSTOGL_H
+#ifndef MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
+#define MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 
-#include "RenderTextureHostOGL.h"
+#include "RenderTextureHost.h"
 #include "GLTypes.h"
 
 struct ID3D11Texture2D;
@@ -17,27 +17,25 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
+class RenderDXGITextureHost final : public RenderTextureHost {
  public:
-  explicit RenderDXGITextureHostOGL(WindowsHandle aHandle,
-                                    gfx::SurfaceFormat aFormat,
-                                    gfx::YUVColorSpace aYUVColorSpace,
-                                    gfx::ColorRange aColorRange,
-                                    gfx::IntSize aSize);
+  explicit RenderDXGITextureHost(WindowsHandle aHandle,
+                                 gfx::SurfaceFormat aFormat,
+                                 gfx::YUVColorSpace aYUVColorSpace,
+                                 gfx::ColorRange aColorRange,
+                                 gfx::IntSize aSize);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
+  gfx::IntSize GetSize(uint8_t aChannelIndex) const;
+  GLuint GetGLHandle(uint8_t aChannelIndex) const;
 
   bool SyncObjectNeeded() override { return true; }
 
-  RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() override {
-    return this;
-  }
+  RenderDXGITextureHost* AsRenderDXGITextureHost() override { return this; }
 
   gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -48,7 +46,7 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   ID3D11Texture2D* GetD3D11Texture2D();
 
  private:
-  virtual ~RenderDXGITextureHostOGL();
+  virtual ~RenderDXGITextureHost();
 
   bool EnsureD3D11Texture2D();
   bool EnsureLockable(wr::ImageRendering aRendering);
@@ -76,24 +74,24 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   bool mLocked;
 };
 
-class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL {
+class RenderDXGIYCbCrTextureHost final : public RenderTextureHost {
  public:
-  explicit RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
-                                         gfx::IntSize aSize,
-                                         gfx::IntSize aSizeCbCr);
+  explicit RenderDXGIYCbCrTextureHost(WindowsHandle (&aHandles)[3],
+                                      gfx::IntSize aSize,
+                                      gfx::IntSize aSizeCbCr);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
+  gfx::IntSize GetSize(uint8_t aChannelIndex) const;
+  GLuint GetGLHandle(uint8_t aChannelIndex) const;
 
   bool SyncObjectNeeded() override { return true; }
 
  private:
-  virtual ~RenderDXGIYCbCrTextureHostOGL();
+  virtual ~RenderDXGIYCbCrTextureHost();
 
   bool EnsureLockable(wr::ImageRendering aRendering);
 
@@ -120,4 +118,4 @@ class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL {
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDERD3D11TEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H

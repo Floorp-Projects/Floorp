@@ -21,7 +21,6 @@ EXPORTS.mozilla.webrender += [
     'RenderSharedSurfaceTextureHost.h',
     'RenderSharedSurfaceTextureHostSWGL.h',
     'RenderTextureHost.h',
-    'RenderTextureHostOGL.h',
     'RenderTextureHostSWGL.h',
     'RenderTextureHostWrapper.h',
     'RenderThread.h',
@@ -45,7 +44,6 @@ UNIFIED_SOURCES += [
     'RenderSharedSurfaceTextureHost.cpp',
     'RenderSharedSurfaceTextureHostSWGL.cpp',
     'RenderTextureHost.cpp',
-    'RenderTextureHostOGL.cpp',
     'RenderTextureHostSWGL.cpp',
     'RenderTextureHostWrapper.cpp',
     'RenderThread.cpp',
@@ -56,23 +54,23 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.webrender += [
         'RenderCompositorNative.h',
-        'RenderMacIOSurfaceTextureHostOGL.h',
+        'RenderMacIOSurfaceTextureHost.h',
         'RenderMacIOSurfaceTextureHostSWGL.h',
     ]
     UNIFIED_SOURCES += [
         'RenderCompositorNative.cpp',
-        'RenderMacIOSurfaceTextureHostOGL.cpp',
+        'RenderMacIOSurfaceTextureHost.cpp',
         'RenderMacIOSurfaceTextureHostSWGL.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS.mozilla.webrender += [
         'RenderAndroidHardwareBufferTextureHost.h',
-        'RenderAndroidSurfaceTextureHostOGL.h',
+        'RenderAndroidSurfaceTextureHost.h',
     ]
     UNIFIED_SOURCES += [
         'RenderAndroidHardwareBufferTextureHost.cpp',
-        'RenderAndroidSurfaceTextureHostOGL.cpp',
+        'RenderAndroidSurfaceTextureHost.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
@@ -80,10 +78,10 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     EXPORTS.mozilla.webrender += [
         'DCLayerTree.h',
         'RenderCompositorANGLE.h',
-        'RenderD3D11TextureHostOGL.h',
+        'RenderD3D11TextureHost.h',
     ]
     UNIFIED_SOURCES += [
-        'RenderD3D11TextureHostOGL.cpp',
+        'RenderD3D11TextureHost.cpp',
     ]
     SOURCES += [
         'DCLayerTree.cpp',
@@ -92,10 +90,10 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
 
 if CONFIG['MOZ_WAYLAND']:
     EXPORTS.mozilla.webrender += [
-        'RenderDMABUFTextureHostOGL.h',
+        'RenderDMABUFTextureHost.h',
     ]
     SOURCES += [
-        'RenderDMABUFTextureHostOGL.cpp',
+        'RenderDMABUFTextureHost.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):

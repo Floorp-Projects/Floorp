@@ -29,7 +29,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/layers/AndroidHardwareBuffer.h"
 #  include "mozilla/webrender/RenderAndroidHardwareBufferTextureHost.h"
-#  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
+#  include "mozilla/webrender/RenderAndroidSurfaceTextureHost.h"
 #endif
 
 #ifdef MOZ_WAYLAND
@@ -657,8 +657,8 @@ void SurfaceTextureHost::DeallocateDeviceData() {
 void SurfaceTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderAndroidSurfaceTextureHostOGL(mSurfTex, mSize, mFormat,
-                                                 mContinuousUpdate);
+      new wr::RenderAndroidSurfaceTextureHost(mSurfTex, mSize, mFormat,
+                                              mContinuousUpdate);
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
 }

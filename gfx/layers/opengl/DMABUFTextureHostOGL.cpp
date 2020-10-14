@@ -6,7 +6,7 @@
 
 #include "DMABUFTextureHostOGL.h"
 #include "mozilla/widget/DMABufSurface.h"
-#include "mozilla/webrender/RenderDMABUFTextureHostOGL.h"
+#include "mozilla/webrender/RenderDMABUFTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextEGL.h"
@@ -121,7 +121,7 @@ gl::GLContext* DMABUFTextureHostOGL::gl() const {
 void DMABUFTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDMABUFTextureHostOGL(mSurface);
+      new wr::RenderDMABUFTextureHost(mSurface);
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
 }

@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
-#define MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
+#ifndef MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOST_H
+#define MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOST_H
 
 #include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHostOGL.h"
+#include "RenderTextureHost.h"
 
 namespace mozilla {
 
 namespace wr {
 
-class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
+class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
  public:
-  explicit RenderAndroidSurfaceTextureHostOGL(
+  explicit RenderAndroidSurfaceTextureHost(
       const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat, bool aContinuousUpdate);
 
@@ -25,15 +25,12 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
-  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
-
   void PrepareForUse() override;
   void NotifyForUse() override;
   void NotifyNotUsed() override;
 
  private:
-  virtual ~RenderAndroidSurfaceTextureHostOGL();
+  virtual ~RenderAndroidSurfaceTextureHost();
   bool EnsureAttachedToGLContext();
 
   enum PrepareStatus {
@@ -58,4 +55,4 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOST_H
