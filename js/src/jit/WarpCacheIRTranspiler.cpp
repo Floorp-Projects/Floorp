@@ -868,15 +868,7 @@ bool WarpCacheIRTranspiler::emitGuardFunctionIsNonBuiltinCtor(
     ObjOperandId funId) {
   MDefinition* fun = getOperand(funId);
 
-  // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
-  // have the SELF_HOSTED flag.
-  // This is equivalent to JSFunction::isNonBuiltinConstructor.
-  uint16_t expectedFlags =
-      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
-  uint16_t unexpectedFlags = FunctionFlags::SELF_HOSTED;
-
-  auto* ins =
-      MGuardFunctionFlags::New(alloc(), fun, expectedFlags, unexpectedFlags);
+  auto* ins = MGuardFunctionIsNonBuiltinCtor::New(alloc(), fun);
   add(ins);
 
   setOperand(funId, ins);

@@ -10160,6 +10160,30 @@ class MGuardFunctionFlags : public MUnaryInstruction,
   }
 };
 
+// Guard the function is a non-builtin constructor.
+class MGuardFunctionIsNonBuiltinCtor : public MUnaryInstruction,
+                                       public SingleObjectPolicy::Data {
+  explicit MGuardFunctionIsNonBuiltinCtor(MDefinition* fun)
+      : MUnaryInstruction(classOpcode, fun) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(fun->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardFunctionIsNonBuiltinCtor)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+};
+
 // Guard on function kind
 class MGuardFunctionKind : public MUnaryInstruction,
                            public SingleObjectPolicy::Data {
