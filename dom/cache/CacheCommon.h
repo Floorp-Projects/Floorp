@@ -15,11 +15,11 @@
 #define CACHE_TRY(...) CACHE_TRY_GLUE(__VA_ARGS__)
 
 // Cache equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
-#define CACHE_TRY_VAR_GLUE(accessFunction, ...)                   \
-  QM_TRY_VAR_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), \
-                  accessFunction, ##__VA_ARGS__)
-#define CACHE_TRY_UNWRAP(...) CACHE_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
-#define CACHE_TRY_INSPECT(...) CACHE_TRY_VAR_GLUE(inspect, __VA_ARGS__)
+#define CACHE_TRY_ASSIGN_GLUE(accessFunction, ...)                   \
+  QM_TRY_ASSIGN_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), \
+                     accessFunction, ##__VA_ARGS__)
+#define CACHE_TRY_UNWRAP(...) CACHE_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
+#define CACHE_TRY_INSPECT(...) CACHE_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
 
 // Cache equivalents of QM_TRY_RETURN.
 #define CACHE_TRY_RETURN_GLUE(...)                                   \

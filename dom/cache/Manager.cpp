@@ -840,7 +840,8 @@ class Manager::CachePutAllAction final : public DBAction {
         }
       }
 
-      // XXXtt:: CACHE_TRY_VAR might need to handle cases like this.
+      // XXXtt:: CACHE_TRY_UNWRAP/CACHE_TRY_INSPECT might need to handle cases
+      //         like this.
       auto deletionInfoOrErr = db::CachePut(
           *mConn, mCacheId, e.mRequest,
           e.mRequestStream ? &e.mRequestBodyId : nullptr, e.mResponse,

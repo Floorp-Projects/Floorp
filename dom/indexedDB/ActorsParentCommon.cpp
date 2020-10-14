@@ -313,7 +313,7 @@ nsresult ReadCompressedIndexDataValuesFromSource(
 
     case mozIStorageStatement::VALUE_TYPE_BLOB: {
       // XXX ToResultInvoke does not support multiple output parameters yet, so
-      // we also can't use IDB_TRY_VAR here.
+      // we also can't use IDB_TRY_UNWRAP/IDB_TRY_INSPECT here.
       const uint8_t* blobData;
       uint32_t blobDataLength;
       IDB_TRY(aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData));
@@ -410,7 +410,8 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
 
   // XXX NS_NewLocalFileInputStream does not follow the convention to place its
   // output parameter last (it has optional parameters which makes that
-  // problematic), so we can't use ToResultInvoke, nor IDB_TRY_VAR.
+  // problematic), so we can't use ToResultInvoke, nor
+  // IDB_TRY_UNWRAP/IDB_TRY_INSPECT.
   nsCOMPtr<nsIInputStream> fileInputStream;
   IDB_TRY(
       NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile));
