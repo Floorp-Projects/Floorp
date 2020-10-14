@@ -12,7 +12,6 @@ But there can be a wide variety of highlighters. In particular, highlighters are
 
 * the exact form of a css shape,
 * how a css transform applied to an element,
-* where are the color stops of a css gradient,
 * which are all the elements that match a given selector,
 * ...
 
@@ -20,33 +19,15 @@ But there can be a wide variety of highlighters. In particular, highlighters are
 
 Highlighters run on the debuggee side, not on the toolbox side. This is so that it's possible to highlight elements on a remote device for instance. This means you need to go through the [Remote Debugging Protocol](protocol.md) to use a highlighter.
 
-Since the box-model highlighter (HighlighterFront) is the most used type of highlighter (for instance it's displayed when you move your mouse over nodes in the inspector), the HighlighterFront provides a custom set of methods to interact with it:
-
-| Method                             | Description                                                                                                                                                                                                                   |
-|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `startPicker()`                    | Starts the node picker mode which will highlight every node you hover over in the page, and will change the current node selection in the inspector on click. “picker-node-hovered” and “picker-node-picked” events are sent. |
-| `stopPicker()`                     | Stops the node picker mode.                                                                                                                                                                                                   |
-| `highlightNodeFront(nodeFront)`    | Display the box-model highlighter on a given node. NodeFront objects are what the WalkerActor return.                                                                                                                         |
-| `highlightDomValueGrip(valueGrip)` | Display the box-model highlighter on a given node, represented by a debugger object value grip.                                                                                                                               |
-| `unhighlight()`                    | Hide the box-model highlighter.                                                                                                                                                                                               |
-
-Not all methods that are related to highlighters are present on the HighlighterFront. The
-`highlightDomValueGrip` method also requires the WalkerFront in order to transform a Grip into a
-NodeFront. Therefore, methods that access other Fronts are available on the InspectorFront.
-
-| Method                             | Description                                                                                                                                                                                                                   |
-|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `highlightDomValueGrip(valueGrip)` | Display the box-model highlighter on a given node, represented by a debugger object value grip.                                                                                                                               |
-
-But the box-model highlighter isn't the only type of highlighter, so the InspectorFront also provides the following method:
+The InspectorFront provides the following method:
 
 | Method                           | Description                                                                                                                                                                                                                                                                                                   |
 |----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `getHighlighterByType(typeName)` | Instantiate a new highlighter, given its type (as a String). At the time of writing, the available types of highlighters are: `BoxModelHighlighter`, `CssTransformHighlighter`, `SelectorHighlighter` and `RectHighlighter`. This returns a promise that resolves to the new instance of [protocol.js](https://wiki.mozilla.org/DevTools/protocol.js) actor. |
+| `getHighlighterByType(typeName)` | Instantiate a new highlighter, given its type (as a String). At the time of writing, the available types of highlighters are: `CssGridHighlighter`, `BoxModelHighlighter`, `CssTransformHighlighter`, `FlexboxHighlighter`, `FontsHighlighter`, `GeometryEditorHighlighter`, `MeasuringToolHighlighter`, `PausedDebuggerOverlay`, `RulersHighlighter`, `SelectorHighlighter` and `ShapesHighlighter`. This returns a promise that resolves to the new instance of [protocol.js](https://wiki.mozilla.org/DevTools/protocol.js) actor. |
 
 ### The highlighter API
 
-When getting a highlighter via `toolbox.inspector.getHighlighterByType(typeName)`, the right type of highlighter will be instantiated on the server-side and will be wrapped into a `CustomHighlighterActor` and that's what will be returned to the caller. This means that all types of highlighters share the same following API:
+When getting a highlighter via `InspectorFront.getHighlighterByType(typeName)`, the right type of highlighter will be instantiated on the server-side and will be wrapped into a `CustomHighlighterActor` and that's what will be returned to the caller. This means that all types of highlighters share the same following API:
 
 | Method                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 |------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

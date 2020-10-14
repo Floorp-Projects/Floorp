@@ -19,13 +19,8 @@ loader.lazyRequireGetter(
 );
 
 /**
- * The registration mechanism for highlighters provide a quick way to
- * have modular highlighters, instead of a hard coded list.
- * It allow us to split highlighers in sub modules, and add them dynamically
- * using add-on (useful for 3rd party developers, or prototyping)
- *
- * Note that currently, highlighters added using add-ons, can only work on
- * Firefox desktop, or Fennec if the same add-on is installed in both.
+ * The registration mechanism for highlighters provides a quick way to
+ * have modular highlighters instead of a hard coded list.
  */
 const highlighterTypes = new Map();
 
@@ -38,8 +33,6 @@ exports.isTypeRegistered = isTypeRegistered;
 
 /**
  * Registers a given constructor as highlighter, for the `typeName` given.
- * If no `typeName` is provided, the `typeName` property on the constructor's prototype
- * is used, if one is found, otherwise the name of the constructor function is used.
  */
 const register = (typeName, modulePath) => {
   if (highlighterTypes.has(typeName)) {
@@ -51,17 +44,16 @@ const register = (typeName, modulePath) => {
 exports.register = register;
 
 /**
-/**
- * A generic highlighter actor class that instantiate a highlighter given its
- * type name and allows to show/hide it.
+ * CustomHighlighterActor is a generic Actor that instantiates a custom implementation of
+ * a highlighter class given its type name which must be registered in `highlighterTypes`.
+ * CustomHighlighterActor proxies calls to methods of the highlighter class instance:
+ * constructor(targetActor), show(node, options), hide(), destroy()
  */
 exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
   customHighlighterSpec,
   {
     /**
-     * Create a highlighter instance given its typename
-     * The typename must be one of HIGHLIGHTER_CLASSES and the class must
-     * implement constructor(targetActor), show(node), hide(), destroy()
+     * Create a highlighter instance given its typeName.
      */
     initialize: function(parent, typeName) {
       protocol.Actor.prototype.initialize.call(this, null);
@@ -125,16 +117,14 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
      * method.
      *
      * Most custom highlighters are made to highlight DOM nodes, hence the first
-     * NodeActor argument (NodeActor as in
-     * devtools/server/actor/inspector).
+     * NodeActor argument (NodeActor as in devtools/server/actor/inspector).
      * Note however that some highlighters use this argument merely as a context
-     * node: The SelectHighlighter for instance uses it as a base node to run the
+     * node: The SelectorHighlighter for instance uses it as a base node to run the
      * provided CSS selector on.
      *
      * @param {NodeActor} The node to be highlighted
      * @param {Object} Options for the custom highlighter
      * @return {Boolean} True, if the highlighter has been successfully shown
-     * (FF41+)
      */
     show: function(node, options) {
       if (!this._highlighter) {
@@ -163,8 +153,8 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
     },
 
     /**
-     * Kill this actor. This method is called automatically just before the actor
-     * is destroyed.
+     * Destroy the custom highlighter implementation.
+     * This method is called automatically just before the actor is destroyed.
      */
     finalize: function() {
       if (this._highlighter) {
@@ -193,9 +183,9 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
  * similarly to the BrowsingContextTargetActor.
  *
  * It can be initialized either from a BrowsingContextTargetActor (which is the
- * most frequent way of using it, since highlighters are usually initialized by
- * the HighlighterActor or CustomHighlighterActor, which have a targetActor
- * reference). It can also be initialized just with a window object (which is
+ * most frequent way of using it, since highlighters are initialized by
+ * CustomHighlighterActor, which has a targetActor reference).
+ * It can also be initialized just with a window object (which is
  * useful for when a highlighter is used outside of the devtools server context.
  */
 function HighlighterEnvironment() {

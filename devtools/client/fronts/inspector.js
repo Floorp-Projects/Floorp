@@ -90,7 +90,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   destroy() {
     this._compatibility = null;
-    // Highlighter fronts are managed by InspectorFront and so will be
+    // CustomHighlighter fronts are managed by InspectorFront and so will be
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
     this.destroyHighlighters();
