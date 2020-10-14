@@ -143,7 +143,6 @@ let actionChainFn = dispatch(actionChain);
 let multiActionFn = dispatch(multiAction);
 let executeScriptFn = dispatch(executeScript);
 let sendKeysToElementFn = dispatch(sendKeysToElement);
-let reftestWaitFn = dispatch(reftestWait);
 let setBrowsingContextIdFn = dispatch(setBrowsingContextId);
 
 function startListeners() {
@@ -180,7 +179,6 @@ function startListeners() {
   addMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListener("Marionette:multiAction", multiActionFn);
   addMessageListener("Marionette:performActions", performActionsFn);
-  addMessageListener("Marionette:reftestWait", reftestWaitFn);
   addMessageListener("Marionette:releaseActions", releaseActionsFn);
   addMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
   addMessageListener("Marionette:Session:Delete", deleteSession);
@@ -1076,147 +1074,6 @@ function getScreenshotRect({ el, full = true, scroll = true } = {}) {
   }
 
   return rect;
-}
-
-function flushRendering() {
-  let content = curContainer.frame;
-  let anyPendingPaintsGeneratedInDescendants = false;
-
-  let windowUtils = content.windowUtils;
-
-  function flushWindow(win) {
-    let utils = win.windowUtils;
-    let afterPaintWasPending = utils.isMozAfterPaintPending;
-
-    let root = win.document.documentElement;
-    if (root) {
-      try {
-        // Flush pending restyles and reflows for this window (layout)
-        root.getBoundingClientRect();
-      } catch (e) {
-        logger.error("flushWindow failed", e);
-      }
-    }
-
-    if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
-      anyPendingPaintsGeneratedInDescendants = true;
-    }
-
-    for (let i = 0; i < win.frames.length; ++i) {
-      flushWindow(win.frames[i]);
-    }
-  }
-  flushWindow(content);
-
-  if (
-    anyPendingPaintsGeneratedInDescendants &&
-    !windowUtils.isMozAfterPaintPending
-  ) {
-    logger.error(
-      "Descendant frame generated a MozAfterPaint event, " +
-        "but the root document doesn't have one!"
-    );
-  }
-}
-
-async function reftestWait(url, remote) {
-  let win = curContainer.frame;
-  let document = curContainer.frame.document;
-  let reftestWait;
-
-  if (document.location.href !== url || document.readyState != "complete") {
-    reftestWait = await documentLoad(win, url);
-    win = curContainer.frame;
-    document = curContainer.frame.document;
-  } else {
-    reftestWait = document.documentElement.classList.contains("reftest-wait");
-  }
-
-  logger.debug("Waiting for event loop to spin");
-  await new Promise(resolve => win.setTimeout(resolve, 0));
-
-  await paintComplete(win, remote);
-
-  let root = document.documentElement;
-  if (reftestWait) {
-    let event = new Event("TestRendered", { bubbles: true });
-    root.dispatchEvent(event);
-    logger.info("Emitted TestRendered event");
-    await reftestWaitRemoved(win, root);
-    await paintComplete(win, remote);
-  }
-  if (
-    win.innerWidth < document.documentElement.scrollWidth ||
-    win.innerHeight < document.documentElement.scrollHeight
-  ) {
-    logger.warn(
-      `${url} overflows viewport (width: ${document.documentElement.scrollWidth}, height: ${document.documentElement.scrollHeight})`
-    );
-  }
-}
-
-function documentLoad(win, url) {
-  logger.debug(truncate`Waiting for page load of ${url}`);
-  return new Promise(resolve => {
-    let maybeResolve = event => {
-      if (
-        event.target === curContainer.frame.document &&
-        event.target.location.href === url
-      ) {
-        let reftestWait = win.document.documentElement.classList.contains(
-          "reftest-wait"
-        );
-        removeEventListener("load", maybeResolve, { once: true });
-        resolve(reftestWait);
-      }
-    };
-    addEventListener("load", maybeResolve, true);
-  });
-}
-
-function paintComplete(win, remote) {
-  logger.debug("Waiting for rendering");
-  let windowUtils = content.windowUtils;
-  return new Promise(resolve => {
-    let maybeResolve = () => {
-      flushRendering();
-      if (remote) {
-        // Flush display (paint)
-        logger.debug("Force update of layer tree");
-        windowUtils.updateLayerTree();
-      }
-
-      if (windowUtils.isMozAfterPaintPending) {
-        logger.debug("isMozAfterPaintPending: true");
-        win.addEventListener("MozAfterPaint", maybeResolve, { once: true });
-      } else {
-        // resolve at the start of the next frame in case of leftover paints
-        logger.debug("isMozAfterPaintPending: false");
-        win.requestAnimationFrame(() => {
-          win.requestAnimationFrame(resolve);
-        });
-      }
-    };
-    maybeResolve();
-  });
-}
-
-function reftestWaitRemoved(win, root) {
-  logger.debug("Waiting for reftest-wait removal");
-  return new Promise(resolve => {
-    let observer = new win.MutationObserver(() => {
-      if (!root.classList.contains("reftest-wait")) {
-        observer.disconnect();
-        logger.debug("reftest-wait removed");
-        win.setTimeout(resolve, 0);
-      }
-    });
-    if (root.classList.contains("reftest-wait")) {
-      observer.observe(root, { attributes: true });
-    } else {
-      win.setTimeout(resolve, 0);
-    }
-  });
 }
 
 function domAddEventListener(msg) {
