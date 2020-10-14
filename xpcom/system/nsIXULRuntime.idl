@@ -63,6 +63,8 @@ interface nsIXULRuntime : nsISupports
     eExperimentStatusCount,
   };
 
+  // NOTE: Please do not add new values to this enum without also updating the
+  // mapping in aboutSupport.js
   cenum FissionDecisionStatus : 8 {
     eFissionStatusUnknown = 0,
     // Fission is disabled because the user is in the control group of a

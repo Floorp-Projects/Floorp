@@ -228,11 +228,15 @@ var dataProviders = {
     } catch (e) {}
 
     data.numTotalWindows = 0;
+    data.numFissionWindows = 0;
     data.numRemoteWindows = 0;
     for (let { docShell } of Services.wm.getEnumerator("navigator:browser")) {
+      docShell.QueryInterface(Ci.nsILoadContext);
       data.numTotalWindows++;
-      let remote = docShell.QueryInterface(Ci.nsILoadContext).useRemoteTabs;
-      if (remote) {
+      if (docShell.useRemoteSubframes) {
+        data.numFissionWindows++;
+      }
+      if (docShell.useRemoteTabs) {
         data.numRemoteWindows++;
       }
     }
@@ -245,17 +249,6 @@ var dataProviders = {
     data.fissionDecisionStatus = Services.appinfo.fissionDecisionStatusString;
 
     data.remoteAutoStart = Services.appinfo.browserTabsRemoteAutostart;
-
-    try {
-      let e10sStatus = Cc["@mozilla.org/supports-PRUint64;1"].createInstance(
-        Ci.nsISupportsPRUint64
-      );
-      let appinfo = Services.appinfo.QueryInterface(Ci.nsIObserver);
-      appinfo.observe(e10sStatus, "getE10SBlocked", "");
-      data.autoStartStatus = e10sStatus.data;
-    } catch (e) {
-      data.autoStartStatus = -1;
-    }
 
     if (Services.policies) {
       data.policiesStatus = Services.policies.status;
