@@ -1658,6 +1658,7 @@ def enable_webrender(config, tasks):
             if not task['attributes']['unittest_category'] in ['cppunittest',
                                                                'geckoview-junit',
                                                                'gtest',
+                                                               'jittest',
                                                                'raptor']:
                 extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
 
