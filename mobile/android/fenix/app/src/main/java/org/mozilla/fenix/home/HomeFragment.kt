@@ -69,6 +69,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -274,7 +275,10 @@ class HomeFragment : Fragment() {
      */
     private fun getTopSitesConfig(): TopSitesConfig {
         val settings = requireContext().settings()
-        return TopSitesConfig(settings.topSitesMaxLimit, settings.showTopFrecentSites)
+        return TopSitesConfig(
+            settings.topSitesMaxLimit,
+            FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
+        )
     }
 
     /**
