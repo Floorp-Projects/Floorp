@@ -3774,19 +3774,17 @@ size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
 /*** IsMarked / IsAboutToBeFinalized ****************************************/
 
 template <typename T>
-static inline void CheckIsMarkedThing(T* thingp) {
-#define IS_SAME_TYPE_OR(name, type, _, _1) std::is_same_v<type*, T> ||
+static inline void CheckIsMarkedThing(T* thing) {
+#define IS_SAME_TYPE_OR(name, type, _, _1) std::is_same_v<type, T> ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR) false,
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");
 #undef IS_SAME_TYPE_OR
 
 #ifdef DEBUG
-  MOZ_ASSERT(thingp);
-  MOZ_ASSERT(*thingp);
+  MOZ_ASSERT(thing);
 
   // Allow any thread access to uncollected things.
-  T thing = *thingp;
   if (thing->isPermanentAndMayBeShared()) {
     return;
   }
@@ -3812,7 +3810,8 @@ static inline void CheckIsMarkedThing(T* thingp) {
 
 template <typename T>
 static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
-  CheckIsMarkedThing(thingp);
+  MOZ_ASSERT(thingp);
+  CheckIsMarkedThing(*thingp);
   MOZ_ASSERT(!IsInsideNursery(*thingp));
 
   TenuredCell& thing = (*thingp)->asTenured();
@@ -3863,8 +3862,9 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   // Don't depend on the mark state of other cells during finalization.
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
 
-  CheckIsMarkedThing(thingp);
+  MOZ_ASSERT(thingp);
   T* thing = *thingp;
+  CheckIsMarkedThing(thing);
   JSRuntime* rt = thing->runtimeFromAnyThread();
 
   /* Permanent atoms are never finalized by non-owning runtimes. */
@@ -3904,13 +3904,13 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thingp) {
 }
 
 template <typename T>
-inline bool SweepingTracer::sweepEdge(T** thingp) {
-  CheckIsMarkedThing(thingp);
-  T* thing = *thingp;
+inline T* SweepingTracer::onEdge(T* thing) {
+  CheckIsMarkedThing(thing);
+
   JSRuntime* rt = thing->runtimeFromAnyThread();
 
   if (thing->isPermanentAndMayBeShared() && runtime() != rt) {
-    return true;
+    return thing;
   }
 
   // TODO: We should assert the zone of the tenured cell is in Sweeping state,
@@ -3919,36 +3919,37 @@ inline bool SweepingTracer::sweepEdge(T** thingp) {
   // Bug 1071218 : Refactor Debugger::sweepAll and
   //               JitRuntime::SweepJitcodeGlobalTable to work per sweep group
   if (!thing->isMarkedAny()) {
-    *thingp = nullptr;
-    return false;
+    return nullptr;
   }
 
-  return true;
+  return thing;
 }
 
-bool SweepingTracer::onObjectEdge(JSObject** objp) { return sweepEdge(objp); }
-bool SweepingTracer::onShapeEdge(Shape** shapep) { return sweepEdge(shapep); }
-bool SweepingTracer::onStringEdge(JSString** stringp) {
-  return sweepEdge(stringp);
+JSObject* SweepingTracer::onObjectEdge(JSObject* obj) { return onEdge(obj); }
+Shape* SweepingTracer::onShapeEdge(Shape* shape) { return onEdge(shape); }
+JSString* SweepingTracer::onStringEdge(JSString* string) {
+  return onEdge(string);
 }
-bool SweepingTracer::onScriptEdge(js::BaseScript** scriptp) {
-  return sweepEdge(scriptp);
+js::BaseScript* SweepingTracer::onScriptEdge(js::BaseScript* script) {
+  return onEdge(script);
 }
-bool SweepingTracer::onBaseShapeEdge(BaseShape** basep) {
-  return sweepEdge(basep);
+BaseShape* SweepingTracer::onBaseShapeEdge(BaseShape* base) {
+  return onEdge(base);
 }
-bool SweepingTracer::onJitCodeEdge(jit::JitCode** jitp) {
-  return sweepEdge(jitp);
+jit::JitCode* SweepingTracer::onJitCodeEdge(jit::JitCode* jit) {
+  return onEdge(jit);
 }
-bool SweepingTracer::onScopeEdge(Scope** scopep) { return sweepEdge(scopep); }
-bool SweepingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
-  return sweepEdge(sharedp);
+Scope* SweepingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
+RegExpShared* SweepingTracer::onRegExpSharedEdge(RegExpShared* shared) {
+  return onEdge(shared);
 }
-bool SweepingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
-  return sweepEdge(groupp);
+ObjectGroup* SweepingTracer::onObjectGroupEdge(ObjectGroup* group) {
+  return onEdge(group);
 }
-bool SweepingTracer::onBigIntEdge(BigInt** bip) { return sweepEdge(bip); }
-bool SweepingTracer::onSymbolEdge(JS::Symbol** symp) { return sweepEdge(symp); }
+BigInt* SweepingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
+JS::Symbol* SweepingTracer::onSymbolEdge(JS::Symbol* sym) {
+  return onEdge(sym);
+}
 
 namespace js {
 namespace gc {

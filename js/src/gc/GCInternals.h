@@ -223,21 +223,21 @@ struct MovingTracer final : public GenericTracer {
       : GenericTracer(rt, JS::TracerKind::Moving,
                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
-  bool onObjectEdge(JSObject** objp) override;
-  bool onShapeEdge(Shape** shapep) override;
-  bool onStringEdge(JSString** stringp) override;
-  bool onScriptEdge(js::BaseScript** scriptp) override;
-  bool onBaseShapeEdge(BaseShape** basep) override;
-  bool onScopeEdge(Scope** scopep) override;
-  bool onRegExpSharedEdge(RegExpShared** sharedp) override;
-  bool onBigIntEdge(BigInt** bip) override;
-  bool onObjectGroupEdge(ObjectGroup** groupp) override;
-  bool onSymbolEdge(JS::Symbol** symp) override;
-  bool onJitCodeEdge(jit::JitCode** jitp) override;
+  JSObject* onObjectEdge(JSObject* obj) override;
+  Shape* onShapeEdge(Shape* shape) override;
+  JSString* onStringEdge(JSString* string) override;
+  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
+  BaseShape* onBaseShapeEdge(BaseShape* base) override;
+  Scope* onScopeEdge(Scope* scope) override;
+  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
+  BigInt* onBigIntEdge(BigInt* bi) override;
+  ObjectGroup* onObjectGroupEdge(ObjectGroup* group) override;
+  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
+  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
 
  private:
   template <typename T>
-  bool updateEdge(T** thingp);
+  T* onEdge(T* thingp);
 };
 
 struct SweepingTracer final : public GenericTracer {
@@ -245,21 +245,21 @@ struct SweepingTracer final : public GenericTracer {
       : GenericTracer(rt, JS::TracerKind::Sweeping,
                       JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
-  bool onObjectEdge(JSObject** objp) override;
-  bool onShapeEdge(Shape** shapep) override;
-  bool onStringEdge(JSString** stringp) override;
-  bool onScriptEdge(js::BaseScript** scriptp) override;
-  bool onBaseShapeEdge(BaseShape** basep) override;
-  bool onJitCodeEdge(jit::JitCode** jitp) override;
-  bool onScopeEdge(Scope** scopep) override;
-  bool onRegExpSharedEdge(RegExpShared** sharedp) override;
-  bool onBigIntEdge(BigInt** bip) override;
-  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
-  bool onSymbolEdge(JS::Symbol** symp) override;
+  JSObject* onObjectEdge(JSObject* obj) override;
+  Shape* onShapeEdge(Shape* shape) override;
+  JSString* onStringEdge(JSString* string) override;
+  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
+  BaseShape* onBaseShapeEdge(BaseShape* base) override;
+  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
+  Scope* onScopeEdge(Scope* scope) override;
+  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
+  BigInt* onBigIntEdge(BigInt* bi) override;
+  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override;
+  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
 
  private:
   template <typename T>
-  bool sweepEdge(T** thingp);
+  T* onEdge(T* thingp);
 };
 
 // Structure for counting how many times objects in a particular group have

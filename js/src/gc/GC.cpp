@@ -2178,41 +2178,40 @@ bool GCRuntime::relocateArenas(Zone* zone, JS::GCReason reason,
 }
 
 template <typename T>
-inline bool MovingTracer::updateEdge(T** thingp) {
-  auto thing = *thingp;
+inline T* MovingTracer::onEdge(T* thing) {
   if (thing->runtimeFromAnyThread() == runtime() && IsForwarded(thing)) {
-    *thingp = Forwarded(thing);
+    thing = Forwarded(thing);
   }
 
-  return true;
+  return thing;
 }
 
-bool MovingTracer::onObjectEdge(JSObject** objp) { return updateEdge(objp); }
-bool MovingTracer::onShapeEdge(Shape** shapep) { return updateEdge(shapep); }
-bool MovingTracer::onStringEdge(JSString** stringp) {
-  return updateEdge(stringp);
+JSObject* MovingTracer::onObjectEdge(JSObject* obj) { return onEdge(obj); }
+Shape* MovingTracer::onShapeEdge(Shape* shape) { return onEdge(shape); }
+JSString* MovingTracer::onStringEdge(JSString* string) {
+  return onEdge(string);
 }
-bool MovingTracer::onScriptEdge(js::BaseScript** scriptp) {
-  return updateEdge(scriptp);
+js::BaseScript* MovingTracer::onScriptEdge(js::BaseScript* script) {
+  return onEdge(script);
 }
-bool MovingTracer::onBaseShapeEdge(BaseShape** basep) {
-  return updateEdge(basep);
+BaseShape* MovingTracer::onBaseShapeEdge(BaseShape* base) {
+  return onEdge(base);
 }
-bool MovingTracer::onScopeEdge(Scope** scopep) { return updateEdge(scopep); }
-bool MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
-  return updateEdge(sharedp);
+Scope* MovingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
+RegExpShared* MovingTracer::onRegExpSharedEdge(RegExpShared* shared) {
+  return onEdge(shared);
 }
-bool MovingTracer::onBigIntEdge(BigInt** bip) { return updateEdge(bip); }
-bool MovingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
-  return updateEdge(groupp);
+BigInt* MovingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
+ObjectGroup* MovingTracer::onObjectGroupEdge(ObjectGroup* group) {
+  return onEdge(group);
 }
-bool MovingTracer::onSymbolEdge(JS::Symbol** symp) {
-  MOZ_ASSERT(!(*symp)->isForwarded());
-  return true;
+JS::Symbol* MovingTracer::onSymbolEdge(JS::Symbol* sym) {
+  MOZ_ASSERT(!sym->isForwarded());
+  return sym;
 }
-bool MovingTracer::onJitCodeEdge(jit::JitCode** jitp) {
-  MOZ_ASSERT(!(*jitp)->isForwarded());
-  return true;
+jit::JitCode* MovingTracer::onJitCodeEdge(jit::JitCode* jit) {
+  MOZ_ASSERT(!jit->isForwarded());
+  return jit;
 }
 
 void Zone::prepareForCompacting() {
@@ -8903,48 +8902,53 @@ js::gc::ClearEdgesTracer::ClearEdgesTracer()
     : ClearEdgesTracer(TlsContext.get()->runtime()) {}
 
 template <typename S>
-inline bool js::gc::ClearEdgesTracer::clearEdge(S** thingp) {
+inline S* js::gc::ClearEdgesTracer::onEdge(S* thing) {
   // We don't handle removing pointers to nursery edges from the store buffer
-  // with this tracer.
-  MOZ_ASSERT(!IsInsideNursery(*thingp));
+  // with this tracer. Check that this doesn't happen.
+  MOZ_ASSERT(!IsInsideNursery(thing));
 
-  InternalBarrierMethods<S*>::preBarrier(*thingp);
-  *thingp = nullptr;
-  return false;
+  // Fire the pre-barrier since we're removing an edge from the graph.
+  InternalBarrierMethods<S*>::preBarrier(thing);
+
+  // Return nullptr to clear the edge.
+  return nullptr;
 }
 
-bool js::gc::ClearEdgesTracer::onObjectEdge(JSObject** objp) {
-  return clearEdge(objp);
+JSObject* js::gc::ClearEdgesTracer::onObjectEdge(JSObject* obj) {
+  return onEdge(obj);
 }
-bool js::gc::ClearEdgesTracer::onStringEdge(JSString** strp) {
-  return clearEdge(strp);
+JSString* js::gc::ClearEdgesTracer::onStringEdge(JSString* str) {
+  return onEdge(str);
 }
-bool js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
-  return clearEdge(symp);
+JS::Symbol* js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol* sym) {
+  return onEdge(sym);
 }
-bool js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
-  return clearEdge(bip);
+JS::BigInt* js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt* bi) {
+  return onEdge(bi);
 }
-bool js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript** scriptp) {
-  return clearEdge(scriptp);
+js::BaseScript* js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript* script) {
+  return onEdge(script);
 }
-bool js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) {
-  return clearEdge(shapep);
+js::Shape* js::gc::ClearEdgesTracer::onShapeEdge(js::Shape* shape) {
+  return onEdge(shape);
 }
-bool js::gc::ClearEdgesTracer::onObjectGroupEdge(js::ObjectGroup** groupp) {
-  return clearEdge(groupp);
+js::ObjectGroup* js::gc::ClearEdgesTracer::onObjectGroupEdge(
+    js::ObjectGroup* group) {
+  return onEdge(group);
 }
-bool js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) {
-  return clearEdge(basep);
+js::BaseShape* js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape* base) {
+  return onEdge(base);
 }
-bool js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) {
-  return clearEdge(codep);
+js::jit::JitCode* js::gc::ClearEdgesTracer::onJitCodeEdge(
+    js::jit::JitCode* code) {
+  return onEdge(code);
 }
-bool js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
-  return clearEdge(scopep);
+js::Scope* js::gc::ClearEdgesTracer::onScopeEdge(js::Scope* scope) {
+  return onEdge(scope);
 }
-bool js::gc::ClearEdgesTracer::onRegExpSharedEdge(js::RegExpShared** sharedp) {
-  return clearEdge(sharedp);
+js::RegExpShared* js::gc::ClearEdgesTracer::onRegExpSharedEdge(
+    js::RegExpShared* shared) {
+  return onEdge(shared);
 }
 
 JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,

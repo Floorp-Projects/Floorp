@@ -238,25 +238,28 @@ class GenericTracer : public JSTracer {
     MOZ_ASSERT(isGenericTracer());
   }
 
-  // Override these methods to receive notification when an edge is visited
-  // with the type contained in the callback.
+  // These methods are called when the tracer encounters an edge. Clients should
+  // override them to receive notifications when an edge of each type is
+  // visited.
+  //
+  // The caller updates the edge with the return value (if different).
   //
   // In C++, overriding a method hides all methods in the base class with that
   // name, not just methods with that signature. Thus, the typed edge methods
   // have to have distinct names to allow us to override them individually,
   // which is freqently useful if, for example, we only want to process one type
   // of edge.
-  virtual bool onObjectEdge(JSObject** objp) = 0;
-  virtual bool onStringEdge(JSString** strp) = 0;
-  virtual bool onSymbolEdge(JS::Symbol** symp) = 0;
-  virtual bool onBigIntEdge(JS::BigInt** bip) = 0;
-  virtual bool onScriptEdge(js::BaseScript** scriptp) = 0;
-  virtual bool onShapeEdge(js::Shape** shapep) = 0;
-  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) = 0;
-  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) = 0;
-  virtual bool onBaseShapeEdge(js::BaseShape** basep) = 0;
-  virtual bool onJitCodeEdge(js::jit::JitCode** codep) = 0;
-  virtual bool onScopeEdge(js::Scope** scopep) = 0;
+  virtual JSObject* onObjectEdge(JSObject* obj) = 0;
+  virtual JSString* onStringEdge(JSString* str) = 0;
+  virtual JS::Symbol* onSymbolEdge(JS::Symbol* sym) = 0;
+  virtual JS::BigInt* onBigIntEdge(JS::BigInt* bi) = 0;
+  virtual js::BaseScript* onScriptEdge(js::BaseScript* script) = 0;
+  virtual js::Shape* onShapeEdge(js::Shape* shape) = 0;
+  virtual js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) = 0;
+  virtual js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) = 0;
+  virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) = 0;
+  virtual js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) = 0;
+  virtual js::Scope* onScopeEdge(js::Scope* scope) = 0;
 };
 
 }  // namespace js
@@ -282,49 +285,49 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
 
  private:
   // This class implements the GenericTracer interface to dispatches to onChild.
-  virtual bool onObjectEdge(JSObject** objp) {
-    onChild(JS::GCCellPtr(*objp));
-    return true;
+  virtual JSObject* onObjectEdge(JSObject* obj) {
+    onChild(JS::GCCellPtr(obj));
+    return obj;
   }
-  virtual bool onStringEdge(JSString** strp) {
-    onChild(JS::GCCellPtr(*strp));
-    return true;
+  virtual JSString* onStringEdge(JSString* str) {
+    onChild(JS::GCCellPtr(str));
+    return str;
   }
-  virtual bool onSymbolEdge(JS::Symbol** symp) {
-    onChild(JS::GCCellPtr(*symp));
-    return true;
+  virtual JS::Symbol* onSymbolEdge(JS::Symbol* sym) {
+    onChild(JS::GCCellPtr(sym));
+    return sym;
   }
-  virtual bool onBigIntEdge(JS::BigInt** bip) {
-    onChild(JS::GCCellPtr(*bip));
-    return true;
+  virtual JS::BigInt* onBigIntEdge(JS::BigInt* bi) {
+    onChild(JS::GCCellPtr(bi));
+    return bi;
   }
-  virtual bool onScriptEdge(js::BaseScript** scriptp) {
-    onChild(JS::GCCellPtr(*scriptp));
-    return true;
+  virtual js::BaseScript* onScriptEdge(js::BaseScript* script) {
+    onChild(JS::GCCellPtr(script));
+    return script;
   }
-  virtual bool onShapeEdge(js::Shape** shapep) {
-    onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
-    return true;
+  virtual js::Shape* onShapeEdge(js::Shape* shape) {
+    onChild(JS::GCCellPtr(shape, JS::TraceKind::Shape));
+    return shape;
   }
-  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) {
-    onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
-    return true;
+  virtual js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) {
+    onChild(JS::GCCellPtr(group, JS::TraceKind::ObjectGroup));
+    return group;
   }
-  virtual bool onBaseShapeEdge(js::BaseShape** basep) {
-    onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
-    return true;
+  virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) {
+    onChild(JS::GCCellPtr(base, JS::TraceKind::BaseShape));
+    return base;
   }
-  virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
-    onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
-    return true;
+  virtual js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) {
+    onChild(JS::GCCellPtr(code, JS::TraceKind::JitCode));
+    return code;
   }
-  virtual bool onScopeEdge(js::Scope** scopep) {
-    onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
-    return true;
+  virtual js::Scope* onScopeEdge(js::Scope* scope) {
+    onChild(JS::GCCellPtr(scope, JS::TraceKind::Scope));
+    return scope;
   }
-  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) {
-    onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
-    return true;
+  virtual js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) {
+    onChild(JS::GCCellPtr(shared, JS::TraceKind::RegExpShared));
+    return shared;
   }
 
   TracingContext context_;
