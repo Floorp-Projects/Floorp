@@ -810,10 +810,14 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     // We already have a mapping for this image key, so ensure we release the
     // previous external image ID. This can happen when an image is animated,
     // and it is changing the external image that the animation points to.
-    if (!aScheduleRelease) {
-      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
+    if (gfx::gfxVars::UseSoftwareWebRender()) {
+      mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
+    } else {
+      if (!aScheduleRelease) {
+        aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
+      }
+      aScheduleRelease->Add(aKey, it->second);
     }
-    aScheduleRelease->Add(aKey, it->second);
     it->second = aExtId;
   }
 
