@@ -3790,7 +3790,7 @@ GeckoDriver.prototype.teardownReftest = function() {
     );
   }
 
-  this._reftest.abort();
+  this._reftest.teardown();
   this._reftest = null;
 };
 
