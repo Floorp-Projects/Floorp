@@ -30,7 +30,6 @@ UNIFIED_SOURCES += [
     'SessionStorageCache.cpp',
     'SessionStorageManager.cpp',
     'SessionStorageObserver.cpp',
-    'SessionStorageService.cpp',
     'Storage.cpp',
     'StorageActivityService.cpp',
     'StorageDBThread.cpp',
@@ -43,6 +42,8 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'PBackgroundLocalStorageCache.ipdl',
+    'PBackgroundSessionStorageCache.ipdl',
+    'PBackgroundSessionStorageManager.ipdl',
     'PBackgroundStorage.ipdl',
     'PSessionStorageObserver.ipdl',
 ]

@@ -141,6 +141,10 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual bool DeallocPBackgroundStorageParent(
       PBackgroundStorageParent* aActor) override;
 
+  virtual already_AddRefed<PBackgroundSessionStorageManagerParent>
+  AllocPBackgroundSessionStorageManagerParent(
+      const uint64_t& aTopContextId) override;
+
   virtual already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent()
       override;
 
@@ -315,6 +319,12 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual bool DeallocPQuotaParent(PQuotaParent* aActor) override;
 
   virtual mozilla::ipc::IPCResult RecvShutdownQuotaManager() override;
+
+  virtual mozilla::ipc::IPCResult RecvShutdownBackgroundSessionStorageManagers()
+      override;
+
+  virtual mozilla::ipc::IPCResult RecvRemoveBackgroundSessionStorageManager(
+      const uint64_t& aTopContextId) override;
 
   virtual already_AddRefed<PFileSystemRequestParent>
   AllocPFileSystemRequestParent(const FileSystemParams&) override;

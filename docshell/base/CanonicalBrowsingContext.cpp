@@ -20,6 +20,7 @@
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
@@ -743,6 +744,10 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
   if (mTabMediaController) {
     mTabMediaController->Shutdown();
     mTabMediaController = nullptr;
+  }
+
+  if (IsTop()) {
+    BackgroundSessionStorageManager::RemoveManager(Id());
   }
 }
 

@@ -573,6 +573,10 @@ VIRTUAL_CALL_CLASSES = set([
     # .h includes something that's a LOCAL_INCLUDE
     ("PBackgroundLocalStorageCache", "child"),
     ("PBackgroundLocalStorageCache", "parent"),
+    ("PBackgroundSessionStorageCache", "child"),
+    ("PBackgroundSessionStorageCache", "parent"),
+    ("PBackgroundSessionStorageManager", "child"),
+    ("PBackgroundSessionStorageManager", "parent"),
     ("PBackgroundStorage", "child"),
     ("PBackgroundStorage", "parent"),
     ("PBrowserStream", "parent"),
