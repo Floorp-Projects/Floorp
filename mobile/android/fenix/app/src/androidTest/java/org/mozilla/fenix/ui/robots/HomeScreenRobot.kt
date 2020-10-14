@@ -25,6 +25,7 @@ import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -38,6 +39,7 @@ import androidx.test.uiautomator.Until.findObject
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.not
+import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Search
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -52,6 +54,7 @@ import org.mozilla.fenix.helpers.withBitmapDrawable
  */
 class HomeScreenRobot {
     fun verifyNavigationToolbar() = assertNavigationToolbar()
+    fun verifyFocusedNavigationToolbar() = assertFocusedNavigationToolbar()
     fun verifyHomeScreen() = assertHomeScreen()
     fun verifyHomePrivateBrowsingButton() = assertHomePrivateBrowsingButton()
     fun verifyHomeMenu() = assertHomeMenu()
@@ -64,6 +67,7 @@ class HomeScreenRobot {
     fun verifyHomeComponent() = assertHomeComponent()
     fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
     fun verifyNoTabsOpened() = assertNoTabsOpened()
+    fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
@@ -387,6 +391,10 @@ class HomeScreenRobot {
                 .perform(click())
         }
 
+        fun pressBack() {
+            onView(ViewMatchers.isRoot()).perform(ViewActions.pressBack())
+        }
+
         fun openTabsListThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
 //            tabsListThreeDotButton().perform(click())
 
@@ -481,6 +489,14 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
+private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
+    Assert.assertEquals(
+        isExpectedToBeVisible,
+        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .executeShellCommand("dumpsys input_method | grep mInputShown")
+            .contains("mInputShown=true")
+    )
+
 private fun navigationToolbar() =
     onView(allOf(withText("Search or enter address")))
 
@@ -488,6 +504,10 @@ private fun closeTabButton() = onView(withId(R.id.close_tab_button))
 
 private fun assertNavigationToolbar() =
     onView(allOf(withText("Search or enter address")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertFocusedNavigationToolbar() =
+    onView(allOf(withHint("Search or enter address")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertHomeScreen() = onView(ViewMatchers.withResourceName("homeLayout"))
