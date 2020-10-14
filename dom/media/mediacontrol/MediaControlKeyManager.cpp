@@ -36,13 +36,7 @@ bool MediaControlKeyManager::Open() {
   if (IsOpened()) {
     return true;
   }
-  const bool isEnabledMediaControl = StartMonitoringControlKeys();
-  if (isEnabledMediaControl) {
-    RefPtr<MediaControlService> service = MediaControlService::GetService();
-    MOZ_ASSERT(service);
-    service->NotifyMediaControlHasEverBeenEnabled();
-  }
-  return isEnabledMediaControl;
+  return StartMonitoringControlKeys();
 }
 
 void MediaControlKeyManager::Close() {

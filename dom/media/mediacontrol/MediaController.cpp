@@ -214,9 +214,6 @@ void MediaController::UpdateMediaControlActionToContentMediaIfNeeded(
   } else {
     context->Canonical()->UpdateMediaControlAction(aAction);
   }
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->NotifyMediaControlHasEverBeenUsed();
 }
 
 void MediaController::Shutdown() {
