@@ -309,10 +309,12 @@ class PerftestTests(MachCommandBase):
             "run",
             pytest.__file__,
             options,
+            "--duration",
+            "10",
             tests,
         ]
         assert self._run_python_script(
-            "coverage", *args, label="running tests", verbose=verbose
+            "coverage", *args, label="running tests", verbose=verbose, display=verbose
         )
         if run_coverage_check and not self._run_python_script(
             "coverage", "report", display=True

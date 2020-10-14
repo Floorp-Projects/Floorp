@@ -4,72 +4,101 @@ import os
 import pytest
 import shutil
 import tempfile
-import time
+import json
 from unittest import mock
 
-from mozbuild.base import MozbuildObject
 from mozperftest.tests.support import get_running_env
 from mozperftest.environment import SYSTEM
-from mozperftest.utils import install_package, silence
+from mozperftest.utils import silence
+from mozperftest.system.proxy import OutputHandler
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 example_dump = os.path.join(here, "..", "system", "example.zip")
 
 
-@pytest.fixture(scope="module")
-def install_mozproxy():
-    build = MozbuildObject.from_environment(cwd=here)
-    build.virtualenv_manager.activate()
+class FakeOutputHandler:
+    def finished(self):
+        pass
 
-    mozbase = os.path.join(build.topsrcdir, "testing", "mozbase")
-    mozproxy_deps = ["mozinfo", "mozlog", "mozproxy"]
-    for i in mozproxy_deps:
-        install_package(build.virtualenv_manager, os.path.join(mozbase, i))
-    return build
+    def wait_for_port(self):
+        return 1234
+
+
+class ProcHandler:
+    def __init__(self, *args, **kw):
+        self.args = args
+        self.kw = kw
+        self.pid = 1234
+
+    def wait(self, *args):
+        return
+
+    run = wait
+
+    @property
+    def proc(self):
+        return self
+
+
+@pytest.fixture(scope="module")
+def running_env():
+    return get_running_env(proxy=True)
 
 
 def mock_download_file(url, dest):
     shutil.copyfile(example_dump, dest)
 
 
-def test_replay(install_mozproxy):
-    mach_cmd, metadata, env = get_running_env(proxy=True)
+@mock.patch("mozperftest.system.proxy.OutputHandler", new=FakeOutputHandler)
+@mock.patch("mozperftest.system.proxy.ProcessHandler", new=ProcHandler)
+@mock.patch("os.kill")
+def test_replay(killer, running_env):
+    mach_cmd, metadata, env = running_env
     system = env.layers[SYSTEM]
     env.set_arg("proxy-replay", example_dump)
 
-    # XXX this will run for real, we need to mock HTTP calls
     with system as proxy, silence():
         proxy(metadata)
-        # Give mitmproxy a bit of time to start up so we can verify that it's
-        # actually running before we tear things down.
-        time.sleep(5)
 
 
 @mock.patch("mozperftest.system.proxy.download_file", mock_download_file)
-def test_replay_url(install_mozproxy):
-    mach_cmd, metadata, env = get_running_env(proxy=True)
+@mock.patch("mozperftest.system.proxy.ProcessHandler", new=ProcHandler)
+@mock.patch("mozperftest.system.proxy.OutputHandler", new=FakeOutputHandler)
+@mock.patch("os.kill")
+def test_replay_url(killer, running_env):
+    mach_cmd, metadata, env = running_env
     system = env.layers[SYSTEM]
     env.set_arg("proxy-replay", "http://example.dump")
 
-    # XXX this will run for real, we need to mock HTTP calls
     with system as proxy, silence():
         proxy(metadata)
-        # Give mitmproxy a bit of time to start up so we can verify that it's
-        # actually running before we tear things down.
-        time.sleep(5)
 
 
-def test_record(install_mozproxy):
-    mach_cmd, metadata, env = get_running_env(proxy=True)
+@mock.patch("mozperftest.system.proxy.download_file", mock_download_file)
+@mock.patch("mozperftest.system.proxy.ProcessHandler", new=ProcHandler)
+@mock.patch("mozperftest.system.proxy.OutputHandler", new=FakeOutputHandler)
+@mock.patch("os.kill")
+def test_record(killer, running_env):
+    mach_cmd, metadata, env = running_env
     system = env.layers[SYSTEM]
     with tempfile.TemporaryDirectory() as tmpdir:
         recording = os.path.join(tmpdir, "recording.dump")
         env.set_arg("proxy-record", recording)
 
-        # XXX this will run for real, we need to mock HTTP calls
         with system as proxy, silence():
             proxy(metadata)
-        assert os.path.exists(recording)
+
+
+@mock.patch("mozperftest.system.proxy.LOG")
+def test_output_handler(logged):
+    hdlr = OutputHandler()
+    hdlr(b"simple line")
+    hdlr(json.dumps({"not": "expected data"}).encode())
+
+    # this catches the port
+    hdlr(json.dumps({"action": "", "message": "Proxy running on port 1234"}).encode())
+    assert hdlr.wait_for_port() == 1234
 
 
 if __name__ == "__main__":

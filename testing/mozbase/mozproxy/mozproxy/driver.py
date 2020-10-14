@@ -83,3 +83,7 @@ def main():
     except Exception as e:
         LOG.error(str(e), exc_info=True)
         return EXIT_EXCEPTION
+
+
+if __name__ == "__main__":
+    main()
