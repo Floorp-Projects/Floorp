@@ -281,6 +281,7 @@
   MACRO(MapConstructorInit, MapConstructorInit, "MapConstructorInit")          \
   MACRO(MapIterator, MapIterator, "Map Iterator")                              \
   MACRO(maxColumn, maxColumn, "maxColumn")                                     \
+  MACRO(maximum, maximum, "maximum")                                           \
   MACRO(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
   MACRO(maximumSignificantDigits, maximumSignificantDigits,                    \
         "maximumSignificantDigits")                                            \
@@ -290,6 +291,7 @@
   MACRO(meta, meta, "meta")                                                    \
   MACRO(minColumn, minColumn, "minColumn")                                     \
   MACRO(minDays, minDays, "minDays")                                           \
+  MACRO(minimum, minimum, "minimum")                                           \
   MACRO(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
   MACRO(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits")    \
   MACRO(minimumSignificantDigits, minimumSignificantDigits,                    \
@@ -306,6 +308,7 @@
   MACRO(ModuleEvaluate, ModuleEvaluate, "ModuleEvaluate")                      \
   MACRO(month, month, "month")                                                 \
   MACRO(multiline, multiline, "multiline")                                     \
+  MACRO(mutable, mutable_, "mutable")                                          \
   MACRO(name, name, "name")                                                    \
   MACRO(nan, nan, "nan")                                                       \
   MACRO(NaN, NaN, "NaN")                                                       \
