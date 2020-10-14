@@ -6,9 +6,15 @@ const { mount } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
+const {
+  combineReducers,
+  createStore,
+  applyMiddleware,
+} = require("devtools/client/shared/vendor/redux");
 
-const { thunk } = require("devtools/client/shared/components/reps/shared/redux/middleware/thunk");
+const {
+  thunk,
+} = require("devtools/client/shared/components/reps/shared/redux/middleware/thunk");
 const {
   waitUntilService,
 } = require("devtools/client/shared/components/reps/shared/redux/middleware/waitUntilService");
@@ -17,9 +23,6 @@ const {
  * Redux store utils
  * @module utils/create-store
  */
-
-import { createStore, applyMiddleware } from "redux";
-
 const objectInspector = require("devtools/client/shared/components/reps/object-inspector/index");
 const {
   getLoadedProperties,

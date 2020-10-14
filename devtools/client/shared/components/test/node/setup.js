@@ -16,6 +16,27 @@ global.requestAnimationFrame = function(cb) {
   return null;
 };
 
+// Mock getSelection
+
+let selection;
+const selectionObject = {
+  toString: () => selection,
+  get type() {
+    if (selection === undefined) {
+      return "None";
+    }
+    if (selection === "") {
+      return "Caret";
+    }
+    return "Range";
+  },
+  setMockSelection: str => {
+    selection = str;
+  },
+};
+
+global.getSelection = () => selectionObject;
+
 // Array#flatMap is only supported in Node 11+
 if (!Array.prototype.flatMap) {
   // eslint-disable-next-line no-extend-native
