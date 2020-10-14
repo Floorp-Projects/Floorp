@@ -57,6 +57,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
    * A cache of a subset of our states.
    */
   uint64_t mCachedState;
+
+  nsStaticAtom* mARIARole;
 }
 
 // inits with the given wrap or proxy accessible
