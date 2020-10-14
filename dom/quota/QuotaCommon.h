@@ -76,10 +76,11 @@
 /**
  * There are multiple ways to handle unrecoverable conditions (note that the
  * patterns are put in reverse chronological order and only the first pattern
- * QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL should be used in new code):
+ * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_TRY_RETURN/QM_FAIL should be used in
+ * new code):
  *
- * 1. Using QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL macros (Quota manager
- *    specific, defined below)
+ * 1. Using QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_TRY_RETURN/QM_FAIL macros
+ *    (Quota manager specific, defined below)
  *
  * Typical use cases:
  *
@@ -350,16 +351,16 @@
  *   return NS_OK;
  * }
  *
- * QM_TRY/QM_TRY_VAR is like MOZ_TRY/MOZ_TRY_VAR but if an error occurs it
- * additionally calls a generic function HandleError to handle the error and it
- * can be used to return custom return values as well and even call an
- * additional cleanup function.
+ * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT is like MOZ_TRY/MOZ_TRY_VAR but if an
+ * error occurs it additionally calls a generic function HandleError to handle
+ * the error and it can be used to return custom return values as well and even
+ * call an additional cleanup function.
  * HandleError currently only warns in debug builds, it will report to the
  * browser console and telemetry in the future.
- * The other advantage of QM_TRY/QM_TRY_VAR is that a local nsresult is not
- * needed at all in all cases, all calls can be wrapped directly. If an error
- * occurs, the warning contains a concrete call instead of the rv local
- * variable. For example:
+ * The other advantage of QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT is that a local
+ * nsresult is not needed at all in all cases, all calls can be wrapped
+ * directly. If an error occurs, the warning contains a concrete call instead
+ * of the rv local variable. For example:
  *
  * 1. WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80004005
  * (NS_ERROR_FAILURE): file XYZ, line N
@@ -372,19 +373,21 @@
  *
  * QM_TRY_RETURN is a supplementary macro for cases when the result's success
  * value can be directly returned (instead of assigning to a variable as in the
- * QM_TRY_VAR case).
+ * QM_TRY_UNWRAP/QM_TRY_INSPECT case).
  *
  * QM_FAIL is a supplementary macro for cases when an error needs to be
  * returned without evaluating an expression. It's possible to write
  * QM_TRY(OkIf(false), NS_ERROR_FAILURE), but QM_FAIL(NS_ERROR_FAILURE) looks
  * more straightforward.
  *
- * It's highly recommended to use QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL in
- * new code for quota manager and quota clients. Existing code should be
- * incrementally converted as needed.
+ * It's highly recommended to use
+ * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_TRY_RETURN/QM_FAIL in new code for
+ * quota manager and quota clients. Existing code should be incrementally
+ * converted as needed.
  *
- * QM_TRY_VOID/QM_TRY_VAR_VOID/QM_FAIL_VOID is not defined on purpose since
- * it's possible to use QM_TRY/QM_TRY_VAR/QM_FAIL even in void functions.
+ * QM_TRY_VOID/QM_TRY_UNWRAP_VOID/QM_TRY_INSPECT_VOID/QM_FAIL_VOID is not
+ * defined on purpose since it's possible to use
+ * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_FAIL even in void functions.
  * However, QM_TRY(Task(), ) would look odd so it's recommended to use a dummy
  * define QM_VOID that evaluates to nothing instead: QM_TRY(Task(), QM_VOID)
  */
@@ -402,7 +405,7 @@
 #define QM_ASSERT_UNREACHABLE_VOID [] { MOZ_ASSERT(false); }()
 
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
-// QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
+// QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_FAIL and shouldn't be used directly.
 
 #define QM_MISSING_ARGS(...)                           \
   do {                                                 \
@@ -482,34 +485,36 @@
  */
 #define QM_TRY(...) QM_TRY_GLUE(__VA_ARGS__)
 
-// QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAL,
-// QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_VAR_GLUE macros are
-// implementation details of QM_TRY_VAR and shouldn't be used directly.
+// QM_TRY_ASSIGN_PROPAGATE_ERR, QM_TRY_ASSIGN_CUSTOM_RET_VAL,
+// QM_TRY_ASSIGN_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_ASSIGN_GLUE macros are
+// implementation details of QM_TRY_UNWRAP/QM_TRY_INSPECT and shouldn't be used
+// directly.
 
 // Handles the five arguments case when the error is propagated.
-#define QM_TRY_VAR_PROPAGATE_ERR(ns, tryResult, accessFunction, target, expr) \
-  auto tryResult = (expr);                                                    \
-  if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
-    ns::QM_HANDLE_ERROR(expr);                                                \
-    return tryResult.propagateErr();                                          \
-  }                                                                           \
+#define QM_TRY_ASSIGN_PROPAGATE_ERR(ns, tryResult, accessFunction, target, \
+                                    expr)                                  \
+  auto tryResult = (expr);                                                 \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                   \
+    ns::QM_HANDLE_ERROR(expr);                                             \
+    return tryResult.propagateErr();                                       \
+  }                                                                        \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
 
 // Handles the six arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, tryResult, accessFunction, target, expr, \
-                                  customRetVal)                                \
-  auto tryResult = (expr);                                                     \
-  if (MOZ_UNLIKELY(tryResult.isErr())) {                                       \
-    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();                \
-    ns::QM_HANDLE_ERROR(expr);                                                 \
-    return customRetVal;                                                       \
-  }                                                                            \
+#define QM_TRY_ASSIGN_CUSTOM_RET_VAL(ns, tryResult, accessFunction, target, \
+                                     expr, customRetVal)                    \
+  auto tryResult = (expr);                                                  \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                    \
+    auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();             \
+    ns::QM_HANDLE_ERROR(expr);                                              \
+    return customRetVal;                                                    \
+  }                                                                         \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
 
 // Handles the seven arguments case when a cleanup function needs to be called
 // before a custom return value is returned
-#define QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(                         \
+#define QM_TRY_ASSIGN_CUSTOM_RET_VAL_WITH_CLEANUP(                      \
     ns, tryResult, accessFunction, target, expr, customRetVal, cleanup) \
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
@@ -523,19 +528,19 @@
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
 // See also the comment for QM_TRY_META.
-#define QM_TRY_VAR_META(...)                                                \
-  MOZ_ARG_9(                                                                \
-      , ##__VA_ARGS__, QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
-      QM_TRY_VAR_CUSTOM_RET_VAL(__VA_ARGS__),                               \
-      QM_TRY_VAR_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
-      QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),           \
+#define QM_TRY_ASSIGN_META(...)                                                \
+  MOZ_ARG_9(                                                                   \
+      , ##__VA_ARGS__, QM_TRY_ASSIGN_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+      QM_TRY_ASSIGN_CUSTOM_RET_VAL(__VA_ARGS__),                               \
+      QM_TRY_ASSIGN_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
+      QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),              \
       QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
 
 // Specifies the namespace and generates unique variable name. This extra
 // internal macro (along with __COUNTER__) allows nesting of the final macro.
-#define QM_TRY_VAR_GLUE(accessFunction, ...)                      \
-  QM_TRY_VAR_META(mozilla::dom::quota, MOZ_UNIQUE_VAR(tryResult), \
-                  accessFunction, ##__VA_ARGS__)
+#define QM_TRY_ASSIGN_GLUE(accessFunction, ...)                      \
+  QM_TRY_ASSIGN_META(mozilla::dom::quota, MOZ_UNIQUE_VAR(tryResult), \
+                     accessFunction, ##__VA_ARGS__)
 
 /**
  * QM_TRY_UNWRAP(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
@@ -546,10 +551,10 @@
  * result or a custom return value (if the third argument was passed). |target|
  * must be an lvalue.
  */
-#define QM_TRY_UNWRAP(...) QM_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
+#define QM_TRY_UNWRAP(...) QM_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
 
 /**
- * QM_TRY_INSPECT is similar to QM_TRY_VAR, but it does not unwrap a success
+ * QM_TRY_INSPECT is similar to QM_TRY_UNWRAP, but it does not unwrap a success
  * value, but inspects it and binds it to the target. It can therefore only be
  * used when the target declares a const&. In general,
  *
@@ -561,7 +566,7 @@
  *
  * as it avoids unnecessary moves/copies.
  */
-#define QM_TRY_INSPECT(...) QM_TRY_VAR_GLUE(inspect, __VA_ARGS__)
+#define QM_TRY_INSPECT(...) QM_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
 
 // QM_TRY_RETURN_PROPAGATE_ERR, QM_TRY_RETURN_CUSTOM_RET_VAL,
 // QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_RETURN_GLUE macros are

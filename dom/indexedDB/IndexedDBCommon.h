@@ -15,11 +15,11 @@
 #define IDB_TRY(...) IDB_TRY_GLUE(__VA_ARGS__)
 
 // IndexedDB equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
-#define IDB_TRY_VAR_GLUE(accessFunction, ...)                         \
-  QM_TRY_VAR_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
-                  accessFunction, ##__VA_ARGS__)
-#define IDB_TRY_UNWRAP(...) IDB_TRY_VAR_GLUE(unwrap, __VA_ARGS__)
-#define IDB_TRY_INSPECT(...) IDB_TRY_VAR_GLUE(inspect, __VA_ARGS__)
+#define IDB_TRY_ASSIGN_GLUE(accessFunction, ...)                         \
+  QM_TRY_ASSIGN_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
+                     accessFunction, ##__VA_ARGS__)
+#define IDB_TRY_UNWRAP(...) IDB_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
+#define IDB_TRY_INSPECT(...) IDB_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
 
 // IndexedDB equivalents of QM_TRY_RETURN.
 #define IDB_TRY_RETURN_GLUE(...)                                         \
