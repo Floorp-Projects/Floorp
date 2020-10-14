@@ -100,6 +100,7 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-lex-r
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-var.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-err-non-configurable.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/methods-called-as-functions.js
 
 # Calls preventExtensions() on the WindowProxy object.
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-err-non-extensible.js
@@ -141,6 +142,9 @@ skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1670124
 skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-8.js
 skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-strict-strict.js
+skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-9.js
+skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-strict.js
+skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
 skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
@@ -258,6 +262,18 @@ skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-o
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670495
+skip script test262/language/identifier-resolution/assign-to-global-undefined-strict.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670496
+skip script test262/intl402/DateTimeFormat/constructor-options-order-fractionalSecondDigits.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1662977
+skip script test262/intl402/NumberFormat/dft-currency-mnfd-range-check-mxfd.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670502
+skip script test262/built-ins/Function/prototype/toString/built-in-function-object.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
 ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
