@@ -4,8 +4,10 @@
 
 /* global jest */
 
-const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
-const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
+const {
+  mountObjectInspector,
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
 
 const {
   createNode,
@@ -13,9 +15,8 @@ const {
   makeNumericalBuckets,
 } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 
-const repsPath = "../../../reps";
-const gripRepStubs = require(`${repsPath}/stubs/grip`);
-const gripArrayRepStubs = require(`${repsPath}/stubs/grip-array`);
+const gripRepStubs = require(`devtools/client/shared/components/test/node/stubs/reps/grip`);
+const gripArrayRepStubs = require(`devtools/client/shared/components/test/node/stubs/reps/grip-array`);
 
 function mount(props, overrides = {}) {
   const client = {

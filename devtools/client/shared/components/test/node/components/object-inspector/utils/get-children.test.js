@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
-const performanceStubs = require("devtools/client/shared/components/reps/object-inspector/stubs/performance");
+const performanceStubs = require("devtools/client/shared/components/test/node/stubs/object-inspector/performance");
 const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
 const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
 const gripMapEntryStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map-entry");

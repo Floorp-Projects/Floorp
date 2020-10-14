@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
-const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const {
+  mountObjectInspector,
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
 
 function generateDefaults(overrides) {
   return {

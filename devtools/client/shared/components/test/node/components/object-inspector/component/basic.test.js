@@ -2,19 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { mountObjectInspector } = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+const {
+  mountObjectInspector,
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
 const { mount } = require("enzyme");
-const { createNode, NODE_TYPES } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
-const repsPath = "../../../reps";
-const { MODE } = require(`${repsPath}/constants`);
-const { Rep } = require(`${repsPath}/rep`);
+const {
+  createNode,
+  NODE_TYPES,
+} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+
+const { Rep } = require(`devtools/client/shared/components/reps/reps/rep`);
+const {
+  MODE,
+} = require(`devtools/client/shared/components/reps/reps/constants`);
 const {
   formatObjectInspector,
   waitForDispatch,
   waitForLoadedProperties,
-} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
-const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
-const gripRepStubs = require(`${repsPath}/stubs/grip`);
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
+const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
+const gripRepStubs = require(`devtools/client/shared/components/test/node/stubs/reps/grip`);
 
 function generateDefaults(overrides) {
   return {

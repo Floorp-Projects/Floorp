@@ -8,10 +8,10 @@ const {
 const {
   waitForDispatch,
   mountObjectInspector,
-} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
 
 const gripWindowStubs = require("devtools/client/shared/components/test/node/stubs/reps/window");
-const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
+const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
 const windowNode = createNode({
   name: "window",
   contents: { value: gripWindowStubs.get("Window") },
