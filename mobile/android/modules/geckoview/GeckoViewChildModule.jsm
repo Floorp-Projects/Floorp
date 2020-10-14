@@ -27,7 +27,6 @@ class GeckoViewChildModule {
     this.moduleName = aModuleName;
     this.messageManager = aGlobal;
     this.enabled = false;
-    this.settings = {};
 
     if (!aGlobal._gvEventDispatcher) {
       aGlobal._gvEventDispatcher = GeckoViewUtils.getDispatcherForWindow(
@@ -47,11 +46,6 @@ class GeckoViewChildModule {
     }
     this.eventDispatcher = aGlobal._gvEventDispatcher;
 
-    this.messageManager.addMessageListener("GeckoView:UpdateSettings", aMsg => {
-      Object.assign(this.settings, aMsg.data);
-      this.onSettingsUpdate();
-    });
-
     this.messageManager.addMessageListener(
       "GeckoView:UpdateModuleState",
       aMsg => {
@@ -59,11 +53,7 @@ class GeckoViewChildModule {
           return;
         }
 
-        const { enabled, settings } = aMsg.data;
-
-        if (settings) {
-          Object.assign(this.settings, settings);
-        }
+        const { enabled } = aMsg.data;
 
         if (enabled !== this.enabled) {
           if (!enabled) {
@@ -75,10 +65,6 @@ class GeckoViewChildModule {
           if (enabled) {
             this.onEnable();
           }
-        }
-
-        if (settings) {
-          this.onSettingsUpdate();
         }
       }
     );
@@ -92,9 +78,6 @@ class GeckoViewChildModule {
 
   // Override to initialize module.
   onInit() {}
-
-  // Override to detect settings change. Access settings via this.settings.
-  onSettingsUpdate() {}
 
   // Override to enable module after setting a Java delegate.
   onEnable() {}
