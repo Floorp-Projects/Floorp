@@ -20,11 +20,14 @@
 #  include "mozilla/ProfileChunkedBuffer.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
+#  include "mozilla/Variant.h"
 
+#  include <initializer_list>
 #  include <string_view>
 #  include <string>
 #  include <type_traits>
 #  include <utility>
+#  include <vector>
 
 namespace mozilla::baseprofiler {
 // Implemented in platform.cpp
@@ -647,6 +650,207 @@ namespace mozilla::baseprofiler::markers {
 struct NoPayload final {};
 
 }  // namespace mozilla::baseprofiler::markers
+
+namespace mozilla {
+
+class JSONWriter;
+
+// This class collects all the information necessary to stream the JSON schema
+// that informs the front-end how to display a type of markers.
+// It will be created and populated in `MarkerTypeDisplay()` functions in each
+// marker type definition, see Add/Set functions.
+class MarkerSchema {
+ public:
+  enum class Location : unsigned {
+    markerChart,
+    markerTable,
+    // This adds markers to the main marker timeline in the header.
+    timelineOverview,
+    // In the timeline, this is a section that breaks out markers that are
+    // related to memory. When memory counters are enabled, this is its own
+    // track, otherwise it is displayed with the main thread.
+    timelineMemory,
+    // This adds markers to the IPC timeline area in the header.
+    timelineIPC,
+    // This adds markers to the FileIO timeline area in the header.
+    timelineFileIO,
+    // TODO - This is not supported yet.
+    stackChart
+  };
+
+  // Used as constructor parameter, to explicitly specify that the location (and
+  // other display options) are handled as a special case in the front-end.
+  // In this case, *no* schema will be output for this type.
+  struct SpecialFrontendLocation {};
+
+  enum class Format {
+    // ----------------------------------------------------
+    // String types.
+
+    // Show the URL, and handle PII sanitization
+    url,
+    // Show the file path, and handle PII sanitization.
+    filePath,
+    // Important, do not put URL or file path information here, as it will not
+    // be sanitized. Please be careful with including other types of PII here as
+    // well.
+    // e.g. "Label: Some String"
+    string,
+
+    // ----------------------------------------------------
+    // Numeric types
+
+    // For time data that represents a duration of time.
+    // e.g. "Label: 5s, 5ms, 5μs"
+    duration,
+    // Data that happened at a specific time, relative to the start of the
+    // profile. e.g. "Label: 15.5s, 20.5ms, 30.5μs"
+    time,
+    // The following are alternatives to display a time only in a specific unit
+    // of time.
+    seconds,       // "Label: 5s"
+    milliseconds,  // "Label: 5ms"
+    microseconds,  // "Label: 5μs"
+    nanoseconds,   // "Label: 5ns"
+    // e.g. "Label: 5.55mb, 5 bytes, 312.5kb"
+    bytes,
+    // This should be a value between 0 and 1.
+    // "Label: 50%"
+    percentage,
+    // The integer should be used for generic representations of numbers.
+    // Do not use it for time information.
+    // "Label: 52, 5,323, 1,234,567"
+    integer,
+    // The decimal should be used for generic representations of numbers.
+    // Do not use it for time information.
+    // "Label: 52.23, 0.0054, 123,456.78"
+    decimal
+  };
+
+  enum class Searchable { notSearchable, searchable };
+
+  // Marker schema, with a non-empty list of locations where markers should be
+  // shown.
+  // Tech note: Even though `aLocations` are templated arguments, they are
+  // assigned to an `enum class` object, so they can only be of that enum type.
+  template <typename... Locations>
+  explicit MarkerSchema(Location aLocation, Locations... aLocations)
+      : mLocations{aLocation, aLocations...} {}
+
+  // Marker schema for types that have special frontend handling.
+  // Nothing else should be set in this case.
+  // Implicit to allow quick return from MarkerTypeDisplay functions.
+  MOZ_IMPLICIT MarkerSchema(SpecialFrontendLocation) {}
+
+  // Caller must specify location(s) or SpecialFrontendLocation above.
+  MarkerSchema() = delete;
+
+  // Optional labels in the marker chart, the chart tooltip, and the marker
+  // table. If not provided, the marker "name" will be used. The given string
+  // can contain element keys in braces to include data elements streamed by
+  // `StreamJSONMarkerData()`. E.g.: "This is {text}"
+
+#  define LABEL_SETTER(name)                       \
+    MarkerSchema& Set##name(std::string a##name) { \
+      m##name = std::move(a##name);                \
+      return *this;                                \
+    }
+
+  LABEL_SETTER(ChartLabel)
+  LABEL_SETTER(TooltipLabel)
+  LABEL_SETTER(TableLabel)
+
+#  undef LABEL_SETTER
+
+  MarkerSchema& SetAllLabels(std::string aText) {
+    // Here we set the same text in each label.
+    // TODO: Move to a single "label" field once the front-end allows it.
+    SetChartLabel(aText);
+    SetTooltipLabel(aText);
+    SetTableLabel(std::move(aText));
+    return *this;
+  }
+
+  // Each data element that is streamed by `StreamJSONMarkerData()` can be
+  // displayed as indicated by using one of the `Add...` function below.
+  // Each `Add...` will add a line in the full marker description. Parameters:
+  // - `aKey`: Element property name as streamed by `StreamJSONMarkerData()`.
+  // - `aLabel`: Optional prefix. Defaults to the key name.
+  // - `aFormat`: How to format the data element value, see `Format` above.
+  // - `aSearchable`: Optional, indicates if the value is used in searches,
+  //   defaults to false.
+
+  MarkerSchema& AddKeyFormat(std::string aKey, Format aFormat) {
+    mData.emplace_back(mozilla::VariantType<DynamicData>{},
+                       DynamicData{std::move(aKey), mozilla::Nothing{}, aFormat,
+                                   mozilla::Nothing{}});
+    return *this;
+  }
+
+  MarkerSchema& AddKeyLabelFormat(std::string aKey, std::string aLabel,
+                                  Format aFormat) {
+    mData.emplace_back(
+        mozilla::VariantType<DynamicData>{},
+        DynamicData{std::move(aKey), mozilla::Some(std::move(aLabel)), aFormat,
+                    mozilla::Nothing{}});
+    return *this;
+  }
+
+  MarkerSchema& AddKeyFormatSearchable(std::string aKey, Format aFormat,
+                                       Searchable aSearchable) {
+    mData.emplace_back(mozilla::VariantType<DynamicData>{},
+                       DynamicData{std::move(aKey), mozilla::Nothing{}, aFormat,
+                                   mozilla::Some(aSearchable)});
+    return *this;
+  }
+
+  MarkerSchema& AddKeyLabelFormatSearchable(std::string aKey,
+                                            std::string aLabel, Format aFormat,
+                                            Searchable aSearchable) {
+    mData.emplace_back(
+        mozilla::VariantType<DynamicData>{},
+        DynamicData{std::move(aKey), mozilla::Some(std::move(aLabel)), aFormat,
+                    mozilla::Some(aSearchable)});
+    return *this;
+  }
+
+  // The display may also include static rows.
+
+  MarkerSchema& AddStaticLabelValue(std::string aLabel, std::string aValue) {
+    mData.emplace_back(mozilla::VariantType<StaticData>{},
+                       StaticData{std::move(aLabel), std::move(aValue)});
+    return *this;
+  }
+
+  // Internal streaming function.
+  MFBT_API void Stream(JSONWriter& aWriter, const Span<const char>& aName) &&;
+
+ private:
+  MFBT_API static Span<const char> LocationToStringSpan(Location aLocation);
+  MFBT_API static Span<const char> FormatToStringSpan(Format aFormat);
+
+  // List of marker display locations. Empty for SpecialFrontendLocation.
+  std::vector<Location> mLocations;
+  // Labels for different places.
+  std::string mChartLabel;
+  std::string mTooltipLabel;
+  std::string mTableLabel;
+  // Main display, made of zero or more rows of key+label+format or label+value.
+  struct DynamicData {
+    std::string mKey;
+    mozilla::Maybe<std::string> mLabel;
+    Format mFormat;
+    mozilla::Maybe<Searchable> mSearchable;
+  };
+  struct StaticData {
+    std::string mLabel;
+    std::string mValue;
+  };
+  using DataRow = mozilla::Variant<DynamicData, StaticData>;
+  std::vector<DataRow> mData;
+};
+
+}  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
 
