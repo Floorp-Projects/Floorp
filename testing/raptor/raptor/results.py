@@ -536,7 +536,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # chrome we just measure fcp and loadtime; skip fnbpaint and dcf
                     if (
                         self.app
-                        and "chrome" in self.app.lower()
+                        and ("chrome" in self.app.lower() or "chromium" in self.app.lower())
                         and bt in ("fnbpaint", "dcf")
                     ):
                         continue

@@ -2,38 +2,66 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
+import shlex
 import sys
 import tempfile
+import warnings
 
+from click import Command
 from click.utils import safecall
+from pip._internal.commands import create_command
+from pip._internal.req.constructors import install_req_from_line
+from pip._internal.utils.misc import redact_auth_from_url
 
 from .. import click
-from .._compat import install_req_from_line, parse_requirements
+from .._compat import parse_requirements
 from ..cache import DependencyCache
 from ..exceptions import PipToolsError
 from ..locations import CACHE_DIR
 from ..logging import log
 from ..repositories import LocalRequirementsRepository, PyPIRepository
 from ..resolver import Resolver
-from ..utils import (
-    UNSAFE_PACKAGES,
-    create_install_command,
-    dedup,
-    get_trusted_hosts,
-    is_pinned_requirement,
-    key_from_ireq,
-)
+from ..utils import UNSAFE_PACKAGES, dedup, is_pinned_requirement, key_from_ireq
 from ..writer import OutputWriter
 
 DEFAULT_REQUIREMENTS_FILE = "requirements.in"
 DEFAULT_REQUIREMENTS_OUTPUT_FILE = "requirements.txt"
 
-# Get default values of the pip's options (including options from pip.conf).
-install_command = create_install_command()
-pip_defaults = install_command.parser.get_default_values()
+
+def _get_default_option(option_name):
+    """
+    Get default value of the pip's option (including option from pip.conf)
+    by a given option name.
+    """
+    install_command = create_command("install")
+    default_values = install_command.parser.get_default_values()
+    return getattr(default_values, option_name)
 
 
-@click.command()
+class BaseCommand(Command):
+    _os_args = None
+
+    def parse_args(self, ctx, args):
+        """
+        Override base `parse_args` to store the argument part of `sys.argv`.
+        """
+        self._os_args = set(args)
+        return super(BaseCommand, self).parse_args(ctx, args)
+
+    def has_arg(self, arg_name):
+        """
+        Detect whether a given arg name (including negative counterparts
+        to the arg, e.g. --no-arg) is present in the argument part of `sys.argv`.
+        """
+        command_options = {option.name: option for option in self.params}
+        option = command_options[arg_name]
+        args = set(option.opts + option.secondary_opts)
+        return bool(self._os_args & args)
+
+
+@click.command(
+    cls=BaseCommand, context_settings={"help_option_names": ("-h", "--help")}
+)
 @click.version_option()
 @click.pass_context
 @click.option("-v", "--verbose", count=True, help="Show more output")
@@ -67,7 +95,9 @@ pip_defaults = install_command.parser.get_default_values()
 @click.option(
     "-i",
     "--index-url",
-    help="Change index URL (defaults to {})".format(pip_defaults.index_url),
+    help="Change index URL (defaults to {index_url})".format(
+        index_url=redact_auth_from_url(_get_default_option("index_url"))
+    ),
     envvar="PIP_INDEX_URL",
 )
 @click.option(
@@ -99,7 +129,7 @@ pip_defaults = install_command.parser.get_default_values()
     "--index/--no-index",
     is_flag=True,
     default=True,
-    help="Add index URL to generated file",
+    help="DEPRECATED: Add index URL to generated file",
 )
 @click.option(
     "--emit-trusted-host/--no-emit-trusted-host",
@@ -154,6 +184,15 @@ pip_defaults = install_command.parser.get_default_values()
     help="Generate pip 8 style hashes in the resulting requirements file.",
 )
 @click.option(
+    "--reuse-hashes/--no-reuse-hashes",
+    is_flag=True,
+    default=True,
+    help=(
+        "Improve the speed of --generate-hashes by reusing the hashes from an "
+        "existing output file."
+    ),
+)
+@click.option(
     "--max-rounds",
     default=10,
     help="Maximum number of rounds before resolving the requirements aborts.",
@@ -162,7 +201,7 @@ pip_defaults = install_command.parser.get_default_values()
 @click.option(
     "--build-isolation/--no-build-isolation",
     is_flag=True,
-    default=False,
+    default=True,
     help="Enable isolation when building a modern source distribution. "
     "Build dependencies specified by PEP 518 must be already installed "
     "if build isolation is disabled.",
@@ -181,6 +220,13 @@ pip_defaults = install_command.parser.get_default_values()
     show_default=True,
     show_envvar=True,
     type=click.Path(file_okay=False, writable=True),
+)
+@click.option("--pip-args", help="Arguments to pass directly to the pip command.")
+@click.option(
+    "--emit-index-url/--no-emit-index-url",
+    is_flag=True,
+    default=True,
+    help="Add index URL to generated file",
 )
 def cli(
     ctx,
@@ -204,11 +250,14 @@ def cli(
     output_file,
     allow_unsafe,
     generate_hashes,
+    reuse_hashes,
     src_files,
     max_rounds,
     build_isolation,
     emit_find_links,
     cache_dir,
+    pip_args,
+    emit_index_url,
 ):
     """Compiles requirements.txt from requirements.in specs."""
     log.verbosity = verbose - quiet
@@ -248,10 +297,24 @@ def cli(
         # Close the file at the end of the context execution
         ctx.call_on_close(safecall(output_file.close_intelligently))
 
+    if cli.has_arg("index") and cli.has_arg("emit_index_url"):
+        raise click.BadParameter(
+            "--index/--no-index and --emit-index-url/--no-emit-index-url "
+            "are mutually exclusive."
+        )
+    elif cli.has_arg("index"):
+        warnings.warn(
+            "--index and --no-index are deprecated and will be removed "
+            "in future versions. Use --emit-index-url/--no-emit-index-url instead.",
+            category=FutureWarning,
+        )
+        emit_index_url = index
+
     ###
     # Setup
     ###
 
+    right_args = shlex.split(pip_args or "")
     pip_args = []
     if find_links:
         for link in find_links:
@@ -271,9 +334,11 @@ def cli(
         for host in trusted_host:
             pip_args.extend(["--trusted-host", host])
 
-    repository = PyPIRepository(
-        pip_args, build_isolation=build_isolation, cache_dir=cache_dir
-    )
+    if not build_isolation:
+        pip_args.append("--no-build-isolation")
+    pip_args.extend(right_args)
+
+    repository = PyPIRepository(pip_args, cache_dir=cache_dir)
 
     # Parse all constraints coming from --upgrade-package/-P
     upgrade_reqs_gen = (install_req_from_line(pkg) for pkg in upgrade_packages)
@@ -288,9 +353,7 @@ def cli(
     if not upgrade and os.path.exists(output_file.name):
         # Use a temporary repository to ensure outdated(removed) options from
         # existing requirements.txt wouldn't get into the current repository.
-        tmp_repository = PyPIRepository(
-            pip_args, build_isolation=build_isolation, cache_dir=cache_dir
-        )
+        tmp_repository = PyPIRepository(pip_args, cache_dir=cache_dir)
         ireqs = parse_requirements(
             output_file.name,
             finder=tmp_repository.finder,
@@ -307,7 +370,9 @@ def cli(
                 existing_pins_to_upgrade.add(key)
             else:
                 existing_pins[key] = ireq
-        repository = LocalRequirementsRepository(existing_pins, repository)
+        repository = LocalRequirementsRepository(
+            existing_pins, repository, reuse_hashes=reuse_hashes
+        )
 
     ###
     # Parsing/collecting initial requirements
@@ -370,14 +435,16 @@ def cli(
     ]
 
     log.debug("Using indexes:")
-    for index_url in dedup(repository.finder.index_urls):
-        log.debug("  {}".format(index_url))
+    with log.indentation():
+        for index_url in dedup(repository.finder.index_urls):
+            log.debug(redact_auth_from_url(index_url))
 
     if repository.finder.find_links:
         log.debug("")
-        log.debug("Configuration:")
-        for find_link in dedup(repository.finder.find_links):
-            log.debug("  -f {}".format(find_link))
+        log.debug("Using links:")
+        with log.indentation():
+            for find_link in dedup(repository.finder.find_links):
+                log.debug(redact_auth_from_url(find_link))
 
     try:
         resolver = Resolver(
@@ -409,13 +476,13 @@ def cli(
         click_ctx=ctx,
         dry_run=dry_run,
         emit_header=header,
-        emit_index=index,
+        emit_index_url=emit_index_url,
         emit_trusted_host=emit_trusted_host,
         annotate=annotate,
         generate_hashes=generate_hashes,
         default_index_url=repository.DEFAULT_INDEX_URL,
         index_urls=repository.finder.index_urls,
-        trusted_hosts=get_trusted_hosts(repository.finder),
+        trusted_hosts=repository.finder.trusted_hosts,
         format_control=repository.finder.format_control,
         allow_unsafe=allow_unsafe,
         find_links=repository.finder.find_links,

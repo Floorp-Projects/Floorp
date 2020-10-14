@@ -7,6 +7,7 @@
 #ifndef LAYOUT_GENERIC_LAYOUTMESSAGEUTILS_H_
 #define LAYOUT_GENERIC_LAYOUTMESSAGEUTILS_H_
 
+#include "ipc/IPCMessageUtils.h"
 #include "nsIFrame.h"
 #include "mozilla/AspectRatio.h"
 

@@ -9,7 +9,7 @@
 #include "ActorsChild.h"
 #include "LocalStorageCommon.h"
 #include "LSDatabase.h"
-#include "LSWriteOptimizer.h"
+#include "LSWriteOptimizerImpl.h"
 #include "mozilla/dom/PBackgroundLSSnapshot.h"
 #include "nsContentUtils.h"
 

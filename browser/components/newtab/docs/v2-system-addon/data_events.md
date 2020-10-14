@@ -1399,6 +1399,18 @@ For message impressions we concatenate the ids of all messages in the panel.
 }
 ```
 
+We also report when the panel checkbox (used to allow users to opt out of
+notifications) is checked or unchecked.
+
+```
+{
+  ...
+  "message_id": "n/a",
+  "event": "WNP_PREF_TOGGLE",
+  "value": { "prefValue": true }
+}
+```
+
 ## Moments page pings
 
 This reports when a moments page message has set the user preference for

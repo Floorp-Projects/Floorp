@@ -2,7 +2,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-object-initializer
-es6id: 12.2.6
 description: Permitted duplicate `__proto__` property
 info: |
     Annex B defines an early error for duplicate PropertyName of `__proto__`,
@@ -14,6 +13,7 @@ info: |
     any duplicate entries for "__proto__" and at least two of those entries
     were obtained from productions of the form
     PropertyDefinition : PropertyName : AssignmentExpression .
+features: [generators, async-functions, async-iteration]
 ---*/
 
 var obj = {
@@ -24,6 +24,9 @@ var obj = {
   proto__: null,
   ['__proto__']: null,
   __proto__() {},
+  * __proto__() {},
+  async __proto__() {},
+  async * __proto__() {},
   get __proto__() { return 33; },
   set __proto__(_) { return 44; }
 };

@@ -41,6 +41,9 @@ class nsPrinterBase : public nsIPrinter {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPrinterBase)
 
+  // We require the paper info array
+  nsPrinterBase() = delete;
+
   // No copy or move, we're an identity.
   nsPrinterBase(const nsPrinterBase&) = delete;
   nsPrinterBase(nsPrinterBase&&) = delete;
@@ -84,7 +87,7 @@ class nsPrinterBase : public nsIPrinter {
   Maybe<PrintSettingsInitializer> mPrintSettingsInitializer;
 
  protected:
-  nsPrinterBase();
+  nsPrinterBase(const mozilla::CommonPaperInfoArray* aPaperInfoArray);
   virtual ~nsPrinterBase();
 
   // Implementation-specific methods. These must not make assumptions about
@@ -96,11 +99,17 @@ class nsPrinterBase : public nsIPrinter {
   virtual bool SupportsCollation() const = 0;
   virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
   virtual MarginDouble GetMarginsForPaper(nsString aPaperId) const = 0;
+  // Searches our built-in list of commonly used PWG paper sizes for a matching,
+  // localized PaperInfo. Returns null if there is no matching size.
+  const mozilla::PaperInfo* FindCommonPaperSize(
+      const mozilla::gfx::SizeDouble& aSize) const;
 
  private:
   mozilla::EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,
                            RefPtr<Promise>>
       mAsyncAttributePromises;
+  // List of built-in, commonly used paper sizes.
+  const RefPtr<const mozilla::CommonPaperInfoArray> mCommonPaperInfo;
 };
 
 #endif

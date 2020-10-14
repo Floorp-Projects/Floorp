@@ -241,6 +241,7 @@ add_task(
       ping.payload.ecosystemAnonId,
       "test_login_workflow:my.anon.id"
     );
+    const origClientId = ping.payload.ecosystemClientId;
 
     // 4. User disconnects account, should get an immediate ping.
     print("user disconnects");
@@ -253,6 +254,11 @@ add_task(
       ping.payload.ecosystemAnonId,
       "test_login_workflow:my.anon.id",
       "should have been submitted with the old anonid"
+    );
+    Assert.equal(
+      ping.payload.ecosystemClientId,
+      origClientId,
+      "should have been submitted with the old clientid"
     );
     Assert.equal(
       await EcosystemTelemetry.promiseEcosystemAnonId,
@@ -275,6 +281,11 @@ add_task(
     Assert.equal(
       ping.payload.ecosystemAnonId,
       "test_login_workflow:my.anon.id.2"
+    );
+    Assert.notEqual(
+      ping.payload.ecosystemClientId,
+      origClientId,
+      "should have a different clientid after signing out then back in"
     );
 
     // Reset policy.

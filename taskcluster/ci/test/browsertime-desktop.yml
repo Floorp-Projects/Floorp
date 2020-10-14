@@ -92,7 +92,7 @@ browsertime-tp6:
     limit-platforms:
         by-app:
             chrome:
-                - linux.*shippable[^-qr].*
+                - .*shippable[^-qr].*
             chromium:
                 - .*shippable[^-qr].*
             default: []

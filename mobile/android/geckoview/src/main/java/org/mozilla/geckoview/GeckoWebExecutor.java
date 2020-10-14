@@ -89,12 +89,11 @@ public class GeckoWebExecutor {
     @WrapForJNI
     /* package */ static final int FETCH_FLAGS_ALLOW_SOME_ERRORS = 1 << 2;
 
-    // TODO: implement in WebExecutorSupport and make public bug 1538348
     /**
-     * Associates this download with a private browsing session
+     * Associates this download with the current private browsing session
      */
     @WrapForJNI
-    /* package */ static final int FETCH_FLAGS_PRIVATE = 1 << 3;
+    public static final int FETCH_FLAGS_PRIVATE = 1 << 3;
 
     /**
      * This flag causes a read error in the {@link WebResponse} body. Useful for testing.

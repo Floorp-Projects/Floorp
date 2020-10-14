@@ -40,6 +40,7 @@ EXPORTS.mozilla.dom += [
     'LSSnapshot.h',
     'LSValue.h',
     'LSWriteOptimizer.h',
+    'LSWriteOptimizerImpl.h',
     'SnappyUtils.h',
 ]
 

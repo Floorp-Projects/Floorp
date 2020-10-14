@@ -23,10 +23,13 @@ class nsPrinterWin final : public nsPrinterBase {
   MarginDouble GetMarginsForPaper(nsString aPaperId) const final;
 
   nsPrinterWin() = delete;
-  static already_AddRefed<nsPrinterWin> Create(const nsAString& aName);
+  static already_AddRefed<nsPrinterWin> Create(
+      const mozilla::CommonPaperInfoArray* aPaperInfoArray,
+      const nsAString& aName);
 
  private:
-  explicit nsPrinterWin(const nsAString& aName);
+  nsPrinterWin(const mozilla::CommonPaperInfoArray* aPaperInfoArray,
+               const nsAString& aName);
   ~nsPrinterWin() = default;
 
   nsTArray<uint8_t> CopyDefaultDevmodeW() const;

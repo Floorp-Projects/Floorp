@@ -1705,7 +1705,14 @@ class UrlbarInput {
     }
 
     this.searchMode = searchMode;
-    this._setValue(result.payload.query?.trimStart() || "", false);
+
+    // Set userTypedValue to the payload's query string so that it's properly
+    // restored when switching back to the current tab and across sessions.
+    let value = result.payload.query?.trimStart() || "";
+    this._setValue(value, false);
+    this.window.gBrowser.userTypedValue = value;
+    this.valueIsTyped = true;
+
     if (startQuery) {
       this.startQuery({ allowAutofill: false });
     }
