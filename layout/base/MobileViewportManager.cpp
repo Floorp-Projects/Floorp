@@ -673,6 +673,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
   if (mManagerType == ManagerType::VisualViewportOnly) {
     MVM_LOG("%p: Visual-only, so aborting before reflow\n", this);
+    mIsFirstPaint = false;
     return;
   }
 
