@@ -4,7 +4,7 @@
 
 const { MODE } = require("./reps/constants");
 const { REPS, getRep } = require("./reps/rep");
-const objectInspector = require("./object-inspector");
+const objectInspector = require("./object-inspector/index");
 
 const {
   parseURLEncodedText,

@@ -11,7 +11,7 @@ const { expectActorAttribute } = require("./test-helpers");
 const { ErrorRep } = REPS;
 const { MODE } = require("../constants");
 const stubs = require("../stubs/error");
-const dom = require("react-dom-factories");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 describe("Error - Simple error", () => {
   // Test object = `new Error("Error message")`

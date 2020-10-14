@@ -2,8 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { Component, createFactory, createElement } = require("react");
-const { connect } = require("react-redux");
+const {
+  Component,
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("../actions");
 
 const selectors = require("../reducer");
@@ -14,8 +18,7 @@ require("./ObjectInspector.css");
 
 const ObjectInspectorItem = createFactory(require("./ObjectInspectorItem"));
 
-
-const Utils = require("../utils");
+const Utils = require("../utils/index");
 const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,

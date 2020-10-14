@@ -3,12 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { mount } = require("enzyme");
-const React = require("react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const { createFactory } = React;
-
-const { Provider } = require("react-redux");
-const { combineReducers } = require("redux");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
+const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
 const { thunk } = require("../../shared/redux/middleware/thunk");
 const {
