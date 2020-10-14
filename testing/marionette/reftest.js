@@ -107,22 +107,6 @@ reftest.Runner = class {
     if (isPrint) {
       this.loadPdfJs();
     }
-
-    ChromeUtils.registerWindowActor("MarionetteReftestFrame", {
-      kind: "JSWindowActor",
-      parent: {
-        moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestFrameParent.jsm",
-      },
-      child: {
-        moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestFrameChild.jsm",
-        events: {
-          load: { mozSystemGroup: true, capture: true },
-        },
-      },
-      allFrames: true,
-    });
   }
 
   async ensureWindow(timeout, width, height) {
@@ -653,16 +637,8 @@ max-width: ${width}px; max-height: ${height}px`;
 
     this.ensureFocus(win);
 
-    // TODO: Move all the wait logic into the parent process (bug 1669787)
-    let isReftestReady = false;
-    while (!isReftestReady) {
-      // Note: We cannot compare the URL here. Before the navigation is complete
-      // currentWindowGlobal.documentURI.spec will still point to the old URL.
-      const actor = browsingContext.currentWindowGlobal.getActor(
-        "MarionetteReftestFrame"
-      );
-      isReftestReady = await actor.reftestWait(url, this.useRemoteTabs);
-    }
+    // TODO: Move all the wait logic into the parent process (bug 1648444)
+    await this.driver.listener.reftestWait(url, this.useRemoteTabs);
   }
 
   async screenshot(win, url, timeout) {
