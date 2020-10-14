@@ -4,6 +4,7 @@ import contextlib
 import shutil
 import os
 from pathlib import Path
+import sys
 
 from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
@@ -52,6 +53,8 @@ def get_running_env(**kwargs):
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
     mach_cmd.run_process.return_value = 0
+    mach_cmd.virtualenv_manager = MagicMock()
+    mach_cmd.virtualenv_manager.python_path = sys.executable
 
     mach_args = {
         "flavor": "desktop-browser",

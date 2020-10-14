@@ -88,7 +88,7 @@ class Profile(Layer):
 
         if self.get_arg("directory") is not None:
             # no need to create one or load a conditioned one
-            return
+            return metadata
 
         # fresh profile
         profile = create_profile(app="firefox")
