@@ -38,7 +38,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
@@ -62,7 +61,6 @@ import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
-import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
@@ -123,7 +121,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
-    private lateinit var sessionObserver: SessionManager.Observer
 
     private var isVisuallyComplete = false
 
@@ -182,8 +179,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.performance.visualCompletenessQueue
                 .attachViewToRunVisualCompletenessQueueLater(WeakReference(rootContainer))
         }
-
-        sessionObserver = UriOpenedObserver(this)
 
         checkPrivateShortcutEntryPoint(intent)
         privateNotificationObserver = PrivateNotificationFeature(

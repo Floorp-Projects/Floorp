@@ -62,6 +62,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.TelemetryMiddleware
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -154,6 +155,11 @@ class Core(
                 MediaMiddleware(context, MediaService::class.java),
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
+                TelemetryMiddleware(
+                    context.settings(),
+                    adsTelemetry,
+                    metrics
+                ),
                 ThumbnailsMiddleware(thumbnailStorage),
                 UndoMiddleware(::lookupSessionManager, context.getUndoDelay())
             ) + EngineMiddleware.create(engine, ::findSessionById)
@@ -250,12 +256,16 @@ class Core(
         BrowserIcons(context, client)
     }
 
+    val metrics by lazy {
+        context.components.analytics.metrics
+    }
+
     val adsTelemetry by lazy {
-        AdsTelemetry(context.components.analytics.metrics)
+        AdsTelemetry(metrics)
     }
 
     val searchTelemetry by lazy {
-        InContentTelemetry(context.components.analytics.metrics)
+        InContentTelemetry(metrics)
     }
 
     /**
