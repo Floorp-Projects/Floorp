@@ -42,23 +42,44 @@ inline ProfileChunkedBuffer& CachedBaseCoreBuffer() {
 }
 
 struct Streaming {
-  // A `Deserializer` is a free function that can read a serialized payload from
-  // an `EntryReader` and streams it as JSON object properties.
-  using Deserializer = void (*)(ProfileBufferEntryReader&, JSONWriter&);
+  // A `MarkerDataDeserializer` is a free function that can read a serialized
+  // payload from an `EntryReader` and streams it as JSON object properties.
+  using MarkerDataDeserializer = void (*)(ProfileBufferEntryReader&,
+                                          JSONWriter&);
+
+  // A `MarkerTypeNameFunction` is a free function that returns the name of the
+  // marker type.
+  using MarkerTypeNameFunction = Span<const char> (*)();
+
+  // A `MarkerSchemaFunction` is a free function that returns a
+  // `MarkerSchema`, which contains all the information needed to stream
+  // the display schema associated with a marker type.
+  using MarkerSchemaFunction = MarkerSchema (*)();
+
+  struct MarkerTypeFunctions {
+    MarkerDataDeserializer mMarkerDataDeserializer = nullptr;
+    MarkerTypeNameFunction mMarkerTypeNameFunction = nullptr;
+    MarkerSchemaFunction mMarkerSchemaFunction = nullptr;
+  };
 
   // A `DeserializerTag` will be added before the payload, to help select the
   // correct deserializer when reading back the payload.
   using DeserializerTag = uint8_t;
 
-  // Store a deserializer and get its `DeserializerTag`.
-  // This is intended to be only used once per deserializer, so it should be
-  // called to initialize a `static const` tag that will be re-used by all
-  // markers of the corresponding payload type.
-  MFBT_API static DeserializerTag TagForDeserializer(
-      Deserializer aDeserializer);
+  // Store a deserializer (and other marker-type-specific functions) and get its
+  // `DeserializerTag`.
+  // This is intended to be only used once per deserializer when a new marker
+  // type is used for the first time, so it should be called to initialize a
+  // `static const` tag that will be re-used by all markers of the corresponding
+  // payload type -- see use below.
+  MFBT_API static DeserializerTag TagForMarkerTypeFunctions(
+      MarkerDataDeserializer aDeserializer,
+      MarkerTypeNameFunction aMarkerTypeNameFunction,
+      MarkerSchemaFunction aMarkerSchemaFunction);
 
-  // Get the `Deserializer` for a given `DeserializerTag`.
-  MFBT_API static Deserializer DeserializerForTag(DeserializerTag aTag);
+  // Get the `MarkerDataDeserializer` for a given `DeserializerTag`.
+  MFBT_API static MarkerDataDeserializer DeserializerForTag(
+      DeserializerTag aTag);
 };
 
 // This helper will examine a marker type's `StreamJSONMarkerData` function, see
@@ -117,16 +138,19 @@ struct MarkerTypeSerialization {
     static_assert(!std::is_same_v<MarkerType,
                                   ::mozilla::baseprofiler::markers::NoPayload>,
                   "NoPayload should have been handled in the caller.");
+    // Register marker type functions, and get the tag for this deserializer.
     // Note that the tag is stored in a function-static object, and this
     // function is static in a templated struct, so there should only be one tag
     // per MarkerType.
     // Making the tag class-static may have been more efficient (to avoid a
     // thread-safe init check at every call), but random global static
     // initialization order would make it more complex to coordinate with
-    // `Streaming::TagForDeserializer()`, and also would add a (small) cost for
-    // everybody, even the majority of users not using the profiler.
+    // `Streaming::TagForMarkerTypeFunctions()`, and also would add a (small)
+    // cost for everybody, even the majority of users not using the profiler.
     static const Streaming::DeserializerTag tag =
-        Streaming::TagForDeserializer(Deserialize);
+        Streaming::TagForMarkerTypeFunctions(Deserialize,
+                                             MarkerType::MarkerTypeName,
+                                             MarkerType::MarkerTypeDisplay);
     return StreamFunctionType::Serialize(aBuffer, aName, aCategory,
                                          std::move(aOptions), tag, aTs...);
   }
@@ -325,7 +349,7 @@ template <typename NameCallback, typename StackCallback>
         }
 
         // Stream the payload, including the type.
-        mozilla::base_profiler_markers_detail::Streaming::Deserializer
+        mozilla::base_profiler_markers_detail::Streaming::MarkerDataDeserializer
             deserializer = mozilla::base_profiler_markers_detail::Streaming::
                 DeserializerForTag(tag);
         MOZ_RELEASE_ASSERT(deserializer);
