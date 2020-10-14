@@ -17,12 +17,14 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent,
                                        public SupportsWeakPtr {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadTestChannelParent)
-  GamepadTestChannelParent() : mShuttingdown(false) {}
+
+  GamepadTestChannelParent() = default;
+
   bool Init();
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
   mozilla::ipc::IPCResult RecvGamepadTestEvent(
       const uint32_t& aID, const GamepadChangeEvent& aGamepadEvent);
-  mozilla::ipc::IPCResult RecvShutdownChannel();
 
   void OnMonitoringStateChanged(bool aNewState);
 
@@ -34,7 +36,6 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent,
   void AddGamepadToPlatformService(uint32_t aPromiseId,
                                    const GamepadAdded& aGamepadAdded);
   ~GamepadTestChannelParent() = default;
-  bool mShuttingdown;
   nsTArray<DeferredGamepadAdded> mDeferredGamepadAdded;
 };
 
