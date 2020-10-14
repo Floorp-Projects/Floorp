@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
+  accessibility: "chrome://marionette/content/accessibility.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
@@ -52,19 +53,49 @@ action.Chain = function() {
   this.inputSource = null;
 };
 
+/**
+ * Create a touch based event.
+ *
+ * @param {Element} elem
+ *        The Element on which the touch event should be created.
+ * @param {Number} x
+ *        x coordinate relative to the viewport.
+ * @param {Number} y
+ *        y coordinate relative to the viewport.
+ * @param {Number} touchId
+ *        Touch event id used by legacyactions.
+ */
+action.Chain.prototype.createATouch = function(elem, x, y, touchId) {
+  const doc = elem.ownerDocument;
+  const win = doc.defaultView;
+  const [
+    clientX,
+    clientY,
+    pageX,
+    pageY,
+    screenX,
+    screenY,
+  ] = this.getCoordinateInfo(elem, x, y);
+  const atouch = doc.createTouch(
+    win,
+    elem,
+    touchId,
+    pageX,
+    pageY,
+    screenX,
+    screenY,
+    clientX,
+    clientY
+  );
+  return atouch;
+};
+
 action.Chain.prototype.dispatchActions = function(
   args,
   touchId,
   container,
-  seenEls,
-  touchProvider
+  seenEls
 ) {
-  // Some touch events code in the listener needs to do ipc, so we can't
-  // share this code across chrome/content.
-  if (touchProvider) {
-    this.touchProvider = touchProvider;
-  }
-
   this.seenEls = seenEls;
   this.container = container;
   let commandArray = evaluate.fromJSON(args, seenEls, container.frame);
@@ -145,14 +176,80 @@ action.Chain.prototype.emitMouseEvent = function(
   );
 };
 
+action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
+  logger.info(
+    `Emitting Touch event of type ${type} ` +
+      `to element with id: ${touch.target.id} ` +
+      `and tag name: ${touch.target.tagName} ` +
+      `at coordinates (${touch.clientX}), ` +
+      `${touch.clientY}) relative to the viewport`
+  );
+
+  const win = doc.defaultView;
+  if (win.docShell.asyncPanZoomEnabled && this.scrolling) {
+    logger.debug(
+      `Cannot emit touch event with asyncPanZoomEnabled and legacyactions.scrolling`
+    );
+    return;
+  }
+
+  // we get here if we're not in asyncPacZoomEnabled land, or if we're
+  // the main process
+  win.windowUtils.sendTouchEvent(
+    type,
+    [touch.identifier],
+    [touch.clientX],
+    [touch.clientY],
+    [touch.radiusX],
+    [touch.radiusY],
+    [touch.rotationAngle],
+    [touch.force],
+    0
+  );
+};
+
 /**
  * Reset any persisted values after a command completes.
  */
 action.Chain.prototype.resetValues = function() {
   this.container = null;
   this.seenEls = null;
-  this.touchProvider = null;
   this.mouseEventsOnly = false;
+};
+
+/**
+ * Function that performs a single tap.
+ */
+action.Chain.prototype.singleTap = async function(
+  el,
+  corx,
+  cory,
+  capabilities
+) {
+  const doc = el.ownerDocument;
+  // after this block, the element will be scrolled into view
+  let visible = element.isVisible(el, corx, cory);
+  if (!visible) {
+    throw new error.ElementNotInteractableError(
+      "Element is not currently visible and may not be manipulated"
+    );
+  }
+
+  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
+  let acc = await a11y.getAccessible(el, true);
+  a11y.assertVisible(acc, el, visible);
+  a11y.assertActionable(acc, el);
+  if (!doc.createTouch) {
+    this.mouseEventsOnly = true;
+  }
+  let c = element.coordinates(el, corx, cory);
+  if (!this.mouseEventsOnly) {
+    let touchId = this.nextTouchId++;
+    let touch = this.createATouch(el, c.x, c.y, touchId);
+    this.emitTouchEvent(doc, "touchstart", touch);
+    this.emitTouchEvent(doc, "touchend", touch);
+  }
+  this.mouseTap(doc, c.x, c.y);
 };
 
 /**
@@ -386,7 +483,7 @@ action.Chain.prototype.generateEvents = function(
   switch (type) {
     case "tap":
       if (this.mouseEventsOnly) {
-        let touch = this.touchProvider.createATouch(target, x, y, touchId);
+        let touch = this.createATouch(target, x, y, touchId);
         this.mouseTap(
           touch.target.ownerDocument,
           touch.clientX,
@@ -397,9 +494,9 @@ action.Chain.prototype.generateEvents = function(
         );
       } else {
         touchId = this.nextTouchId++;
-        let touch = this.touchProvider.createATouch(target, x, y, touchId);
-        this.touchProvider.emitTouchEvent("touchstart", touch);
-        this.touchProvider.emitTouchEvent("touchend", touch);
+        let touch = this.createATouch(target, x, y, touchId);
+        this.emitTouchEvent(doc, "touchstart", touch);
+        this.emitTouchEvent(doc, "touchend", touch);
         this.mouseTap(
           touch.target.ownerDocument,
           touch.clientX,
@@ -419,8 +516,8 @@ action.Chain.prototype.generateEvents = function(
         this.emitMouseEvent(doc, "mousedown", x, y, null, null, keyModifiers);
       } else {
         touchId = this.nextTouchId++;
-        let touch = this.touchProvider.createATouch(target, x, y, touchId);
-        this.touchProvider.emitTouchEvent("touchstart", touch);
+        let touch = this.createATouch(target, x, y, touchId);
+        this.emitTouchEvent(doc, "touchstart", touch);
         this.touchIds[touchId] = touch;
         return touchId;
       }
@@ -434,8 +531,8 @@ action.Chain.prototype.generateEvents = function(
         let touch = this.touchIds[touchId];
         let [x, y] = this.lastCoordinates;
 
-        touch = this.touchProvider.createATouch(touch.target, x, y, touchId);
-        this.touchProvider.emitTouchEvent("touchend", touch);
+        touch = this.createATouch(touch.target, x, y, touchId);
+        this.emitTouchEvent(doc, "touchend", touch);
 
         if (this.isTap) {
           this.mouseTap(
@@ -460,10 +557,7 @@ action.Chain.prototype.generateEvents = function(
         let [x, y] = this.lastCoordinates;
         this.emitMouseEvent(doc, "mouseup", x, y, null, null, keyModifiers);
       } else {
-        this.touchProvider.emitTouchEvent(
-          "touchcancel",
-          this.touchIds[touchId]
-        );
+        this.emitTouchEvent(doc, "touchcancel", this.touchIds[touchId]);
         delete this.touchIds[touchId];
       }
       this.lastCoordinates = null;
@@ -474,14 +568,14 @@ action.Chain.prototype.generateEvents = function(
       if (this.mouseEventsOnly) {
         this.emitMouseEvent(doc, "mousemove", x, y, null, null, keyModifiers);
       } else {
-        let touch = this.touchProvider.createATouch(
+        let touch = this.createATouch(
           this.touchIds[touchId].target,
           x,
           y,
           touchId
         );
         this.touchIds[touchId] = touch;
-        this.touchProvider.emitTouchEvent("touchmove", touch);
+        this.emitTouchEvent(doc, "touchmove", touch);
       }
       break;
 
