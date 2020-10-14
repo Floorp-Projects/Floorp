@@ -133,12 +133,9 @@ mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     return IPC_OK();
   }
 
-  auto principalOrErr = PrincipalInfoToPrincipal(aPrincipalInfo);
-  if (NS_WARN_IF(principalOrErr.isErr())) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+  LS_TRY_INSPECT(const auto& principal,
+                 PrincipalInfoToPrincipal(aPrincipalInfo),
+                 IPC_FAIL_NO_REASON(this));
 
   Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey,
                         aOldValue.AsString(), aNewValue.AsString(),
