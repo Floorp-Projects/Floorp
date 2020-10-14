@@ -26,6 +26,7 @@ DevToolsModules(
     'SidebarToggle.js',
     'SmartTrace.js',
     'StackTrace.js',
+    'Tree.js',
     'VirtualizedTree.js',
     'VisibilityHandler.js',
 )

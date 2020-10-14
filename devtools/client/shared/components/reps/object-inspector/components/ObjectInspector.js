@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const {
   Component,
   createFactory,
@@ -12,11 +14,11 @@ const actions = require("devtools/client/shared/components/reps/object-inspector
 
 const selectors = require("devtools/client/shared/components/reps/object-inspector/reducer");
 
-import Components from "devtools-components";
-const Tree = createFactory(Components.Tree);
-require("devtools/client/shared/components/reps/object-inspector/components/ObjectInspector.css");
+const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 
-const ObjectInspectorItem = createFactory(require("devtools/client/shared/components/reps/object-inspector/components/ObjectInspectorItem"));
+const ObjectInspectorItem = createFactory(
+  require("devtools/client/shared/components/reps/object-inspector/components/ObjectInspectorItem")
+);
 
 const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
 const { renderRep, shouldRenderRootsInReps } = Utils;
