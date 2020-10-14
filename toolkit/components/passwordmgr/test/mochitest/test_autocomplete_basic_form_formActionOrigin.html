@@ -84,7 +84,7 @@ add_task(async function test_form1_menu_shows_logins_for_different_formActionOri
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
 
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(uname, "dfsu1", pword, "dfsp1");
 });
 </script>

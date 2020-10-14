@@ -72,7 +72,7 @@ add_task(async function test_empty_first_entry() {
   await index0Promise;
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(uname, "name", pword, "pass");
 });
 
@@ -84,7 +84,7 @@ add_task(async function test_empty_second_entry() {
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(uname, "Name", pword, "Pass");
 });
 
@@ -97,7 +97,7 @@ add_task(async function test_empty_third_entry() {
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_ArrowDown"); // third
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(uname, "USER", pword, "PASS");
 });
 
@@ -111,7 +111,7 @@ add_task(async function test_preserve_matching_username_case() {
   // Check that we don't clobber user-entered text when tabbing away
   // (even with no autocomplete entry selected)
   synthesizeKey("KEY_Tab");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(uname, "user", pword, "PASS");
 });
 </script>

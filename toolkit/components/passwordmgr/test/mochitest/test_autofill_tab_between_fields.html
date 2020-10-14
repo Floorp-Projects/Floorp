@@ -100,7 +100,7 @@ async function testResultOfTabInteractions(testData) {
   await prepareLogins(logins);
 
   info("recreating form");
-  let processed = promiseFormsProcessedInChildFrame();
+  let processed = promiseFormsProcessed();
   await recreateTreeInWindow(1);
   info("waiting for form processed");
   await processed;
@@ -132,7 +132,7 @@ async function testResultOfTabInteractions(testData) {
   await checkLoginFormInFrameWithElementValues(win, 1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
 
   await recreateTreeInWindow(1);
-  await promiseFormsProcessedInChildFrame();
+  await promiseFormsProcessed();
 
   await SpecialPowers.spawn(win, [], () => {
     EventUtils.synthesizeKey("KEY_Escape", {}, this.content);

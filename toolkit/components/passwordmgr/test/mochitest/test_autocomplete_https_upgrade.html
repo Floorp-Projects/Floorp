@@ -54,7 +54,7 @@ const HTTPS_FORM_URL = originSecure + "/tests/toolkit/components/passwordmgr/tes
 async function setup(formUrl = HTTPS_FORM_URL) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   iframe.src = formUrl;
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
@@ -93,7 +93,7 @@ add_task(async function test_empty_first_entry() {
   await index0Promise;
   await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name", "form-basic-password", "pass");
 });
 
@@ -105,7 +105,7 @@ add_task(async function test_empty_second_entry() {
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
 });
 
@@ -127,7 +127,7 @@ add_task(async function test_search() {
   checkAutoCompleteResults(results, ["name1"], hostname, "check result deduping for 'name1'");
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
 
   let popupState = await getPopupState();
