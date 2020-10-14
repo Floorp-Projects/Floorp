@@ -7,7 +7,8 @@
 import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
 
-import Reps from "devtools-reps";
+// $FlowIgnore
+import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { Rep },
   MODE,

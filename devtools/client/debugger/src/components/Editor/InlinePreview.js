@@ -4,7 +4,8 @@
 
 // @flow
 import React, { PureComponent } from "react";
-import Reps from "devtools-reps";
+// $FlowIgnore
+import Reps from "devtools/client/shared/components/reps/index";
 
 import actions from "../../actions";
 

@@ -16,7 +16,7 @@ import type { URL } from "../../types";
 import "./PreviewFunction.css";
 
 type FunctionType = {
-  name: string,
+  name?: string,
   displayName?: string,
   userDisplayName?: string,
   parameterNames?: string[],

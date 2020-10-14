@@ -6,6 +6,7 @@
 import React, { Component } from "react";
 import "./ManagedTree.css";
 
+// $FlowIgnore
 const Tree = require("devtools/client/shared/components/Tree");
 
 export type Item = {

@@ -23,8 +23,8 @@ import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 
-// eslint-disable-next-line import/named
-import { objectInspector } from "devtools-reps";
+// $FlowIgnore
+import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 export default {
   ...ast,

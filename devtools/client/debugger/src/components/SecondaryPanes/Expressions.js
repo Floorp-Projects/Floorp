@@ -8,8 +8,8 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
 
-// eslint-disable-next-line import/named
-import { objectInspector } from "devtools-reps";
+// $FlowIgnore
+import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 import actions from "../../actions";
 import {
