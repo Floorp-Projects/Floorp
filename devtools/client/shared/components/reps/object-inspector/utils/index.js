@@ -12,9 +12,8 @@ const { MODE } = require("../../reps/constants");
 const {
   REPS: { Rep, Grip },
 } = require("../../reps/rep");
-import type { Node, Props } from "../types";
 
-function shouldRenderRootsInReps(roots: Array<Node>, props: any = {}): boolean {
+function shouldRenderRootsInReps(roots, props = {}) {
   if (roots.length !== 1) {
     return false;
   }
@@ -28,7 +27,7 @@ function shouldRenderRootsInReps(roots: Array<Node>, props: any = {}): boolean {
   );
 }
 
-function renderRep(item: Node, props: Props) {
+function renderRep(item, props) {
   return Rep({
     ...props,
     object: node.getValue(item),

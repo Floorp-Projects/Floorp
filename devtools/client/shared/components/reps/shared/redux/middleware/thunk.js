@@ -8,11 +8,11 @@
  * allowing the action to create multiple actions (most likely
  * asynchronously).
  */
-function thunk(makeArgs: any) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+function thunk(makeArgs) {
+  return ({ dispatch, getState }) => {
     const args = { dispatch, getState };
 
-    return (next: Function) => (action: ActionType) => {
+    return next => action => {
       return typeof action === "function"
         ? action(makeArgs ? makeArgs(args, getState()) : args)
         : next(action);

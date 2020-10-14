@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-import type { Store } from "../types";
 const { mount } = require("enzyme");
 const React = require("react");
 
@@ -54,7 +52,7 @@ const {
  *   |  ▼ <prototype> : Object { … }
  *
  */
-function formatObjectInspector(wrapper: Object) {
+function formatObjectInspector(wrapper) {
   const hasFocusedNode = wrapper.find(".tree-node.focused").length > 0;
   const textTree = wrapper
     .find(".tree-node")
@@ -105,10 +103,7 @@ function getSanitizedNodeText(node) {
  * @param {String} type: type of the actin to wait for
  * @return {Promise}
  */
-function waitForDispatch(
-  store: Object,
-  type: string
-): Promise<{ type: string }> {
+function waitForDispatch(store, type) {
   return new Promise(resolve => {
     store.dispatch({
       type: WAIT_UNTIL_TYPE,
@@ -127,11 +122,7 @@ function waitForDispatch(
  * @param {int} interval: Time to wait before trying to evaluate condition again
  * @param {int} maxTries: Number of evaluation to try.
  */
-async function waitFor(
-  condition: any => any,
-  interval: number = 50,
-  maxTries: number = 100
-) {
+async function waitFor(condition, interval = 50, maxTries = 100) {
   let res = condition();
   while (!res) {
     await new Promise(done => setTimeout(done, interval));
@@ -155,12 +146,7 @@ async function waitFor(
  * @param {int} interval: Time to wait before trying to evaluate condition again
  * @param {int} maxTries: Number of evaluation to try.
  */
-function waitForLoadedProperties(
-  store: Store,
-  expectedKeys: Array<string>,
-  interval: number,
-  maxTries: number
-): Promise<any> {
+function waitForLoadedProperties(store, expectedKeys, interval, maxTries) {
   return waitFor(
     () => storeHasLoadedPropertiesKeys(store, expectedKeys),
     interval,
@@ -168,52 +154,46 @@ function waitForLoadedProperties(
   );
 }
 
-function storeHasLoadedPropertiesKeys(
-  store: Store,
-  expectedKeys: Array<string>
-) {
+function storeHasLoadedPropertiesKeys(store, expectedKeys) {
   return expectedKeys.every(key => storeHasLoadedProperty(store, key));
 }
 
-function storeHasLoadedProperty(store: Store, key: string): boolean {
+function storeHasLoadedProperty(store, key) {
   return getLoadedPropertyKeys(store.getState()).some(
     k => k.toString() === key
   );
 }
 
-function storeHasExactLoadedProperties(
-  store: Store,
-  expectedKeys: Array<string>
-) {
+function storeHasExactLoadedProperties(store, expectedKeys) {
   return (
     expectedKeys.length === getLoadedProperties(store.getState()).size &&
     expectedKeys.every(key => storeHasLoadedProperty(store, key))
   );
 }
 
-function storeHasExpandedPaths(store: Store, expectedKeys: Array<string>) {
+function storeHasExpandedPaths(store, expectedKeys) {
   return expectedKeys.every(key => storeHasExpandedPath(store, key));
 }
 
-function storeHasExpandedPath(store: Store, key: string): boolean {
+function storeHasExpandedPath(store, key) {
   return getExpandedPathKeys(store.getState()).some(k => k.toString() === key);
 }
 
-function storeHasExactExpandedPaths(store: Store, expectedKeys: Array<string>) {
+function storeHasExactExpandedPaths(store, expectedKeys) {
   return (
     expectedKeys.length === getExpandedPaths(store.getState()).size &&
     expectedKeys.every(key => storeHasExpandedPath(store, key))
   );
 }
 
-function createOiStore(client: any, initialState: any = {}) {
+function createOiStore(client, initialState = {}) {
   const reducers = { objectInspector: objectInspector.reducer.default };
   return configureStore({
     thunkArgs: args => ({ ...args, client }),
   })(combineReducers(reducers), initialState);
 }
 
-const configureStore = (opts: ReduxStoreOptions = {}) => {
+const configureStore = (opts = {}) => {
   const middleware = [thunk(opts.thunkArgs), waitUntilService];
   return applyMiddleware(...middleware)(createStore);
 };

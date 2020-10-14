@@ -29,24 +29,7 @@ const {
   nodeIsLongString,
 } = require("./node");
 
-import type {
-  CreateLongStringFront,
-  CreateObjectFront,
-  GripProperties,
-  LoadedProperties,
-  Node,
-} from "../types";
-
-type Client = {
-  createObjectFront?: CreateObjectFront,
-  createLongStringFront?: CreateLongStringFront,
-};
-
-function loadItemProperties(
-  item: Node,
-  client: Client,
-  loadedProperties: LoadedProperties
-): Promise<GripProperties> {
+function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
   let front = getFront(gripItem);
@@ -101,7 +84,7 @@ function loadItemProperties(
   return Promise.all(promises).then(mergeResponses);
 }
 
-function mergeResponses(responses: Array<Object>): Object {
+function mergeResponses(responses) {
   const data = {};
 
   for (const response of responses) {
@@ -130,10 +113,7 @@ function mergeResponses(responses: Array<Object>): Object {
   return data;
 }
 
-function shouldLoadItemIndexedProperties(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
 
@@ -150,9 +130,9 @@ function shouldLoadItemIndexedProperties(
 }
 
 function shouldLoadItemNonIndexedProperties(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+  item,
+  loadedProperties = new Map()
+) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
 
@@ -168,10 +148,7 @@ function shouldLoadItemNonIndexedProperties(
   );
 }
 
-function shouldLoadItemEntries(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+function shouldLoadItemEntries(item, loadedProperties = new Map()) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
 
@@ -183,10 +160,7 @@ function shouldLoadItemEntries(
   );
 }
 
-function shouldLoadItemPrototype(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+function shouldLoadItemPrototype(item, loadedProperties = new Map()) {
   const value = getValue(item);
 
   return (
@@ -203,10 +177,7 @@ function shouldLoadItemPrototype(
   );
 }
 
-function shouldLoadItemSymbols(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
   const value = getValue(item);
 
   return (
@@ -223,17 +194,11 @@ function shouldLoadItemSymbols(
   );
 }
 
-function shouldLoadItemFullText(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-) {
+function shouldLoadItemFullText(item, loadedProperties = new Map()) {
   return !loadedProperties.has(item.path) && nodeIsLongString(item);
 }
 
-function shouldLoadItemProxySlots(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
+function shouldLoadItemProxySlots(item, loadedProperties = new Map()) {
   return !loadedProperties.has(item.path) && nodeIsProxy(item);
 }
 
