@@ -78,6 +78,10 @@ class RenderCompositor {
 
   virtual bool UseTripleBuffering() const { return false; }
 
+  // True if AttachExternalImage supports being used with an external
+  // image that maps to a RenderBufferTextureHost
+  virtual bool SupportsExternalBufferTextures() const { return false; }
+
   virtual LayoutDeviceIntSize GetBufferSize() = 0;
 
   widget::CompositorWidget* GetWidget() const { return mWidget; }
