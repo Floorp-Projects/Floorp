@@ -6681,65 +6681,45 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
   return blocked ? lock.forget() : nullptr;
 }
 
-nsresult QuotaManager::EnsureStorageAndOriginIsInitialized(
+Result<nsCOMPtr<nsIFile>, nsresult>
+QuotaManager::EnsureStorageAndOriginIsInitialized(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
     const nsACString& aGroup, const nsACString& aOrigin,
-    Client::Type aClientType, nsIFile** aDirectory) {
+    Client::Type aClientType) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
 
-  nsCOMPtr<nsIFile> directory;
-  bool created;
-  nsresult rv = EnsureStorageAndOriginIsInitializedInternal(
-      aPersistenceType, aSuffix, aGroup, aOrigin,
-      Nullable<Client::Type>(aClientType), getter_AddRefs(directory), &created);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  directory.forget(aDirectory);
-  return NS_OK;
+  QM_TRY_RETURN(EnsureStorageAndOriginIsInitializedInternal(
+                    aPersistenceType, aSuffix, aGroup, aOrigin,
+                    Nullable<Client::Type>(aClientType))
+                    .map([](const auto& res) { return res.first; }));
 }
 
-nsresult QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
+Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
+QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
     const nsACString& aGroup, const nsACString& aOrigin,
-    const Nullable<Client::Type>& aClientType, nsIFile** aDirectory,
-    bool* aCreated) {
+    const Nullable<Client::Type>& aClientType) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
 
+  // XXX Can't we just remove the argument if we don't need it?
   Unused << aClientType;
 
-  nsresult rv = EnsureStorageIsInitialized();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(EnsureStorageIsInitialized());
 
   nsCOMPtr<nsIFile> directory;
   bool created;
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    rv = EnsurePersistentOriginIsInitialized(
-        aSuffix, aGroup, aOrigin, getter_AddRefs(directory), &created);
+    QM_TRY(EnsurePersistentOriginIsInitialized(
+        aSuffix, aGroup, aOrigin, getter_AddRefs(directory), &created));
   } else {
-    rv = EnsureTemporaryStorageIsInitialized();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(EnsureTemporaryStorageIsInitialized());
 
-    rv = EnsureTemporaryOriginIsInitialized(aPersistenceType, aSuffix, aGroup,
-                                            aOrigin, getter_AddRefs(directory),
-                                            &created);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    QM_TRY(EnsureTemporaryOriginIsInitialized(
+        aPersistenceType, aSuffix, aGroup, aOrigin, getter_AddRefs(directory),
+        &created));
   }
 
-  directory.forget(aDirectory);
-  if (aCreated) {
-    *aCreated = created;
-  }
-  return NS_OK;
+  return std::pair(std::move(directory), created);
 }
 
 nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
@@ -9567,16 +9547,11 @@ nsresult InitStorageAndOriginOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("InitStorageAndOriginOp::DoDirectoryWork", OTHER);
 
-  nsCOMPtr<nsIFile> directory;
-  bool created;
-  nsresult rv = aQuotaManager.EnsureStorageAndOriginIsInitializedInternal(
-      mPersistenceType.Value(), mSuffix, mGroup, mOriginScope.GetOrigin(),
-      mClientType, getter_AddRefs(directory), &created);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mCreated = created;
+  QM_TRY_UNWRAP(mCreated, aQuotaManager
+                              .EnsureStorageAndOriginIsInitializedInternal(
+                                  mPersistenceType.Value(), mSuffix, mGroup,
+                                  mOriginScope.GetOrigin(), mClientType)
+                              .map([](const auto& res) { return res.second; }));
 
   return NS_OK;
 }
