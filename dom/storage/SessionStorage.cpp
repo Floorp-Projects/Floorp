@@ -228,11 +228,13 @@ void SessionStorage::StableStateCallback() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mHasPendingStableStateCallback);
   MOZ_ASSERT(mManager);
-  MOZ_ASSERT(mManager->CanLoadData());
   MOZ_ASSERT(mCache);
 
   mHasPendingStableStateCallback = false;
-  mManager->CheckpointData(*Principal(), *mCache);
+
+  if (mManager->CanLoadData()) {
+    mManager->CheckpointData(*Principal(), *mCache);
+  }
 }
 
 nsresult SessionStorage::EnsureCacheLoadedOrCloned() const {
