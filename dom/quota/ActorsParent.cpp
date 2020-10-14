@@ -6424,11 +6424,14 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     if (newDatabase && newDirectory) {
       QM_TRY(CreateTables(connection));
 
+#ifdef DEBUG
       {
-        QM_DEBUG_TRY_UNWRAP(const auto storageVersion,
-                            MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
+        QM_TRY_INSPECT(const int32_t& storageVersion,
+                       MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion),
+                       QM_ASSERT_UNREACHABLE);
         MOZ_ASSERT(storageVersion == kStorageVersion);
       }
+#endif
 
       QM_TRY(connection->ExecuteSimpleSQL(
           nsLiteralCString("INSERT INTO database (cache_version) "
@@ -11074,9 +11077,13 @@ void OriginParser::HandleTrailingSeparator() {
 nsresult RepositoryOperationBase::ProcessRepository() {
   AssertIsOnIOThread();
 
-  QM_DEBUG_TRY_UNWRAP(const bool exists,
-                      MOZ_TO_RESULT_INVOKE(mDirectory, Exists));
-  MOZ_ASSERT(exists);
+#ifdef DEBUG
+  {
+    QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(mDirectory, Exists),
+                   QM_ASSERT_UNREACHABLE);
+    MOZ_ASSERT(exists);
+  }
+#endif
 
   QM_TRY(CollectEachFileEntry(
       *mDirectory,

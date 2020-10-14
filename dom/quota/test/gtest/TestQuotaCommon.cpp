@@ -29,6 +29,35 @@ TEST(QuotaCommon_Try, Success)
   EXPECT_EQ(rv, NS_OK);
 }
 
+TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
+{
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&tryDidNotReturn]() -> nsresult {
+    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE);
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
+{
+  bool tryDidNotReturn = false;
+
+  [&tryDidNotReturn]() -> void {
+    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE_VOID);
+
+    tryDidNotReturn = true;
+  }();
+
+  EXPECT_TRUE(tryDidNotReturn);
+}
+
 TEST(QuotaCommon_Try, Success_WithCleanup)
 {
   bool tryCleanupRan = false;
@@ -374,6 +403,39 @@ TEST(QuotaCommon_TryInspect, Success)
 
   EXPECT_TRUE(tryInspectDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_TryInspect, Success_CustomErr_AssertUnreachable)
+{
+  bool tryInspectDidNotReturn = false;
+
+  nsresult rv = [&tryInspectDidNotReturn]() -> nsresult {
+    QM_TRY_INSPECT(const auto& x, (Result<int32_t, nsresult>{42}),
+                   QM_ASSERT_UNREACHABLE);
+    EXPECT_EQ(x, 42);
+
+    tryInspectDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(tryInspectDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_TryInspect, Success_NoErr_AssertUnreachable)
+{
+  bool tryInspectDidNotReturn = false;
+
+  [&tryInspectDidNotReturn]() -> void {
+    QM_TRY_INSPECT(const auto& x, (Result<int32_t, nsresult>{42}),
+                   QM_ASSERT_UNREACHABLE_VOID);
+    EXPECT_EQ(x, 42);
+
+    tryInspectDidNotReturn = true;
+  }();
+
+  EXPECT_TRUE(tryInspectDidNotReturn);
 }
 
 TEST(QuotaCommon_TryInspect, Success_WithCleanup)
@@ -811,6 +873,21 @@ TEST(QuotaCommon_TryReturn, Success)
 
   auto res = [&tryReturnDidNotReturn] {
     QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_TryReturn, Success_CustomErr_AssertUnreachable)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN((Result<int32_t, nsresult>{42}), QM_ASSERT_UNREACHABLE);
 
     tryReturnDidNotReturn = true;
   }();
