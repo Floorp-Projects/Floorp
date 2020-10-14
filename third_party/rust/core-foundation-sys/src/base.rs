@@ -71,13 +71,13 @@ pub type CFAllocatorPreferredSizeCallBack = extern "C" fn(size: CFIndex, hint: C
 pub struct CFAllocatorContext {
     pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: CFAllocatorRetainCallBack,
-    pub release: CFAllocatorReleaseCallBack,
-    pub copyDescription: CFAllocatorCopyDescriptionCallBack,
-    pub allocate: CFAllocatorAllocateCallBack,
-    pub reallocate: CFAllocatorReallocateCallBack,
-    pub deallocate: CFAllocatorDeallocateCallBack,
-    pub preferredSize: CFAllocatorPreferredSizeCallBack
+    pub retain: Option<CFAllocatorRetainCallBack>,
+    pub release: Option<CFAllocatorReleaseCallBack>,
+    pub copyDescription: Option<CFAllocatorCopyDescriptionCallBack>,
+    pub allocate: Option<CFAllocatorAllocateCallBack>,
+    pub reallocate: Option<CFAllocatorReallocateCallBack>,
+    pub deallocate: Option<CFAllocatorDeallocateCallBack>,
+    pub preferredSize: Option<CFAllocatorPreferredSizeCallBack>
 }
 
 /// Trait for all types which are Core Foundation reference types.

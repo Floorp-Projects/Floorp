@@ -4,7 +4,7 @@
 
 use api::{ColorU, FontKey, FontRenderMode, FontSize, GlyphDimensions};
 use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
-use core_foundation::array::{CFArray, CFArrayRef};
+use core_foundation::{array::{CFArray, CFArrayRef}, data::CFData};
 use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::{CFNumber, CFNumberRef};
@@ -14,12 +14,12 @@ use core_graphics::base::{kCGBitmapByteOrder32Little};
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::CGContext;
 use core_graphics::context::{CGBlendMode, CGTextDrawingMode};
-use core_graphics::data_provider::CGDataProvider;
-use core_graphics::font::{CGFont, CGGlyph};
+use core_graphics::font::CGGlyph;
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
-use core_text;
+use core_text::{self, font_descriptor::CTFontDescriptorCreateCopyWithAttributes};
 use core_text::font::{CTFont, CTFontRef};
+use core_text::font_descriptor::CTFontDescriptor;
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use euclid::default::Size2D;
 use crate::gamma_lut::{ColorLut, GammaLut};
@@ -32,7 +32,7 @@ use std::sync::Arc;
 const INITIAL_CG_CONTEXT_SIDE_LENGTH: u32 = 32;
 
 pub struct FontContext {
-    cg_fonts: FastHashMap<FontKey, CGFont>,
+    ct_font_descs: FastHashMap<FontKey, CTFontDescriptor>,
     ct_fonts: FastHashMap<(FontKey, FontSize, Vec<FontVariation>), CTFont>,
     #[allow(dead_code)]
     graphics_context: GraphicsContext,
@@ -206,13 +206,14 @@ extern {
     static kCTFontVariationAxisMinimumValueKey: CFStringRef;
     static kCTFontVariationAxisMaximumValueKey: CFStringRef;
     static kCTFontVariationAxisDefaultValueKey: CFStringRef;
+    static kCTFontVariationAttribute: CFStringRef;
 
     fn CTFontCopyVariationAxes(font: CTFontRef) -> CFArrayRef;
 }
 
-fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVariation]) -> CTFont {
+fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, variations: &[FontVariation]) -> CTFont {
     unsafe {
-        let ct_font = core_text::font::new_from_CGFont(cg_font, size);
+        let ct_font = core_text::font::new_from_descriptor(ct_font_desc, size);
         if variations.is_empty() {
             return ct_font;
         }
@@ -301,8 +302,9 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             return ct_font;
         }
         let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-        let cg_var_font = cg_font.create_copy_from_variations(&vals_dict).unwrap();
-        core_text::font::new_from_CGFont_with_variations(&cg_var_font, size, &vals_dict)
+        let attrs_dict = CFDictionary::from_CFType_pairs(&[(CFString::wrap_under_get_rule(kCTFontVariationAttribute), vals_dict)]);
+        let ct_var_font_desc = create_copy_with_attributes(ct_font_desc, attrs_dict.to_untyped()).unwrap();
+        core_text::font::new_from_descriptor(&ct_var_font_desc, size)
     }
 }
 
@@ -320,7 +322,7 @@ impl FontContext {
         let gamma = 0.0;
 
         Ok(FontContext {
-            cg_fonts: FastHashMap::default(),
+            ct_font_descs: FastHashMap::default(),
             ct_fonts: FastHashMap::default(),
             graphics_context: GraphicsContext::new(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
@@ -328,34 +330,40 @@ impl FontContext {
     }
 
     pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.cg_fonts.contains_key(font_key)
+        self.ct_font_descs.contains_key(font_key)
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
-        if self.cg_fonts.contains_key(font_key) {
+        if self.ct_font_descs.contains_key(font_key) {
             return;
         }
 
         assert_eq!(index, 0);
-        let data_provider = CGDataProvider::from_buffer(bytes);
-        let cg_font = match CGFont::from_data_provider(data_provider) {
+        let data = CFData_wrapping_arc_vec(bytes);
+        let ct_font_desc = match create_font_descriptor(data) {
             Err(_) => return,
             Ok(cg_font) => cg_font,
         };
-        self.cg_fonts.insert(*font_key, cg_font);
+        self.ct_font_descs.insert(*font_key, ct_font_desc);
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
-        if self.cg_fonts.contains_key(font_key) {
+        if self.ct_font_descs.contains_key(font_key) {
             return;
         }
 
-        self.cg_fonts
-            .insert(*font_key, native_font_handle.0);
+        // there's no way great way to go from a CGFont to a CTFontDescriptor
+        // so we use the postscript name. Ideally NativeFontHandle would
+        // just use a CTFontDescriptor
+        let name = native_font_handle.0.postscript_name();
+        let font = core_text::font_descriptor::new_from_postscript_name(&name);
+
+        self.ct_font_descs
+            .insert(*font_key, font);
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        if let Some(_) = self.cg_fonts.remove(font_key) {
+        if let Some(_) = self.ct_font_descs.remove(font_key) {
             self.ct_fonts.retain(|k, _| k.0 != *font_key);
         }
     }
@@ -375,7 +383,7 @@ impl FontContext {
         match self.ct_fonts.entry((font_key, FontSize::from_f64_px(size), variations.to_vec())) {
             Entry::Occupied(entry) => Some((*entry.get()).clone()),
             Entry::Vacant(entry) => {
-                let cg_font = self.cg_fonts.get(&font_key)?;
+                let cg_font = self.ct_font_descs.get(&font_key)?;
                 let ct_font = new_ct_font_with_variations(cg_font, size, variations);
                 entry.insert(ct_font.clone());
                 Some(ct_font)
@@ -908,4 +916,73 @@ impl GraphicsContext {
 enum GlyphType {
     Vector,
     Bitmap,
+}
+
+// This stuff should eventually migrate to upstream core-foundation
+#[allow(non_snake_case)]
+fn CFData_wrapping_arc_vec(buffer: Arc<Vec<u8>>) -> CFData {
+    use core_foundation::base::*;
+    use core_foundation::data::CFDataRef;
+    use std::os::raw::c_void;
+
+    extern "C" {
+        pub fn CFDataCreateWithBytesNoCopy(
+            allocator: CFAllocatorRef,
+            bytes: *const u8,
+            length: CFIndex,
+            allocator: CFAllocatorRef,
+        ) -> CFDataRef;
+    }
+    unsafe {
+        let ptr = (*buffer).as_ptr() as *const _;
+        let len = buffer.len().to_CFIndex();
+        let info = Arc::into_raw(buffer) as *mut c_void;
+
+        extern "C" fn deallocate(_: *mut c_void, info: *mut c_void) {
+            unsafe {
+                drop(Arc::from_raw(info as *mut Vec<u8>));
+            }
+        }
+
+        // CFAllocatorContext doesn't have nullable members so we transmute
+        let allocator = CFAllocator::new(CFAllocatorContext {
+            info: info,
+            version: 0,
+            retain: None,
+            reallocate: None,
+            release: None,
+            copyDescription: None,
+            allocate: None,
+            deallocate: Some(deallocate),
+            preferredSize: None,
+        });
+        let data_ref =
+            CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, ptr, len, allocator.as_CFTypeRef());
+        TCFType::wrap_under_create_rule(data_ref)
+    }
+}
+
+fn create_font_descriptor(cf_data: CFData) -> Result<CTFontDescriptor, ()> {
+    use core_text::font_descriptor::CTFontDescriptorRef;
+    use core_foundation::data::CFDataRef;
+    extern {
+        pub fn CTFontManagerCreateFontDescriptorFromData(data: CFDataRef) -> CTFontDescriptorRef;
+    }
+    unsafe {
+        let ct_font_descriptor_ref = CTFontManagerCreateFontDescriptorFromData(cf_data.as_concrete_TypeRef());
+        if ct_font_descriptor_ref.is_null() {
+            return Err(());
+        }
+        Ok(CTFontDescriptor::wrap_under_create_rule(ct_font_descriptor_ref))
+    }
+}
+
+fn create_copy_with_attributes(desc: &CTFontDescriptor, attr: CFDictionary) -> Result<CTFontDescriptor, ()> {
+    unsafe {
+    let ct_font_descriptor_ref = CTFontDescriptorCreateCopyWithAttributes(desc.as_concrete_TypeRef(), attr.as_concrete_TypeRef());
+    if ct_font_descriptor_ref.is_null() {
+        return Err(());
+    }
+    Ok(CTFontDescriptor::wrap_under_create_rule(ct_font_descriptor_ref))
+}
 }

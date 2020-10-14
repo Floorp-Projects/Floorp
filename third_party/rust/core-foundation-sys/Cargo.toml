@@ -12,13 +12,15 @@
 
 [package]
 name = "core-foundation-sys"
-version = "0.8.0"
+version = "0.8.2"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 description = "Bindings to Core Foundation for macOS"
 homepage = "https://github.com/servo/core-foundation-rs"
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
+[package.metadata.docs.rs]
+default-target = "x86_64-apple-darwin"
 
 [dependencies]
 
