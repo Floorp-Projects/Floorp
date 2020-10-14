@@ -720,7 +720,9 @@ def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_confi
             return False
         if 'fenix' not in try_name:
             return False
-        if 'browsertime' not in try_name and 'live' not in try_name:
+        if 'browsertime' not in try_name:
+            return False
+        if 'live' not in try_name:
             return False
         for test in LIVE_SITES:
             if try_name.endswith(test) or try_name.endswith(test + "-e10s"):
