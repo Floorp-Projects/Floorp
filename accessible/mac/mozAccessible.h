@@ -106,6 +106,9 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 // Get top level (tab) web area.
 - (mozAccessible*)topWebArea;
 
+// Handle a role change
+- (void)handleRoleChanged:(mozilla::a11y::role)newRole;
+
 #pragma mark - mozAccessible protocol / widget
 
 // override

@@ -161,6 +161,12 @@ void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
   }
 }
 
+void ProxyRoleChangedEvent(ProxyAccessible* aTarget, const a11y::role& aRole) {
+  if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
+    [wrapper handleRoleChanged:aRole];
+  }
+}
+
 }  // namespace a11y
 }  // namespace mozilla
 
