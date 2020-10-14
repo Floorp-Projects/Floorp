@@ -1,0 +1,2062 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window when dimTopLevelWindow =false 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <Component
+    autoExpandDepth={0}
+    roots={
+      Array [
+        Object {
+          "contents": Object {
+            "value": Object {
+              "actor": "server1.conn3.obj198",
+              "class": "Window",
+              "extensible": true,
+              "frozen": false,
+              "ownPropertyLength": 887,
+              "preview": Object {
+                "kind": "ObjectWithURL",
+                "url": "about:newtab",
+              },
+              "sealed": false,
+              "type": "object",
+            },
+          },
+          "meta": undefined,
+          "name": "window",
+          "parent": undefined,
+          "path": "window",
+          "propertyName": undefined,
+          "type": Symbol(GRIP),
+        },
+      ]
+    }
+  >
+    <Connect(ObjectInspector)
+      autoExpandDepth={0}
+      roots={
+        Array [
+          Object {
+            "contents": Object {
+              "value": Object {
+                "actor": "server1.conn3.obj198",
+                "class": "Window",
+                "extensible": true,
+                "frozen": false,
+                "ownPropertyLength": 887,
+                "preview": Object {
+                  "kind": "ObjectWithURL",
+                  "url": "about:newtab",
+                },
+                "sealed": false,
+                "type": "object",
+              },
+            },
+            "meta": undefined,
+            "name": "window",
+            "parent": undefined,
+            "path": "window",
+            "propertyName": undefined,
+            "type": Symbol(GRIP),
+          },
+        ]
+      }
+    >
+      <ObjectInspector
+        addWatchpoint={[Function]}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        evaluations={Map {}}
+        expandedPaths={Set {}}
+        invokeGetter={[Function]}
+        loadedProperties={Map {}}
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        removeWatchpoint={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "actor": "server1.conn3.obj198",
+                  "class": "Window",
+                  "extensible": true,
+                  "frozen": false,
+                  "ownPropertyLength": 887,
+                  "preview": Object {
+                    "kind": "ObjectWithURL",
+                    "url": "about:newtab",
+                  },
+                  "sealed": false,
+                  "type": "object",
+                },
+              },
+              "meta": undefined,
+              "name": "window",
+              "parent": undefined,
+              "path": "window",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+      >
+        <Tree
+          autoExpandAll={true}
+          autoExpandDepth={0}
+          className="object-inspector"
+          getChildren={[Function]}
+          getKey={[Function]}
+          getParent={[Function]}
+          getRoots={[Function]}
+          isExpandable={[Function]}
+          isExpanded={[Function]}
+          onActivate={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          onFocus={[Function]}
+          renderItem={[Function]}
+          shouldItemUpdate={[Function]}
+        >
+          <div
+            className="tree object-inspector"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyPress={[Function]}
+            onKeyUp={[Function]}
+            role="tree"
+            style={Object {}}
+            tabIndex="0"
+          >
+            <TreeNode
+              active={false}
+              depth={0}
+              expanded={false}
+              focused={false}
+              id="window"
+              index={0}
+              isExpandable={true}
+              item={
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                }
+              }
+              key="window-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-expanded={false}
+                aria-level={1}
+                className="tree-node"
+                data-expandable={true}
+                id="window"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    />
+                  }
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={0}
+                  evaluations={Map {}}
+                  expanded={false}
+                  expandedPaths={Set {}}
+                  focused={false}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Object {
+                        "value": Object {
+                          "actor": "server1.conn3.obj198",
+                          "class": "Window",
+                          "extensible": true,
+                          "frozen": false,
+                          "ownPropertyLength": 887,
+                          "preview": Object {
+                            "kind": "ObjectWithURL",
+                            "url": "about:newtab",
+                          },
+                          "sealed": false,
+                          "type": "object",
+                        },
+                      },
+                      "meta": undefined,
+                      "name": "window",
+                      "parent": undefined,
+                      "path": "window",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    }
+                  }
+                  loadedProperties={Map {}}
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Object {
+                          "value": Object {
+                            "actor": "server1.conn3.obj198",
+                            "class": "Window",
+                            "extensible": true,
+                            "frozen": false,
+                            "ownPropertyLength": 887,
+                            "preview": Object {
+                              "kind": "ObjectWithURL",
+                              "url": "about:newtab",
+                            },
+                            "sealed": false,
+                            "type": "object",
+                          },
+                        },
+                        "meta": undefined,
+                        "name": "window",
+                        "parent": undefined,
+                        "path": "window",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    >
+                      <button
+                        className="arrow"
+                      />
+                    </ArrowExpander>
+                    <span
+                      className="object-label"
+                    >
+                      window
+                    </span>
+                    <span
+                      className="object-delimiter"
+                    >
+                      : 
+                    </span>
+                    <span
+                      className="objectBox objectBox-Window"
+                      data-link-actor-id="server1.conn3.obj198"
+                      title={null}
+                    >
+                      <span
+                        className="objectTitle"
+                      >
+                        Window
+                      </span>
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+          </div>
+        </Tree>
+      </ObjectInspector>
+    </Connect(ObjectInspector)>
+  </Component>
+</Provider>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <Component
+    autoExpandDepth={0}
+    dimTopLevelWindow={true}
+    injectWaitService={true}
+    roots={
+      Array [
+        Object {
+          "contents": Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "actor": "server1.conn3.obj198",
+                  "class": "Window",
+                  "extensible": true,
+                  "frozen": false,
+                  "ownPropertyLength": 887,
+                  "preview": Object {
+                    "kind": "ObjectWithURL",
+                    "url": "about:newtab",
+                  },
+                  "sealed": false,
+                  "type": "object",
+                },
+              },
+              "meta": undefined,
+              "name": "window",
+              "parent": undefined,
+              "path": "window",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            },
+          ],
+          "meta": undefined,
+          "name": "root",
+          "parent": undefined,
+          "path": "root",
+          "propertyName": undefined,
+          "type": Symbol(GRIP),
+        },
+      ]
+    }
+  >
+    <Connect(ObjectInspector)
+      autoExpandDepth={0}
+      dimTopLevelWindow={true}
+      injectWaitService={true}
+      roots={
+        Array [
+          Object {
+            "contents": Array [
+              Object {
+                "contents": Object {
+                  "value": Object {
+                    "actor": "server1.conn3.obj198",
+                    "class": "Window",
+                    "extensible": true,
+                    "frozen": false,
+                    "ownPropertyLength": 887,
+                    "preview": Object {
+                      "kind": "ObjectWithURL",
+                      "url": "about:newtab",
+                    },
+                    "sealed": false,
+                    "type": "object",
+                  },
+                },
+                "meta": undefined,
+                "name": "window",
+                "parent": undefined,
+                "path": "window",
+                "propertyName": undefined,
+                "type": Symbol(GRIP),
+              },
+            ],
+            "meta": undefined,
+            "name": "root",
+            "parent": undefined,
+            "path": "root",
+            "propertyName": undefined,
+            "type": Symbol(GRIP),
+          },
+        ]
+      }
+    >
+      <ObjectInspector
+        addWatchpoint={[Function]}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        dimTopLevelWindow={true}
+        evaluations={Map {}}
+        expandedPaths={
+          Set {
+            "root",
+          }
+        }
+        injectWaitService={true}
+        invokeGetter={[Function]}
+        loadedProperties={
+          Map {
+            "root" => Object {},
+          }
+        }
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        removeWatchpoint={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Array [
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                },
+              ],
+              "meta": undefined,
+              "name": "root",
+              "parent": undefined,
+              "path": "root",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+      >
+        <Tree
+          autoExpandAll={true}
+          autoExpandDepth={0}
+          className="object-inspector"
+          focused={
+            Object {
+              "contents": Array [
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                },
+              ],
+              "meta": undefined,
+              "name": "root",
+              "parent": undefined,
+              "path": "root",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            }
+          }
+          getChildren={[Function]}
+          getKey={[Function]}
+          getParent={[Function]}
+          getRoots={[Function]}
+          isExpandable={[Function]}
+          isExpanded={[Function]}
+          onActivate={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          onFocus={[Function]}
+          renderItem={[Function]}
+          shouldItemUpdate={[Function]}
+        >
+          <div
+            aria-activedescendant="root"
+            className="tree object-inspector"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyPress={[Function]}
+            onKeyUp={[Function]}
+            role="tree"
+            style={Object {}}
+            tabIndex="0"
+          >
+            <TreeNode
+              active={false}
+              depth={0}
+              expanded={true}
+              focused={true}
+              id="root"
+              index={0}
+              isExpandable={true}
+              item={
+                Object {
+                  "contents": Array [
+                    Object {
+                      "contents": Object {
+                        "value": Object {
+                          "actor": "server1.conn3.obj198",
+                          "class": "Window",
+                          "extensible": true,
+                          "frozen": false,
+                          "ownPropertyLength": 887,
+                          "preview": Object {
+                            "kind": "ObjectWithURL",
+                            "url": "about:newtab",
+                          },
+                          "sealed": false,
+                          "type": "object",
+                        },
+                      },
+                      "meta": undefined,
+                      "name": "window",
+                      "parent": undefined,
+                      "path": "window",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    },
+                  ],
+                  "meta": undefined,
+                  "name": "root",
+                  "parent": undefined,
+                  "path": "root",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                }
+              }
+              key="root-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-expanded={true}
+                aria-level={1}
+                className="tree-node focused"
+                data-expandable={true}
+                id="root"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={
+                    <ArrowExpander
+                      expanded={true}
+                      item={
+                        Object {
+                          "contents": Array [
+                            Object {
+                              "contents": Object {
+                                "value": Object {
+                                  "actor": "server1.conn3.obj198",
+                                  "class": "Window",
+                                  "extensible": true,
+                                  "frozen": false,
+                                  "ownPropertyLength": 887,
+                                  "preview": Object {
+                                    "kind": "ObjectWithURL",
+                                    "url": "about:newtab",
+                                  },
+                                  "sealed": false,
+                                  "type": "object",
+                                },
+                              },
+                              "meta": undefined,
+                              "name": "window",
+                              "parent": undefined,
+                              "path": "window",
+                              "propertyName": undefined,
+                              "type": Symbol(GRIP),
+                            },
+                          ],
+                          "meta": undefined,
+                          "name": "root",
+                          "parent": undefined,
+                          "path": "root",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    />
+                  }
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={0}
+                  dimTopLevelWindow={true}
+                  evaluations={Map {}}
+                  expanded={true}
+                  expandedPaths={
+                    Set {
+                      "root",
+                    }
+                  }
+                  focused={true}
+                  injectWaitService={true}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Array [
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        },
+                      ],
+                      "meta": undefined,
+                      "name": "root",
+                      "parent": undefined,
+                      "path": "root",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    }
+                  }
+                  loadedProperties={Map {}}
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Array [
+                          Object {
+                            "contents": Object {
+                              "value": Object {
+                                "actor": "server1.conn3.obj198",
+                                "class": "Window",
+                                "extensible": true,
+                                "frozen": false,
+                                "ownPropertyLength": 887,
+                                "preview": Object {
+                                  "kind": "ObjectWithURL",
+                                  "url": "about:newtab",
+                                },
+                                "sealed": false,
+                                "type": "object",
+                              },
+                            },
+                            "meta": undefined,
+                            "name": "window",
+                            "parent": undefined,
+                            "path": "window",
+                            "propertyName": undefined,
+                            "type": Symbol(GRIP),
+                          },
+                        ],
+                        "meta": undefined,
+                        "name": "root",
+                        "parent": undefined,
+                        "path": "root",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node focused"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <ArrowExpander
+                      expanded={true}
+                      item={
+                        Object {
+                          "contents": Array [
+                            Object {
+                              "contents": Object {
+                                "value": Object {
+                                  "actor": "server1.conn3.obj198",
+                                  "class": "Window",
+                                  "extensible": true,
+                                  "frozen": false,
+                                  "ownPropertyLength": 887,
+                                  "preview": Object {
+                                    "kind": "ObjectWithURL",
+                                    "url": "about:newtab",
+                                  },
+                                  "sealed": false,
+                                  "type": "object",
+                                },
+                              },
+                              "meta": undefined,
+                              "name": "window",
+                              "parent": undefined,
+                              "path": "window",
+                              "propertyName": undefined,
+                              "type": Symbol(GRIP),
+                            },
+                          ],
+                          "meta": undefined,
+                          "name": "root",
+                          "parent": undefined,
+                          "path": "root",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    >
+                      <button
+                        className="arrow expanded"
+                      />
+                    </ArrowExpander>
+                    <span
+                      className="object-label"
+                    >
+                      root
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+            <TreeNode
+              active={false}
+              depth={1}
+              expanded={false}
+              focused={false}
+              id="window"
+              index={1}
+              isExpandable={true}
+              item={
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                }
+              }
+              key="window-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-expanded={false}
+                aria-level={2}
+                className="tree-node"
+                data-expandable={true}
+                id="window"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <span
+                  className="tree-indent tree-last-indent"
+                >
+                  ​
+                </span>
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    />
+                  }
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={1}
+                  dimTopLevelWindow={true}
+                  evaluations={Map {}}
+                  expanded={false}
+                  expandedPaths={
+                    Set {
+                      "root",
+                    }
+                  }
+                  focused={false}
+                  injectWaitService={true}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Object {
+                        "value": Object {
+                          "actor": "server1.conn3.obj198",
+                          "class": "Window",
+                          "extensible": true,
+                          "frozen": false,
+                          "ownPropertyLength": 887,
+                          "preview": Object {
+                            "kind": "ObjectWithURL",
+                            "url": "about:newtab",
+                          },
+                          "sealed": false,
+                          "type": "object",
+                        },
+                      },
+                      "meta": undefined,
+                      "name": "window",
+                      "parent": undefined,
+                      "path": "window",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    }
+                  }
+                  loadedProperties={Map {}}
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Array [
+                          Object {
+                            "contents": Object {
+                              "value": Object {
+                                "actor": "server1.conn3.obj198",
+                                "class": "Window",
+                                "extensible": true,
+                                "frozen": false,
+                                "ownPropertyLength": 887,
+                                "preview": Object {
+                                  "kind": "ObjectWithURL",
+                                  "url": "about:newtab",
+                                },
+                                "sealed": false,
+                                "type": "object",
+                              },
+                            },
+                            "meta": undefined,
+                            "name": "window",
+                            "parent": undefined,
+                            "path": "window",
+                            "propertyName": undefined,
+                            "type": Symbol(GRIP),
+                          },
+                        ],
+                        "meta": undefined,
+                        "name": "root",
+                        "parent": undefined,
+                        "path": "root",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    >
+                      <button
+                        className="arrow"
+                      />
+                    </ArrowExpander>
+                    <span
+                      className="object-label"
+                    >
+                      window
+                    </span>
+                    <span
+                      className="object-delimiter"
+                    >
+                      : 
+                    </span>
+                    <span
+                      className="objectBox objectBox-Window"
+                      data-link-actor-id="server1.conn3.obj198"
+                      title={null}
+                    >
+                      <span
+                        className="objectTitle"
+                      >
+                        Window
+                      </span>
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+          </div>
+        </Tree>
+      </ObjectInspector>
+    </Connect(ObjectInspector)>
+  </Component>
+</Provider>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dimTopLevelWindow is true 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <Component
+    autoExpandDepth={0}
+    dimTopLevelWindow={true}
+    roots={
+      Array [
+        Object {
+          "contents": Object {
+            "value": Object {
+              "actor": "server1.conn3.obj198",
+              "class": "Window",
+              "extensible": true,
+              "frozen": false,
+              "ownPropertyLength": 887,
+              "preview": Object {
+                "kind": "ObjectWithURL",
+                "url": "about:newtab",
+              },
+              "sealed": false,
+              "type": "object",
+            },
+          },
+          "meta": undefined,
+          "name": "window",
+          "parent": undefined,
+          "path": "window",
+          "propertyName": undefined,
+          "type": Symbol(GRIP),
+        },
+      ]
+    }
+  >
+    <Connect(ObjectInspector)
+      autoExpandDepth={0}
+      dimTopLevelWindow={true}
+      roots={
+        Array [
+          Object {
+            "contents": Object {
+              "value": Object {
+                "actor": "server1.conn3.obj198",
+                "class": "Window",
+                "extensible": true,
+                "frozen": false,
+                "ownPropertyLength": 887,
+                "preview": Object {
+                  "kind": "ObjectWithURL",
+                  "url": "about:newtab",
+                },
+                "sealed": false,
+                "type": "object",
+              },
+            },
+            "meta": undefined,
+            "name": "window",
+            "parent": undefined,
+            "path": "window",
+            "propertyName": undefined,
+            "type": Symbol(GRIP),
+          },
+        ]
+      }
+    >
+      <ObjectInspector
+        addWatchpoint={[Function]}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        dimTopLevelWindow={true}
+        evaluations={Map {}}
+        expandedPaths={Set {}}
+        invokeGetter={[Function]}
+        loadedProperties={Map {}}
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        removeWatchpoint={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "actor": "server1.conn3.obj198",
+                  "class": "Window",
+                  "extensible": true,
+                  "frozen": false,
+                  "ownPropertyLength": 887,
+                  "preview": Object {
+                    "kind": "ObjectWithURL",
+                    "url": "about:newtab",
+                  },
+                  "sealed": false,
+                  "type": "object",
+                },
+              },
+              "meta": undefined,
+              "name": "window",
+              "parent": undefined,
+              "path": "window",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+      >
+        <Tree
+          autoExpandAll={true}
+          autoExpandDepth={0}
+          className="object-inspector"
+          getChildren={[Function]}
+          getKey={[Function]}
+          getParent={[Function]}
+          getRoots={[Function]}
+          isExpandable={[Function]}
+          isExpanded={[Function]}
+          onActivate={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          onFocus={[Function]}
+          renderItem={[Function]}
+          shouldItemUpdate={[Function]}
+        >
+          <div
+            className="tree object-inspector"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyPress={[Function]}
+            onKeyUp={[Function]}
+            role="tree"
+            style={Object {}}
+            tabIndex="0"
+          >
+            <TreeNode
+              active={false}
+              depth={0}
+              expanded={false}
+              focused={false}
+              id="window"
+              index={0}
+              isExpandable={true}
+              item={
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                }
+              }
+              key="window-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-expanded={false}
+                aria-level={1}
+                className="tree-node"
+                data-expandable={true}
+                id="window"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    />
+                  }
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={0}
+                  dimTopLevelWindow={true}
+                  evaluations={Map {}}
+                  expanded={false}
+                  expandedPaths={Set {}}
+                  focused={false}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Object {
+                        "value": Object {
+                          "actor": "server1.conn3.obj198",
+                          "class": "Window",
+                          "extensible": true,
+                          "frozen": false,
+                          "ownPropertyLength": 887,
+                          "preview": Object {
+                            "kind": "ObjectWithURL",
+                            "url": "about:newtab",
+                          },
+                          "sealed": false,
+                          "type": "object",
+                        },
+                      },
+                      "meta": undefined,
+                      "name": "window",
+                      "parent": undefined,
+                      "path": "window",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    }
+                  }
+                  loadedProperties={Map {}}
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Object {
+                          "value": Object {
+                            "actor": "server1.conn3.obj198",
+                            "class": "Window",
+                            "extensible": true,
+                            "frozen": false,
+                            "ownPropertyLength": 887,
+                            "preview": Object {
+                              "kind": "ObjectWithURL",
+                              "url": "about:newtab",
+                            },
+                            "sealed": false,
+                            "type": "object",
+                          },
+                        },
+                        "meta": undefined,
+                        "name": "window",
+                        "parent": undefined,
+                        "path": "window",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node lessen"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <ArrowExpander
+                      expanded={false}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    >
+                      <button
+                        className="arrow"
+                      />
+                    </ArrowExpander>
+                    <span
+                      className="object-label"
+                    >
+                      window
+                    </span>
+                    <span
+                      className="object-delimiter"
+                    >
+                      : 
+                    </span>
+                    <span
+                      className="objectBox objectBox-Window"
+                      data-link-actor-id="server1.conn3.obj198"
+                      title={null}
+                    >
+                      <span
+                        className="objectTitle"
+                      >
+                        Window
+                      </span>
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+          </div>
+        </Tree>
+      </ObjectInspector>
+    </Connect(ObjectInspector)>
+  </Component>
+</Provider>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dimTopLevelWindow is true 2`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <Component
+    autoExpandDepth={0}
+    dimTopLevelWindow={true}
+    roots={
+      Array [
+        Object {
+          "contents": Object {
+            "value": Object {
+              "actor": "server1.conn3.obj198",
+              "class": "Window",
+              "extensible": true,
+              "frozen": false,
+              "ownPropertyLength": 887,
+              "preview": Object {
+                "kind": "ObjectWithURL",
+                "url": "about:newtab",
+              },
+              "sealed": false,
+              "type": "object",
+            },
+          },
+          "meta": undefined,
+          "name": "window",
+          "parent": undefined,
+          "path": "window",
+          "propertyName": undefined,
+          "type": Symbol(GRIP),
+        },
+      ]
+    }
+  >
+    <Connect(ObjectInspector)
+      autoExpandDepth={0}
+      dimTopLevelWindow={true}
+      roots={
+        Array [
+          Object {
+            "contents": Object {
+              "value": Object {
+                "actor": "server1.conn3.obj198",
+                "class": "Window",
+                "extensible": true,
+                "frozen": false,
+                "ownPropertyLength": 887,
+                "preview": Object {
+                  "kind": "ObjectWithURL",
+                  "url": "about:newtab",
+                },
+                "sealed": false,
+                "type": "object",
+              },
+            },
+            "meta": undefined,
+            "name": "window",
+            "parent": undefined,
+            "path": "window",
+            "propertyName": undefined,
+            "type": Symbol(GRIP),
+          },
+        ]
+      }
+    >
+      <ObjectInspector
+        addWatchpoint={[Function]}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        dimTopLevelWindow={true}
+        evaluations={Map {}}
+        expandedPaths={
+          Set {
+            "window",
+          }
+        }
+        invokeGetter={[Function]}
+        loadedProperties={
+          Map {
+            "window" => Object {
+              "ownProperties": Object {},
+              "prototype": Object {},
+            },
+          }
+        }
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        removeWatchpoint={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "actor": "server1.conn3.obj198",
+                  "class": "Window",
+                  "extensible": true,
+                  "frozen": false,
+                  "ownPropertyLength": 887,
+                  "preview": Object {
+                    "kind": "ObjectWithURL",
+                    "url": "about:newtab",
+                  },
+                  "sealed": false,
+                  "type": "object",
+                },
+              },
+              "meta": undefined,
+              "name": "window",
+              "parent": undefined,
+              "path": "window",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+      >
+        <Tree
+          autoExpandAll={true}
+          autoExpandDepth={0}
+          className="object-inspector"
+          focused={
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "actor": "server1.conn3.obj198",
+                  "class": "Window",
+                  "extensible": true,
+                  "frozen": false,
+                  "ownPropertyLength": 887,
+                  "preview": Object {
+                    "kind": "ObjectWithURL",
+                    "url": "about:newtab",
+                  },
+                  "sealed": false,
+                  "type": "object",
+                },
+              },
+              "meta": undefined,
+              "name": "window",
+              "parent": undefined,
+              "path": "window",
+              "propertyName": undefined,
+              "type": Symbol(GRIP),
+            }
+          }
+          getChildren={[Function]}
+          getKey={[Function]}
+          getParent={[Function]}
+          getRoots={[Function]}
+          isExpandable={[Function]}
+          isExpanded={[Function]}
+          onActivate={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          onFocus={[Function]}
+          renderItem={[Function]}
+          shouldItemUpdate={[Function]}
+        >
+          <div
+            aria-activedescendant="window"
+            className="tree object-inspector"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyPress={[Function]}
+            onKeyUp={[Function]}
+            role="tree"
+            style={Object {}}
+            tabIndex="0"
+          >
+            <TreeNode
+              active={false}
+              depth={0}
+              expanded={true}
+              focused={true}
+              id="window"
+              index={0}
+              isExpandable={true}
+              item={
+                Object {
+                  "contents": Object {
+                    "value": Object {
+                      "actor": "server1.conn3.obj198",
+                      "class": "Window",
+                      "extensible": true,
+                      "frozen": false,
+                      "ownPropertyLength": 887,
+                      "preview": Object {
+                        "kind": "ObjectWithURL",
+                        "url": "about:newtab",
+                      },
+                      "sealed": false,
+                      "type": "object",
+                    },
+                  },
+                  "meta": undefined,
+                  "name": "window",
+                  "parent": undefined,
+                  "path": "window",
+                  "propertyName": undefined,
+                  "type": Symbol(GRIP),
+                }
+              }
+              key="window-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-expanded={true}
+                aria-level={1}
+                className="tree-node focused"
+                data-expandable={true}
+                id="window"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={
+                    <ArrowExpander
+                      expanded={true}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    />
+                  }
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={0}
+                  dimTopLevelWindow={true}
+                  evaluations={Map {}}
+                  expanded={true}
+                  expandedPaths={
+                    Set {
+                      "window",
+                    }
+                  }
+                  focused={true}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Object {
+                        "value": Object {
+                          "actor": "server1.conn3.obj198",
+                          "class": "Window",
+                          "extensible": true,
+                          "frozen": false,
+                          "ownPropertyLength": 887,
+                          "preview": Object {
+                            "kind": "ObjectWithURL",
+                            "url": "about:newtab",
+                          },
+                          "sealed": false,
+                          "type": "object",
+                        },
+                      },
+                      "meta": undefined,
+                      "name": "window",
+                      "parent": undefined,
+                      "path": "window",
+                      "propertyName": undefined,
+                      "type": Symbol(GRIP),
+                    }
+                  }
+                  loadedProperties={Map {}}
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Object {
+                          "value": Object {
+                            "actor": "server1.conn3.obj198",
+                            "class": "Window",
+                            "extensible": true,
+                            "frozen": false,
+                            "ownPropertyLength": 887,
+                            "preview": Object {
+                              "kind": "ObjectWithURL",
+                              "url": "about:newtab",
+                            },
+                            "sealed": false,
+                            "type": "object",
+                          },
+                        },
+                        "meta": undefined,
+                        "name": "window",
+                        "parent": undefined,
+                        "path": "window",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node focused"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <ArrowExpander
+                      expanded={true}
+                      item={
+                        Object {
+                          "contents": Object {
+                            "value": Object {
+                              "actor": "server1.conn3.obj198",
+                              "class": "Window",
+                              "extensible": true,
+                              "frozen": false,
+                              "ownPropertyLength": 887,
+                              "preview": Object {
+                                "kind": "ObjectWithURL",
+                                "url": "about:newtab",
+                              },
+                              "sealed": false,
+                              "type": "object",
+                            },
+                          },
+                          "meta": undefined,
+                          "name": "window",
+                          "parent": undefined,
+                          "path": "window",
+                          "propertyName": undefined,
+                          "type": Symbol(GRIP),
+                        }
+                      }
+                    >
+                      <button
+                        className="arrow expanded"
+                      />
+                    </ArrowExpander>
+                    <span
+                      className="object-label"
+                    >
+                      window
+                    </span>
+                    <span
+                      className="object-delimiter"
+                    >
+                      : 
+                    </span>
+                    <span
+                      className="objectBox objectBox-Window"
+                      data-link-actor-id="server1.conn3.obj198"
+                      title={null}
+                    >
+                      <span
+                        className="objectTitle"
+                      >
+                        Window
+                      </span>
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+            <TreeNode
+              active={false}
+              depth={1}
+              expanded={false}
+              focused={false}
+              id="window◦<prototype>"
+              index={1}
+              isExpandable={false}
+              item={
+                Object {
+                  "contents": Object {
+                    "front": null,
+                    "value": Object {},
+                  },
+                  "meta": undefined,
+                  "name": "<prototype>",
+                  "parent": Object {
+                    "contents": Object {
+                      "value": Object {
+                        "actor": "server1.conn3.obj198",
+                        "class": "Window",
+                        "extensible": true,
+                        "frozen": false,
+                        "ownPropertyLength": 887,
+                        "preview": Object {
+                          "kind": "ObjectWithURL",
+                          "url": "about:newtab",
+                        },
+                        "sealed": false,
+                        "type": "object",
+                      },
+                    },
+                    "meta": undefined,
+                    "name": "window",
+                    "parent": undefined,
+                    "path": "window",
+                    "propertyName": undefined,
+                    "type": Symbol(GRIP),
+                  },
+                  "path": "window◦<prototype>",
+                  "propertyName": undefined,
+                  "type": Symbol(<prototype>),
+                }
+              }
+              key="window◦<prototype>-inactive"
+              onClick={[Function]}
+              onCollapse={[Function]}
+              onExpand={[Function]}
+              renderItem={[Function]}
+              shouldItemUpdate={[Function]}
+            >
+              <div
+                aria-level={2}
+                className="tree-node"
+                data-expandable={false}
+                id="window◦<prototype>"
+                onClick={[Function]}
+                onKeyDownCapture={null}
+                role="treeitem"
+              >
+                <span
+                  className="tree-indent tree-last-indent"
+                >
+                  ​
+                </span>
+                <ObjectInspectorItem
+                  addWatchpoint={[Function]}
+                  arrow={null}
+                  autoExpandDepth={0}
+                  closeObjectInspector={[Function]}
+                  depth={1}
+                  dimTopLevelWindow={true}
+                  evaluations={Map {}}
+                  expanded={false}
+                  expandedPaths={
+                    Set {
+                      "window",
+                    }
+                  }
+                  focused={false}
+                  invokeGetter={[Function]}
+                  item={
+                    Object {
+                      "contents": Object {
+                        "front": null,
+                        "value": Object {},
+                      },
+                      "meta": undefined,
+                      "name": "<prototype>",
+                      "parent": Object {
+                        "contents": Object {
+                          "value": Object {
+                            "actor": "server1.conn3.obj198",
+                            "class": "Window",
+                            "extensible": true,
+                            "frozen": false,
+                            "ownPropertyLength": 887,
+                            "preview": Object {
+                              "kind": "ObjectWithURL",
+                              "url": "about:newtab",
+                            },
+                            "sealed": false,
+                            "type": "object",
+                          },
+                        },
+                        "meta": undefined,
+                        "name": "window",
+                        "parent": undefined,
+                        "path": "window",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                      "path": "window◦<prototype>",
+                      "propertyName": undefined,
+                      "type": Symbol(<prototype>),
+                    }
+                  }
+                  loadedProperties={
+                    Map {
+                      "window" => Object {
+                        "ownProperties": Object {},
+                        "prototype": Object {},
+                      },
+                    }
+                  }
+                  nodeCollapse={[Function]}
+                  nodeExpand={[Function]}
+                  nodeLoadProperties={[Function]}
+                  nodePropertiesLoaded={[Function]}
+                  onContextMenu={[Function]}
+                  removeWatchpoint={[Function]}
+                  renderItemActions={[Function]}
+                  roots={
+                    Array [
+                      Object {
+                        "contents": Object {
+                          "value": Object {
+                            "actor": "server1.conn3.obj198",
+                            "class": "Window",
+                            "extensible": true,
+                            "frozen": false,
+                            "ownPropertyLength": 887,
+                            "preview": Object {
+                              "kind": "ObjectWithURL",
+                              "url": "about:newtab",
+                            },
+                            "sealed": false,
+                            "type": "object",
+                          },
+                        },
+                        "meta": undefined,
+                        "name": "window",
+                        "parent": undefined,
+                        "path": "window",
+                        "propertyName": undefined,
+                        "type": Symbol(GRIP),
+                      },
+                    ]
+                  }
+                  rootsChanged={[Function]}
+                  setExpanded={[Function]}
+                >
+                  <div
+                    className="node object-node lessen"
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                  >
+                    <span
+                      className="object-label"
+                    >
+                      &lt;prototype&gt;
+                    </span>
+                    <span
+                      className="object-delimiter"
+                    >
+                      : 
+                    </span>
+                    <span
+                      className="objectBox objectBox-object"
+                      title={null}
+                    >
+                      <span
+                        className="objectLeftBrace"
+                      >
+                        {
+                      </span>
+                      <span
+                        className="objectRightBrace"
+                      >
+                        }
+                      </span>
+                    </span>
+                  </div>
+                </ObjectInspectorItem>
+              </div>
+            </TreeNode>
+          </div>
+        </Tree>
+      </ObjectInspector>
+    </Connect(ObjectInspector)>
+  </Component>
+</Provider>
+`;

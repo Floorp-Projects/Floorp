@@ -9,6 +9,7 @@
 module.exports = {
   verbose: true,
   moduleNameMapper: {
+    "^Services": `${__dirname}/__mock__/Services`,
     // Map all require("devtools/...") to the real devtools root.
     "^devtools\\/(.*)": `${__dirname}/../../../../../$1`,
   },

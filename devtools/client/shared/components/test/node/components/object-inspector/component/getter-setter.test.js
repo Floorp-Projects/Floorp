@@ -9,13 +9,13 @@ const {
   formatObjectInspector,
   waitForLoadedProperties,
   mountObjectInspector,
-} = require("devtools/client/shared/components/reps/object-inspector/tests/test-utils");
+} = require("devtools/client/shared/components/test/node/components/object-inspector/test-utils");
 
 const {
   makeNodesForProperties,
 } = require("devtools/client/shared/components/reps/object-inspector/utils/node");
 const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
-const ObjectFront = require("devtools/client/shared/components/reps/object-inspector/tests/__mocks__/object-front");
+const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
 
 function generateDefaults(overrides) {
   return {
