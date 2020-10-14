@@ -50,9 +50,6 @@ function iota(len) {
     return xs;
 }
 
-function pmin(x, y) { return y < x ? y : x }
-function pmax(x, y) { return x < y ? y : x }
-
 const v2vSig = {args:[], ret:VoidCode};
 
 function V128Load(addr) {
@@ -64,39 +61,6 @@ function V128StoreExpr(addr, v) {
     return [I32ConstCode, varS32(addr),
             ...v,
             SimdPrefix, V128StoreCode, 4, varU32(0)];
-}
-
-// Pseudo-min/max, https://github.com/WebAssembly/simd/pull/122
-var fxs = [5, 1, -4, NaN];
-var fys = [6, 0, -7, 3];
-var dxs = [5, NaN];
-var dys = [6, 0];
-
-for ( let [opcode, xs, ys, operator] of [[F32x4PMinCode, fxs, fys, pmin],
-                                         [F32x4PMaxCode, fxs, fys, pmax],
-                                         [F64x2PMinCode, dxs, dys, pmin],
-                                         [F64x2PMaxCode, dxs, dys, pmax]] ) {
-    var k = xs.length;
-    var ans = iota(k).map((i) => operator(xs[i], ys[i]))
-
-    var ins = wasmEval(moduleWithSections([
-        sigSection([v2vSig]),
-        declSection([0]),
-        memorySection(1),
-        exportSection([{funcIndex: 0, name: "run"},
-                       {memIndex: 0, name: "mem"}]),
-        bodySection([
-            funcBody({locals:[],
-                      body: [...V128StoreExpr(0, [...V128Load(16),
-                                                  ...V128Load(32),
-                                                  SimdPrefix, varU32(opcode)])]})])]));
-
-    var mem = new (k == 4 ? Float32Array : Float64Array)(ins.exports.mem.buffer);
-    set(mem, k, xs);
-    set(mem, 2*k, ys);
-    ins.exports.run();
-    var result = get(mem, 0, k);
-    assertSame(result, ans);
 }
 
 // Widening integer dot product, https://github.com/WebAssembly/simd/pull/127

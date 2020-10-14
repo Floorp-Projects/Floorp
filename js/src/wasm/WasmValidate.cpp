@@ -1052,12 +1052,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I16x8NarrowSI32x4):
           case uint32_t(SimdOp::I16x8NarrowUI32x4):
           case uint32_t(SimdOp::V8x16Swizzle):
+          case uint32_t(SimdOp::F32x4PMax):
+          case uint32_t(SimdOp::F32x4PMin):
+          case uint32_t(SimdOp::F64x2PMax):
+          case uint32_t(SimdOp::F64x2PMin):
             CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
 
-          case uint32_t(SimdOp::F32x4PMaxExperimental):
-          case uint32_t(SimdOp::F32x4PMinExperimental):
-          case uint32_t(SimdOp::F64x2PMaxExperimental):
-          case uint32_t(SimdOp::F64x2PMinExperimental):
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
             CHECK_SIMD_EXPERIMENTAL();
             CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
