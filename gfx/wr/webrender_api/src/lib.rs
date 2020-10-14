@@ -558,12 +558,10 @@ bitflags! {
         const GLYPH_FLASHING = 1 << 25;
         /// The profiler only displays information that is out of the ordinary.
         const SMART_PROFILER        = 1 << 26;
-        /// Dynamically control whether picture caching is enabled.
-        const DISABLE_PICTURE_CACHING = 1 << 27;
         /// If set, dump picture cache invalidation debug to console.
-        const INVALIDATION_DBG = 1 << 28;
+        const INVALIDATION_DBG = 1 << 27;
         /// Log tile cache to memory for later saving as part of wr-capture
-        const TILE_CACHE_LOGGING_DBG   = 1 << 29;
+        const TILE_CACHE_LOGGING_DBG   = 1 << 28;
         /// Collect and dump profiler statistics to captures.
         const PROFILER_CAPTURE = (1 as u32) << 31; // need "as u32" until we have cbindgen#556
     }

@@ -38,7 +38,6 @@ void gfxConfigManager::Init() {
       StaticPrefs::gfx_webrender_compositor_force_enabled_AtStartup();
   mGPUProcessAllowSoftware =
       StaticPrefs::layers_gpu_process_allow_software_AtStartup();
-  mWrPictureCaching = StaticPrefs::gfx_webrender_picture_caching();
   mWrPartialPresent =
       StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0;
 #ifdef XP_WIN
@@ -351,12 +350,6 @@ void gfxConfigManager::ConfigureWebRender() {
                                   FeatureStatus::Unavailable, "Requires ANGLE",
                                   "FEATURE_FAILURE_DCOMP_NOT_ANGLE"_ns);
 
-  if (!mWrPictureCaching) {
-    mFeatureWrCompositor->ForceDisable(
-        FeatureStatus::Unavailable, "Picture caching is disabled",
-        "FEATURE_FAILURE_PICTURE_CACHING_DISABLED"_ns);
-  }
-
   if (!mFeatureWrDComp->IsEnabled() && mWrCompositorDCompRequired) {
     mFeatureWrCompositor->ForceDisable(FeatureStatus::Unavailable,
                                        "No DirectComposition usage",
@@ -368,11 +361,6 @@ void gfxConfigManager::ConfigureWebRender() {
   if (mWrPartialPresent) {
     if (mFeatureWr->IsEnabled()) {
       mFeatureWrPartial->EnableByDefault();
-      if (!mWrPictureCaching) {
-        mFeatureWrPartial->ForceDisable(
-            FeatureStatus::Unavailable, "Picture caching is disabled",
-            "FEATURE_FAILURE_PICTURE_CACHING_DISABLED"_ns);
-      }
     }
   }
 }
