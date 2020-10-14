@@ -2723,10 +2723,10 @@ static inline WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
   ivec4 i = round_pixel(v);
   HalfRGBA8 xz = packRGBA8(i.z, i.x);
   HalfRGBA8 yw = packRGBA8(i.y, i.w);
-  HalfRGBA8 xy = zipLow(xz, yw);
-  HalfRGBA8 zw = zipHigh(xz, yw);
-  HalfRGBA8 lo = zip2Low(xy, zw);
-  HalfRGBA8 hi = zip2High(xy, zw);
+  HalfRGBA8 xyzwl = zipLow(xz, yw);
+  HalfRGBA8 xyzwh = zipHigh(xz, yw);
+  HalfRGBA8 lo = zip2Low(xyzwl, xyzwh);
+  HalfRGBA8 hi = zip2High(xyzwl, xyzwh);
   return combine(lo, hi);
 }
 
@@ -2916,7 +2916,7 @@ static inline WideR8 span_mask(uint8_t*, int span) {
   return span_mask_R8(span);
 }
 
-static inline PackedRG8 span_mask_RG8(int span) {
+UNUSED static inline PackedRG8 span_mask_RG8(int span) {
   return bit_cast<PackedRG8>(I16(span) < I16{1, 2, 3, 4});
 }
 
