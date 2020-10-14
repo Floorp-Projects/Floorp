@@ -57,6 +57,9 @@ class DownloadUtilsTest {
             // ISO-8859-1 encoded filename* field
             assertContentDisposition("file' 'name.jpg",
                 "$contentDisposition; filename=\"_.jpg\"; filename*=iso-8859-1'en'file%27%20%27name.jpg")
+
+            assertContentDisposition("success.html", "$contentDisposition; filename*=utf-8''success.html; foo")
+            assertContentDisposition("success.html", "$contentDisposition; filename*=utf-8''success.html")
         }
     }
 

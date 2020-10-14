@@ -16,13 +16,95 @@ import java.util.regex.Pattern
 object DownloadUtils {
 
     /**
+     * This is the regular expression to match the content disposition type segment.
+     *
+     * A content disposition header can start either with inline or attachment followed by comma;
+     *  For example: attachment; filename="filename.jpg" or inline; filename="filename.jpg"
+     * (inline|attachment)\\s*; -> Match either inline or attachment, followed by zero o more
+     * optional whitespaces characters followed by a comma.
+     *
+     */
+    private const val contentDispositionType = "(inline|attachment)\\s*;"
+
+    /**
+     * This is the regular expression to match filename* parameter segment.
+     *
+     * A content disposition header could have an optional filename* parameter,
+     * the difference between this parameter and the filename is that this uses
+     * the encoding defined in RFC 5987.
+     *
+     * Some examples:
+     *  filename*=utf-8''success.html
+     *  filename*=iso-8859-1'en'file%27%20%27name.jpg
+     *  filename*=utf-8'en'filename.jpg
+     *
+     * For matching this section we use:
+     * \\s*filename\\s*=\\s*= -> Zero or more optional whitespaces characters
+     * followed by filename followed by any zero or more whitespaces characters and the equal sign;
+     *
+     * (utf-8|iso-8859-1)-> Either utf-8 or iso-8859-1 encoding types.
+     *
+     * '[^']*'-> Zero or more characters that are inside of single quotes '' that are not single
+     * quote.
+     *
+     * (\S*) -> Zero or more characters that are not whitespaces. In this group,
+     * it's where we are going to have the filename.
+     *
+     */
+    private const val contentDispositionFileNameAsterisk =
+            "\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*)"
+
+    /**
      * Format as defined in RFC 2616 and RFC 5987
      * Both inline and attachment types are supported.
+     * More details can be found
+     * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+     *
+     * The first segment is the [contentDispositionType], there you can find the documentation,
+     * Next, it's the filename segment, where we have a filename="filename.ext"
+     * For example, all of these could be possible in this section:
+     * filename="filename.jpg"
+     * filename="file\"name.jpg"
+     * filename="file\\name.jpg"
+     * filename="file\\\"name.jpg"
+     * filename=filename.jpg
+     *
+     * For matching this section we use:
+     * \\s*filename\\s*=\\s*= -> Zero or more whitespaces followed by filename followed
+     *  by zero or more whitespaces and the equal sign.
+     *
+     * As we want to extract the the content of filename="THIS", we use:
+     *
+     * \\s* -> Zero or more whitespaces
+     *
+     *  (\"((?:\\\\.|[^|"\\\\])*)\" -> A quotation mark, optional : or \\ or any character,
+     *  and any non quotation mark or \\\\ zero or more times.
+     *
+     *  For example: filename="file\\name.jpg", filename="file\"name.jpg" and filename="file\\\"name.jpg"
+     *
+     * We don't want to match after ; appears, For example filename="filename.jpg"; foo
+     * we only want to match before the semicolon, so we use. |[^;]*)
+     *
+     * \\s* ->  Zero or more whitespaces.
+     *
+     *  For supporting cases, where we have both filename and filename*, we use:
+     * "(?:;$contentDispositionFileNameAsterisk)?"
+     *
+     * Some examples:
+     *
+     * attachment; filename="_.jpg"; filename*=iso-8859-1'en'file%27%20%27name.jpg
+     * attachment; filename="_.jpg"; filename*=iso-8859-1'en'file%27%20%27name.jpg
      */
-    private val contentDispositionPattern = Pattern.compile("(inline|attachment)\\s*;" +
+    private val contentDispositionPattern = Pattern.compile(contentDispositionType +
             "\\s*filename\\s*=\\s*(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
-            "(?:;\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*))?",
+            "(?:;$contentDispositionFileNameAsterisk)?",
             Pattern.CASE_INSENSITIVE)
+
+    /**
+     * This is an alternative content disposition pattern where only filename* is available
+     */
+    private val fileNameAsteriskContentDispositionPattern = Pattern.compile(contentDispositionType +
+            contentDispositionFileNameAsterisk, Pattern.CASE_INSENSITIVE)
 
     /**
      * Keys for the capture groups inside contentDispositionPattern
@@ -31,6 +113,12 @@ object DownloadUtils {
     private const val ENCODING_GROUP = 4
     private const val QUOTED_FILE_NAME_GROUP = 3
     private const val UNQUOTED_FILE_NAME = 2
+
+    /**
+     * Belongs to the [fileNameAsteriskContentDispositionPattern]
+     */
+    private const val ALTERNATIVE_FILE_NAME_GROUP = 3
+    private const val ALTERNATIVE_ENCODING_GROUP = 2
 
     /**
      * Definition as per RFC 5987, section 3.2.1. (value-chars)
@@ -131,33 +219,46 @@ object DownloadUtils {
     }
 
     private fun parseContentDisposition(contentDisposition: String): String? {
-        try {
-            val m = contentDispositionPattern.matcher(contentDisposition)
-
-            if (m.find()) {
-                // If escaped string is found, decode it using the given encoding.
-                val encodedFileName = m.group(ENCODED_FILE_NAME_GROUP)
-                val encoding = m.group(ENCODING_GROUP)
-
-                if (encodedFileName != null && encoding != null) {
-                    return decodeHeaderField(encodedFileName, encoding)
-                }
-
-                // Return quoted string if available and replace escaped characters.
-                val quotedFileName = m.group(QUOTED_FILE_NAME_GROUP)
-
-                return quotedFileName?.replace("\\\\(.)".toRegex(), "$1")
-                    ?: m.group(UNQUOTED_FILE_NAME)
-
-                // Otherwise try to extract the unquoted file name
-            }
+        return try {
+            parseContentDispositionWithFileName(contentDisposition)
+                    ?: parseContentDispositionWithFileNameAsterisk(contentDisposition)
         } catch (ex: IllegalStateException) {
             // This function is defined as returning null when it can't parse the header
+            null
         } catch (ex: UnsupportedEncodingException) {
             // Do nothing
+            null
         }
+    }
 
-        return null
+    private fun parseContentDispositionWithFileName(contentDisposition: String): String? {
+        val m = contentDispositionPattern.matcher(contentDisposition)
+        return if (m.find()) {
+            val encodedFileName = m.group(ENCODED_FILE_NAME_GROUP)
+            val encoding = m.group(ENCODING_GROUP)
+            if (encodedFileName != null && encoding != null) {
+                decodeHeaderField(encodedFileName, encoding)
+            } else {
+                // Return quoted string if available and replace escaped characters.
+                val quotedFileName = m.group(QUOTED_FILE_NAME_GROUP)
+                quotedFileName?.replace("\\\\(.)".toRegex(), "$1")
+                        ?: m.group(UNQUOTED_FILE_NAME)
+            }
+        } else {
+            null
+        }
+    }
+
+    private fun parseContentDispositionWithFileNameAsterisk(contentDisposition: String): String? {
+        val alternative = fileNameAsteriskContentDispositionPattern.matcher(contentDisposition)
+
+        return if (alternative.find()) {
+            val encoding = alternative.group(ALTERNATIVE_ENCODING_GROUP) ?: return null
+            val fileName = alternative.group(ALTERNATIVE_FILE_NAME_GROUP) ?: return null
+            decodeHeaderField(fileName, encoding)
+        } else {
+            null
+        }
     }
 
     @Throws(UnsupportedEncodingException::class)
