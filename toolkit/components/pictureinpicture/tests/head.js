@@ -107,6 +107,7 @@ async function triggerPictureInPicture(browser, videoID) {
   let win = await domWindowOpened;
   await win.promiseDocumentFlushed(() => {});
   await videoReady;
+  await SimpleTest.promiseFocus(win);
   return win;
 }
 
