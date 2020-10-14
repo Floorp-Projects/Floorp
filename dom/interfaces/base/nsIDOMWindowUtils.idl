@@ -2013,6 +2013,13 @@ interface nsIDOMWindowUtils : nsISupports {
   bool isCssPropertyRecordedInUseCounter(in ACString aProperty);
 
   /**
+   * Calls SetInitialViewport on the MobileViewportManager, which effectively
+   * causes it to refresh all of its internal state and update things that
+   * need updating.
+   */
+  void resetMobileViewportManager();
+
+  /**
    * NOTE: Currently works only on GTK+.
    */
   attribute ACString systemFont;
