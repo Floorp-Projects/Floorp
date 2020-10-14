@@ -360,6 +360,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   virtual bool GetStandardFamilyName(const nsCString& aFontName,
                                      nsACString& aFamilyName);
 
+  // Get the localized family name for a given font family.
+  bool GetLocalizedFamilyName(const FontFamily& aFamily,
+                              nsACString& aFamilyName);
+
   // get the default font name which is available on the system from
   // font.name-list.*.  if there are no available fonts in the pref,
   // returns an empty FamilyAndGeneric record.
