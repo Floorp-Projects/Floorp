@@ -588,6 +588,9 @@ function min_u(bits) {
     }
 }
 
+function pmin(x, y) { return y < x ? y : x }
+function pmax(x, y) { return x < y ? y : x }
+
 assertEq(max_s(8)(1, 2), 2);
 assertEq(max_s(8)(1, 128), 1);
 assertEq(min_s(8)(1, 2), 1);
@@ -689,6 +692,10 @@ for ( let [op, memtype, rop, resultmemtype] of
        ['f64x2.gt', Float64Array, gt(-1), BigInt64Array],
        ['f64x2.le', Float64Array, le(-1), BigInt64Array],
        ['f64x2.ge', Float64Array, ge(-1), BigInt64Array],
+       ['f32x4.pmin', Float32Array, pmin],
+       ['f32x4.pmax', Float32Array, pmax],
+       ['f64x2.pmin', Float64Array, pmin],
+       ['f64x2.pmax', Float64Array, pmax],
       ])
 {
     let [ins, mem, resultmem] = insAndMemBinop(op, memtype, resultmemtype);
