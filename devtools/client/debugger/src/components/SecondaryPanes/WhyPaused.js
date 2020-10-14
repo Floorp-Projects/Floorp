@@ -8,7 +8,8 @@ import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";
 import actions from "../../actions";
 
-import Reps from "devtools-reps";
+// $FlowIgnore
+import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { Rep },
   MODE,

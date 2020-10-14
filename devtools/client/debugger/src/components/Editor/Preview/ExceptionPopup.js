@@ -8,7 +8,8 @@ import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
 import classnames from "classnames";
 
-import Reps from "devtools-reps";
+// $FlowIgnore
+import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { StringRep },
 } = Reps;

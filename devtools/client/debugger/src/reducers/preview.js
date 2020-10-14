@@ -7,13 +7,12 @@
 import type { AstLocation } from "../workers/parser";
 
 import type { Action } from "../actions/types";
-import type { Node, Grip } from "devtools-reps";
-import type { Exception } from "../types";
+import type { Grip, Exception, OINode } from "../types";
 
 export type Preview = {|
   expression: string,
   resultGrip: Grip | null,
-  root: Node,
+  root: OINode,
   properties: Array<Grip>,
   location: AstLocation,
   cursorPos: any,

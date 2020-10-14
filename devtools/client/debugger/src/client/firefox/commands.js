@@ -13,8 +13,8 @@ import {
 } from "./events";
 import { makePendingLocationId } from "../../utils/breakpoint";
 
-import Reps from "devtools-reps";
-import type { Node } from "devtools-reps";
+// $FlowIgnore
+import Reps from "devtools/client/shared/components/reps/index";
 
 import type {
   ActorId,
@@ -23,6 +23,7 @@ import type {
   PendingLocation,
   Frame,
   FrameId,
+  OINode,
   Script,
   SourceId,
   SourceActor,
@@ -80,7 +81,7 @@ function createObjectFront(grip: Grip): ObjectFront {
   return devToolsClient.createObjectFront(grip, currentThreadFront());
 }
 
-async function loadObjectProperties(root: Node) {
+async function loadObjectProperties(root: OINode) {
   const { utils } = Reps.objectInspector;
   const properties = await utils.loadProperties.loadItemProperties(
     root,
