@@ -36,7 +36,7 @@ class RegionMiddlewareTest {
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = FakeSharedPreferences()
+            preferences = lazy { FakeSharedPreferences() }
         )
     }
 

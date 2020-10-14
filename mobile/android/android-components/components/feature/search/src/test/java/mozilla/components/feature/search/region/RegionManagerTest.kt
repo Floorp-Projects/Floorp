@@ -21,7 +21,7 @@ class RegionManagerTest {
             context = FakeContext(),
             locationService = FakeLocationService(),
             currentTime = FakeClock()::time,
-            preferences = FakeSharedPreferences()
+            preferences = lazy { FakeSharedPreferences() }
         )
 
         assertNull(regionManager.region())
@@ -37,7 +37,7 @@ class RegionManagerTest {
             context = FakeContext(),
             locationService = locationService,
             currentTime = FakeClock()::time,
-            preferences = FakeSharedPreferences()
+            preferences = lazy { FakeSharedPreferences() }
         )
 
         val updatedRegion = runBlocking { regionManager.update() }
@@ -58,7 +58,7 @@ class RegionManagerTest {
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = FakeSharedPreferences()
+            preferences = lazy { FakeSharedPreferences() }
         )
 
         runBlocking { regionManager.update() }
@@ -101,7 +101,7 @@ class RegionManagerTest {
             context = FakeContext(),
             locationService = locationService,
             currentTime = clock::time,
-            preferences = FakeSharedPreferences()
+            preferences = lazy { FakeSharedPreferences() }
         )
 
         runBlocking { regionManager.update() }

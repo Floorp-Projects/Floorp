@@ -41,26 +41,28 @@ internal class RegionManager(
     context: Context,
     private val locationService: LocationService,
     @VisibleForTesting private val currentTime: () -> Long = { System.currentTimeMillis() },
-    @VisibleForTesting private val preferences: SharedPreferences = context.getSharedPreferences(
-        PREFERENCE_FILE,
-        Context.MODE_PRIVATE
-    ),
+    @VisibleForTesting private val preferences: Lazy<SharedPreferences> = lazy {
+        context.getSharedPreferences(
+            PREFERENCE_FILE,
+            Context.MODE_PRIVATE
+        )
+    },
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var homeRegion: String?
-        get() = preferences.getString(PREFERENCE_KEY_HOME_REGION, null)
-        set(value) = preferences.edit().putString(PREFERENCE_KEY_HOME_REGION, value).apply()
+        get() = preferences.value.getString(PREFERENCE_KEY_HOME_REGION, null)
+        set(value) = preferences.value.edit().putString(PREFERENCE_KEY_HOME_REGION, value).apply()
 
     private var currentRegion: String?
-        get() = preferences.getString(PREFERENCE_KEY_CURRENT_REGION, null)
-        set(value) = preferences.edit().putString(PREFERENCE_KEY_CURRENT_REGION, value).apply()
+        get() = preferences.value.getString(PREFERENCE_KEY_CURRENT_REGION, null)
+        set(value) = preferences.value.edit().putString(PREFERENCE_KEY_CURRENT_REGION, value).apply()
 
     private var firstSeen: Long?
-        get() = preferences.getLong(PREFERENCE_KEY_REGION_FIRST_SEEN, 0)
+        get() = preferences.value.getLong(PREFERENCE_KEY_REGION_FIRST_SEEN, 0)
         set(value) = if (value == null) {
-            preferences.edit().remove(PREFERENCE_KEY_REGION_FIRST_SEEN).apply()
+            preferences.value.edit().remove(PREFERENCE_KEY_REGION_FIRST_SEEN).apply()
         } else {
-            preferences.edit().putLong(PREFERENCE_KEY_REGION_FIRST_SEEN, value).apply()
+            preferences.value.edit().putLong(PREFERENCE_KEY_REGION_FIRST_SEEN, value).apply()
         }
 
     fun region(): RegionState? {
