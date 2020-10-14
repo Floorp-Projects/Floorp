@@ -32,7 +32,7 @@ for (let v of WasmExternrefValues)
     let ins = wasmEvalText(
         `(module
            (type $S (struct (field $S.x (mut externref))))
-           (func (export "make") (param $v externref) (result externref)
+           (func (export "make") (param $v externref) (result eqref)
              (struct.new $S (local.get $v))))`);
     let x = ins.exports.make(v);
     assertEq(x._0, v);
@@ -46,7 +46,7 @@ for (let v of WasmExternrefValues)
     let args = iota(10).map((i) => `(local.get $${i})`).join(' ');
     let txt = `(module
                  (type $S (struct ${fields}))
-                 (func (export "make") ${params} (result externref)
+                 (func (export "make") ${params} (result eqref)
                    (struct.new $S ${args})))`;
     let ins = wasmEvalText(txt);
     let x = ins.exports.make({x:0}, {x:1}, {x:2}, {x:3}, {x:4}, {x:5}, {x:6}, {x:7}, {x:8}, {x:9})

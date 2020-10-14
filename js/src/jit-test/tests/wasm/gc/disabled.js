@@ -5,14 +5,14 @@ const { CompileError, validate } = WebAssembly;
 const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|(Structure|reference|gc) types not enabled|invalid heap type|invalid inline block type|bad type|\(ref T\) types not enabled|Invalid type|invalid function type/;
 
 let simpleTests = [
-    "(module (func (drop (ref.null any))))",
-    "(module (func $test (local anyref)))",
-    "(module (func $test (param anyref)))",
-    "(module (func $test (result anyref) (ref.null any)))",
-    "(module (func $test (block (result anyref) (unreachable)) unreachable))",
-    "(module (func $test (result i32) (local anyref) (ref.is_null (local.get 0))))",
-    `(module (import "a" "b" (func (param anyref))))`,
-    `(module (import "a" "b" (func (result anyref))))`,
+    "(module (func (drop (ref.null eq))))",
+    "(module (func $test (local eqref)))",
+    "(module (func $test (param eqref)))",
+    "(module (func $test (result eqref) (ref.null eq)))",
+    "(module (func $test (block (result eqref) (unreachable)) unreachable))",
+    "(module (func $test (result i32) (local eqref) (ref.is_null (local.get 0))))",
+    `(module (import "a" "b" (func (param eqref))))`,
+    `(module (import "a" "b" (func (result eqref))))`,
     `(module (type $s (struct)))`,
     `(module (func (param (ref 0)) (unreachable)))`,
 ];
