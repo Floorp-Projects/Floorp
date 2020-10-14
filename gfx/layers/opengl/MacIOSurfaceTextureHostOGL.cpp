@@ -8,7 +8,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
-#include "mozilla/webrender/RenderMacIOSurfaceTextureHostSWGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextCGL.h"
@@ -134,12 +133,8 @@ gfx::ColorRange MacIOSurfaceTextureHostOGL::GetColorRange() const {
 
 void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture;
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    texture = new wr::RenderMacIOSurfaceTextureHostSWGL(GetMacIOSurface());
-  } else {
-    texture = new wr::RenderMacIOSurfaceTextureHost(GetMacIOSurface());
-  }
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderMacIOSurfaceTextureHost(GetMacIOSurface());
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());

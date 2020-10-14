@@ -128,5 +128,30 @@ void RenderMacIOSurfaceTextureHost::DeleteTextureHandle() {
   }
 }
 
+size_t RenderMacIOSurfaceTextureHost::GetPlaneCount() {
+  size_t planeCount = mSurface->GetPlaneCount();
+  return planeCount > 0 ? planeCount : 1;
+}
+
+gfx::YUVColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace() const {
+  return mSurface->GetYUVColorSpace();
+}
+
+bool RenderMacIOSurfaceTextureHost::MapPlane(uint8_t aChannelIndex,
+                                             PlaneInfo& aPlaneInfo) {
+  if (!aChannelIndex) {
+    mSurface->Lock();
+  }
+  aPlaneInfo.mFormat = mSurface->GetFormat();
+  aPlaneInfo.mData = mSurface->GetBaseAddressOfPlane(aChannelIndex);
+  aPlaneInfo.mStride = mSurface->GetBytesPerRow(aChannelIndex);
+  aPlaneInfo.mSize =
+      gfx::IntSize(mSurface->GetDevicePixelWidth(aChannelIndex),
+                   mSurface->GetDevicePixelHeight(aChannelIndex));
+  return true;
+}
+
+void RenderMacIOSurfaceTextureHost::UnmapPlanes() { mSurface->Unlock(); }
+
 }  // namespace wr
 }  // namespace mozilla
