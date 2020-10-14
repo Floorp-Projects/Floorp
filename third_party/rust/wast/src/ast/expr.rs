@@ -945,7 +945,7 @@ instructions! {
         I32x4MinU : [0xfd, 0xb7] : "i32x4.min_u",
         I32x4MaxS : [0xfd, 0xb8] : "i32x4.max_s",
         I32x4MaxU : [0xfd, 0xb9] : "i32x4.max_u",
-        I32x4DotI16x8S : [0xfd, 0xba] : "i32x4.dot_i8x16_s",
+        I32x4DotI16x8S : [0xfd, 0xba] : "i32x4.dot_i16x8_s",
 
         I64x2Neg : [0xfd, 0xc1] : "i64x2.neg",
         I64x2Shl : [0xfd, 0xcb] : "i64x2.shl",
