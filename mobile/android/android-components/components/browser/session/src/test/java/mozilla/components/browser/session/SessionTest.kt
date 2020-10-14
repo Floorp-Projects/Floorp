@@ -10,8 +10,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
@@ -35,7 +33,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -217,23 +214,6 @@ class SessionTest {
 
         verify(store).dispatch(ContentAction.UpdateSearchTermsAction(session.id, session.searchTerms))
         verifyNoMoreInteractions(store)
-    }
-
-    @Test
-    fun `observer is notified when load request is triggered`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        session.loadRequestMetadata = LoadRequestMetadata(
-            "https://www.mozilla.org", arrayOf(LoadRequestOption.REDIRECT)
-        )
-
-        assertTrue(session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT))
-        verify(observer, times(1)).onLoadRequest(eq(session), eq("https://www.mozilla.org"),
-            anyBoolean(), anyBoolean())
-        verifyNoMoreInteractions(observer)
     }
 
     @Test

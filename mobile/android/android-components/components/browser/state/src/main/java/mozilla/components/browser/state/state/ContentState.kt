@@ -42,6 +42,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property webAppManifest the Web App Manifest for the currently visited page (or null).
  * @property firstContentfulPaint whether or not the first contentful paint has happened.
  * @property pictureInPictureEnabled True if the session is being displayed in PIP mode.
+ * @property loadRequest last [LoadRequestState] if this session.
  */
 data class ContentState(
     val url: String,
@@ -66,5 +67,6 @@ data class ContentState(
     val webAppManifest: WebAppManifest? = null,
     val firstContentfulPaint: Boolean = false,
     val history: HistoryState = HistoryState(),
-    val pictureInPictureEnabled: Boolean = false
+    val pictureInPictureEnabled: Boolean = false,
+    val loadRequest: LoadRequestState? = null
 )

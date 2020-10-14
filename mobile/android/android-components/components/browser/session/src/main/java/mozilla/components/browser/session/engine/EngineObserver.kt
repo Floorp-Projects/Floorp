@@ -11,8 +11,6 @@ import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.toElement
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
@@ -22,6 +20,7 @@ import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.state.content.FindResultState
@@ -121,13 +120,12 @@ internal class EngineObserver(
             session.searchTerms = ""
         }
 
-        session.loadRequestMetadata = LoadRequestMetadata(
-            url,
-            arrayOf(
-                if (triggeredByRedirect) LoadRequestOption.REDIRECT else LoadRequestOption.NONE,
-                if (triggeredByWebContent) LoadRequestOption.WEB_CONTENT else LoadRequestOption.NONE
-            )
-        )
+        session.notifyObservers {
+            onLoadRequest(session, url, triggeredByRedirect, triggeredByWebContent)
+        }
+
+        val loadRequest = LoadRequestState(url, triggeredByRedirect, triggeredByWebContent)
+        store?.dispatch(ContentAction.UpdateLoadRequestAction(session.id, loadRequest))
     }
 
     override fun onLaunchIntentRequest(url: String, appIntent: Intent?) {

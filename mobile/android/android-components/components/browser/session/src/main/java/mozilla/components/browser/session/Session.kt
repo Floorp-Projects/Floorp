@@ -7,8 +7,6 @@ package mozilla.components.browser.session
 import android.content.Intent
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestMetadata
-import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
@@ -156,20 +154,6 @@ class Session(
     var searchTerms: String by Delegates.observable("") { _, _, new ->
         notifyObservers { onSearch(this@Session, new) }
         store?.syncDispatch(UpdateSearchTermsAction(id, new))
-    }
-
-    /**
-     * Set when a load request is received, indicating if the request came from web content, or via a redirect.
-     */
-    var loadRequestMetadata: LoadRequestMetadata by Delegates.observable(LoadRequestMetadata.blank) { _, _, new ->
-        notifyObservers {
-            onLoadRequest(
-                this@Session,
-                new.url,
-                new.isSet(LoadRequestOption.REDIRECT),
-                new.isSet(LoadRequestOption.WEB_CONTENT)
-            )
-        }
     }
 
     /**

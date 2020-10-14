@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.ReaderState
@@ -439,6 +440,11 @@ sealed class ContentAction : BrowserAction() {
         val historyList: List<HistoryItem>,
         val currentIndex: Int
     ) : ContentAction()
+
+    /**
+     * Updates the [LoadRequestState] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateLoadRequestAction(val sessionId: String, val loadRequest: LoadRequestState) : ContentAction()
 }
 
 /**

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -631,5 +632,19 @@ class ContentActionTest {
 
         assertEquals(historyState, tab.content.history)
         assertNotEquals(historyState, otherTab.content.history)
+    }
+
+    @Test
+    fun `UpdateLoadRequestAction updates load request state`() {
+        val loadRequestUrl = "https://mozilla.org"
+
+        store.dispatch(
+            ContentAction.UpdateLoadRequestAction(tab.id, LoadRequestState(loadRequestUrl, true, false))
+        ).joinBlocking()
+
+        assertNotNull(tab.content.loadRequest)
+        assertEquals(loadRequestUrl, tab.content.loadRequest!!.url)
+        assertTrue(tab.content.loadRequest!!.triggeredByRedirect)
+        assertFalse(tab.content.loadRequest!!.triggeredByUser)
     }
 }

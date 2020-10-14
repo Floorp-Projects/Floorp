@@ -10,7 +10,6 @@ import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -32,6 +31,7 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -989,11 +989,6 @@ class EngineObserverTest {
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true)
 
         assertEquals("", session.searchTerms)
-        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
-
-        assertFalse(triggeredByRedirect)
-        assertTrue(triggeredByWebContent)
     }
 
     @Test
@@ -1006,11 +1001,18 @@ class EngineObserverTest {
         observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
 
         assertEquals("", session.searchTerms)
-        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
+    }
 
-        assertTrue(triggeredByRedirect)
-        assertFalse(triggeredByWebContent)
+    @Test
+    fun `onLoadRequest notifies session observers`() {
+        val url = "https://www.mozilla.org"
+        val sessionObserver: Session.Observer = mock()
+        val session = Session(url)
+        session.register(sessionObserver)
+
+        val observer = EngineObserver(session, mock())
+        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
+        verify(sessionObserver).onLoadRequest(eq(session), eq(url), eq(true), eq(false))
     }
 
     @Test
@@ -1023,12 +1025,6 @@ class EngineObserverTest {
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false)
 
         assertEquals("Mozilla Foundation", session.searchTerms)
-
-        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
-
-        assertFalse(triggeredByRedirect)
-        assertFalse(triggeredByWebContent)
     }
 
     @Test

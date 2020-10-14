@@ -128,6 +128,9 @@ internal object ContentStateReducer {
             is ContentAction.UpdateHistoryStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(history = HistoryState(action.historyList, action.currentIndex))
             }
+            is ContentAction.UpdateLoadRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(loadRequest = action.loadRequest)
+            }
         }
     }
 }
