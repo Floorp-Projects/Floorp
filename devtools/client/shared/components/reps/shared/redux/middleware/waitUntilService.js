@@ -49,7 +49,7 @@ function waitUntilService({ dispatch, getState }) {
     }
   }
 
-  return (next: Function) => (action: Object) => {
+  return next => action => {
     if (action.type === WAIT_UNTIL_TYPE) {
       pending.push(action);
       return null;
