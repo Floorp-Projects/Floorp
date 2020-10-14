@@ -80,7 +80,8 @@ void GamepadServiceTest::InitPBackgroundActor() {
 }
 
 void GamepadServiceTest::DestroyPBackgroundActor() {
-  mChild->SendShutdownChannel();
+  MOZ_ASSERT(mChild);
+  PGamepadTestChannelChild::Send__delete__(mChild);
   mChild = nullptr;
 }
 
