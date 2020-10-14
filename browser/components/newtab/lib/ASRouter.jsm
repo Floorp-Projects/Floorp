@@ -381,7 +381,9 @@ const MessageLoaderUtils = {
             branchValue.trigger
           ) {
             experiments.push({
-              forReachEvent: { sent: false },
+              // Used by `_recordReachEvent` to filter and decide if a reach
+              // ping should be sent
+              forReachEvent: { sent: false, group: featureId },
               experimentSlug: experimentData.slug,
               branchSlug: branch.slug,
               ...branchValue,
@@ -1855,8 +1857,9 @@ class _ASRouter {
   }
 
   _recordReachEvent(message) {
+    const messageGroup = message.forReachEvent.group;
     // Events telemetry only accepts understores for the event `object`
-    const underscored = message.group.split("-").join("_");
+    const underscored = messageGroup.split("-").join("_");
     const extra = { branches: message.branchSlug };
     Services.telemetry.recordEvent(
       REACH_EVENT_CATEGORY,
