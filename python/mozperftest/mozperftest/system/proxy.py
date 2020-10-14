@@ -25,10 +25,10 @@ class OutputHandler(object):
         self.port_event = threading.Event()
 
     def __call__(self, line):
-        if not line.strip():
+        line = line.strip()
+        if not line:
             return
         line = line.decode("utf-8", errors="replace")
-
         try:
             data = json.loads(line)
         except ValueError:
@@ -40,7 +40,7 @@ class OutputHandler(object):
             # our subprocess.
             m = re.match(r"Proxy running on port (\d+)", data.get("message", ""))
             if m:
-                self.port = m.group(1)
+                self.port = int(m.group(1))
                 self.port_event.set()
             LOG.log_raw(data)
         else:
@@ -50,7 +50,10 @@ class OutputHandler(object):
         self.port_event.set()
 
     def process_output(self, line):
-        LOG.process_output(self.proc.pid, line)
+        if self.proc is None:
+            LOG.process_output(line)
+        else:
+            LOG.process_output(self.proc.pid, line)
 
     def wait_for_port(self):
         self.port_event.wait()
@@ -100,9 +103,10 @@ class ProxyRunner(Layer):
             replay_file = target
 
         self.info("Setting up the proxy")
-        # replace with artifacts
         command = [
-            "mozproxy",
+            self.mach_cmd.virtualenv_manager.python_path,
+            "-m",
+            "mozproxy.driver",
             "--local",
             "--binary=" + self.mach_cmd.get_binary_path(),
             "--topsrcdir=" + self.mach_cmd.topsrcdir,
