@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundSessionStorageManager;
+
+namespace mozilla {
+namespace dom {
+
+struct SSSetItemInfo
+{
+  nsString key;
+  nsString value;
+};
+
+struct SSRemoveItemInfo
+{
+  nsString key;
+};
+
+struct SSClearInfo
+{
+};
+
+/**
+ * Union of SessionStorage mutation types.
+ */
+union SSWriteInfo
+{
+  SSSetItemInfo;
+  SSRemoveItemInfo;
+  SSClearInfo;
+};
+
+sync refcounted protocol PBackgroundSessionStorageCache
+{
+ manager PBackgroundSessionStorageManager;
+
+ parent:
+  async DeleteMe();
+
+  /**
+    * Copy SessionStorageCache from the parent process to the content process.
+    * See SessionStorageManager documentation for more details.
+    *
+    * This needs to be synchronous because SessionStorage's semantics are
+    * synchronous. Note that the BackgroundSessionStorageManager in the
+    * PBackground parent already has the answers to this request immediately
+    * available without needing to consult any other threads or perform any I/O.
+    */
+  sync Load()
+       returns (SSSetItemInfo[] aDefaultData, SSSetItemInfo[] aSessionData);
+
+  /**
+   * Send changes for SessionStorageCache from a content process to the parent
+   * process so that the data in the parent can be updated to be in sync with
+   * the content. See SessionStorageManager documentation for more details.
+   */
+  async Checkpoint(SSWriteInfo[] aDefaultWriteInfos,
+                   SSWriteInfo[] aSessionWriteInfos);
+
+ child:
+   async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla
