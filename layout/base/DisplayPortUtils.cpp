@@ -666,6 +666,16 @@ bool DisplayPortUtils::SetDisplayPortMargins(nsIContent* aContent,
     return false;
   }
 
+  if (currentData && currentData->mMargins.mVisualOffset != CSSPoint() &&
+      aMargins.mVisualOffset == CSSPoint()) {
+    // If we hit this, then it's possible that we're setting a displayport
+    // that is wrong because the old one had a layout/visual adjustment and
+    // the new one does not.
+    MOZ_LOG(sDisplayportLog, LogLevel::Warning,
+            ("Dropping visual offset %s",
+             ToString(currentData->mMargins.mVisualOffset).c_str()));
+  }
+
   nsIFrame* scrollFrame = nsLayoutUtils::GetScrollFrameFromContent(aContent);
 
   nsRect oldDisplayPort;
