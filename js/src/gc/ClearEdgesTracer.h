@@ -17,19 +17,19 @@ struct ClearEdgesTracer final : public GenericTracer {
   ClearEdgesTracer();
 
   template <typename T>
-  inline bool clearEdge(T** thingp);
+  inline T* onEdge(T* thing);
 
-  bool onObjectEdge(JSObject** objp) override;
-  bool onStringEdge(JSString** strp) override;
-  bool onSymbolEdge(JS::Symbol** symp) override;
-  bool onBigIntEdge(JS::BigInt** bip) override;
-  bool onScriptEdge(js::BaseScript** scriptp) override;
-  bool onShapeEdge(js::Shape** shapep) override;
-  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
-  bool onBaseShapeEdge(js::BaseShape** basep) override;
-  bool onJitCodeEdge(js::jit::JitCode** codep) override;
-  bool onScopeEdge(js::Scope** scopep) override;
-  bool onRegExpSharedEdge(js::RegExpShared** sharedp) override;
+  JSObject* onObjectEdge(JSObject* obj) override;
+  JSString* onStringEdge(JSString* str) override;
+  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
+  JS::BigInt* onBigIntEdge(JS::BigInt* bi) override;
+  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
+  js::Shape* onShapeEdge(js::Shape* shape) override;
+  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override;
+  js::BaseShape* onBaseShapeEdge(js::BaseShape* base) override;
+  js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) override;
+  js::Scope* onScopeEdge(js::Scope* scope) override;
+  js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) override;
 };
 
 }  // namespace gc
