@@ -2522,8 +2522,8 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
     if (!outputStruct.hasPrefix(inputStruct)) {
       return fail("invalid narrowing operation");
     }
-  } else if (outputType->isExternRef()) {
-    if (!inputType->isExternRef()) {
+  } else if (outputType->isEqRef()) {
+    if (!inputType->isEqRef()) {
       return fail("invalid type combination in struct.narrow");
     }
   }

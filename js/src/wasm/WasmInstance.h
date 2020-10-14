@@ -226,8 +226,8 @@ class Instance {
   static void postBarrier(Instance* instance, gc::Cell** location);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, uint32_t typeIndex);
-  static void* structNarrow(Instance* instance, uint32_t mustUnboxAnyref,
-                            uint32_t outputTypeIndex, void* maybeNullPtr);
+  static void* structNarrow(Instance* instance, uint32_t outputTypeIndex,
+                            void* maybeNullPtr);
 };
 
 using UniqueInstance = UniquePtr<Instance>;

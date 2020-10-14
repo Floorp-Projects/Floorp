@@ -1291,7 +1291,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
-        CHECK(iter.readComparison(RefType::extern_(), &nothing, &nothing));
+        CHECK(iter.readComparison(RefType::eq(), &nothing, &nothing));
       }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
