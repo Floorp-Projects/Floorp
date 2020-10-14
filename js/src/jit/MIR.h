@@ -10113,7 +10113,11 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
 // Guard on function flags
 class MGuardFunctionFlags : public MUnaryInstruction,
                             public SingleObjectPolicy::Data {
+  // At least one of the expected flags must be set, but not necessarily all
+  // expected flags.
   uint16_t expectedFlags_;
+
+  // None of the unexpected flags must be set.
   uint16_t unexpectedFlags_;
 
   explicit MGuardFunctionFlags(MDefinition* fun, uint16_t expectedFlags,
