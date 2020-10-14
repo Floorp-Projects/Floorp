@@ -557,10 +557,9 @@ typedef int64_t (*Prototype_General_GeneralInt32)(int64_t, int32_t);
 typedef int64_t (*Prototype_General_GeneralInt32Int32)(int64_t,
                                                        int32_t,
                                                        int32_t);
-typedef int64_t (*Prototype_General_GeneralInt32Int32General)(int64_t,
-                                                              int32_t,
-                                                              int32_t,
-                                                              int64_t);
+typedef int64_t (*Prototype_General_GeneralInt32General)(int64_t,
+                                                         int32_t,
+                                                         int64_t);
 
 // Simulator support for callWithABI().
 void
@@ -850,10 +849,10 @@ Simulator::VisitCallRedirection(const Instruction* instr)
       setGPR64Result(ret);
       break;
     }
-    case js::jit::Args_General_GeneralInt32Int32General: {
+    case js::jit::Args_General_GeneralInt32General: {
       int64_t ret =
-          reinterpret_cast<Prototype_General_GeneralInt32Int32General>(
-              nativeFn)(x0, x1, x2, x3);
+          reinterpret_cast<Prototype_General_GeneralInt32General>(
+              nativeFn)(x0, x1, x2);
       setGPR64Result(ret);
       break;
     }

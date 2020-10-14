@@ -217,8 +217,8 @@ const SymbolicAddressSignature SASigStructNarrow = {
     SymbolicAddress::StructNarrow,
     _RoN,
     _Infallible,
-    4,
-    {_PTR, _I32, _I32, _RoN, _END}};
+    3,
+    {_PTR, _I32, _RoN, _END}};
 
 }  // namespace wasm
 }  // namespace js
@@ -1060,8 +1060,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast(Instance::structNew, *abiType);
     case SymbolicAddress::StructNarrow:
       *abiType = MakeABIFunctionType(
-          ArgType_General,
-          {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General});
+          ArgType_General, {ArgType_General, ArgType_Int32, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
 
