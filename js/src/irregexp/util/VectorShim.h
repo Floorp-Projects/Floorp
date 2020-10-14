@@ -69,7 +69,7 @@ class Vector {
   // Returns the length of the vector. Only use this if you really need an
   // integer return value. Use {size()} otherwise.
   int length() const {
-    MOZ_ASSERT(length_ <= std::numeric_limits<int>::max());
+    MOZ_ASSERT(length_ <= static_cast<size_t>(std::numeric_limits<int>::max()));
     return static_cast<int>(length_);
   }
 

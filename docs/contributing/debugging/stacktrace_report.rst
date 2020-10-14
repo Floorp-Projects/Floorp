@@ -87,7 +87,7 @@ If you cannot load Firefox at all you can find the crash report files at
 this location depending on your operating system:
 
 * Windows : ``%APPDATA%\Mozilla\Firefox\Crash Reports\submitted\``
-* OS X : ``~/Library/Application Support/Firefox/Crash Reports/submitted/``
+* macOS : ``~/Library/Application Support/Firefox/Crash Reports/submitted/``
 * Linux : ``~/.mozilla/firefox/Crash Reports/submitted/``
 
 Each file in this folder contains one submitted crash report ID. You can
@@ -112,8 +112,8 @@ For a full process dump, see :ref:`How to get a process dump with Windows
 Task Manager`.
 
 
-OS X
-~~~~
+macOS
+~~~~~
 
 Run /Applications/Utilities/Console.app.  Expand "~/Library/Logs" and
 "CrashReporter", then look for logs for "firefox-bin".

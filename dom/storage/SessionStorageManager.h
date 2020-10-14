@@ -7,22 +7,32 @@
 #ifndef mozilla_dom_SessionStorageManager_h
 #define mozilla_dom_SessionStorageManager_h
 
+#include "StorageObserver.h"
+
+#include "mozilla/dom/FlippedOnce.h"
 #include "nsIDOMStorageManager.h"
 #include "nsClassHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
-#include "StorageObserver.h"
 
 namespace mozilla {
 class OriginAttributesPattern;
 
 namespace dom {
 
+bool RecvShutdownBackgroundSessionStorageManagers();
+bool RecvRemoveBackgroundSessionStorageManager(uint64_t aTopContextId);
+
 class BrowsingContext;
 class ContentParent;
-class KeyValuePair;
+class SSSetItemInfo;
+class SSWriteInfo;
 class SessionStorageCache;
+class SessionStorageCacheChild;
+class SessionStorageManagerChild;
+class SessionStorageManagerParent;
 class SessionStorageObserver;
+struct OriginRecord;
 
 // sessionStorage is a data store that's unique to each tab (i.e. top-level
 // browsing context) and origin. Before the advent of Fission all the data
@@ -33,17 +43,44 @@ class SessionStorageObserver;
 // by navigating an iframe element). Therefore SessionStorageManager
 // objects exist in both the parent and content processes.
 //
-// Whenever a content process terminates it sends its sessionStorage data
-// to the parent process (see SessionStorageService); whenever a content
-// process navigates to an origin for the first time in a given tab, the
-// parent process sends it the saved data. To avoid sending the data
-// multiple times, the parent process maintains a table of content
-// processes that already received it; this table is empty in content
-// processes.
+// Whenever a write operation for SessionStorage executes, the content process
+// sends the changes to the parent process at the next stable state. Whenever a
+// content process navigates to an origin for the first time in a given tab, the
+// parent process sends it the saved data. SessionStorageCache has a flag
+// (mLoadedOrCloned) to ensure that it's only be loaded or cloned once.
 //
 // Note: the current implementation is expected to be replaced by a new
 // implementation using LSNG.
-class SessionStorageManager final : public nsIDOMSessionStorageManager,
+class SessionStorageManagerBase {
+ public:
+  SessionStorageManagerBase() = default;
+
+ protected:
+  ~SessionStorageManagerBase() = default;
+
+  struct OriginRecord {
+    OriginRecord() = default;
+    OriginRecord(OriginRecord&&) = default;
+    OriginRecord& operator=(OriginRecord&&) = default;
+    ~OriginRecord();
+
+    RefPtr<SessionStorageCache> mCache;
+
+    // A flag to ensure that cache is only loaded once.
+    FlippedOnce<false> mLoaded;
+  };
+
+  OriginRecord* GetOriginRecord(const nsACString& aOriginAttrs,
+                                const nsACString& aOriginKey,
+                                bool aMakeIfNeeded,
+                                SessionStorageCache* aCloneFrom);
+
+  using OriginKeyHashTable = nsClassHashtable<nsCStringHashKey, OriginRecord>;
+  nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
+};
+
+class SessionStorageManager final : public SessionStorageManagerBase,
+                                    public nsIDOMSessionStorageManager,
                                     public StorageObserverSink {
  public:
   explicit SessionStorageManager(RefPtr<BrowsingContext> aBrowsingContext);
@@ -54,17 +91,19 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
 
   NS_DECL_CYCLE_COLLECTION_CLASS(SessionStorageManager)
 
-  RefPtr<BrowsingContext> GetBrowsingContext() const;
+  bool CanLoadData();
 
-  void SendSessionStorageDataToParentProcess();
-  void SendSessionStorageDataToContentProcess(ContentParent* aActor,
-                                              nsIPrincipal* aPrincipal);
+  void SetActor(SessionStorageManagerChild* aActor);
 
-  void LoadSessionStorageData(ContentParent* aSource,
-                              const nsACString& aOriginAttrs,
-                              const nsACString& aOriginKey,
-                              const nsTArray<KeyValuePair>& aDefaultData,
-                              const nsTArray<KeyValuePair>& aSessionData);
+  bool ActorExists() const;
+
+  void ClearActor();
+
+  nsresult EnsureManager();
+
+  nsresult LoadData(nsIPrincipal& aPrincipal, SessionStorageCache& aCache);
+
+  void CheckpointData(nsIPrincipal& aPrincipal, SessionStorageCache& aCache);
 
  private:
   ~SessionStorageManager();
@@ -73,15 +112,6 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
   nsresult Observe(const char* aTopic,
                    const nsAString& aOriginAttributesPattern,
                    const nsACString& aOriginScope) override;
-
-  enum ClearStorageType {
-    eAll,
-    eSessionOnly,
-  };
-
-  void ClearStorages(ClearStorageType aType,
-                     const OriginAttributesPattern& aPattern,
-                     const nsACString& aOriginScope);
 
   nsresult GetSessionStorageCacheHelper(nsIPrincipal* aPrincipal,
                                         bool aMakeIfNeeded,
@@ -94,32 +124,58 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
                                         SessionStorageCache* aCloneFrom,
                                         RefPtr<SessionStorageCache>* aRetVal);
 
-  struct OriginRecord {
-    OriginRecord() = default;
-    OriginRecord(OriginRecord&&) = default;
-    OriginRecord& operator=(OriginRecord&&) = default;
-    ~OriginRecord();
-
-    RefPtr<SessionStorageCache> mCache;
-    nsTHashtable<nsUint64HashKey> mKnownTo;
+  enum ClearStorageType {
+    eAll,
+    eSessionOnly,
   };
+  void ClearStorages(ClearStorageType aType,
+                     const OriginAttributesPattern& aPattern,
+                     const nsACString& aOriginScope);
 
-  OriginRecord* GetOriginRecord(const nsACString& aOriginAttrs,
-                                const nsACString& aOriginKey,
-                                bool aMakeIfNeeded,
-                                SessionStorageCache* aCloneFrom);
+  SessionStorageCacheChild* EnsureCache(const nsCString& aOriginAttrs,
+                                        const nsCString& aOriginKey,
+                                        SessionStorageCache& aCache);
 
-  template <typename Actor>
-  void SendSessionStorageCache(Actor* aActor, const nsACString& aOriginAttrs,
-                               const nsACString& aOriginKey,
-                               SessionStorageCache* aCache);
-
-  using OriginKeyHashTable = nsClassHashtable<nsCStringHashKey, OriginRecord>;
-  nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
+  void CheckpointDataInternal(const nsCString& aOriginAttrs,
+                              const nsCString& aOriginKey,
+                              SessionStorageCache& aCache);
 
   RefPtr<SessionStorageObserver> mObserver;
 
   RefPtr<BrowsingContext> mBrowsingContext;
+
+  SessionStorageManagerChild* mActor;
+};
+
+/**
+ * A specialized SessionStorageManager class that lives on the parent process
+ * background thread. It is a shadow copy of SessionStorageManager and it's used
+ * to preserve SessionStorageCaches for the other SessionStorageManagers.
+ */
+class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
+ public:
+  // Parent process getter function.
+  static BackgroundSessionStorageManager* GetOrCreate(uint64_t aTopContextId);
+
+  NS_INLINE_DECL_REFCOUNTING(BackgroundSessionStorageManager);
+
+  // Only called by ~BrowsingContext on parent process.
+  static void RemoveManager(uint64_t aTopContextId);
+
+  void CopyDataToContentProcess(const nsACString& aOriginAttrs,
+                                const nsACString& aOriginKey,
+                                nsTArray<SSSetItemInfo>& aDefaultData,
+                                nsTArray<SSSetItemInfo>& aSessionData);
+
+  void UpdateData(const nsACString& aOriginAttrs, const nsACString& aOriginKey,
+                  const nsTArray<SSWriteInfo>& aDefaultWriteInfos,
+                  const nsTArray<SSWriteInfo>& aSessionWriteInfos);
+
+ private:
+  // Only be called by GetOrCreate() on the parent process.
+  explicit BackgroundSessionStorageManager();
+
+  ~BackgroundSessionStorageManager();
 };
 
 }  // namespace dom

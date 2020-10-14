@@ -160,39 +160,7 @@ class AwsyTestCase(MarionetteTestCase):
         self._tabs = self.marionette.window_handles
         self.marionette.switch_to_window(self._tabs[0])
 
-    def do_full_gc(self):
-        """Performs a full garbage collection cycle and returns when it is finished.
-
-        Returns True on success and False on failure.
-        """
-        # NB: we could do this w/ a signal or the fifo queue too
-        self.logger.info("starting gc...")
-        gc_script = """
-            let [resolve] = arguments;
-            Cu.import("resource://gre/modules/Services.jsm");
-            Services.obs.notifyObservers(null, "child-mmu-request", null);
-
-            let memMgrSvc =
-            Cc["@mozilla.org/memory-reporter-manager;1"].getService(
-            Ci.nsIMemoryReporterManager);
-            memMgrSvc.minimizeMemoryUsage(() => {resolve("gc done!");});
-            """
-        result = None
-        try:
-            result = self.marionette.execute_async_script(
-                gc_script, script_timeout=180000)
-        except JavascriptException as e:
-            self.logger.error("GC JavaScript error: %s" % e)
-        except ScriptTimeoutException:
-            self.logger.error("GC timed out")
-        except Exception:
-            self.logger.error("Unexpected error: %s" % sys.exc_info()[0])
-        else:
-            self.logger.info(result)
-
-        return result is not None
-
-    def do_memory_report(self, checkpointName, iteration):
+    def do_memory_report(self, checkpointName, iteration, minimize=False):
         """Creates a memory report for all processes and and returns the
         checkpoint.
 
@@ -200,6 +168,8 @@ class AwsyTestCase(MarionetteTestCase):
         Returns the checkpoint or None on error.
 
         :param checkpointName: The name of the checkpoint.
+
+        :param minimize: If true, minimize memory before getting the report.
         """
         self.logger.info("starting checkpoint %s..." % checkpointName)
 
@@ -223,8 +193,9 @@ class AwsyTestCase(MarionetteTestCase):
                 () => resolve("memory report done!"),
                 null,
                 /* anonymize */ false,
-                /* minimize memory usage */ false);
-            """ % checkpoint_path
+                /* minimize memory usage */ %s);
+            """ % (checkpoint_path,
+                   "true" if minimize else "false")
 
         checkpoint = None
         try:

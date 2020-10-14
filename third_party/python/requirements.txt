@@ -160,9 +160,9 @@ pathspec==0.8 \
     --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
     --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061 \
     # via -r requirements-mach-vendor-python.in, yamllint
-pip-tools==4.5.1 \
-    --hash=sha256:693f30e451875796b1b25203247f0b4cf48a4c4a5ab7341f4f33ffd498cdcc98 \
-    --hash=sha256:be9c796aa88b2eec5cabf1323ba1cb60a08212b84bfb75b8b4037a8ef8cb8cb6 \
+pip-tools==5.3.1 \
+    --hash=sha256:5672c2b6ca0f1fd803f3b45568c2cf7fadf135b4971e7d665232b2075544c0ef \
+    --hash=sha256:73787e23269bf8a9230f376c351297b9037ed0d32ab0f9bef4a187d976acc054 \
     # via -r requirements-mach-vendor-python.in
 pluggy==0.6.0 \
     --hash=sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff \
@@ -247,10 +247,6 @@ urllib3==1.25.9 \
     --hash=sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527 \
     --hash=sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115 \
     # via sentry-sdk
-virtualenv==16.7.8 \
-    --hash=sha256:116655188441670978117d0ebb6451eb6a7526f9ae0796cc0dee6bd7356909b0 \
-    --hash=sha256:b57776b44f91511866594e477dd10e76a6eb44439cdd7f06dcd30ba4c5bd854f \
-    # via -r requirements-mach-vendor-python.in
 voluptuous==0.11.5 \
     --hash=sha256:303542b3fc07fb52ec3d7a1c614b329cdbee13a9d681935353d8ea56a7bfa9f1 \
     --hash=sha256:567a56286ef82a9d7ae0628c5842f65f516abcb496e74f3f59f1d7b28df314ef \
@@ -262,4 +258,5 @@ yamllint==1.23 \
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# pip
 # setuptools

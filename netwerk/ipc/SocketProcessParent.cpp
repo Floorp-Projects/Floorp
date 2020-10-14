@@ -75,7 +75,7 @@ void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
   launcherThread->Dispatch(NS_NewRunnableFunction(
       "SocketProcessParent::ActorDestroy",
       [selector = java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
-        java::GeckoProcessManager::MarkAsDead(selector);
+        java::GeckoProcessManager::ShutdownProcess(selector);
       }));
 #endif  // defined(MOZ_WIDGET_ANDROID)
 

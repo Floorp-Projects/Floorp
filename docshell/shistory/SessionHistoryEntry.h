@@ -43,6 +43,9 @@ class SessionHistoryInfo {
                      nsIPrincipal* aPartitionedPrincipalToInherit,
                      nsIContentSecurityPolicy* aCsp,
                      const nsACString& aContentType);
+  SessionHistoryInfo(nsIChannel* aChannel, uint32_t aLoadType,
+                     nsIPrincipal* aPartitionedPrincipalToInherit,
+                     nsIContentSecurityPolicy* aCsp);
 
   void Reset(nsIURI* aURI, const nsID& aDocShellID, bool aDynamicCreation,
              nsIPrincipal* aTriggeringPrincipal,
@@ -121,6 +124,8 @@ class SessionHistoryInfo {
   }
 
   void FillLoadInfo(nsDocShellLoadState& aLoadState) const;
+
+  uint32_t LoadType() { return mLoadType; }
 
  private:
   friend class SessionHistoryEntry;
@@ -262,6 +267,7 @@ class SessionHistoryEntry : public nsISHEntry {
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
+  static void SetByLoadId(uint64_t aLoadId, SessionHistoryEntry* aEntry);
   static void RemoveLoadId(uint64_t aLoadId);
 
   const nsTArray<RefPtr<SessionHistoryEntry>>& Children() { return mChildren; }

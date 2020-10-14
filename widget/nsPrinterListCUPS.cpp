@@ -108,7 +108,7 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
 
 RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
   return mozilla::MakeRefPtr<nsPrinterCUPS>(
-      sCupsShim, std::move(aInfo.mName),
+      mCommonPaperInfo, sCupsShim, std::move(aInfo.mName),
       static_cast<cups_dest_t*>(aInfo.mCupsHandle));
 }
 

@@ -245,11 +245,6 @@ class BrowserDOMWindow {
     );
   }
 
-  isTabContentWindow(window) {
-    // This method is probably not needed anymore: bug 1602915
-    return gSSBBrowser.contentWindow == window;
-  }
-
   canClose() {
     /* globals docShell */
     for (let i = 0; i < docShell.childCount; i++) {

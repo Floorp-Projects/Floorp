@@ -32,7 +32,7 @@
 #include "jit/Simulator.h"
 #include "js/Conversions.h"
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
-#include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/ScalarType.h"       // js::Scalar::Type
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
@@ -55,6 +55,8 @@ using namespace js::jit;
 
 using JS::GenericNaN;
 using JS::ToInt32;
+
+using mozilla::CheckedInt;
 
 template <typename T>
 static void EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond,
@@ -1947,8 +1949,9 @@ void MacroAssembler::guardStringToInt32(Register str, Register output,
   {
     bind(&vmCall);
 
-    // Reserve stack for holding the result value of the call.
-    reserveStack(sizeof(int32_t));
+    // Reserve space for holding the result int32_t of the call. Use
+    // pointer-size to avoid misaligning the stack on 64-bit platforms.
+    reserveStack(sizeof(uintptr_t));
     moveStackPtrTo(output);
 
     volatileRegs.takeUnchecked(scratch);
@@ -1976,12 +1979,12 @@ void MacroAssembler::guardStringToInt32(Register str, Register output,
       // Use addToStackPtr instead of freeStack as freeStack tracks stack height
       // flow-insensitively, and using it twice would confuse the stack height
       // tracking.
-      addToStackPtr(Imm32(sizeof(int32_t)));
+      addToStackPtr(Imm32(sizeof(uintptr_t)));
       jump(fail);
     }
     bind(&ok);
     load32(Address(output, 0), output);
-    freeStack(sizeof(int32_t));
+    freeStack(sizeof(uintptr_t));
   }
   bind(&done);
 }

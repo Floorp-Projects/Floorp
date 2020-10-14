@@ -6359,10 +6359,6 @@ nsBrowserAccess.prototype = {
     );
   },
 
-  isTabContentWindow(aWindow) {
-    return gBrowser.browsers.some(browser => browser.contentWindow == aWindow);
-  },
-
   canClose() {
     return CanCloseWindow();
   },
@@ -9519,6 +9515,14 @@ if (AppConstants.NIGHTLY_BUILD) {
     init() {
       // Handle the Fission/Non-Fission testing UI.
       if (!Services.appinfo.fissionAutostart) {
+        return;
+      }
+
+      const openNonFissionWindowOption = Services.prefs.getBoolPref(
+        "fission.openNonFissionWindowOption",
+        false
+      );
+      if (!openNonFissionWindowOption) {
         return;
       }
 

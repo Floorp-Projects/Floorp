@@ -139,10 +139,10 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == flexbox-align-self-vert-
 == flexbox-intrinsic-ratio-001v.html flexbox-intrinsic-ratio-001-ref.html
 == flexbox-intrinsic-ratio-002.html flexbox-intrinsic-ratio-001-ref.html
 == flexbox-intrinsic-ratio-002v.html flexbox-intrinsic-ratio-001-ref.html
-== flexbox-intrinsic-ratio-003.html flexbox-intrinsic-ratio-003-ref.html
-== flexbox-intrinsic-ratio-003v.html flexbox-intrinsic-ratio-003-ref.html
-== flexbox-intrinsic-ratio-004.html flexbox-intrinsic-ratio-004-ref.html
-== flexbox-intrinsic-ratio-004v.html flexbox-intrinsic-ratio-004-ref.html
+fails == flexbox-intrinsic-ratio-003.html flexbox-intrinsic-ratio-003-ref.html # Bug 1664938
+fails == flexbox-intrinsic-ratio-003v.html flexbox-intrinsic-ratio-003-ref.html # Bug 1664938
+fails == flexbox-intrinsic-ratio-004.html flexbox-intrinsic-ratio-004-ref.html # Bug 1664938
+fails == flexbox-intrinsic-ratio-004v.html flexbox-intrinsic-ratio-004-ref.html # Bug 1664938
 == flexbox-intrinsic-ratio-005.html flexbox-intrinsic-ratio-005-ref.html
 == flexbox-intrinsic-ratio-005v.html flexbox-intrinsic-ratio-005-ref.html
 == flexbox-intrinsic-ratio-006.html flexbox-intrinsic-ratio-006-ref.html

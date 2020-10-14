@@ -2756,7 +2756,6 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
 
 nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf) {
   MOZ_ASSERT(aStaticCloneOf->IsRemoteFrame());
-  MOZ_DIAGNOSTIC_ASSERT(GetBrowsingContext());
   auto* cc = ContentChild::GetSingleton();
   if (!cc) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
@@ -2767,7 +2766,9 @@ nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf) {
   if (NS_WARN_IF(!bcToClone)) {
     return NS_ERROR_UNEXPECTED;
   }
-  cc->SendCloneDocumentTreeInto(bcToClone, GetBrowsingContext());
+  BrowsingContext* bc = GetBrowsingContext();
+  MOZ_DIAGNOSTIC_ASSERT(bc);
+  cc->SendCloneDocumentTreeInto(bcToClone, bc);
   return NS_OK;
 }
 
@@ -2789,6 +2790,16 @@ nsresult nsFrameLoader::FinishStaticClone(
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (aStaticCloneOf->IsRemoteFrame()) {
+    return DoRemoteStaticClone(aStaticCloneOf);
+  }
+
+  nsIDocShell* origDocShell = aStaticCloneOf->GetDocShell();
+  NS_ENSURE_STATE(origDocShell);
+
+  nsCOMPtr<Document> doc = origDocShell->GetDocument();
+  NS_ENSURE_STATE(doc);
+
   MaybeCreateDocShell();
   RefPtr<nsDocShell> docShell = GetDocShell();
   NS_ENSURE_STATE(docShell);
@@ -2796,19 +2807,9 @@ nsresult nsFrameLoader::FinishStaticClone(
   nsCOMPtr<Document> kungFuDeathGrip = docShell->GetDocument();
   Unused << kungFuDeathGrip;
 
-  if (aStaticCloneOf->IsRemoteFrame()) {
-    return DoRemoteStaticClone(aStaticCloneOf);
-  }
-
   nsCOMPtr<nsIContentViewer> viewer;
   docShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
-
-  nsIDocShell* origDocShell = aStaticCloneOf->GetDocShell();
-  NS_ENSURE_STATE(origDocShell);
-
-  nsCOMPtr<Document> doc = origDocShell->GetDocument();
-  NS_ENSURE_STATE(doc);
 
   nsCOMPtr<Document> clonedDoc =
       doc->CreateStaticClone(docShell, viewer, aOutHasInProcessPrintCallbacks);

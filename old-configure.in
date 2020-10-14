@@ -541,7 +541,7 @@ case "$target" in
 
     if test -z "$CLANG_CC"; then
         MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
-    elif test -n "$RELEASE_OR_BETA"; then
+    else
         # From https://github.com/android-ndk/ndk/issues/133#issuecomment-308549264
         # -Oz is smaller than -Os on clang.
         MOZ_OPTIMIZE_FLAGS="-Oz"
@@ -560,8 +560,6 @@ case "$target" in
             AC_TRY_LINK(,,[MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS $DISABLE_OUTLINER"])
             LDFLAGS="$_SAVE_LDFLAGS"
         fi
-    else
-        MOZ_OPTIMIZE_FLAGS="-O2"
     fi
     ;;
 
@@ -1797,7 +1795,7 @@ case $target in
 i?86-*-mingw*|x86_64-*-mingw*|aarch64-*-mingw*)
   MOZ_CRASHREPORTER=1
   ;;
-i?86-apple-darwin*|x86_64-apple-darwin*)
+i?86-apple-darwin*|x86_64-apple-darwin*|aarch64-apple-darwin*)
   MOZ_CRASHREPORTER=1
   ;;
 *-android*|*-linuxandroid*)

@@ -135,6 +135,21 @@ var ClientID = Object.freeze({
   },
 
   /**
+   * Sets the ecosystem client IDs to a new random value while leaving other IDs
+   * unchanged, writing the result to disk and updating the cached identifier.
+   * This can be used when a user signs out, to avoid linking telemetry between
+   * different accounts.
+   *
+   * Use `removeClientIDs` followed by `get{Ecosystem}ClientID` to reset *all* the
+   * identifiers rather than just the ecosystem client id.
+   *
+   * @return {Promise<void>} Resolves when the change has been saved to disk.
+   */
+  resetEcosystemClientID() {
+    return ClientIDImpl.resetEcosystemClientID();
+  },
+
+  /**
    * Clears the main and ecosystem client IDs asynchronously, removing them
    * from disk. Use `getClientID()` and `getEcosystemClientID()` to generate
    * fresh IDs after calling this method.
@@ -363,6 +378,14 @@ var ClientIDImpl = {
     this._saveClientIdsTask = this._saveClientIDs();
     await this._saveClientIdsTask;
     return this._clientID;
+  },
+
+  async resetEcosystemClientID() {
+    this._log.trace("resetEcosystemClientID");
+    this.updateEcosystemClientID(CommonUtils.generateUUID());
+    this._saveClientIdsTask = this._saveClientIDs();
+    await this._saveClientIdsTask;
+    return this._ecosystemClientID;
   },
 
   async _doRemoveClientIDs() {
