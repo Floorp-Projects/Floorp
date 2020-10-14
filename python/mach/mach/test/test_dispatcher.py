@@ -6,19 +6,21 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
+import unittest
 from io import StringIO
 
+import pytest
 from mozunit import main
 from six import string_types
 
 from mach.base import CommandContext
 from mach.registrar import Registrar
-from mach.test.common import TestBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestDispatcher(TestBase):
+@pytest.mark.usefixtures("get_mach", "run_mach")
+class TestDispatcher(unittest.TestCase):
     """Tests dispatch related code"""
 
     def get_parser(self, config=None):

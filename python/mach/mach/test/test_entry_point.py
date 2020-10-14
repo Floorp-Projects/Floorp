@@ -9,7 +9,7 @@ import os
 import sys
 
 from mach.base import MachError
-from mach.test.common import TestBase
+from mach.test.conftest import TestBase
 from mock import patch
 
 from mozunit import main
@@ -33,8 +33,8 @@ class TestEntryPoints(TestBase):
     """Test integrating with setuptools entry points"""
     provider_dir = os.path.join(here, 'providers')
 
-    def _run_mach(self):
-        return TestBase._run_mach(self, ['help'], entry_point='mach.providers')
+    def _run_help(self):
+        return self._run_mach(['help'], entry_point='mach.providers')
 
     @patch('pkg_resources.iter_entry_points')
     def test_load_entry_point_from_directory(self, mock):
@@ -47,13 +47,13 @@ class TestEntryPoints(TestBase):
         mock.return_value = [Entry([self.provider_dir])]
         # Mach error raised due to conditions_invalid.py
         with self.assertRaises(MachError):
-            self._run_mach()
+            self._run_help()
 
     @patch('pkg_resources.iter_entry_points')
     def test_load_entry_point_from_file(self, mock):
         mock.return_value = [Entry([os.path.join(self.provider_dir, 'basic.py')])]
 
-        result, stdout, stderr = self._run_mach()
+        result, stdout, stderr = self._run_help()
         self.assertIsNone(result)
         self.assertIn('cmd_foo', stdout)
 
