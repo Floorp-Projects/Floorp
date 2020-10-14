@@ -20,25 +20,15 @@ RenderAndroidHardwareBufferTextureHost::RenderAndroidHardwareBufferTextureHost(
       mTextureHandle(0) {
   MOZ_ASSERT(mAndroidHardwareBuffer);
   MOZ_COUNT_CTOR_INHERITED(RenderAndroidHardwareBufferTextureHost,
-                           RenderTextureHostOGL);
+                           RenderTextureHost);
 }
 
 RenderAndroidHardwareBufferTextureHost::
     ~RenderAndroidHardwareBufferTextureHost() {
   MOZ_COUNT_DTOR_INHERITED(RenderAndroidHardwareBufferTextureHost,
-                           RenderTextureHostOGL);
+                           RenderTextureHost);
   DeleteTextureHandle();
   DestroyEGLImage();
-}
-
-GLuint RenderAndroidHardwareBufferTextureHost::GetGLHandle(
-    uint8_t aChannelIndex) const {
-  return mTextureHandle;
-}
-
-gfx::IntSize RenderAndroidHardwareBufferTextureHost::GetSize(
-    uint8_t aChannelIndex) const {
-  return GetSize();
 }
 
 gfx::IntSize RenderAndroidHardwareBufferTextureHost::GetSize() const {

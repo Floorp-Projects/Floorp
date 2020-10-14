@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderD3D11TextureHostOGL.h"
+#include "RenderD3D11TextureHost.h"
 
 #include <d3d11.h>
 
@@ -17,10 +17,11 @@
 namespace mozilla {
 namespace wr {
 
-RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(
-    WindowsHandle aHandle, gfx::SurfaceFormat aFormat,
-    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
-    gfx::IntSize aSize)
+RenderDXGITextureHost::RenderDXGITextureHost(WindowsHandle aHandle,
+                                             gfx::SurfaceFormat aFormat,
+                                             gfx::YUVColorSpace aYUVColorSpace,
+                                             gfx::ColorRange aColorRange,
+                                             gfx::IntSize aSize)
     : mHandle(aHandle),
       mSurface(0),
       mStream(0),
@@ -30,7 +31,7 @@ RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(
       mColorRange(aColorRange),
       mSize(aSize),
       mLocked(false) {
-  MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHostOGL, RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   MOZ_ASSERT((mFormat != gfx::SurfaceFormat::NV12 &&
               mFormat != gfx::SurfaceFormat::P010 &&
               mFormat != gfx::SurfaceFormat::P016) ||
@@ -38,12 +39,12 @@ RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(
   MOZ_ASSERT(aHandle);
 }
 
-RenderDXGITextureHostOGL::~RenderDXGITextureHostOGL() {
-  MOZ_COUNT_DTOR_INHERITED(RenderDXGITextureHostOGL, RenderTextureHostOGL);
+RenderDXGITextureHost::~RenderDXGITextureHost() {
+  MOZ_COUNT_DTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   DeleteTextureHandle();
 }
 
-ID3D11Texture2D* RenderDXGITextureHostOGL::GetD3D11Texture2D() {
+ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2D() {
   if (!mGL) {
     // SharedGL is always used on Windows with ANGLE.
     mGL = RenderThread::Get()->SharedGL();
@@ -57,7 +58,7 @@ ID3D11Texture2D* RenderDXGITextureHostOGL::GetD3D11Texture2D() {
   return mTexture;
 }
 
-bool RenderDXGITextureHostOGL::EnsureD3D11Texture2D() {
+bool RenderDXGITextureHost::EnsureD3D11Texture2D() {
   if (mTexture) {
     return true;
   }
@@ -75,7 +76,7 @@ bool RenderDXGITextureHostOGL::EnsureD3D11Texture2D() {
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
-    gfxCriticalNote << "RenderDXGITextureHostOGL device is not available";
+    gfxCriticalNote << "RenderDXGITextureHost device is not available";
     return false;
   }
 
@@ -85,10 +86,10 @@ bool RenderDXGITextureHostOGL::EnsureD3D11Texture2D() {
       (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture));
   if (FAILED(hr)) {
     NS_WARNING(
-        "RenderDXGITextureHostOGL::EnsureLockable(): Failed to open shared "
+        "RenderDXGITextureHost::EnsureLockable(): Failed to open shared "
         "texture");
     gfxCriticalNote
-        << "RenderDXGITextureHostOGL Failed to open shared texture, hr="
+        << "RenderDXGITextureHost Failed to open shared texture, hr="
         << gfx::hexa(hr);
     return false;
   }
@@ -96,7 +97,7 @@ bool RenderDXGITextureHostOGL::EnsureD3D11Texture2D() {
   return true;
 }
 
-bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
+bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
   if (mTextureHandle[0]) {
     // Update filter if filter was changed.
     if (IsFilterUpdateNecessary(aRendering)) {
@@ -127,8 +128,7 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
           gl::EGLExtension::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
           gl::EGLExtension::ANGLE_stream_producer_d3d_texture)) {
-    gfxCriticalNote
-        << "RenderDXGITextureHostOGL egl extensions are not suppored";
+    gfxCriticalNote << "RenderDXGITextureHost egl extensions are not suppored";
     return false;
   }
 
@@ -191,7 +191,7 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
       egl->fStreamPostD3DTextureANGLE(mStream, (void*)mTexture.get(), nullptr));
 
   if (!ok) {
-    gfxCriticalNote << "RenderDXGITextureHostOGL init stream failed";
+    gfxCriticalNote << "RenderDXGITextureHost init stream failed";
     DeleteTextureHandle();
     return false;
   }
@@ -202,8 +202,9 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   return true;
 }
 
-wr::WrExternalImage RenderDXGITextureHostOGL::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+wr::WrExternalImage RenderDXGITextureHost::Lock(uint8_t aChannelIndex,
+                                                gl::GLContext* aGL,
+                                                wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
     // Release the texture handle in the previous gl context.
     DeleteTextureHandle();
@@ -214,7 +215,7 @@ wr::WrExternalImage RenderDXGITextureHostOGL::Lock(
     // XXX Software WebRender is not handled yet.
     // Software WebRender does not provide GLContext
     gfxCriticalNoteOnce
-        << "Software WebRender is not suppored by RenderDXGITextureHostOGL.";
+        << "Software WebRender is not suppored by RenderDXGITextureHost.";
     return InvalidToWrExternalImage();
   }
 
@@ -226,9 +227,8 @@ wr::WrExternalImage RenderDXGITextureHostOGL::Lock(
     if (mKeyedMutex) {
       HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
       if (hr != S_OK) {
-        gfxCriticalError()
-            << "RenderDXGITextureHostOGL AcquireSync timeout, hr="
-            << gfx::hexa(hr);
+        gfxCriticalError() << "RenderDXGITextureHost AcquireSync timeout, hr="
+                           << gfx::hexa(hr);
         return InvalidToWrExternalImage();
       }
     }
@@ -240,7 +240,7 @@ wr::WrExternalImage RenderDXGITextureHostOGL::Lock(
                                         size.width, size.height);
 }
 
-void RenderDXGITextureHostOGL::Unlock() {
+void RenderDXGITextureHost::Unlock() {
   if (mLocked) {
     if (mKeyedMutex) {
       mKeyedMutex->ReleaseSync(0);
@@ -249,12 +249,12 @@ void RenderDXGITextureHostOGL::Unlock() {
   }
 }
 
-void RenderDXGITextureHostOGL::ClearCachedResources() {
+void RenderDXGITextureHost::ClearCachedResources() {
   DeleteTextureHandle();
   mGL = nullptr;
 }
 
-void RenderDXGITextureHostOGL::DeleteTextureHandle() {
+void RenderDXGITextureHost::DeleteTextureHandle() {
   if (mTextureHandle[0] == 0) {
     return;
   }
@@ -287,7 +287,7 @@ void RenderDXGITextureHostOGL::DeleteTextureHandle() {
   mStream = 0;
 }
 
-GLuint RenderDXGITextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
+GLuint RenderDXGITextureHost::GetGLHandle(uint8_t aChannelIndex) const {
   MOZ_ASSERT(((mFormat == gfx::SurfaceFormat::NV12 ||
                mFormat == gfx::SurfaceFormat::P010 ||
                mFormat == gfx::SurfaceFormat::P016) &&
@@ -296,7 +296,7 @@ GLuint RenderDXGITextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
   return mTextureHandle[aChannelIndex];
 }
 
-gfx::IntSize RenderDXGITextureHostOGL::GetSize(uint8_t aChannelIndex) const {
+gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
   MOZ_ASSERT(((mFormat == gfx::SurfaceFormat::NV12 ||
                mFormat == gfx::SurfaceFormat::P010 ||
                mFormat == gfx::SurfaceFormat::P016) &&
@@ -311,7 +311,7 @@ gfx::IntSize RenderDXGITextureHostOGL::GetSize(uint8_t aChannelIndex) const {
   }
 }
 
-RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(
+RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
     WindowsHandle (&aHandles)[3], gfx::IntSize aSize, gfx::IntSize aSizeCbCr)
     : mHandles{aHandles[0], aHandles[1], aHandles[2]},
       mSurfaces{0},
@@ -320,7 +320,7 @@ RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(
       mSize(aSize),
       mSizeCbCr(aSizeCbCr),
       mLocked(false) {
-  MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHost, RenderTextureHost);
   // Assume the chroma planes are rounded up if the luma plane is odd sized.
   MOZ_ASSERT((mSizeCbCr.width == mSize.width ||
               mSizeCbCr.width == (mSize.width + 1) >> 1) &&
@@ -329,13 +329,12 @@ RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(
   MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
 }
 
-RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL() {
-  MOZ_COUNT_DTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+RenderDXGIYCbCrTextureHost::~RenderDXGIYCbCrTextureHost() {
+  MOZ_COUNT_DTOR_INHERITED(RenderDXGIYCbCrTextureHost, RenderTextureHost);
   DeleteTextureHandle();
 }
 
-bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
-    wr::ImageRendering aRendering) {
+bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
   if (mTextureHandles[0]) {
     // Update filter if filter was changed.
     if (IsFilterUpdateNecessary(aRendering)) {
@@ -361,7 +360,7 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
       !egl->IsExtensionSupported(
           gl::EGLExtension::ANGLE_stream_producer_d3d_texture)) {
     gfxCriticalNote
-        << "RenderDXGIYCbCrTextureHostOGL egl extensions are not suppored";
+        << "RenderDXGIYCbCrTextureHost egl extensions are not suppored";
     return false;
   }
 
@@ -375,7 +374,7 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
-    gfxCriticalNote << "RenderDXGIYCbCrTextureHostOGL device is not available";
+    gfxCriticalNote << "RenderDXGIYCbCrTextureHost device is not available";
     return false;
   }
 
@@ -386,11 +385,11 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
         (void**)(ID3D11Texture2D**)getter_AddRefs(mTextures[i]));
     if (FAILED(hr)) {
       NS_WARNING(
-          "RenderDXGIYCbCrTextureHostOGL::EnsureLockable(): Failed to open "
+          "RenderDXGIYCbCrTextureHost::EnsureLockable(): Failed to open "
           "shared "
           "texture");
       gfxCriticalNote
-          << "RenderDXGIYCbCrTextureHostOGL Failed to open shared texture, hr="
+          << "RenderDXGIYCbCrTextureHost Failed to open shared texture, hr="
           << gfx::hexa(hr);
       return false;
     }
@@ -427,7 +426,7 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   }
 
   if (!ok) {
-    gfxCriticalNote << "RenderDXGIYCbCrTextureHostOGL init stream failed";
+    gfxCriticalNote << "RenderDXGIYCbCrTextureHost init stream failed";
     DeleteTextureHandle();
     return false;
   }
@@ -435,7 +434,7 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   return true;
 }
 
-wr::WrExternalImage RenderDXGIYCbCrTextureHostOGL::Lock(
+wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
     // Release the texture handle in the previous gl context.
@@ -447,7 +446,7 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHostOGL::Lock(
     // XXX Software WebRender is not handled yet.
     // Software WebRender does not provide GLContext
     gfxCriticalNoteOnce << "Software WebRender is not suppored by "
-                           "RenderDXGIYCbCrTextureHostOGL.";
+                           "RenderDXGIYCbCrTextureHost.";
     return InvalidToWrExternalImage();
   }
 
@@ -461,7 +460,7 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHostOGL::Lock(
         HRESULT hr = mutex->AcquireSync(0, 10000);
         if (hr != S_OK) {
           gfxCriticalError()
-              << "RenderDXGIYCbCrTextureHostOGL AcquireSync timeout, hr="
+              << "RenderDXGIYCbCrTextureHost AcquireSync timeout, hr="
               << gfx::hexa(hr);
           return InvalidToWrExternalImage();
         }
@@ -475,7 +474,7 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHostOGL::Lock(
                                         size.width, size.height);
 }
 
-void RenderDXGIYCbCrTextureHostOGL::Unlock() {
+void RenderDXGIYCbCrTextureHost::Unlock() {
   if (mLocked) {
     if (mKeyedMutexs[0]) {
       for (const auto& mutex : mKeyedMutexs) {
@@ -486,19 +485,18 @@ void RenderDXGIYCbCrTextureHostOGL::Unlock() {
   }
 }
 
-void RenderDXGIYCbCrTextureHostOGL::ClearCachedResources() {
+void RenderDXGIYCbCrTextureHost::ClearCachedResources() {
   DeleteTextureHandle();
   mGL = nullptr;
 }
 
-GLuint RenderDXGIYCbCrTextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
+GLuint RenderDXGIYCbCrTextureHost::GetGLHandle(uint8_t aChannelIndex) const {
   MOZ_ASSERT(aChannelIndex < 3);
 
   return mTextureHandles[aChannelIndex];
 }
 
-gfx::IntSize RenderDXGIYCbCrTextureHostOGL::GetSize(
-    uint8_t aChannelIndex) const {
+gfx::IntSize RenderDXGIYCbCrTextureHost::GetSize(uint8_t aChannelIndex) const {
   MOZ_ASSERT(aChannelIndex < 3);
 
   if (aChannelIndex == 0) {
@@ -508,7 +506,7 @@ gfx::IntSize RenderDXGIYCbCrTextureHostOGL::GetSize(
   }
 }
 
-void RenderDXGIYCbCrTextureHostOGL::DeleteTextureHandle() {
+void RenderDXGIYCbCrTextureHost::DeleteTextureHandle() {
   if (mTextureHandles[0] == 0) {
     return;
   }

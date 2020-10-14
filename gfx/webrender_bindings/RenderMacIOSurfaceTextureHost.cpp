@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderMacIOSurfaceTextureHostOGL.h"
+#include "RenderMacIOSurfaceTextureHost.h"
 
 #include "GLContextCGL.h"
 #include "mozilla/gfx/Logging.h"
@@ -39,21 +39,18 @@ static CGLError CreateTextureForPlane(uint8_t aPlaneID, gl::GLContext* aGL,
   return result;
 }
 
-RenderMacIOSurfaceTextureHostOGL::RenderMacIOSurfaceTextureHostOGL(
+RenderMacIOSurfaceTextureHost::RenderMacIOSurfaceTextureHost(
     MacIOSurface* aSurface)
     : mSurface(aSurface), mTextureHandles{0, 0, 0} {
-  MOZ_COUNT_CTOR_INHERITED(RenderMacIOSurfaceTextureHostOGL,
-                           RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderMacIOSurfaceTextureHost, RenderTextureHost);
 }
 
-RenderMacIOSurfaceTextureHostOGL::~RenderMacIOSurfaceTextureHostOGL() {
-  MOZ_COUNT_DTOR_INHERITED(RenderMacIOSurfaceTextureHostOGL,
-                           RenderTextureHostOGL);
+RenderMacIOSurfaceTextureHost::~RenderMacIOSurfaceTextureHost() {
+  MOZ_COUNT_DTOR_INHERITED(RenderMacIOSurfaceTextureHost, RenderTextureHost);
   DeleteTextureHandle();
 }
 
-GLuint RenderMacIOSurfaceTextureHostOGL::GetGLHandle(
-    uint8_t aChannelIndex) const {
+GLuint RenderMacIOSurfaceTextureHost::GetGLHandle(uint8_t aChannelIndex) const {
   MOZ_ASSERT(mSurface);
   MOZ_ASSERT((mSurface->GetPlaneCount() == 0)
                  ? (aChannelIndex == mSurface->GetPlaneCount())
@@ -61,7 +58,7 @@ GLuint RenderMacIOSurfaceTextureHostOGL::GetGLHandle(
   return mTextureHandles[aChannelIndex];
 }
 
-gfx::IntSize RenderMacIOSurfaceTextureHostOGL::GetSize(
+gfx::IntSize RenderMacIOSurfaceTextureHost::GetSize(
     uint8_t aChannelIndex) const {
   MOZ_ASSERT(mSurface);
   MOZ_ASSERT((mSurface->GetPlaneCount() == 0)
@@ -75,7 +72,7 @@ gfx::IntSize RenderMacIOSurfaceTextureHostOGL::GetSize(
                       mSurface->GetDevicePixelHeight(aChannelIndex));
 }
 
-wr::WrExternalImage RenderMacIOSurfaceTextureHostOGL::Lock(
+wr::WrExternalImage RenderMacIOSurfaceTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
     // release the texture handle in the previous gl context
@@ -118,9 +115,9 @@ wr::WrExternalImage RenderMacIOSurfaceTextureHostOGL::Lock(
                                         size.width, size.height);
 }
 
-void RenderMacIOSurfaceTextureHostOGL::Unlock() {}
+void RenderMacIOSurfaceTextureHost::Unlock() {}
 
-void RenderMacIOSurfaceTextureHostOGL::DeleteTextureHandle() {
+void RenderMacIOSurfaceTextureHost::DeleteTextureHandle() {
   if (mTextureHandles[0] != 0 && mGL && mGL->MakeCurrent()) {
     // Calling glDeleteTextures on 0 isn't an error. So, just make them a single
     // call.
