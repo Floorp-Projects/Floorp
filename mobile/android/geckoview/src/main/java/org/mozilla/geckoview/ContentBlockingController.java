@@ -413,8 +413,16 @@ public class ContentBlockingController {
         /**
          * Indicates that content that would have been blocked has instead been
          * replaced with a shim.
+         * @deprecated use {@link #REPLACED_TRACKING_CONTENT} instead.
          */
+        @Deprecated
         public static final int REPLACED_UNSAFE_CONTENT        = 0x00000010;
+
+        /**
+         * Indicates that content that would have been blocked has instead been
+         * replaced with a shim.
+         */
+        public static final int REPLACED_TRACKING_CONTENT       = 0x00000010;
 
         protected Event() {}
     }
