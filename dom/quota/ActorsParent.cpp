@@ -5527,12 +5527,14 @@ nsresult QuotaManager::UpgradeStorage(const int32_t aOldVersion,
     QM_TRY(helper->ProcessRepository());
   }
 
+#ifdef DEBUG
   {
-    QM_DEBUG_TRY_UNWRAP(const int32_t storageVersion,
-                        MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+    QM_TRY_INSPECT(const int32_t& storageVersion,
+                   MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
 
     MOZ_ASSERT(storageVersion == aOldVersion);
   }
+#endif
 
   QM_TRY(aConnection->SetSchemaVersion(aNewVersion));
 
@@ -5700,12 +5702,14 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
         nsLiteralCString("INSERT INTO database (cache_version) "
                          "VALUES (0)")));
 
+#ifdef DEBUG
     {
-      QM_DEBUG_TRY_UNWRAP(const int32_t storageVersion,
-                          MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+      QM_TRY_INSPECT(const int32_t& storageVersion,
+                     MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
 
       MOZ_ASSERT(storageVersion == MakeStorageVersion(2, 2));
     }
+#endif
 
     QM_TRY(aConnection->SetSchemaVersion(MakeStorageVersion(2, 3)));
 
