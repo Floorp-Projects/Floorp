@@ -9108,7 +9108,7 @@
 
 - name: privacy.partition.network_state
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: privacy.partition.bloburl_per_agent_cluster
