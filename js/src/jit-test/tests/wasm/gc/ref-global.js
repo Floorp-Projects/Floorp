@@ -17,7 +17,7 @@
           ;; Restriction: cannot expose Refs outside the module, not even
           ;; as a return value.  See ref-restrict.js.
 
-          (func (export "get") (result externref)
+          (func (export "get") (result eqref)
            (global.get $g1))
 
           (func (export "copy")

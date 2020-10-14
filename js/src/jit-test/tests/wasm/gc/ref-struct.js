@@ -129,7 +129,7 @@ assertEq(wasmEvalText(
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
-      (func (export "test") (result externref)
+      (func (export "test") (result eqref)
        (call $f (ref.null $node))))`).exports.test(),
          null);
 
@@ -226,32 +226,23 @@ assertEq(wasmEvalText(
       (type $snort (struct (field i32) (field f64)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
-      (func (export "test") (result externref)
+      (func (export "test") (result eqref)
        (call $f (struct.new $snort (i32.const 0) (f64.const 12)))))`).exports.test(),
          null);
 
-// struct.narrow: externref -> struct when the externref is the right struct;
-// special case since externref requires unboxing
+// struct.narrow: eqref -> struct when the eqref is the right struct;
+// special case since eqref requires unboxing
 
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p externref) (result (ref null $node))
-       (struct.narrow externref (ref null $node) (local.get $p)))
+      (func $f (param $p eqref) (result (ref null $node))
+       (struct.narrow eqref (ref null $node) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new $node (i32.const 0)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
-
-// struct.narrow: externref -> struct when the externref is some random gunk.
-
-assertEq(wasmEvalText(
-    `(module
-      (type $node (struct (field i32)))
-      (func (export "test") (param $p externref) (result externref)
-       (struct.narrow externref (ref null $node) (local.get $p))))`).exports.test({hi:37}),
-         null);
 
 // Types are private to an instance and struct.narrow can't break this
 
@@ -259,10 +250,10 @@ assertEq(wasmEvalText(
     let txt =
         `(module
           (type $node (struct (field i32)))
-          (func (export "make") (param $n i32) (result externref)
+          (func (export "make") (param $n i32) (result eqref)
            (struct.new $node (local.get $n)))
-          (func (export "coerce") (param $p externref) (result i32)
-           (ref.is_null (struct.narrow externref (ref null $node) (local.get $p)))))`;
+          (func (export "coerce") (param $p eqref) (result i32)
+           (ref.is_null (struct.narrow eqref (ref null $node) (local.get $p)))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(txt));
     let ins1 = new WebAssembly.Instance(mod).exports;
     let ins2 = new WebAssembly.Instance(mod).exports;
@@ -372,16 +363,16 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow i32 externref (local.get 0))))`),
+      (func $f (param $p (ref null $node)) (result eqref)
+       (struct.narrow i32 eqref (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid reference type/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow externref i32 (local.get 0))))`),
+      (func $f (param $p (ref null $node)) (result eqref)
+       (struct.narrow eqref i32 (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid reference type/);
 
@@ -390,8 +381,8 @@ assertErrorMessage(() => wasmEvalText(
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
-                           ExternRefCode,
-                           GcPrefix, StructNarrow, I32Code, ExternRefCode,
+                           EqRefCode,
+                           GcPrefix, StructNarrow, I32Code, EqRefCode,
                            DropCode
                        ]}),
              /invalid reference type for struct.narrow/);
@@ -399,19 +390,19 @@ checkInvalid(funcBody({locals:[],
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
-                           ExternRefCode,
-                           GcPrefix, StructNarrow, ExternRefCode, I32Code,
+                           EqRefCode,
+                           GcPrefix, StructNarrow, EqRefCode, I32Code,
                            DropCode
                        ]}),
              /invalid reference type for struct.narrow/);
 
-// target type is externref so source type must be externref as well (no upcasts)
+// target type is eqref so source type must be eqref as well (no upcasts)
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow (ref null $node) externref (local.get 0))))`),
+      (func $f (param $p (ref null $node)) (result eqref)
+       (struct.narrow (ref null $node) eqref (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid type combination in struct.narrow/);
 
@@ -421,7 +412,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node2)) (result externref)
+      (func $f (param $p (ref null $node2)) (result eqref)
        (struct.narrow (ref null $node2) (ref null $node) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid narrowing operation/);

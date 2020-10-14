@@ -385,7 +385,20 @@ function fuzzingSafe() {
     return typeof getErrorNotes == 'undefined';
 }
 
-let WasmNonNullExternrefValues = [
+// Common instantiations of wasm values for dynamic type check testing
+
+let WasmNonNullEqrefValues = [];
+let WasmEqrefValues = [];
+if (wasmGcEnabled()) {
+    let { newStruct } = wasmEvalText(`
+      (module
+        (type $s (struct))
+        (func (export "newStruct") (result eqref) struct.new $s)
+      )`).exports;
+    WasmNonNullEqrefValues.push(newStruct());
+    WasmEqrefValues.push(null, ...WasmNonNullEqrefValues);
+}
+let WasmNonEqrefValues = [
     undefined,
     true,
     false,
@@ -399,5 +412,9 @@ let WasmNonNullExternrefValues = [
     new Boolean(true),
     Symbol("status"),
     () => 1337
+];
+let WasmNonNullExternrefValues = [
+    ...WasmNonEqrefValues,
+    ...WasmNonNullEqrefValues
 ];
 let WasmExternrefValues = [null, ...WasmNonNullExternrefValues];
