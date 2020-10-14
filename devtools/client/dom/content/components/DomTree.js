@@ -76,38 +76,15 @@ class DomTree extends Component {
     let onInspectIconClick;
     const toolbox = DomProvider.getToolbox();
     if (toolbox) {
+      const highlighter = toolbox.getHighlighter();
       onDOMNodeMouseOver = async (grip, options = {}) => {
-        const inspectorFront = await toolbox.target.getFront("inspector");
-        const nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(grip);
-        const { highlighterFront } = nodeFront;
-        return highlighterFront.highlight(nodeFront, options);
+        return highlighter.highlight(grip, options);
       };
-      onDOMNodeMouseOut = async grip => {
-        const inspectorFront = await toolbox.target.getFront("inspector");
-        const nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(grip);
-        nodeFront.highlighterFront.unhighlight();
+      onDOMNodeMouseOut = async () => {
+        return highlighter.unhighlight();
       };
       onInspectIconClick = async grip => {
-        const onSelectInspector = toolbox.selectTool(
-          "inspector",
-          "inspect_dom"
-        );
-        const onNodeFront = toolbox.target
-          .getFront("inspector")
-          .then(inspectorFront =>
-            inspectorFront.getNodeFrontFromNodeGrip(grip)
-          );
-        const [nodeFront, inspectorPanel] = await Promise.all([
-          onNodeFront,
-          onSelectInspector,
-        ]);
-
-        const onInspectorUpdated = inspectorPanel.once("inspector-updated");
-        const onNodeFrontSet = toolbox.selection.setNodeFront(nodeFront, {
-          reason: "dom",
-        });
-
-        return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+        return toolbox.viewElementInInspector(grip, "inspect_dom");
       };
     }
 
