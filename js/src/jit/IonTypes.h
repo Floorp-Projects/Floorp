@@ -1066,9 +1066,8 @@ enum ABIFunctionType : uint32_t {
       ArgType_General, {ArgType_General, ArgType_Int32}),
   Args_General_GeneralInt32Int32 = detail::MakeABIFunctionType(
       ArgType_General, {ArgType_General, ArgType_Int32, ArgType_Int32}),
-  Args_General_GeneralInt32Int32General = detail::MakeABIFunctionType(
-      ArgType_General,
-      {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General}),
+  Args_General_GeneralInt32General = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_General, ArgType_Int32, ArgType_General}),
 };
 
 static constexpr ABIFunctionType MakeABIFunctionType(

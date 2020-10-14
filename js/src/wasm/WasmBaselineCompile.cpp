@@ -12803,27 +12803,22 @@ bool BaseCompiler::emitStructNarrow() {
 
   // struct.narrow validation ensures that these hold.
 
-  MOZ_ASSERT(inputType.isExternRef() || moduleEnv_.isStructType(inputType));
-  MOZ_ASSERT(outputType.isExternRef() || moduleEnv_.isStructType(outputType));
-  MOZ_ASSERT_IF(outputType.isExternRef(), inputType.isExternRef());
+  MOZ_ASSERT(inputType.isEqRef() || moduleEnv_.isStructType(inputType));
+  MOZ_ASSERT(outputType.isEqRef() || moduleEnv_.isStructType(outputType));
+  MOZ_ASSERT_IF(outputType.isEqRef(), inputType.isEqRef());
 
-  // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
+  // EqRef -> EqRef is a no-op, just leave the value on the stack.
 
-  if (inputType.isExternRef() && outputType.isExternRef()) {
+  if (inputType.isEqRef() && outputType.isEqRef()) {
     return true;
   }
 
   RegPtr rp = popRef();
 
-  // AnyRef -> (optref T) must first unbox; leaves rp or null
-
-  bool mustUnboxAnyref = inputType.isExternRef();
-
-  // Dynamic downcast (optref T) -> (optref U), leaves rp or null
+  // Dynamic downcast eqref|(optref T) -> (optref U), leaves rp or null
   const StructType& outputStruct =
       moduleEnv_.types[outputType.refType().typeIndex()].structType();
 
-  pushI32(mustUnboxAnyref);
   pushI32(outputStruct.moduleIndex_);
   pushRef(rp);
   return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
@@ -14655,7 +14650,7 @@ bool BaseCompiler::emitBody() {
         if (!moduleEnv_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
-        CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::extern_(),
+        CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::eq(),
                                       Assembler::Equal));
 #endif
 #ifdef ENABLE_WASM_REFTYPES

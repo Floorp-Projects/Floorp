@@ -1288,7 +1288,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 }
 
 /* static */ void* Instance::structNarrow(Instance* instance,
-                                          uint32_t mustUnboxAnyref,
                                           uint32_t outputTypeIndex,
                                           void* maybeNullPtr) {
   MOZ_ASSERT(SASigStructNarrow.failureMode == FailureMode::Infallible);
@@ -1303,25 +1302,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   }
 
   void* nonnullPtr = maybeNullPtr;
-  if (mustUnboxAnyref) {
-    // TODO/AnyRef-boxing: With boxed immediates and strings, unboxing
-    // AnyRef is not a no-op.
-    ASSERT_ANYREF_IS_JSOBJECT;
-
-    Rooted<NativeObject*> no(cx, static_cast<NativeObject*>(nonnullPtr));
-    if (!no->is<TypedObject>()) {
-      return nullptr;
-    }
-    obj = &no->as<TypedObject>();
-    Rooted<TypeDescr*> td(cx, &obj->typeDescr());
-    if (td->kind() != TypeKind::Struct) {
-      return nullptr;
-    }
-    typeDescr = &td->as<StructTypeDescr>();
-  } else {
-    obj = static_cast<TypedObject*>(nonnullPtr);
-    typeDescr = &obj->typeDescr().as<StructTypeDescr>();
-  }
+  obj = static_cast<TypedObject*>(nonnullPtr);
+  typeDescr = &obj->typeDescr().as<StructTypeDescr>();
 
   // Optimization opportunity: instead of this loop we could perhaps load an
   // index from `typeDescr` and use that to index into the structTypes table
