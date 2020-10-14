@@ -2653,8 +2653,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void unsignedWidenLowInt32x4(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  // Compare-based minimum/maximum (experimental as of August, 2020)
-  // https://github.com/WebAssembly/simd/pull/122
+  // Compare-based minimum/maximum
 
   inline void pseudoMinFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);

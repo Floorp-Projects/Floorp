@@ -14970,17 +14970,13 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(NarrowUI32x4));
           case uint32_t(SimdOp::V8x16Swizzle):
             CHECK_NEXT(dispatchVectorBinary(Swizzle));
-          case uint32_t(SimdOp::F32x4PMaxExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::F32x4PMax):
             CHECK_NEXT(dispatchVectorBinary(PMaxF32x4));
-          case uint32_t(SimdOp::F32x4PMinExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::F32x4PMin):
             CHECK_NEXT(dispatchVectorBinary(PMinF32x4));
-          case uint32_t(SimdOp::F64x2PMaxExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::F64x2PMax):
             CHECK_NEXT(dispatchVectorBinary(PMaxF64x2));
-          case uint32_t(SimdOp::F64x2PMinExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::F64x2PMin):
             CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
           case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
             CHECK_SIMD_EXPERIMENTAL();

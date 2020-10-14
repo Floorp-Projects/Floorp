@@ -2594,16 +2594,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::F64x2Ge:
       masm.compareFloat64x2(Assembler::GreaterThanOrEqual, rhs, lhsDest);
       break;
-    case wasm::SimdOp::F32x4PMaxExperimental:
+    case wasm::SimdOp::F32x4PMax:
       masm.pseudoMaxFloat32x4(rhs, lhsDest);
       break;
-    case wasm::SimdOp::F32x4PMinExperimental:
+    case wasm::SimdOp::F32x4PMin:
       masm.pseudoMinFloat32x4(rhs, lhsDest);
       break;
-    case wasm::SimdOp::F64x2PMaxExperimental:
+    case wasm::SimdOp::F64x2PMax:
       masm.pseudoMaxFloat64x2(rhs, lhsDest);
       break;
-    case wasm::SimdOp::F64x2PMinExperimental:
+    case wasm::SimdOp::F64x2PMin:
       masm.pseudoMinFloat64x2(rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4DotSI16x8Experimental:
