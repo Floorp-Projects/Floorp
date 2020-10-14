@@ -124,7 +124,7 @@ class DefaultBrowserToolbarController(
             }
             is TabCounterMenu.Item.NewTab -> {
                 activity.browsingModeManager.mode = item.mode
-                navController.popBackStack(R.id.homeFragment, false)
+                navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
             }
         }
     }
