@@ -32,6 +32,7 @@
         android:layout_height="@dimen/tab_tray_list_item_thumbnail_height"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:backgroundTint="?tabTrayThumbnailItemBackground"
         app:cardBackgroundColor="@color/photonWhite"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,33 +62,37 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="12dp"
         android:ellipsize="end"
-        android:lines="1"
-        android:paddingStart="16dp"
-        android:paddingTop="22dp"
         android:textColor="@color/tab_tray_item_text_normal_theme"
         android:textSize="16sp"
+        android:lineSpacingExtra="4sp"
+        android:maxLines="2"
         tools:text="Firefox"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/mozac_browser_tabstray_url" />
 
     <TextView
         android:id="@+id/mozac_browser_tabstray_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginStart="12dp"
         android:ellipsize="end"
         android:lines="1"
-        android:paddingStart="16dp"
         android:textColor="@color/tab_tray_item_url_normal_theme"
         android:textSize="14sp"
         tools:text="firefox.com"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
-        app:layout_constraintTop_toBottomOf="@id/mozac_browser_tabstray_title" />
+        app:layout_constraintTop_toBottomOf="@id/mozac_browser_tabstray_title"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/mozac_browser_tabstray_close"

@@ -172,7 +172,7 @@
     <!-- Tabs Tray -->
     <dimen name="tab_tray_top_offset">40dp</dimen>
     <dimen name="tab_tray_list_item_thumbnail_width">92dp</dimen>
-    <dimen name="tab_tray_list_item_thumbnail_height">69dp</dimen>
+    <dimen name="tab_tray_list_item_thumbnail_height">72dp</dimen>
     <dimen name="tab_tray_grid_item_thumbnail_width">156dp</dimen>
     <dimen name="tab_tray_grid_item_thumbnail_height">156dp</dimen>
     <dimen name="tab_tray_grid_item_border_radius">8dp</dimen>
