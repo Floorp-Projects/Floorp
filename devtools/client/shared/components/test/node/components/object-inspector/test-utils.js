@@ -12,12 +12,10 @@ const {
   applyMiddleware,
 } = require("devtools/client/shared/vendor/redux");
 
-const {
-  thunk,
-} = require("devtools/client/shared/components/reps/shared/redux/middleware/thunk");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const {
   waitUntilService,
-} = require("devtools/client/shared/components/reps/shared/redux/middleware/waitUntilService");
+} = require("devtools/client/shared/redux/middleware/wait-service");
 
 /**
  * Redux store utils
@@ -34,8 +32,8 @@ const {
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 
 const {
-  WAIT_UNTIL_TYPE,
-} = require("devtools/client/shared/components/reps/shared/redux/middleware/waitUntilService");
+  NAME: WAIT_UNTIL_TYPE,
+} = require("devtools/client/shared/redux/middleware/wait-service");
 
 /*
  * Takes an Enzyme wrapper (obtained with mount/shallow/…) and
@@ -190,7 +188,7 @@ function storeHasExactExpandedPaths(store, expectedKeys) {
 function createOiStore(client, initialState = {}) {
   const reducers = { objectInspector: objectInspector.reducer.default };
   return configureStore({
-    thunkArgs: args => ({ ...args, client }),
+    thunkArgs: { client },
   })(combineReducers(reducers), initialState);
 }
 
