@@ -393,6 +393,14 @@
 
 #define QM_PROPAGATE Err(tryTempError)
 
+#define QM_ASSERT_UNREACHABLE \
+  [&tryTempError] {           \
+    MOZ_ASSERT(false);        \
+    return Err(tryTempError); \
+  }()
+
+#define QM_ASSERT_UNREACHABLE_VOID [] { MOZ_ASSERT(false); }()
+
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
 // QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
 

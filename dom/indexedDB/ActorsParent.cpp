@@ -1004,11 +1004,14 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     if (newDatabase) {
       IDB_TRY(CreateTables(*connection));
 
+#ifdef DEBUG
       {
-        DebugOnly<int32_t> schemaVersion;
-        MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
+        IDB_TRY_INSPECT(const int32_t& schemaVersion,
+                        MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion),
+                        QM_ASSERT_UNREACHABLE);
         MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
       }
+#endif
 
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
@@ -18661,9 +18664,10 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::Mode::ReadOnly);
 
   {
-    IDB_DEBUG_TRY_UNWRAP(
-        const auto pragmaStmt,
-        aConnection->BorrowCachedStatement("PRAGMA foreign_keys;"_ns), QM_VOID);
+    IDB_TRY_INSPECT(
+        const auto& pragmaStmt,
+        aConnection->BorrowCachedStatement("PRAGMA foreign_keys;"_ns),
+        QM_ASSERT_UNREACHABLE_VOID);
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(pragmaStmt->ExecuteStep(&hasResult));
@@ -18678,10 +18682,10 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   }
 
   {
-    IDB_DEBUG_TRY_UNWRAP(
-        const auto checkStmt,
+    IDB_TRY_INSPECT(
+        const auto& checkStmt,
         aConnection->BorrowCachedStatement("PRAGMA foreign_key_check;"_ns),
-        QM_VOID);
+        QM_ASSERT_UNREACHABLE_VOID);
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
@@ -19063,10 +19067,12 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt, aConnection->BorrowCachedStatement(
-                                              "SELECT name "
-                                              "FROM object_store "
-                                              "WHERE name = :name;"_ns));
+    IDB_TRY_INSPECT(
+        const auto& stmt,
+        aConnection->BorrowCachedStatement("SELECT name "
+                                           "FROM object_store "
+                                           "WHERE name = :name;"_ns),
+        QM_ASSERT_UNREACHABLE);
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
 
@@ -19153,9 +19159,10 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
-    IDB_DEBUG_TRY_UNWRAP(
-        const auto stmt,
-        aConnection->BorrowCachedStatement("SELECT id FROM object_store;"_ns));
+    IDB_TRY_INSPECT(
+        const auto& stmt,
+        aConnection->BorrowCachedStatement("SELECT id FROM object_store;"_ns),
+        QM_ASSERT_UNREACHABLE);
 
     bool foundThisObjectStore = false;
     bool foundOtherObjectStore = false;
@@ -19333,11 +19340,12 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT name "
-                             "FROM object_store "
-                             "WHERE name = :name AND id != :id;"_ns));
+    IDB_TRY_INSPECT(const auto& stmt,
+                    aConnection->BorrowCachedStatement(
+                        "SELECT name "
+                        "FROM object_store "
+                        "WHERE name = :name AND id != :id;"_ns),
+                    QM_ASSERT_UNREACHABLE);
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
 
@@ -19516,12 +19524,13 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // we should have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(
-        const auto stmt,
+    IDB_TRY_INSPECT(
+        const auto& stmt,
         aConnection->BorrowCachedStatement(
             "SELECT name "
             "FROM object_store_index "
-            "WHERE object_store_id = :object_store_id AND name = :name;"_ns));
+            "WHERE object_store_id = :object_store_id AND name = :name;"_ns),
+        QM_ASSERT_UNREACHABLE);
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mMetadata.name()));
 
@@ -19894,11 +19903,12 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure |mIsLastIndex| is telling the truth.
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT id "
-                             "FROM object_store_index "
-                             "WHERE object_store_id = :object_store_id;"_ns));
+    IDB_TRY_INSPECT(const auto& stmt,
+                    aConnection->BorrowCachedStatement(
+                        "SELECT id "
+                        "FROM object_store_index "
+                        "WHERE object_store_id = :object_store_id;"_ns),
+                    QM_ASSERT_UNREACHABLE);
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 
@@ -20148,13 +20158,14 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_UNWRAP(const auto stmt,
-                         aConnection->BorrowCachedStatement(
-                             "SELECT name "
-                             "FROM object_store_index "
-                             "WHERE object_store_id = :object_store_id "
-                             "AND name = :name "
-                             "AND id != :id;"_ns));
+    IDB_TRY_INSPECT(const auto& stmt,
+                    aConnection->BorrowCachedStatement(
+                        "SELECT name "
+                        "FROM object_store_index "
+                        "WHERE object_store_id = :object_store_id "
+                        "AND name = :name "
+                        "AND id != :id;"_ns),
+                    QM_ASSERT_UNREACHABLE);
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 

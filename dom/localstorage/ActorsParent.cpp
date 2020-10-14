@@ -520,8 +520,15 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
         return rv;
       }
 
-      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+#ifdef DEBUG
+      {
+        LS_TRY_INSPECT(const int32_t& schemaVersion,
+                       MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion),
+                       QM_ASSERT_UNREACHABLE);
+
+        MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+      }
+#endif
 
       nsCOMPtr<mozIStorageStatement> stmt;
       nsresult rv = connection->CreateStatement(
