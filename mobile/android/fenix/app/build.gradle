@@ -569,8 +569,8 @@ task buildTranslationArray {
     foundLocales.append("new String[]{")
 
     fileTree("src/main/res").visit { FileVisitDetails details ->
-        if(details.file.path.endsWith("/strings.xml")){
-            def languageCode = details.file.parent.tokenize('/').last().replaceAll('values-','').replaceAll('-r','-')
+        if(details.file.path.endsWith("${File.separator}strings.xml")){
+            def languageCode = details.file.parent.tokenize(File.separator).last().replaceAll('values-','').replaceAll('-r','-')
             languageCode = (languageCode == "values") ? "en-US" : languageCode
             foundLocales.append("\"").append(languageCode).append("\"").append(",")
         }
