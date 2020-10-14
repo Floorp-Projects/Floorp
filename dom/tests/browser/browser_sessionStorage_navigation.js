@@ -122,5 +122,47 @@ add_task(async function() {
         );
       }
     );
+
+    info(`Verifying SSCache is loaded to the content process only once`);
+
+    BrowserTestUtils.loadURI(browser, URL1);
+    await BrowserTestUtils.browserLoaded(browser);
+
+    await SpecialPowers.spawn(
+      browser,
+      [ORIGIN1, URL1, key, value],
+      async (ORIGIN, iframeURL, key, value) => {
+        is(content.window.origin, ORIGIN, `Navigate to ${ORIGIN} as expected`);
+
+        let iframe = content.document.createElement("iframe");
+        iframe.src = iframeURL;
+        content.document.body.appendChild(iframe);
+        await ContentTaskUtils.waitForEvent(iframe, "load");
+
+        await content.SpecialPowers.spawn(
+          iframe,
+          [ORIGIN, key, value],
+          async function(ORIGIN, key, value) {
+            is(
+              content.window.origin,
+              ORIGIN,
+              `Load an iframe to ${ORIGIN} as expected`
+            );
+
+            let value1 = content.window.sessionStorage.getItem(key);
+            is(
+              value1,
+              value,
+              `SessionStorage for ${key} in ${content.window.origin} is ` +
+                `preserved.`
+            );
+
+            // When we are here, it means we didn't hit the assertion for
+            // ensuring a SSCache can only be loaded on the content process
+            // once.
+          }
+        );
+      }
+    );
   });
 });

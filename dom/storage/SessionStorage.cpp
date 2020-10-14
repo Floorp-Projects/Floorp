@@ -48,6 +48,11 @@ SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
 SessionStorage::~SessionStorage() = default;
 
 int64_t SessionStorage::GetOriginQuotaUsage() const {
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return 0;
+  }
+
   return mCache->GetOriginQuotaUsage(DATASET);
 }
 
@@ -58,6 +63,12 @@ uint32_t SessionStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
     return 0;
   }
 
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
+
   return mCache->Length(DATASET);
 }
 
@@ -65,6 +76,12 @@ void SessionStorage::Key(uint32_t aIndex, nsAString& aResult,
                          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
     return;
   }
 
@@ -79,11 +96,24 @@ void SessionStorage::GetItem(const nsAString& aKey, nsAString& aResult,
     return;
   }
 
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
   mCache->GetItem(DATASET, aKey, aResult);
 }
 
 void SessionStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
+    // return just an empty array
+    aKeys.Clear();
+    return;
+  }
+
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     // return just an empty array
     aKeys.Clear();
     return;
@@ -100,8 +130,14 @@ void SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
     return;
   }
 
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
   nsString oldValue;
-  nsresult rv = mCache->SetItem(DATASET, aKey, aValue, oldValue);
+  rv = mCache->SetItem(DATASET, aKey, aValue, oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
@@ -122,8 +158,14 @@ void SessionStorage::RemoveItem(const nsAString& aKey,
     return;
   }
 
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
   nsString oldValue;
-  nsresult rv = mCache->RemoveItem(DATASET, aKey, oldValue);
+  rv = mCache->RemoveItem(DATASET, aKey, oldValue);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
@@ -139,6 +181,12 @@ void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
     return;
   }
 
+  nsresult rv = EnsureCacheLoadedOrCloned();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
   mCache->Clear(DATASET);
   BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
 }
@@ -149,9 +197,8 @@ void SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
   NotifyChange(this, StoragePrincipal(), aKey, aOldValue, aNewValue,
                u"sessionStorage", mDocumentURI, mIsPrivate, false);
 
-  // Sync changes on SessionStorageCache to the parent process at the next
-  // statble state.
-  if (XRE_IsContentProcess()) {
+  // Sync changes on SessionStorageCache at the next statble state.
+  if (mManager->CanLoadData()) {
     MaybeScheduleStableStateCallback();
   }
 }
@@ -166,7 +213,6 @@ bool SessionStorage::IsForkOf(const Storage* aOther) const {
 }
 
 void SessionStorage::MaybeScheduleStableStateCallback() {
-  MOZ_ASSERT(XRE_IsContentProcess());
   AssertIsOnOwningThread();
 
   if (!mHasPendingStableStateCallback) {
@@ -179,12 +225,36 @@ void SessionStorage::MaybeScheduleStableStateCallback() {
 }
 
 void SessionStorage::StableStateCallback() {
-  MOZ_ASSERT(XRE_IsContentProcess());
   AssertIsOnOwningThread();
   MOZ_ASSERT(mHasPendingStableStateCallback);
+  MOZ_ASSERT(mManager);
+  MOZ_ASSERT(mManager->CanLoadData());
+  MOZ_ASSERT(mCache);
 
   mHasPendingStableStateCallback = false;
-  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
+  mManager->CheckpointData(*Principal(), *mCache);
+}
+
+nsresult SessionStorage::EnsureCacheLoadedOrCloned() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mManager);
+
+  if (!mManager->CanLoadData()) {
+    return NS_OK;
+  }
+
+  // Ensure manager actor.
+  nsresult rv = mManager->EnsureManager();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Ensure cache is loaded or cloned.
+  if (mCache->WasLoadedOrCloned()) {
+    return NS_OK;
+  }
+
+  return mManager->LoadData(*Principal(), *mCache);
 }
 
 }  // namespace dom

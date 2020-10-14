@@ -5818,11 +5818,6 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
   rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (browsingContext && !browsingContext->IsDiscarded()) {
-    browsingContext->GetSessionStorageManager()
-        ->SendSessionStorageDataToContentProcess(this, principal);
-  }
-
   if (!NextGenLocalStorageEnabled()) {
     return NS_OK;
   }
@@ -6402,20 +6397,6 @@ mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
 #else
   return IPC_FAIL(this, "Unsupported on this platform");
 #endif  // defined(XP_WIN)
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvSessionStorageData(
-    const uint64_t aTopContextId, const nsACString& aOriginAttrs,
-    const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
-    const nsTArray<KeyValuePair>& aSessionData) {
-  if (const RefPtr<BrowsingContext> topContext =
-          BrowsingContext::Get(aTopContextId)) {
-    topContext->GetSessionStorageManager()->LoadSessionStorageData(
-        this, aOriginAttrs, aOriginKey, aDefaultData, aSessionData);
-  } else {
-    NS_WARNING("Got session storage data for a discarded session");
-  }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(

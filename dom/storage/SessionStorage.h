@@ -72,6 +72,8 @@ class SessionStorage final : public Storage {
 
   void StableStateCallback();
 
+  nsresult EnsureCacheLoadedOrCloned() const;
+
   RefPtr<SessionStorageCache> mCache;
   RefPtr<SessionStorageManager> mManager;
 
