@@ -39,16 +39,6 @@ SI VectorType<T, 16> combine(VectorType<T, 8> a, VectorType<T, 8> b) {
 }
 
 template <typename T>
-SI VectorType<T, 2> lowHalf(VectorType<T, 4> a) {
-  return __builtin_shufflevector(a, a, 0, 1);
-}
-
-template <typename T>
-SI VectorType<T, 2> highHalf(VectorType<T, 4> a) {
-  return __builtin_shufflevector(a, a, 2, 3);
-}
-
-template <typename T>
 SI VectorType<T, 4> lowHalf(VectorType<T, 8> a) {
   return __builtin_shufflevector(a, a, 0, 1, 2, 3);
 }
@@ -315,10 +305,6 @@ struct VectorType {
     return VectorType<T, N * 2>::wrap(data, high.data);
   }
 
-#  define xy XY()
-  VectorType<T, 2> XY() const { return VectorType<T, 2>{x, y}; }
-#  define zw ZW()
-  VectorType<T, 2> ZW() const { return VectorType<T, 2>{z, w}; }
 #  define xyxy swizzle(0, 1, 0, 1)
 #  define zwzw swizzle(2, 3, 2, 3)
 #  define zyxw swizzle(2, 1, 0, 3)
