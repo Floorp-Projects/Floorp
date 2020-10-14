@@ -14,15 +14,24 @@ namespace dom {
 
 class GamepadEventChannelChild final : public PGamepadEventChannelChild {
  public:
-  GamepadEventChannelChild() = default;
-  ~GamepadEventChannelChild() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadEventChannelChild, override)
+
+  static already_AddRefed<GamepadEventChannelChild> Create();
 
   mozilla::ipc::IPCResult RecvGamepadUpdate(
       const GamepadChangeEvent& aGamepadEvent);
   mozilla::ipc::IPCResult RecvReplyGamepadPromise(const uint32_t& aPromiseID);
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
 
+  GamepadEventChannelChild(const GamepadEventChannelChild&) = delete;
+  GamepadEventChannelChild(GamepadEventChannelChild&&) = delete;
+  GamepadEventChannelChild& operator=(const GamepadEventChannelChild&) = delete;
+  GamepadEventChannelChild& operator=(GamepadEventChannelChild&&) = delete;
+
  private:
+  GamepadEventChannelChild() = default;
+  ~GamepadEventChannelChild() = default;
+
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 };
 

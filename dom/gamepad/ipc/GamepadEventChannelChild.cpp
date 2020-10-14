@@ -29,6 +29,11 @@ class GamepadUpdateRunnable final : public Runnable {
 
 }  // namespace
 
+already_AddRefed<GamepadEventChannelChild> GamepadEventChannelChild::Create() {
+  return RefPtr<GamepadEventChannelChild>(new GamepadEventChannelChild())
+      .forget();
+}
+
 mozilla::ipc::IPCResult GamepadEventChannelChild::RecvGamepadUpdate(
     const GamepadChangeEvent& aGamepadEvent) {
   DebugOnly<nsresult> rv =

@@ -38,7 +38,13 @@ class SendGamepadUpdateRunnable final : public Runnable {
 
 }  // namespace
 
-bool GamepadEventChannelParent::Init() {
+already_AddRefed<GamepadEventChannelParent>
+GamepadEventChannelParent::Create() {
+  return RefPtr<GamepadEventChannelParent>(new GamepadEventChannelParent())
+      .forget();
+}
+
+GamepadEventChannelParent::GamepadEventChannelParent() {
   AssertIsOnBackgroundThread();
 
   mBackgroundEventTarget = GetCurrentEventTarget();
@@ -48,8 +54,6 @@ bool GamepadEventChannelParent::Init() {
   MOZ_ASSERT(service);
 
   service->AddChannelParent(this);
-
-  return true;
 }
 
 void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {

@@ -13,10 +13,9 @@ namespace dom {
 
 class GamepadEventChannelParent final : public PGamepadEventChannelParent {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadEventChannelParent)
-  GamepadEventChannelParent() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadEventChannelParent, override)
 
-  bool Init();
+  static already_AddRefed<GamepadEventChannelParent> Create();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx,
@@ -31,8 +30,16 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
       const uint32_t& aPromiseID);
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
 
+  GamepadEventChannelParent(const GamepadEventChannelParent&) = delete;
+  GamepadEventChannelParent(GamepadEventChannelParent&&) = delete;
+  GamepadEventChannelParent& operator=(const GamepadEventChannelParent&) =
+      delete;
+  GamepadEventChannelParent& operator=(GamepadEventChannelParent&&) = delete;
+
  private:
+  GamepadEventChannelParent();
   ~GamepadEventChannelParent() = default;
+
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 

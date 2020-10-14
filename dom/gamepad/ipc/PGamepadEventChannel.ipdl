@@ -7,7 +7,7 @@ include GamepadEventTypes;
 namespace mozilla {
 namespace dom {
 
-async protocol PGamepadEventChannel {
+refcounted protocol PGamepadEventChannel {
   manager PBackground;
   parent:
     async __delete__();

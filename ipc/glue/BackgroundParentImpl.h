@@ -333,14 +333,8 @@ class BackgroundParentImpl : public PBackgroundParent,
       PFileSystemRequestParent* actor, const FileSystemParams& params) override;
 
   // Gamepad API Background IPC
-  virtual PGamepadEventChannelParent* AllocPGamepadEventChannelParent()
-      override;
-
-  virtual bool DeallocPGamepadEventChannelParent(
-      PGamepadEventChannelParent* aActor) override;
-
-  virtual mozilla::ipc::IPCResult RecvPGamepadEventChannelConstructor(
-      PGamepadEventChannelParent* aActor) override;
+  virtual already_AddRefed<PGamepadEventChannelParent>
+  AllocPGamepadEventChannelParent() override;
 
   virtual PGamepadTestChannelParent* AllocPGamepadTestChannelParent() override;
 

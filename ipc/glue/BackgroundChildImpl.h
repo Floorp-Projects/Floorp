@@ -223,12 +223,6 @@ class BackgroundChildImpl : public PBackgroundChild,
 
   virtual bool DeallocPQuotaChild(PQuotaChild* aActor) override;
 
-  // Gamepad API Background IPC
-  virtual PGamepadEventChannelChild* AllocPGamepadEventChannelChild() override;
-
-  virtual bool DeallocPGamepadEventChannelChild(
-      PGamepadEventChannelChild* aActor) override;
-
   virtual PGamepadTestChannelChild* AllocPGamepadTestChannelChild() override;
 
   virtual bool DeallocPGamepadTestChannelChild(
