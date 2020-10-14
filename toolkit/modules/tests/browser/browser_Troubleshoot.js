@@ -196,9 +196,6 @@ const SNAPSHOT_SCHEMA = {
           type: "boolean",
           required: true,
         },
-        autoStartStatus: {
-          type: "number",
-        },
         fissionAutoStart: {
           type: "boolean",
         },
@@ -206,6 +203,9 @@ const SNAPSHOT_SCHEMA = {
           type: "string",
         },
         numTotalWindows: {
+          type: "number",
+        },
+        numFissionWindows: {
           type: "number",
         },
         numRemoteWindows: {
