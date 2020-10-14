@@ -1476,6 +1476,8 @@ var Policies = {
         "datareporting.policy.",
         "dom.",
         "extensions.",
+        "general.autoScroll",
+        "general.smoothScroll",
         "geo.",
         "intl.",
         "layout.",
@@ -1483,6 +1485,7 @@ var Policies = {
         "network.",
         "places.",
         "print.",
+        "signon.",
         "ui.",
         "widget.",
       ];
