@@ -3136,28 +3136,28 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
     case wasm::SimdOp::I32x4Abs:
       masm.absInt32x4(src, dest);
       break;
-    case wasm::SimdOp::F32x4CeilExperimental:
+    case wasm::SimdOp::F32x4Ceil:
       masm.ceilFloat32x4(src, dest);
       break;
-    case wasm::SimdOp::F32x4FloorExperimental:
+    case wasm::SimdOp::F32x4Floor:
       masm.floorFloat32x4(src, dest);
       break;
-    case wasm::SimdOp::F32x4TruncExperimental:
+    case wasm::SimdOp::F32x4Trunc:
       masm.truncFloat32x4(src, dest);
       break;
-    case wasm::SimdOp::F32x4NearestExperimental:
+    case wasm::SimdOp::F32x4Nearest:
       masm.nearestFloat32x4(src, dest);
       break;
-    case wasm::SimdOp::F64x2CeilExperimental:
+    case wasm::SimdOp::F64x2Ceil:
       masm.ceilFloat64x2(src, dest);
       break;
-    case wasm::SimdOp::F64x2FloorExperimental:
+    case wasm::SimdOp::F64x2Floor:
       masm.floorFloat64x2(src, dest);
       break;
-    case wasm::SimdOp::F64x2TruncExperimental:
+    case wasm::SimdOp::F64x2Trunc:
       masm.truncFloat64x2(src, dest);
       break;
-    case wasm::SimdOp::F64x2NearestExperimental:
+    case wasm::SimdOp::F64x2Nearest:
       masm.nearestFloat64x2(src, dest);
       break;
     default:

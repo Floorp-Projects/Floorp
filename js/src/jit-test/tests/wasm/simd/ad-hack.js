@@ -271,6 +271,7 @@ BigInt64Array.rectify = (x) => BigInt(x);
 
 Float32Array.inputs = [[1, -1, 1e10, -1e10],
                        [-1, -2, -1e10, 1e10],
+                       [5.1, -1.1, -4.3, -0],
                        ...permute([1, -10, NaN, Infinity])];
 Float32Array.rectify = (x) => Math.fround(x);
 
@@ -812,8 +813,16 @@ function iabs(bits) { return (a) => zero_extend(a < 0 ? -a : a, bits) }
 function fneg(a) { return -a }
 function fabs(a) { return Math.abs(a) }
 function fsqrt(a) { return Math.fround(Math.sqrt(Math.fround(a))) }
-function sqrt(a) { return Math.sqrt(Math.fround(a)) }
+function dsqrt(a) { return Math.sqrt(a) }
 function bitnot(a) { return (~a) & 255 }
+function ffloor(x) { return Math.fround(Math.floor(x)) }
+function fceil(x) { return Math.fround(Math.ceil(x)) }
+function ftrunc(x) { return Math.fround(Math.sign(x)*Math.floor(Math.abs(x))) }
+function fnearest(x) { return Math.fround(Math.round(x)) }
+function dfloor(x) { return Math.floor(x) }
+function dceil(x) { return Math.ceil(x) }
+function dtrunc(x) { return Math.sign(x)*Math.floor(Math.abs(x)) }
+function dnearest(x) { return Math.round(x) }
 
 for ( let [op, memtype, rop, resultmemtype] of
       [['i8x16.neg', Int8Array, ineg(8)],
@@ -828,7 +837,15 @@ for ( let [op, memtype, rop, resultmemtype] of
        ['f32x4.abs', Float32Array, fabs],
        ['f64x2.abs', Float64Array, fabs],
        ['f32x4.sqrt', Float32Array, fsqrt],
-       ['f64x2.sqrt', Float64Array, sqrt],
+       ['f64x2.sqrt', Float64Array, dsqrt],
+       ['f32x4.ceil', Float32Array, fceil],
+       ['f32x4.floor', Float32Array, ffloor],
+       ['f32x4.trunc', Float32Array, ftrunc],
+       ['f32x4.nearest', Float32Array, fnearest],
+       ['f64x2.ceil', Float64Array, dceil],
+       ['f64x2.floor', Float64Array, dfloor],
+       ['f64x2.trunc', Float64Array, dtrunc],
+       ['f64x2.nearest', Float64Array, dnearest],
        ['v128.not', Uint8Array, bitnot],
       ])
 {
