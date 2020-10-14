@@ -9,6 +9,7 @@ import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFil
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
+import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -19,6 +20,7 @@ import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
@@ -146,7 +148,7 @@ class AwesomeBarView(
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
                 context = activity,
-                searchEngineManager = components.search.searchEngineManager,
+                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(activity),
                 searchUseCase = searchUseCase,
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
@@ -159,9 +161,7 @@ class AwesomeBarView(
 
         defaultSearchActionProvider =
             SearchActionProvider(
-                searchEngineGetter = suspend {
-                    components.search.searchEngineManager.getDefaultSearchEngineAsync(activity)
-                },
+                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(activity),
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
                 showDescription = false
@@ -313,7 +313,10 @@ class AwesomeBarView(
 
             listOf(
                 SearchActionProvider(
-                    searchEngineGetter = suspend { searchEngine },
+                    defaultSearchEngineProvider = object : DefaultSearchEngineProvider {
+                        override fun getDefaultSearchEngine(): SearchEngine? = searchEngine
+                        override suspend fun retrieveDefaultSearchEngine(): SearchEngine? = searchEngine
+                    },
                     searchUseCase = shortcutSearchUseCase,
                     icon = searchBitmap
                 ),
