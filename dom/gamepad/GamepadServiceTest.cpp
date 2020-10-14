@@ -73,8 +73,7 @@ void GamepadServiceTest::InitPBackgroundActor() {
 
   mChild = GamepadTestChannelChild::Create();
   PGamepadTestChannelChild* initedChild =
-      actor->SendPGamepadTestChannelConstructor(
-          RefPtr<GamepadTestChannelChild>(mChild).forget().take());
+      actor->SendPGamepadTestChannelConstructor(mChild.get());
   if (NS_WARN_IF(!initedChild)) {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }

@@ -14,6 +14,11 @@ let is = window.parent.is;
 let SimpleTest = window.parent.SimpleTest;
 let SpecialPowers = window.parent.SpecialPowers;
 
+// This should be held for the entire time the testing API is being used to
+// ensure monitoring has been started and that a single GamepadPlatformService
+// instance is used for the entire test
+var GamepadsKungFuDeathGrip = navigator.getGamepads(); 
+
 // Due to gamepad being a polling API instead of event driven, test ordering
 // ends up being a little weird in order to deal with e10s. Calls to
 // GamepadService are async across processes, so we'll need to make sure
