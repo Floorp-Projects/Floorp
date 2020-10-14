@@ -5,6 +5,7 @@
 mod common;
 use common::*;
 
+use fog::ipc;
 use fog::private::{CommonMetricData, DatetimeMetric, Lifetime, TimeUnit};
 
 use chrono::{FixedOffset, TimeZone};
@@ -38,4 +39,38 @@ fn sets_datetime_value() {
         "2020-05-07T11:58:00+05:00",
         metric.test_get_value("store1").unwrap()
     );
+}
+
+#[test]
+fn string_ipc() {
+    // DatetimeMetric doesn't support IPC.
+    let _lock = lock_test();
+    let store_names: Vec<String> = vec!["store1".into()];
+    let _raii = ipc::test_set_need_ipc(true);
+    let child_metric = DatetimeMetric::new(
+        CommonMetricData {
+            name: "datetime metric".into(),
+            category: "ipc".into(),
+            send_in_pings: store_names.clone(),
+            disabled: false,
+            lifetime: Lifetime::Ping,
+            ..Default::default()
+        },
+        TimeUnit::Second,
+    );
+
+    // Instrumentation calls do not panic.
+    let a_datetime = FixedOffset::east(5 * 3600)
+        .ymd(2020, 10, 13)
+        .and_hms(16, 41, 00);
+    child_metric.set(Some(a_datetime));
+
+    // (They also shouldn't do anything,
+    // but that's not something we can inspect in this test)
+
+    // Need to catch the panic so that our RAIIs drop nicely.
+    let result = std::panic::catch_unwind(move || {
+        child_metric.test_get_value("store1");
+    });
+    assert!(result.is_err());
 }
