@@ -197,6 +197,12 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
         static void StreamJSONMarkerData(JSONWriter& aWriter) {
           // No user payload.
         }
+        static mozilla::MarkerSchema MarkerTypeDisplay() {
+          using MS = mozilla::MarkerSchema;
+          MS schema{MS::Location::markerChart, MS::Location::markerTable};
+          // No user data to display.
+          return schema;
+        }
       };
       return MarkerTypeSerialization<NoPayloadUserData>::Serialize(
           aBuffer, aName, aCategory, std::move(aOptions));

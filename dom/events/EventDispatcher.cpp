@@ -1059,6 +1059,17 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               aWriter.DoubleProperty(
                   "latency", (aStartTime - aEventTimeStamp).ToMilliseconds());
             }
+            static MarkerSchema MarkerTypeDisplay() {
+              using MS = MarkerSchema;
+              MS schema{MS::Location::markerChart, MS::Location::markerTable,
+                        MS::Location::timelineOverview};
+              schema.SetChartLabel("{marker.data.eventType}");
+              schema.SetTooltipLabel("{marker.data.eventType} - DOMEvent");
+              schema.SetTableLabel("{marker.data.eventType}");
+              schema.AddKeyLabelFormat("latency", "Latency",
+                                       MS::Format::duration);
+              return schema;
+            }
           };
 
           auto startTime = TimeStamp::NowUnfuzzed();
