@@ -207,12 +207,11 @@ void WebRenderTextureHost::PushResourceUpdates(
 void WebRenderTextureHost::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
   MOZ_ASSERT(aImageKeys.length() > 0);
 
   mWrappedTextureHost->PushDisplayItems(aBuilder, aBounds, aClip, aFilter,
-                                        aImageKeys, aPreferCompositorSurface);
+                                        aImageKeys, aFlags);
 }
 
 bool WebRenderTextureHost::NeedsYFlip() const {

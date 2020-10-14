@@ -448,7 +448,7 @@ class SurfaceTextureHost : public TextureHost {
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
-                        const bool aPreferCompositorSurface) override;
+                        PushDisplayItemFlagSet aFlags) override;
 
   // gecko does not need deferred deletion with WebRender
   // GPU/hardware task end could be checked by android fence.
@@ -521,7 +521,7 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
-                        const bool aPreferCompositorSurface) override;
+                        PushDisplayItemFlagSet aFlags) override;
 
   void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
 
@@ -637,7 +637,7 @@ class EGLImageTextureHost final : public TextureHost {
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
-                        const bool aPreferCompositorSurface) override;
+                        PushDisplayItemFlagSet aFlags) override;
 
  protected:
   const EGLImage mImage;

@@ -765,7 +765,7 @@ RefPtr<TextureHost> GetNullPluginTextureHost() {
                           const wr::LayoutRect& aClip,
                           wr::ImageRendering aFilter,
                           const Range<wr::ImageKey>& aImageKeys,
-                          const bool aPreferCompositorSurface) override {}
+                          PushDisplayItemFlagSet aFlags) override {}
   };
 
   static StaticRefPtr<TextureHost> sNullPluginTextureHost;
