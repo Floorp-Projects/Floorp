@@ -1149,7 +1149,6 @@ class EditorBase : public nsIEditor,
         // We don't need to let contents in chrome's editor to know the size
         // change.
         case EditAction::eSetWrapWidth:
-        case EditAction::eRewrap:
         // While resizing or moving element, we update only shadow, i.e.,
         // don't touch to the DOM in content.  Therefore, we don't need to
         // dispatch "beforeinput" event.
