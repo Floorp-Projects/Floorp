@@ -80,6 +80,9 @@ struct Streaming {
   // Get the `MarkerDataDeserializer` for a given `DeserializerTag`.
   MFBT_API static MarkerDataDeserializer DeserializerForTag(
       DeserializerTag aTag);
+
+  // Retrieve all MarkerTypeFunctions's.
+  MFBT_API static Span<const MarkerTypeFunctions> MarkerTypeFunctionsArray();
 };
 
 // This helper will examine a marker type's `StreamJSONMarkerData` function, see

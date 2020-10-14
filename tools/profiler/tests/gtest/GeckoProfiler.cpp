@@ -31,6 +31,7 @@
 #include "gtest/gtest.h"
 
 #include <cstring>
+#include <set>
 #include <thread>
 
 // Note: profiler_init() has already been called in XRE_main(), so we can't
@@ -1536,6 +1537,246 @@ TEST(GeckoProfiler, Markers)
 
   // We should have read all expected markers.
   EXPECT_EQ(state, S_LAST);
+
+  {
+    const Json::Value& meta = root["meta"];
+    ASSERT_TRUE(!meta.isNull());
+    ASSERT_TRUE(meta.isObject());
+
+    // root.meta is an object.
+    {
+      const Json::Value& markerSchema = meta["markerSchema"];
+      ASSERT_TRUE(!markerSchema.isNull());
+      ASSERT_TRUE(markerSchema.isArray());
+
+      // root.meta.markerSchema is an array.
+
+      std::set<std::string> testedSchemaNames;
+
+      for (const Json::Value& schema : markerSchema) {
+        const Json::Value& name = schema["name"];
+        ASSERT_TRUE(name.isString());
+        const std::string nameString = name.asString();
+
+        const Json::Value& display = schema["display"];
+        ASSERT_TRUE(display.isArray());
+
+        const Json::Value& data = schema["data"];
+        ASSERT_TRUE(data.isArray());
+
+        EXPECT_TRUE(
+            testedSchemaNames
+                .insert(std::string(nameString.data(), nameString.size()))
+                .second)
+            << "Each schema name should be unique (inserted once in the set)";
+
+        if (nameString == "Text") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 1u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Details");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+
+        } else if (nameString == "NoPayloadUserData") {
+          // TODO: Remove this when bug 1646714 lands.
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 0u);
+
+        } else if (nameString == "FileIO") {
+          EXPECT_EQ(display.size(), 3u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-fileio");
+
+          ASSERT_EQ(data.size(), 3u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "operation");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Operation");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+          EXPECT_EQ_JSON(data[0u]["searchable"], Bool, true);
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "source");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Source");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
+          EXPECT_EQ_JSON(data[1u]["searchable"], Bool, true);
+
+          ASSERT_TRUE(data[2u].isObject());
+          EXPECT_EQ_JSON(data[2u]["key"], String, "filename");
+          EXPECT_EQ_JSON(data[2u]["label"], String, "Filename");
+          EXPECT_EQ_JSON(data[2u]["format"], String, "file-path");
+          EXPECT_EQ_JSON(data[2u]["searchable"], Bool, true);
+
+        } else if (nameString == "tracing") {
+          EXPECT_EQ(display.size(), 3u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
+
+          ASSERT_EQ(data.size(), 1u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "category");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+
+        } else if (nameString == "UserTimingMark") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 4u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Marker");
+          EXPECT_EQ_JSON(data[0u]["value"], String, "UserTiming");
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "entryType");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Entry Type");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
+
+          ASSERT_TRUE(data[2u].isObject());
+          EXPECT_EQ_JSON(data[2u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[2u]["label"], String, "Name");
+          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
+
+          ASSERT_TRUE(data[3u].isObject());
+          EXPECT_EQ_JSON(data[3u]["label"], String, "Description");
+          EXPECT_EQ_JSON(data[3u]["value"], String,
+                         "UserTimingMark is created using the DOM API "
+                         "performance.mark().");
+
+        } else if (nameString == "UserTimingMeasure") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 6u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Marker");
+          EXPECT_EQ_JSON(data[0u]["value"], String, "UserTiming");
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "entryType");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Entry Type");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
+
+          ASSERT_TRUE(data[2u].isObject());
+          EXPECT_EQ_JSON(data[2u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[2u]["label"], String, "Name");
+          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
+
+          ASSERT_TRUE(data[3u].isObject());
+          EXPECT_EQ_JSON(data[3u]["key"], String, "startMark");
+          EXPECT_EQ_JSON(data[3u]["label"], String, "Start Mark");
+          EXPECT_EQ_JSON(data[3u]["format"], String, "string");
+
+          ASSERT_TRUE(data[4u].isObject());
+          EXPECT_EQ_JSON(data[4u]["key"], String, "endMark");
+          EXPECT_EQ_JSON(data[4u]["label"], String, "End Mark");
+          EXPECT_EQ_JSON(data[4u]["format"], String, "string");
+
+          ASSERT_TRUE(data[5u].isObject());
+          EXPECT_EQ_JSON(data[5u]["label"], String, "Description");
+          EXPECT_EQ_JSON(data[5u]["value"], String,
+                         "UserTimingMeasure is created using the DOM API "
+                         "performance.measure().");
+
+        } else if (nameString == "BHR-detected hang") {
+          EXPECT_EQ(display.size(), 3u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
+
+          ASSERT_EQ(data.size(), 0u);
+
+        } else if (nameString == "MainThreadLongTask") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 1u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "category");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+
+        } else if (nameString == "Log") {
+          EXPECT_EQ(display.size(), 1u);
+          EXPECT_EQ(display[0u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 2u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "module");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Module");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Name");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
+
+        } else if (nameString == "MediaSample") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 2u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "sampleStartTimeUs");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Sample start time");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "microseconds");
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "sampleEndTimeUs");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Sample end time");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "microseconds");
+
+        } else if (nameString == "Budget") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+
+          ASSERT_EQ(data.size(), 0u);
+
+        } else {
+          ADD_FAILURE() << "Unknown marker schema '" << nameString.c_str()
+                        << "'";
+        }
+      }
+
+      // Check that we've got all expected schema.
+      EXPECT_TRUE(testedSchemaNames.find("Text") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("FileIO") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("tracing") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("UserTimingMark") !=
+                  testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("UserTimingMeasure") !=
+                  testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("BHR-detected hang") !=
+                  testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("MainThreadLongTask") !=
+                  testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("Log") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
+                  testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("Budget") != testedSchemaNames.end());
+    }  // markerSchema
+  }    // meta
 
   Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
   MOZ_RELEASE_ASSERT(info.isSome());

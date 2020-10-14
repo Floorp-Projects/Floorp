@@ -69,6 +69,11 @@ static Streaming::MarkerTypeFunctions
   return sMarkerTypeFunctions1Based[aTag - 1].mMarkerDataDeserializer;
 }
 
+/* static */ Span<const Streaming::MarkerTypeFunctions>
+Streaming::MarkerTypeFunctionsArray() {
+  return {sMarkerTypeFunctions1Based, sDeserializerCount};
+}
+
 }  // namespace base_profiler_markers_detail
 
 void MarkerSchema::Stream(JSONWriter& aWriter,
