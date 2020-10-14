@@ -317,94 +317,11 @@ async function executeScript(script, args, opts = {}) {
   return evaluate.sandbox(sb, script, args, opts);
 }
 
-function emitTouchEvent(type, touch) {
-  logger.info(
-    `Emitting Touch event of type ${type} ` +
-      `to element with id: ${touch.target.id} ` +
-      `and tag name: ${touch.target.tagName} ` +
-      `at coordinates (${touch.clientX}), ` +
-      `${touch.clientY}) relative to the viewport`
-  );
-
-  const win = curContainer.frame;
-  if (win.docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
-    logger.debug(
-      `Cannot emit touch event with asyncPanZoomEnabled and legacyactions.scrolling`
-    );
-    return;
-  }
-
-  // we get here if we're not in asyncPacZoomEnabled land, or if we're
-  // the main process
-  win.windowUtils.sendTouchEvent(
-    type,
-    [touch.identifier],
-    [touch.clientX],
-    [touch.clientY],
-    [touch.radiusX],
-    [touch.radiusY],
-    [touch.rotationAngle],
-    [touch.force],
-    0
-  );
-}
-
 /**
- * Function that perform a single tap
+ * Function that performs a single tap.
  */
 async function singleTap(el, corx, cory, capabilities) {
-  // after this block, the element will be scrolled into view
-  let visible = element.isVisible(el, corx, cory);
-  if (!visible) {
-    throw new error.ElementNotInteractableError(
-      "Element is not currently visible and may not be manipulated"
-    );
-  }
-
-  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
-  let acc = await a11y.getAccessible(el, true);
-  a11y.assertVisible(acc, el, visible);
-  a11y.assertActionable(acc, el);
-  if (!curContainer.frame.document.createTouch) {
-    legacyactions.mouseEventsOnly = true;
-  }
-  let c = element.coordinates(el, corx, cory);
-  if (!legacyactions.mouseEventsOnly) {
-    let touchId = legacyactions.nextTouchId++;
-    let touch = createATouch(el, c.x, c.y, touchId);
-    emitTouchEvent("touchstart", touch);
-    emitTouchEvent("touchend", touch);
-  }
-  legacyactions.mouseTap(el.ownerDocument, c.x, c.y);
-}
-
-/**
- * Function to create a touch based on the element
- * corx and cory are relative to the viewport, id is the touchId
- */
-function createATouch(el, corx, cory, touchId) {
-  let doc = el.ownerDocument;
-  let win = doc.defaultView;
-  let [
-    clientX,
-    clientY,
-    pageX,
-    pageY,
-    screenX,
-    screenY,
-  ] = legacyactions.getCoordinateInfo(el, corx, cory);
-  let atouch = doc.createTouch(
-    win,
-    el,
-    touchId,
-    pageX,
-    pageY,
-    screenX,
-    screenY,
-    clientX,
-    clientY
-  );
-  return atouch;
+  return legacyactions.singleTap(el, corx, cory, capabilities);
 }
 
 /**
@@ -447,17 +364,7 @@ async function releaseActions() {
  * Start action chain on one finger.
  */
 function actionChain(chain, touchId) {
-  let touchProvider = {};
-  touchProvider.createATouch = createATouch;
-  touchProvider.emitTouchEvent = emitTouchEvent;
-
-  return legacyactions.dispatchActions(
-    chain,
-    touchId,
-    curContainer,
-    seenEls,
-    touchProvider
-  );
+  return legacyactions.dispatchActions(chain, touchId, curContainer, seenEls);
 }
 
 function emitMultiEvents(type, touch, touches) {
@@ -534,7 +441,7 @@ function setDispatch(batches, touches, batchIndex = 0) {
       case "press":
         el = seenEls.get(pack[2], curContainer.frame);
         c = element.coordinates(el, pack[3], pack[4]);
-        touch = createATouch(el, c.x, c.y, touchId);
+        touch = legacyactions.createATouch(el, c.x, c.y, touchId);
         multiLast[touchId] = touch;
         touches.push(touch);
         emitMultiEvents("touchstart", touch, touches);
@@ -552,7 +459,12 @@ function setDispatch(batches, touches, batchIndex = 0) {
       case "move":
         el = seenEls.get(pack[2], curContainer.frame);
         c = element.coordinates(el);
-        touch = createATouch(multiLast[touchId].target, c.x, c.y, touchId);
+        touch = legacyactions.createATouch(
+          multiLast[touchId].target,
+          c.x,
+          c.y,
+          touchId
+        );
         touchIndex = touches.indexOf(lastTouch);
         touches[touchIndex] = touch;
         multiLast[touchId] = touch;
