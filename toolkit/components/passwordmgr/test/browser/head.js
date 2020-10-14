@@ -607,15 +607,21 @@ async function openPasswordManager(openingFunc, waitForFilter) {
 
 // Autocomplete popup related functions //
 
-async function openACPopup(popup, browser, inputSelector) {
+async function openACPopup(
+  popup,
+  browser,
+  inputSelector,
+  iframeBrowsingContext = null
+) {
   let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
 
   await SimpleTest.promiseFocus(browser);
   info("content window focused");
 
   // Focus the username field to open the popup.
+  let target = iframeBrowsingContext || browser;
   await SpecialPowers.spawn(
-    browser,
+    target,
     [[inputSelector]],
     function openAutocomplete(sel) {
       content.document.querySelector(sel).focus();

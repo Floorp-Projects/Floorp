@@ -12,31 +12,23 @@
 <script type="application/javascript">
 let readyPromise = registerRunTests();
 
-function add2logins() {
-  runInParent(function initLogins() {
+const DEFAULT_ORIGIN = window.location.origin;
+
+function removeAllLoginsInParent() {
+  runInParent(function removeAllLogins() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.logins.removeAllLogins();
-
-    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-    login1.init("https://example.org", "https://example.org", null, "real••••user", "pass1", "", "");
-
-    let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-    login2.init("https://example.org", "https://example.org", null, "user2", "pass2", "", "");
-
-    Services.logins.addLogin(login1);
-    Services.logins.addLogin(login2);
   });
 }
 
-function addSingleLogin() {
-  runInParent(function initWithSingleLogin() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    Services.logins.removeAllLogins();
+function add2logins() {
+  removeAllLoginsInParent();
+  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""], [DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "user2", "pass2", "", ""]);
+}
 
-    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-    login1.init("https://example.org", "https://example.org", null, "real••••user", "pass1", "", "");
-    Services.logins.addLogin(login1);
-  });
+function addSingleLogin() {
+  removeAllLoginsInParent();
+  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""])
 }
 
 /**
@@ -65,49 +57,15 @@ function addSingleLogin() {
 
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginFrame").addEventListener("load", (evt) => {
-      resolve();
-    });
+    resolve();
   });
 });
 
-async function loadFormIntoIframe(origin, html) {
-  let loginFrame = document.getElementById("loginFrame");
-  let loadedPromise = new Promise((resolve) => {
-    loginFrame.addEventListener("load", function() {
-      resolve();
-    }, {once: true});
-  });
-
-  let processedPromise = promiseFormsProcessedInChildFrame();
-  loginFrame.src = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
-  await loadedPromise;
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [html], function(contentHtml) {
-    // eslint-disable-next-line no-unsanitized/property
-    this.content.document.documentElement.innerHTML = contentHtml;
-  });
-
-  // Wait for the form to be processed before trying to submit.
-  await processedPromise;
-
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [html], function(contentHtml) {
-    let doc = this.content.document;
-    for (let field of doc.querySelectorAll("input")) {
-      let actualValue = field.value;
-      field.value = "";
-      SpecialPowers.wrap(field).setUserInput(actualValue);
-    }
-  });
-}
-
 add_task(async function setup() {
-  info("Waiting for setup and page and frame loads");
+  info("Waiting for setup and page and window loads");
   await readyPromise;
   await loadPromise;
 });
-
-const DEFAULT_ORIGIN = "https://example.com";
-const ORG_ORIGIN = "https://example.org";
 
 add_task(async function test_new_logins() {
   const TEST_CASES = [
@@ -144,22 +102,36 @@ add_task(async function test_new_logins() {
     expected: "*.•*.•*.•*.•*.•*.•",
   },
 ].flatMap(generateTestCases);
-
   for (let tc of TEST_CASES) {
     info("Starting testcase: " + JSON.stringify(tc));
-    await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
-      <input  type="text"       name="uname" value="${tc.username}">
-      <input  type="password"   name="pword" value="thepassword">
-      <button type="submit" id="submitBtn">Submit</button>
-    </form>`);
-    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [tc], function(testcase) {
+    // Create a new window for each test case, because if we instead try to use
+    // the same window and change the page using window.location, that will trigger
+    // an onLocationChange event, which can trigger unwanted FormSubmit outside of
+    // clicking the submit button in each test document.
+    let win = window.open("about:blank");
+    let html = `
+      <form id="form1" onsubmit="return false;">
+        <input  type="text"       name="uname" value="${tc.username}">
+        <input  type="password"   name="pword" value="thepassword">
+        <button type="submit" id="submitBtn">Submit</button>
+      </form>`;
+    await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+      let doc = this.content.document;
+      for (let field of doc.querySelectorAll("input")) {
+        let actualValue = field.value;
+        field.value = "";
+        SpecialPowers.wrap(field).setUserInput(actualValue);
+      }
+    });
+    await SpecialPowers.spawn(win, [tc], function(testcase) {
       let doc = this.content.document;
       Assert.equal(doc.querySelector("[name='uname']").value, testcase.username, "Checking for filled username");
     });
 
     // Check data sent via PasswordManager:onFormSubmit
     let processedPromise = getSubmitMessage();
-    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    await SpecialPowers.spawn(win, [], function() {
       this.content.document.getElementById("submitBtn").click();
     });
 
@@ -171,6 +143,9 @@ add_task(async function test_new_logins() {
     } else {
       is(data.usernameField.value, tc.expected, "Check usernameField");
     }
+
+    win.close();
+    await SimpleTest.promiseFocus(window);
   }
 });
 
@@ -205,18 +180,32 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
 
   for (let tc of TEST_CASES) {
     info("Starting testcase: " + tc.testName)
-    await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
-      <input  type="text"       name="uname" value="username">
-      <input  type="password"   name="pword" value="${tc.password}">
-      <button type="submit" id="submitBtn">Submit</button>
-    </form>`);
-
-    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [tc], function(testcase) {
+    // Create a new window for each test case, because if we instead try to use
+    // the same window and change the page using window.location, that will trigger
+    // an onLocationChange event, which can trigger unwanted FormSubmit outside of
+    // clicking the submit button in each test document.
+    let win = window.open("about:blank");
+    let html = `
+      <form id="form1" onsubmit="return false;">
+        <input  type="text"       name="uname" value="username">
+        <input  type="password"   name="pword" value="${tc.password}">
+        <button type="submit" id="submitBtn">Submit</button>
+      </form>`;
+    await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+      let doc = this.content.document;
+      for (let field of doc.querySelectorAll("input")) {
+        let actualValue = field.value;
+        field.value = "";
+        SpecialPowers.wrap(field).setUserInput(actualValue);
+      }
+    });
+    await SpecialPowers.spawn(win, [tc], function(testcase) {
       let doc = this.content.document;
       Assert.equal(doc.querySelector("[name='pword']").value, testcase.password, "Checking for filled password");
     });
 
-    let formSubmitListener = SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    let formSubmitListener = SpecialPowers.spawn(win, [], function() {
       return new Promise(resolve => {
         this.content.windowRoot.addEventListener(
             "PasswordManager:onFormSubmit",
@@ -228,22 +217,24 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
       });
     });
 
-    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    await SpecialPowers.spawn(win, [], function() {
       this.content.document.getElementById("submitBtn").click();
     });
 
     let dialogRequested = await formSubmitListener;
 
     is(dialogRequested, tc.shouldShowPrompt, "Verify 'show save/update prompt' message sent to parent process");
+
+    win.close();
+    await SimpleTest.promiseFocus(window);
   }
 });
 
 add_task(async function test_no_autofill_munged_username_matching_password() {
   // run this test with 2 matching logins from this origin so we don't autofill
   await add2logins();
-
   let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == ORG_ORIGIN);
+  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
   is(matchingLogins.length, 2, "Expected number of matching logins");
 
   let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
@@ -252,12 +243,23 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   let timesUsed = bulletLogin.timesUsed;
   let guid = bulletLogin.guid;
 
-  await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
-    <input  type="text"       name="uname" value="">
-    <input  type="password"   name="pword" value="">
-    <button type="submit" id="submitBtn">Submit</button>
-  </form>`);
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+  let win = window.open("about:blank");
+  let html =
+    `<form id="form1" onsubmit="return false;">
+      <input  type="text"       name="uname" value="">
+      <input  type="password"   name="pword" value="">
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>`;
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    let doc = this.content.document;
+    for (let field of doc.querySelectorAll("input")) {
+      let actualValue = field.value;
+      field.value = "";
+      SpecialPowers.wrap(field).setUserInput(actualValue);
+    }
+  });
+  await SpecialPowers.spawn(win, [], function() {
     let doc = this.content.document;
     Assert.equal(doc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
     SpecialPowers.wrap(doc.querySelector("[name='uname']")).setUserInput("real••••user");
@@ -269,7 +271,7 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+  await SpecialPowers.spawn(win, [], function() {
     this.content.document.getElementById("submitBtn").click();
   });
 
@@ -284,6 +286,9 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
 
   await popupShownPromise;
+
+  win.close();
+  await SimpleTest.promiseFocus(window);
 });
 
 
@@ -292,7 +297,7 @@ add_task(async function test_autofill_munged_username_matching_password() {
   await addSingleLogin();
 
   let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == ORG_ORIGIN);
+  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
   is(matchingLogins.length, 1, "Expected number of matching logins");
 
   info("matched login: " + matchingLogins[0].username);
@@ -302,12 +307,23 @@ add_task(async function test_autofill_munged_username_matching_password() {
   let timesUsed = bulletLogin.timesUsed;
   let guid = bulletLogin.guid;
 
-  await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
-    <input  type="text"       name="uname" value="">
-    <input  type="password"   name="pword" value="">
-    <button type="submit" id="submitBtn">Submit</button>
-  </form>`);
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+  let win = window.open("about:blank");
+  let html =
+    `<form id="form1" onsubmit="return false;">
+      <input  type="text"       name="uname" value="">
+      <input  type="password"   name="pword" value="">
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>`;
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    let doc = this.content.document;
+    for (let field of doc.querySelectorAll("input")) {
+      let actualValue = field.value;
+      field.value = "";
+      SpecialPowers.wrap(field).setUserInput(actualValue);
+    }
+  });
+  await SpecialPowers.spawn(win, [], function() {
     let doc = this.content.document;
     Assert.equal(doc.querySelector("[name='uname']").value, "real••••user", "Check username did get autofilled");
     doc.querySelector("[name='pword']").setUserInput("pass1");
@@ -318,7 +334,7 @@ add_task(async function test_autofill_munged_username_matching_password() {
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();
-  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+  await SpecialPowers.spawn(win, [], function() {
     this.content.document.getElementById("submitBtn").click();
   });
 
@@ -333,6 +349,9 @@ add_task(async function test_autofill_munged_username_matching_password() {
   is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
 
   await popupShownPromise;
+
+  win.close();
+  await SimpleTest.promiseFocus(window);
 });
 
 </script>
@@ -340,7 +359,6 @@ add_task(async function test_autofill_munged_username_matching_password() {
 <p id="display"></p>
 
 <div id="content">
-  <iframe id="loginFrame" src="https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/blank.html"></iframe>
 </div>
 <pre id="test"></pre>
 </body>
