@@ -280,6 +280,11 @@ async function testNetworkEventResources(options) {
     const expected = options.expectedResourcesOnUpdated[key];
     const actual = actualResourcesOnUpdated[key];
     assertResources(actual, expected);
+    is(
+      actual.updates.length,
+      expected.updates.length,
+      "The number of updates is correct"
+    );
   }
 
   await resourceWatcher.unwatchResources(
@@ -311,11 +316,6 @@ function assertResources(actual, expected) {
   );
   is(actual.request.url, expected.request.url, "The url is correct");
   is(actual.request.method, expected.request.method, "The method is correct");
-  is(
-    actual.updates.length,
-    expected.updates.length,
-    "The number of updates is correct"
-  );
 }
 
 const EXISTING_REQUESTS_COMMANDS = [
