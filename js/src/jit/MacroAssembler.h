@@ -2674,8 +2674,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  // Floating point rounding (experimental as of August, 2020)
-  // https://github.com/WebAssembly/simd/pull/232
+  // Floating point rounding
 
   inline void ceilFloat32x4(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);

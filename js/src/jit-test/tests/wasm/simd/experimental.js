@@ -53,16 +53,6 @@ function iota(len) {
 function pmin(x, y) { return y < x ? y : x }
 function pmax(x, y) { return x < y ? y : x }
 
-function ffloor(x) { return Math.fround(Math.floor(x)) }
-function fceil(x) { return Math.fround(Math.ceil(x)) }
-function ftrunc(x) { return Math.fround(Math.sign(x)*Math.floor(Math.abs(x))) }
-function fnearest(x) { return Math.fround(Math.round(x)) }
-
-function dfloor(x) { return Math.floor(x) }
-function dceil(x) { return Math.ceil(x) }
-function dtrunc(x) { return Math.sign(x)*Math.floor(Math.abs(x)) }
-function dnearest(x) { return Math.round(x) }
-
 const v2vSig = {args:[], ret:VoidCode};
 
 function V128Load(addr) {
@@ -137,40 +127,6 @@ set(mem16, 16, ys);
 ins.exports.run();
 var result = get(mem32, 0, 4);
 assertSame(result, ans);
-
-// Rounding, https://github.com/WebAssembly/simd/pull/232
-
-var fxs = [5.1, -1.1, -4.3, 0];
-var dxs = [5.1, -1.1];
-
-for ( let [opcode, xs, operator] of [[F32x4CeilCode, fxs, fceil],
-                                     [F32x4FloorCode, fxs, ffloor],
-                                     [F32x4TruncCode, fxs, ftrunc],
-                                     [F32x4NearestCode, fxs, fnearest],
-                                     [F64x2CeilCode, dxs, dceil],
-                                     [F64x2FloorCode, dxs, dfloor],
-                                     [F64x2TruncCode, dxs, dtrunc],
-                                     [F64x2NearestCode, dxs, dnearest]] ) {
-    var k = xs.length;
-    var ans = xs.map(operator);
-
-    var ins = wasmEval(moduleWithSections([
-        sigSection([v2vSig]),
-        declSection([0]),
-        memorySection(1),
-        exportSection([{funcIndex: 0, name: "run"},
-                       {memIndex: 0, name: "mem"}]),
-        bodySection([
-            funcBody({locals:[],
-                      body: [...V128StoreExpr(0, [...V128Load(16),
-                                                  SimdPrefix, varU32(opcode)])]})])]));
-
-    var mem = new (k == 4 ? Float32Array : Float64Array)(ins.exports.mem.buffer);
-    set(mem, k, xs);
-    ins.exports.run();
-    var result = get(mem, 0, k);
-    assertSame(result, ans);
-}
 
 // Zero-extending SIMD load, https://github.com/WebAssembly/simd/pull/237
 
