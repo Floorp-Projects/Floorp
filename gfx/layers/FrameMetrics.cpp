@@ -41,10 +41,11 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
                              aMetrics.GetVisualScrollUpdateType(),
                              aMetrics.GetScrollGeneration())
                  .get()
-          << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
-                             aMetrics.GetPresShellId(), aMetrics.GetScrollId(),
-                             aMetrics.IsRootContent())
-                 .get();
+          << "] scrollId=" << aMetrics.GetScrollId();
+  if (aMetrics.IsRootContent()) {
+    aStream << " [rcd]";
+  }
+  aStream << " }";
   return aStream;
 }
 
