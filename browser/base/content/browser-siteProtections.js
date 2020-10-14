@@ -110,7 +110,7 @@ var Fingerprinting = {
 
   isShimming(state) {
     return (
-      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_TRACKING_CONTENT &&
       this.isAllowing(state)
     );
   },
@@ -256,7 +256,7 @@ var Cryptomining = {
 
   isShimming(state) {
     return (
-      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_TRACKING_CONTENT &&
       this.isAllowing(state)
     );
   },
@@ -466,7 +466,7 @@ var TrackingProtection = {
 
   isShimming(state) {
     return (
-      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_TRACKING_CONTENT &&
       this.isAllowing(state)
     );
   },
@@ -1134,7 +1134,7 @@ var SocialTracking = {
 
   isShimming(state) {
     return (
-      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_TRACKING_CONTENT &&
       this.isAllowing(state)
     );
   },
