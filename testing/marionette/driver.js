@@ -1898,6 +1898,11 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
   let { id, x, y } = cmd.parameters;
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    await this.getActor().singleTap(webEl, x, y, this.capabilities);
+    return;
+  }
+
   switch (this.context) {
     case Context.Chrome:
       throw new error.UnsupportedOperationError(
