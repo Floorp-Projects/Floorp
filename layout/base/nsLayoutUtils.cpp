@@ -2726,6 +2726,7 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   float resolution = 1.0f;
   bool isRcdRsf = aScrollFrame->IsRootScrollFrameOfDocument() &&
                   presContext->IsRootContentDocumentCrossProcess();
+  metrics.SetIsRootContent(isRcdRsf);
   if (isRcdRsf) {
     // Only the root content document's root scrollable frame should pick up
     // the presShell's resolution. All the other frames are 1.0.
