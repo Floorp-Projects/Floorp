@@ -2158,6 +2158,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       INSECURE: 10,
       PASSWORD_AUTOCOMPLETE_NEW_PASSWORD: 11,
       TYPE_NO_LONGER_PASSWORD: 12,
+      FORM_IN_CROSSORIGIN_SUBFRAME: 13,
     };
 
     // Heuristically determine what the user/pass fields are
@@ -2222,6 +2223,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       if (usernameField) {
         gFormFillService.markAsLoginManagerField(usernameField);
         usernameField.addEventListener("keydown", observer);
+      }
+
+      if (
+        !userTriggered &&
+        !passwordField.ownerGlobal.windowGlobalChild.sameOriginWithTop
+      ) {
+        log("not filling form; it is in a cross-origin subframe");
+        autofillResult = AUTOFILL_RESULT.FORM_IN_CROSSORIGIN_SUBFRAME;
+        return;
       }
 
       if (!userTriggered) {

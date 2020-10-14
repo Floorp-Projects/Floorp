@@ -16,11 +16,12 @@ let readyPromise = registerRunTests(9);
 addLoginsInParent(
   [window.location.origin, "https://autocomplete", null,
    "testuser@example.com", "testpass1", "", ""]);
-</script>
 
-<p id="display"></p>
-<div id="content">
+let DEFAULT_ORIGIN = window.location.origin;
 
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+let loadPromise = loadFormIntoWindow(DEFAULT_ORIGIN, `
   <form id="form0" action="https://autocomplete">
     <input  type="text" name="uname">
     <input  type="text" autocomplete="">
@@ -84,8 +85,11 @@ addLoginsInParent(
     <input  type="text" autocomplete="cc-number" name="acfield">
     <input  type="password" name="pword">
     <button type="submit">Submit</button>
-  </form>
+  </form>`, win);
+</script>
 
+<p id="display"></p>
+<div id="content">
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -100,15 +104,16 @@ add_task(async function setup() {
 
 /* Tests for autofill of single-user forms with various autocomplete types */
 add_task(async function test_autofill_autocomplete_types() {
-  checkForm(0, null, "testuser@example.com", "testpass1");
-  checkForm(1, null, "testuser@example.com", "testpass1");
-  checkForm(2, null, "testuser@example.com", "testpass1");
-  checkForm(3, null, "testuser@example.com", "testpass1");
-  checkForm(4, null, "testuser@example.com", "testpass1");
-  checkForm(5, null, "testuser@example.com", "testpass1");
-  checkForm(6, null, "testuser@example.com", "testpass1");
-  checkForm(7, null, "testuser@example.com", "testpass1");
-  checkForm(101, "testuser@example.com", null, "testpass1");
+  await loadPromise;
+  await checkLoginFormInFrameWithElementValues(win, 0, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 1, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 2, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 3, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 4, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 5, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 6, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 7, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 101, "testuser@example.com", null, "testpass1");
 });
 
 </script>

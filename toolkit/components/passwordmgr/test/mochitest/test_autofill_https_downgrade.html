@@ -23,17 +23,17 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-  <iframe></iframe>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
 
 async function prepareAndProcessForm(url, login) {
   let processedPromise = promiseFormsProcessedInChildFrame();
-  iframe.src = url;
-  info("prepareAndProcessForm, assigned iframe.src: " + url);
+  win.location = url;
+  info("prepareAndProcessForm, assigned window location: " + url);
   await processedPromise;
 }
 
@@ -47,7 +47,7 @@ async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPa
     await prepareAndProcessForm(url);
     info("form was processed");
 
-    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [url, expectedUsername, expectedPassword],
+    await SpecialPowers.spawn(win, [url, expectedUsername, expectedPassword],
                               function(urlContent, expectedUsernameContent, expectedPasswordContent) {
       let doc = this.content.document;
       let uname = doc.getElementById("form-basic-username");
@@ -109,7 +109,6 @@ add_task(async function test_checkNoAutofillOnDowngradeSubdomainDifferentPort() 
     `https://example.com${SAME_ORIGIN_ACTION_PATH}`,
   ], login, "", "");
 });
-
 </script>
 </pre>
 </body>
