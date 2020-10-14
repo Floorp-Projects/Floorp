@@ -605,20 +605,6 @@ bool BackgroundChildImpl::DeallocPMIDIManagerChild(PMIDIManagerChild* aActor) {
   return true;
 }
 
-dom::PGamepadTestChannelChild*
-BackgroundChildImpl::AllocPGamepadTestChannelChild() {
-  MOZ_CRASH("PGamepadTestChannelChild actor should be manually constructed!");
-  return nullptr;
-}
-
-bool BackgroundChildImpl::DeallocPGamepadTestChannelChild(
-    PGamepadTestChannelChild* aActor) {
-  MOZ_ASSERT(aActor);
-  RefPtr<dom::GamepadTestChannelChild> child(
-      dont_AddRef(static_cast<dom::GamepadTestChannelChild*>(aActor)));
-  return true;
-}
-
 mozilla::dom::PClientManagerChild*
 BackgroundChildImpl::AllocPClientManagerChild() {
   return mozilla::dom::AllocClientManagerChild();

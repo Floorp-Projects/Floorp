@@ -223,11 +223,6 @@ class BackgroundChildImpl : public PBackgroundChild,
 
   virtual bool DeallocPQuotaChild(PQuotaChild* aActor) override;
 
-  virtual PGamepadTestChannelChild* AllocPGamepadTestChannelChild() override;
-
-  virtual bool DeallocPGamepadTestChannelChild(
-      PGamepadTestChannelChild* aActor) override;
-
   virtual PClientManagerChild* AllocPClientManagerChild() override;
 
   virtual bool DeallocPClientManagerChild(PClientManagerChild* aActor) override;
