@@ -119,20 +119,20 @@ var snapshotFormatters = {
       );
     } catch (e) {}
 
-    let statusTextId = "multi-process-status-unknown";
+    const STATUS_STRINGS = {
+      experimentControl: "fission-status-experiment-control",
+      experimentTreatment: "fission-status-experiment-treatment",
+      disabledByE10sEnv: "fission-status-disabled-by-e10s-env",
+      enabledByEnv: "fission-status-enabled-by-env",
+      disabledBySafeMode: "fission-status-disabled-by-safe-mode",
+      enabledByDefault: "fission-status-enabled-by-default",
+      disabledByDefault: "fission-status-disabled-by-default",
+      enabledByUserPref: "fission-status-enabled-by-user-pref",
+      disabledByUserPref: "fission-status-disabled-by-user-pref",
+      disabledByE10sOther: "fission-status-disabled-by-e10s-other",
+    };
 
-    // Whitelist of known values with string descriptions:
-    switch (data.autoStartStatus) {
-      case 0:
-      case 1:
-      case 2:
-      case 4:
-      case 6:
-      case 7:
-      case 8:
-        statusTextId = "multi-process-status-" + data.autoStartStatus;
-        break;
-    }
+    let statusTextId = STATUS_STRINGS[data.fissionDecisionStatus];
 
     document.l10n.setAttributes(
       $("multiprocess-box-process-count"),
@@ -142,7 +142,15 @@ var snapshotFormatters = {
         totalWindows: data.numTotalWindows,
       }
     );
-    document.l10n.setAttributes($("multiprocess-box-status"), statusTextId);
+    document.l10n.setAttributes(
+      $("fission-box-process-count"),
+      "fission-windows",
+      {
+        fissionWindows: data.numFissionWindows,
+        totalWindows: data.numTotalWindows,
+      }
+    );
+    document.l10n.setAttributes($("fission-box-status"), statusTextId);
 
     if (Services.policies) {
       let policiesStrId = "";
