@@ -1772,14 +1772,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_8_1");
 #endif
 
+#ifndef NIGHTLY_BUILD
     // Bug 1615421 / 1607860 - Playing videos appear to crash with WebRender
-    // with this particular driver.
+    // with this particular driver. Bug 1671253 enabled this on nightly only.
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_EQUAL,
         V(23, 20, 16, 4973),
         "FEATURE_FAILURE_WEBRENDER_VIDEO_CRASH_INTEL_23.20.16.4973");
+#endif
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
