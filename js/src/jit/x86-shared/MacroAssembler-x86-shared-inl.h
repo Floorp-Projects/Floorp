@@ -1981,24 +1981,36 @@ void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
 
 void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
-  vminps(Operand(rhs), lhsDest, lhsDest);
+  ScratchSimd128Scope scratch(*this);
+  vmovaps(rhs, scratch);
+  vminps(Operand(lhsDest), scratch, scratch);
+  vmovaps(scratch, lhsDest);
 }
 
 void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhs,
                                         FloatRegister lhsDest) {
-  vminpd(Operand(rhs), lhsDest, lhsDest);
+  ScratchSimd128Scope scratch(*this);
+  vmovapd(rhs, scratch);
+  vminpd(Operand(lhsDest), scratch, scratch);
+  vmovapd(scratch, lhsDest);
 }
 
 // Compare-based maximum
 
 void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
-  vmaxps(Operand(rhs), lhsDest, lhsDest);
+  ScratchSimd128Scope scratch(*this);
+  vmovaps(rhs, scratch);
+  vmaxps(Operand(lhsDest), scratch, scratch);
+  vmovaps(scratch, lhsDest);
 }
 
 void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhs,
                                         FloatRegister lhsDest) {
-  vmaxpd(Operand(rhs), lhsDest, lhsDest);
+  ScratchSimd128Scope scratch(*this);
+  vmovapd(rhs, scratch);
+  vmaxpd(Operand(lhsDest), scratch, scratch);
+  vmovapd(scratch, lhsDest);
 }
 
 void MacroAssembler::widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
