@@ -760,13 +760,11 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
     case EditAction::eEnableOrDisableInlineTableEditingUI:
     case EditAction::eSetCharacterSet:
     case EditAction::eSetWrapWidth:
-    case EditAction::eRewrap:
       return false;
 
+    case EditAction::eRewrap:
     case EditAction::eSetText:
     case EditAction::eSetHTML:
-      return true;
-
     case EditAction::eInsertHTML:
       return true;
 
