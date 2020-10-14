@@ -146,7 +146,7 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   if (ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list) ==
       ChannelBlockDecision::Unblocked) {
     ContentBlockingNotifier::OnEvent(
-        aChannel, nsIWebProgressListener::STATE_UNBLOCKED_UNSAFE_CONTENT,
+        aChannel, nsIWebProgressListener::STATE_UNBLOCKED_TRACKING_CONTENT,
         false);
     *aShouldContinue = true;
     return NS_OK;
