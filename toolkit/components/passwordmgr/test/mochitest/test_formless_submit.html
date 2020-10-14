@@ -178,7 +178,7 @@ async function testFormlessSubmit(tc) {
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
   info("Starting testcase: " + JSON.stringify(tc));
 
-  let formsProcessed = promiseFormsProcessed(tc.expectedFormsCount);
+  let formsProcessed = promiseFormsProcessedInSameProcess(tc.expectedFormsCount);
   // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = tc.document;
   await formsProcessed;

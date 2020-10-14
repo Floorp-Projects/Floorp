@@ -35,7 +35,7 @@ let iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_task(async function setup() {
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   iframe.src = "/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
@@ -57,7 +57,7 @@ add_task(async function test_initial_focus() {
   checkAutoCompleteResults(results, ["name", "name1"], hostname, "Two login results");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     Assert.equal(this.content.document.getElementById("form-basic-password").value, "pass", "Check first password filled");
   });

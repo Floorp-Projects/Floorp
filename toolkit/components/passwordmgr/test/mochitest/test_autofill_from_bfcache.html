@@ -32,7 +32,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_crossOriginBfcacheRestore() {
-  let processedPromise = promiseFormsProcessed();
+  let processedPromise = promiseFormsProcessedInSameProcess();
   win = window.open("form_basic.html", "loginWin");
   await processedPromise;
   let doc = win.document;
@@ -50,7 +50,7 @@ add_task(async function test_crossOriginBfcacheRestore() {
   ok(pageHideEvent.persisted, "First document should have been persisted in bfcache");
 
   info("loaded page will go back to the first page (login form)");
-  processedPromise = promiseFormsProcessed();
+  processedPromise = promiseFormsProcessedInSameProcess();
   await processedPromise;
   checkLoginForm(uname, "autofilled", pword, "pass1");
   win.close();

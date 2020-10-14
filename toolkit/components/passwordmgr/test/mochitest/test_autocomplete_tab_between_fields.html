@@ -129,7 +129,7 @@ async function testResultOfTabInteractions(testData) {
   await prepareLogins(logins);
 
   info("recreating form");
-  let processed = promiseFormsProcessed();
+  let processed = promiseFormsProcessedInSameProcess();
   recreateTree(document.getElementById("form1"));
   info("waiting for form processed");
   await processed;
@@ -175,7 +175,7 @@ async function testResultOfTabInteractions(testData) {
   checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
 
   recreateTree(document.getElementById("form1"));
-  await promiseFormsProcessed();
+  await promiseFormsProcessedInSameProcess();
   // tidy up by closing any open AC popup
   await synthesizeKey("KEY_Escape");
 }

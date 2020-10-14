@@ -61,7 +61,7 @@ function resetSavedLogins() {
 
 async function setup(pageUrl) {
   let loadPromise = waitForLoad();
-  let processedFormPromise = promiseFormsProcessedInChildFrame();
+  let processedFormPromise = promiseFormsProcessed();
   iframe.src = pageUrl;
 
   await processedFormPromise;

@@ -43,7 +43,7 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
     await LoginManager.addLogin(login);
   }
 
-  let processedPromise = promiseFormsProcessedInChildFrame();
+  let processedPromise = promiseFormsProcessed();
   win.location = url;
   await processedPromise;
 }
