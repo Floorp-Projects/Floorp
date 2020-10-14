@@ -18,7 +18,7 @@ const AuditController = createFactory(
   require("devtools/client/accessibility/components/AuditController")
 );
 
-const { REPS } = require("devtools/client/shared/components/reps/reps");
+const { REPS } = require("devtools/client/shared/components/reps/index");
 const { Grip } = REPS;
 const Rep = createFactory(REPS.Rep);
 

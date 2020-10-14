@@ -19,7 +19,7 @@ const TreeView = createFactory(
   require("devtools/client/shared/components/tree/TreeView")
 );
 // Reps
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const { REPS, MODE } = require("devtools/client/shared/components/reps/index");
 const { Rep } = REPS;
 
 const Grip = REPS.Grip;

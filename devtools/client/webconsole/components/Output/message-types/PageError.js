@@ -12,10 +12,10 @@ const Message = createFactory(
 );
 const GripMessageBody = require("devtools/client/webconsole/components/Output/GripMessageBody");
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS;
+  return require("devtools/client/shared/components/reps/index").REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 PageError.displayName = "PageError";

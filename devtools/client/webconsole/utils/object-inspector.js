@@ -10,13 +10,13 @@ const {
 } = require("devtools/client/shared/vendor/react");
 
 loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS;
+  return require("devtools/client/shared/components/reps/index").REPS;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 loader.lazyGetter(this, "ObjectInspector", function() {
-  const reps = require("devtools/client/shared/components/reps/reps");
+  const reps = require("devtools/client/shared/components/reps/index");
   return createFactory(reps.objectInspector.ObjectInspector);
 });
 

@@ -23,10 +23,10 @@ const PropertiesView = createFactory(
 );
 
 loader.lazyGetter(this, "Rep", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS.Rep;
+  return require("devtools/client/shared/components/reps/index").REPS.Rep;
 });
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 const { div, span } = dom;

@@ -14,7 +14,7 @@ const {
   getDescriptorValue,
 } = require("devtools/client/webconsole/utils/messages");
 loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
+  return require("devtools/client/shared/components/reps/index").MODE;
 });
 
 const GripMessageBody = createFactory(
