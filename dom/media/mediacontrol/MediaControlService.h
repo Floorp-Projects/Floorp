@@ -81,6 +81,13 @@ class MediaControlService final : public nsIObserver {
   // exposing potentially sensitive titles.
   nsString GetFallbackTitle() const;
 
+  // These functions are used to update the variable which would be used for
+  // telemetry probe.
+  void NotifyMediaControlHasEverBeenUsed() { mHasEverUsedMediaControl = true; }
+  void NotifyMediaControlHasEverBeenEnabled() {
+    mHasEverEnabledMediaControl = true;
+  }
+
  private:
   MediaControlService();
   ~MediaControlService();
@@ -166,6 +173,11 @@ class MediaControlService final : public nsIObserver {
   MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
   UniquePtr<ControllerManager> mControllerManager;
   nsString mFallbackTitle;
+
+  // Used for telemetry probe.
+  void UpdateTelemetryUsageProbe();
+  bool mHasEverUsedMediaControl = false;
+  bool mHasEverEnabledMediaControl = false;
 };
 
 }  // namespace dom
