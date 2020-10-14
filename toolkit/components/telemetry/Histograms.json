@@ -15130,6 +15130,20 @@
     "description": "Counts the number of times users enable and use media control on different platforms.",
     "releaseChannelCollection": "opt-out"
   },
+  "MEDIA_CONTROL_HANDLE_PLAY_PAUSE_STOP_ACTIONS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cchang@mozilla.com"
+    ],
+    "bug_numbers": [1668139],
+    "expires_in_version": "90",
+    "kind": "categorical",
+    "labels": ["DefaultHandler", "MediaSessionHandler"],
+    "description": "The number of times `play/pause/stop` actions are being handled on either default handler or media session action handler.",
+    "releaseChannelCollection": "opt-out"
+  },
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
