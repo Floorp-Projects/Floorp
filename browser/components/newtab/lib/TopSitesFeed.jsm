@@ -655,10 +655,11 @@ this.TopSitesFeed = class TopSitesFeed {
     // Insert the original pinned sites into the deduped frecent and defaults.
     let withPinned = insertPinned(checkedAdult, pinned);
     // Insert sponsored sites at their desired position.
-    dedupedSponsored.forEach((link, index) => {
+    dedupedSponsored.forEach(link => {
       if (!link) {
         return;
       }
+      let index = link.sponsored_position - 1;
       if (index > withPinned.length) {
         withPinned[index] = link;
       } else {
