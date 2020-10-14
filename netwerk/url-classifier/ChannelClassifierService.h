@@ -16,6 +16,7 @@ namespace net {
 enum class ChannelBlockDecision {
   Blocked,
   Unblocked,
+  Allowed,
 };
 
 class UrlClassifierBlockedChannel final
@@ -29,6 +30,8 @@ class UrlClassifierBlockedChannel final
   bool IsUnblocked() const {
     return mDecision != ChannelBlockDecision::Blocked;
   }
+
+  ChannelBlockDecision GetDecision() { return mDecision; };
 
   void SetReason(const nsACString& aFeatureName, const nsACString& aTableName);
 

@@ -150,11 +150,14 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
   nsAutoCString list;
   UrlClassifierCommon::TablesToString(aList, list);
 
-  if (ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list) ==
-      ChannelBlockDecision::Unblocked) {
-    ContentBlockingNotifier::OnEvent(
-        aChannel, nsIWebProgressListener::STATE_UNBLOCKED_TRACKING_CONTENT,
-        false);
+  ChannelBlockDecision decision =
+      ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list);
+  if (decision != ChannelBlockDecision::Blocked) {
+    if (decision == ChannelBlockDecision::Unblocked) {
+      ContentBlockingNotifier::OnEvent(
+          aChannel, nsIWebProgressListener::STATE_UNBLOCKED_TRACKING_CONTENT,
+          false);
+    }
     *aShouldContinue = true;
     return NS_OK;
   }
