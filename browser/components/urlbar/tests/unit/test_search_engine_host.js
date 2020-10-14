@@ -74,6 +74,7 @@ add_task(async function test_searchEngine_noautoFill() {
       }),
       makeSearchResult(context, {
         engineName: engine.name,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
         uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
         keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
         query: "",
