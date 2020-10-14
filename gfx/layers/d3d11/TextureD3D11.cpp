@@ -1051,8 +1051,9 @@ void DXGITextureHostD3D11::PushResourceUpdates(
 void DXGITextureHostD3D11::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
+  bool preferCompositorSurface =
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
@@ -1073,7 +1074,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                         aPreferCompositorSurface);
+                         preferCompositorSurface);
       break;
     }
     case gfx::SurfaceFormat::P010:
@@ -1091,7 +1092,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
           GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
                                                   : wr::ColorDepth::Color16,
           wr::ToWrYuvColorSpace(mYUVColorSpace),
-          wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface,
+          wr::ToWrColorRange(mColorRange), aFilter, preferCompositorSurface,
           supportsExternalCompositing);
       break;
     }
@@ -1305,8 +1306,7 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
 void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
-    const Range<wr::ImageKey>& aImageKeys,
-    const bool aPreferCompositorSurface) {
+    const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
@@ -1323,7 +1323,8 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
   aBuilder.PushYCbCrPlanarImage(
       aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
       wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
-      wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface);
+      wr::ToWrColorRange(mColorRange), aFilter,
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE));
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(

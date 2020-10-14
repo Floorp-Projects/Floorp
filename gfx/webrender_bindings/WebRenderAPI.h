@@ -273,6 +273,9 @@ class WebRenderAPI final {
   bool GetUseANGLE() const { return mUseANGLE; }
   bool GetUseDComp() const { return mUseDComp; }
   bool GetUseTripleBuffering() const { return mUseTripleBuffering; }
+  bool SupportsExternalBufferTextures() const {
+    return mSupportsExternalBufferTextures;
+  }
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
   void Capture();
@@ -305,7 +308,8 @@ class WebRenderAPI final {
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
                uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp,
-               bool aUseTripleBuffering, layers::SyncHandle aSyncHandle);
+               bool aUseTripleBuffering, bool aSupportsExternalBufferTextures,
+               layers::SyncHandle aSyncHandle);
 
   ~WebRenderAPI();
   // Should be used only for shutdown handling
@@ -319,6 +323,7 @@ class WebRenderAPI final {
   bool mUseANGLE;
   bool mUseDComp;
   bool mUseTripleBuffering;
+  bool mSupportsExternalBufferTextures;
   bool mCaptureSequence;
   layers::SyncHandle mSyncHandle;
 

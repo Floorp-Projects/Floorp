@@ -65,7 +65,7 @@ class DMABUFTextureHostOGL : public TextureHost {
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
-                        const bool aPreferCompositorSurface) override;
+                        PushDisplayItemFlagSet aFlags) override;
 
  private:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);

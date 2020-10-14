@@ -35,6 +35,8 @@ class RenderCompositorSWGL : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
+  bool SupportsExternalBufferTextures() const override { return true; }
+
   // Interface for wr::Compositor
   CompositorCapabilities GetCompositorCapabilities() override;
 

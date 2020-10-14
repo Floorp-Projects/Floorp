@@ -741,15 +741,18 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                          const wr::LayoutRect& aClip,
                                          wr::ImageRendering aFilter,
                                          const Range<wr::ImageKey>& aImageKeys,
-                                         const bool aPreferCompositorSurface) {
+                                         PushDisplayItemFlagSet aFlags) {
   // SWGL should always try to bypass shaders and composite directly.
-  bool useExternalSurface = gfx::gfxVars::UseSoftwareWebRender();
+  bool preferCompositorSurface =
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
+  bool useExternalSurface =
+      aFlags.contains(PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES);
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
     aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                        !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                        wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                       aPreferCompositorSurface, useExternalSurface);
+                       preferCompositorSurface, useExternalSurface);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
     const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
@@ -757,8 +760,8 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
         aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
         wr::ToWrColorDepth(desc.colorDepth()),
         wr::ToWrYuvColorSpace(desc.yUVColorSpace()),
-        wr::ToWrColorRange(desc.colorRange()), aFilter,
-        aPreferCompositorSurface, useExternalSurface);
+        wr::ToWrColorRange(desc.colorRange()), aFilter, preferCompositorSurface,
+        useExternalSurface);
   }
 }
 

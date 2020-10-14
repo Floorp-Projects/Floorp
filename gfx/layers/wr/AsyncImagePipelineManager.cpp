@@ -434,14 +434,19 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     if (aPipeline->mUseExternalImage) {
       MOZ_ASSERT(aPipeline->mCurrentTexture->AsWebRenderTextureHost());
       Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
-      bool prefer_compositor_surface =
-          IsOpaque(aPipeline->mCurrentTexture->GetFormat()) ||
+      TextureHost::PushDisplayItemFlagSet flags;
+      if (IsOpaque(aPipeline->mCurrentTexture->GetFormat()) ||
           bool(aPipeline->mCurrentTexture->GetFlags() &
-               TextureFlags::IS_OPAQUE);
+               TextureFlags::IS_OPAQUE)) {
+        flags += TextureHost::PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE;
+      }
+      if (mApi->SupportsExternalBufferTextures()) {
+        flags +=
+            TextureHost::PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES;
+      }
       aPipeline->mCurrentTexture->PushDisplayItems(
           builder, wr::ToLayoutRect(rect), wr::ToLayoutRect(rect),
-          aPipeline->mFilter, range_keys,
-          /* aPreferCompositorSurface */ prefer_compositor_surface);
+          aPipeline->mFilter, range_keys, flags);
       HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture);
     } else {
       MOZ_ASSERT(keys.Length() == 1);

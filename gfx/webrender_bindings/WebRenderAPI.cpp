@@ -59,6 +59,7 @@ class NewRenderer : public RendererEvent {
   NewRenderer(wr::DocumentHandle** aDocHandle,
               layers::CompositorBridgeParent* aBridge, int32_t* aMaxTextureSize,
               bool* aUseANGLE, bool* aUseDComp, bool* aUseTripleBuffering,
+              bool* aSupportsExternalBufferTextures,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask, LayoutDeviceIntSize aSize,
               layers::SyncHandle* aHandle, nsACString* aError)
@@ -67,6 +68,7 @@ class NewRenderer : public RendererEvent {
         mUseANGLE(aUseANGLE),
         mUseDComp(aUseDComp),
         mUseTripleBuffering(aUseTripleBuffering),
+        mSupportsExternalBufferTextures(aSupportsExternalBufferTextures),
         mBridge(aBridge),
         mCompositorWidget(std::move(aWidget)),
         mTask(aTask),
@@ -93,6 +95,8 @@ class NewRenderer : public RendererEvent {
     *mUseANGLE = compositor->UseANGLE();
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
+    *mSupportsExternalBufferTextures =
+        compositor->SupportsExternalBufferTextures();
 
     // Only allow the panic on GL error functionality in nightly builds,
     // since it (deliberately) crashes the GPU process if any GL call
@@ -179,6 +183,7 @@ class NewRenderer : public RendererEvent {
   bool* mUseANGLE;
   bool* mUseDComp;
   bool* mUseTripleBuffering;
+  bool* mSupportsExternalBufferTextures;
   layers::CompositorBridgeParent* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
@@ -345,16 +350,17 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
   bool useANGLE = false;
   bool useDComp = false;
   bool useTripleBuffering = false;
+  bool supportsExternalBufferTextures = false;
   layers::SyncHandle syncHandle = 0;
 
   // Dispatch a synchronous task because the DocumentHandle object needs to be
   // created on the render thread. If need be we could delay waiting on this
   // task until the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
-  auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize,
-                                       &useANGLE, &useDComp,
-                                       &useTripleBuffering, std::move(aWidget),
-                                       &task, aSize, &syncHandle, &aError);
+  auto event = MakeUnique<NewRenderer>(
+      &docHandle, aBridge, &maxTextureSize, &useANGLE, &useDComp,
+      &useTripleBuffering, &supportsExternalBufferTextures, std::move(aWidget),
+      &task, aSize, &syncHandle, &aError);
   RenderThread::Get()->RunEvent(aWindowId, std::move(event));
 
   task.Wait();
@@ -365,7 +371,8 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
 
   return RefPtr<WebRenderAPI>(
              new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE,
-                              useDComp, useTripleBuffering, syncHandle))
+                              useDComp, useTripleBuffering,
+                              supportsExternalBufferTextures, syncHandle))
       .forget();
 }
 
@@ -373,9 +380,9 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
   wr::DocumentHandle* docHandle = nullptr;
   wr_api_clone(mDocHandle, &docHandle);
 
-  RefPtr<WebRenderAPI> renderApi =
-      new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mUseDComp,
-                       mUseTripleBuffering, mSyncHandle);
+  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(
+      docHandle, mId, mMaxTextureSize, mUseANGLE, mUseDComp,
+      mUseTripleBuffering, mSupportsExternalBufferTextures, mSyncHandle);
   renderApi->mRootApi = this;  // Hold root api
   renderApi->mRootDocumentApi = this;
 
@@ -389,6 +396,7 @@ wr::WrIdNamespace WebRenderAPI::GetNamespace() {
 WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
                            uint32_t aMaxTextureSize, bool aUseANGLE,
                            bool aUseDComp, bool aUseTripleBuffering,
+                           bool aSupportsExternalBufferTextures,
                            layers::SyncHandle aSyncHandle)
     : mDocHandle(aHandle),
       mId(aId),
@@ -396,6 +404,7 @@ WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
       mUseANGLE(aUseANGLE),
       mUseDComp(aUseDComp),
       mUseTripleBuffering(aUseTripleBuffering),
+      mSupportsExternalBufferTextures(aSupportsExternalBufferTextures),
       mCaptureSequence(false),
       mSyncHandle(aSyncHandle) {}
 
