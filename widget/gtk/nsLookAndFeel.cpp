@@ -22,6 +22,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/Telemetry.h"
 #include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
@@ -1328,3 +1329,52 @@ char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
 }
 
 bool nsLookAndFeel::GetEchoPasswordImpl() { return false; }
+
+bool nsLookAndFeel::WidgetUsesImage(WidgetNodeType aNodeType) {
+  static constexpr GtkStateFlags sFlagsToCheck[] {
+    GTK_STATE_FLAG_NORMAL,
+    GTK_STATE_FLAG_PRELIGHT,
+    GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
+    GTK_STATE_FLAG_BACKDROP,
+    GTK_STATE_FLAG_INSENSITIVE
+  };
+
+  GtkStyleContext* style = GetStyleContext(aNodeType);
+
+  GValue value = G_VALUE_INIT;
+  for (GtkStateFlags state : sFlagsToCheck) {
+    gtk_style_context_get_property(style, "background-image", state, &value);
+    bool hasPattern = G_VALUE_TYPE(&value) == CAIRO_GOBJECT_TYPE_PATTERN &&
+                      g_value_get_boxed(&value);
+    g_value_unset(&value);
+    if (hasPattern) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void nsLookAndFeel::RecordLookAndFeelSpecificTelemetry() {
+  // Gtk version we're on.
+  nsString version;
+  version.AppendPrintf("%d.%d", gtk_major_version, gtk_minor_version);
+  Telemetry::ScalarSet(Telemetry::ScalarID::WIDGET_GTK_VERSION, version);
+
+  // Whether the current Gtk theme has scrollbar buttons.
+  bool hasScrollbarButtons =
+      GetInt(LookAndFeel::IntID::ScrollArrowStyle) != eScrollArrow_None;
+  mozilla::Telemetry::ScalarSet(
+      mozilla::Telemetry::ScalarID::WIDGET_GTK_THEME_HAS_SCROLLBAR_BUTTONS,
+      hasScrollbarButtons);
+
+  // Whether the current Gtk theme uses something other than a solid color
+  // background for scrollbar parts.
+  bool scrollbarUsesImage =
+      WidgetUsesImage(MOZ_GTK_SCROLLBAR_VERTICAL) ||
+      WidgetUsesImage(MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL) ||
+      WidgetUsesImage(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL) ||
+      WidgetUsesImage(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
+  mozilla::Telemetry::ScalarSet(
+      mozilla::Telemetry::ScalarID::WIDGET_GTK_THEME_SCROLLBAR_USES_IMAGES,
+      scrollbarUsesImage);
+}

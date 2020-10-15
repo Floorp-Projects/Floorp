@@ -140,7 +140,7 @@ typedef enum {
 #define MOZ_GTK_WIDGET_INCONSISTENT (1 << 1)
 
 /*** widget type constants ***/
-typedef enum {
+enum WidgetNodeType : int {
   /* Paints a GtkButton. flags is a GtkReliefStyle. */
   MOZ_GTK_BUTTON,
   /* Paints a button with image and no text */
@@ -350,7 +350,7 @@ typedef enum {
   MOZ_GTK_WINDOW_DECORATION_SOLID,
 
   MOZ_GTK_WIDGET_NODE_COUNT
-} WidgetNodeType;
+};
 
 /* ButtonLayout represents a GTK CSD button and whether its on the left or
  * right side of the tab bar */
