@@ -30,12 +30,12 @@ Grid Layout is a layout model for CSS that has powerful abilities to control the
 
 Although many layouts can be expressed with regular Grid Layout, restricting items into a grid in both axes also makes it impossible to express some common layouts on the Web.
 
-This module defines a layout system that removes that restriction so that items can be placed into Grid-like tracks in just one of the axes, while stacking them one after another in the other axis.  Items are placed into the column (or row) with the most remaining space based on the layout size of the items placed so far.  It extends <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> with this new grid item placement strategy and <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> with new alignment features.
+This module defines a layout system that removes that restriction so that items can be placed into Grid-like tracks in just one of the axes, while stacking them one after another in the other axis.  Items are placed into the column (or row) with the most remaining space based on the layout size of the items placed so far.  This module also extends <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> with this new grid item placement strategy and <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> with new alignment features.
 
 <h3 id='background'>
 Background and Motivation</h3>
 
-Masonry layout is a common Web design pattern where a number of items — commonly images or short article summaries — are placed one by one into columns, so-called because it resembles stone masonry. Unlike <a href="https://drafts.csswg.org/css-multicol-1/">regular multi-column layout</a>, where items are placed vertically in the first column until they must spill over to the second column, masonry layout selects a column for each new item such that it is generally closer to the top of the layout than items placed later.
+Masonry layout is a common Web design pattern where a number of items — commonly images or short article summaries — are placed one by one into columns, in a way that loosely resembles stone masonry. Unlike <a href="https://drafts.csswg.org/css-multicol-1/">regular multi-column layout</a>, where items are placed vertically in the first column until they must spill over to the second column, masonry layout selects a column for each new item such that it is generally closer to the top of the layout than items placed later.
 
 The Pinterest search results page exemplifies this layout:
 
@@ -50,9 +50,9 @@ The Pinterest search results page exemplifies this layout:
 
 Here, each item has a different height (depending on the content and the width of the column), and inspecting the DOM reveals (as the visual content itself gives no indication of ordering) that each item has been placed into the column with the smallest height so far.
 
-An advantage to using this layout over regular multi-column layout is that the masonry layout container height grows as more items are placed into it, as a balancing multi-column layout would, but the effect for the reader is that scrolling down will naturally lead to "later" items in the layout (that is, those less relevant in the search results).
+This layout superficially looks similar to multi-column layout; but it has the advantage that scrolling down will naturally lead to "later" items in the layout (that is, those less relevant in the search results).
 
-Achieving this layout without knowing upfront how tall each item will be is currently not possible without using script.
+It's not possible to achieve this layout using earlier CSS layout models, unless you know up-front how tall each item will be, or use JavaScript for content measurement or placement.
 
 <h3 id="values">
 Value Definitions</h3>
