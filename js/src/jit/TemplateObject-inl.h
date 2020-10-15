@@ -56,15 +56,6 @@ inline gc::Cell* TemplateObject::shape() const {
   return shape;
 }
 
-inline uint32_t TemplateObject::getInlineTypedObjectSize() const {
-  return obj_->as<InlineTypedObject>().size();
-}
-
-inline uint8_t* TemplateObject::getInlineTypedObjectMem(
-    const JS::AutoRequireNoGC& nogc) const {
-  return obj_->as<InlineTypedObject>().inlineTypedMem(nogc);
-}
-
 inline const NativeTemplateObject& TemplateObject::asNativeTemplateObject()
     const {
   MOZ_ASSERT(isNative());
