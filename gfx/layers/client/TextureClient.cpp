@@ -274,8 +274,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   int32_t maxTextureSize = aKnowsCompositor->GetMaxTextureSize();
   if ((layersBackend == LayersBackend::LAYERS_D3D11 ||
        (layersBackend == LayersBackend::LAYERS_WR &&
-        !aKnowsCompositor->GetTextureFactoryIdentifier()
-             .mUsingSoftwareWebRender)) &&
+        !aKnowsCompositor->UsingSoftwareWebRender())) &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT))) &&
@@ -293,7 +292,8 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 
 #ifdef MOZ_WAYLAND
   if ((layersBackend == LayersBackend::LAYERS_OPENGL ||
-       layersBackend == LayersBackend::LAYERS_WR) &&
+       (layersBackend == LayersBackend::LAYERS_WR &&
+        !aKnowsCompositor->UsingSoftwareWebRender())) &&
       gfxPlatformGtk::GetPlatform()->UseDMABufTextures() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::DMABUF;

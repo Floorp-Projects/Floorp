@@ -112,9 +112,15 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     return TextureType::MacIOSurface;
   }
   if (kIsWayland) {
+    if (knowsCompositor->UsingSoftwareWebRender()) {
+      return TextureType::Unknown;
+    }
     return TextureType::DMABUF;
   }
   if (kIsX11) {
+    if (knowsCompositor->UsingSoftwareWebRender()) {
+      return TextureType::Unknown;
+    }
     return TextureType::X11;
   }
   if (kIsAndroid) {
