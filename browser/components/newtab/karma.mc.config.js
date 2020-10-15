@@ -90,7 +90,7 @@ module.exports = function(config) {
               statements: 75,
               lines: 75,
               functions: 80,
-              branches: 65,
+              branches: 60,
             },
             "lib/Screenshots.jsm": {
               statements: 94,
