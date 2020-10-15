@@ -4,6 +4,3 @@
 
 export::
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
-
-clean clobber realclean clobber_all distclean::
-	$(call SUBMAKE,$@,$(DEPTH)/config/makefiles/xpidl)

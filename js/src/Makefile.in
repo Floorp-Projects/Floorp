@@ -74,18 +74,6 @@ ifndef HAVE_DTRACE
 endif
 endif
 
-GARBAGE_DIRS += config.statusd
-DIST_GARBAGE = config.cache config.log config.status \
-   config/autoconf.mk config/emptyvars.mk \
-   js-config.h js-confdefs.h \
-   backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
-   gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
-   backend.RecursiveMakeBackend backend.RecursiveMakeBackend.pp \
-   devtools/rootAnalysis/Makefile
-
-distclean::
-	$(RM) $(DIST_GARBAGE)
-
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
 
 # Silence warnings on AIX/HP-UX from non-GNU compilers
@@ -137,7 +125,7 @@ $(LIBRARY): $(DTRACE_PROBE_OBJ)
 $(DTRACE_PROBE_OBJ): $(srcdir)/devtools/javascript-trace.d $(OBJS)
 	dtrace -x nolibs -G -C -s $< -o $@ $(filter-out $<, $^)
 
-OBJS += $(DTRACE_PROBE_OBJ) # for "make clean"
+OBJS += $(DTRACE_PROBE_OBJ)
 endif # OS_ARCH != Darwin
 endif # HAVE_DTRACE
 
@@ -157,13 +145,5 @@ source-package:
 	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
 	MOZJS_ALPHA=$(MOZJS_ALPHA) \
 	$(srcdir)/make-source-package.sh
-
-clean::
-	DIST=$(DIST) \
-	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
-	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
-	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
-	MOZJS_ALPHA=$(MOZJS_ALPHA) \
-	$(srcdir)/make-source-package.sh clean
 
 endif
