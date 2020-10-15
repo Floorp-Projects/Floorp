@@ -223,6 +223,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:WebRtcAec_CreateAec\n"
          "race:EchoSubtraction\n"
 
+         // Bug 1656068
+         "race:WebRtcAec_Create\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
