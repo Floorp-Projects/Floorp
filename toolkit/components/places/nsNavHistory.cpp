@@ -3245,8 +3245,9 @@ void nsNavHistory::GetStringFromName(const char* aName, nsACString& aResult) {
 void nsNavHistory::GetMonthName(const PRExplodedTime& aTime,
                                 nsACString& aResult) {
   nsAutoString month;
-  nsresult rv = DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatMonthLong, kTimeFormatNone, &aTime, month);
+  nsresult rv = mozilla::DateTimeFormat::GetCalendarSymbol(
+      mozilla::DateTimeFormat::Field::Month,
+      mozilla::DateTimeFormat::Style::Wide, &aTime, month);
   if (NS_FAILED(rv)) {
     aResult = nsPrintfCString("[%d]", aTime.tm_month + 1);
     return;

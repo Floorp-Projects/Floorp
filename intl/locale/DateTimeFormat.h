@@ -22,9 +22,7 @@ enum nsDateFormatSelector : long {
   kDateFormatLong,       // provides the long date format for the given locale
   kDateFormatShort,      // provides the short date format for the given locale
   kDateFormatYearMonth,  // formats using only the year and month
-  kDateFormatWeekday,    // week day (e.g. Mon, Tue)
   kDateFormatYearMonthLong,  // long version of kDateFormatYearMonth
-  kDateFormatMonthLong       // long format of month name only
 };
 
 enum nsTimeFormatSelector : long {
