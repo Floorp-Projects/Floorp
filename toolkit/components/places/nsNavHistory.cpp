@@ -3259,8 +3259,8 @@ void nsNavHistory::GetMonthName(const PRExplodedTime& aTime,
 void nsNavHistory::GetMonthYear(const PRExplodedTime& aTime,
                                 nsACString& aResult) {
   nsAutoString monthYear;
-  nsresult rv = DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonthLong, kTimeFormatNone, &aTime, monthYear);
+  nsresult rv = mozilla::DateTimeFormat::FormatDateTime(
+      &aTime, DateTimeFormat::Skeleton::yyyyMMMM, monthYear);
   if (NS_FAILED(rv)) {
     aResult = nsPrintfCString("[%d-%d]", aTime.tm_month + 1, aTime.tm_year);
     return;

@@ -99,14 +99,13 @@ TEST(DateTimeFormat, DateFormatSelectors)
   mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
-  nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatNone, &prExplodedTime, formattedTime);
+  nsresult rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::yyyyMM, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("01/1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonthLong, kTimeFormatNone, &prExplodedTime,
-      formattedTime);
+  rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::yyyyMMMM, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("January 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
@@ -115,18 +114,6 @@ TEST(DateTimeFormat, DateFormatSelectors)
       mozilla::DateTimeFormat::Style::Wide, &prExplodedTime, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("January", NS_ConvertUTF16toUTF8(formattedTime).get());
-
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatShort, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_STREQ("01/1970, 12:00 AM",
-               nt(NS_ConvertUTF16toUTF8(formattedTime)).get());
-
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatLong, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_STREQ("01/1970, 12:00:00 AM",
-               nt(NS_ConvertUTF16toUTF8(formattedTime)).get());
 
   rv = mozilla::DateTimeFormat::GetCalendarSymbol(
       mozilla::DateTimeFormat::Field::Weekday,
@@ -227,14 +214,13 @@ TEST(DateTimeFormat, DateFormatSelectorsForeign)
   mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
-  nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatNone, &prExplodedTime, formattedTime);
+  nsresult rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::yyyyMM, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("01.1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonthLong, kTimeFormatNone, &prExplodedTime,
-      formattedTime);
+  rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::yyyyMMMM, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("Januar 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
@@ -243,18 +229,6 @@ TEST(DateTimeFormat, DateFormatSelectorsForeign)
       mozilla::DateTimeFormat::Style::Wide, &prExplodedTime, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("Januar", NS_ConvertUTF16toUTF8(formattedTime).get());
-
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatShort, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_STREQ("01.1970, 00:00",
-               ntd(NS_ConvertUTF16toUTF8(formattedTime)).get());
-
-  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
-      kDateFormatYearMonth, kTimeFormatLong, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_STREQ("01.1970, 00:00:00",
-               ntd(NS_ConvertUTF16toUTF8(formattedTime)).get());
 
   rv = mozilla::DateTimeFormat::GetCalendarSymbol(
       mozilla::DateTimeFormat::Field::Weekday,

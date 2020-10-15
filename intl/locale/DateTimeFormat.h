@@ -18,11 +18,9 @@ namespace mozilla {
 
 enum nsDateFormatSelector : long {
   // Do not change the order of the values below (see bug 1225696).
-  kDateFormatNone = 0,   // do not include the date  in the format string
-  kDateFormatLong,       // provides the long date format for the given locale
-  kDateFormatShort,      // provides the short date format for the given locale
-  kDateFormatYearMonth,  // formats using only the year and month
-  kDateFormatYearMonthLong,  // long version of kDateFormatYearMonth
+  kDateFormatNone = 0,  // do not include the date  in the format string
+  kDateFormatLong,      // provides the long date format for the given locale
+  kDateFormatShort,     // provides the short date format for the given locale
 };
 
 enum nsTimeFormatSelector : long {
