@@ -118,14 +118,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:sync..Arc\n"
          "race:alloc::sync::Arc\n"
 
-         // Bug 1600572
-         "race:SchedulerGroup::CreateEventTargetFor\n"
-         "race:SystemGroupImpl::AddRef\n"
-         "race:SystemGroup::EventTargetFor\n"
-         "race:SchedulerEventTarget::AddRef\n"
-         "race:SchedulerEventTarget::Dispatch\n"
-         "race:MessageChannel::MessageTask::Post\n"
-
          // Bug 1600594
          "race:nsThread::SizeOfEventQueues\n"
 
