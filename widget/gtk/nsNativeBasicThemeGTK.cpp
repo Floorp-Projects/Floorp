@@ -8,6 +8,7 @@
 using namespace mozilla;
 
 static constexpr CSSIntCoord kMinimumScrollbarSize = 12;
+static constexpr CSSIntCoord kMinimumScrollbarThumbSize = 40;
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   static mozilla::StaticRefPtr<nsITheme> gInstance;
@@ -45,6 +46,19 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   uint32_t dpiRatio = GetDPIRatio(aFrame);
   auto size = static_cast<uint32_t>(kMinimumScrollbarSize) * dpiRatio;
   aResult->SizeTo(size, size);
+
+  switch (aAppearance) {
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      aResult->width =
+          static_cast<uint32_t>(kMinimumScrollbarThumbSize) * dpiRatio;
+      break;
+    case StyleAppearance::ScrollbarthumbVertical:
+      aResult->height =
+          static_cast<uint32_t>(kMinimumScrollbarThumbSize) * dpiRatio;
+      break;
+    default:
+      break;
+  }
 
   *aIsOverridable = true;
   return NS_OK;
