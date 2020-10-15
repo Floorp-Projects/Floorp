@@ -35,7 +35,7 @@ add_task(async function() {
 
   is(
     getTitle(),
-    `Developer Tools - Page title - ${URL}`,
+    `Developer Tools — Page title — ${URL}`,
     "Devtools title correct after switching to detached window host"
   );
 
@@ -98,7 +98,7 @@ add_task(async function() {
   info("Navigation to the iframe is done, the inspector should be back up");
   is(
     getTitle(),
-    `Developer Tools - Page title - ${URL}`,
+    `Developer Tools — Page title — ${URL}`,
     "Devtools title was not updated after changing inspected frame"
   );
 
