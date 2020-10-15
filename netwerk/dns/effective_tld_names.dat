@@ -1152,7 +1152,7 @@ gov.gr
 // gs : https://en.wikipedia.org/wiki/.gs
 gs
 
-// gt : http://www.gt/politicas_de_registro.html
+// gt : https://www.gt/sitio/registration_policy.php?lang=en
 gt
 com.gt
 edu.gt
@@ -7110,7 +7110,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-10-08T17:45:32Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-10-12T17:47:39Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7328,7 +7328,7 @@ author
 // auto : 2014-11-13 XYZ.COM LLC
 auto
 
-// autos : 2014-01-09 DERAutos, LLC
+// autos : 2014-01-09 XYZ.COM LLC
 autos
 
 // avianca : 2015-01-08 Avianca Holdings S.A.
@@ -7478,7 +7478,7 @@ bmw
 // bnpparibas : 2014-05-29 BNP Paribas
 bnpparibas
 
-// boats : 2014-12-04 DERBoats, LLC
+// boats : 2014-12-04 XYZ.COM LLC
 boats
 
 // boehringer : 2015-07-09 Boehringer Ingelheim International GmbH
@@ -7517,7 +7517,7 @@ bot
 // boutique : 2013-11-14 Binky Moon, LLC
 boutique
 
-// box : 2015-11-12 .BOX INC.
+// box : 2015-11-12 Intercap Registry Inc.
 box
 
 // bradesco : 2014-12-18 Banco Bradesco S.A.
@@ -8501,7 +8501,7 @@ homedepot
 // homegoods : 2015-07-16 The TJX Companies, Inc.
 homegoods
 
-// homes : 2014-01-09 DERHomes, LLC
+// homes : 2014-01-09 XYZ.COM LLC
 homes
 
 // homesense : 2015-07-16 The TJX Companies, Inc.
@@ -9077,7 +9077,7 @@ moscow
 // moto : 2015-06-04 Motorola Trademark Holdings, LLC
 moto
 
-// motorcycles : 2014-01-09 DERMotorcycles, LLC
+// motorcycles : 2014-01-09 XYZ.COM LLC
 motorcycles
 
 // mov : 2014-01-30 Charleston Road Registry Inc.
@@ -10595,7 +10595,7 @@ vermögensberatung
 // xyz : 2013-12-05 XYZ.COM LLC
 xyz
 
-// yachts : 2014-01-09 DERYachts, LLC
+// yachts : 2014-01-09 XYZ.COM LLC
 yachts
 
 // yahoo : 2015-04-02 Yahoo! Domain Services Inc.
@@ -11872,6 +11872,7 @@ usercontent.jp
 gentapps.com
 gentlentapis.com
 lab.ms
+cdn-edges.net
 
 // GitHub, Inc.
 // Submitted by Patrick Toomey <security@github.com>
@@ -11931,9 +11932,10 @@ pagespeedmobilizer.com
 publishproxy.com
 withgoogle.com
 withyoutube.com
-cloudfunctions.net
+*.gateway.dev
 cloud.goog
 translate.goog
+cloudfunctions.net
 
 blogspot.ae
 blogspot.al
