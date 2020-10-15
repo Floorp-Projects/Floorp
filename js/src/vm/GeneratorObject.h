@@ -38,10 +38,6 @@ class AbstractGeneratorObject : public NativeObject {
     RESERVED_SLOTS
   };
 
- private:
-  static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame,
-                      jsbytecode* pc, Value* vp, unsigned nvalues);
-
  public:
   static JSObject* create(JSContext* cx, AbstractFramePtr frame);
 
@@ -49,16 +45,8 @@ class AbstractGeneratorObject : public NativeObject {
                      Handle<AbstractGeneratorObject*> genObj, HandleValue arg,
                      HandleValue resumeKind);
 
-  static bool initialSuspend(JSContext* cx, HandleObject obj,
-                             AbstractFramePtr frame, jsbytecode* pc) {
-    return suspend(cx, obj, frame, pc, nullptr, 0);
-  }
-
-  static bool normalSuspend(JSContext* cx, HandleObject obj,
-                            AbstractFramePtr frame, jsbytecode* pc, Value* vp,
-                            unsigned nvalues) {
-    return suspend(cx, obj, frame, pc, vp, nvalues);
-  }
+  static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame,
+                      jsbytecode* pc, unsigned nvalues);
 
   static void finalSuspend(HandleObject obj);
 
@@ -209,8 +197,6 @@ bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
  */
 AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
                                                     AbstractFramePtr frame);
-
-void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
 
 inline GeneratorResumeKind IntToResumeKind(int32_t value) {
   MOZ_ASSERT(uint32_t(value) <= uint32_t(GeneratorResumeKind::Return));

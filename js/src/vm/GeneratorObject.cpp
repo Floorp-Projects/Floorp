@@ -28,7 +28,6 @@ using namespace js;
 JSObject* AbstractGeneratorObject::create(JSContext* cx,
                                           AbstractFramePtr frame) {
   MOZ_ASSERT(frame.isGeneratorFrame());
-  MOZ_ASSERT(frame.script()->nfixed() == 0);
   MOZ_ASSERT(!frame.isConstructing());
 
   RootedFunction fun(cx, frame.callee());
@@ -65,7 +64,7 @@ void AbstractGeneratorObject::trace(JSTracer* trc) {
 
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
                                       AbstractFramePtr frame, jsbytecode* pc,
-                                      Value* vp, unsigned nvalues) {
+                                      unsigned nvalues) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
              JSOp(*pc) == JSOp::Await);
 
@@ -74,36 +73,24 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Await, genObj->callee().isAsync());
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Yield, genObj->callee().isGenerator());
 
-  ArrayObject* stack = nullptr;
   if (nvalues > 0) {
-    do {
-      if (genObj->hasStackStorage()) {
-        MOZ_ASSERT(genObj->stackStorage().getDenseInitializedLength() == 0);
-        auto result = genObj->stackStorage().setOrExtendDenseElements(
-            cx, 0, vp, nvalues, ShouldUpdateTypes::DontUpdate);
-        if (result == DenseElementResult::Success) {
-          MOZ_ASSERT(genObj->stackStorage().getDenseInitializedLength() ==
-                     nvalues);
-          break;
-        }
-        if (result == DenseElementResult::Failure) {
-          return false;
-        }
-      }
-
-      stack = NewDenseCopiedArray(cx, nvalues, vp);
+    ArrayObject* stack = nullptr;
+    if (genObj->hasStackStorage()) {
+      stack = &genObj->stackStorage();
+    } else {
+      stack = NewDenseEmptyArray(cx);
       if (!stack) {
         return false;
       }
-    } while (false);
+      genObj->setStackStorage(*stack);
+    }
+    if (!frame.saveGeneratorSlots(cx, nvalues, stack)) {
+      return false;
+    }
   }
 
   genObj->setResumeIndex(pc);
   genObj->setEnvironmentChain(*frame.environmentChain());
-  if (stack) {
-    genObj->setStackStorage(*stack);
-  }
-
   return true;
 }
 
@@ -127,21 +114,11 @@ AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
   Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
   Value genValue = callObj.getSlot(shape->slot());
 
-  // If the `generator; setaliasedvar ".generator"; initialyield` bytecode
+  // If the `Generator; SetAliasedVar ".generator"; InitialYield` bytecode
   // sequence has not run yet, genValue is undefined.
   return genValue.isObject()
              ? &genValue.toObject().as<AbstractGeneratorObject>()
              : nullptr;
-}
-
-void js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame) {
-  CallObject& callObj = frame.callObj();
-
-  // Get the generator object stored on the scope chain and close it.
-  Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
-  auto& genObj =
-      callObj.getSlot(shape->slot()).toObject().as<AbstractGeneratorObject>();
-  genObj.setClosed();
 }
 
 bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
@@ -181,12 +158,12 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
   }
 
   if (genObj->hasStackStorage() && !genObj->isStackStorageEmpty()) {
-    uint32_t len = genObj->stackStorage().getDenseInitializedLength();
-    MOZ_ASSERT(activation.regs().spForStackDepth(len));
-    const Value* src = genObj->stackStorage().getDenseElements();
-    mozilla::PodCopy(activation.regs().sp, src, len);
-    activation.regs().sp += len;
-    genObj->stackStorage().setDenseInitializedLength(0);
+    JSScript* script = activation.regs().fp()->script();
+    ArrayObject* storage = &genObj->stackStorage();
+    uint32_t len = storage->getDenseInitializedLength();
+    activation.regs().fp()->restoreGeneratorSlots(storage);
+    activation.regs().sp += len - script->nfixed();
+    storage->setDenseInitializedLength(0);
   }
 
   JSScript* script = callee->nonLazyScript();

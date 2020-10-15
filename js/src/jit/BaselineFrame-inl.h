@@ -14,6 +14,7 @@
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/NativeObject-inl.h"  // js::NativeObject::initDenseElementsFromRange
 
 namespace js {
 namespace jit {
@@ -37,6 +38,17 @@ inline void BaselineFrame::replaceInnermostEnvironment(EnvironmentObject& env) {
   MOZ_ASSERT(env.enclosingEnvironment() ==
              envChain_->as<EnvironmentObject>().enclosingEnvironment());
   envChain_ = &env;
+}
+
+inline bool BaselineFrame::saveGeneratorSlots(JSContext* cx, unsigned nslots,
+                                              ArrayObject* dest) const {
+  // By convention, generator slots are stored in interpreter order,
+  // which is the reverse of BaselineFrame order.
+
+  MOZ_ASSERT(nslots == numValueSlots(debugFrameSize()) - 1);
+  const Value* end = reinterpret_cast<const Value*>(this);
+  mozilla::Span<const Value> span{end - nslots, end};
+  return dest->initDenseElementsFromRange(cx, span.rbegin(), span.rend());
 }
 
 inline bool BaselineFrame::pushLexicalEnvironment(JSContext* cx,

@@ -5780,12 +5780,10 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     masm.unboxObject(R0, genObj);
   }
 
-#ifdef DEBUG
-  size_t liveFixed;
-  MOZ_ASSERT_IF(handler.tryCountLiveFixed(&liveFixed), liveFixed == 0);
-#endif
-
-  if (op == JSOp::InitialYield || frame.hasKnownStackDepth(1)) {
+  if (frame.hasKnownStackDepth(1) && !handler.canHaveFixedSlots()) {
+    // If the expression stack is empty, we can inline the Yield. Note that this
+    // branch is never taken for the interpreter because it doesn't know static
+    // stack depths.
     MOZ_ASSERT_IF(op == JSOp::InitialYield && handler.maybePC(),
                   GET_RESUMEINDEX(handler.maybePC()) == 0);
     Address resumeIndexSlot(genObj,
@@ -5794,9 +5792,6 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     if (op == JSOp::InitialYield) {
       masm.storeValue(Int32Value(0), resumeIndexSlot);
     } else {
-      // If the expression stack is empty, we can inline the Yield. Note that
-      // this branch is never taken for the interpreter because it doesn't know
-      // static stack depths.
       jsbytecode* pc = handler.maybePC();
       MOZ_ASSERT(pc, "compiler-only code never has a null pc");
       masm.move32(Imm32(GET_RESUMEINDEX(pc)), temp);
@@ -5814,14 +5809,8 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     masm.branchPtrInNurseryChunk(Assembler::Equal, genObj, temp, &skipBarrier);
     masm.branchPtrInNurseryChunk(Assembler::NotEqual, envObj, temp,
                                  &skipBarrier);
-    if (op == JSOp::InitialYield) {
-      masm.push(genObj);
-    }
     MOZ_ASSERT(genObj == R2.scratchReg());
     masm.call(&postBarrierSlot_);
-    if (op == JSOp::InitialYield) {
-      masm.pop(genObj);
-    }
     masm.bind(&skipBarrier);
   } else {
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
@@ -5839,8 +5828,8 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
       return false;
     }
   }
-  masm.loadValue(frame.addressOfStackValue(-1), JSReturnOperand);
 
+  masm.loadValue(frame.addressOfStackValue(-1), JSReturnOperand);
   if (!emitReturn()) {
     return false;
   }
@@ -6145,7 +6134,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   }
   masm.bind(&noArgsObj);
 
-  // Push expression slots if needed.
+  // Push locals and expression slots if needed.
   Label noStackStorage;
   Address stackStorageSlot(genObj,
                            AbstractGeneratorObject::offsetOfStackStorageSlot());
