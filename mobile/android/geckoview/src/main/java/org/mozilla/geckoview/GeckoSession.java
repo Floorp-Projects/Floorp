@@ -1461,6 +1461,32 @@ public class GeckoSession {
     public static final int LOAD_FLAGS_REPLACE_HISTORY = 1 << 6;
 
     /**
+     * Filter headers according to the CORS safelisted rules.
+     *
+     * See <a href="https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header">
+     *  CORS-safelisted request header
+     * </a>.
+     */
+    public static final int HEADER_FILTER_CORS_SAFELISTED = 1;
+    /**
+     * Allows most headers.
+     *
+     * Note: the <code>Host</code> and <code>Connection</code>
+     * headers are still ignored.
+     *
+     * This should only be used when input is hard-coded from the app or when
+     * properly sanitized, as some headers could cause unexpected consequences
+     * and security issues.
+     *
+     * Only use this if you know what you're doing.
+     */
+    public static final int HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(value = {HEADER_FILTER_CORS_SAFELISTED, HEADER_FILTER_UNRESTRICTED_UNSAFE})
+            /* package */ @interface HeaderFilter {}
+
+    /**
      * Main entry point for loading URIs into a {@link GeckoSession}.
      *
      * The simplest use case is loading a URIs with no extra options, this can
@@ -1502,6 +1528,7 @@ public class GeckoSession {
         private GeckoBundle mHeaders;
         private @LoadFlags int mLoadFlags = LOAD_FLAGS_NONE;
         private boolean mIsDataUri;
+        private @HeaderFilter int mHeaderFilter = HEADER_FILTER_CORS_SAFELISTED;
 
         private static @NonNull String createDataUri(@NonNull final byte[] bytes,
                                                     @Nullable final String mimeType) {
@@ -1603,8 +1630,12 @@ public class GeckoSession {
         /**
          * Add headers for this load.
          *
-         * Note: the <code>Host</code> and <code>Connection</code>
-         * headers are ignored.
+         * Note: only CORS safelisted headers are allowed by default. To modify this
+         * behavior use {@link #headerFilter}.
+         *
+         * See <a href="https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header">
+         *  CORS-safelisted request header
+         * </a>.
          *
          * @param headers a <code>Map</code> containing headers that will
          *                be added to this load.
@@ -1621,6 +1652,20 @@ public class GeckoSession {
                 bundle.putString(entry.getKey(), entry.getValue());
             }
             mHeaders = bundle;
+            return this;
+        }
+
+        /**
+         * Modify the header filter behavior. By default only CORS safelisted headers are allowed.
+         *
+         * @param filter one of the
+         *               {@link GeckoSession#HEADER_FILTER_CORS_SAFELISTED HEADER_FILTER_*}
+         *               constants.
+         * @return this {@link Loader} instance.
+         */
+        @NonNull
+        public Loader headerFilter(final @HeaderFilter int filter) {
+            mHeaderFilter = filter;
             return this;
         }
 
@@ -1679,6 +1724,7 @@ public class GeckoSession {
             final GeckoBundle msg = new GeckoBundle();
             msg.putString("uri", request.mUri);
             msg.putInt("flags", loadFlags);
+            msg.putInt("headerFilter", request.mHeaderFilter);
 
             if (request.mReferrerUri != null) {
                 msg.putString("referrerUri", request.mReferrerUri);
@@ -1721,6 +1767,7 @@ public class GeckoSession {
     public void loadUri(final @NonNull String uri, final @Nullable Map<String, String> additionalHeaders) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .additionalHeaders(additionalHeaders));
     }
 
@@ -1736,6 +1783,7 @@ public class GeckoSession {
     public void loadUri(final @NonNull String uri, final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .flags(flags));
     }
 
@@ -1753,6 +1801,7 @@ public class GeckoSession {
                         final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .flags(flags));
     }
@@ -1772,6 +1821,7 @@ public class GeckoSession {
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .flags(flags)
                 .additionalHeaders(additionalHeaders));
@@ -1793,6 +1843,7 @@ public class GeckoSession {
                         final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .flags(flags));
     }
@@ -1814,6 +1865,7 @@ public class GeckoSession {
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .additionalHeaders(additionalHeaders)
                 .flags(flags));
@@ -1853,6 +1905,7 @@ public class GeckoSession {
     @Deprecated
     public void loadUri(final @NonNull Uri uri) {
         load(new Loader()
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .uri(uri));
     }
 
@@ -1867,6 +1920,7 @@ public class GeckoSession {
     public void loadUri(final @NonNull Uri uri, final @Nullable Map<String, String> additionalHeaders) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .additionalHeaders(additionalHeaders));
     }
 
@@ -1881,6 +1935,7 @@ public class GeckoSession {
     public void loadUri(final @NonNull Uri uri, final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .flags(flags));
     }
 
@@ -1897,6 +1952,7 @@ public class GeckoSession {
                         final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .flags(flags));
     }
@@ -1915,6 +1971,7 @@ public class GeckoSession {
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         load(new Loader()
                 .uri(uri)
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
                 .flags(flags)
                 .additionalHeaders(additionalHeaders));
