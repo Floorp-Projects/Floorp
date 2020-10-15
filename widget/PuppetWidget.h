@@ -326,7 +326,7 @@ class PuppetWidget : public nsBaseWidget,
   virtual void OnMemoryPressure(layers::MemoryPressureReason aWhy) override;
 
  private:
-  nsresult Paint();
+  nsresult Paint(bool aDoTick);
 
   void SetChild(PuppetWidget* aChild);
 
@@ -355,12 +355,15 @@ class PuppetWidget : public nsBaseWidget,
   class PaintTask : public Runnable {
    public:
     NS_DECL_NSIRUNNABLE
-    explicit PaintTask(PuppetWidget* widget)
-        : Runnable("PuppetWidget::PaintTask"), mWidget(widget) {}
+    explicit PaintTask(PuppetWidget* widget, bool aDoTick)
+        : Runnable("PuppetWidget::PaintTask"),
+          mWidget(widget),
+          mDoTick(aDoTick) {}
     void Revoke() { mWidget = nullptr; }
 
    private:
     PuppetWidget* mWidget;
+    bool mDoTick;
   };
 
   // BrowserChild normally holds a strong reference to this PuppetWidget
@@ -373,7 +376,6 @@ class PuppetWidget : public nsBaseWidget,
   // The "widget" to which we delegate events if we don't have an
   // event handler.
   RefPtr<PuppetWidget> mChild;
-  LayoutDeviceIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
   RefPtr<layers::MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
