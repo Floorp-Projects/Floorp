@@ -684,15 +684,16 @@ bool ParseContext::declareFunctionArgumentsObject(
 }
 
 bool ParseContext::declareDotGeneratorName() {
-  // The special '.generator' binding must be on the function scope, as
-  // generators expect to find it on the CallObject.
+  // The special '.generator' binding must be on the function scope, and must
+  // be marked closed-over, as generators expect to find it on the CallObject.
   ParseContext::Scope& funScope = functionScope();
   const ParserName* dotGenerator = sc()->cx_->parserNames().dotGenerator;
   AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
-  if (!p &&
-      !funScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
-                                DeclaredNameInfo::npos)) {
-    return false;
+  if (!p) {
+    if (!funScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
+                                  DeclaredNameInfo::npos, ClosedOver::Yes)) {
+      return false;
+    }
   }
   return true;
 }
