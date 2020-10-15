@@ -1229,6 +1229,35 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsOnSecondExecution)
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);
 }
 
+TEST(QuotaCommon_CollectEachInRange, Success)
+{
+  size_t bodyExecutions = 0;
+  const auto result = CollectEachInRange(
+      std::array<int, 5>{{1, 2, 3, 4, 5}},
+      [&bodyExecutions](const int val) -> Result<Ok, nsresult> {
+        ++bodyExecutions;
+        return Ok{};
+      });
+
+  MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(5 == bodyExecutions);
+}
+
+TEST(QuotaCommon_CollectEachInRange, FailureShortCircuit)
+{
+  size_t bodyExecutions = 0;
+  const auto result = CollectEachInRange(
+      std::array<int, 5>{{1, 2, 3, 4, 5}},
+      [&bodyExecutions](const int val) -> Result<Ok, nsresult> {
+        ++bodyExecutions;
+        return val == 3 ? Err(NS_ERROR_FAILURE) : Result<Ok, nsresult>{Ok{}};
+      });
+
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(NS_ERROR_FAILURE == result.inspectErr());
+  MOZ_RELEASE_ASSERT(3 == bodyExecutions);
+}
+
 TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
 {
   static constexpr auto text = "foo"_ns;
