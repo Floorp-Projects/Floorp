@@ -459,7 +459,7 @@
       testElm("em_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:embed (windowless and windowed plugins)
+      // HTML:embed (windowless/windowed plugins and media)
 
       if (WIN) {
         obj = {
@@ -475,6 +475,29 @@
         };
         testElm("embed_plugin_windowed", obj);
       }
+
+      obj = {
+        role: ROLE_GRAPHIC,
+        interfaces: [ nsIAccessibleImage ],
+      };
+      testElm("embed_png", obj);
+
+      obj = {
+        INTERNAL_FRAME: [ {
+          DOCUMENT: [ {
+            role: ROLE_PARAGRAPH,
+          } ],
+        } ],
+      };
+      testElm("embed_html", obj);
+
+      obj = {
+        INTERNAL_FRAME: [ {
+          DOCUMENT: [ {
+          } ],
+        } ],
+      };
+      testElm("embed_pdf", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:fieldset and HTML:legend
@@ -1108,7 +1131,7 @@
       testElm("nav", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:object (windowless and windowed plugins) and HTML:param
+      // HTML:object (windowless/windowed plugins and media) and HTML:param
 
       if (WIN) {
         obj = {
@@ -1124,6 +1147,29 @@
         };
         testElm("object_plugin_windowed", obj);
       }
+
+      obj = {
+        role: ROLE_GRAPHIC,
+        interfaces: [ nsIAccessibleImage ],
+      };
+      testElm("object_png", obj);
+
+      obj = {
+        INTERNAL_FRAME: [ {
+          DOCUMENT: [ {
+            role: ROLE_PARAGRAPH,
+          } ],
+        } ],
+      };
+      testElm("object_html", obj);
+
+      obj = {
+        INTERNAL_FRAME: [ {
+          DOCUMENT: [ {
+          } ],
+        } ],
+      };
+      testElm("object_pdf", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:select, HTML:optgroup and HTML:option
@@ -1578,6 +1624,16 @@
   <embed id="embed_plugin_windowed" type="application/x-test" wmode="window"
          width="300" height="300"></embed>
 
+  <embed id="embed_png" type="image/png" src="../moz.png"
+         width="300" height="300">
+  </embed>
+  <embed id="embed_html" type="text/html" src="../longdesc_src.html"
+         width="300" height="300">
+  </embed>
+  <embed id="embed_pdf" type="application/pdf" src="../dummy.pdf"
+         width="300" height="300">
+  </embed>
+
   <fieldset id="fieldset">
     <legend id="legend">legend</legend>
     <input />
@@ -1866,6 +1922,16 @@
   </object>
   <object id="object_plugin_windowed" type="application/x-test" wmode="window"
          width="300" height="300"></object>
+
+  <object id="object_png" type="image/png" data="../moz.png"
+         width="300" height="300">
+  </object>
+  <object id="object_html" type="text/html" data="../longdesc_src.html"
+         width="300" height="300">
+  </object>
+  <object id="object_pdf" type="application/pdf" data="../dummy.pdf"
+         width="300" height="300">
+  </object>
 
   <select id="select_listbox" size="4">
     <optgroup label="Colors">
