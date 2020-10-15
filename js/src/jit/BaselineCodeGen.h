@@ -142,6 +142,8 @@ class BaselineCodeGen {
     return emitDebugInstrumentation(ifDebuggee, mozilla::Maybe<F>());
   }
 
+  bool emitSuspend(JSOp op);
+
   template <typename F>
   MOZ_MUST_USE bool emitAfterYieldDebugInstrumentation(const F& ifDebuggee,
                                                        Register scratch);
@@ -359,6 +361,11 @@ class BaselineCompilerHandler {
     static constexpr size_t NumSlotsLimit = 128;
     return script()->nslots() > NumSlotsLimit;
   }
+
+  bool tryCountLiveFixed(size_t* liveFixed) const {
+    *liveFixed = script()->calculateLiveFixed(pc());
+    return true;
+  }
 };
 
 using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
@@ -480,6 +487,8 @@ class BaselineInterpreterHandler {
   // The interpreter doesn't know the number of slots statically so we always
   // include them.
   bool mustIncludeSlotsInStackCheck() const { return true; }
+
+  bool tryCountLiveFixed(size_t* liveFixed) const { return false; }
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
