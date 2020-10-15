@@ -264,17 +264,19 @@ class CCGCScheduler {
   enum class CCRunnerAction {
     None,
     ForgetSkippable,
-    PrepForCC,
+    CleanupContentUnbinder,
+    CleanupDeferred,
     CycleCollect,
     StopRunning
   };
 
   enum class CCRunnerState {
     Inactive,
-    EarlyTimer,
-    LateTimer,
-    LateTimerPostForgetSkippable,
-    FinalTimer
+    ReducePurple,
+    CleanupChildless,
+    CleanupContentUnbinder,
+    CleanupDeferred,
+    CycleCollect
   };
 
   enum CCRunnerYield { Continue, Yield };
@@ -300,7 +302,7 @@ class CCGCScheduler {
 
   void ActivateCCRunner() {
     MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive);
-    mCCRunnerState = CCRunnerState::EarlyTimer;
+    mCCRunnerState = CCRunnerState::ReducePurple;
     mCCDelay = kCCDelay;
     mCCRunnerEarlyFireCount = 0;
   }
@@ -321,7 +323,7 @@ class CCGCScheduler {
         // CC. Because of reduced mCCDelay forgetSkippable will be called just
         // a few times. kMaxCCLockedoutTime limit guarantees that we end up
         // calling forgetSkippable and CycleCollectNow eventually.
-        mCCRunnerState = CCRunnerState::EarlyTimer;
+        mCCRunnerState = CCRunnerState::ReducePurple;
         mCCRunnerEarlyFireCount = 0;
         mCCDelay = kCCDelay / int64_t(3);
         return {CCRunnerAction::None, Yield};
@@ -335,32 +337,42 @@ class CCGCScheduler {
       // synchronously.
     }
 
-    if (mCCRunnerState != CCRunnerState::EarlyTimer) {
-      // If we don't pass the threshold for wanting to cycle collect, stop now
-      // (after possibly doing a final ForgetSkippable).
-      if (!IsCCNeeded(aSuspected, now)) {
-        mCCRunnerState = CCRunnerState::Inactive;
-        NoteForgetSkippableOnlyCycle();
-        if (mCCRunnerState == CCRunnerState::LateTimerPostForgetSkippable) {
+    // For states that aren't just continuations of previous states, check
+    // whether a CC is still needed (after doing various things to reduce the
+    // purple buffer).
+    switch (mCCRunnerState) {
+      case CCRunnerState::ReducePurple:
+      case CCRunnerState::CleanupDeferred:
+        break;
+
+      default:
+        // If we don't pass the threshold for wanting to cycle collect, stop
+        // now (after possibly doing a final ForgetSkippable).
+        if (!IsCCNeeded(aSuspected, now)) {
+          mCCRunnerState = CCRunnerState::Inactive;
+          NoteForgetSkippableOnlyCycle();
+
+          // Preserve the previous code's idea of when to check whether a
+          // ForgetSkippable should be fired.
+          if (mCCRunnerState != CCRunnerState::CleanupContentUnbinder &&
+              ShouldFireForgetSkippable(aSuspected)) {
+            // The Inactive state will make us StopRunning after this action is
+            // performed (see conditional at top of function).
+            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+          }
           return {CCRunnerAction::StopRunning, Yield};
         }
-        if (ShouldFireForgetSkippable(aSuspected)) {
-          // The Inactive state will make us StopRunning after this action is
-          // performed (see conditional at top of function).
-          return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
-        }
-        return {CCRunnerAction::StopRunning, Yield};
-      }
     }
 
     switch (mCCRunnerState) {
-      // EarlyTimer: a GC ran (or we otherwise decided to try CC'ing). Wait for
-      // some amount of time (kCCDelay, or less if incremental GC blocked this
-      // CC) while firing regular ForgetSkippable actions before continuing on.
-      case CCRunnerState::EarlyTimer:
+      // ReducePurple: a GC ran (or we otherwise decided to try CC'ing). Wait
+      // for some amount of time (kCCDelay, or less if incremental GC blocked
+      // this CC) while firing regular ForgetSkippable actions before
+      // continuing on.
+      case CCRunnerState::ReducePurple:
         ++mCCRunnerEarlyFireCount;
         if (IsLastEarlyCCTimer(mCCRunnerEarlyFireCount)) {
-          mCCRunnerState = CCRunnerState::LateTimer;
+          mCCRunnerState = CCRunnerState::CleanupChildless;
         }
 
         if (ShouldFireForgetSkippable(aSuspected)) {
@@ -374,36 +386,60 @@ class CCGCScheduler {
         // If we're called during idle time, try to find some work to do by
         // advancing to the next state, effectively bypassing some possible
         // forget skippable calls.
-        mCCRunnerState = CCRunnerState::LateTimer;
+        mCCRunnerState = CCRunnerState::CleanupChildless;
 
-        // Continue on to LateTimer, but only after checking IsCCNeeded again.
+        // Continue on to CleanupChildless, but only after checking IsCCNeeded
+        // again.
         return GetNextCCRunnerAction(aDeadline, aSuspected);
 
-      // LateTimer: do a stronger ForgetSkippable that removes nodes with no
-      // children in the cycle collector graph. This state is split into two
-      // parts; LateTimerPostForgetSkippable will happen within the same
+      // CleanupChildless: do a stronger ForgetSkippable that removes nodes
+      // with no children in the cycle collector graph. This state is split
+      // into 3 parts; the other Cleanup* actions will happen within the same
       // callback (unless the ForgetSkippable shrinks the purple buffer enough
       // for the CC to be skipped entirely.)
-      case CCRunnerState::LateTimer:
-        mCCRunnerState = CCRunnerState::LateTimerPostForgetSkippable;
+      case CCRunnerState::CleanupChildless:
+        mCCRunnerState = CCRunnerState::CleanupContentUnbinder;
         return {CCRunnerAction::ForgetSkippable, Yield, RemoveChildless};
 
-      // LateTimerPostForgetSkippable: continuing LateTimer, possibly do some
-      // final setup before the actual cycle collection slice.
-      case CCRunnerState::LateTimerPostForgetSkippable:
-        // Our efforts to avoid a CC have failed. Let the timer fire once more
-        // to trigger a CC.
-        mCCRunnerState = CCRunnerState::FinalTimer;
-
-        if (!aDeadline.IsNull() && TimeStamp::Now() < aDeadline) {
-          return {CCRunnerAction::PrepForCC, Yield};
+      // CleanupContentUnbinder: continuing cleanup, clear out the content
+      // unbinder.
+      case CCRunnerState::CleanupContentUnbinder:
+        if (aDeadline.IsNull()) {
+          // Non-idle (waiting) callbacks skip the rest of the cleanup, but
+          // still wait for another fire before the actual CC.
+          mCCRunnerState = CCRunnerState::CycleCollect;
+          return {CCRunnerAction::None, Yield};
         }
 
-        [[fallthrough]];
+        // Running in an idle callback.
 
-      // FinalTimer: the final state where we actually do a slice of cycle
+        // The deadline passed, so go straight to CC in the next slice.
+        if (now >= aDeadline) {
+          mCCRunnerState = CCRunnerState::CycleCollect;
+          return {CCRunnerAction::None, Yield};
+        }
+
+        mCCRunnerState = CCRunnerState::CleanupDeferred;
+        return {CCRunnerAction::CleanupContentUnbinder, Continue};
+
+      // CleanupDeferred: continuing cleanup, do deferred deletion.
+      case CCRunnerState::CleanupDeferred:
+        MOZ_ASSERT(!aDeadline.IsNull(),
+                   "Should only be in CleanupDeferred state when idle");
+
+        // Our efforts to avoid a CC have failed. Let the timer fire once more
+        // to trigger a CC.
+        mCCRunnerState = CCRunnerState::CycleCollect;
+        if (now >= aDeadline) {
+          // The deadline passed, go straight to CC in the next slice.
+          return {CCRunnerAction::None, Yield};
+        }
+
+        return {CCRunnerAction::CleanupDeferred, Yield};
+
+      // CycleCollect: the final state where we actually do a slice of cycle
       // collection and reset the timer.
-      case CCRunnerState::FinalTimer:
+      case CCRunnerState::CycleCollect:
         // We are in the final timer fire and still meet the conditions for
         // triggering a CC. Let RunCycleCollectorSlice finish the current IGC
         // if any, because that will allow us to include the GC time in the CC

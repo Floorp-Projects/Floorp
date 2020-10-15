@@ -1686,15 +1686,14 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
         FireForgetSkippable(suspected, bool(step.mRemoveChildless), aDeadline);
         break;
 
-      case CCRunnerAction::PrepForCC:
+      case CCRunnerAction::CleanupContentUnbinder:
         // Clear content unbinder before the first actual CC slice.
         Element::ClearContentUnbinder();
+        break;
 
-        if (TimeStamp::Now() < aDeadline) {
-          // PrepForCC will only be requested when idle. If we still have time
-          // left before the deadline, trigger deferred deletion too.
-          nsCycleCollector_doDeferredDeletion();
-        }
+      case CCRunnerAction::CleanupDeferred:
+        // and if time still permits, perform deferred deletions.
+        nsCycleCollector_doDeferredDeletion();
         break;
 
       case CCRunnerAction::CycleCollect:
