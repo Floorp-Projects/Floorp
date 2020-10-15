@@ -60,7 +60,9 @@ class PrintHelper {
   }
 
   async startPrint() {
-    document.getElementById("cmd_print").doCommand();
+    this.sourceBrowser.ownerGlobal.document
+      .getElementById("cmd_print")
+      .doCommand();
     let dialog = await TestUtils.waitForCondition(
       () => this.dialog,
       "Wait for dialog"
