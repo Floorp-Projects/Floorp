@@ -45,7 +45,7 @@ class RotorMacRoleRule : public RotorRule {
   ~RotorMacRoleRule();
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 
- private:
+ protected:
   NSString* mMacRole;
 };
 
@@ -79,6 +79,18 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
   explicit RotorUnvisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
+
+/**
+ * This rule matches all accessibles that satisfy the "boilerplate"
+ * pivot conditions and have a corresponding native accessible.
+ */
+class RotorNotMacRoleRule : public RotorMacRoleRule {
+ public:
+  explicit RotorNotMacRoleRule(NSString* aMacRole,
+                               AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorNotMacRoleRule(NSString* aMacRole);
+  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 };
 
 class RotorStaticTextRule : public RotorRule {
