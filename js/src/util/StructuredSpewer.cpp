@@ -243,4 +243,18 @@ AutoStructuredSpewer::AutoStructuredSpewer(JSContext* cx, SpewChannel channel,
   printer_.emplace(&cx->spewer().json_.ref());
 }
 
+AutoSpewChannel::AutoSpewChannel(JSContext* cx, SpewChannel channel,
+                                 JSScript* script)
+    : cx_(cx) {
+  if (!cx->spewer().enabled(cx, script, channel)) {
+    wasChannelAutoSet = cx->spewer().selectedChannel_.enableChannel(channel);
+  }
+}
+
+AutoSpewChannel::~AutoSpewChannel() {
+  if (wasChannelAutoSet) {
+    cx_->spewer().selectedChannel_.disableAllChannels();
+  }
+}
+
 #endif
