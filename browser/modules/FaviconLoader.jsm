@@ -107,12 +107,24 @@ class FaviconLoad {
   constructor(iconInfo) {
     this.icon = iconInfo;
 
+    let securityFlags;
+    if (iconInfo.node.crossOrigin === "anonymous") {
+      securityFlags = Ci.nsILoadInfo.SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+    } else if (iconInfo.node.crossOrigin === "use-credentials") {
+      securityFlags =
+        Ci.nsILoadInfo.SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
+        Ci.nsILoadInfo.SEC_COOKIES_INCLUDE;
+    } else {
+      securityFlags =
+        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
+    }
+
     this.channel = Services.io.newChannelFromURI(
       iconInfo.iconUri,
       iconInfo.node,
       iconInfo.node.nodePrincipal,
       iconInfo.node.nodePrincipal,
-      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
+      securityFlags |
         Ci.nsILoadInfo.SEC_ALLOW_CHROME |
         Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT,
       Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
