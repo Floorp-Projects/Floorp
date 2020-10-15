@@ -514,10 +514,6 @@ class JSFunction : public js::NativeObject {
     return asyncKind() == js::FunctionAsyncKind::AsyncFunction;
   }
 
-  bool isGeneratorOrAsync() const {
-    return isGenerator() || isAsync();
-  }
-
   void initScript(js::BaseScript* script) {
     MOZ_ASSERT_IF(script, realm() == script->realm());
     MOZ_ASSERT(isInterpreted());
