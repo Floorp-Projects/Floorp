@@ -1869,7 +1869,8 @@ var gBrowserInit = {
       ToolbarKeyboardNavigator.init();
     }
 
-    gRemoteControl.updateVisualCue(Marionette.running || RemoteAgent.listening);
+    // Update UI if browser is under remote control.
+    gRemoteControl.updateVisualCue();
 
     // If we are given a tab to swap in, take care of it before first paint to
     // avoid an about:blank flash.
@@ -1940,6 +1941,7 @@ var gBrowserInit = {
     this._handleURIToLoad();
 
     Services.obs.addObserver(gIdentityHandler, "perm-changed");
+    Services.obs.addObserver(gRemoteControl, "marionette-listening");
     Services.obs.addObserver(gRemoteControl, "remote-listening");
     Services.obs.addObserver(
       gSessionHistoryObserver,
@@ -2551,6 +2553,7 @@ var gBrowserInit = {
       FullZoom.destroy();
 
       Services.obs.removeObserver(gIdentityHandler, "perm-changed");
+      Services.obs.removeObserver(gRemoteControl, "marionette-listening");
       Services.obs.removeObserver(gRemoteControl, "remote-listening");
       Services.obs.removeObserver(
         gSessionHistoryObserver,
@@ -8257,12 +8260,12 @@ function formatURL(aFormat, aIsPref) {
  */
 const gRemoteControl = {
   observe(subject, topic, data) {
-    gRemoteControl.updateVisualCue(data);
+    gRemoteControl.updateVisualCue();
   },
 
-  updateVisualCue(enabled) {
+  updateVisualCue() {
     const mainWindow = document.documentElement;
-    if (enabled) {
+    if (Marionette.running || RemoteAgent.listening) {
       mainWindow.setAttribute("remotecontrol", "true");
     } else {
       mainWindow.removeAttribute("remotecontrol");

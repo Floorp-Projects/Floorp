@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const XMLURI_PARSE_ERROR =
   "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
-const NOTIFY_LISTENING = "remote-listening";
+const NOTIFY_LISTENING = "marionette-listening";
 
 // Complements -marionette flag for starting the Marionette server.
 // We also set this if Marionette is running in order to start the server
