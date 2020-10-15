@@ -1408,9 +1408,24 @@ class NativeObject : public JSObject {
 
   inline void copyDenseElements(uint32_t dstStart, const Value* src,
                                 uint32_t count);
+
   inline void initDenseElements(const Value* src, uint32_t count);
   inline void initDenseElements(JSContext* cx, NativeObject* src,
                                 uint32_t srcStart, uint32_t count);
+
+  // Store the Values in the range [begin, end) as elements of this array.
+  //
+  // Preconditions: This must be a boring ArrayObject with dense initialized
+  // length 0: no shifted elements, no frozen elements, no fixed "length", not
+  // indexed, not inextensible, not copy-on-write. Existing capacity is
+  // optional.
+  //
+  // This runs write barriers but does not update types. `end - begin` must
+  // return the size of the range, which must be >= 0 and fit in an int32_t.
+  template <typename Iter>
+  inline MOZ_MUST_USE bool initDenseElementsFromRange(JSContext* cx, Iter begin,
+                                                      Iter end);
+
   inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart,
                                 uint32_t count);
   inline void reverseDenseElementsNoPreBarrier(uint32_t length);
