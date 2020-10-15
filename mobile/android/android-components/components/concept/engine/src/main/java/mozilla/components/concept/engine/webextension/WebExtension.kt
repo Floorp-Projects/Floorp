@@ -468,3 +468,9 @@ class DisabledFlags internal constructor(val value: Int) {
  * Returns whether or not the extension is disabled because it is unsupported.
  */
 fun WebExtension.isUnsupported() = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
+
+/**
+ * An unexpected event that occurs when trying to perform an action on the extension like
+ * (but not exclusively) installing/uninstalling, removing or updating.
+ */
+open class WebExtensionException(throwable: Throwable, open val isRecoverable: Boolean = true) : Exception(throwable)

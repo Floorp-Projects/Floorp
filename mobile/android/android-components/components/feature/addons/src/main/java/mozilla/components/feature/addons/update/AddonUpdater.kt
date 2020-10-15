@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -584,7 +585,7 @@ internal class AddonUpdaterWorker(
                                     "Unable to update extension $extensionId, re-schedule ${status.message}",
                                     status.exception
                             )
-                            Result.retry()
+                            retryIfRecoverable(status.exception)
                         }
                     }
                     saveUpdateAttempt(extensionId, status)
@@ -599,8 +600,20 @@ internal class AddonUpdaterWorker(
                 if (exception.shouldReport()) {
                     GlobalAddonDependencyProvider.onCrash?.invoke(exception)
                 }
-                continuation.resume(Result.retry())
+                continuation.resume(retryIfRecoverable(exception))
             }
+        }
+    }
+
+    @VisibleForTesting
+    // We want to ensure, we are only retrying when the throwable isRecoverable,
+    // this could cause side effects as described on:
+    // https://github.com/mozilla-mobile/android-components/issues/8681
+    internal fun retryIfRecoverable(throwable: Throwable): Result {
+        return if (throwable is WebExtensionException && throwable.isRecoverable) {
+            Result.retry()
+        } else {
+            Result.success()
         }
     }
 

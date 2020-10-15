@@ -6,8 +6,10 @@ package mozilla.components.feature.addons.worker
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
+import mozilla.components.concept.engine.webextension.WebExtensionException
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -27,5 +29,15 @@ class ExtensionsTest {
     @Test
     fun `shouldReport - when cause the exception is a CancellationException must NOT be reported`() {
         assertFalse(CancellationException().shouldReport())
+    }
+
+    @Test
+    fun `shouldReport - when the exception isRecoverable must be reported`() {
+        assertTrue(WebExtensionException(java.lang.Exception(), isRecoverable = true).shouldReport())
+    }
+
+    @Test
+    fun `shouldReport - when the exception NOT isRecoverable must NOT be reported`() {
+        assertFalse(WebExtensionException(java.lang.Exception(), isRecoverable = false).shouldReport())
     }
 }

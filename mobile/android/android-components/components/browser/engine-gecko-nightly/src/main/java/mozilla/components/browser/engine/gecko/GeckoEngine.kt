@@ -17,6 +17,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionFactory
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtensionException
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushHandler
@@ -267,7 +268,7 @@ class GeckoEngine(
             onSuccess(updatedExtension)
             GeckoResult<Void>()
         }, { throwable ->
-            onError(extension.id, throwable)
+            onError(extension.id, GeckoWebExtensionException(throwable))
             GeckoResult<Void>()
         })
     }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -134,7 +135,7 @@ class AddonUpdaterWorkerTest {
     }
 
     @Test
-    fun `doWork - will return Result_retry when an Error happens`() {
+    fun `doWork - will return Result_retry when an Error happens and is recoverable`() {
         val updateAttemptStorage = mock<DefaultAddonUpdater.UpdateAttemptStorage>()
         val addonId = "addonId"
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
@@ -142,19 +143,45 @@ class AddonUpdaterWorkerTest {
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
-
+        val recoverableException = WebExtensionException(Exception(), isRecoverable = true)
         (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
-            onFinishCaptor.value.invoke(AddonUpdater.Status.Error("error", Exception()))
+            onFinishCaptor.value.invoke(AddonUpdater.Status.Error("error", recoverableException))
         }
 
         runBlocking {
             val result = worker.startWork().await()
 
             assertEquals(ListenableWorker.Result.retry(), result)
+            updateAttemptStorage.saveOrUpdate(any())
+        }
+    }
+
+    @Test
+    fun `doWork - will return Result_success when an Error happens and is unrecoverable`() {
+        val updateAttemptStorage = mock<DefaultAddonUpdater.UpdateAttemptStorage>()
+        val addonId = "addonId"
+        val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
+        val addonManager = mock<AddonManager>()
+        val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
+                .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
+                .build()
+        val unrecoverableException = WebExtensionException(Exception(), isRecoverable = false)
+        (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
+
+        GlobalAddonDependencyProvider.initialize(addonManager, mock())
+
+        whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
+            onFinishCaptor.value.invoke(AddonUpdater.Status.Error("error", unrecoverableException))
+        }
+
+        runBlocking {
+            val result = worker.startWork().await()
+
+            assertEquals(ListenableWorker.Result.success(), result)
             updateAttemptStorage.saveOrUpdate(any())
         }
     }
@@ -182,8 +209,26 @@ class AddonUpdaterWorkerTest {
         runBlocking {
             val result = worker.startWork().await()
 
-            assertEquals(ListenableWorker.Result.retry(), result)
+            assertEquals(ListenableWorker.Result.success(), result)
             assertTrue(crashWasReported)
         }
+    }
+
+    @Test
+    fun `retryIfRecoverable must return retry for recoverable exception`() {
+        val recoverableException = WebExtensionException(Exception(), isRecoverable = true)
+        val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
+                .build()
+
+        assertEquals(ListenableWorker.Result.retry(), worker.retryIfRecoverable(recoverableException))
+    }
+
+    @Test
+    fun `retryIfRecoverable must return success for unrecoverable exception`() {
+        val unrecoverableException = WebExtensionException(Exception(), isRecoverable = false)
+        val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
+                .build()
+
+        assertEquals(ListenableWorker.Result.success(), worker.retryIfRecoverable(unrecoverableException))
     }
 }

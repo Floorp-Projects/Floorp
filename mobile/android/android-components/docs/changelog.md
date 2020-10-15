@@ -11,6 +11,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-addons**
+  * 🚒 Bug fixed [issue #8681](https://github.com/mozilla-mobile/android-components/issues/8681) Fenix was consuming a lot of extra space on disk, when an add-on update requires a new permission, more info can be found [here](https://github.com/mozilla-mobile/android-components/issues/8681)
+  ```
+
 * All components
  * Updated to Kotlin 1.4.10 and Coroutines 1.3.9.
  * Updated to Android Gradle plugin 4.0.1 (downstream projects need to update too).
@@ -58,7 +62,7 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8585) fixed regression files not been added to the downloads database system.
   * 🌟 Added new use cases for removing individual downloads (`removeDownload`) and all downloads (`removeAllDownloads`).
   * 🌟 Added support for new download [GeckoView API](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-).
-  
+
 * **service-glean**
   * Glean was upgraded to v32.4.1
     * Update `glean_parser` to 1.28.6

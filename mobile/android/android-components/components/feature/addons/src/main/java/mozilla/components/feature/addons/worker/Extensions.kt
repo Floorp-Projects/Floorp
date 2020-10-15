@@ -6,8 +6,15 @@ package mozilla.components.feature.addons.worker
 
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
+import mozilla.components.concept.engine.webextension.WebExtensionException
+
 /**
  * Indicates if an exception should be reported to the crash reporter.
  */
-internal fun Exception.shouldReport(): Boolean =
-        cause !is IOException && cause !is CancellationException && this !is CancellationException
+internal fun Exception.shouldReport(): Boolean {
+    val isRecoverable = (this as? WebExtensionException)?.isRecoverable ?: true
+    return cause !is IOException &&
+            cause !is CancellationException &&
+            this !is CancellationException &&
+            isRecoverable
+}

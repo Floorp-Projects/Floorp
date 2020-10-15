@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -62,12 +63,23 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.StorageController
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_HASH
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_ID
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_NETWORK_FAILURE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
 import java.lang.Exception
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
+
+typealias GeckoInstallException = org.mozilla.geckoview.WebExtension.InstallException
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
@@ -1208,8 +1220,55 @@ class GeckoEngineTest {
         )
         updateExtensionResult.completeExceptionally(expected)
 
-        assertSame(expected, throwable)
+        assertSame(expected, throwable!!.cause)
         assertNull(result)
+    }
+
+    @Test
+    fun `failures when updating MUST indicate if they are recoverable`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            mockNativeExtension(),
+            runtime
+        )
+        val performUpdate: (GeckoInstallException) -> WebExtensionException = { exception ->
+            val updateExtensionResult = GeckoResult<GeckoWebExtension>()
+            whenever(extensionController.update(any())).thenReturn(updateExtensionResult)
+            whenever(runtime.webExtensionController).thenReturn(extensionController)
+            var throwable: WebExtensionException? = null
+
+            engine.updateWebExtension(
+                extension,
+                onError = { _, e -> throwable = e as WebExtensionException }
+            )
+
+            updateExtensionResult.completeExceptionally(exception)
+            throwable!!
+        }
+
+        val unrecoverableExceptions = listOf(
+                mockGeckoInstallException(ERROR_NETWORK_FAILURE),
+                mockGeckoInstallException(ERROR_INCORRECT_HASH),
+                mockGeckoInstallException(ERROR_CORRUPT_FILE),
+                mockGeckoInstallException(ERROR_FILE_ACCESS),
+                mockGeckoInstallException(ERROR_SIGNEDSTATE_REQUIRED),
+                mockGeckoInstallException(ERROR_UNEXPECTED_ADDON_TYPE),
+                mockGeckoInstallException(ERROR_INCORRECT_ID),
+                mockGeckoInstallException(ERROR_POSTPONED)
+        )
+
+        unrecoverableExceptions.forEach { exception ->
+            assertFalse(performUpdate(exception).isRecoverable)
+        }
+
+        val recoverableExceptions = listOf(mockGeckoInstallException(ERROR_USER_CANCELED))
+
+        recoverableExceptions.forEach { exception ->
+            assertTrue(performUpdate(exception).isRecoverable)
+        }
     }
 
     @Test
@@ -1915,5 +1974,11 @@ class GeckoEngineTest {
             putString("locationURI", location)
         }
         return spy(MockWebExtension(bundle))
+    }
+
+    private fun mockGeckoInstallException(errorCode: Int): GeckoInstallException {
+        val exception = object : GeckoInstallException() {}
+        ReflectionUtils.setField(exception, "code", errorCode)
+        return exception
     }
 }
