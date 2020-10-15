@@ -300,7 +300,11 @@ wasmAssert(`(module
         let s = "";
         for ( let i in x )
             s = s + i + ",";
-        assertEq(s, "valueOf,type,value,");
+        if (getBuildConfiguration().release_or_beta) {
+            assertEq(s, "valueOf,value,");
+        } else {
+            assertEq(s, "valueOf,type,value,");
+        }
     }
 
     // "value" is defined on the prototype, not on the object
