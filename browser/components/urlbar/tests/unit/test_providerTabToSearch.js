@@ -16,18 +16,14 @@ add_task(async function init() {
   // Enable tab-to-search.
   Services.prefs.setBoolPref("browser.urlbar.update2", true);
   Services.prefs.setBoolPref("browser.urlbar.update2.tabToComplete", true);
-  // Disable tab-to-search onboarding results. Those are covered in
-  // browser/components/urlbar/tests/browser/browser_tabToSearch.js.
-  Services.prefs.setIntPref("browser.urlbar.tabToSearch.onboard.maxShown", 0);
   testEngine = await Services.search.addEngineWithDetails("Test", {
     template: "https://example.com/?search={searchTerms}",
   });
 
   registerCleanupFunction(async () => {
     await Services.search.removeEngine(testEngine);
-    Services.prefs.clearUserPref("browser.urlbar.tabToSearch.onboard.maxShown");
-    Services.prefs.clearUserPref("browser.urlbar.update2.tabToComplete");
     Services.prefs.clearUserPref("browser.urlbar.update2");
+    Services.prefs.clearUserPref("browser.urlbar.update2.tabToComplete");
     Services.prefs.clearUserPref("browser.search.suggest.enabled");
   });
 });
@@ -283,7 +279,7 @@ add_task(async function multipleEnginesForHostname() {
   info(
     "In case of multiple engines only one tab-to-search result should be returned"
   );
-  let mapsEngine = await Services.search.addEngineWithDetails("TestMaps", {
+  await Services.search.addEngineWithDetails("TestMaps", {
     template: "https://example.com/maps/?search={searchTerms}",
   });
   await PlacesTestUtils.addVisits(["https://example.com/"]);
@@ -312,7 +308,6 @@ add_task(async function multipleEnginesForHostname() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(mapsEngine);
 });
 
 add_task(async function test_casing() {
@@ -377,12 +372,11 @@ add_task(async function test_publicSuffix() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(engine);
 });
 
 add_task(async function test_publicSuffixIsHost() {
   info("Tab-to-search results does not appear in case we autofill a suffix.");
-  let suffixEngine = await Services.search.addEngineWithDetails("SuffixTest", {
+  await Services.search.addEngineWithDetails("SuffixTest", {
     template: "https://somesuffix.com.mx/?search={searchTerms}",
   });
   // The top level domain will be autofilled, not the full domain.
@@ -402,5 +396,4 @@ add_task(async function test_publicSuffixIsHost() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(suffixEngine);
 });
