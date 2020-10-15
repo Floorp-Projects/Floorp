@@ -39,6 +39,8 @@ class DateTimeFormat {
 
   enum class Style { Wide, Abbreviated };
 
+  enum class Skeleton { yyyyMM, yyyyMMMM };
+
   // performs a locale sensitive date formatting operation on the PRTime
   // parameter
   static nsresult FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
@@ -51,6 +53,12 @@ class DateTimeFormat {
       const nsDateFormatSelector aDateFormatSelector,
       const nsTimeFormatSelector aTimeFormatSelector,
       const PRExplodedTime* aExplodedTime, nsAString& aStringOut);
+
+  // performs a locale sensitive date formatting operation on the PRExplodedTime
+  // parameter, using the specified options.
+  static nsresult FormatDateTime(const PRExplodedTime* aExplodedTime,
+                                 const Skeleton aSkeleton,
+                                 nsAString& aStringOut);
 
   // finds the locale sensitive display name for the specified field on the
   // PRExplodedTime parameter
