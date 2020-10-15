@@ -117,6 +117,10 @@ class KnowsCompositor {
     return mTextureFactoryIdentifier.mUseCompositorWnd;
   }
 
+  bool UsingSoftwareWebRender() const {
+    return mTextureFactoryIdentifier.mUsingSoftwareWebRender;
+  }
+
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const {
     return mTextureFactoryIdentifier;
   }
