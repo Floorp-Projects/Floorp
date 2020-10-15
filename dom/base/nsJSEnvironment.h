@@ -71,6 +71,9 @@ class nsJSContext : public nsIScriptContext {
 
   static void CycleCollectNow(nsICycleCollectorListener* aListener = nullptr);
 
+  // Finish up any in-progress incremental GC.
+  static void PrepareForCycleCollectionSlice(mozilla::TimeStamp aDeadline);
+
   // Run a cycle collector slice, using a heuristic to decide how long to run
   // it.
   static void RunCycleCollectorSlice(mozilla::TimeStamp aDeadline);
