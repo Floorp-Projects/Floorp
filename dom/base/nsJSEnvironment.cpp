@@ -45,6 +45,7 @@
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
 #include "nsIArray.h"
+#include "CCGCScheduler.h"
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/AutoRestore.h"
@@ -89,52 +90,6 @@ using namespace mozilla::dom;
 #  undef CompareString
 #endif
 
-// The amount of time we wait between a request to CC (after GC ran)
-// and doing the actual CC.
-static const TimeDuration kCCDelay = TimeDuration::FromSeconds(6);
-
-static const TimeDuration kCCSkippableDelay =
-    TimeDuration::FromMilliseconds(250);
-
-// In case the cycle collector isn't run at all, we don't want forget skippables
-// to run too often. So limit the forget skippable cycle to start at earliest 2
-// seconds after the end of the previous cycle.
-static const TimeDuration kTimeBetweenForgetSkippableCycles =
-    TimeDuration::FromSeconds(2);
-
-// ForgetSkippable is usually fast, so we can use small budgets.
-// This isn't a real budget but a hint to IdleTaskRunner whether there
-// is enough time to call ForgetSkippable.
-static const TimeDuration kForgetSkippableSliceDuration =
-    TimeDuration::FromMilliseconds(2);
-
-// Maximum amount of time that should elapse between incremental CC slices
-static const TimeDuration kICCIntersliceDelay =
-    TimeDuration::FromMilliseconds(64);
-
-// Time budget for an incremental CC slice when using timer to run it.
-static const TimeDuration kICCSliceBudget = TimeDuration::FromMilliseconds(3);
-// Minimum budget for an incremental CC slice when using idle time to run it.
-static const TimeDuration kIdleICCSliceBudget =
-    TimeDuration::FromMilliseconds(2);
-
-// Maximum total duration for an ICC
-static const TimeDuration kMaxICCDuration = TimeDuration::FromSeconds(2);
-
-// Force a CC after this long if there's more than NS_CC_FORCED_PURPLE_LIMIT
-// objects in the purple buffer.
-static const TimeDuration kCCForced =
-    TimeDuration::FromSeconds(2 * 60);  // 2 min
-static const uint32_t kCCForcedPurpleLimit = 10;
-
-// Don't allow an incremental GC to lock out the CC for too long.
-static const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
-
-// Trigger a CC if the purple buffer exceeds this size when we check it.
-static const uint32_t kCCPurpleLimit = 200;
-
-// if you add statics here, add them to the list in StartupJSEnvironment
-
 enum class CCRunnerState { Inactive, EarlyTimer, LateTimer, FinalTimer };
 
 static nsITimer* sGCTimer;
@@ -152,8 +107,6 @@ static TimeStamp sCurrentGCStartTime;
 
 static CCRunnerState sCCRunnerState = CCRunnerState::Inactive;
 static TimeDuration sCCDelay = kCCDelay;
-static bool sCCLockedOut;
-static TimeStamp sCCLockedOutTime;
 
 static JS::GCSliceCallback sPrevGCSliceCallback;
 
@@ -169,8 +122,6 @@ static bool sNeedsFullCC = false;
 static bool sNeedsFullGC = false;
 static bool sNeedsGCAfterCC = false;
 static bool sIncrementalCC = false;
-static TimeDuration sActiveIntersliceGCBudget =
-    TimeDuration::FromMilliseconds(5);
 
 static TimeStamp sFirstCollectionTime;
 
@@ -185,6 +136,8 @@ static bool sShuttingDown;
 static bool sIsCompactingOnUserInactive = false;
 
 static TimeDuration sGCUnnotifiedTotalTime;
+
+static CCGCScheduler sScheduler;
 
 struct CycleCollectorStats {
   constexpr CycleCollectorStats() = default;
@@ -1160,7 +1113,7 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
     return;
   }
 
-  if (sCCLockedOut && aIncremental == IncrementalGC) {
+  if (sScheduler.InIncrementalGC() && aIncremental == IncrementalGC) {
     // We're in the middle of incremental GC. Do another slice.
     JS::PrepareForIncrementalGC(cx);
     JS::IncrementalGCSlice(cx, aReason, aSliceMillis);
@@ -1188,7 +1141,7 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 static void FinishAnyIncrementalGC() {
   AUTO_PROFILER_LABEL("FinishAnyIncrementalGC", GCCC);
 
-  if (sCCLockedOut) {
+  if (sScheduler.InIncrementalGC()) {
     AutoJSAPI jsapi;
     jsapi.Init();
 
@@ -1358,7 +1311,7 @@ void CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline) {
   mIdleDeadline = aDeadline;
 
   // Before we begin the cycle collection, make sure there is no active GC.
-  if (sCCLockedOut) {
+  if (sScheduler.InIncrementalGC()) {
     mAnyLockedOut = true;
     FinishAnyIncrementalGC();
     TimeDuration gcTime = TimeUntilNow(mBeginSliceTime);
@@ -1626,13 +1579,13 @@ static bool ICCRunnerFired(TimeStamp aDeadline) {
   // Ignore ICC timer fires during IGC. Running ICC during an IGC will cause us
   // to synchronously finish the GC, which is bad.
 
-  if (sCCLockedOut) {
+  if (sScheduler.InIncrementalGC()) {
     TimeStamp now = TimeStamp::Now();
-    if (!sCCLockedOutTime) {
-      sCCLockedOutTime = now;
+    if (!sScheduler.mCCLockedOutTime) {
+      sScheduler.mCCLockedOutTime = now;
       return false;
     }
-    if (now - sCCLockedOutTime < kMaxCCLockedoutTime) {
+    if (now - sScheduler.mCCLockedOutTime < kMaxCCLockedoutTime) {
       return false;
     }
   }
@@ -1716,20 +1669,8 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 
 // static
 bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
-  MOZ_ASSERT(sActiveIntersliceGCBudget);
-  // We use longer budgets when the CC has been locked out but the CC has tried
-  // to run since that means we may have significant amount garbage to collect
-  // and better to GC in several longer slices than in a very long one.
-  TimeDuration budget = aDeadline.IsNull() ? sActiveIntersliceGCBudget * 2
-                                           : aDeadline - TimeStamp::Now();
-  if (sCCLockedOut && sCCLockedOutTime) {
-    TimeDuration lockedTime = TimeStamp::Now() - sCCLockedOutTime;
-    TimeDuration maxSliceGCBudget = sActiveIntersliceGCBudget * 10;
-    double percentOfLockedTime =
-        std::min(lockedTime / kMaxCCLockedoutTime, 1.0);
-    budget = std::max(budget, maxSliceGCBudget.MultDouble(percentOfLockedTime));
-  }
-
+  MOZ_ASSERT(sScheduler.mActiveIntersliceGCBudget);
+  TimeDuration budget = sScheduler.ComputeInterSliceGCBudget(aDeadline);
   TimeStamp startTimeStamp = TimeStamp::Now();
   TimeDuration duration = sGCUnnotifiedTotalTime;
   uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
@@ -1786,7 +1727,7 @@ void GCTimerFired(nsITimer* aTimer, void* aClosure) {
       },
       "GCTimerFired::InterSliceGCRunnerFired",
       StaticPrefs::javascript_options_gc_delay_interslice(),
-      sActiveIntersliceGCBudget.ToMilliseconds(), true,
+      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
       [] { return sShuttingDown; });
 }
 
@@ -1831,9 +1772,9 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
     return false;
   }
 
-  if (sCCLockedOut) {
+  if (sScheduler.InIncrementalGC()) {
     TimeStamp now = TimeStamp::Now();
-    if (!sCCLockedOutTime) {
+    if (!sScheduler.mCCLockedOutTime) {
       // Reset our state so that we run forgetSkippable often enough before
       // CC. Because of reduced sCCDelay forgetSkippable will be called just a
       // few times. kMaxCCLockedoutTime limit guarantees that we end up calling
@@ -1841,11 +1782,11 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       sCCRunnerState = CCRunnerState::EarlyTimer;
       sCCRunnerEarlyFireCount = 0;
       sCCDelay = kCCDelay / int64_t(3);
-      sCCLockedOutTime = now;
+      sScheduler.mCCLockedOutTime = now;
       return false;
     }
 
-    if (now - sCCLockedOutTime < kMaxCCLockedoutTime) {
+    if (now - sScheduler.mCCLockedOutTime < kMaxCCLockedoutTime) {
       return false;
     }
   }
@@ -1980,8 +1921,9 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
   } else {
     // Check the CC timers after the GC timers, because the CC timers won't do
     // anything if a GC is in progress.
-    MOZ_ASSERT(!sCCLockedOut,
-               "Don't check the CC timers if the CC is locked out.");
+    MOZ_ASSERT(
+        !sScheduler.InIncrementalGC(),
+        "Don't check the CC timers if the CC is locked out during an iGC.");
 
     if (sCCRunner) {
       MOZ_ASSERT(!sICCRunner,
@@ -2186,7 +2128,7 @@ void nsJSContext::KillShrinkingGCTimer() {
 
 // static
 void nsJSContext::KillCCRunner() {
-  sCCLockedOutTime = TimeStamp();
+  sScheduler.mCCLockedOutTime = TimeStamp();
   sCCRunnerState = CCRunnerState::Inactive;
   if (sCCRunner) {
     sCCRunner->Cancel();
@@ -2196,7 +2138,7 @@ void nsJSContext::KillCCRunner() {
 
 // static
 void nsJSContext::KillICCRunner() {
-  sCCLockedOutTime = TimeStamp();
+  sScheduler.mCCLockedOutTime = TimeStamp();
 
   if (sICCRunner) {
     sICCRunner->Cancel();
@@ -2211,7 +2153,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
   switch (aProgress) {
     case JS::GC_CYCLE_BEGIN: {
       // Prevent cycle collections and shrinking during incremental GC.
-      sCCLockedOut = true;
+      sScheduler.NoteGCBegin();
       sCurrentGCStartTime = TimeStamp::Now();
       break;
     }
@@ -2234,7 +2176,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         }
       }
 
-      sCCLockedOut = false;
+      sScheduler.NoteGCEnd();
       sIsCompactingOnUserInactive = false;
 
       // May need to kill the inter-slice GC runner
@@ -2291,7 +2233,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
             },
             "DOMGCSliceCallback::InterSliceGCRunnerFired",
             StaticPrefs::javascript_options_gc_delay_interslice(),
-            sActiveIntersliceGCBudget.ToMilliseconds(), true,
+            sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
             [] { return sShuttingDown; });
       }
 
@@ -2337,8 +2279,6 @@ void nsJSContext::LikelyShortLivingObjectCreated() {
 void mozilla::dom::StartupJSEnvironment() {
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sShrinkingGCTimer = sFullGCTimer = nullptr;
-  sCCLockedOut = false;
-  sCCLockedOutTime = TimeStamp();
   sLastCCEndTime = TimeStamp();
   sLastForgetSkippableCycleEndTime = TimeStamp();
   sHasRunGC = false;
@@ -2351,6 +2291,7 @@ void mozilla::dom::StartupJSEnvironment() {
   sIsInitialized = false;
   sDidShutdown = false;
   sShuttingDown = false;
+  new (&sScheduler) CCGCScheduler();  // Reset the scheduler state.
   sCCStats.Init();
 }
 
@@ -2436,7 +2377,8 @@ static void SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName,
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000) {
-    sActiveIntersliceGCBudget = TimeDuration::FromMilliseconds(pref);
+    sScheduler.SetActiveIntersliceGCBudget(
+        TimeDuration::FromMilliseconds(pref));
     SetGCParameter(JSGC_SLICE_TIME_BUDGET_MS, pref);
   } else {
     ResetGCParameter(JSGC_SLICE_TIME_BUDGET_MS);
