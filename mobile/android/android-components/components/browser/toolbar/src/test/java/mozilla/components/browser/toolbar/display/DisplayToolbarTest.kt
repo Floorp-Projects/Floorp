@@ -92,6 +92,7 @@ class DisplayToolbarTest {
         )
 
         assertNotNull(displayToolbar.views.trackingProtectionIndicator.colorFilter)
+        assertNotNull(displayToolbar.views.trackingProtectionIndicator.trackingProtectionTint)
     }
 
     @Test

@@ -9,6 +9,7 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
@@ -37,12 +38,19 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
             }
         }
 
+    @VisibleForTesting
+    internal var trackingProtectionTint: Int? = null
+
     private var iconOnNoTrackersBlocked: Drawable =
         requireNotNull(AppCompatResources.getDrawable(context, DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED))
     private var iconOnTrackersBlocked: Drawable =
         requireNotNull(AppCompatResources.getDrawable(context, DEFAULT_ICON_ON_TRACKERS_BLOCKED))
     private var disabledForSite: Drawable =
         requireNotNull(AppCompatResources.getDrawable(context, DEFAULT_ICON_OFF_FOR_A_SITE))
+
+    fun setTint(tint: Int) {
+        trackingProtectionTint = tint
+    }
 
     fun setIcons(
         iconOnNoTrackersBlocked: Drawable,
@@ -68,11 +76,19 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
             null
         }
 
+        setOrClearColorFilter(update.drawable)
         setImageDrawable(update.drawable)
 
         if (update.drawable is Animatable) {
             update.drawable.start()
         }
+    }
+
+    @VisibleForTesting
+    internal fun setOrClearColorFilter(drawable: Drawable?) {
+        if (drawable is Animatable) {
+            clearColorFilter()
+        } else trackingProtectionTint?.let { setColorFilter(it) }
     }
 
     companion object {

@@ -191,6 +191,7 @@ class DisplayToolbar internal constructor(
         views.separator.setColorFilter(value.separator)
 
         if (value.trackingProtection != null) {
+            views.trackingProtectionIndicator.setTint(value.trackingProtection)
             views.trackingProtectionIndicator.setColorFilter(value.trackingProtection)
         }
     }
