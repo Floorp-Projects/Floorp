@@ -287,7 +287,7 @@ add_task(async function onboard() {
   // Check that the onboarding result enters search mode.
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
     isPreview: true,
   });
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
@@ -295,7 +295,7 @@ add_task(async function onboard() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
   });
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
@@ -482,7 +482,7 @@ add_task(async function onboard_oneInteraction_true() {
   EventUtils.synthesizeKey("KEY_Tab");
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
     isPreview: true,
   });
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
@@ -491,7 +491,7 @@ add_task(async function onboard_oneInteraction_true() {
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
     // Implicit check that we selected an onboarding result.
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
   });
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
@@ -539,7 +539,7 @@ add_task(async function onboard_oneInteraction_false() {
   EventUtils.synthesizeKey("KEY_Tab");
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
     isPreview: true,
   });
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
@@ -548,7 +548,7 @@ add_task(async function onboard_oneInteraction_false() {
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
     // Implicit check that we selected an onboarding result.
-    entry: "tabtosearch",
+    entry: "tabtosearch_onboard",
   });
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
