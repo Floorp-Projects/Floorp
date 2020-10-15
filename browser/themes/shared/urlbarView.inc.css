@@ -10,8 +10,6 @@
 %define urlbarViewMarginInline 7px
 %define urlbarViewItemInlinePadding 6px
 
-%include ../shared/urlbar/dynamicResults.inc.css
-
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
   --autocomplete-popup-color: var(--arrowpanel-color);

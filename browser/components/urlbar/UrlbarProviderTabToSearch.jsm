@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarView: "resource:///modules/UrlbarView.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
@@ -23,85 +22,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";
-const VIEW_TEMPLATE = {
-  attributes: {
-    role: "group",
-    selectable: "true",
-  },
-  children: [
-    {
-      name: "no-wrap",
-      tag: "span",
-      classList: ["urlbarView-no-wrap"],
-      children: [
-        {
-          name: "icon",
-          tag: "img",
-          classList: ["urlbarView-favicon"],
-        },
-        {
-          name: "text-container",
-          tag: "span",
-          children: [
-            {
-              name: "first-row-container",
-              tag: "span",
-              children: [
-                {
-                  name: "title",
-                  tag: "span",
-                  classList: ["urlbarView-title"],
-                  children: [
-                    {
-                      name: "titleStrong",
-                      tag: "strong",
-                    },
-                  ],
-                },
-                {
-                  name: "title-separator",
-                  tag: "span",
-                  classList: ["urlbarView-title-separator"],
-                },
-                {
-                  name: "action",
-                  tag: "span",
-                  classList: ["urlbarView-action"],
-                  attributes: {
-                    "slide-in": true,
-                  },
-                },
-              ],
-            },
-            {
-              name: "description",
-              tag: "span",
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
-
-/**
- * Initializes this provider's dynamic result. To be called after the creation
- *  of the provider singleton.
- */
-function initializeDynamicResult() {
-  UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
-  UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
-}
-
 /**
  * Class used to create the provider.
  */
 class ProviderTabToSearch extends UrlbarProvider {
   constructor() {
     super();
-    // Expose this variable so tests can set it.
-    this.onboardingResultCountThisSession = 0;
   }
 
   /**
@@ -145,62 +71,6 @@ class ProviderTabToSearch extends UrlbarProvider {
   }
 
   /**
-   * This is called only for dynamic result types, when the urlbar view updates
-   * the view of one of the results of the provider.  It should return an object
-   * describing the view update.
-   *
-   * @param {UrlbarResult} result The result whose view will be updated.
-   * @returns {object} An object describing the view update.
-   */
-  getViewUpdate(result) {
-    return {
-      icon: {
-        attributes: {
-          src: result.payload.icon,
-        },
-      },
-      titleStrong: {
-        l10n: {
-          id: "urlbar-result-action-search-w-engine",
-          args: {
-            engine: result.payload.engine,
-          },
-        },
-      },
-      action: {
-        l10n: {
-          id: UrlbarUtils.WEB_ENGINE_NAMES.has(result.payload.engine)
-            ? "urlbar-result-action-tabtosearch-web"
-            : "urlbar-result-action-tabtosearch-other-engine",
-          args: {
-            engine: result.payload.engine,
-          },
-        },
-      },
-      description: {
-        l10n: {
-          id: "urlbar-tabtosearch-onboard",
-        },
-      },
-    };
-  }
-
-  /**
-   * Called when any selectable element in a dynamic result's view is picked.
-   *
-   * @param {UrlbarResult} result
-   *   The result that was picked.
-   * @param {Element} element
-   *   The element in the result's view that was picked.
-   */
-  pickResult(result, element) {
-    element.ownerGlobal.gURLBar.maybePromoteResultToSearchMode({
-      result,
-      checkValue: false,
-    });
-  }
-
-  /**
    * Starts querying.
    * @param {object} queryContext The query context object
    * @param {function} addCallback Callback invoked by the provider to add a new
@@ -225,60 +95,26 @@ class ProviderTabToSearch extends UrlbarProvider {
     let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
       matchAllDomainLevels: true,
     });
-    let onboardingShownCount = UrlbarPrefs.get("tipShownCount.tabToSearch");
-    let showedOnboarding = false;
     for (let engine of engines) {
       // Set the domain without public suffix as url, it will be used by
       // the muxer to evaluate this result.
       let url = engine.getResultDomain();
       url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
-      let result;
-      if (
-        onboardingShownCount <
-          UrlbarPrefs.get("tabToSearch.onboard.maxShown") &&
-        this.onboardingResultCountThisSession <
-          UrlbarPrefs.get("tabToSearch.onboard.maxShownPerSession")
-      ) {
-        result = new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.DYNAMIC,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
-          {
-            engine: engine.name,
-            url,
-            keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-            icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
-            dynamicType: DYNAMIC_RESULT_TYPE,
-          }
-        );
-        result.resultSpan = 2;
-        showedOnboarding = true;
-      } else {
-        result = new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            engine: engine.name,
-            url,
-            keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-            icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
-            query: "",
-          })
-        );
-      }
-
+      let result = new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          engine: engine.name,
+          url,
+          keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+          icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+          query: "",
+        })
+      );
       result.suggestedIndex = 1;
       addCallback(this, result);
-    }
-
-    // The muxer ensures we show at most one tab-to-seach result per query.
-    // Thus, we increment these counters just once, even if we sent multiple
-    // results to the muxer.
-    if (showedOnboarding) {
-      this.onboardingResultCountThisSession++;
-      UrlbarPrefs.set("tipShownCount.tabToSearch", ++onboardingShownCount);
     }
   }
 }
 
 var UrlbarProviderTabToSearch = new ProviderTabToSearch();
-initializeDynamicResult();

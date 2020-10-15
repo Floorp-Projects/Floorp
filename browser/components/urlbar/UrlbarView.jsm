@@ -81,7 +81,7 @@ class UrlbarView {
 
     for (let viewTemplate of UrlbarView.dynamicViewTemplatesByName.values()) {
       if (viewTemplate.stylesheet) {
-        addDynamicStylesheet(this.window, viewTemplate.stylesheet);
+        this._addDynamicStylesheet(viewTemplate.stylesheet);
       }
     }
   }
@@ -750,7 +750,7 @@ class UrlbarView {
     this.dynamicViewTemplatesByName.set(name, viewTemplate);
     if (viewTemplate.stylesheet) {
       for (let window of BrowserWindowTracker.orderedWindows) {
-        addDynamicStylesheet(window, viewTemplate.stylesheet);
+        window.gURLBar.view._addDynamicStylesheet(viewTemplate.stylesheet);
       }
     }
   }
@@ -770,7 +770,7 @@ class UrlbarView {
     this.dynamicViewTemplatesByName.delete(name);
     if (viewTemplate.stylesheet) {
       for (let window of BrowserWindowTracker.orderedWindows) {
-        removeDynamicStylesheet(window, viewTemplate.stylesheet);
+        window.gURLBar.view._removeDynamicStylesheet(viewTemplate.stylesheet);
       }
     }
   }
@@ -1813,6 +1813,47 @@ class UrlbarView {
     return true;
   }
 
+  /**
+   * Adds a dynamic result type stylesheet to the view's window.
+   *
+   * @param {string} stylesheetURL
+   *   The stylesheet's URL.
+   */
+  async _addDynamicStylesheet(stylesheetURL) {
+    // Try-catch all of these so that failing to load a stylesheet doesn't break
+    // callers and possibly the urlbar.  If a stylesheet does fail to load, the
+    // dynamic results that depend on it will appear broken, but at least we
+    // won't break the whole urlbar.
+    try {
+      let uri = Services.io.newURI(stylesheetURL);
+      let sheet = await styleSheetService.preloadSheetAsync(
+        uri,
+        Ci.nsIStyleSheetService.AGENT_SHEET
+      );
+      this.window.windowUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.AGENT_SHEET);
+    } catch (ex) {
+      Cu.reportError(`Error adding dynamic stylesheet: ${ex}`);
+    }
+  }
+
+  /**
+   * Removes a dynamic result type stylesheet from the view's window.
+   *
+   * @param {string} stylesheetURL
+   *   The stylesheet's URL.
+   */
+  _removeDynamicStylesheet(stylesheetURL) {
+    // Try-catch for the same reason as desribed in _addDynamicStylesheet.
+    try {
+      this.window.windowUtils.removeSheetUsingURIString(
+        stylesheetURL,
+        Ci.nsIDOMWindowUtils.AGENT_SHEET
+      );
+    } catch (ex) {
+      Cu.reportError(`Error removing dynamic stylesheet: ${ex}`);
+    }
+  }
+
   // Event handlers below.
 
   _on_SelectedOneOffButtonChanged() {
@@ -2061,50 +2102,5 @@ class QueryContextCache {
 
   get(searchString) {
     return this._cache.find(e => e.searchString == searchString);
-  }
-}
-
-/**
- * Adds a dynamic result type stylesheet to a specified window.
- *
- * @param {Window} window
- *   The window to which to add the stylesheet.
- * @param {string} stylesheetURL
- *   The stylesheet's URL.
- */
-async function addDynamicStylesheet(window, stylesheetURL) {
-  // Try-catch all of these so that failing to load a stylesheet doesn't break
-  // callers and possibly the urlbar.  If a stylesheet does fail to load, the
-  // dynamic results that depend on it will appear broken, but at least we
-  // won't break the whole urlbar.
-  try {
-    let uri = Services.io.newURI(stylesheetURL);
-    let sheet = await styleSheetService.preloadSheetAsync(
-      uri,
-      Ci.nsIStyleSheetService.AGENT_SHEET
-    );
-    window.windowUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.AGENT_SHEET);
-  } catch (ex) {
-    Cu.reportError(`Error adding dynamic stylesheet: ${ex}`);
-  }
-}
-
-/**
- * Removes a dynamic result type stylesheet from the view's window.
- *
- * @param {Window} window
- *   The window from which to remove the stylesheet.
- * @param {string} stylesheetURL
- *   The stylesheet's URL.
- */
-function removeDynamicStylesheet(window, stylesheetURL) {
-  // Try-catch for the same reason as desribed in addDynamicStylesheet.
-  try {
-    window.windowUtils.removeSheetUsingURIString(
-      stylesheetURL,
-      Ci.nsIDOMWindowUtils.AGENT_SHEET
-    );
-  } catch (ex) {
-    Cu.reportError(`Error removing dynamic stylesheet: ${ex}`);
   }
 }

@@ -169,9 +169,6 @@ urlbar.searchmode.*
   - ``tabtosearch``
     Used when the user selects a tab-to-search result. These results suggest a
     search engine when the search engine's domain is autofilled.
-  - ``tabtosearch_onboard``
-    Used when the user selects a tab-to-search onboarding result. These are
-    shown the first few times the user encounters a tab-to-search result.
   - ``topsites_newtab``
     Used when the user selects a search shortcut Top Site from the New Tab Page.
   - ``topsites_urlbar``

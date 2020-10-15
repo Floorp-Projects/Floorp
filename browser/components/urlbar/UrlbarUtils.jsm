@@ -199,7 +199,7 @@ var UrlbarUtils = {
   ]),
 
   // Valid entry points for search mode. If adding a value here, please update
-  // telemetry documentation and Scalars.yaml.
+  // telemetry documentation.
   SEARCH_MODE_ENTRY: new Set([
     "bookmarkmenu",
     "handoff",
@@ -209,7 +209,6 @@ var UrlbarUtils = {
     "shortcut",
     "tabmenu",
     "tabtosearch",
-    "tabtosearch_onboard",
     "topsites_newtab",
     "topsites_urlbar",
     "touchbar",
@@ -528,9 +527,6 @@ var UrlbarUtils = {
    *          dropdown.
    */
   getSpanForResult(result) {
-    if (result.resultSpan) {
-      return result.resultSpan;
-    }
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL:
       case UrlbarUtils.RESULT_TYPE.BOOKMARKS:
