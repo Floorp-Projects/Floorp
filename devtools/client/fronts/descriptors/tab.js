@@ -47,6 +47,10 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     // debugging).
     this._localTab = null;
 
+    // Flipped when creating dedicated tab targets for DevTools WebExtensions.
+    // See toolkit/components/extensions/ExtensionParent.jsm .
+    this.isDevToolsExtensionContext = false;
+
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
   }
@@ -255,7 +259,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     }
 
     // The front that was created for DevTools page extension does not have corresponding toolbox.
-    if (this._targetFront.isDevToolsExtensionContext) {
+    if (this.isDevToolsExtensionContext) {
       return;
     }
 
