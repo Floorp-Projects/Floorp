@@ -446,7 +446,7 @@ public class ContentBlockingController {
                       Event.COOKIES_BLOCKED_TRACKER, Event.COOKIES_BLOCKED_SOCIALTRACKER,
                       Event.COOKIES_BLOCKED_ALL, Event.COOKIES_PARTITIONED_FOREIGN,
                       Event.COOKIES_BLOCKED_FOREIGN, Event.BLOCKED_SOCIALTRACKING_CONTENT,
-                      Event.LOADED_SOCIALTRACKING_CONTENT })
+                      Event.LOADED_SOCIALTRACKING_CONTENT, Event.REPLACED_UNSAFE_CONTENT })
             /* package */ @interface LogEvent {}
 
             /**
