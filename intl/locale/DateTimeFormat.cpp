@@ -18,6 +18,8 @@ using namespace mozilla::intl;
 nsCString* DateTimeFormat::mLocale = nullptr;
 nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
 
+static const int32_t DATETIME_FORMAT_INITIAL_LEN = 127;
+
 /*static*/
 nsresult DateTimeFormat::Initialize() {
   if (mLocale) {
@@ -53,6 +55,95 @@ nsresult DateTimeFormat::FormatPRExplodedTime(
   return FormatUDateTime(aDateFormatSelector, aTimeFormatSelector,
                          (PR_ImplodeTime(aExplodedTime) / PR_USEC_PER_MSEC),
                          &(aExplodedTime->tm_params), aStringOut);
+}
+
+// performs a locale sensitive date formatting operation on the PRExplodedTime
+// parameter, using the specified options.
+/*static*/
+nsresult DateTimeFormat::FormatDateTime(
+    const PRExplodedTime* aExplodedTime,
+    const DateTimeFormat::Skeleton aSkeleton, nsAString& aStringOut) {
+  // set up locale data
+  nsresult rv = Initialize();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  aStringOut.Truncate();
+
+  UErrorCode status = U_ZERO_ERROR;
+
+  nsAutoString skeleton;
+  nsAutoString pattern;
+
+  switch (aSkeleton) {
+    case Skeleton::yyyyMM:
+      skeleton.AssignASCII("yyyyMM");
+      break;
+    case Skeleton::yyyyMMMM:
+      skeleton.AssignASCII("yyyyMMMM");
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled skeleton enum");
+  }
+
+  UDateTimePatternGenerator* patternGenerator =
+      udatpg_open(mLocale->get(), &status);
+  if (U_SUCCESS(status)) {
+    int32_t patternLength;
+    pattern.SetLength(DATETIME_FORMAT_INITIAL_LEN);
+    patternLength = udatpg_getBestPattern(
+        patternGenerator,
+        reinterpret_cast<const UChar*>(skeleton.BeginReading()),
+        skeleton.Length(), reinterpret_cast<UChar*>(pattern.BeginWriting()),
+        DATETIME_FORMAT_INITIAL_LEN, &status);
+    pattern.SetLength(patternLength);
+
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+      status = U_ZERO_ERROR;
+      udatpg_getBestPattern(
+          patternGenerator,
+          reinterpret_cast<const UChar*>(skeleton.BeginReading()),
+          skeleton.Length(), reinterpret_cast<UChar*>(pattern.BeginWriting()),
+          patternLength, &status);
+    }
+  }
+  udatpg_close(patternGenerator);
+
+  nsAutoString timeZoneID;
+  BuildTimeZoneString(aExplodedTime->tm_params, timeZoneID);
+
+  UDateFormat* dateTimeFormat =
+      udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(),
+                reinterpret_cast<const UChar*>(timeZoneID.BeginReading()),
+                timeZoneID.Length(),
+                reinterpret_cast<const UChar*>(pattern.BeginReading()),
+                pattern.Length(), &status);
+
+  if (U_SUCCESS(status) && dateTimeFormat) {
+    UDate udate =
+        static_cast<float>((PR_ImplodeTime(aExplodedTime) / PR_USEC_PER_MSEC));
+
+    aStringOut.SetLength(DATETIME_FORMAT_INITIAL_LEN);
+    int32_t dateTimeLen =
+        udat_format(dateTimeFormat, udate,
+                    reinterpret_cast<UChar*>(aStringOut.BeginWriting()),
+                    DATETIME_FORMAT_INITIAL_LEN, nullptr, &status);
+    aStringOut.SetLength(dateTimeLen);
+
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+      status = U_ZERO_ERROR;
+      udat_format(dateTimeFormat, udate,
+                  reinterpret_cast<UChar*>(aStringOut.BeginWriting()),
+                  dateTimeLen, nullptr, &status);
+    }
+  }
+
+  if (U_FAILURE(status)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 /*static*/
@@ -137,7 +228,6 @@ nsresult DateTimeFormat::FormatUDateTime(
     const nsDateFormatSelector aDateFormatSelector,
     const nsTimeFormatSelector aTimeFormatSelector, const UDate aUDateTime,
     const PRTimeParameters* aTimeParameters, nsAString& aStringOut) {
-  const int32_t DATETIME_FORMAT_INITIAL_LEN = 127;
   int32_t dateTimeLen = 0;
   nsresult rv = NS_OK;
 
