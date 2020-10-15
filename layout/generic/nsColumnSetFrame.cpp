@@ -248,17 +248,6 @@ void nsColumnSetFrame::CreateBorderRenderers(
       aPt);
 }
 
-static nscoord GetAvailableContentISize(const ReflowInput& aReflowInput) {
-  if (aReflowInput.AvailableISize() == NS_UNCONSTRAINEDSIZE) {
-    return NS_UNCONSTRAINEDSIZE;
-  }
-
-  WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord borderPaddingISize =
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm);
-  return std::max(0, aReflowInput.AvailableISize() - borderPaddingISize);
-}
-
 static uint32_t ColumnBalancingDepth(const ReflowInput& aReflowInput,
                                      uint32_t aMaxDepth) {
   uint32_t depth = 0;
@@ -274,7 +263,7 @@ static uint32_t ColumnBalancingDepth(const ReflowInput& aReflowInput,
 nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     const ReflowInput& aReflowInput, bool aForceAuto = false) const {
   const nsStyleColumn* colStyle = StyleColumn();
-  nscoord availContentISize = GetAvailableContentISize(aReflowInput);
+  nscoord availContentISize = aReflowInput.AvailableISize();
   if (aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
     availContentISize = aReflowInput.ComputedISize();
   }
