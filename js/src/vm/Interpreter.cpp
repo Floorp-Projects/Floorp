@@ -1274,7 +1274,8 @@ bool js::HandleClosingGeneratorReturn(JSContext* cx, AbstractFramePtr frame,
   if (cx->isClosingGenerator()) {
     cx->clearPendingException();
     ok = true;
-    SetGeneratorClosed(cx, frame);
+    auto* genObj = GetGeneratorObjectForFrame(cx, frame);
+    genObj->setClosed();
   }
   return ok;
 }
@@ -4265,8 +4266,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
       POP_RETURN_VALUE();
       MOZ_ASSERT(REGS.stackDepth() == 0);
-      if (!AbstractGeneratorObject::initialSuspend(cx, obj, REGS.fp(),
-                                                   REGS.pc)) {
+      if (!AbstractGeneratorObject::suspend(cx, obj, REGS.fp(), REGS.pc,
+                                            script->nfixed())) {
         goto error;
       }
       goto successful_return_continuation;
@@ -4277,9 +4278,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       MOZ_ASSERT(!cx->isExceptionPending());
       MOZ_ASSERT(REGS.fp()->isFunctionFrame());
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
-      if (!AbstractGeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc,
-                                                  REGS.spForStackDepth(0),
-                                                  REGS.stackDepth() - 2)) {
+      if (!AbstractGeneratorObject::suspend(
+              cx, obj, REGS.fp(), REGS.pc,
+              script->nfixed() + REGS.stackDepth() - 2)) {
         goto error;
       }
 

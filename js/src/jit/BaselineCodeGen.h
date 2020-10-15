@@ -362,10 +362,7 @@ class BaselineCompilerHandler {
     return script()->nslots() > NumSlotsLimit;
   }
 
-  bool tryCountLiveFixed(size_t* liveFixed) const {
-    *liveFixed = script()->calculateLiveFixed(pc());
-    return true;
-  }
+  bool canHaveFixedSlots() const { return script()->nfixed() != 0; }
 };
 
 using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
@@ -488,7 +485,7 @@ class BaselineInterpreterHandler {
   // include them.
   bool mustIncludeSlotsInStackCheck() const { return true; }
 
-  bool tryCountLiveFixed(size_t* liveFixed) const { return false; }
+  bool canHaveFixedSlots() const { return true; }
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
