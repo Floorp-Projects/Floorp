@@ -8,11 +8,11 @@
 const TEST_DATA = [
   {
     targetClass: "cssanimation-normal",
-    expectedTitle: "cssanimation - CSS Animation",
+    expectedTitle: "cssanimation — CSS Animation",
   },
   {
     targetClass: "delay-positive",
-    expectedTitle: "test-delay-animation - Script Animation",
+    expectedTitle: "test-delay-animation — Script Animation",
   },
   {
     targetClass: "easing-step",
