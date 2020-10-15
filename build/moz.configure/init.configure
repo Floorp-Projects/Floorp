@@ -357,6 +357,10 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
         # value which messes with mach's virtualenv handling code. Override
         # Homebrew's changes with the correct sys.executable value.
         os.environ['PYTHONEXECUTABLE'] = python
+        # Another quirk on macOS, with the system python, the virtualenv is
+        # not fully operational (missing entries in sys.path) if
+        # __PYVENV_LAUNCHER__ is set.
+        os.environ.pop('__PYVENV_LAUNCHER__', None)
         # One would prefer to use os.execl, but that's completely borked on
         # Windows.
         sys.exit(subprocess.call([python] + sys.argv))
