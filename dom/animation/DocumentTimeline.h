@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "AnimationTimeline.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
+#include "nsRefreshDriver.h"
 #include "nsRefreshObservers.h"
 
 struct JSContext;
