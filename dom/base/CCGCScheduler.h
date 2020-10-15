@@ -58,20 +58,55 @@ namespace mozilla {
 
 class CCGCScheduler {
  public:
+  // Parameter setting
+
   void SetActiveIntersliceGCBudget(TimeDuration aDuration) {
     mActiveIntersliceGCBudget = aDuration;
   }
 
-  // Returns an IsNull() TimeStamp if CC is not currently locked out.
-  TimeStamp GetCCLockedOutTime() const {
-    return mCCLockedOut ? mCCLockedOutTime : TimeStamp();
+  // State retrieval
+
+  Maybe<TimeDuration> GetCCBlockedTime(TimeStamp now) const {
+    MOZ_ASSERT_IF(mCCBlockStart.IsNull(), !mInIncrementalGC);
+    if (mCCBlockStart.IsNull()) {
+      return {};
+    }
+    return Some(now - mCCBlockStart);
   }
 
-  bool InIncrementalGC() const { return mCCLockedOut; }
+  bool InIncrementalGC() const { return mInIncrementalGC; }
 
-  void NoteGCBegin() { mCCLockedOut = true; }
+  // State modification
 
-  void NoteGCEnd() { mCCLockedOut = false; }
+  void NoteGCBegin() {
+    // Treat all GC as incremental here; non-incremental GC will just appear to
+    // be one slice.
+    mInIncrementalGC = true;
+  }
+
+  void NoteGCEnd() {
+    mCCBlockStart = TimeStamp();
+    mInIncrementalGC = false;
+  }
+
+  // When we decide to do a cycle collection but we're in the middle of an
+  // incremental GC, the CC is "locked out" until the GC completes -- unless
+  // the wait is too long, and we decide to finish the incremental GC early.
+  enum IsStartingCCLockout { StartingLockout = true, AlreadyLockedOut = false };
+  IsStartingCCLockout EnsureCCIsBlocked(TimeStamp aNow) {
+    MOZ_ASSERT(mInIncrementalGC);
+
+    if (mCCBlockStart) {
+      return AlreadyLockedOut;
+    }
+
+    mCCBlockStart = aNow;
+    return StartingLockout;
+  }
+
+  void UnblockCC() { mCCBlockStart = TimeStamp(); }
+
+  // Scheduling
 
   TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline) const {
     // We use longer budgets when the CC has been locked out but the CC has
@@ -80,24 +115,26 @@ class CCGCScheduler {
     // in a very long one.
     TimeDuration budget = aDeadline.IsNull() ? mActiveIntersliceGCBudget * 2
                                              : aDeadline - TimeStamp::Now();
-    TimeStamp CCLockedOutTime = GetCCLockedOutTime();
-    if (CCLockedOutTime.IsNull()) {
+    if (!mCCBlockStart) {
       return budget;
     }
 
-    TimeDuration blockedTime = TimeStamp::Now() - CCLockedOutTime;
+    TimeDuration blockedTime = TimeStamp::Now() - mCCBlockStart;
     TimeDuration maxSliceGCBudget = mActiveIntersliceGCBudget * 10;
     double percentOfBlockedTime =
         std::min(blockedTime / kMaxCCLockedoutTime, 1.0);
     return std::max(budget, maxSliceGCBudget.MultDouble(percentOfBlockedTime));
   }
 
-  // The CC is locked out because an incremental GC has started.
-  bool mCCLockedOut = false;
+  // State
+
+  // An incremental GC is in progress, which blocks the CC from running for its
+  // duration (or until it goes too long and is finished synchronously.)
+  bool mInIncrementalGC = false;
 
   // When the CC started actually waiting for the GC to finish. This will be
   // set to non-null at a later time than mCCLockedOut.
-  TimeStamp mCCLockedOutTime;
+  TimeStamp mCCBlockStart;
 
   // Configuration parameters
 
