@@ -267,8 +267,7 @@ nsTypeAheadFind::SetSelectionModeAndRepaint(int16_t aToggle) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTypeAheadFind::CollapseSelection() {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsTypeAheadFind::CollapseSelection() {
   nsCOMPtr<nsISelectionController> selectionController =
       do_QueryReferent(mSelectionController);
   if (!selectionController) {
@@ -906,10 +905,9 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
   *aIsStartingLink = false;
 }
 
-NS_IMETHODIMP
-nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
-                      uint32_t aMode, bool aDontIterateFrames,
-                      uint16_t* aResult) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsTypeAheadFind::Find(
+    const nsAString& aSearchString, bool aLinksOnly, uint32_t aMode,
+    bool aDontIterateFrames, uint16_t* aResult) {
   if (aMode == nsITypeAheadFind::FIND_PREVIOUS ||
       aMode == nsITypeAheadFind::FIND_NEXT) {
     if (mTypeAheadBuffer.IsEmpty()) {

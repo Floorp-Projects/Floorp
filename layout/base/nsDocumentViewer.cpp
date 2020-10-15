@@ -2410,7 +2410,7 @@ mozilla::dom::Selection* nsDocumentViewer::GetDocumentSelection() {
  * ============================================================================
  */
 
-NS_IMETHODIMP nsDocumentViewer::ClearSelection() {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocumentViewer::ClearSelection() {
   // use nsCopySupport::GetSelectionForCopy() ?
   RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (!selection) {
