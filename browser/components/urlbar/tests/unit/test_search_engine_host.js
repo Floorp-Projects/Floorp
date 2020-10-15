@@ -55,6 +55,7 @@ add_task(async function test_searchEngine_autoFill() {
 add_task(async function test_searchEngine_noautoFill() {
   Services.prefs.setBoolPref("browser.urlbar.update2", true);
   Services.prefs.setBoolPref("browser.urlbar.update2.tabToComplete", true);
+  Services.prefs.setIntPref("browser.urlbar.tabToSearch.onboard.maxShown", 0);
   await PlacesTestUtils.addVisits(
     Services.io.newURI("http://my.search.com/samplepage/")
   );
@@ -89,6 +90,7 @@ add_task(async function test_searchEngine_noautoFill() {
   });
 
   await cleanupPlaces();
+  Services.prefs.clearUserPref("browser.urlbar.tabToSearch.onboard.maxShown");
   Services.prefs.clearUserPref("browser.urlbar.update2.tabToComplete");
   Services.prefs.clearUserPref("browser.urlbar.update2");
 });
