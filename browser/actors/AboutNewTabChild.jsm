@@ -84,12 +84,19 @@ class AboutNewTabChild extends JSWindowActorChild {
       (event.type == "pageshow" || event.type == "visibilitychange") &&
       // The default browser notification shouldn't be shown on about:welcome
       // since we don't want to distract from the onboarding wizard.
-      !this.contentWindow.location.pathname.includes("welcome") &&
-      // Don't show the notification in private windows since it is expected
-      // to have very little opt-in here.
-      !PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow)
+      !this.contentWindow.location.pathname.includes("welcome")
     ) {
-      if (this.document.visibilityState == "visible") {
+      // Don't show the notification in non-permanent private windows
+      // since it is expected to have very little opt-in here.
+      let contentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
+        this.contentWindow
+      );
+      if (
+        this.document.visibilityState == "visible" &&
+        (!contentWindowPrivate ||
+          (contentWindowPrivate &&
+            PrivateBrowsingUtils.permanentPrivateBrowsing))
+      ) {
         this.sendAsyncMessage("DefaultBrowserNotification");
       }
     }
