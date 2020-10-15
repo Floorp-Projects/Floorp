@@ -300,7 +300,7 @@ AddrHostRecord::~AddrHostRecord() {
 }
 
 bool AddrHostRecord::Blocklisted(const NetAddr* aQuery) {
-  // must call locked
+  addr_info_lock.AssertCurrentThreadOwns();
   LOG(("Checking unusable list for host [%s], host record [%p].\n", host.get(),
        this));
 
@@ -326,7 +326,7 @@ bool AddrHostRecord::Blocklisted(const NetAddr* aQuery) {
 }
 
 void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
-  // must call locked
+  addr_info_lock.AssertCurrentThreadOwns();
   LOG(
       ("Adding address to blocklist for host [%s], host record [%p]."
        "used trr=%d\n",
@@ -345,7 +345,7 @@ void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
 }
 
 void AddrHostRecord::ResetBlocklist() {
-  // must call locked
+  addr_info_lock.AssertCurrentThreadOwns();
   LOG(("Resetting blocklist for host [%s], host record [%p].\n", host.get(),
        this));
   mUnusableItems.Clear();
@@ -1130,24 +1130,27 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
             if (unspecRec->negative) {
               rec->negative = unspecRec->negative;
               rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
-            } else if (addrUnspecRec->addr_info) {
-              // Search for any valid address in the AF_UNSPEC entry
-              // in the cache (not blocklisted and from the right
-              // family).
-              nsTArray<NetAddr> addresses;
-              for (const auto& addr : addrUnspecRec->addr_info->Addresses()) {
-                if ((af == addr.inet.family) &&
-                    !addrUnspecRec->Blocklisted(&addr)) {
-                  addresses.AppendElement(addr);
+            } else {
+              MutexAutoLock lock(addrUnspecRec->addr_info_lock);
+              if (addrUnspecRec->addr_info) {
+                // Search for any valid address in the AF_UNSPEC entry
+                // in the cache (not blocklisted and from the right
+                // family).
+                nsTArray<NetAddr> addresses;
+                for (const auto& addr : addrUnspecRec->addr_info->Addresses()) {
+                  if ((af == addr.inet.family) &&
+                      !addrUnspecRec->Blocklisted(&addr)) {
+                    addresses.AppendElement(addr);
+                  }
                 }
-              }
-              if (!addresses.IsEmpty()) {
-                addrRec->addr_info = new AddrInfo(
-                    addrUnspecRec->addr_info->Hostname(),
-                    addrUnspecRec->addr_info->CanonicalHostname(),
-                    addrUnspecRec->addr_info->IsTRR(), std::move(addresses));
-                addrRec->addr_info_gencnt++;
-                rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
+                if (!addresses.IsEmpty()) {
+                  addrRec->addr_info = new AddrInfo(
+                      addrUnspecRec->addr_info->Hostname(),
+                      addrUnspecRec->addr_info->CanonicalHostname(),
+                      addrUnspecRec->addr_info->IsTRR(), std::move(addresses));
+                  addrRec->addr_info_gencnt++;
+                  rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
+                }
               }
             }
             // Now check if we have a new record.
