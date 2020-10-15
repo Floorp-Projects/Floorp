@@ -11,7 +11,6 @@ import androidx.core.net.toUri
 import mozilla.components.support.ktx.android.content.appVersionName
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
@@ -39,7 +38,6 @@ object SupportUtils {
         SET_AS_DEFAULT_BROWSER("set-firefox-preview-default"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
-        UPGRADE_FAQ("firefox-preview-upgrade-faqs"),
         SYNC_SETUP("how-set-firefox-sync-firefox-preview"),
         QR_CAMERA_ACCESS("qr-camera-access")
     }
@@ -85,11 +83,7 @@ object SupportUtils {
         return "https://www.mozilla.org/$langTag/$path"
     }
 
-    fun getWhatsNewUrl(context: Context) = if (Config.channel.isFennec) {
-        getGenericSumoURLForTopic(SumoTopic.UPGRADE_FAQ)
-    } else {
-        getSumoURLForTopic(context, SumoTopic.WHATS_NEW)
-    }
+    fun getWhatsNewUrl(context: Context) = getSumoURLForTopic(context, SumoTopic.WHATS_NEW)
 
     fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
         .setInstantAppsEnabled(false)
