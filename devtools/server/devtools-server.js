@@ -345,10 +345,10 @@ var DevToolsServer = {
     return this._onConnection(transport, prefix, true);
   },
 
-  connectToParentWindowActor(jsWindowChildActor, forwardingPrefix) {
+  connectToParentWindowActor(devtoolsFrameActor, forwardingPrefix) {
     this._checkInit();
     const transport = new JsWindowActorTransport(
-      jsWindowChildActor,
+      devtoolsFrameActor,
       forwardingPrefix
     );
 

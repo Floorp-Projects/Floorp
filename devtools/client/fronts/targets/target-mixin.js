@@ -411,10 +411,7 @@ function TargetMixin(parentClass) {
     }
 
     get isWorkerTarget() {
-      // XXX Remove the check on `workerDescriptor` as part of Bug 1667404.
-      return (
-        this.typeName === "workerTarget" || this.typeName === "workerDescriptor"
-      );
+      return this.typeName === "workerDescriptor";
     }
 
     get isLegacyAddon() {
@@ -538,13 +535,7 @@ function TargetMixin(parentClass) {
       if (this.isDestroyedOrBeingDestroyed()) {
         return;
       }
-
-      // WorkerTargetFront don't have an attach function as the related console and thread
-      // actors are created right away (from devtools/server/startup/worker.js)
-      if (this.attach) {
-        await this.attach();
-      }
-
+      await this.attach();
       const isBrowserToolbox = targetList.targetFront.isParentProcess;
       const isNonTopLevelFrameTarget =
         !this.isTopLevel && this.targetType === targetList.TYPES.FRAME;

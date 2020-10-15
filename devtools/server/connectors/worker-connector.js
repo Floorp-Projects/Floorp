@@ -21,8 +21,6 @@ loader.lazyRequireGetter(
  * @params {String} forwardingPrefix: The prefix that will be used to forward messages
  *                  to the DevToolsServer on the worker thread.
  * @params {Object} options: An option object that will be passed with the "connect" packet.
- * @params {Object} options.watchedData: The watchedData object that will be passed to the
- *                  worker target actor.
  */
 function connectToWorker(connection, dbg, forwardingPrefix, options) {
   return new Promise((resolve, reject) => {
@@ -102,11 +100,6 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         type: "connect",
         forwardingPrefix,
         options,
-        workerDebuggerData: {
-          id: dbg.id,
-          type: dbg.type,
-          url: dbg.url,
-        },
       })
     );
 

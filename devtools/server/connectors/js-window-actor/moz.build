@@ -7,7 +7,5 @@
 DevToolsModules(
     'DevToolsFrameChild.jsm',
     'DevToolsFrameParent.jsm',
-    'DevToolsWorkerChild.jsm',
-    'DevToolsWorkerParent.jsm',
     'WindowGlobalLogger.jsm',
 )

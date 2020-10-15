@@ -285,7 +285,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
-    front: "devtools/client/fronts/targets/worker",
+    front: null,
   },
   {
     types: ["thread"],
