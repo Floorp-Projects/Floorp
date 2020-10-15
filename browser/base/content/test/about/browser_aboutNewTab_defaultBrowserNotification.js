@@ -191,6 +191,45 @@ add_task(async function notification_not_displayed_on_private_window() {
   );
 });
 
+add_task(async function notification_displayed_on_perm_private_window() {
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.autostart", true]],
+  });
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await test_with_mock_shellservice(
+    { win: privateWin, isDefault: false },
+    async function() {
+      let tab = await BrowserTestUtils.openNewForegroundTab({
+        gBrowser: privateWin.gBrowser,
+        opening: "about:newtab",
+        waitForLoad: false,
+      });
+      ok(
+        PrivateBrowsingUtils.isBrowserPrivate(
+          privateWin.gBrowser.selectedBrowser
+        ),
+        "Browser should be private"
+      );
+      let notification = await TestUtils.waitForCondition(
+        () =>
+          tab.linkedBrowser &&
+          gBrowser.getNotificationBox(tab.linkedBrowser) &&
+          gBrowser.getNotificationBox(tab.linkedBrowser).currentNotification,
+        "waiting for notification"
+      );
+      ok(notification, "A notification should be shown on the new tab page");
+      is(
+        notification.getAttribute("value"),
+        "default-browser",
+        "Notification should be default browser"
+      );
+      await BrowserTestUtils.closeWindow(privateWin);
+    }
+  );
+});
+
 add_task(async function clicking_dismiss_disables_default_browser_checking() {
   await test_with_mock_shellservice({ isDefault: false }, async function() {
     let firstTab = await BrowserTestUtils.openNewForegroundTab({
