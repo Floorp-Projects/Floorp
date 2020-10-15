@@ -33,7 +33,7 @@ class AbstractGeneratorObject : public NativeObject {
     CALLEE_SLOT = 0,
     ENV_CHAIN_SLOT,
     ARGS_OBJ_SLOT,
-    EXPRESSION_STACK_SLOT,
+    STACK_STORAGE_SLOT,
     RESUME_INDEX_SLOT,
     RESERVED_SLOTS
   };
@@ -84,21 +84,19 @@ class AbstractGeneratorObject : public NativeObject {
     setFixedSlot(ARGS_OBJ_SLOT, ObjectValue(argsObj));
   }
 
-  bool hasExpressionStack() const {
-    return getFixedSlot(EXPRESSION_STACK_SLOT).isObject();
+  bool hasStackStorage() const {
+    return getFixedSlot(STACK_STORAGE_SLOT).isObject();
   }
-  bool isExpressionStackEmpty() const {
-    return expressionStack().getDenseInitializedLength() == 0;
+  bool isStackStorageEmpty() const {
+    return stackStorage().getDenseInitializedLength() == 0;
   }
-  ArrayObject& expressionStack() const {
-    return getFixedSlot(EXPRESSION_STACK_SLOT).toObject().as<ArrayObject>();
+  ArrayObject& stackStorage() const {
+    return getFixedSlot(STACK_STORAGE_SLOT).toObject().as<ArrayObject>();
   }
-  void setExpressionStack(ArrayObject& expressionStack) {
-    setFixedSlot(EXPRESSION_STACK_SLOT, ObjectValue(expressionStack));
+  void setStackStorage(ArrayObject& stackStorage) {
+    setFixedSlot(STACK_STORAGE_SLOT, ObjectValue(stackStorage));
   }
-  void clearExpressionStack() {
-    setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
-  }
+  void clearStackStorage() { setFixedSlot(STACK_STORAGE_SLOT, NullValue()); }
 
   // The resumeIndex slot is abused for a few purposes.  It's undefined if
   // it hasn't been set yet (before the initial yield), and null if the
@@ -153,7 +151,7 @@ class AbstractGeneratorObject : public NativeObject {
     setFixedSlot(CALLEE_SLOT, NullValue());
     setFixedSlot(ENV_CHAIN_SLOT, NullValue());
     setFixedSlot(ARGS_OBJ_SLOT, NullValue());
-    setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
+    setFixedSlot(STACK_STORAGE_SLOT, NullValue());
     setFixedSlot(RESUME_INDEX_SLOT, NullValue());
   }
 
@@ -176,8 +174,8 @@ class AbstractGeneratorObject : public NativeObject {
   static size_t offsetOfResumeIndexSlot() {
     return getFixedSlotOffset(RESUME_INDEX_SLOT);
   }
-  static size_t offsetOfExpressionStackSlot() {
-    return getFixedSlotOffset(EXPRESSION_STACK_SLOT);
+  static size_t offsetOfStackStorageSlot() {
+    return getFixedSlotOffset(STACK_STORAGE_SLOT);
   }
 };
 

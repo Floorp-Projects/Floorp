@@ -50,7 +50,7 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   if (frame.script()->needsArgsObj()) {
     genObj->setArgsObj(frame.argsObj());
   }
-  genObj->clearExpressionStack();
+  genObj->clearStackStorage();
 
   if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
     return nullptr;
@@ -70,19 +70,19 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
              JSOp(*pc) == JSOp::Await);
 
   auto genObj = obj.as<AbstractGeneratorObject>();
-  MOZ_ASSERT(!genObj->hasExpressionStack() || genObj->isExpressionStackEmpty());
+  MOZ_ASSERT(!genObj->hasStackStorage() || genObj->isStackStorageEmpty());
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Await, genObj->callee().isAsync());
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Yield, genObj->callee().isGenerator());
 
   ArrayObject* stack = nullptr;
   if (nvalues > 0) {
     do {
-      if (genObj->hasExpressionStack()) {
-        MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() == 0);
-        auto result = genObj->expressionStack().setOrExtendDenseElements(
+      if (genObj->hasStackStorage()) {
+        MOZ_ASSERT(genObj->stackStorage().getDenseInitializedLength() == 0);
+        auto result = genObj->stackStorage().setOrExtendDenseElements(
             cx, 0, vp, nvalues, ShouldUpdateTypes::DontUpdate);
         if (result == DenseElementResult::Success) {
-          MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() ==
+          MOZ_ASSERT(genObj->stackStorage().getDenseInitializedLength() ==
                      nvalues);
           break;
         }
@@ -101,7 +101,7 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
   genObj->setResumeIndex(pc);
   genObj->setEnvironmentChain(*frame.environmentChain());
   if (stack) {
-    genObj->setExpressionStack(*stack);
+    genObj->setStackStorage(*stack);
   }
 
   return true;
@@ -180,13 +180,13 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
     activation.regs().fp()->initArgsObj(genObj->argsObj());
   }
 
-  if (genObj->hasExpressionStack() && !genObj->isExpressionStackEmpty()) {
-    uint32_t len = genObj->expressionStack().getDenseInitializedLength();
+  if (genObj->hasStackStorage() && !genObj->isStackStorageEmpty()) {
+    uint32_t len = genObj->stackStorage().getDenseInitializedLength();
     MOZ_ASSERT(activation.regs().spForStackDepth(len));
-    const Value* src = genObj->expressionStack().getDenseElements();
+    const Value* src = genObj->stackStorage().getDenseElements();
     mozilla::PodCopy(activation.regs().sp, src, len);
     activation.regs().sp += len;
-    genObj->expressionStack().setDenseInitializedLength(0);
+    genObj->stackStorage().setDenseInitializedLength(0);
   }
 
   JSScript* script = callee->nonLazyScript();

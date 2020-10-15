@@ -6146,10 +6146,10 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.bind(&noArgsObj);
 
   // Push expression slots if needed.
-  Label noExprStack;
-  Address exprStackSlot(genObj,
-                        AbstractGeneratorObject::offsetOfExpressionStackSlot());
-  masm.fallibleUnboxObject(exprStackSlot, scratch2, &noExprStack);
+  Label noStackStorage;
+  Address stackStorageSlot(genObj,
+                           AbstractGeneratorObject::offsetOfStackStorageSlot());
+  masm.fallibleUnboxObject(stackStorageSlot, scratch2, &noStackStorage);
   {
     Register initLength = regs.takeAny();
     masm.loadPtr(Address(scratch2, NativeObject::offsetOfElements()), scratch2);
@@ -6173,7 +6173,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
     regs.add(initLength);
   }
 
-  masm.bind(&noExprStack);
+  masm.bind(&noStackStorage);
 
   // Push arg, generator, resumeKind stack Values, in that order.
   masm.pushValue(Address(callerStackPtr, sizeof(Value)));
