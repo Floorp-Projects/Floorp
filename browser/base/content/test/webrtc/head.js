@@ -54,7 +54,13 @@ let observerTopics = [
   "recording-window-ended",
 ];
 
-let gObserveSubFrameIds = [];
+// Structured hierarchy of subframes. Keys are frame id:s, The children member
+// contains nested sub frames if any. The noTest member make a frame be ignored
+// for testing if true.
+let gObserveSubFrames = {};
+// Object of subframes to test. Each element contains the members bc and id, for
+// the frames BrowsingContext and id, respectively.
+let gSubFramesToTest = [];
 let gBrowserContextsToObserve = [];
 
 function whenDelayedStartupFinished(aWindow) {
@@ -591,15 +597,42 @@ async function stopSharing(
   }
 }
 
-function getBrowsingContextForFrame(aBrowser, aFrameId) {
-  let bc = aBrowser.browsingContext;
+function getBrowsingContextForFrame(aBrowsingContext, aFrameId) {
   if (!aFrameId) {
-    return bc;
+    return aBrowsingContext;
   }
 
-  return SpecialPowers.spawn(bc, [aFrameId], frameId => {
+  return SpecialPowers.spawn(aBrowsingContext, [aFrameId], frameId => {
     return content.document.getElementById(frameId).browsingContext;
   });
+}
+
+async function getBrowsingContextsAndFrameIdsForSubFrames(
+  aBrowsingContext,
+  aSubFrames
+) {
+  let pendingBrowserSubFrames = [
+    { bc: aBrowsingContext, subFrames: aSubFrames },
+  ];
+  let browsingContextsAndFrames = [];
+  while (pendingBrowserSubFrames.length) {
+    let { bc, subFrames } = pendingBrowserSubFrames.shift();
+    for (let id of Object.keys(subFrames)) {
+      let subBc = await getBrowsingContextForFrame(bc, id);
+      if (subFrames[id].children) {
+        pendingBrowserSubFrames.push({
+          bc: subBc,
+          subFrames: subFrames[id].children,
+        });
+      }
+      if (subFrames[id].noTest) {
+        continue;
+      }
+      let observeBC = subFrames[id].observe ? subBc : undefined;
+      browsingContextsAndFrames.push({ bc: subBc, id, observeBC });
+    }
+  }
+  return browsingContextsAndFrames;
 }
 
 async function promiseRequestDevice(
@@ -607,11 +640,13 @@ async function promiseRequestDevice(
   aRequestVideo,
   aFrameId,
   aType,
-  aBrowser = gBrowser.selectedBrowser,
+  aBrowsingContext,
   aBadDevice = false
 ) {
   info("requesting devices");
-  let bc = await getBrowsingContextForFrame(aBrowser, aFrameId);
+  let bc =
+    aBrowsingContext ??
+    (await getBrowsingContextForFrame(gBrowser.selectedBrowser, aFrameId));
   return SpecialPowers.spawn(
     bc,
     [{ aRequestAudio, aRequestVideo, aType, aBadDevice }],
@@ -630,7 +665,9 @@ async function promiseRequestDevice(
 async function closeStream(
   aAlreadyClosed,
   aFrameId,
-  aDontFlushObserverVerification
+  aDontFlushObserverVerification,
+  aBrowsingContext,
+  aBrowsingContextToObserve
 ) {
   // Check that spurious notifications that occur while closing the
   // stream are handled separately. Tests that use skipObserverVerification
@@ -642,22 +679,28 @@ async function closeStream(
 
   // If the observers are listening to other frames, listen for a notification
   // on the right subframe.
-  let frameBC = await getBrowsingContextForFrame(
-    gBrowser.selectedBrowser,
-    aFrameId
-  );
-  let frameBCToObserve;
-  if (gBrowserContextsToObserve.length > 1) {
-    frameBCToObserve = frameBC;
-  }
+  let frameBC =
+    aBrowsingContext ??
+    (await getBrowsingContextForFrame(
+      gBrowser.selectedBrowser.browsingContext,
+      aFrameId
+    ));
 
   let observerPromises = [];
   if (!aAlreadyClosed) {
     observerPromises.push(
-      expectObserverCalled("recording-device-events", 1, frameBCToObserve)
+      expectObserverCalled(
+        "recording-device-events",
+        1,
+        aBrowsingContextToObserve
+      )
     );
     observerPromises.push(
-      expectObserverCalled("recording-window-ended", 1, frameBCToObserve)
+      expectObserverCalled(
+        "recording-window-ended",
+        1,
+        aBrowsingContextToObserve
+      )
     );
   }
 
@@ -825,7 +868,7 @@ async function checkNotSharing() {
   await assertWebRTCIndicatorStatus(null);
 }
 
-async function promiseReloadFrame(aFrameId) {
+async function promiseReloadFrame(aFrameId, aBrowsingContext) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     true,
@@ -833,7 +876,12 @@ async function promiseReloadFrame(aFrameId) {
       return true;
     }
   );
-  let bc = await getBrowsingContextForFrame(gBrowser.selectedBrowser, aFrameId);
+  let bc =
+    aBrowsingContext ??
+    (await getBrowsingContextForFrame(
+      gBrowser.selectedBrowser.browsingContext,
+      aFrameId
+    ));
   await SpecialPowers.spawn(bc, [], async function() {
     content.location.reload();
   });
@@ -888,11 +936,15 @@ async function enableObserverVerification(browser = gBrowser.selectedBrowser) {
 
   // A list of subframe indicies to also add observers to. This only
   // supports one nested level.
-  if (gObserveSubFrameIds) {
-    for (let id of gObserveSubFrameIds) {
-      gBrowserContextsToObserve.push(
-        await getBrowsingContextForFrame(browser, id)
-      );
+  if (gObserveSubFrames) {
+    let bcsAndFrameIds = await getBrowsingContextsAndFrameIdsForSubFrames(
+      browser,
+      gObserveSubFrames
+    );
+    for (let { observeBC } of bcsAndFrameIds) {
+      if (observeBC) {
+        gBrowserContextsToObserve.push(observeBC);
+      }
     }
   }
 
@@ -946,7 +998,9 @@ async function runTests(tests, options = {}) {
   ];
   await SpecialPowers.pushPrefEnv({ set: prefs });
 
-  gObserveSubFrameIds = options.observeSubFrameIds;
+  // When the frames are in different processes, add observers to each frame,
+  // to ensure that the notifications don't get sent in the wrong process.
+  gObserveSubFrames = SpecialPowers.useRemoteSubframes ? options.subFrames : {};
 
   for (let testCase of tests) {
     info(testCase.desc);
@@ -956,7 +1010,7 @@ async function runTests(tests, options = {}) {
     ) {
       await enableObserverVerification();
     }
-    await testCase.run(browser);
+    await testCase.run(browser, options.subFrames);
     if (
       !testCase.skipObserverVerification &&
       !options.skipObserverVerification
