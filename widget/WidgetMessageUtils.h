@@ -55,18 +55,43 @@ struct ParamTraits<LookAndFeelFont> {
 };
 
 template <>
+struct ParamTraits<LookAndFeelColor> {
+  using paramType = LookAndFeelColor;
+  using idType = std::underlying_type<mozilla::LookAndFeel::ColorID>::type;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, static_cast<idType>(aParam.id));
+    WriteParam(aMsg, aParam.color);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    idType id;
+    nscolor color;
+    if (ReadParam(aMsg, aIter, &id) && ReadParam(aMsg, aIter, &color)) {
+      aResult->id = static_cast<mozilla::LookAndFeel::ColorID>(id);
+      aResult->color = color;
+      return true;
+    }
+    return false;
+  }
+};
+
+template <>
 struct ParamTraits<LookAndFeelCache> {
   typedef LookAndFeelCache paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mInts);
     WriteParam(aMsg, aParam.mFonts);
+    WriteParam(aMsg, aParam.mColors);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mInts) &&
-           ReadParam(aMsg, aIter, &aResult->mFonts);
+           ReadParam(aMsg, aIter, &aResult->mFonts) &&
+           ReadParam(aMsg, aIter, &aResult->mColors);
   }
 };
 
