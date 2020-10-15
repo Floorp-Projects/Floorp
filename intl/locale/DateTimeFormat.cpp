@@ -274,9 +274,7 @@ nsresult DateTimeFormat::FormatUDateTime(
     // We didn't have a cached formatter for this key, so create one.
 
     // Get the date style for the formatter.
-    nsAutoString skeletonDate;
     nsAutoString patternDate;
-    bool haveSkeleton = true;
     switch (aDateFormatSelector) {
       case kDateFormatLong:
         rv = OSPreferences::GetInstance()->GetDateTimePattern(
@@ -284,7 +282,6 @@ nsresult DateTimeFormat::FormatUDateTime(
             mozIOSPreferences::dateTimeFormatStyleNone,
             nsDependentCString(mLocale->get()), patternDate);
         NS_ENSURE_SUCCESS(rv, rv);
-        haveSkeleton = false;
         break;
       case kDateFormatShort:
         rv = OSPreferences::GetInstance()->GetDateTimePattern(
@@ -292,48 +289,12 @@ nsresult DateTimeFormat::FormatUDateTime(
             mozIOSPreferences::dateTimeFormatStyleNone,
             nsDependentCString(mLocale->get()), patternDate);
         NS_ENSURE_SUCCESS(rv, rv);
-        haveSkeleton = false;
-        break;
-      case kDateFormatYearMonth:
-        skeletonDate.AssignLiteral("yyyyMM");
-        break;
-      case kDateFormatYearMonthLong:
-        skeletonDate.AssignLiteral("yyyyMMMM");
         break;
       case kDateFormatNone:
-        haveSkeleton = false;
         break;
       default:
         NS_ERROR("Unknown nsDateFormatSelector");
         return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    if (haveSkeleton) {
-      // Get pattern for skeleton.
-      UDateTimePatternGenerator* patternGenerator =
-          udatpg_open(mLocale->get(), &status);
-      if (U_SUCCESS(status)) {
-        int32_t patternLength;
-        patternDate.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-        patternLength = udatpg_getBestPattern(
-            patternGenerator,
-            reinterpret_cast<const UChar*>(skeletonDate.BeginReading()),
-            skeletonDate.Length(),
-            reinterpret_cast<UChar*>(patternDate.BeginWriting()),
-            DATETIME_FORMAT_INITIAL_LEN, &status);
-        patternDate.SetLength(patternLength);
-
-        if (status == U_BUFFER_OVERFLOW_ERROR) {
-          status = U_ZERO_ERROR;
-          udatpg_getBestPattern(
-              patternGenerator,
-              reinterpret_cast<const UChar*>(skeletonDate.BeginReading()),
-              skeletonDate.Length(),
-              reinterpret_cast<UChar*>(patternDate.BeginWriting()),
-              patternLength, &status);
-        }
-      }
-      udatpg_close(patternGenerator);
     }
 
     // Get the time style for the formatter.
