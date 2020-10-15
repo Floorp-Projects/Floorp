@@ -1014,6 +1014,11 @@
   value: false
   mirror: always
 
+- name: browser.navigation.requireUserInteraction
+  type: bool
+  value: false
+  mirror: always
+
 # Indicates if about:newtab shows content (enabled) or just blank.
 - name: browser.newtabpage.enabled
   type: bool

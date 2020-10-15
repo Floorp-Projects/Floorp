@@ -2325,9 +2325,11 @@ void EventStateManager::DoScrollHistory(int32_t direction) {
       // This is doing user-initiated history traversal, hence we want
       // to require that history entries we navigate to have user interaction.
       if (direction > 0)
-        webNav->GoBack(/* aRequireUserInteraction = */ true);
+        webNav->GoBack(
+            StaticPrefs::browser_navigation_requireUserInteraction());
       else
-        webNav->GoForward(/* aRequireUserInteraction = */ true);
+        webNav->GoForward(
+            StaticPrefs::browser_navigation_requireUserInteraction());
     }
   }
 }
