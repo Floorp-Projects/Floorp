@@ -19,13 +19,15 @@ module.exports = async function() {
   // These numbers controls the number of console api calls we do in the test
   const sync = 250,
     stream = 250,
-    batch = 250;
-  const params = `?sync=${sync}&stream=${stream}&batch=${batch}`;
+    batch = 250,
+    simple = 5000;
+
+  const params = `?sync=${sync}&stream=${stream}&batch=${batch}&simple=${simple}`;
   const url = TEST_URL + params;
   await testSetup(url, { disableCache: true });
 
   const toolbox = await openToolboxAndLog("custom.webconsole", "webconsole");
-  await reloadConsoleAndLog("custom", toolbox, sync + stream + batch);
+  await reloadConsoleAndLog("custom", toolbox, sync + stream + batch + simple);
   await closeToolboxAndLog("custom.webconsole", toolbox);
 
   await testTeardown();

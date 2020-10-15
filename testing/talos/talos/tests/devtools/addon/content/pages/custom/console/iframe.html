@@ -12,6 +12,7 @@ const searchParams = new URLSearchParams(location.search);
 const sync = searchParams.get("sync");
 const stream = searchParams.get("stream");
 const batch = searchParams.get("batch");
+const simple = searchParams.get("simple");
 
 // We log complex objects:
 // * a complex js object (window)
@@ -36,7 +37,7 @@ function streamLogs() {
 }
 requestIdleCallback(streamLogs);
 
-// Finally, we batch log by small bulk asynchronously slightly more slowly thanks to idle callback
+// We batch log by small bulk asynchronously slightly more slowly thanks to idle callback
 let x = 0;
 function batchLogs() {
   const batchSize = 10;
@@ -45,6 +46,15 @@ function batchLogs() {
   }
   if (x < batch) {
     requestIdleCallback(batchLogs);
+  } else {
+    requestIdleCallback(simpleLogs);
+  }
+}
+
+// We log simple messages, too, as a way to test performance of a high volume of log messages
+function simpleLogs() {
+  for (let i = 0; i < simple; i++) {
+    console.log("simple log", i);
   }
 }
 </script>
