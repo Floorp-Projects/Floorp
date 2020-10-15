@@ -16795,258 +16795,262 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
   AssertIsOnIOThread();
   MOZ_ASSERT(mMetadata);
 
-  // Load version information.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection.CreateStatement(
-      "SELECT name, origin, version FROM database"_ns, getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    // Load version information.
+    IDB_TRY_INSPECT(
+        const auto& stmt,
+        MOZ_TO_RESULT_INVOKE_TYPED(
+            nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
+            "SELECT name, origin, version FROM database"_ns));
+
+    IDB_TRY_INSPECT(const bool& hasResult,
+                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+
+    IDB_TRY(OkIf(hasResult), NS_ERROR_FILE_CORRUPTED);
+
+    IDB_TRY_INSPECT(const auto& databaseName,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, stmt, GetString, 0));
+
+    IDB_TRY(OkIf(mCommonParams.metadata().name() == databaseName),
+            NS_ERROR_FILE_CORRUPTED);
+
+    IDB_TRY_INSPECT(const auto& origin, MOZ_TO_RESULT_INVOKE_TYPED(
+                                            nsCString, stmt, GetUTF8String, 1));
+
+    // We can't just compare these strings directly. See bug 1339081 comment 69.
+    IDB_TRY(OkIf(QuotaManager::AreOriginsEqualOnDisk(mOrigin, origin)),
+            NS_ERROR_FILE_CORRUPTED);
+
+    IDB_TRY_INSPECT(const int64_t& version,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 2));
+
+    mMetadata->mCommonMetadata.version() = uint64_t(version);
   }
-
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-
-  if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  nsString databaseName;
-  rv = stmt->GetString(0, databaseName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(mCommonParams.metadata().name() != databaseName)) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  nsCString origin;
-  rv = stmt->GetUTF8String(1, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // We can't just compare these strings directly. See bug 1339081 comment 69.
-  if (NS_WARN_IF(!QuotaManager::AreOriginsEqualOnDisk(mOrigin, origin))) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  int64_t version;
-  rv = stmt->GetInt64(2, &version);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mMetadata->mCommonMetadata.version() = uint64_t(version);
 
   ObjectStoreTable& objectStores = mMetadata->mObjectStores;
 
-  // Load object store names and ids.
-  rv = aConnection.CreateStatement(
-      "SELECT id, auto_increment, name, key_path "
-      "FROM object_store"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& lastObjectStoreId,
+      ([&aConnection,
+        &objectStores]() -> mozilla::Result<IndexOrObjectStoreId, nsresult> {
+        // Load object store names and ids.
+        IDB_TRY_INSPECT(
+            const auto& stmt,
+            MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
+                "SELECT id, auto_increment, name, key_path "
+                "FROM object_store"_ns));
 
-  IndexOrObjectStoreId lastObjectStoreId = 0;
+        IndexOrObjectStoreId lastObjectStoreId = 0;
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [&lastObjectStoreId, &objectStores,
-       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
-        IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
-                        MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+        IDB_TRY(CollectWhileHasResult(
+            *stmt,
+            [&lastObjectStoreId, &objectStores,
+             usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
+             usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+                auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+              IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
-        if (!usedIds) {
-          usedIds.emplace();
-        }
+              if (!usedIds) {
+                usedIds.emplace();
+              }
 
-        IDB_TRY(OkIf(objectStoreId > 0), Err(NS_ERROR_FILE_CORRUPTED));
-        IDB_TRY(OkIf(!usedIds.ref().Contains(objectStoreId)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+              IDB_TRY(OkIf(objectStoreId > 0), Err(NS_ERROR_FILE_CORRUPTED));
+              IDB_TRY(OkIf(!usedIds.ref().Contains(objectStoreId)),
+                      Err(NS_ERROR_FILE_CORRUPTED));
 
-        IDB_TRY(OkIf(usedIds.ref().PutEntry(objectStoreId, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(usedIds.ref().PutEntry(objectStoreId, fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        nsString name;
-        IDB_TRY(stmt.GetString(2, name));
+              nsString name;
+              IDB_TRY(stmt.GetString(2, name));
 
-        if (!usedNames) {
-          usedNames.emplace();
-        }
+              if (!usedNames) {
+                usedNames.emplace();
+              }
 
-        IDB_TRY(OkIf(!usedNames.ref().Contains(name)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+              IDB_TRY(OkIf(!usedNames.ref().Contains(name)),
+                      Err(NS_ERROR_FILE_CORRUPTED));
 
-        IDB_TRY(OkIf(usedNames.ref().PutEntry(name, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(usedNames.ref().PutEntry(name, fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        RefPtr<FullObjectStoreMetadata> metadata =
-            new FullObjectStoreMetadata();
-        metadata->mCommonMetadata.id() = objectStoreId;
-        metadata->mCommonMetadata.name() = name;
+              RefPtr<FullObjectStoreMetadata> metadata =
+                  new FullObjectStoreMetadata();
+              metadata->mCommonMetadata.id() = objectStoreId;
+              metadata->mCommonMetadata.name() = name;
 
-        IDB_TRY_INSPECT(const int32_t& columnType,
-                        MOZ_TO_RESULT_INVOKE(stmt, GetTypeOfIndex, 3));
+              IDB_TRY_INSPECT(const int32_t& columnType,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetTypeOfIndex, 3));
 
-        if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
-          metadata->mCommonMetadata.keyPath() = KeyPath(0);
-        } else {
-          MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
+              if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+                metadata->mCommonMetadata.keyPath() = KeyPath(0);
+              } else {
+                MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
 
-          nsString keyPathSerialization;
-          IDB_TRY(stmt.GetString(3, keyPathSerialization));
+                nsString keyPathSerialization;
+                IDB_TRY(stmt.GetString(3, keyPathSerialization));
 
-          metadata->mCommonMetadata.keyPath() =
-              KeyPath::DeserializeFromString(keyPathSerialization);
-          IDB_TRY(OkIf(metadata->mCommonMetadata.keyPath().IsValid()),
-                  Err(NS_ERROR_FILE_CORRUPTED));
-        }
+                metadata->mCommonMetadata.keyPath() =
+                    KeyPath::DeserializeFromString(keyPathSerialization);
+                IDB_TRY(OkIf(metadata->mCommonMetadata.keyPath().IsValid()),
+                        Err(NS_ERROR_FILE_CORRUPTED));
+              }
 
-        IDB_TRY_INSPECT(const int64_t& nextAutoIncrementId,
-                        MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
+              IDB_TRY_INSPECT(const int64_t& nextAutoIncrementId,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
-        metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
-        metadata->mNextAutoIncrementId = nextAutoIncrementId;
-        metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
+              metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
+              metadata->mNextAutoIncrementId = nextAutoIncrementId;
+              metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
 
-        IDB_TRY(OkIf(objectStores.Put(objectStoreId, std::move(metadata),
-                                      fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(objectStores.Put(objectStoreId, std::move(metadata),
+                                            fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
+              lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
 
-        return Ok{};
-      }));
+              return Ok{};
+            }));
 
-  // Load index information
-  rv = aConnection.CreateStatement(
-      "SELECT "
-      "id, object_store_id, name, key_path, unique_index, multientry, "
-      "locale, is_auto_locale "
-      "FROM object_store_index"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return lastObjectStoreId;
+      }()));
 
-  IndexOrObjectStoreId lastIndexId = 0;
+  IDB_TRY_INSPECT(
+      const auto& lastIndexId,
+      ([&aConnection,
+        &objectStores]() -> mozilla::Result<IndexOrObjectStoreId, nsresult> {
+        // Load index information
+        IDB_TRY_INSPECT(
+            const auto& stmt,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                       aConnection, CreateStatement,
+                                       "SELECT "
+                                       "id, object_store_id, name, key_path, "
+                                       "unique_index, multientry, "
+                                       "locale, is_auto_locale "
+                                       "FROM object_store_index"_ns));
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [&lastIndexId, &objectStores, &aConnection,
-       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
-        IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
-                        MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
+        IndexOrObjectStoreId lastIndexId = 0;
 
-        RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
-        IDB_TRY(OkIf(objectStores.Get(objectStoreId,
-                                      getter_AddRefs(objectStoreMetadata))),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+        IDB_TRY(CollectWhileHasResult(
+            *stmt,
+            [&lastIndexId, &objectStores, &aConnection,
+             usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
+             usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+                auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
+              IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
-        MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
+              RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
+              IDB_TRY(OkIf(objectStores.Get(
+                          objectStoreId, getter_AddRefs(objectStoreMetadata))),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        IndexOrObjectStoreId indexId;
-        IDB_TRY(stmt.GetInt64(0, &indexId));
+              MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() ==
+                         objectStoreId);
 
-        if (!usedIds) {
-          usedIds.emplace();
-        }
+              IndexOrObjectStoreId indexId;
+              IDB_TRY(stmt.GetInt64(0, &indexId));
 
-        IDB_TRY(OkIf(indexId > 0), Err(NS_ERROR_FILE_CORRUPTED));
-        IDB_TRY(OkIf(!usedIds.ref().Contains(indexId)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+              if (!usedIds) {
+                usedIds.emplace();
+              }
 
-        IDB_TRY(OkIf(usedIds.ref().PutEntry(indexId, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(indexId > 0), Err(NS_ERROR_FILE_CORRUPTED));
+              IDB_TRY(OkIf(!usedIds.ref().Contains(indexId)),
+                      Err(NS_ERROR_FILE_CORRUPTED));
 
-        nsString name;
-        IDB_TRY(stmt.GetString(2, name));
+              IDB_TRY(OkIf(usedIds.ref().PutEntry(indexId, fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        const nsAutoString hashName = IntToString(indexId) + u":"_ns + name;
+              nsString name;
+              IDB_TRY(stmt.GetString(2, name));
 
-        if (!usedNames) {
-          usedNames.emplace();
-        }
+              const nsAutoString hashName =
+                  IntToString(indexId) + u":"_ns + name;
 
-        IDB_TRY(OkIf(!usedNames.ref().Contains(hashName)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+              if (!usedNames) {
+                usedNames.emplace();
+              }
 
-        IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(!usedNames.ref().Contains(hashName)),
+                      Err(NS_ERROR_FILE_CORRUPTED));
 
-        RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
-        indexMetadata->mCommonMetadata.id() = indexId;
-        indexMetadata->mCommonMetadata.name() = name;
+              IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
+
+              RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
+              indexMetadata->mCommonMetadata.id() = indexId;
+              indexMetadata->mCommonMetadata.name() = name;
 
 #ifdef DEBUG
-        {
-          int32_t columnType;
-          nsresult rv = stmt.GetTypeOfIndex(3, &columnType);
-          MOZ_ASSERT(NS_SUCCEEDED(rv));
-          MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
-        }
+              {
+                int32_t columnType;
+                nsresult rv = stmt.GetTypeOfIndex(3, &columnType);
+                MOZ_ASSERT(NS_SUCCEEDED(rv));
+                MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
+              }
 #endif
 
-        nsString keyPathSerialization;
-        IDB_TRY(stmt.GetString(3, keyPathSerialization));
+              nsString keyPathSerialization;
+              IDB_TRY(stmt.GetString(3, keyPathSerialization));
 
-        indexMetadata->mCommonMetadata.keyPath() =
-            KeyPath::DeserializeFromString(keyPathSerialization);
-        IDB_TRY(OkIf(indexMetadata->mCommonMetadata.keyPath().IsValid()),
-                Err(NS_ERROR_FILE_CORRUPTED));
+              indexMetadata->mCommonMetadata.keyPath() =
+                  KeyPath::DeserializeFromString(keyPathSerialization);
+              IDB_TRY(OkIf(indexMetadata->mCommonMetadata.keyPath().IsValid()),
+                      Err(NS_ERROR_FILE_CORRUPTED));
 
-        int32_t scratch;
-        IDB_TRY(stmt.GetInt32(4, &scratch));
+              int32_t scratch;
+              IDB_TRY(stmt.GetInt32(4, &scratch));
 
-        indexMetadata->mCommonMetadata.unique() = !!scratch;
+              indexMetadata->mCommonMetadata.unique() = !!scratch;
 
-        IDB_TRY(stmt.GetInt32(5, &scratch));
+              IDB_TRY(stmt.GetInt32(5, &scratch));
 
-        indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
+              indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
 
-        const bool localeAware = !stmt.IsNull(6);
-        if (localeAware) {
-          IDB_TRY(
-              stmt.GetUTF8String(6, indexMetadata->mCommonMetadata.locale()));
+              const bool localeAware = !stmt.IsNull(6);
+              if (localeAware) {
+                IDB_TRY(stmt.GetUTF8String(
+                    6, indexMetadata->mCommonMetadata.locale()));
 
-          IDB_TRY(stmt.GetInt32(7, &scratch));
+                IDB_TRY(stmt.GetInt32(7, &scratch));
 
-          indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
+                indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
 
-          // Update locale-aware indexes if necessary
-          const nsCString& indexedLocale =
-              indexMetadata->mCommonMetadata.locale();
-          const bool& isAutoLocale =
-              indexMetadata->mCommonMetadata.autoLocale();
-          nsCString systemLocale = IndexedDatabaseManager::GetLocale();
-          if (!systemLocale.IsEmpty() && isAutoLocale &&
-              !indexedLocale.EqualsASCII(systemLocale.get())) {
-            IDB_TRY(UpdateLocaleAwareIndex(
-                aConnection, indexMetadata->mCommonMetadata, systemLocale));
-          }
-        }
+                // Update locale-aware indexes if necessary
+                const nsCString& indexedLocale =
+                    indexMetadata->mCommonMetadata.locale();
+                const bool& isAutoLocale =
+                    indexMetadata->mCommonMetadata.autoLocale();
+                const nsCString& systemLocale =
+                    IndexedDatabaseManager::GetLocale();
+                if (!systemLocale.IsEmpty() && isAutoLocale &&
+                    !indexedLocale.EqualsASCII(systemLocale.get())) {
+                  IDB_TRY(UpdateLocaleAwareIndex(aConnection,
+                                                 indexMetadata->mCommonMetadata,
+                                                 systemLocale));
+                }
+              }
 
-        IDB_TRY(OkIf(objectStoreMetadata->mIndexes.Put(
-                    indexId, std::move(indexMetadata), fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(OkIf(objectStoreMetadata->mIndexes.Put(
+                          indexId, std::move(indexMetadata), fallible)),
+                      Err(NS_ERROR_OUT_OF_MEMORY));
 
-        lastIndexId = std::max(lastIndexId, indexId);
+              lastIndexId = std::max(lastIndexId, indexId);
 
-        return Ok{};
-      }));
+              return Ok{};
+            }));
 
-  if (NS_WARN_IF(lastObjectStoreId == INT64_MAX) ||
-      NS_WARN_IF(lastIndexId == INT64_MAX)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+        return lastIndexId;
+      }()));
+
+  IDB_TRY(OkIf(lastObjectStoreId != INT64_MAX),
+          NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, IDB_REPORT_INTERNAL_ERR_LAMBDA);
+  IDB_TRY(OkIf(lastIndexId != INT64_MAX), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   mMetadata->mNextObjectStoreId = lastObjectStoreId + 1;
   mMetadata->mNextIndexId = lastIndexId + 1;
