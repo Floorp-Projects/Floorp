@@ -146,7 +146,7 @@ class BrowsertimeRunner(NodeRunner):
             old_pkg = json.load(old)
             new_pkg = json.load(new)
 
-        return old_pkg["_resolved"] != new_pkg["devDependencies"]["browsertime"]
+        return not old_pkg["_from"].endswith(new_pkg["devDependencies"]["browsertime"])
 
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
