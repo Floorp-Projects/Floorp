@@ -25,7 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=132255
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   is(window.frames[0].document.links[0].href,
-     window.location.href.replace(/bugs\/test_bug132255\.html/, "foo.html"),
+     window.location.href.replace(/\?.*/, "")
+           .replace(/bugs\/test_bug132255\.html/, "foo.html"),
      "Unexpected anchor href");
   is(window.frames[1].document.links[0].href,
      "http://example.com/foo.html",
