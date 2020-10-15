@@ -75,10 +75,6 @@ void EmitterScope::updateFrameFixedSlots(BytecodeEmitter* bce,
   if (nextFrameSlot_ > bce->maxFixedSlots) {
     bce->maxFixedSlots = nextFrameSlot_;
   }
-  MOZ_ASSERT_IF(
-      bce->sc->isFunctionBox() && (bce->sc->asFunctionBox()->isGenerator() ||
-                                   bce->sc->asFunctionBox()->isAsync()),
-      bce->maxFixedSlots == 0);
 }
 
 bool EmitterScope::putNameInCache(BytecodeEmitter* bce, const ParserAtom* name,
