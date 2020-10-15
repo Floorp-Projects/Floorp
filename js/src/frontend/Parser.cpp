@@ -1166,6 +1166,8 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
   ParserBindingNameVector vars(cx);
 
   bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
+  bool argumentBindingsClosedOver =
+      allBindingsClosedOver || pc->isGeneratorOrAsync();
   bool hasDuplicateParams = pc->functionBox()->hasDuplicateParameters;
 
   // Positional parameter names must be added in order of appearance as they are
@@ -1181,7 +1183,7 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
       // there are parameter defaults. It is the binding in the defaults
       // scope that is closed over instead.
       bool closedOver =
-          allBindingsClosedOver || (p && p->value()->closedOver());
+          argumentBindingsClosedOver || (p && p->value()->closedOver());
 
       // If the parameter name has duplicates, only the final parameter
       // name should be on the environment, as otherwise the environment
