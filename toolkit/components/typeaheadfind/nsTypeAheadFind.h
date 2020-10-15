@@ -51,9 +51,11 @@ class nsTypeAheadFind : public nsITypeAheadFind,
   nsresult GetWebBrowserFind(nsIDocShell* aDocShell,
                              nsIWebBrowserFind** aWebBrowserFind);
 
-  nsresult FindInternal(uint32_t aMode, const nsAString& aSearchString,
-                        bool aLinksOnly, bool aDontIterateFrames,
-                        uint16_t* aResult);
+  MOZ_CAN_RUN_SCRIPT nsresult FindInternal(uint32_t aMode,
+                                           const nsAString& aSearchString,
+                                           bool aLinksOnly,
+                                           bool aDontIterateFrames,
+                                           uint16_t* aResult);
 
   void RangeStartsInsideLink(nsRange* aRange, bool* aIsInsideLink,
                              bool* aIsStartingLink);
