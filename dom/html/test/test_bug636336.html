@@ -26,7 +26,8 @@ function testIt(tag) {
   elem.setAttribute("src", " test ");
   is(elem.getAttribute("src"), " test ",
      tag + " src attribute setter should not strip whitespace around non-whitespace");
-  is(elem.src, window.location.href.replace(/test_bug636336\.html$/, "test"),
+  is(elem.src, window.location.href.replace(/\?.*/, "")
+                     .replace(/test_bug636336\.html$/, "test"),
      tag + ".src should strip whitespace as needed");
 }
 
