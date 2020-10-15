@@ -78,8 +78,6 @@ jstestbrowser:
 	$(call RUN_REFTEST,'$(DIST)/$(TESTS_PATH)/jstests.list' --extra-profile-file=$(DIST)/test-stage/jsreftest/tests/user.js)
 	$(CHECK_TEST_ERROR)
 
-GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
-
 REMOTE_CPPUNITTESTS = \
 	$(PYTHON3) -u $(topsrcdir)/testing/remotecppunittests.py \
 	  --xre-path=$(DEPTH)/dist/bin \

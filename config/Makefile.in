@@ -32,9 +32,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE += \
-  $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) $(srcdir)/*.pyc *.pyc
-
 FORCE:
 
 ifndef JS_STANDALONE

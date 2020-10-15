@@ -34,12 +34,6 @@ translate_from_snapshot:
   stored in ../javasrc.
 named_characters:
   Generates data tables for named character tokenization.
-clean_javaparser:
-  Removes the build products of the javaparser target.
-clean_htmlparser:
-  Removes the build products of the translator target.
-clean:
-  Runs both clean_javaparser and clean_htmlparser.
 
 ## How to add an attribute
 

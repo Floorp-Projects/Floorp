@@ -91,8 +91,6 @@ class MakeBackend(CommonBackend):
                         ret.append('%s: %s' % (tier, stub_file))
             for output in outputs:
                 ret.append('%s: %s ;' % (output, stub_file))
-                ret.append('GARBAGE += %s' % output)
-            ret.append('GARBAGE += %s' % stub_file)
             ret.append('EXTRA_MDDEPEND_FILES += %s' % dep_file)
 
             ret.append((

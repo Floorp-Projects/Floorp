@@ -23,21 +23,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-GARBAGE_DIRS += _javagen _profile staticlib
-# To share compilation of dependencies, Rust libraries all set their
-# CARGO_TARGET_DIR as a subdirectory of topobjdir.  Normally, we would add
-# RUST*TARGET to GARBAGE_DIRS for those directories building Rust libraries.
-# But the directories building Rust libraries don't actually have
-# subdirectories to remove.  So we add to GARBAGE_DIRS once here, globally,
-# for it to have the desired effect.
-GARBAGE_DIRS += $(RUST_TARGET)
-GARBAGE_DIRS += config.statusd
-DIST_GARBAGE = config.cache config.log config.status config-defs.h \
-   config/autoconf.mk \
-   mozilla-config.h \
-   xpcom/xpcom-config.h \
-   .mozconfig.mk
-
 ifneq (mobile/android,$(MOZ_BUILD_APP))
 $(MDDEPDIR)/buildid.h.stub $(MDDEPDIR)/source-repo.h.stub: FORCE
 endif
@@ -112,9 +97,6 @@ install-test-files:
 
 include $(topsrcdir)/build/moz-automation.mk
 
-# dist and _tests should be purged during cleaning.
-GARBAGE_DIRS += dist _tests
-
 # Dummy rule for the cases below where we don't depend on dist/include
 recurse_pre-export::
 
@@ -179,9 +161,6 @@ default::
 	-$(CCACHE) --show-stats
 	@echo "==================="
 endif
-
-distclean::
-	$(RM) $(DIST_GARBAGE)
 
 ifdef MOZ_CRASHREPORTER
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
