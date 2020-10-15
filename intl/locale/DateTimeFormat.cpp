@@ -210,12 +210,6 @@ nsresult DateTimeFormat::FormatUDateTime(
       case kDateFormatYearMonthLong:
         skeletonDate.AssignLiteral("yyyyMMMM");
         break;
-      case kDateFormatMonthLong:
-        skeletonDate.AssignLiteral("MMMM");
-        break;
-      case kDateFormatWeekday:
-        skeletonDate.AssignLiteral("EEE");
-        break;
       case kDateFormatNone:
         haveSkeleton = false;
         break;
