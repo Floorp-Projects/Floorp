@@ -384,13 +384,21 @@ class JSAPITest {
   virtual JSObject* createGlobal(JSPrincipals* principals = nullptr);
 };
 
-#define BEGIN_TEST_WITH_ATTRIBUTES(testname, attrs)           \
-  class cls_##testname : public JSAPITest {                   \
-   public:                                                    \
-    virtual const char* name() override { return #testname; } \
-    virtual bool run(JS::HandleObject global) override attrs
+#define BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, extra) \
+  class cls_##testname : public JSAPITest {                          \
+   public:                                                           \
+    virtual const char* name() override { return #testname; }        \
+    extra virtual bool run(JS::HandleObject global) override attrs
+
+#define BEGIN_TEST_WITH_ATTRIBUTES(testname, attrs) \
+  BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, )
 
 #define BEGIN_TEST(testname) BEGIN_TEST_WITH_ATTRIBUTES(testname, )
+
+#define BEGIN_REUSABLE_TEST(testname)   \
+  BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA( \
+      testname, , cls_##testname()      \
+      : JSAPITest() { reuseGlobal = true; })
 
 #define END_TEST(testname) \
   }                        \
