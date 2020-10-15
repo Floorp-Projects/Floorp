@@ -1004,6 +1004,10 @@ LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() { return LookAndFeelCache{}; }
 static bool sRecordedLookAndFeelTelemetry = false;
 
 void nsXPLookAndFeel::RecordTelemetry() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
   if (sRecordedLookAndFeelTelemetry) {
     return;
   }
@@ -1014,6 +1018,8 @@ void nsXPLookAndFeel::RecordTelemetry() {
   Telemetry::ScalarSet(
       Telemetry::ScalarID::WIDGET_DARK_MODE,
       NS_SUCCEEDED(GetIntImpl(IntID::SystemUsesDarkTheme, i)) && i != 0);
+
+  RecordLookAndFeelSpecificTelemetry();
 }
 
 namespace mozilla {
