@@ -50,11 +50,3 @@ named_characters:: translator \
 ; java -cp translator.jar \
     nu.validator.htmlparser.generator.GenerateNamedCharactersCpp \
       named-character-references.html ../
-
-clean_javaparser:: \
-; rm -rf javaparser/bin javaparser.jar
-
-clean_htmlparser:: \
-; rm -rf htmlparser/bin translator.jar
-
-clean:: clean_javaparser clean_htmlparser

@@ -364,8 +364,6 @@ endif # HOST_RUST_LIBRARY_FILE
 
 ifdef RUST_PROGRAMS
 
-GARBAGE_DIRS += $(RUST_TARGET)
-
 force-cargo-program-build: $(call resfile,module)
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module))
@@ -379,8 +377,6 @@ force-cargo-program-check:
 	@true
 endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
-
-GARBAGE_DIRS += $(RUST_HOST_TARGET)
 
 force-cargo-host-program-build:
 	$(REPORT_BUILD)

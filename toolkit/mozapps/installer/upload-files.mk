@@ -308,8 +308,6 @@ ifdef MOZ_FOLD_LIBS
   DEFINES += -DMOZ_FOLD_LIBS=1
 endif
 
-GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
-
 # The following target stages files into two directories: one directory for
 # core files, and one for optional extensions based on the information in
 # the MOZ_PKG_MANIFEST file.
