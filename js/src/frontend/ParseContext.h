@@ -458,7 +458,9 @@ class ParseContext : public Nestable<ParseContext> {
     return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
   }
 
-  bool needsDotGeneratorName() const { return isGenerator() || isAsync(); }
+  bool isGeneratorOrAsync() const { return isGenerator() || isAsync(); }
+
+  bool needsDotGeneratorName() const { return isGeneratorOrAsync(); }
 
   FunctionAsyncKind asyncKind() const {
     return isAsync() ? FunctionAsyncKind::AsyncFunction
