@@ -294,31 +294,49 @@ let isJSWindowActorRegistered = false;
  * Register the JSWindowActor pair "DevToolsFrame".
  *
  * We should call this method before we try to use this JS Window Actor from the parent process
- * via WindowGlobal.getActor("DevToolsFrame").
+ * (via `WindowGlobal.getActor("DevToolsFrame")` or `WindowGlobal.getActor("DevToolsWorker")`).
  * Also, registering it will automatically force spawing the content process JSWindow Actor
  * anytime a new document is opened (via DOMWindowCreated event).
  */
+
+const JSWindowActorsConfig = {
+  DevToolsFrame: {
+    parent: {
+      moduleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.jsm",
+    },
+    child: {
+      moduleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm",
+      events: {
+        DOMWindowCreated: {},
+      },
+    },
+    allFrames: true,
+  },
+  DevToolsWorker: {
+    parent: {
+      moduleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerParent.jsm",
+    },
+    child: {
+      moduleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerChild.jsm",
+      events: {
+        DOMWindowCreated: {},
+      },
+    },
+    allFrames: true,
+  },
+};
+
 function registerJSWindowActor() {
   if (isJSWindowActorRegistered) {
     return;
   }
   isJSWindowActorRegistered = true;
-  ActorManagerParent.addJSWindowActors({
-    DevToolsFrame: {
-      parent: {
-        moduleURI:
-          "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.jsm",
-      },
-      child: {
-        moduleURI:
-          "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm",
-        events: {
-          DOMWindowCreated: {},
-        },
-      },
-      allFrames: true,
-    },
-  });
+  ActorManagerParent.addJSWindowActors(JSWindowActorsConfig);
+
   // Force the immediate activation of this JSWindow Actor, so that we can immediately
   // use the JSWindowActor, from the same event loop.
   ActorManagerParent.flush();
@@ -329,6 +347,9 @@ function unregisterJSWindowActor() {
     return;
   }
   isJSWindowActorRegistered = false;
-  // ActorManagerParent doesn't expose a "removeActors" method, but it would be equivalent to that:
-  ChromeUtils.unregisterWindowActor("DevToolsFrame");
+
+  for (const JSWindowActorName of Object.keys(JSWindowActorsConfig)) {
+    // ActorManagerParent doesn't expose a "removeActors" method, but it would be equivalent to that:
+    ChromeUtils.unregisterWindowActor(JSWindowActorName);
+  }
 }

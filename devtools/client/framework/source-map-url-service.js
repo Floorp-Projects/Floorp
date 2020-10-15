@@ -416,6 +416,7 @@ class SourceMapURLService {
     if (!this._prefValue) {
       return null;
     }
+
     if (this._target.isWorkerTarget) {
       return;
     }
