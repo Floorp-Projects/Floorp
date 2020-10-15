@@ -8,6 +8,9 @@
 
 #include "frontend/CompilationInfo.h"
 #include "frontend/ParserAtom.h"
+#ifdef DEBUG
+#  include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
+#endif
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -93,6 +96,46 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
   genObj->setEnvironmentChain(*frame.environmentChain());
   return true;
 }
+
+#ifdef DEBUG
+void AbstractGeneratorObject::dump() const {
+  fprintf(stderr, "(AbstractGeneratorObject*) %p {\n", (void*)this);
+  fprintf(stderr, "  callee: (JSFunction*) %p,\n", (void*)&callee());
+  fprintf(stderr, "  environmentChain: (JSObject*) %p,\n",
+          (void*)&environmentChain());
+  if (hasArgsObj()) {
+    fprintf(stderr, "  argsObj: Some((ArgumentsObject*) %p),\n",
+            (void*)&argsObj());
+  } else {
+    fprintf(stderr, "  argsObj: None,\n");
+  }
+  if (hasStackStorage()) {
+    fprintf(stderr, "  stackStorage: Some(ArrayObject {\n");
+    ArrayObject& stack = stackStorage();
+    uint32_t denseLen = uint32_t(stack.getDenseInitializedLength());
+    fprintf(stderr, "    denseInitializedLength: %u\n,", denseLen);
+    uint32_t len = stack.length();
+    fprintf(stderr, "    length: %u\n,", len);
+    fprintf(stderr, "    data: [\n");
+    const Value* elements =
+        const_cast<AbstractGeneratorObject*>(this)->getDenseElements();
+    for (uint32_t i = 0; i < std::max(len, denseLen); i++) {
+      fprintf(stderr, "      [%u]: ", i);
+      js::DumpValue(elements[i]);
+    }
+    fprintf(stderr, "    ],\n");
+    fprintf(stderr, "  }),\n");
+  } else {
+    fprintf(stderr, "  stackStorage: None\n");
+  }
+  if (isSuspended()) {
+    fprintf(stderr, "  resumeIndex: Some(%u),\n", resumeIndex());
+  } else {
+    fprintf(stderr, "  resumeIndex: None, /* (not suspended) */\n");
+  }
+  fprintf(stderr, "}\n");
+}
+#endif
 
 void AbstractGeneratorObject::finalSuspend(HandleObject obj) {
   auto* genObj = &obj->as<AbstractGeneratorObject>();
