@@ -315,8 +315,9 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
                    !strcmp(aTopic, "cycle-collector-forget-skippable"),
                "wrong topic");
 
-  // JS cleanup can be slow. Do it only if there has been a GC.
-  const bool cleanupJS = nsJSContext::CleanupsSinceLastGC() == 0 &&
+  // JS cleanup can be slow. Do it only if this is the first forget-skippable
+  // after a GC.
+  const bool cleanupJS = nsJSContext::HasHadCleanupSinceLastGC() &&
                          !strcmp(aTopic, "cycle-collector-forget-skippable");
 
   const bool prepareForCC = !strcmp(aTopic, "cycle-collector-begin");

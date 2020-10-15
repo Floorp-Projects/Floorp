@@ -116,7 +116,7 @@ class nsJSContext : public nsIScriptContext {
   // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
   static void LikelyShortLivingObjectCreated();
 
-  static uint32_t CleanupsSinceLastGC();
+  static bool HasHadCleanupSinceLastGC();
 
   nsIScriptGlobalObject* GetCachedGlobalObject() {
     // Verify that we have a global so that this

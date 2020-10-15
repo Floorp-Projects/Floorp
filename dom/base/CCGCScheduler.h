@@ -88,7 +88,13 @@ class CCGCScheduler {
 
   TimeStamp GetLastCCEndTime() const { return mLastCCEndTime; }
 
+  bool IsEarlyForgetSkippable(uint32_t aN = kMajorForgetSkippableCalls) const {
+    return mCleanupsSinceLastGC < aN;
+  }
+
   // State modification
+
+  void SetNeedsFullCC() { mNeedsFullCC = true; }
 
   void NoteGCBegin() {
     // Treat all GC as incremental here; non-incremental GC will just appear to
@@ -98,6 +104,7 @@ class CCGCScheduler {
 
   void NoteGCEnd() {
     mCCBlockStart = TimeStamp();
+    mCleanupsSinceLastGC = 0;
     mInIncrementalGC = false;
   }
 
@@ -118,12 +125,23 @@ class CCGCScheduler {
 
   void UnblockCC() { mCCBlockStart = TimeStamp(); }
 
-  void NoteForgetSkippableComplete(TimeStamp now) {
+  // Returns the number of purple buffer items that were processed and removed.
+  uint32_t NoteForgetSkippableComplete(
+      TimeStamp aNow, uint32_t aSuspectedBeforeForgetSkippable) {
     mLastForgetSkippableEndTime = aNow;
+    uint32_t suspected = nsCycleCollector_suspectedCount();
+    mPreviousSuspectedCount = suspected;
+    mCleanupsSinceLastGC++;
+    return aSuspectedBeforeForgetSkippable - suspected;
   }
 
-  void NoteCCEnd(TimeStamp when) { mLastCCEndTime = when; }
+  void NoteCCEnd(TimeStamp aWhen) {
+    mLastCCEndTime = aWhen;
+    mNeedsFullCC = false;
+  }
 
+  // The CC was abandoned without running a slice, so we only did forget
+  // skippables. Prevent running another cycle soon.
   void NoteForgetSkippableOnlyCycle() {
     mLastForgetSkippableCycleEndTime = TimeStamp::Now();
   }
@@ -196,12 +214,28 @@ class CCGCScheduler {
         std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
   }
 
-  bool ShouldScheduleCC(uint32_t aCleanupsSinceLastGC) const {
-    TimeStamp now;
+  bool ShouldFireForgetSkippable(uint32_t aSuspected) const {
+    // Only do a forget skippable if there are more than a few new objects
+    // or we're doing the initial forget skippables.
+    return ((mPreviousSuspectedCount + 100) <= aSuspected) ||
+           mCleanupsSinceLastGC < kMajorForgetSkippableCalls;
+  }
+
+  // There is reason to suspect that there may be a significant amount of
+  // garbage to cycle collect: either we just finished a GC, or the purple
+  // buffer is getting really big, or it's getting somewhat big and it has been
+  // too long since the last CC.
+  bool IsCCNeeded(uint32_t aSuspected, TimeStamp aNow = TimeStamp::Now()) const {
+    return mNeedsFullCC || aSuspected > kCCPurpleLimit ||
+           (aSuspected > kCCForcedPurpleLimit && mLastCCEndTime &&
+            aNow - mLastCCEndTime > kCCForced);
+  }
+
+  bool ShouldScheduleCC() const {
+    TimeStamp now = TimeStamp::Now();
 
     // Don't run consecutive CCs too often.
-    if (aCleanupsSinceLastGC && !mLastCCEndTime.IsNull()) {
-      now = TimeStamp::Now();
+    if (mCleanupsSinceLastGC && !mLastCCEndTime.IsNull()) {
       if (now - mLastCCEndTime < kCCDelay) {
         return false;
       }
@@ -209,18 +243,181 @@ class CCGCScheduler {
 
     // If GC hasn't run recently and forget skippable only cycle was run,
     // don't start a new cycle too soon.
-    if ((aCleanupsSinceLastGC > kMajorForgetSkippableCalls) &&
+    if ((mCleanupsSinceLastGC > kMajorForgetSkippableCalls) &&
         !mLastForgetSkippableCycleEndTime.IsNull()) {
-      if (now.IsNull()) {
-        now = TimeStamp::Now();
-      }
       if (now - mLastForgetSkippableCycleEndTime <
           kTimeBetweenForgetSkippableCycles) {
         return false;
       }
     }
 
-    return true;
+    return IsCCNeeded(nsCycleCollector_suspectedCount(), now);
+  }
+
+  bool IsLastEarlyCCTimer(int32_t aCurrentFireCount) {
+    int32_t numEarlyTimerFires =
+        std::max(int32_t(mCCDelay / kCCSkippableDelay) - 2, 1);
+
+    return aCurrentFireCount >= numEarlyTimerFires;
+  }
+
+  enum class CCRunnerAction {
+    None,
+    ForgetSkippable,
+    PrepForCC,
+    CycleCollect,
+    StopRunning
+  };
+
+  enum class CCRunnerState {
+    Inactive,
+    EarlyTimer,
+    LateTimer,
+    LateTimerPostForgetSkippable,
+    FinalTimer
+  };
+
+  enum CCRunnerYield { Continue, Yield };
+
+  enum CCRunnerForgetSkippableRemoveChildless {
+    KeepChildless = false,
+    RemoveChildless = true
+  };
+
+  struct CCRunnerStep {
+    // The action to scheduler is instructing the caller to perform.
+    CCRunnerAction mAction;
+
+    // Whether to stop processing actions for this invocation of the timer
+    // callback.
+    CCRunnerYield mYield;
+
+    // If the action is ForgetSkippable, then whether to remove childless nodes
+    // or not. (ForgetSkippable is the only action requiring a parameter; if
+    // that changes, this will become a union.)
+    CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
+  };
+
+  void ActivateCCRunner() {
+    MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive);
+    mCCRunnerState = CCRunnerState::EarlyTimer;
+    mCCDelay = kCCDelay;
+    mCCRunnerEarlyFireCount = 0;
+  }
+
+  void DeactivateCCRunner() { mCCRunnerState = CCRunnerState::Inactive; }
+
+  CCRunnerStep GetNextCCRunnerAction(TimeStamp aDeadline, uint32_t aSuspected) {
+    if (mCCRunnerState == CCRunnerState::Inactive) {
+      // When we cancel a cycle, there may have been a final ForgetSkippable.
+      return {CCRunnerAction::StopRunning, Yield};
+    }
+
+    TimeStamp now = TimeStamp::Now();
+
+    if (InIncrementalGC()) {
+      if (EnsureCCIsBlocked(now) == StartingLockout) {
+        // Reset our state so that we run forgetSkippable often enough before
+        // CC. Because of reduced mCCDelay forgetSkippable will be called just
+        // a few times. kMaxCCLockedoutTime limit guarantees that we end up
+        // calling forgetSkippable and CycleCollectNow eventually.
+        mCCRunnerState = CCRunnerState::EarlyTimer;
+        mCCRunnerEarlyFireCount = 0;
+        mCCDelay = kCCDelay / int64_t(3);
+        return {CCRunnerAction::None, Yield};
+      }
+
+      if (GetCCBlockedTime(now).value() < kMaxCCLockedoutTime) {
+        return {CCRunnerAction::None, Yield};
+      }
+
+      // Locked out for too long, so proceed and finish the incremental GC
+      // synchronously.
+    }
+
+    switch (mCCRunnerState) {
+      // EarlyTimer: a GC ran (or we otherwise decided to try CC'ing). Wait for
+      // some amount of time (kCCDelay, or less if incremental GC blocked this
+      // CC) while firing regular ForgetSkippable actions before continuing on.
+      case CCRunnerState::EarlyTimer:
+        ++mCCRunnerEarlyFireCount;
+        if (IsLastEarlyCCTimer(mCCRunnerEarlyFireCount)) {
+          mCCRunnerState = CCRunnerState::LateTimer;
+        }
+
+        if (ShouldFireForgetSkippable(aSuspected)) {
+          return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+        }
+
+        if (aDeadline.IsNull()) {
+          return {CCRunnerAction::None, Yield};
+        }
+
+        // If we're called during idle time, try to find some work to do by
+        // advancing to the next state, effectively bypassing some possible
+        // forget skippable calls.
+        mCCRunnerState = CCRunnerState::LateTimer;
+        [[fallthrough]];
+
+      // LateTimer: do a stronger ForgetSkippable that removes nodes with no
+      // children in the cycle collector graph. This state is split into two
+      // parts; LateTimerPostForgetSkippable will happen within the same
+      // callback (unless the ForgetSkippable shrinks the purple buffer enough
+      // for the CC to be skipped entirely.)
+      case CCRunnerState::LateTimer:
+        if (!IsCCNeeded(aSuspected, now)) {
+          mCCRunnerState = CCRunnerState::Inactive;
+          NoteForgetSkippableOnlyCycle();
+          if (ShouldFireForgetSkippable(aSuspected)) {
+            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+          }
+          return {CCRunnerAction::StopRunning, Yield};
+        }
+
+        mCCRunnerState = CCRunnerState::LateTimerPostForgetSkippable;
+        return {CCRunnerAction::ForgetSkippable, Yield, RemoveChildless};
+
+      // LateTimerPostForgetSkippable: continuing LateTimer, possibly do some
+      // final setup before the actual cycle collection slice.
+      case CCRunnerState::LateTimerPostForgetSkippable:
+        if (!IsCCNeeded(aSuspected, now)) {
+          mCCRunnerState = CCRunnerState::Inactive;
+          NoteForgetSkippableOnlyCycle();
+          return {CCRunnerAction::StopRunning, Yield};
+        }
+
+        // Our efforts to avoid a CC have failed. Let the timer fire once more
+        // to trigger a CC.
+        mCCRunnerState = CCRunnerState::FinalTimer;
+
+        if (!aDeadline.IsNull() && TimeStamp::Now() < aDeadline) {
+          return {CCRunnerAction::PrepForCC, Yield};
+        }
+
+        [[fallthrough]];
+
+      // FinalTimer: the final state where we actually do a slice of cycle
+      // collection and reset the timer.
+      case CCRunnerState::FinalTimer:
+        if (!IsCCNeeded(aSuspected, now)) {
+          mCCRunnerState = CCRunnerState::Inactive;
+          NoteForgetSkippableOnlyCycle();
+          if (ShouldFireForgetSkippable(aSuspected)) {
+            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+          }
+          return {CCRunnerAction::StopRunning, Yield};
+        }
+
+        // We are in the final timer fire and still meet the conditions for
+        // triggering a CC. Let RunCycleCollectorSlice finish the current IGC
+        // if any, because that will allow us to include the GC time in the CC
+        // pause.
+        mCCRunnerState = CCRunnerState::Inactive;
+        return {CCRunnerAction::CycleCollect, Yield};
+
+      default:
+        MOZ_CRASH("Unexpected CCRunner state");
+    };
   }
 
   // aStartTimeStamp : when the ForgetSkippable timer fired. This may be some
@@ -272,6 +469,14 @@ class CCGCScheduler {
   TimeStamp mForgetSkippableFrequencyStartTime;
   TimeStamp mLastCCEndTime;
   TimeStamp mLastForgetSkippableCycleEndTime;
+
+  CCRunnerState mCCRunnerState = CCRunnerState::Inactive;
+  int32_t mCCRunnerEarlyFireCount = 0;
+  TimeDuration mCCDelay = kCCDelay;
+  bool mNeedsFullCC = false;
+  uint32_t mPreviousSuspectedCount = 0;
+
+  uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
   // Configuration parameters
 
