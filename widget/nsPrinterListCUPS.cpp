@@ -59,50 +59,42 @@ nsPrinterListCUPS::InitPrintSettingsFromPrinter(
   return NS_OK;
 }
 
+static int CupsDestCallback(void* user_data, unsigned aFlags,
+                            cups_dest_t* aDest) {
+  MOZ_ASSERT(user_data);
+  nsTArray<PrinterInfo>* printerInfoList =
+      reinterpret_cast<nsTArray<PrinterInfo>*>(user_data);
+
+  cups_dest_t* ownedDest = nullptr;
+  mozilla::DebugOnly<const int> numCopied =
+      sCupsShim.cupsCopyDest(aDest, 0, &ownedDest);
+  MOZ_ASSERT(numCopied == 1);
+
+  nsString name;
+  GetDisplayNameForPrinter(*aDest, name);
+
+  printerInfoList->AppendElement(PrinterInfo{std::move(name), ownedDest});
+
+  return aFlags == CUPS_DEST_FLAGS_MORE ? 1 : 0;
+}
+
 nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   if (!sCupsShim.EnsureInitialized()) {
     return {};
   }
 
   nsTArray<PrinterInfo> printerInfoList;
-
-  cups_dest_t* printers = nullptr;
-  // Ideally we should use cupsEnumDests with CUPS_PRINTER_DISCOVERED, etc.
-  // flags instead of calling cupsGetDests and filtering out
-  // CUPS_PRINTER_DISCOVERED later, because it should be faster than the
-  // cupsGetDests call.  That being said, unfortunately at least on Ubuntu 20.20
-  // cupsEnumDests doesn't filter out CUPS_PRINTER_DISCOVERED-ed printers at
-  // all. So for now we use cupsGetDests but if we still have perf issues when
-  // we enumerate available printers on Mac, we should use cupsEnumDest at least
-  // on Mac.
-  auto numPrinters = sCupsShim.cupsGetDests(&printers);
-  printerInfoList.SetCapacity(numPrinters);
-
-  for (auto i : mozilla::IntegerRange(0, numPrinters)) {
-    cups_dest_t* dest = printers + i;
-
-    if (const char* printerType = sCupsShim.cupsGetOption(
-            "printer-type", dest->num_options, dest->options)) {
-      nsresult rv;
-      int64_t type = nsAutoCString(printerType).ToInteger64(&rv);
-      if (NS_SUCCEEDED(rv) && (type & (CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER |
-                                       CUPS_PRINTER_DISCOVERED))) {
-        continue;
-      }
-    }
-
-    cups_dest_t* ownedDest = nullptr;
-    mozilla::DebugOnly<const int> numCopied =
-        sCupsShim.cupsCopyDest(dest, 0, &ownedDest);
-    MOZ_ASSERT(numCopied == 1);
-
-    nsString name;
-    GetDisplayNameForPrinter(*dest, name);
-
-    printerInfoList.AppendElement(PrinterInfo{std::move(name), ownedDest});
+  if (!sCupsShim.cupsEnumDests(
+          CUPS_DEST_FLAGS_NONE,
+          0 /* timeout, 0 timeout shouldn't be a problem since we are masking
+               CUPS_PRINTER_DISCOVERED */
+          ,
+          nullptr /* cancel* */, CUPS_PRINTER_LOCAL,
+          CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER | CUPS_PRINTER_DISCOVERED,
+          &CupsDestCallback, &printerInfoList)) {
+    return {};
   }
 
-  sCupsShim.cupsFreeDests(numPrinters, printers);
   return printerInfoList;
 }
 
