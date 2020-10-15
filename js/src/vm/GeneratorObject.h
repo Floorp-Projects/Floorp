@@ -176,6 +176,10 @@ class AbstractGeneratorObject : public NativeObject {
   static size_t offsetOfStackStorageSlot() {
     return getFixedSlotOffset(STACK_STORAGE_SLOT);
   }
+
+#ifdef DEBUG
+  void dump() const;
+#endif
 };
 
 class GeneratorObject : public AbstractGeneratorObject {
