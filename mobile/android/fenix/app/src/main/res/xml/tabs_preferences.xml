@@ -25,7 +25,7 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_close_tabs"
-        app:allowDividerAbove="false"
+        app:allowDividerAbove="true"
         app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:defaultValue="true"
