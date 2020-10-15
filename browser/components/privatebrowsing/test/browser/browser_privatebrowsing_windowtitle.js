@@ -23,13 +23,13 @@ add_task(async function test() {
   //                    to compare with the actual values.
   const isMacOS = AppConstants.platform == "macosx";
 
-  let pb_postfix = isMacOS ? ` - (Private Browsing)` : ` (Private Browsing)`;
-  let page_with_title = isMacOS ? test_title : `${test_title} - ${app_name}`;
+  let pb_postfix = isMacOS ? ` — (Private Browsing)` : ` (Private Browsing)`;
+  let page_with_title = isMacOS ? test_title : `${test_title} — ${app_name}`;
   let page_without_title = app_name;
   let about_pb_title = app_name;
   let pb_page_with_title = isMacOS
     ? `${test_title}${pb_postfix}`
-    : `${test_title} - ${app_name}${pb_postfix}`;
+    : `${test_title} — ${app_name}${pb_postfix}`;
   let pb_page_without_title = `${app_name}${pb_postfix}`;
   let pb_about_pb_title = `${app_name}${pb_postfix}`;
 
