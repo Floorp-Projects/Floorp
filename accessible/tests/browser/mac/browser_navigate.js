@@ -5,6 +5,70 @@
 "use strict";
 
 /**
+ * Test navigation of same/different type content
+ */
+addAccessibleTask(
+  `<h1 id="hello">hello</h1>
+  world<br>
+  <a href="example.com" id="link">I am a link</a>
+  <h1 id="goodbye">goodbye</h1>`,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXSameTypeSearchKey",
+      AXImmediateDescendantsOnly: 0,
+      AXResultsLimit: 1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const hello = getNativeInterface(accDoc, "hello");
+    const goodbye = getNativeInterface(accDoc, "goodbye");
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    searchPred.AXStartElement = hello;
+
+    let sameItem = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(sameItem.length, 1, "Found one item");
+    is(
+      "goodbye",
+      sameItem[0].getAttributeValue("AXTitle"),
+      "Found correct item of same type"
+    );
+
+    searchPred.AXDirection = "AXDirectionPrevious";
+    searchPred.AXStartElement = goodbye;
+    sameItem = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(sameItem.length, 1, "Found one item");
+    is(
+      "hello",
+      sameItem[0].getAttributeValue("AXTitle"),
+      "Found correct item of same type"
+    );
+
+    searchPred.AXSearchKey = "AXDifferentTypeSearchKey";
+    let diffItem = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(diffItem.length, 1, "Found one item");
+    is(
+      "I am a link",
+      diffItem[0].getAttributeValue("AXValue"),
+      "Found correct item of different type"
+    );
+  }
+);
+
+/**
  * Test navigation of heading levels
  */
 addAccessibleTask(

@@ -113,6 +113,7 @@ using namespace mozilla::a11y;
 
 - (NSArray*)performSearch {
   AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
+  AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
   NSMutableArray* matches = [[NSMutableArray alloc] init];
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
@@ -215,6 +216,24 @@ using namespace mozilla::a11y;
       RotorControlRule rule = mImmediateDescendantsOnly
                                   ? RotorControlRule(geckoRootAcc)
                                   : RotorControlRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
+    if ([key isEqualToString:@"AXSameTypeSearchKey"]) {
+      mozAccessible* native = GetNativeFromGeckoAccessible(geckoStartAcc);
+      NSString* macRole = [native moxRole];
+      RotorMacRoleRule rule = mImmediateDescendantsOnly
+                                  ? RotorMacRoleRule(macRole, geckoRootAcc)
+                                  : RotorMacRoleRule(macRole);
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
+    if ([key isEqualToString:@"AXDifferentTypeSearchKey"]) {
+      mozAccessible* native = GetNativeFromGeckoAccessible(geckoStartAcc);
+      NSString* macRole = [native moxRole];
+      RotorNotMacRoleRule rule =
+          mImmediateDescendantsOnly ? RotorNotMacRoleRule(macRole, geckoRootAcc)
+                                    : RotorNotMacRoleRule(macRole);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
