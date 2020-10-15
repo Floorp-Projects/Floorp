@@ -488,9 +488,8 @@ pub fn set_rgb_colorants(
     (*profile).blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2] as f64);
     return true;
 }
-#[no_mangle]
-pub unsafe extern "C" fn get_rgb_colorants(
-    mut colorants: *mut matrix,
+pub fn get_rgb_colorants(
+    mut colorants: &mut matrix,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
 ) -> bool {
@@ -806,7 +805,7 @@ static void qcms_transform_data_clut(const qcms_transform *transform, const unsi
     }
 }
 */
-unsafe extern "C" fn int_div_ceil(mut value: i32, mut div: i32) -> i32 {
+fn int_div_ceil(mut value: i32, mut div: i32) -> i32 {
     return (value + div - 1) / div;
 }
 // Using lcms' tetra interpolation algorithm.
@@ -1137,31 +1136,26 @@ fn sse_version_available() -> i32 {
      * taken (i.e. OK to optimze away the SSE1 and non-SIMD code */
     return 2;
 }
-static mut bradford_matrix: matrix = {
-    let mut init = matrix {
-        m: [
-            [0.8951, 0.2664, -0.1614],
-            [-0.7502, 1.7135, 0.0367],
-            [0.0389, -0.0685, 1.0296],
-        ],
-        invalid: false,
-    };
-    init
+const bradford_matrix: matrix = matrix {
+    m: [
+        [0.8951, 0.2664, -0.1614],
+        [-0.7502, 1.7135, 0.0367],
+        [0.0389, -0.0685, 1.0296],
+    ],
+    invalid: false,
 };
-static mut bradford_matrix_inv: matrix = {
-    let mut init = matrix {
-        m: [
-            [0.9869929, -0.1470543, 0.1599627],
-            [0.4323053, 0.5183603, 0.0492912],
-            [-0.0085287, 0.0400428, 0.9684867],
-        ],
-        invalid: false,
-    };
-    init
+
+const bradford_matrix_inv: matrix = matrix {
+    m: [
+        [0.9869929, -0.1470543, 0.1599627],
+        [0.4323053, 0.5183603, 0.0492912],
+        [-0.0085287, 0.0400428, 0.9684867],
+    ],
+    invalid: false,
 };
+
 // See ICCv4 E.3
-#[no_mangle]
-pub unsafe extern "C" fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
+fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
     let mut p: f32 = (0.96422 * bradford_matrix.m[0][0]
         + 1.000 * bradford_matrix.m[1][0]
         + 0.82521 * bradford_matrix.m[2][0])
