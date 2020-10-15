@@ -874,28 +874,6 @@
     newShape: ShapeField
     numNewSlots: RawInt32Field
 
-- name: StoreTypedObjectReferenceProperty
-  shared: false
-  transpile: false
-  cost_estimate: 6
-  args:
-    obj: ObjId
-    offset: RawInt32Field
-    layout: TypedThingLayoutImm
-    type: ReferenceTypeImm
-    rhs: ValId
-
-- name: StoreTypedObjectScalarProperty
-  shared: true
-  transpile: false
-  cost_estimate: 2
-  args:
-    obj: ObjId
-    offset: RawInt32Field
-    layout: TypedThingLayoutImm
-    type: ScalarTypeImm
-    rhs: RawId
-
 - name: StoreDenseElement
   shared: false
   transpile: true
@@ -1343,17 +1321,6 @@
     rhs: RawId
     handleOOB: BoolImm
 
-- name: StoreTypedObjectElement
-  shared: true
-  transpile: false
-  cost_estimate: 3
-  args:
-    obj: ObjId
-    layout: TypedThingLayoutImm
-    elementType: ScalarTypeImm
-    index: Int32Id
-    rhs: RawId
-
 - name: AtomicsCompareExchangeResult
   shared: true
   transpile: true
@@ -1669,16 +1636,6 @@
     obj: ObjId
     offset: RawInt32Field
 
-- name: LoadTypedObjectResult
-  shared: true
-  transpile: false
-  cost_estimate: 4
-  args:
-    obj: ObjId
-    layout: TypedThingLayoutImm
-    typeDescr: ByteImm
-    offset: RawInt32Field
-
 - name: LoadDenseElementResult
   shared: true
   transpile: true
@@ -1719,15 +1676,6 @@
     obj: ObjId
     index: Int32Id
 
-- name: LoadTypedObjectElementExistsResult
-  shared: true
-  transpile: false
-  cost_estimate: 2
-  args:
-    obj: ObjId
-    index: Int32Id
-    layout: TypedThingLayoutImm
-
 - name: LoadDenseElementHoleExistsResult
   shared: true
   transpile: false
@@ -1746,16 +1694,6 @@
     elementType: ScalarTypeImm
     handleOOB: BoolImm
     allowDoubleForUint32: BoolImm
-
-- name: LoadTypedObjectElementResult
-  shared: true
-  transpile: false
-  cost_estimate: 4
-  args:
-    obj: ObjId
-    index: Int32Id
-    layout: TypedThingLayoutImm
-    elementType: ScalarTypeImm
 
 - name: LoadDataViewValueResult
   shared: true

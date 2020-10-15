@@ -226,7 +226,7 @@ enum class FailureMode : uint8_t;
 enum class SimdOp;
 enum class SymbolicAddress;
 enum class Trap;
-}
+}  // namespace wasm
 
 namespace jit {
 
@@ -1572,9 +1572,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void copyObjGroupNoPreBarrier(Register sourceObj, Register destObj,
                                 Register scratch);
-
-  void loadTypedObjectDescr(Register obj, Register dest);
-  void loadTypedObjectLength(Register obj, Register dest);
 
   // Emit type case branch on tag matching if the type tag in the definition
   // might actually be that type.
