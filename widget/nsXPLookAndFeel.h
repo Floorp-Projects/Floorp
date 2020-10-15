@@ -91,6 +91,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   bool ColorIsNotCSSAccessible(ColorID aID);
   nscolor GetStandinForNativeColor(ColorID aID);
   void RecordTelemetry();
+  virtual void RecordLookAndFeelSpecificTelemetry() {}
 
   static void OnPrefChanged(const char* aPref, void* aClosure);
 
