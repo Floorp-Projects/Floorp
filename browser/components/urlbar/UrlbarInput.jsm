@@ -2509,7 +2509,11 @@ class UrlbarInput {
             searchMode.entry = "topsites_urlbar";
             break;
           case "TabToSearch":
-            searchMode.entry = "tabtosearch";
+            if (result.payload.dynamicType) {
+              searchMode.entry = "tabtosearch_onboard";
+            } else {
+              searchMode.entry = "tabtosearch";
+            }
             break;
           default:
             searchMode.entry = "keywordoffer";

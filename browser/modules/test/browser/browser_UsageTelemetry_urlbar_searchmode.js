@@ -21,6 +21,8 @@ const SUGGEST_PREF = "browser.search.suggest.enabled";
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  UrlbarProviderTabToSearch:
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
@@ -435,7 +437,11 @@ add_task(async function test_touchbar() {
 // payload.keyword parameter.
 add_task(async function test_tabtosearch() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2.tabToComplete", true]],
+    set: [
+      ["browser.urlbar.update2.tabToComplete", true],
+      // Do not show the onboarding result for this subtest.
+      ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
+    ],
   });
   await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
 
@@ -474,6 +480,63 @@ add_task(async function test_tabtosearch() {
   });
 
   assertSearchModeScalar("tabtosearch", "other");
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Enters search mode by selecting a tab-to-search onboarding result.
+add_task(async function test_tabtosearch_onboard() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2.tabToComplete", true]],
+  });
+  UrlbarProviderTabToSearch.onboardingResultsThisSession = 0;
+
+  await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: ENGINE_DOMAIN.slice(0, 4),
+  });
+  let tabToSearchResult = (
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+  ).result;
+  Assert.equal(
+    tabToSearchResult.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+  Assert.equal(
+    tabToSearchResult.payload.engine,
+    ENGINE_NAME,
+    "The tab-to-search result is for the correct engine."
+  );
+  Assert.equal(
+    tabToSearchResult.payload.dynamicType,
+    "onboardTabToSearch",
+    "The tab-to-search result is an onboarding result."
+  );
+  await UrlbarTestUtils.assertSearchMode(window, null);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    1,
+    "Sanity check: The second result is selected."
+  );
+  // Select the tab-to-search onboarding result.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: ENGINE_NAME,
+    entry: "tabtosearch_onboard",
+  });
+
+  assertSearchModeScalar("tabtosearch_onboard", "other");
 
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
