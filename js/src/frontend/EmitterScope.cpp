@@ -416,6 +416,9 @@ bool EmitterScope::deadZoneFrameSlotRange(BytecodeEmitter* bce,
   // InitializeBinding, after which touching the binding will no longer
   // throw reference errors. See 13.1.11, 9.2.13, 13.6.3.4, 13.6.4.6,
   // 13.6.4.8, 13.14.5, 15.1.8, and 15.2.0.15.
+  //
+  // The same code is used to clear slots on exit, in generators and async
+  // functions, to avoid keeping garbage alive indefinitely.
   if (slotStart != slotEnd) {
     if (!bce->emit1(JSOp::Uninitialized)) {
       return false;
@@ -1043,6 +1046,12 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody:
+      if (bce->sc->isFunctionBox() &&
+          bce->sc->asFunctionBox()->needsClearSlotsOnExit()) {
+        if (!deadZoneFrameSlots(bce)) {
+          return false;
+        }
+      }
       if (!bce->emit1(hasEnvironment() ? JSOp::PopLexicalEnv
                                        : JSOp::DebugLeaveLexicalEnv)) {
         return false;
