@@ -275,6 +275,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         resourceTypes,
         targetType
       );
+      if (targetResourceTypes.length == 0) {
+        continue;
+      }
       const targetHelperModule = TARGET_HELPERS[targetType];
       await targetHelperModule.addWatcherDataEntry({
         watcher: this,
@@ -306,11 +309,13 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       resourceTypes,
       Targets.TYPES.FRAME
     );
-    const targetActor = this.browserElement
-      ? TargetActorRegistry.getTargetActor(this.browserId)
-      : TargetActorRegistry.getParentProcessTargetActor();
-    if (targetActor) {
-      await targetActor.addWatcherDataEntry("resources", frameResourceTypes);
+    if (frameResourceTypes.length > 0) {
+      const targetActor = this.browserElement
+        ? TargetActorRegistry.getTargetActor(this.browserId)
+        : TargetActorRegistry.getParentProcessTargetActor();
+      if (targetActor) {
+        await targetActor.addWatcherDataEntry("resources", frameResourceTypes);
+      }
     }
   },
 
@@ -359,6 +364,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           resourceTypes,
           targetType
         );
+        if (targetResourceTypes.length == 0) {
+          continue;
+        }
         const targetHelperModule = TARGET_HELPERS[targetType];
         targetHelperModule.removeWatcherDataEntry({
           watcher: this,
@@ -373,11 +381,13 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       resourceTypes,
       Targets.TYPES.FRAME
     );
-    const targetActor = this.browserElement
-      ? TargetActorRegistry.getTargetActor(this.browserId)
-      : TargetActorRegistry.getParentProcessTargetActor();
-    if (targetActor) {
-      targetActor.removeWatcherDataEntry("resources", frameResourceTypes);
+    if (frameResourceTypes.length > 0) {
+      const targetActor = this.browserElement
+        ? TargetActorRegistry.getTargetActor(this.browserId)
+        : TargetActorRegistry.getParentProcessTargetActor();
+      if (targetActor) {
+        targetActor.removeWatcherDataEntry("resources", frameResourceTypes);
+      }
     }
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
