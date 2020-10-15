@@ -5,13 +5,9 @@
 
 #include "nsNativeBasicThemeGTK.h"
 
-#include "nsLayoutUtils.h"
-
 using namespace mozilla;
 
-static constexpr CSSIntCoord kGtkMinimumScrollbarSize = 12;
-static constexpr CSSIntCoord kGtkMinimumThinScrollbarSize = 6;
-static constexpr CSSIntCoord kGtkMinimumScrollbarThumbSize = 40;
+static constexpr CSSIntCoord kMinimumScrollbarSize = 12;
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   static mozilla::StaticRefPtr<nsITheme> gInstance;
@@ -41,88 +37,63 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                             StyleAppearance aAppearance,
                                             LayoutDeviceIntSize* aResult,
                                             bool* aIsOverridable) {
+  if (!IsWidgetScrollbarPart(aAppearance)) {
+    return nsNativeBasicTheme::GetMinimumWidgetSize(
+        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+  }
+
   uint32_t dpiRatio = GetDPIRatio(aFrame);
-
-  switch (aAppearance) {
-    case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-    case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbartrackVertical:
-    case StyleAppearance::Scrollcorner: {
-      ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-      if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-        aResult->SizeTo(
-            static_cast<uint32_t>(kGtkMinimumThinScrollbarSize) * dpiRatio,
-            static_cast<uint32_t>(kGtkMinimumThinScrollbarSize) * dpiRatio);
-      } else {
-        aResult->SizeTo(
-            static_cast<uint32_t>(kGtkMinimumScrollbarSize) * dpiRatio,
-            static_cast<uint32_t>(kGtkMinimumScrollbarSize) * dpiRatio);
-      }
-      break;
-    }
-    default:
-      return nsNativeBasicTheme::GetMinimumWidgetSize(
-          aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
-  }
-
-  switch (aAppearance) {
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      aResult->width =
-          static_cast<uint32_t>(kGtkMinimumScrollbarThumbSize) * dpiRatio;
-      break;
-    case StyleAppearance::ScrollbarthumbVertical:
-      aResult->height =
-          static_cast<uint32_t>(kGtkMinimumScrollbarThumbSize) * dpiRatio;
-      break;
-    default:
-      break;
-  }
+  auto size = static_cast<uint32_t>(kMinimumScrollbarSize) * dpiRatio;
+  aResult->SizeTo(size, size);
 
   *aIsOverridable = true;
   return NS_OK;
 }
 
+static sRGBColor GetScrollbarthumbColor(const EventStates& aState) {
+  if (aState.HasAllStates(NS_EVENT_STATE_ACTIVE)) {
+    return widget::sScrollbarThumbColorActive;
+  }
+  if (aState.HasAllStates(NS_EVENT_STATE_HOVER)) {
+    return widget::sScrollbarThumbColorHover;
+  }
+  return widget::sScrollbarThumbColor;
+}
+
 void nsNativeBasicThemeGTK::PaintScrollbarthumbHorizontal(
-    DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState) {
-  sRGBColor thumbColor =
-      ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
+    DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
+  sRGBColor thumbColor = GetScrollbarthumbColor(aState);
   Rect thumbRect(aRect);
-  thumbRect.Deflate(floorf(aRect.height / 4.0f));
+  thumbRect.Deflate(aRect.height / 4.0f);
   PaintRoundedRectWithRadius(aDrawTarget, thumbRect, thumbColor, sRGBColor(), 0,
                              thumbRect.height / 2.0f, 1);
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbarthumbVertical(
-    DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState) {
-  sRGBColor thumbColor =
-      ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
+    DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
+  sRGBColor thumbColor = GetScrollbarthumbColor(aState);
   Rect thumbRect(aRect);
-  thumbRect.Deflate(floorf(aRect.width / 4.0f));
+  thumbRect.Deflate(aRect.width / 4.0f);
   PaintRoundedRectWithRadius(aDrawTarget, thumbRect, thumbColor, sRGBColor(), 0,
                              thumbRect.width / 2.0f, 1);
 }
 
-void nsNativeBasicThemeGTK::PaintScrollbarHorizontal(
-    DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, bool aIsRoot) {
-  sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(trackColor)));
+void nsNativeBasicThemeGTK::PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
+                                                     const Rect& aRect,
+                                                     bool aIsRoot) {
+  if (!aIsRoot) {
+    return;
+  }
+  aDrawTarget->FillRect(aRect,
+                        ColorPattern(ToDeviceColor(widget::sScrollbarColor)));
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbarVerticalAndCorner(
-    DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, uint32_t aDpiRatio, bool aIsRoot) {
-  sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(trackColor)));
+    DrawTarget* aDrawTarget, const Rect& aRect, uint32_t aDpiRatio,
+    bool aIsRoot) {
+  if (!aIsRoot) {
+    return;
+  }
+  aDrawTarget->FillRect(aRect,
+                        ColorPattern(ToDeviceColor(widget::sScrollbarColor)));
 }
