@@ -22,7 +22,7 @@
         android:title="@string/preferences_search_address_bar"
         android:selectable="false"
         app:iconSpaceReserved="false"
-        app:allowDividerAbove="false"
+        app:allowDividerAbove="true"
         android:layout="@layout/preference_cat_style">
         <SwitchPreference
             android:defaultValue="true"
@@ -60,8 +60,8 @@
             android:defaultValue="false"
             android:dependency="@string/pref_key_show_search_suggestions"
             android:key="@string/pref_key_show_search_suggestions_in_private"
-            android:title="@string/preferences_show_search_suggestions_in_private"
             android:layout="@layout/checkbox_left_sub_preference"
+            android:title="@string/preferences_show_search_suggestions_in_private"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 </PreferenceScreen>
