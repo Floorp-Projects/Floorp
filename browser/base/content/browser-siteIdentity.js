@@ -437,22 +437,21 @@ var gIdentityHandler = {
 
     let host = this._uri.host;
 
-    // Site data could have changed while the identity popup was open,
-    // reload again to be sure.
-    await SiteDataManager.updateSites();
-
-    let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
-    let siteData = await SiteDataManager.getSites(baseDomain);
-
     // Hide the popup before showing the removal prompt, to
     // avoid a pretty ugly transition. Also hide it even
     // if the update resulted in no site data, to keep the
     // illusion that clicking the button had an effect.
+    let hidden = new Promise(c => {
+      this._identityPopup.addEventListener("popuphidden", c, { once: true });
+    });
     PanelMultiView.hidePopup(this._identityPopup);
+    await hidden;
 
-    if (siteData && siteData.length) {
-      let hosts = siteData.map(site => site.host);
-      if (SiteDataManager.promptSiteDataRemoval(window, hosts)) {
+    let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
+    if (SiteDataManager.promptSiteDataRemoval(window, null, baseDomain)) {
+      let siteData = await SiteDataManager.getSites(baseDomain);
+      if (siteData && siteData.length) {
+        let hosts = siteData.map(site => site.host);
         SiteDataManager.remove(hosts);
       }
     }
