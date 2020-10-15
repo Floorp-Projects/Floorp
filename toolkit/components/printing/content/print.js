@@ -315,18 +315,6 @@ var PrintEventHandler = {
       initialBrowsingContextGroupId: sourceBrowsingContext.group.id,
       skipLoad: true,
     });
-    printPreviewBrowser.addEventListener("DOMWindowClose", function(e) {
-      // Ignore close events from printing, see the code creating browsers in
-      // printUtils.js and nsDocumentViewer::OnDonePrinting.
-      //
-      // When we print with the new print UI we don't bother creating a new
-      // <browser> element, so the close event gets dispatched to us.
-      //
-      // Ignoring it is harmless (and doesn't cause correctness issues, because
-      // the preview document can't run script anyways).
-      e.preventDefault();
-      e.stopPropagation();
-    });
     printPreviewBrowser.classList.add("printPreviewBrowser");
     printPreviewBrowser.setAttribute("flex", "1");
     printPreviewBrowser.setAttribute("printpreview", "true");
