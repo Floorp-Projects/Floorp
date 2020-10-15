@@ -77,6 +77,8 @@ static const gfx::sRGBColor sColorMeterRed20(
 
 static const gfx::sRGBColor sScrollbarColor(gfx::sRGBColor(0.94f, 0.94f,
                                                            0.94f));
+static const gfx::sRGBColor sScrollbarColorTransparent(
+    gfx::sRGBColor(0.94f, 0.94f, 0.94f, 0.2f));
 static const gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
                                                                  1.0f));
 static const gfx::sRGBColor sScrollbarThumbColor(gfx::sRGBColor(0.8f, 0.8f,
@@ -103,6 +105,8 @@ static const gfx::sRGBColor sScrollbarButtonHoverColor(gfx::sRGBColor(0.86f,
                                                                       0.86f));
 
 static const CSSIntCoord kMinimumWidgetSize = 14;
+static const CSSIntCoord kMinimumScrollbarSize = 14;
+static const CSSIntCoord kMinimumThinScrollbarSize = 6;
 static const CSSIntCoord kMinimumColorPickerHeight = 32;
 static const CSSIntCoord kMinimumRangeThumbSize = 20;
 static const CSSIntCoord kMinimumDropdownArrowButtonWidth = 18;
@@ -255,6 +259,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
       const EventStates& aState);
   static std::pair<sRGBColor, sRGBColor> ComputeRangeThumbColors(
       const EventStates& aState);
+  static sRGBColor ComputeScrollbarColor(const ComputedStyle& aStyle,
+                                         bool aIsRoot,
+                                         bool aDefaultTransparent);
+  static sRGBColor ComputeScrollbarthumbColor(const ComputedStyle& aStyle,
+                                              const EventStates& aState);
   static void PaintListbox(DrawTarget* aDrawTarget, const Rect& aRect,
                            const EventStates& aState, uint32_t aDpiRatio);
   static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
@@ -297,19 +306,25 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   virtual void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget,
                                              const Rect& aRect,
+                                             const ComputedStyle& aStyle,
                                              const EventStates& aState);
   virtual void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget,
                                            const Rect& aRect,
+                                           const ComputedStyle& aStyle,
                                            const EventStates& aState);
   virtual void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
-                                        const Rect& aRect, bool aIsRoot);
+                                        const Rect& aRect,
+                                        const ComputedStyle& aStyle,
+                                        bool aIsRoot);
   virtual void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
                                                const Rect& aRect,
+                                               const ComputedStyle& aStyle,
                                                uint32_t aDpiRatio,
                                                bool aIsRoot);
   virtual void PaintScrollbarbutton(DrawTarget* aDrawTarget,
                                     StyleAppearance aAppearance,
                                     const Rect& aRect,
+                                    const ComputedStyle& aStyle,
                                     const EventStates& aState,
                                     uint32_t aDpiRatio);
 };
