@@ -25,10 +25,24 @@ which value should it take?
 This ambiguity is not a good foundation to build trust on,
 so we forbid setting a String metric from multiple processes.
 
-__TODO__: Expand on what, exactly, is forbidden and when.
-Do we permit actions on string metrics so long as they only happen on one process?
-Do we forbid any actions on string metrics from non-main processes?
-See [bug 1647730](https://bugzilla.mozilla.org/show_bug.cgi?id=1647730).
+#### List of Forbidden Operations
+
+* Boolean's `set` (this is the metric type's only operation)
+* Labeled Boolean's `set` (this is the metric type's only operation)
+* String's `set` (this is the metric type's only operation)
+* Labeled String's `set` (this is the metric type's only operation)
+* String List's `set`
+    * `add` is permitted (order and uniqueness are not guaranteed)
+* Timespan's `start`, `stop`, and `cancel` (these are the metric type's only operations)
+* UUID's `set` and `generateAndSet` (these are the metric type's only operations)
+* Datetime's `set` (this is the metric type's only operation)
+* Quantity's `set` (this is the metric type's only operation)
+
+This list may grow over time as new metric types are added.
+If there's an operation/metric type on this list that you need to use in a non-parent process,
+please reach out
+[on the #glean channel](https://chat.mozilla.org/#/room/#glean:mozilla.org)
+and we'll help you out.
 
 ### Process Agnosticism
 
