@@ -127,6 +127,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using sRGBColor = mozilla::gfx::sRGBColor;
   using CSSCoord = mozilla::CSSCoord;
   using CSSIntCoord = mozilla::CSSIntCoord;
+  using ComputedStyle = mozilla::ComputedStyle;
   using EventStates = mozilla::EventStates;
   using DrawTarget = mozilla::gfx::DrawTarget;
   using Path = mozilla::gfx::Path;
