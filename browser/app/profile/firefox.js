@@ -341,40 +341,36 @@ pref("browser.urlbar.openintab", false);
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);
 
-#ifdef NIGHTLY_BUILD
 // Whether the Urlbar can enter search mode. Also controls the other
 // urlbar.update2 prefs.
 pref("browser.urlbar.update2", true);
+
 // Whether horizontal key navigation with left/right is disabled for urlbar's
 // one-off buttons.
 pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", true);
-// Whether the urlbar displays one-offs to filter searches to history,
-// bookmarks, or tabs.
-pref("browser.urlbar.update2.localOneOffs", true);
-// Whether the urlbar one-offs act as search filters instead of executing a
-// search immediately.
-pref("browser.urlbar.update2.oneOffsRefresh", true);
-// Whether browsing history that is recognized as a previous search should
-// be restyled and deduped against form history. This only happens when
-// search mode is active.
-pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
-// Whether we display a tab-to-complete result when the user types an engine
-// name.
-pref("browser.urlbar.update2.tabToComplete", true);
-#else
-pref("browser.urlbar.update2", false);
-pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", false);
-pref("browser.urlbar.update2.localOneOffs", false);
-pref("browser.urlbar.update2.oneOffsRefresh", false);
-pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", false);
-pref("browser.urlbar.update2.tabToComplete", false);
-#endif
 
 // Controls the empty search behavior in Search Mode:
 //  0 - Show nothing
 //  1 - Show search history
 //  2 - Show search and browsing history
 pref("browser.urlbar.update2.emptySearchBehavior", 2);
+
+// Whether the urlbar displays one-offs to filter searches to history,
+// bookmarks, or tabs.
+pref("browser.urlbar.update2.localOneOffs", true);
+
+// Whether the urlbar one-offs act as search filters instead of executing a
+// search immediately.
+pref("browser.urlbar.update2.oneOffsRefresh", true);
+
+// Whether browsing history that is recognized as a previous search should
+// be restyled and deduped against form history. This only happens when
+// search mode is active.
+pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
+
+// Whether we display a tab-to-complete result when the user types an engine
+// name.
+pref("browser.urlbar.update2.tabToComplete", true);
 
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
