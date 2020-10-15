@@ -56,6 +56,16 @@ static const uint32_t kCCPurpleLimit = 200;
 
 namespace mozilla {
 
+MOZ_ALWAYS_INLINE
+static TimeDuration TimeBetween(TimeStamp aStart, TimeStamp aEnd) {
+  MOZ_ASSERT(aEnd >= aStart);
+  return aEnd - aStart;
+}
+
+static inline js::SliceBudget BudgetFromDuration(TimeDuration aDuration) {
+  return js::SliceBudget(js::TimeBudget(aDuration.ToMilliseconds()));
+}
+
 class CCGCScheduler {
  public:
   // Parameter setting
@@ -124,6 +134,54 @@ class CCGCScheduler {
     double percentOfBlockedTime =
         std::min(blockedTime / kMaxCCLockedoutTime, 1.0);
     return std::max(budget, maxSliceGCBudget.MultDouble(percentOfBlockedTime));
+  }
+
+  // Return a budget along with a boolean saying whether to prefer to run short
+  // slices and stop rather than continuing to the next phase of cycle
+  // collection.
+  js::SliceBudget ComputeCCSliceBudget(TimeStamp aDeadline,
+                                       TimeStamp aCCBeginTime,
+                                       TimeStamp aPrevSliceEndTime,
+                                       bool* aPreferShorterSlices) const {
+    TimeStamp now = TimeStamp::Now();
+
+    *aPreferShorterSlices =
+        aDeadline.IsNull() || (aDeadline - now) < kICCSliceBudget;
+
+    TimeDuration baseBudget =
+        aDeadline.IsNull() ? kICCSliceBudget : aDeadline - now;
+
+    if (aCCBeginTime.IsNull()) {
+      // If no CC is in progress, use the standard slice time.
+      return BudgetFromDuration(baseBudget);
+    }
+
+    // Only run a limited slice if we're within the max running time.
+    TimeDuration runningTime = TimeBetween(aCCBeginTime, now);
+    if (runningTime >= kMaxICCDuration) {
+      return js::SliceBudget::unlimited();
+    }
+
+    const TimeDuration maxSlice = TimeDuration::FromMilliseconds(
+        MainThreadIdlePeriod::GetLongIdlePeriod());
+
+    // Try to make up for a delay in running this slice.
+    double sliceDelayMultiplier =
+        TimeBetween(aPrevSliceEndTime, now) / kICCIntersliceDelay;
+    TimeDuration delaySliceBudget =
+        std::min(baseBudget.MultDouble(sliceDelayMultiplier), maxSlice);
+
+    // Increase slice budgets up to |maxSlice| as we approach
+    // half way through the ICC, to avoid large sync CCs.
+    double percentToHalfDone =
+        std::min(2.0 * (runningTime / kMaxICCDuration), 1.0);
+    TimeDuration laterSliceBudget = maxSlice.MultDouble(percentToHalfDone);
+
+    // Note: We may have already overshot the deadline, in which case
+    // baseBudget will be negative and we will end up returning
+    // laterSliceBudget.
+    return BudgetFromDuration(
+        std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
   }
 
   // State
