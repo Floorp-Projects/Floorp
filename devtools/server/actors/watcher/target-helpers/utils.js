@@ -7,12 +7,21 @@
 const Services = require("Services");
 
 /**
- * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
+ * Helper function to know if a given WindowGlobal should be exposed via watchTargets API
  * XXX: We probably want to share this function with DevToolsFrameChild,
  * but may be not, it looks like the checks are really differents because WindowGlobalParent and WindowGlobalChild
  * expose very different attributes. (WindowGlobalChild exposes much less!)
+ *
+ * @param {BrowsingContext} browsingContext: The browsing context we want to check the window global for
+ * @param {String} watchedBrowserId
+ * @param {Object} options
+ * @param {Boolean} options.acceptNonRemoteFrame: Set to true to not restrict to remote frame only
  */
-function shouldNotifyWindowGlobal(browsingContext, watchedBrowserId) {
+function shouldNotifyWindowGlobal(
+  browsingContext,
+  watchedBrowserId,
+  options = {}
+) {
   const windowGlobal = browsingContext.currentWindowGlobal;
   // Loading or destroying BrowsingContext won't have any associated WindowGlobal.
   // Ignore them. They should be either handled via DOMWindowCreated event or JSWindowActor destroy
@@ -42,7 +51,11 @@ function shouldNotifyWindowGlobal(browsingContext, watchedBrowserId) {
     return false;
   }
 
-  // For now, we only mention the "remote frames".
+  if (options.acceptNonRemoteFrame) {
+    return true;
+  }
+
+  // If `acceptNonRemoteFrame` options isn't true, only mention the "remote frames".
   // i.e. the frames which are in a distinct process compared to their parent document
   return (
     !browsingContext.parent ||
