@@ -9,6 +9,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "OSPreferences.h"
 #include "mozIOSPreferences.h"
+#include "unicode/dtfmtsym.h"
 #include "unicode/udatpg.h"
 
 namespace mozilla {
@@ -52,6 +53,82 @@ nsresult DateTimeFormat::FormatPRExplodedTime(
   return FormatUDateTime(aDateFormatSelector, aTimeFormatSelector,
                          (PR_ImplodeTime(aExplodedTime) / PR_USEC_PER_MSEC),
                          &(aExplodedTime->tm_params), aStringOut);
+}
+
+/*static*/
+nsresult DateTimeFormat::GetCalendarSymbol(const Field aField,
+                                           const Style aStyle,
+                                           const PRExplodedTime* aExplodedTime,
+                                           nsAString& aStringOut) {
+  nsresult rv = Initialize();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  icu::DateFormatSymbols::DtWidthType widthType;
+  switch (aStyle) {
+    case Style::Wide:
+      widthType = icu::DateFormatSymbols::DtWidthType::WIDE;
+      break;
+    case Style::Abbreviated:
+      widthType = icu::DateFormatSymbols::DtWidthType::ABBREVIATED;
+      break;
+  }
+
+  int32_t count;
+  UErrorCode status = U_ZERO_ERROR;
+  icu::Locale locale = icu::Locale::createCanonical(mLocale->get());
+
+  UDate udate =
+      static_cast<float>((PR_ImplodeTime(aExplodedTime) / PR_USEC_PER_MSEC));
+
+  nsAutoString timeZoneID;
+  BuildTimeZoneString(aExplodedTime->tm_params, timeZoneID);
+  std::unique_ptr<icu::TimeZone> timeZone(
+      icu::TimeZone::createTimeZone(timeZoneID.BeginReading()));
+  std::unique_ptr<icu::Calendar> cal(
+      icu::Calendar::createInstance(timeZone.release(), locale, status));
+  if (U_FAILURE(status)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  cal->setTime(udate, status);
+  if (U_FAILURE(status)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  std::unique_ptr<icu::DateFormatSymbols> dfs(
+      icu::DateFormatSymbols::createForLocale(locale, status));
+  if (U_FAILURE(status)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aField == Field::Month) {
+    int32_t month = cal->get(UCAL_MONTH, status);
+    if (U_FAILURE(status)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const auto* months = dfs->getMonths(
+        count, icu::DateFormatSymbols::DtContextType::STANDALONE, widthType);
+    if (month < 0 || month >= count) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    aStringOut.Assign(months[month].getBuffer(), months[month].length());
+  } else if (aField == Field::Weekday) {
+    int32_t weekday = cal->get(UCAL_DAY_OF_WEEK, status);
+    if (U_FAILURE(status)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const auto* weekdays = dfs->getWeekdays(
+        count, icu::DateFormatSymbols::DtContextType::STANDALONE, widthType);
+    if (weekday < 0 || weekday >= count) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    aStringOut.Assign(weekdays[weekday].getBuffer(),
+                      weekdays[weekday].length());
+  }
+
+  return NS_OK;
 }
 
 // performs a locale sensitive date formatting operation on the UDate parameter
@@ -213,21 +290,10 @@ nsresult DateTimeFormat::FormatUDateTime(
       if (index != kNotFound) pattern.Replace(index, 3, patternTime);
     }
 
-    // Generate date/time string.
-    nsAutoString timeZoneID(u"GMT");
     if (aTimeParameters) {
-      int32_t totalOffsetMinutes =
-          (aTimeParameters->tp_gmt_offset + aTimeParameters->tp_dst_offset) /
-          60;
-      if (totalOffsetMinutes != 0) {
-        char sign = totalOffsetMinutes < 0 ? '-' : '+';
-        int32_t hours = abs(totalOffsetMinutes) / 60;
-        int32_t minutes = abs(totalOffsetMinutes) % 60;
-        timeZoneID.AppendPrintf("%c%02d:%02d", sign, hours, minutes);
-      }
-    }
+      nsAutoString timeZoneID;
+      BuildTimeZoneString(*aTimeParameters, timeZoneID);
 
-    if (aTimeParameters) {
       dateTimeFormat =
           udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(),
                     reinterpret_cast<const UChar*>(timeZoneID.BeginReading()),
@@ -263,6 +329,21 @@ nsresult DateTimeFormat::FormatUDateTime(
   }
 
   return rv;
+}
+
+/*static*/
+void DateTimeFormat::BuildTimeZoneString(
+    const PRTimeParameters& aTimeParameters, nsAString& aStringOut) {
+  aStringOut.Truncate();
+  aStringOut.Append(u"GMT");
+  int32_t totalOffsetMinutes =
+      (aTimeParameters.tp_gmt_offset + aTimeParameters.tp_dst_offset) / 60;
+  if (totalOffsetMinutes != 0) {
+    char sign = totalOffsetMinutes < 0 ? '-' : '+';
+    int32_t hours = abs(totalOffsetMinutes) / 60;
+    int32_t minutes = abs(totalOffsetMinutes) % 60;
+    aStringOut.AppendPrintf("%c%02d:%02d", sign, hours, minutes);
+  }
 }
 
 /*static*/
