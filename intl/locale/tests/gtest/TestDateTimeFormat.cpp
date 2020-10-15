@@ -32,6 +32,7 @@ TEST(DateTimeFormat, FormatPRExplodedTime)
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
   mozilla::DateTimeFormat::mLocale = new nsCString("en-US");
+  mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
   nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -95,6 +96,7 @@ TEST(DateTimeFormat, DateFormatSelectors)
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
   mozilla::DateTimeFormat::mLocale = new nsCString("en-US");
+  mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
   nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -167,6 +169,7 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
   mozilla::DateTimeFormat::mLocale = new nsCString("de-DE");
+  mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
   nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
@@ -230,6 +233,7 @@ TEST(DateTimeFormat, DateFormatSelectorsForeign)
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
   mozilla::DateTimeFormat::mLocale = new nsCString("de-DE");
+  mozilla::DateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
   nsresult rv = mozilla::DateTimeFormat::FormatPRExplodedTime(
