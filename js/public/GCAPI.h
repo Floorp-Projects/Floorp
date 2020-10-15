@@ -379,6 +379,12 @@ typedef enum JSGCParamKey {
    */
   JSGC_HELPER_THREAD_COUNT = 41,
 
+  /**
+   * If the percentage of the tenured strings exceeds this threshold, string
+   * will be allocated in tenured heap instead. (Default is allocated in
+   * nursery.)
+   */
+  JSGC_PRETENURE_STRING_THRESHOLD = 42,
 } JSGCParamKey;
 
 /*

@@ -1527,6 +1527,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.pretenureThreshold() * 100);
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       return tunables.pretenureGroupThreshold();
+    case JSGC_PRETENURE_STRING_THRESHOLD:
+      return uint32_t(tunables.pretenureStringThreshold() * 100);
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       return tunables.minLastDitchGCPeriod().ToSeconds();
     case JSGC_ZONE_ALLOC_DELAY_KB:

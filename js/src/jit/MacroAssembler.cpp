@@ -823,6 +823,8 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
   // with the nursery's end will always fail in such cases.
 
   CompileZone* zone = GetJitContext()->realm()->zone();
+  uint64_t* allocStrsPtr = &zone->zone()->nurseryAllocatedStrings.ref();
+  inc64(AbsoluteAddress(allocStrsPtr));
   size_t thingSize = gc::Arena::thingSize(allocKind);
 
   bumpPointerAllocate(result, temp, fail, zone,

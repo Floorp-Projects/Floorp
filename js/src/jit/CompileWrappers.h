@@ -90,6 +90,7 @@ class CompileRuntime {
 };
 
 class CompileZone {
+  friend class MacroAssembler;
   JS::Zone* zone();
 
  public:

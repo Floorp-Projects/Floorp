@@ -246,9 +246,7 @@ class Nursery {
   gc::Cell* allocateBigInt(JS::Zone* zone, size_t size) {
     return allocateCell(zone, size, JS::TraceKind::BigInt);
   }
-  gc::Cell* allocateString(JS::Zone* zone, size_t size) {
-    return allocateCell(zone, size, JS::TraceKind::String);
-  }
+  gc::Cell* allocateString(JS::Zone* zone, size_t size);
 
   static size_t nurseryCellHeaderSize() {
     return sizeof(gc::NurseryCellHeader);
