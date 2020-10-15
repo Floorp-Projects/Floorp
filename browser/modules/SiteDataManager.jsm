@@ -46,13 +46,29 @@ var SiteDataManager = {
 
   _quotaUsageRequest: null,
 
-  async updateSites() {
+  /**
+   *  Retrieve the latest site data and store it in SiteDataManager.
+   *
+   *  Updating site data is a *very* expensive operation. This method exists so that
+   *  consumers can manually decide when to update, most methods on SiteDataManager
+   *  will not trigger updates automatically.
+   *
+   *  It is *highly discouraged* to await on this function to finish before showing UI.
+   *  Either trigger the update some time before the data is needed or use the
+   *  entryUpdatedCallback parameter to update the UI async.
+   *
+   * @param {entryUpdatedCallback} a function to be called whenever a site is added or
+   *        updated. This can be used to e.g. fill a UI that lists sites without
+   *        blocking on the entire update to finish.
+   * @returns a Promise that resolves when updating is done.
+   **/
+  async updateSites(entryUpdatedCallback) {
     Services.obs.notifyObservers(null, "sitedatamanager:updating-sites");
     // Clear old data and requests first
     this._sites.clear();
-    this._getAllCookies();
-    await this._getQuotaUsage();
-    this._updateAppCache();
+    this._getAllCookies(entryUpdatedCallback);
+    await this._getQuotaUsage(entryUpdatedCallback);
+    this._updateAppCache(entryUpdatedCallback);
     Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   },
 
@@ -133,7 +149,7 @@ var SiteDataManager = {
     return this._getCacheSizePromise;
   },
 
-  _getQuotaUsage() {
+  _getQuotaUsage(entryUpdatedCallback) {
     this._cancelGetQuotaUsage();
     this._getQuotaUsagePromise = new Promise(resolve => {
       let onUsageResult = request => {
@@ -163,6 +179,9 @@ var SiteDataManager = {
               }
               site.principals.push(principal);
               site.quotaUsage += item.usage;
+              if (entryUpdatedCallback) {
+                entryUpdatedCallback(principal.host, site);
+              }
             }
           }
         }
@@ -176,9 +195,12 @@ var SiteDataManager = {
     return this._getQuotaUsagePromise;
   },
 
-  _getAllCookies() {
+  _getAllCookies(entryUpdatedCallback) {
     for (let cookie of Services.cookies.cookies) {
       let site = this._getOrInsertSite(cookie.rawHost);
+      if (entryUpdatedCallback) {
+        entryUpdatedCallback(cookie.rawHost, site);
+      }
       site.cookies.push(cookie);
       if (site.lastAccessed < cookie.lastAccessed) {
         site.lastAccessed = cookie.lastAccessed;
@@ -193,7 +215,7 @@ var SiteDataManager = {
     }
   },
 
-  _updateAppCache() {
+  _updateAppCache(entryUpdatedCallback) {
     let groups;
     try {
       groups = this._appCache.getGroups();
@@ -221,6 +243,9 @@ var SiteDataManager = {
         site.principals.push(principal);
       }
       site.appCacheList.push(cache);
+      if (entryUpdatedCallback) {
+        entryUpdatedCallback(principal.host, site);
+      }
     }
   },
 
@@ -501,11 +526,14 @@ var SiteDataManager = {
    *
    * @param {mozIDOMWindowProxy} a parent DOM window to host the dialog.
    * @param {Array} [optional] an array of host name strings that will be removed.
+   * @param {baseDomain} [optional] a baseDomain to use in the dialog when searching
+   *        for hosts to be removed. This will trigger a SiteDataManager update.
    * @returns a boolean whether the user confirmed the prompt.
    */
-  promptSiteDataRemoval(win, removals) {
-    if (removals) {
+  promptSiteDataRemoval(win, removals, baseDomain) {
+    if (baseDomain || removals) {
       let args = {
+        baseDomain,
         hosts: removals,
         allowed: false,
       };
