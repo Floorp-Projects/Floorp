@@ -420,6 +420,7 @@ class MozillaSocorroServiceTest {
             val request = bufferedReader.readText()
 
             assert(request.contains("name=JavaStackTrace\r\n\r\njava.lang.RuntimeException: Test"))
+            assert(request.contains("name=JavaException\r\n\r\n{\"exception\":{\"values\":[{\"stacktrace\":{\"frames\":[{\"module\":\"mozilla.components.lib.crash.service.MozillaSocorroServiceTest\",\"function\":\"MozillaSocorroService uncaught exception request is correct\",\"in_app\":true"))
             assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
             assert(request.contains("name=ProductID\r\n\r\n{aa3c5121-dab2-40e2-81ca-7ea25febc110}"))
             assert(request.contains("name=Vendor\r\n\r\nMozilla"))
