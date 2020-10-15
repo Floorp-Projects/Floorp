@@ -165,11 +165,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether aliases are styled as a "chiclet" separated from the Urlbar.
   // Also controls the other urlbar.update2 prefs.
-  ["update2", false],
+  ["update2", true],
 
   // Whether horizontal key navigation with left/right is disabled for urlbar's
   // one-off buttons.
-  ["update2.disableOneOffsHorizontalKeyNavigation", false],
+  ["update2.disableOneOffsHorizontalKeyNavigation", true],
 
   // Controls the empty search behavior in Search Mode:
   //  0 - Show nothing
@@ -179,11 +179,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether the urlbar displays one-offs to filter searches to history,
   // bookmarks, or tabs.
-  ["update2.localOneOffs", false],
+  ["update2.localOneOffs", true],
 
   // Whether the urlbar one-offs act as search filters instead of executing a
   // search immediately.
-  ["update2.oneOffsRefresh", false],
+  ["update2.oneOffsRefresh", true],
 
   // Whether browsing history that is recognized as a previous search should
   // be restyled and deduped against form history. This only happens when
@@ -192,7 +192,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether we display a tab-to-complete result when the user types an engine
   // name.
-  ["update2.tabToComplete", false],
+  ["update2.tabToComplete", true],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
