@@ -120,9 +120,9 @@ function checkTitle(name, url, context) {
   const win = Services.wm.getMostRecentWindow("devtools:toolbox");
   let expectedTitle;
   if (name) {
-    expectedTitle = `Developer Tools - ${name} - ${url}`;
+    expectedTitle = `Developer Tools — ${name} — ${url}`;
   } else {
-    expectedTitle = `Developer Tools - ${url}`;
+    expectedTitle = `Developer Tools — ${url}`;
   }
   is(win.document.title, expectedTitle, context);
 }
