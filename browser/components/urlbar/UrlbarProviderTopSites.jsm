@@ -139,13 +139,14 @@ class ProviderTopSites extends UrlbarProvider {
     sites = sites.map(link => ({
       type: link.searchTopSite ? "search" : "url",
       url: link.url_urlbar || link.url,
-      isPinned: link.isPinned,
+      isPinned: !!link.isPinned,
+      isSponsored: !!link.sponsored_position,
       // The newtab page allows the user to set custom site titles, which
       // are stored in `label`, so prefer it.  Search top sites currently
       // don't have titles but `hostname` instead.
       title: link.label || link.title || link.hostname || "",
       favicon: link.smallFavicon || link.favicon || undefined,
-      sendAttributionRequest: link.sendAttributionRequest,
+      sendAttributionRequest: !!link.sendAttributionRequest,
     }));
 
     for (let site of sites) {
@@ -159,6 +160,7 @@ class ProviderTopSites extends UrlbarProvider {
               url: site.url,
               icon: site.favicon,
               isPinned: site.isPinned,
+              isSponsored: site.isSponsored,
               sendAttributionRequest: site.sendAttributionRequest,
             })
           );

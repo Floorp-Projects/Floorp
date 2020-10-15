@@ -1010,6 +1010,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isPinned: {
         type: "boolean",
       },
+      isSponsored: {
+        type: "boolean",
+      },
       sendAttributionRequest: {
         type: "boolean",
       },

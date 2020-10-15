@@ -461,6 +461,7 @@ urlbar-result-action-search-in-private = Search in a Private Window
 # Variables
 #  $engine (String): the name of a search engine
 urlbar-result-action-search-w-engine = Search with { $engine }
+urlbar-result-action-sponsored = Sponsored
 urlbar-result-action-switch-tab = Switch to Tab
 urlbar-result-action-visit = Visit
 # Directs a user to press the Tab key to perform a search with the specified
