@@ -34,6 +34,7 @@ class nsCUPSShim {
   X(cupsCopyDest)              \
   X(cupsCopyDestInfo)          \
   X(cupsDoRequest)             \
+  X(cupsEnumDests)             \
   X(cupsFindDestDefault)       \
   X(cupsFreeDestInfo)          \
   X(cupsFreeDests)             \
