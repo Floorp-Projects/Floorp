@@ -109,7 +109,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_NOT_CONFIRMED = 14,  // TRR confirmation is not done yet
     TRR_DID_NOT_MAKE_QUERY = 15,  // TrrLookup exited without doing a TRR query
     TRR_UNKNOWN_CHANNEL_FAILURE = 16,  // unknown channel failure reason
-    TRR_HOST_BLOCKED_TEMPORARY = 17,   // host blacklisted
+    TRR_HOST_BLOCKED_TEMPORARY = 17,   // host blocklisted
     TRR_SEND_FAILED = 18,          // The call to TRR::SendHTTPRequest failed
     TRR_NET_RESET = 19,            // NS_ERROR_NET_RESET
     TRR_NET_TIMEOUT = 20,          // NS_ERROR_NET_TIMEOUT
@@ -244,9 +244,9 @@ class AddrHostRecord final : public nsHostRecord {
   RefPtr<mozilla::net::AddrInfo> addr_info;
   mozilla::UniquePtr<mozilla::net::NetAddr> addr;
 
-  // hold addr_info_lock when calling the blacklist functions
-  bool Blacklisted(const mozilla::net::NetAddr* query);
-  void ResetBlacklist();
+  // hold addr_info_lock when calling the blocklist functions
+  bool Blocklisted(const mozilla::net::NetAddr* query);
+  void ResetBlocklist();
   void ReportUnusable(const mozilla::net::NetAddr* aAddress);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
@@ -311,12 +311,12 @@ class AddrHostRecord final : public nsHostRecord {
 
   // The number of times ReportUnusable() has been called in the record's
   // lifetime.
-  uint32_t mBlacklistedCount;
+  uint32_t mUnusableCount = 0;
 
   // a list of addresses associated with this record that have been reported
   // as unusable. the list is kept as a set of strings to make it independent
   // of gencnt.
-  nsTArray<nsCString> mBlacklistedItems;
+  nsTArray<nsCString> mUnusableItems;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(AddrHostRecord, ADDRHOSTRECORD_IID)

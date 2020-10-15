@@ -215,9 +215,7 @@ avoid-blacklist-and-whitelist:
         - netwerk/base/nsURLHelper.cpp
         - netwerk/cache/nsDiskCacheDeviceSQL.cpp
         - netwerk/cookie/CookieCommons.h
-        - netwerk/dns/nsDNSService2.cpp
         - netwerk/dns/nsHostResolver.cpp
-        - netwerk/dns/nsHostResolver.h
         - netwerk/dns/nsIDNService.cpp
         - netwerk/dns/nsIDNService.h
         - netwerk/dns/TRR.cpp

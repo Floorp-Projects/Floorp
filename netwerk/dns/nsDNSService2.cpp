@@ -184,13 +184,13 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
       } else {
         mIter++;
       }
-    } while (iter() && mHostRecord->Blacklisted(iter()));
+    } while (iter() && mHostRecord->Blocklisted(iter()));
 
     if (!iter() && startedFresh) {
-      // If everything was blacklisted we want to reset the blacklist (and
+      // If everything was blocklisted we want to reset the blocklist (and
       // likely relearn it) and return the first address. That is better
       // than nothing.
-      mHostRecord->ResetBlacklist();
+      mHostRecord->ResetBlocklist();
       mIter = mAddrInfo->Addresses().begin();
     }
 
@@ -240,7 +240,7 @@ nsDNSRecord::GetAddresses(nsTArray<NetAddr>& aAddressArray) {
   mHostRecord->addr_info_lock.Lock();
   if (mHostRecord->addr_info) {
     for (const auto& address : mHostRecord->addr_info->Addresses()) {
-      if (mHostRecord->Blacklisted(&address)) {
+      if (mHostRecord->Blocklisted(&address)) {
         continue;
       }
       NetAddr* addr = aAddressArray.AppendElement(address);
@@ -329,7 +329,7 @@ nsDNSRecord::Rewind() {
 
 NS_IMETHODIMP
 nsDNSRecord::ReportUnusable(uint16_t aPort) {
-  // right now we don't use the port in the blacklist
+  // right now we don't use the port in the blocklist
 
   MutexAutoLock lock(mHostRecord->addr_info_lock);
 
