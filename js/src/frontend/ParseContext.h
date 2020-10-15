@@ -11,6 +11,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
+#include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
@@ -150,9 +151,10 @@ class ParseContext : public Nestable<ParseContext> {
 
     MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p,
                                       const ParserAtom* name,
-                                      DeclarationKind kind, uint32_t pos) {
+                                      DeclarationKind kind, uint32_t pos,
+                                      ClosedOver closedOver = ClosedOver::No) {
       return maybeReportOOM(
-          pc, declared_->add(p, name, DeclaredNameInfo(kind, pos)));
+          pc, declared_->add(p, name, DeclaredNameInfo(kind, pos, closedOver)));
     }
 
     // Add a FunctionBox as a possible candidate for Annex B.3.3 semantics.
