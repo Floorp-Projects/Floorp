@@ -37,24 +37,9 @@ const BAD_HEADERS = ["connection", "host"];
 // in the header name or value
 const FORBIDDEN_HEADER_CHARACTERS = ["\n", "\r"];
 
-function validateHeader(key, value) {
-  if (!key) {
-    // Key cannot be empty
-    return false;
-  }
-
-  for (const c of FORBIDDEN_HEADER_CHARACTERS) {
-    if (key.includes(c) || value?.includes(c)) {
-      return false;
-    }
-  }
-
-  if (BAD_HEADERS.includes(key.toLowerCase().trim())) {
-    return false;
-  }
-
-  return true;
-}
+// Keep in sync with GeckoSession.java
+const HEADER_FILTER_CORS_SAFELISTED = 1;
+const HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
 
 // Create default ReferrerInfo instance for the given referrer URI string.
 const createReferrerInfo = aReferrer => {
@@ -143,6 +128,32 @@ class GeckoViewNavigation extends GeckoViewModule {
     this._initialAboutBlank = true;
   }
 
+  validateHeader(key, value, filter) {
+    if (!key) {
+      // Key cannot be empty
+      return false;
+    }
+
+    for (const c of FORBIDDEN_HEADER_CHARACTERS) {
+      if (key.includes(c) || value?.includes(c)) {
+        return false;
+      }
+    }
+
+    if (BAD_HEADERS.includes(key.toLowerCase().trim())) {
+      return false;
+    }
+
+    if (
+      filter == HEADER_FILTER_CORS_SAFELISTED &&
+      !this.window.windowUtils.isCORSSafelistedRequestHeader(key, value)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
   // Bundle event handler.
   async onEvent(aEvent, aData, aCallback) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
@@ -158,7 +169,14 @@ class GeckoViewNavigation extends GeckoViewModule {
         this.browser.gotoIndex(aData.index);
         break;
       case "GeckoView:LoadUri":
-        const { uri, referrerUri, referrerSessionId, flags, headers } = aData;
+        const {
+          uri,
+          referrerUri,
+          referrerSessionId,
+          flags,
+          headers,
+          headerFilter,
+        } = aData;
 
         let navFlags = convertFlags(flags);
         // For performance reasons we don't call the LoadUriDelegate.loadUri
@@ -215,7 +233,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         if (headers) {
           additionalHeaders = "";
           for (const [key, value] of Object.entries(headers)) {
-            if (!validateHeader(key, value)) {
+            if (!this.validateHeader(key, value, headerFilter)) {
               Cu.reportError(`Ignoring invalid header '${key}'='${value}'.`);
               continue;
             }
