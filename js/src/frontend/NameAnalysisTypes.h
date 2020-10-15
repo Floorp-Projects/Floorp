@@ -135,6 +135,8 @@ enum class PrivateNameKind : uint8_t {
   GetterSetter,
 };
 
+enum class ClosedOver : bool { No = false, Yes = true };
+
 // Used in Parser to track declared names.
 class DeclaredNameInfo {
   uint32_t pos_;
@@ -148,10 +150,11 @@ class DeclaredNameInfo {
   PrivateNameKind privateNameKind_;
 
  public:
-  explicit DeclaredNameInfo(DeclarationKind kind, uint32_t pos)
+  explicit DeclaredNameInfo(DeclarationKind kind, uint32_t pos,
+                            ClosedOver closedOver = ClosedOver::No)
       : pos_(pos),
         kind_(kind),
-        closedOver_(false),
+        closedOver_(bool(closedOver)),
         privateNameKind_(PrivateNameKind::None) {}
 
   // Needed for InlineMap.
