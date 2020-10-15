@@ -31,12 +31,18 @@ exclude: true
   FIDO support for WebAuthn.
 - Added ['GeckoWebExecutor#FETCH_FLAG_PRIVATE'][83.5]. This new flag allows for private browsing downloads using WebExecutor.
   ([bug 1665426]({{bugzilla}}1665426))
+- ⚠️ Deprecated [`GeckoSession#loadUri`][83.6] variants in favor of
+  [`GeckoSession#load`][83.7]. See docs for [`Loader`][83.8].
+  ([bug 1667471]({{bugzilla}}1667471))
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 [83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
 [83.3]: {{javadoc_uri}}/ContentBlocking.SafeBrowsingProvider.html
 [83.4]: {{javadoc_uri}}/GeckoRuntime.ActivityDelegate.html
 [83.5]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAG_PRIVATE
+[83.6]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-org.mozilla.geckoview.GeckoSession-int-java.util.Map-
+[83.7]: {{javadoc_uri}}/GeckoSession.html#load-org.mozilla.geckoview.GeckoSession.Loader-
+[83.8]: {{javadoc_uri}}/GeckoSession.Loader.html
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -826,4 +832,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: a2b63f41870a698bfe884cc415427dfb8c6fb471
+[api-version]: 0abbabc4fa9445edc2f37ba174b189be25c2b2fa
