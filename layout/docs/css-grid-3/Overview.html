@@ -1321,8 +1321,9 @@ Possible extra rowspan handling
 		}
 	}
 </style>
-  <meta content="Bikeshed version 5f7b0e20, updated Tue Aug 18 15:46:28 2020 -0700" name="generator">
+  <meta content="Bikeshed version 89ebb6ab, updated Fri Oct 9 15:32:07 2020 -0700" name="generator">
   <link href="https://drafts.csswg.org/css-grid-3/" rel="canonical">
+  <meta content="613461af16dd1bfa0ba74d13d9a36a30bdf470d1" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -1871,7 +1872,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">CSS Masonry Layout Module</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Living Standard, <time class="dt-updated" datetime="2020-10-08">8 October 2020</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Living Standard, <time class="dt-updated" datetime="2020-10-14">14 October 2020</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1885,7 +1886,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
    <div data-fill-with="warning"></div>
    <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" src="https://licensebuttons.net/p/zero/1.0/80x15.png"></a> To the extent possible under law, the editors have waived all copyright
 and related or neighboring rights to this work.
-In addition, as of 8 October 2020,
+In addition, as of 14 October 2020,
 the editors have made this specification available under the <a href="http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
 which is available at http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
 Parts of this work may be from another specification document.  If so, those parts are instead covered by the license of that specification document. </p>
@@ -1969,9 +1970,9 @@ Parts of this work may be from another specification document.  If so, those par
     <figcaption>Representative Grid layout example</figcaption>
    </figure>
    <p>Although many layouts can be expressed with regular Grid Layout, restricting items into a grid in both axes also makes it impossible to express some common layouts on the Web.</p>
-   <p>This module defines a layout system that removes that restriction so that items can be placed into Grid-like tracks in just one of the axes, while stacking them one after another in the other axis.  Items are placed into the column (or row) with the most remaining space based on the layout size of the items placed so far.  It extends <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> with this new grid item placement strategy and <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> with new alignment features.</p>
+   <p>This module defines a layout system that removes that restriction so that items can be placed into Grid-like tracks in just one of the axes, while stacking them one after another in the other axis.  Items are placed into the column (or row) with the most remaining space based on the layout size of the items placed so far.  This module also extends <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> with this new grid item placement strategy and <a href="https://drafts.csswg.org/css-align">CSS Box Alignment</a> with new alignment features.</p>
    <h3 class="heading settled" data-level="1.1" id="background"><span class="secno">1.1. </span><span class="content"> Background and Motivation</span><a class="self-link" href="#background"></a></h3>
-   <p>Masonry layout is a common Web design pattern where a number of items — commonly images or short article summaries — are placed one by one into columns, so-called because it resembles stone masonry. Unlike <a href="https://drafts.csswg.org/css-multicol-1/">regular multi-column layout</a>, where items are placed vertically in the first column until they must spill over to the second column, masonry layout selects a column for each new item such that it is generally closer to the top of the layout than items placed later.</p>
+   <p>Masonry layout is a common Web design pattern where a number of items — commonly images or short article summaries — are placed one by one into columns, in a way that loosely resembles stone masonry. Unlike <a href="https://drafts.csswg.org/css-multicol-1/">regular multi-column layout</a>, where items are placed vertically in the first column until they must spill over to the second column, masonry layout selects a column for each new item such that it is generally closer to the top of the layout than items placed later.</p>
    <p>The Pinterest search results page exemplifies this layout:</p>
    <figure>
      <img alt="An example of masonry layout:
@@ -1980,8 +1981,8 @@ Parts of this work may be from another specification document.  If so, those par
     <figcaption>Representative masonry layout example</figcaption>
    </figure>
    <p>Here, each item has a different height (depending on the content and the width of the column), and inspecting the DOM reveals (as the visual content itself gives no indication of ordering) that each item has been placed into the column with the smallest height so far.</p>
-   <p>An advantage to using this layout over regular multi-column layout is that the masonry layout container height grows as more items are placed into it, as a balancing multi-column layout would, but the effect for the reader is that scrolling down will naturally lead to "later" items in the layout (that is, those less relevant in the search results).</p>
-   <p>Achieving this layout without knowing upfront how tall each item will be is currently not possible without using script.</p>
+   <p>This layout superficially looks similar to multi-column layout; but it has the advantage that scrolling down will naturally lead to "later" items in the layout (that is, those less relevant in the search results).</p>
+   <p>It’s not possible to achieve this layout using earlier CSS layout models, unless you know up-front how tall each item will be, or use JavaScript for content measurement or placement.</p>
    <h3 class="heading settled" data-level="1.2" id="values"><span class="secno">1.2. </span><span class="content"> Value Definitions</span><a class="self-link" href="#values"></a></h3>
    <p>This specification follows the <a href="https://www.w3.org/TR/CSS2/about.html#property-defs">CSS property definition conventions</a> from <a data-link-type="biblio" href="#biblio-css2">[CSS2]</a> using the <a href="https://www.w3.org/TR/css-values-3/#value-defs">value definition syntax</a> from <a data-link-type="biblio" href="#biblio-css-values-3">[CSS-VALUES-3]</a>.
 	Value types not defined in this specification are defined in CSS Values &amp; Units <a data-link-type="biblio" href="#biblio-css-values-3">[CSS-VALUES-3]</a>.
