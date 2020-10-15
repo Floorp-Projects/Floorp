@@ -4204,7 +4204,7 @@
 
 - name: gfx.e10s.font-list.shared
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: once
 
 - name: gfx.font_loader.delay
