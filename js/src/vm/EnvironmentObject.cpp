@@ -2457,10 +2457,7 @@ ArrayObject* DebugEnvironmentProxy::maybeSnapshot() const {
 }
 
 void DebugEnvironmentProxy::initSnapshot(ArrayObject& o) {
-  MOZ_ASSERT_IF(
-    maybeSnapshot() != nullptr,
-    environment().is<CallObject>() &&
-    environment().as<CallObject>().callee().isGeneratorOrAsync());
+  MOZ_ASSERT(maybeSnapshot() == nullptr);
   setReservedSlot(SNAPSHOT_SLOT, ObjectValue(o));
 }
 
@@ -2668,6 +2665,11 @@ bool DebugEnvironments::addDebugEnvironment(
     Handle<DebugEnvironmentProxy*> debugEnv) {
   MOZ_ASSERT(!ei.hasSyntacticEnvironment());
   MOZ_ASSERT(cx->realm() == debugEnv->nonCCWRealm());
+  // Generators should always have environments.
+  MOZ_ASSERT_IF(
+      ei.scope().is<FunctionScope>(),
+      !ei.scope().as<FunctionScope>().canonicalFunction()->isGenerator() &&
+          !ei.scope().as<FunctionScope>().canonicalFunction()->isAsync());
 
   if (!CanUseDebugEnvironmentMaps(cx)) {
     return true;
@@ -2833,6 +2835,10 @@ void DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame) {
       return;
     }
 
+    if (frame.callee()->isGenerator() || frame.callee()->isAsync()) {
+      return;
+    }
+
     CallObject& callobj = frame.environmentChain()->as<CallObject>();
     envs->liveEnvs.remove(&callobj);
     if (JSObject* obj = envs->proxiedEnvs.lookup(&callobj)) {
@@ -2952,6 +2958,12 @@ bool DebugEnvironments::updateLiveEnvironments(JSContext* cx) {
     AbstractFramePtr frame = i.abstractFramePtr();
     if (frame.realm() != cx->realm()) {
       continue;
+    }
+
+    if (frame.isFunctionFrame()) {
+      if (frame.callee()->isGenerator() || frame.callee()->isAsync()) {
+        continue;
+      }
     }
 
     if (!frame.isDebuggee()) {
@@ -3131,6 +3143,8 @@ static DebugEnvironmentProxy* GetDebugEnvironmentForMissing(
   if (ei.scope().is<FunctionScope>()) {
     RootedFunction callee(cx,
                           ei.scope().as<FunctionScope>().canonicalFunction());
+    // Generators should always reify their scopes.
+    MOZ_ASSERT(!callee->isGenerator() && !callee->isAsync());
 
     JS::ExposeObjectToActiveJS(callee);
     Rooted<CallObject*> callobj(cx,

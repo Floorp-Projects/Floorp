@@ -24,7 +24,7 @@ dbg.onEnterFrame = f => {
 const it = g.f();
 
 assertEq(!!frame, true);
-//FIXME assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
+assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
 
 it.next();
 

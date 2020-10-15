@@ -18,7 +18,7 @@ var f = async function*() {
 let frame;
 dbg.onEnterFrame = f => {
   frame = f;
-  //FIXME assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
+  assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
   dbg.onEnterFrame = undefined;
 };
 
@@ -26,11 +26,11 @@ dbg.onEnterFrame = f => {
   const it = g.f();
 
   assertEq(!!frame, true);
-  //FIXME assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
+  assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
 
   const promise = it.next();
 
-  //FIXME assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
+  assertEq(frame.this, gDO.makeDebuggeeValue(g.context));
 
   await promise;
 
