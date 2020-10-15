@@ -77,12 +77,18 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 val addonCollectionProvider = context.components.addonCollectionProvider
                 val addons = context.components.addonManager.getAddons()
 
+                val style = AddonsManagerAdapter.Style(
+                    dividerColor = R.color.browser_actions_divider_color,
+                    dividerHeight = R.dimen.mozac_browser_menu_item_divider_height
+                )
+
                 scope.launch(Dispatchers.Main) {
                     if (adapter == null) {
                         adapter = AddonsManagerAdapter(
-                                addonCollectionProvider = addonCollectionProvider,
-                                addonsManagerDelegate = this@AddonsFragment,
-                                addons = addons
+                            addonCollectionProvider = addonCollectionProvider,
+                            addonsManagerDelegate = this@AddonsFragment,
+                            addons = addons,
+                            style = style
                         )
                         recyclerView.adapter = adapter
                     } else {

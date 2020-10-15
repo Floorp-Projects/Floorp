@@ -16,6 +16,7 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
@@ -61,6 +62,7 @@ class AddonsManagerAdapter(
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val logger = Logger("AddonsManagerAdapter")
+
     /**
      * Represents all the add-ons that will be distributed in multiple headers like
      * enabled, recommended and unsupported, this help have the data source of the items,
@@ -87,7 +89,8 @@ class AddonsManagerAdapter(
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.mozac_feature_addons_section_item, parent, false)
         val titleView = view.findViewById<TextView>(R.id.title)
-        return SectionViewHolder(view, titleView)
+        val divider = view.findViewById<View>(R.id.divider)
+        return SectionViewHolder(view, titleView, divider)
     }
 
     private fun createUnsupportedSectionViewHolder(parent: ViewGroup): CustomViewHolder {
@@ -142,7 +145,7 @@ class AddonsManagerAdapter(
         val item = getItem(position)
 
         when (holder) {
-            is SectionViewHolder -> bindSection(holder, item as Section)
+            is SectionViewHolder -> bindSection(holder, item as Section, position)
             is AddonViewHolder -> bindAddon(holder, item as Addon)
             is UnsupportedSectionViewHolder -> bindNotYetSupportedSection(
                 holder,
@@ -152,10 +155,15 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun bindSection(holder: SectionViewHolder, section: Section) {
+    internal fun bindSection(holder: SectionViewHolder, section: Section, position: Int) {
         holder.titleView.setText(section.title)
-        style?.maybeSetSectionsTextColor(holder.titleView)
-        style?.maybeSetSectionsTypeFace(holder.titleView)
+
+        style?.let {
+            holder.divider.isVisible = it.visibleDividers && position != 0
+            it.maybeSetSectionsTextColor(holder.titleView)
+            it.maybeSetSectionsTypeFace(holder.titleView)
+            it.maybeSetSectionsDividerStyle(holder.divider)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -289,19 +297,19 @@ class AddonsManagerAdapter(
 
         // Add installed section and addons if available
         if (installedAddons.isNotEmpty()) {
-            itemsWithSections.add(Section(R.string.mozac_feature_addons_enabled))
+            itemsWithSections.add(Section(R.string.mozac_feature_addons_enabled, false))
             itemsWithSections.addAll(installedAddons)
         }
 
         // Add disabled section and addons if available
         if (disabledAddons.isNotEmpty()) {
-            itemsWithSections.add(Section(R.string.mozac_feature_addons_disabled_section))
+            itemsWithSections.add(Section(R.string.mozac_feature_addons_disabled_section, true))
             itemsWithSections.addAll(disabledAddons)
         }
 
         // Add recommended section and addons if available
         if (recommendedAddons.isNotEmpty()) {
-            itemsWithSections.add(Section(R.string.mozac_feature_addons_recommended_section))
+            itemsWithSections.add(Section(R.string.mozac_feature_addons_recommended_section, true))
             itemsWithSections.addAll(recommendedAddons)
         }
 
@@ -314,7 +322,7 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal data class Section(@StringRes val title: Int)
+    internal data class Section(@StringRes val title: Int, val visibleDivider: Boolean = true)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal data class NotYetSupportedSection(@StringRes val title: Int)
@@ -331,7 +339,12 @@ class AddonsManagerAdapter(
         val addonSummaryTextColor: Int? = null,
         val sectionsTypeFace: Typeface? = null,
         @DrawableRes
-        val addonAllowPrivateBrowsingLabelDrawableRes: Int? = null
+        val addonAllowPrivateBrowsingLabelDrawableRes: Int? = null,
+        val visibleDividers: Boolean = true,
+        @ColorRes
+        val dividerColor: Int? = null,
+        @DimenRes
+        val dividerHeight: Int? = null
     ) {
         internal fun maybeSetSectionsTextColor(textView: TextView) {
             sectionsTextColor?.let {
@@ -363,6 +376,15 @@ class AddonsManagerAdapter(
         internal fun maybeSetPrivateBrowsingLabelDrawale(imageView: ImageView) {
             addonAllowPrivateBrowsingLabelDrawableRes?.let {
                 imageView.setImageDrawable(ContextCompat.getDrawable(imageView.context, it))
+            }
+        }
+
+        internal fun maybeSetSectionsDividerStyle(divider: View) {
+            dividerColor?.let {
+                divider.setBackgroundColor(it)
+            }
+            dividerHeight?.let {
+                divider.layoutParams.height = divider.context.resources.getDimensionPixelOffset(it)
             }
         }
     }
