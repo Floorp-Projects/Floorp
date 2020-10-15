@@ -18,7 +18,6 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -57,11 +56,8 @@ class RegionMiddlewareTest {
             middleware = listOf(middleware)
         )
 
-        assertNull(store.state.search.region)
-
-        store.dispatch(InitAction).joinBlocking()
-
-        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+        middleware.updateJob?.joinBlocking()
         store.waitUntilIdle()
 
         assertNotEquals(RegionState.Default, store.state.search.region)
@@ -77,8 +73,6 @@ class RegionMiddlewareTest {
         val store = BrowserStore(
             middleware = listOf(middleware)
         )
-
-        assertNull(store.state.search.region)
 
         store.dispatch(InitAction).joinBlocking()
 
@@ -97,16 +91,13 @@ class RegionMiddlewareTest {
 
         locationService.region = LocationService.Region("FR", "France")
         runBlocking { regionManager.update() }
-        locationService.region = null
 
         val store = BrowserStore(
             middleware = listOf(middleware)
         )
 
-        assertNull(store.state.search.region)
-
         store.dispatch(InitAction).joinBlocking()
-        dispatcher.advanceUntilIdle()
+        middleware.updateJob?.joinBlocking()
         store.waitUntilIdle()
 
         assertEquals("FR", store.state.search.region!!.home)
@@ -116,7 +107,7 @@ class RegionMiddlewareTest {
         runBlocking { regionManager.update() }
 
         store.dispatch(InitAction).joinBlocking()
-        dispatcher.advanceUntilIdle()
+        middleware.updateJob?.joinBlocking()
         store.waitUntilIdle()
 
         assertEquals("FR", store.state.search.region!!.home)
@@ -125,8 +116,7 @@ class RegionMiddlewareTest {
         clock.advanceBy(1000 * 60 * 60 * 24 * 21)
 
         store.dispatch(InitAction).joinBlocking()
-        dispatcher.advanceUntilIdle()
-        store.waitUntilIdle()
+        middleware.updateJob?.joinBlocking()
         store.waitUntilIdle()
 
         assertEquals("DE", store.state.search.region!!.home)

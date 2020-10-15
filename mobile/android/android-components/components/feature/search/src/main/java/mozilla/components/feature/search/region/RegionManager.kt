@@ -7,6 +7,7 @@ package mozilla.components.feature.search.region
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -43,7 +44,8 @@ internal class RegionManager(
     @VisibleForTesting private val preferences: SharedPreferences = context.getSharedPreferences(
         PREFERENCE_FILE,
         Context.MODE_PRIVATE
-    )
+    ),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var homeRegion: String?
         get() = preferences.getString(PREFERENCE_KEY_HOME_REGION, null)
@@ -110,7 +112,7 @@ internal class RegionManager(
         }
     }
 
-    private suspend fun fetchRegionWithRetry(): LocationService.Region? = withContext(Dispatchers.IO) {
+    private suspend fun fetchRegionWithRetry(): LocationService.Region? = withContext(dispatcher) {
         repeat(MAX_RETRIES) {
             val region = locationService.fetchRegion(readFromCache = false)
             if (region != null) {

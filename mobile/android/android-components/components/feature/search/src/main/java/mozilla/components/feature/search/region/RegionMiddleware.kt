@@ -9,6 +9,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
@@ -29,7 +30,11 @@ class RegionMiddleware(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : Middleware<BrowserState, BrowserAction> {
     @VisibleForTesting
-    internal var regionManager = RegionManager(context, locationService)
+    internal var regionManager = RegionManager(context, locationService, dispatcher = ioDispatcher)
+
+    @VisibleForTesting
+    @Volatile
+    internal var updateJob: Job? = null
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
@@ -37,7 +42,7 @@ class RegionMiddleware(
         action: BrowserAction
     ) {
         if (action is InitAction) {
-            determineRegion(context.store)
+            updateJob = determineRegion(context.store)
         }
 
         next(action)
