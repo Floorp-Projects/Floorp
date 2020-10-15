@@ -3711,6 +3711,12 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
 
   js::jit::CacheIRHealth cih;
   RootedScript script(cx);
+
+  // In the case that we are calling this function from the shell and
+  // the environment variable is not set, AutoSpewChannel automatically
+  // sets and unsets the proper channel for the duration of spewing
+  // a health report.
+  AutoSpewChannel channel(cx, SpewChannel::RateMyCacheIR, script);
   if (!argc) {
     // Calling RateMyCacheIR without any arguments will create health
     // reports for all scripts in the zone.
