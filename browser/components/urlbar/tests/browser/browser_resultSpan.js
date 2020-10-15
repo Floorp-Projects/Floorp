@@ -112,7 +112,7 @@ add_task(async function threeTips() {
   gURLBar.view.close();
 });
 
-// A non-restricting provider with one tip results and many history results.
+// A non-restricting provider with one tip result and many history results.
 add_task(async function oneTip_nonRestricting() {
   let results = Array.from(TEST_RESULTS);
   for (let i = 2; i < 15; i++) {
@@ -193,6 +193,37 @@ add_task(async function threeTips_nonRestricting() {
   });
 
   expectedResults = expectedResults.slice(0, MAX_RESULTS - 3 * (TIP_SPAN - 1));
+
+  let provider = new UrlbarTestUtils.TestProvider({ results });
+  UrlbarProvidersManager.registerProvider(provider);
+
+  let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+  });
+
+  checkResults(context.results, expectedResults);
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+  gURLBar.view.close();
+});
+
+add_task(async function customValue() {
+  let results = [];
+  for (let i = 0; i < 15; i++) {
+    results.push(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: `http://mozilla.org/${i}` }
+      )
+    );
+  }
+
+  results[1].resultSpan = 5;
+
+  let expectedResults = Array.from(results);
+  expectedResults = expectedResults.slice(0, 6);
 
   let provider = new UrlbarTestUtils.TestProvider({ results });
   UrlbarProvidersManager.registerProvider(provider);
