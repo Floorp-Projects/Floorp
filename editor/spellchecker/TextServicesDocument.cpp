@@ -1188,7 +1188,8 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       return rv;
     }
 
-    rv = selection->CollapseInLimiter(itEntry->mNode,
+    RefPtr<nsINode> node = itEntry->mNode;
+    rv = selection->CollapseInLimiter(node,
                                       itEntry->mNodeOffset + itEntry->mLength);
 
     if (NS_FAILED(rv)) {

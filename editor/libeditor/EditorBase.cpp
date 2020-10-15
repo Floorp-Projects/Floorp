@@ -1101,14 +1101,14 @@ nsresult EditorBase::SelectAllInternal() {
   return rv;
 }
 
-NS_IMETHODIMP EditorBase::BeginningOfDocument() {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   // get the root element
-  Element* rootElement = GetRoot();
+  RefPtr<Element> rootElement = GetRoot();
   if (NS_WARN_IF(!rootElement)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -1117,7 +1117,8 @@ NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
   if (!firstNode) {
     // just the root node, set selection to inside the root
-    nsresult rv = SelectionRefPtr()->CollapseInLimiter(rootElement, 0);
+    nsresult rv =
+        MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(rootElement, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
     return rv;
@@ -1125,7 +1126,8 @@ NS_IMETHODIMP EditorBase::BeginningOfDocument() {
 
   if (firstNode->IsText()) {
     // If firstNode is text, set selection to beginning of the text node.
-    nsresult rv = SelectionRefPtr()->CollapseInLimiter(firstNode, 0);
+    nsresult rv =
+        MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(firstNode, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
     return rv;
@@ -1140,7 +1142,7 @@ NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   MOZ_ASSERT(
       parent->ComputeIndexOf(firstNode) == 0,
       "How come the first node isn't the left most child in its parent?");
-  nsresult rv = SelectionRefPtr()->CollapseInLimiter(parent, 0);
+  nsresult rv = MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(parent, 0);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Selection::CollapseInLimiter() failed");
   return rv;
@@ -1173,7 +1175,7 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIContent* lastContent = rootElement;
+  nsCOMPtr<nsIContent> lastContent = rootElement;
   for (nsIContent* child = lastContent->GetLastChild();
        child && (IsTextEditor() || HTMLEditUtils::IsContainerNode(*child));
        child = child->GetLastChild()) {
@@ -1181,8 +1183,9 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
   }
 
   uint32_t length = lastContent->Length();
-  nsresult rv = SelectionRefPtr()->CollapseInLimiter(
-      lastContent, static_cast<int32_t>(length));
+  nsresult rv =
+      MOZ_KnownLive(SelectionRefPtr())
+          ->CollapseInLimiter(lastContent, static_cast<int32_t>(length));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Selection::CollapseInLimiter() failed");
   return rv;
@@ -2693,7 +2696,7 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   if (!mActionListeners.IsEmpty() && length) {
     for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
-          listener->WillDeleteText(&aTextNode, 0, length);
+          listener->WillDeleteText(MOZ_KnownLive(&aTextNode), 0, length);
       if (NS_WARN_IF(Destroyed())) {
         NS_WARNING(
             "nsIEditActionListener::WillDeleteText() failed, but ignored");
@@ -2713,7 +2716,8 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   }
 
   DebugOnly<nsresult> rvIgnored =
-      SelectionRefPtr()->CollapseInLimiter(&aTextNode, aString.Length());
+      MOZ_KnownLive(SelectionRefPtr())
+          ->CollapseInLimiter(MOZ_KnownLive(&aTextNode), aString.Length());
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3243,8 +3247,8 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Set selection.
-  SelectionRefPtr()->CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
-                                       ignoredError);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->CollapseInLimiter(EditorRawDOMPoint(rootElement, 0), ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3669,7 +3673,7 @@ nsresult EditorBase::DeleteSelectionAsAction(
           break;
         }
         ErrorResult error;
-        SelectionRefPtr()->CollapseToStart(error);
+        MOZ_KnownLive(SelectionRefPtr())->CollapseToStart(error);
         if (NS_WARN_IF(Destroyed())) {
           error.SuppressException();
           return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);

@@ -266,7 +266,8 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
       !pointAfterInsertedLineFeed.GetChild(),
       "After inserting text into a text node, pointAfterInsertedLineFeed."
       "GetChild() should be nullptr");
-  rv = SelectionRefPtr()->CollapseInLimiter(pointAfterInsertedLineFeed);
+  rv = MOZ_KnownLive(SelectionRefPtr())
+           ->CollapseInLimiter(pointAfterInsertedLineFeed);
   if (NS_FAILED(rv)) {
     NS_WARNING("Selection::CollapseInLimiter() failed");
     return EditActionIgnored(rv);
@@ -346,7 +347,8 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_ERROR_FAILURE;
   }
   IgnoredErrorResult ignoredError;
-  SelectionRefPtr()->CollapseInLimiter(afterStartContainer, ignoredError);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->CollapseInLimiter(afterStartContainer, ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -590,8 +592,8 @@ EditActionResult TextEditor::HandleInsertText(
           "After inserting text into a text node, pointAfterStringInserted."
           "GetChild() should be nullptr");
       ignoredError = IgnoredErrorResult();
-      SelectionRefPtr()->CollapseInLimiter(pointAfterStringInserted,
-                                           ignoredError);
+      MOZ_KnownLive(SelectionRefPtr())
+          ->CollapseInLimiter(pointAfterStringInserted, ignoredError);
       if (NS_WARN_IF(Destroyed())) {
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }

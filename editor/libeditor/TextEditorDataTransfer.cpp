@@ -105,7 +105,7 @@ nsresult TextEditor::PrepareToInsertContent(
   }
 
   IgnoredErrorResult error;
-  SelectionRefPtr()->CollapseInLimiter(pointToInsert, error);
+  MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(pointToInsert, error);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

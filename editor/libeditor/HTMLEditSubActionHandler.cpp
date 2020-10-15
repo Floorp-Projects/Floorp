@@ -4153,8 +4153,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
   MOZ_ASSERT(newCaretPosition.IsSetAndValid());
 
   DebugOnly<nsresult> rvIgnored =
-      aHTMLEditor.SelectionRefPtr()->CollapseInLimiter(
-          newCaretPosition.ToRawRangeBoundary());
+      MOZ_KnownLive(aHTMLEditor.SelectionRefPtr())
+          ->CollapseInLimiter(newCaretPosition.ToRawRangeBoundary());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Selection::Collapse() failed, but ignored");
   return EditActionHandled();

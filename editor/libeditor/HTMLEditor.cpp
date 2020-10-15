@@ -1724,7 +1724,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     // For all other tags, we insert AFTER the selection
     if (HTMLEditUtils::IsNamedAnchor(aElement)) {
       IgnoredErrorResult ignoredError;
-      SelectionRefPtr()->CollapseToStart(ignoredError);
+      MOZ_KnownLive(SelectionRefPtr())->CollapseToStart(ignoredError);
       if (NS_WARN_IF(Destroyed())) {
         return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -1732,7 +1732,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
                            "Selection::CollapseToStart() failed, but ignored");
     } else {
       IgnoredErrorResult ignoredError;
-      SelectionRefPtr()->CollapseToEnd(ignoredError);
+      MOZ_KnownLive(SelectionRefPtr())->CollapseToEnd(ignoredError);
       if (NS_WARN_IF(Destroyed())) {
         return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -4718,8 +4718,10 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
 
   if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
-    DebugOnly<nsresult> rvIgnored = SelectionRefPtr()->CollapseInLimiter(
-        &aContentToKeep, AssertedCast<int32_t>(firstNodeLength));
+    DebugOnly<nsresult> rvIgnored =
+        MOZ_KnownLive(SelectionRefPtr())
+            ->CollapseInLimiter(&aContentToKeep,
+                                AssertedCast<int32_t>(firstNodeLength));
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -4804,7 +4806,8 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
   EditorRawDOMPoint afterNewElement(EditorRawDOMPoint::After(newElement));
   MOZ_ASSERT(afterNewElement.IsSetAndValid());
   IgnoredErrorResult ignoredError;
-  SelectionRefPtr()->CollapseInLimiter(afterNewElement, ignoredError);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->CollapseInLimiter(afterNewElement, ignoredError);
   if (ignoredError.Failed()) {
     NS_WARNING("Selection::CollapseInLimiter() failed");
     // XXX Even if it succeeded to create new element, this returns error
@@ -4852,7 +4855,8 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    SelectionRefPtr()->CollapseInLimiter(atAnchorContainer, error);
+    MOZ_KnownLive(SelectionRefPtr())
+        ->CollapseInLimiter(atAnchorContainer, error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Selection::CollapseInLimiter() failed");
     return error.StealNSResult();
@@ -4864,7 +4868,8 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    SelectionRefPtr()->CollapseInLimiter(afterAnchorContainer, error);
+    MOZ_KnownLive(SelectionRefPtr())
+        ->CollapseInLimiter(afterAnchorContainer, error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Selection::CollapseInLimiter() failed");
     return error.StealNSResult();
@@ -4882,7 +4887,7 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atRightNode.IsSetAndValid());
-  SelectionRefPtr()->CollapseInLimiter(atRightNode, error);
+  MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(atRightNode, error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();

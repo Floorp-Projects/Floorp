@@ -1805,7 +1805,7 @@ class EditorBase : public nsIEditor,
   /**
    * CollapseSelectionToEnd() collapses the selection to the end of the editor.
    */
-  nsresult CollapseSelectionToEnd() const;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CollapseSelectionToEnd() const;
 
   /**
    * AllowsTransactionsToChangeSelection() returns true if editor allows any
