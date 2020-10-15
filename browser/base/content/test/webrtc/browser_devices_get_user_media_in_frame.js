@@ -6,6 +6,9 @@ SpecialPowers.pushPrefEnv({
   set: [["permissions.delegation.enabled", true]],
 });
 
+// This test has been seen timing out locally in non-opt debug builds.
+requestLongerTimeout(2);
+
 let gShouldObserveSubframes = false;
 
 var gTests = [
