@@ -641,7 +641,7 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
 
   disconnect_all();
 
-  mTransportHandler->Destroy();
+  mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
   mTransportHandler = nullptr;
 
   // we're holding a ref to 'this' that's released by SelfDestruct_m

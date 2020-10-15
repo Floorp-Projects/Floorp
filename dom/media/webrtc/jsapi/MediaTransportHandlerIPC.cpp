@@ -152,15 +152,11 @@ nsresult MediaTransportHandlerIPC::CreateIceCtx(
 }
 
 void MediaTransportHandlerIPC::Destroy() {
-  mInitPromise->Then(
-      mCallbackThread, __func__,
-      [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
-        if (mChild) {
-          MediaTransportChild::Send__delete__(mChild);
-          mChild = nullptr;
-        }
-      },
-      [](const nsCString& aError) {});
+  if (mChild) {
+    MediaTransportChild::Send__delete__(mChild);
+    mChild = nullptr;
+  }
+  delete this;
 }
 
 // We will probably be able to move the proxy lookup stuff into
