@@ -103,7 +103,7 @@ transforms.add_validate(raptor_description_schema)
 @transforms.add
 def set_defaults(config, tests):
     for test in tests:
-        test.setdefault('pageload', 'warm')
+        test.setdefault('pageload', None)
         test.setdefault('run-visual-metrics', False)
         yield test
 
@@ -226,29 +226,38 @@ def handle_keyed_by(config, tests):
 def split_pageload(config, tests):
     # Split test by pageload type (cold, warm)
     for test in tests:
-        pageload = test.pop('pageload', 'warm')
+        mozharness = test.setdefault('mozharness', {})
+        extra_options = mozharness.setdefault('extra-options', [])
 
-        if pageload not in ('cold', 'both'):
+        pageload = test.pop('pageload', None)
+
+        if not pageload or '--chimera' in extra_options:
             yield test
             continue
 
-        if pageload == 'both':
-            orig = deepcopy(test)
-            yield orig
+        if pageload in ('warm', 'both'):
+            # make a deepcopy if 'both', otherwise use the test object itself
+            warmtest = deepcopy(test) if pageload == 'both' else test
 
-        assert 'subtest' in test
-        test['description'] += " using cold pageload"
+            warmtest['warm'] = True
+            group, symbol = split_symbol(warmtest['treeherder-symbol'])
+            symbol += '-w'
+            warmtest['treeherder-symbol'] = join_symbol(group, symbol)
+            yield warmtest
 
-        test['cold'] = True
+        if pageload in ('cold', 'both'):
+            assert 'subtest' in test
 
-        test['max-run-time'] = 3000
-        test['test-name'] += '-cold'
-        test['try-name'] += '-cold'
+            test['description'] += " using cold pageload"
+            test['cold'] = True
+            test['max-run-time'] = 3000
+            test['test-name'] += '-cold'
+            test['try-name'] += '-cold'
 
-        group, symbol = split_symbol(test['treeherder-symbol'])
-        symbol += '-c'
-        test['treeherder-symbol'] = join_symbol(group, symbol)
-        yield test
+            group, symbol = split_symbol(test['treeherder-symbol'])
+            symbol += '-c'
+            test['treeherder-symbol'] = join_symbol(group, symbol)
+            yield test
 
 
 @transforms.add
@@ -287,8 +296,10 @@ def split_page_load_by_url(config, tests):
         group, symbol = split_symbol(test['treeherder-symbol'])
 
         symbol = subtest_symbol
-        if test.get("cold"):
+        if test.get('cold'):
             symbol += "-c"
+        elif test.pop('warm', False):
+            symbol += "-w"
 
         test['treeherder-symbol'] = join_symbol(group, symbol)
         test['description'] += " on {}".format(subtest)
