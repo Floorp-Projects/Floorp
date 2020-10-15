@@ -769,22 +769,6 @@ class MOZ_RAII CacheIRCompiler {
            !allocator.isDeadAfterInstruction(objId);
   }
 
-  bool emitLoadTypedElementExistsResult(ObjOperandId objId,
-                                        Int32OperandId indexId,
-                                        TypedThingLayout layout);
-
-  bool emitLoadTypedElementResult(ObjOperandId objId, Int32OperandId indexId,
-                                  TypedThingLayout layout,
-                                  Scalar::Type elementType, bool handleOOB,
-                                  bool allowDoubleForUint32);
-
-  bool emitStoreTypedElement(ObjOperandId objId, TypedThingLayout layout,
-                             Scalar::Type elementType, Int32OperandId indexId,
-                             uint32_t rhsId, bool handleOOB);
-
-  void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceType type,
-                                         const Address& dest, Register scratch);
-
   void emitRegisterEnumerator(Register enumeratorsList, Register iter,
                               Register scratch);
 
@@ -1254,12 +1238,6 @@ class CacheIRStubInfo {
 
 template <typename T>
 void TraceCacheIRStub(JSTracer* trc, T* stub, const CacheIRStubInfo* stubInfo);
-
-void LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout,
-                        Register obj, Register result);
-
-void LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout,
-                          Register obj, Register result);
 
 }  // namespace jit
 }  // namespace js
