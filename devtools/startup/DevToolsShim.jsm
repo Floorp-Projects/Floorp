@@ -309,7 +309,7 @@ const DevToolsShim = {
  * therefore DevTools should always be available when they are called.
  */
 const webExtensionsMethods = [
-  "createTargetForTab",
+  "createDescriptorForTab",
   "createWebExtensionInspectedWindowFront",
   "getTargetForTab",
   "getTheme",

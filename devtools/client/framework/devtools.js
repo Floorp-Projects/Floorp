@@ -679,8 +679,8 @@ DevTools.prototype = {
    * web-extensions need to use dedicated instances of Target and cannot reuse the
    * cached instances managed by DevTools target factory.
    */
-  createTargetForTab: function(tab) {
-    return TargetFactory.createTargetForTab(tab);
+  createDescriptorForTab: function(tab) {
+    return TargetFactory.createDescriptorForTab(tab);
   },
 
   /**
