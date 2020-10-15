@@ -125,7 +125,8 @@ EffectSet* EffectSet::GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame) {
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSetForEffect(const KeyframeEffect* aEffect) {
+EffectSet* EffectSet::GetEffectSetForEffect(
+    const dom::KeyframeEffect* aEffect) {
   NonOwningAnimationTarget target = aEffect->GetAnimationTarget();
   if (!target) {
     return nullptr;
