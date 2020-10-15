@@ -28,6 +28,7 @@ using namespace js;
 JSObject* AbstractGeneratorObject::create(JSContext* cx,
                                           AbstractFramePtr frame) {
   MOZ_ASSERT(frame.isGeneratorFrame());
+  MOZ_ASSERT(frame.script()->nfixed() == 0);
   MOZ_ASSERT(!frame.isConstructing());
 
   RootedFunction fun(cx, frame.callee());
@@ -49,7 +50,7 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   if (frame.script()->needsArgsObj()) {
     genObj->setArgsObj(frame.argsObj());
   }
-  genObj->clearStackStorage();
+  genObj->clearExpressionStack();
 
   if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
     return nullptr;
@@ -64,33 +65,45 @@ void AbstractGeneratorObject::trace(JSTracer* trc) {
 
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
                                       AbstractFramePtr frame, jsbytecode* pc,
-                                      unsigned nvalues) {
+                                      Value* vp, unsigned nvalues) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
              JSOp(*pc) == JSOp::Await);
 
   auto genObj = obj.as<AbstractGeneratorObject>();
-  MOZ_ASSERT(!genObj->hasStackStorage() || genObj->isStackStorageEmpty());
+  MOZ_ASSERT(!genObj->hasExpressionStack() || genObj->isExpressionStackEmpty());
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Await, genObj->callee().isAsync());
   MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Yield, genObj->callee().isGenerator());
 
+  ArrayObject* stack = nullptr;
   if (nvalues > 0) {
-    ArrayObject* stack = nullptr;
-    if (genObj->hasStackStorage()) {
-      stack = &genObj->stackStorage();
-    } else {
-      stack = NewDenseEmptyArray(cx);
+    do {
+      if (genObj->hasExpressionStack()) {
+        MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() == 0);
+        auto result = genObj->expressionStack().setOrExtendDenseElements(
+            cx, 0, vp, nvalues, ShouldUpdateTypes::DontUpdate);
+        if (result == DenseElementResult::Success) {
+          MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() ==
+                     nvalues);
+          break;
+        }
+        if (result == DenseElementResult::Failure) {
+          return false;
+        }
+      }
+
+      stack = NewDenseCopiedArray(cx, nvalues, vp);
       if (!stack) {
         return false;
       }
-      genObj->setStackStorage(*stack);
-    }
-    if (!frame.saveGeneratorSlots(cx, nvalues, stack)) {
-      return false;
-    }
+    } while (false);
   }
 
   genObj->setResumeIndex(pc);
   genObj->setEnvironmentChain(*frame.environmentChain());
+  if (stack) {
+    genObj->setExpressionStack(*stack);
+  }
+
   return true;
 }
 
@@ -114,11 +127,21 @@ AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
   Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
   Value genValue = callObj.getSlot(shape->slot());
 
-  // If the `Generator; SetAliasedVar ".generator"; InitialYield` bytecode
+  // If the `generator; setaliasedvar ".generator"; initialyield` bytecode
   // sequence has not run yet, genValue is undefined.
   return genValue.isObject()
              ? &genValue.toObject().as<AbstractGeneratorObject>()
              : nullptr;
+}
+
+void js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame) {
+  CallObject& callObj = frame.callObj();
+
+  // Get the generator object stored on the scope chain and close it.
+  Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
+  auto& genObj =
+      callObj.getSlot(shape->slot()).toObject().as<AbstractGeneratorObject>();
+  genObj.setClosed();
 }
 
 bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
@@ -157,13 +180,13 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
     activation.regs().fp()->initArgsObj(genObj->argsObj());
   }
 
-  if (genObj->hasStackStorage() && !genObj->isStackStorageEmpty()) {
-    JSScript* script = activation.regs().fp()->script();
-    ArrayObject* storage = &genObj->stackStorage();
-    uint32_t len = storage->getDenseInitializedLength();
-    activation.regs().fp()->restoreGeneratorSlots(storage);
-    activation.regs().sp += len - script->nfixed();
-    storage->setDenseInitializedLength(0);
+  if (genObj->hasExpressionStack() && !genObj->isExpressionStackEmpty()) {
+    uint32_t len = genObj->expressionStack().getDenseInitializedLength();
+    MOZ_ASSERT(activation.regs().spForStackDepth(len));
+    const Value* src = genObj->expressionStack().getDenseElements();
+    mozilla::PodCopy(activation.regs().sp, src, len);
+    activation.regs().sp += len;
+    genObj->expressionStack().setDenseInitializedLength(0);
   }
 
   JSScript* script = callee->nonLazyScript();

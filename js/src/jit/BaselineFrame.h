@@ -195,9 +195,6 @@ class BaselineFrame {
                     BaselineFrame::Size() + offsetOfArg(0));
   }
 
-  MOZ_MUST_USE bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
-                                       ArrayObject* dest) const;
-
  private:
   Value* evalNewTargetAddress() const {
     MOZ_ASSERT(isEvalFrame());

@@ -1437,13 +1437,33 @@ JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
                    uint32_t frameSize, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
-             JSOp(*pc) == JSOp::Await);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::Yield || JSOp(*pc) == JSOp::Await);
 
-  // Minus one because we don't want to include the return value.
-  uint32_t numSlots = frame->numValueSlots(frameSize) - 1;
-  MOZ_ASSERT(numSlots >= frame->script()->nfixed());
-  return AbstractGeneratorObject::suspend(cx, obj, frame, pc, numSlots);
+  uint32_t numValueSlots = frame->numValueSlots(frameSize);
+
+  MOZ_ASSERT(numValueSlots > frame->script()->nfixed());
+  uint32_t stackDepth = numValueSlots - frame->script()->nfixed();
+
+  // Return value is still on the stack.
+  MOZ_ASSERT(stackDepth >= 1);
+
+  // The expression stack slots are stored on the stack in reverse order, so
+  // we copy them to a Vector and pass a pointer to that instead. We use
+  // stackDepth - 1 because we don't want to include the return value.
+  RootedValueVector exprStack(cx);
+  if (!exprStack.reserve(stackDepth - 1)) {
+    return false;
+  }
+
+  size_t firstSlot = numValueSlots - stackDepth;
+  for (size_t i = 0; i < stackDepth - 1; i++) {
+    exprStack.infallibleAppend(*frame->valueSlot(firstSlot + i));
+  }
+
+  MOZ_ASSERT(exprStack.length() == stackDepth - 1);
+
+  return AbstractGeneratorObject::normalSuspend(
+      cx, obj, frame, pc, exprStack.begin(), stackDepth - 1);
 }
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
