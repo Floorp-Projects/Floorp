@@ -10,14 +10,14 @@
     android:layout_width="match_parent"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:layout_marginStart="@dimen/top_bar_alignment_margin_start">
     <ImageView
         android:id="@+id/add_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:importantForAccessibility="no"
         android:textAlignment="textStart"
-        android:layout_marginStart="@dimen/radio_button_preference_horizontal"
         app:srcCompat="@drawable/ic_new"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -27,7 +27,7 @@
         android:textColor="?primaryText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/radio_button_drawable_padding"
+        android:layout_marginStart="@dimen/radio_button_padding_horizontal"
         android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
         android:text="@string/search_engine_add_custom_search_engine_title"
         android:textSize="16sp"
