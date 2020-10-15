@@ -25,7 +25,6 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
   nsresult CreateIceCtx(const std::string& aName,
                         const nsTArray<dom::RTCIceServer>& aIceServers,
                         dom::RTCIceTransportPolicy aIcePolicy) override;
-  void Destroy() override;
 
   // We will probably be able to move the proxy lookup stuff into
   // this class once we move mtransport to its own process.
@@ -76,6 +75,7 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
 
  private:
   friend class MediaTransportChild;
+  void Destroy() override;
 
   // We do not own this; it will tell us when it is going away.
   dom::PMediaTransportChild* mChild = nullptr;
