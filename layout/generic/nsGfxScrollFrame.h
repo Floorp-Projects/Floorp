@@ -95,8 +95,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // wrapped in the async zoom container, if we're building one.
   // It should not be called with an ASR setter on the stack, as the
   // top-layer items handle setting up their own ASRs.
-  nsDisplayWrapList* MaybeCreateTopLayerItems(nsDisplayListBuilder* aBuilder,
-                                              bool* aIsOpaque);
+  void MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
+                             const nsDisplayListSet& aLists);
 
   void AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                            const nsDisplayListSet& aLists, bool aCreateLayer,
