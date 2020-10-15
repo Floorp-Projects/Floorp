@@ -3,15 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
-
-// XXX: This actor doesn't expose any methods and events yet, but will in the future
-// (e.g. resource-available-form and resource-destroyed-form).
+const { Arg, generateActorSpec } = require("devtools/shared/protocol");
 
 const workerTargetSpec = generateActorSpec({
   typeName: "workerTarget",
   methods: {},
-  events: {},
+  events: {
+    "resource-available-form": {
+      type: "resource-available-form",
+      resources: Arg(0, "array:json"),
+    },
+  },
 });
 
 exports.workerTargetSpec = workerTargetSpec;
