@@ -455,13 +455,20 @@ var gPrivacyPane = {
       "https-only-prefs";
     link.setAttribute("href", httpsOnlyURL);
 
-    setSyncFromPrefListener("httpsOnlyRadioGroup", () =>
+    // Set radio-value based on the pref value
+    this.syncFromHttpsOnlyPref();
+
+    // Create event listener for when the user clicks
+    // on one of the radio buttons
+    setEventListener(
+      "httpsOnlyRadioGroup",
+      "command",
+      this.syncToHttpsOnlyPref
+    );
+    // Update radio-value when the pref changes
+    Preferences.get("dom.security.https_only_mode").on("change", () =>
       this.syncFromHttpsOnlyPref()
     );
-    setSyncToPrefListener("httpsOnlyRadioGroup", () =>
-      this.syncToHttpsOnlyPref()
-    );
-
     Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
       this.syncFromHttpsOnlyPref()
     );
