@@ -27,7 +27,6 @@
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/ScalarType.h"            // js::Scalar::Type
 #include "vm/SharedStencil.h"         // GCThingIndex
-#include "wasm/TypedObject.h"
 
 namespace js {
 
@@ -598,12 +597,12 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_getelem();
   AbortReasonOr<Ok> jsop_getelem_dense(MDefinition* obj, MDefinition* index);
   AbortReasonOr<Ok> jsop_getelem_typed(MDefinition* obj, MDefinition* index,
-                                       ScalarTypeDescr::Type arrayType);
+                                       Scalar::Type arrayType);
   AbortReasonOr<Ok> jsop_setelem();
   AbortReasonOr<Ok> initOrSetElemDense(
       TemporaryTypeSet::DoubleConversion conversion, MDefinition* object,
       MDefinition* index, MDefinition* value, bool writeHole, bool* emitted);
-  AbortReasonOr<Ok> jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
+  AbortReasonOr<Ok> jsop_setelem_typed(Scalar::Type arrayType,
                                        MDefinition* object, MDefinition* index,
                                        MDefinition* value);
   AbortReasonOr<Ok> jsop_length();
