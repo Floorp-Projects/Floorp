@@ -248,22 +248,42 @@ class Selection final : public nsSupportsWeakReference,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL methods
-  nsINode* GetAnchorNode() const {
+  nsINode* GetAnchorNode(CallerType aCallerType = CallerType::System) const {
     const RangeBoundary& anchor = AnchorRef();
-    return anchor.IsSet() ? anchor.Container() : nullptr;
+    nsINode* anchorNode = anchor.IsSet() ? anchor.Container() : nullptr;
+    if (!anchorNode || aCallerType == CallerType::System ||
+        !anchorNode->ChromeOnlyAccess()) {
+      return anchorNode;
+    }
+    // anchor is nsIContent as ChromeOnlyAccess is nsIContent-only
+    return anchorNode->AsContent()->FindFirstNonChromeOnlyAccessContent();
   }
-  uint32_t AnchorOffset() const {
+  uint32_t AnchorOffset(CallerType aCallerType = CallerType::System) const {
     const RangeBoundary& anchor = AnchorRef();
+    if (aCallerType != CallerType::System && anchor.IsSet() &&
+        anchor.Container()->ChromeOnlyAccess()) {
+      return 0;
+    }
     const Maybe<uint32_t> offset =
         anchor.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
     return offset ? *offset : 0;
   }
-  nsINode* GetFocusNode() const {
+  nsINode* GetFocusNode(CallerType aCallerType = CallerType::System) const {
     const RangeBoundary& focus = FocusRef();
-    return focus.IsSet() ? focus.Container() : nullptr;
+    nsINode* focusNode = focus.IsSet() ? focus.Container() : nullptr;
+    if (!focusNode || aCallerType == CallerType::System ||
+        !focusNode->ChromeOnlyAccess()) {
+      return focusNode;
+    }
+    // focus is nsIContent as ChromeOnlyAccess is nsIContent-only
+    return focusNode->AsContent()->FindFirstNonChromeOnlyAccessContent();
   }
-  uint32_t FocusOffset() const {
+  uint32_t FocusOffset(CallerType aCallerType = CallerType::System) const {
     const RangeBoundary& focus = FocusRef();
+    if (aCallerType != CallerType::System && focus.IsSet() &&
+        focus.Container()->ChromeOnlyAccess()) {
+      return 0;
+    }
     const Maybe<uint32_t> offset =
         focus.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
     return offset ? *offset : 0;
