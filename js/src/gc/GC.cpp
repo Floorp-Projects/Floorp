@@ -4339,6 +4339,21 @@ IncrementalProgress GCRuntime::markWeakReferences(
 
   // We may have already entered weak marking mode.
   if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
+    // Do not rely on the information about not-yet-marked weak keys that have
+    // been collected by barriers. Clear out the gcWeakKeys entries and rebuild
+    // the full table. Note that this a cross-zone operation; delegate zone
+    // entries will be populated by map zone traversals, so everything needs to
+    // be cleared first, then populated.
+    if (!marker.incrementalWeakMapMarkingEnabled) {
+      for (ZoneIterT zone(this); !zone.done(); zone.next()) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        MOZ_ASSERT(zone->gcWeakKeys().count() == 0);
+        if (!zone->gcWeakKeys().clear()) {
+          oomUnsafe.crash("clearing weak keys when entering weak marking mode");
+        }
+      }
+    }
+
     for (ZoneIterT zone(this); !zone.done(); zone.next()) {
       if (zone->enterWeakMarkingMode(&marker, budget) == NotFinished) {
         MOZ_ASSERT(marker.incrementalWeakMapMarkingEnabled);
