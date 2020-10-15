@@ -249,14 +249,14 @@ nsresult DateTimeFormat::FormatUDateTime(
     // Get the time style for the formatter.
     nsAutoString patternTime;
     switch (aTimeFormatSelector) {
-      case kTimeFormatSeconds:
+      case kTimeFormatLong:
         rv = OSPreferences::GetInstance()->GetDateTimePattern(
             mozIOSPreferences::dateTimeFormatStyleNone,
             mozIOSPreferences::dateTimeFormatStyleLong,
             nsDependentCString(mLocale->get()), patternTime);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
-      case kTimeFormatNoSeconds:
+      case kTimeFormatShort:
         rv = OSPreferences::GetInstance()->GetDateTimePattern(
             mozIOSPreferences::dateTimeFormatStyleNone,
             mozIOSPreferences::dateTimeFormatStyleShort,

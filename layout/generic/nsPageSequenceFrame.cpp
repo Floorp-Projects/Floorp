@@ -376,7 +376,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   nsAutoString formattedDateString;
   PRTime now = PR_Now();
   if (NS_SUCCEEDED(DateTimeFormat::FormatPRTime(
-          kDateFormatShort, kTimeFormatNoSeconds, now, formattedDateString))) {
+          kDateFormatShort, kTimeFormatShort, now, formattedDateString))) {
     SetDateTimeStr(formattedDateString);
   }
 
