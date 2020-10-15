@@ -1109,38 +1109,6 @@ bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
                                    mozilla::Some(numNewSlotsOffset));
 }
 
-bool BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
-    ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
-    ReferenceType type, ValOperandId rhsId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Address offsetAddr = stubAddress(offsetOffset);
-
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch1, saveRegs)) {
-    return false;
-  }
-
-  // Compute the address being written to.
-  LoadTypedThingData(masm, layout, obj, scratch1);
-  masm.addPtr(offsetAddr, scratch1);
-  Address dest(scratch1, 0);
-
-  emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
-  emitPostBarrierSlot(obj, val, scratch1);
-
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
                                                     Int32OperandId indexId,
                                                     ValOperandId rhsId) {
