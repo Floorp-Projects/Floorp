@@ -28,10 +28,7 @@ async function createLocalClient() {
   return client;
 }
 
-async function initResourceWatcherAndTarget(
-  tab,
-  { listenForWorkers = false } = {}
-) {
+async function initResourceWatcherAndTarget(tab) {
   const { TargetList } = require("devtools/shared/resources/target-list");
   const {
     ResourceWatcher,
@@ -49,9 +46,6 @@ async function initResourceWatcherAndTarget(
 
   const target = await descriptor.getTarget();
   const targetList = new TargetList(client.mainRoot, target);
-  if (listenForWorkers) {
-    targetList.listenForWorkers = true;
-  }
   await targetList.startListening();
 
   // Now create a ResourceWatcher

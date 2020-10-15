@@ -412,7 +412,7 @@ function makeDebuggeeValue(targetActor, value) {
     }
   }
   const dbgGlobal = targetActor.dbg.makeGlobalObjectReference(
-    targetActor.window || targetActor.workerGlobal
+    targetActor.window
   );
   return dbgGlobal.makeDebuggeeValue(value);
 }

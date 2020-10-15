@@ -54,7 +54,7 @@ DevToolsServer.createRootActor = function() {
 // that, we handle a Map of the different connections, keyed by forwarding prefix.
 const connections = new Map();
 
-this.addEventListener("message", async function(event) {
+this.addEventListener("message", function(event) {
   const packet = JSON.parse(event.data);
   switch (packet.type) {
     case "connect":
@@ -64,11 +64,7 @@ this.addEventListener("message", async function(event) {
       const connection = DevToolsServer.connectToParent(forwardingPrefix, this);
 
       // Step 4: Create a WorkerTarget actor.
-      const workerTargetActor = new WorkerTargetActor(
-        connection,
-        global,
-        packet.workerDebuggerData
-      );
+      const workerTargetActor = new WorkerTargetActor(connection, global);
       // Make the worker manage itself so it is put in a Pool and assigned an actorID.
       workerTargetActor.manage(workerTargetActor);
 
@@ -84,7 +80,6 @@ this.addEventListener("message", async function(event) {
       // it that a connection has been established.
       connections.set(forwardingPrefix, {
         connection,
-        workerTargetActor,
       });
 
       postMessage(
@@ -95,36 +90,6 @@ this.addEventListener("message", async function(event) {
         })
       );
 
-      // We might receive data to watch.
-      if (packet.options?.watchedData) {
-        const promises = [];
-        for (const [type, entries] of Object.entries(
-          packet.options.watchedData
-        )) {
-          promises.push(workerTargetActor.addWatcherDataEntry(type, entries));
-        }
-        await Promise.all(promises);
-      }
-
-      break;
-
-    case "add-watcher-data-entry":
-      await connections
-        .get(packet.forwardingPrefix)
-        .workerTargetActor.addWatcherDataEntry(
-          packet.dataEntryType,
-          packet.entries
-        );
-      postMessage(JSON.stringify({ type: "watcher-data-entry-added" }));
-      break;
-
-    case "remove-watcher-data-entry":
-      await connections
-        .get(packet.forwardingPrefix)
-        .workerTargetActor.removeWatcherDataEntry(
-          packet.dataEntryType,
-          packet.entries
-        );
       break;
 
     case "disconnect":
