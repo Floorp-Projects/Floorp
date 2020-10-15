@@ -12873,24 +12873,16 @@ nsresult FileManager::SyncDeleteFile(const int64_t aId) {
   }
 
   const auto directory = GetDirectory();
-  if (NS_WARN_IF(!directory)) {
-    return NS_ERROR_FAILURE;
-  }
+  IDB_TRY(OkIf(directory), NS_ERROR_FAILURE);
 
   const auto journalDirectory = GetJournalDirectory();
-  if (NS_WARN_IF(!journalDirectory)) {
-    return NS_ERROR_FAILURE;
-  }
+  IDB_TRY(OkIf(journalDirectory), NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIFile> file = GetFileForId(directory, aId);
-  if (NS_WARN_IF(!file)) {
-    return NS_ERROR_FAILURE;
-  }
+  const nsCOMPtr<nsIFile> file = GetFileForId(directory, aId);
+  IDB_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIFile> journalFile = GetFileForId(journalDirectory, aId);
-  if (NS_WARN_IF(!journalFile)) {
-    return NS_ERROR_FAILURE;
-  }
+  const nsCOMPtr<nsIFile> journalFile = GetFileForId(journalDirectory, aId);
+  IDB_TRY(OkIf(journalFile), NS_ERROR_FAILURE);
 
   return SyncDeleteFile(*file, *journalFile);
 }
@@ -12900,16 +12892,10 @@ nsresult FileManager::SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile) {
       EnforcingQuota() ? QuotaManager::Get() : nullptr;
   MOZ_ASSERT_IF(EnforcingQuota(), quotaManager);
 
-  nsresult rv = DeleteFile(aFile, quotaManager, Type(), Group(), Origin(),
-                           Idempotency::No);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(DeleteFile(aFile, quotaManager, Type(), Group(), Origin(),
+                     Idempotency::No));
 
-  rv = aJournalFile.Remove(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aJournalFile.Remove(false));
 
   return NS_OK;
 }
