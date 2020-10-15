@@ -145,6 +145,7 @@ class GeckoEngineSession(
         if (initialLoad) {
             initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
         }
+        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
         geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value, additionalHeaders)
     }
 
@@ -152,6 +153,7 @@ class GeckoEngineSession(
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
+        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
         when (encoding) {
             "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
             else -> geckoSession.loadString(data, mimeType)

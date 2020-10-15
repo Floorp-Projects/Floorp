@@ -90,6 +90,7 @@ typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
+@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
 class GeckoEngineSessionTest {
 
     private lateinit var runtime: GeckoRuntime
