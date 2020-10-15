@@ -527,6 +527,9 @@ var UrlbarUtils = {
    *          dropdown.
    */
   getSpanForResult(result) {
+    if (result.resultSpan) {
+      return result.resultSpan;
+    }
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL:
       case UrlbarUtils.RESULT_TYPE.BOOKMARKS:
