@@ -115,15 +115,14 @@ GamepadManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void GamepadManager::StopMonitoring() {
-  for (auto& channelChild : mChannelChildren) {
-    PGamepadEventChannelChild::Send__delete__(channelChild);
-    channelChild = nullptr;
+  if (mChannelChild) {
+    PGamepadEventChannelChild::Send__delete__(mChannelChild);
+    mChannelChild = nullptr;
   }
   if (gfx::VRManagerChild::IsCreated()) {
     gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
     vm->SendControllerListenerRemoved();
   }
-  mChannelChildren.Clear();
   mGamepads.Clear();
 }
 
@@ -143,7 +142,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // IPDL child has not been created
-  if (mChannelChildren.IsEmpty()) {
+  if (!mChannelChild) {
     PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
     if (NS_WARN_IF(!actor)) {
       // We are probably shutting down.
@@ -156,7 +155,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
       return;
     }
 
-    mChannelChildren.AppendElement(child);
+    mChannelChild = child;
 
     if (gfx::VRManagerChild::IsCreated()) {
       // Construct VRManagerChannel and ask adding the connected
@@ -637,10 +636,10 @@ already_AddRefed<Promise> GamepadManager::VibrateHaptic(
                               mPromiseID);
       }
     } else {
-      for (const auto& channelChild : mChannelChildren) {
-        channelChild->AddPromise(mPromiseID, promise);
-        channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
-                                        aIntensity, aDuration, mPromiseID);
+      if (mChannelChild) {
+        mChannelChild->AddPromise(mPromiseID, promise);
+        mChannelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
+                                         aIntensity, aDuration, mPromiseID);
       }
     }
   }
@@ -663,8 +662,8 @@ void GamepadManager::StopHaptics() {
         vm->SendStopVibrateHaptic(index);
       }
     } else {
-      for (auto& channelChild : mChannelChildren) {
-        channelChild->SendStopVibrateHaptic(gamepadIndex);
+      if (mChannelChild) {
+        mChannelChild->SendStopVibrateHaptic(gamepadIndex);
       }
     }
   }
@@ -684,11 +683,11 @@ already_AddRefed<Promise> GamepadManager::SetLightIndicatorColor(
       if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {
         MOZ_ASSERT(false && "We don't support light indicator in VR.");
       } else {
-        for (auto& channelChild : mChannelChildren) {
-          channelChild->AddPromise(mPromiseID, promise);
-          channelChild->SendLightIndicatorColor(aControllerIdx,
-                                                aLightColorIndex, aRed, aGreen,
-                                                aBlue, mPromiseID);
+        if (mChannelChild) {
+          mChannelChild->AddPromise(mPromiseID, promise);
+          mChannelChild->SendLightIndicatorColor(aControllerIdx,
+                                                 aLightColorIndex, aRed, aGreen,
+                                                 aBlue, mPromiseID);
         }
       }
     }

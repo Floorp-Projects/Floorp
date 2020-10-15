@@ -119,7 +119,7 @@ class GamepadManager final : public nsIObserver {
   // true when shutdown has begun
   bool mShuttingDown;
 
-  nsTArray<RefPtr<GamepadEventChannelChild>> mChannelChildren;
+  RefPtr<GamepadEventChannelChild> mChannelChild;
 
  private:
   nsresult Init();
