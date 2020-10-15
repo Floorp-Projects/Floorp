@@ -98,10 +98,6 @@ static StaticRefPtr<IdleTaskRunner> sICCRunner;
 static nsITimer* sFullGCTimer;
 static StaticRefPtr<IdleTaskRunner> sInterSliceGCRunner;
 
-static TimeStamp sLastCCEndTime;
-
-static TimeStamp sLastForgetSkippableCycleEndTime;
-
 static TimeStamp sCurrentGCStartTime;
 
 static CCRunnerState sCCRunnerState = CCRunnerState::Inactive;
@@ -1315,8 +1311,9 @@ void CycleCollectorStats::SendTelemetry(TimeDuration aCCNowDuration) const {
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_MAX_PAUSE,
                         mMaxSliceTime.ToMilliseconds());
 
-  if (!sLastCCEndTime.IsNull()) {
-    TimeDuration timeBetween = TimeBetween(sLastCCEndTime, mBeginTime);
+  TimeStamp lastCCEndTime = sScheduler.GetLastCCEndTime();
+  if (!lastCCEndTime.IsNull()) {
+    TimeDuration timeBetween = TimeBetween(lastCCEndTime, mBeginTime);
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN,
                           timeBetween.ToSeconds());
   }
@@ -1582,7 +1579,7 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   sCCStats.MaybeNotifyStats(aResults, ccNowDuration, cleanups);
 
   // Update global state to indicate we have just run a cycle collection.
-  sLastCCEndTime = endCCTimeStamp;
+  sScheduler.NoteCCEnd(endCCTimeStamp);
   sNeedsFullCC = false;
   sNeedsGCAfterCC = false;
   sCCStats.Clear();
@@ -1664,7 +1661,7 @@ void ShrinkingGCTimerFired(nsITimer* aTimer, void* aClosure) {
 static bool ShouldTriggerCC(uint32_t aSuspected) {
   return sNeedsFullCC || aSuspected > kCCPurpleLimit ||
          (aSuspected > kCCForcedPurpleLimit &&
-          TimeUntilNow(sLastCCEndTime) > kCCForced);
+          TimeUntilNow(sScheduler.GetLastCCEndTime()) > kCCForced);
 }
 
 static inline bool ShouldFireForgetSkippable(uint32_t aSuspected) {
@@ -1712,6 +1709,8 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
   }
 
   bool didDoWork = false;
+
+  // Either we have run a CC slice, or we have decided no CC is needed.
   bool finished = false;
 
   uint32_t suspected = nsCycleCollector_suspectedCount();
@@ -1788,8 +1787,8 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       }
 
       // We are in the final timer fire and still meet the conditions for
-      // triggering a CC. Let RunCycleCollectorSlice finish the current IGC, if
-      // any because that will allow us to include the GC time in the CC pause.
+      // triggering a CC. Let RunCycleCollectorSlice finish the current IGC if
+      // any, because that will allow us to include the GC time in the CC pause.
       nsJSContext::RunCycleCollectorSlice(aDeadline);
       didDoWork = true;
       finished = true;
@@ -1803,7 +1802,9 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
     sPreviousSuspectedCount = 0;
     nsJSContext::KillCCRunner();
     if (!didDoWork) {
-      sLastForgetSkippableCycleEndTime = TimeStamp::Now();
+      // The CC was abandoned without running a slice, so we only did forget
+      // skippables. Prevent running another cycle soon.
+      sScheduler.NoteForgetSkippableOnlyCycle();
     }
   }
 
@@ -1984,26 +1985,8 @@ void nsJSContext::MaybePokeCC() {
     return;
   }
 
-  // Don't run consecutive CCs too often.
-  if (sCleanupsSinceLastGC && !sLastCCEndTime.IsNull()) {
-    TimeDuration sinceLastCCEnd = TimeUntilNow(sLastCCEndTime);
-    if (sinceLastCCEnd < kCCDelay) {
-      return;
-    }
-  }
-
-  // If GC hasn't run recently and forget skippable only cycle was run,
-  // don't start a new cycle too soon.
-  if ((sCleanupsSinceLastGC > kMajorForgetSkippableCalls) &&
-      !sLastForgetSkippableCycleEndTime.IsNull()) {
-    TimeDuration sinceLastForgetSkippableCycle =
-        TimeUntilNow(sLastForgetSkippableCycleEndTime);
-    if (sinceLastForgetSkippableCycle < kTimeBetweenForgetSkippableCycles) {
-      return;
-    }
-  }
-
-  if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+  if (sScheduler.ShouldScheduleCC(sCleanupsSinceLastGC) &&
+      ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
@@ -2199,8 +2182,6 @@ void nsJSContext::LikelyShortLivingObjectCreated() {
 void mozilla::dom::StartupJSEnvironment() {
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sShrinkingGCTimer = sFullGCTimer = nullptr;
-  sLastCCEndTime = TimeStamp();
-  sLastForgetSkippableCycleEndTime = TimeStamp();
   sHasRunGC = false;
   sCCollectedWaitingForGC = 0;
   sCCollectedZonesWaitingForGC = 0;
