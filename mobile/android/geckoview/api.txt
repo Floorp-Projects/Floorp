@@ -777,6 +777,8 @@ package org.mozilla.geckoview {
     field public static final int FINDER_FIND_LINKS_ONLY = 8;
     field public static final int FINDER_FIND_MATCH_CASE = 2;
     field public static final int FINDER_FIND_WHOLE_WORD = 4;
+    field public static final int HEADER_FILTER_CORS_SAFELISTED = 1;
+    field public static final int HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
     field public static final int LOAD_FLAGS_ALLOW_POPUPS = 8;
     field public static final int LOAD_FLAGS_BYPASS_CACHE = 1;
     field public static final int LOAD_FLAGS_BYPASS_CLASSIFIER = 16;
@@ -859,6 +861,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSession.Loader data(@NonNull byte[], @Nullable String);
     method @NonNull public GeckoSession.Loader data(@NonNull String, @Nullable String);
     method @NonNull public GeckoSession.Loader flags(int);
+    method @NonNull public GeckoSession.Loader headerFilter(int);
     method @NonNull public GeckoSession.Loader referrer(@NonNull GeckoSession);
     method @NonNull public GeckoSession.Loader referrer(@NonNull Uri);
     method @NonNull public GeckoSession.Loader referrer(@NonNull String);

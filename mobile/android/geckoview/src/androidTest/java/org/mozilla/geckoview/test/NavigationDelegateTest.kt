@@ -1372,7 +1372,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     private fun loadUriHeaderTest(headers: Map<String?,String?>,
-                                  additional: Map<String?, String?>) {
+                                  additional: Map<String?, String?>,
+                                  filter: Int = GeckoSession.HEADER_FILTER_CORS_SAFELISTED) {
         // First collect default headers with no override
         sessionRule.session.loadUri("$TEST_ENDPOINT/anything")
         sessionRule.session.waitForPageStop()
@@ -1381,26 +1382,40 @@ class NavigationDelegateTest : BaseSessionTest() {
         val defaultBody = JSONObject(defaultContent)
         val defaultHeaders = defaultBody.getJSONObject("headers").asMap<String>()
 
-        val expected = defaultHeaders.plus(additional)
+        val expected = HashMap(additional)
+        for (key in defaultHeaders.keys) {
+            expected[key] = defaultHeaders[key]
+            if (additional.containsKey(key)) {
+                // TODO: Bug 1671294, headers should be replaced, not appended
+                expected[key] += ", " + additional[key]
+            }
+        }
 
         // Now load the page with the header override
         sessionRule.session.load(Loader()
             .uri("$TEST_ENDPOINT/anything")
-            .additionalHeaders(headers))
+            .additionalHeaders(headers)
+            .headerFilter(filter))
         sessionRule.session.waitForPageStop()
 
         val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
         val body = JSONObject(content)
         val actualHeaders = body.getJSONObject("headers").asMap<String>()
 
-        assertThat("Headers should match", actualHeaders, equalTo(expected))
+        assertThat("Headers should match", expected as Map<String?, String?>,
+                equalTo(actualHeaders))
     }
 
     @Test fun loadUriHeader() {
         // Basic test
         loadUriHeaderTest(
                 mapOf("Header1" to "Value", "Header2" to "Value1, Value2"),
-                mapOf("Header1" to "Value", "Header2" to "Value1, Value2")
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1" to "Value", "Header2" to "Value1, Value2"),
+                mapOf("Header1" to "Value", "Header2" to "Value1, Value2"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         // Empty value headers are ignored
@@ -1426,16 +1441,34 @@ class NavigationDelegateTest : BaseSessionTest() {
                       "what" to "what\r\nhost:amazon.com",
                       "Header3" to "Value1, Value2, Value3"
                 ),
+                mapOf()
+        )
+        loadUriHeaderTest(
                 mapOf("Header1" to "Value",
-                      "Header2" to "Value1, Value2",
-                      "Header3" to "Value1, Value2, Value3")
+                        "Header2" to "Value1, Value2",
+                        "this\r\nis invalid" to "test value",
+                        "test key" to "this\r\n is a no-no",
+                        "what" to "what\r\nhost:amazon.com",
+                        "Header3" to "Value1, Value2, Value3"
+                ),
+                mapOf("Header1" to "Value",
+                        "Header2" to "Value1, Value2",
+                        "Header3" to "Value1, Value2, Value3"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         loadUriHeaderTest(
                 mapOf("Header1" to "Value",
+                        "Header2" to "Value1, Value2",
+                        "what" to "what\r\nhost:amazon.com"),
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1" to "Value",
                       "Header2" to "Value1, Value2",
                       "what" to "what\r\nhost:amazon.com"),
-                mapOf("Header1" to "Value", "Header2" to "Value1, Value2")
+                mapOf("Header1" to "Value", "Header2" to "Value1, Value2"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         loadUriHeaderTest(
@@ -1451,22 +1484,42 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Connection and Host cannot be overriden, no matter the case spelling
         loadUriHeaderTest(
                 mapOf("Header1" to "Value1", "ConnEction" to "test", "connection" to "test2"),
-                mapOf("Header1" to "Value1")
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1" to "Value1", "ConnEction" to "test", "connection" to "test2"),
+                mapOf("Header1" to "Value1"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         loadUriHeaderTest(
                 mapOf("Header1" to "Value1", "connection" to "test2"),
-                mapOf("Header1" to "Value1")
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1" to "Value1", "connection" to "test2"),
+                mapOf("Header1" to "Value1"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         loadUriHeaderTest(
                 mapOf("Header1   " to "Value1", "host" to "test2"),
-                mapOf("Header1" to "Value1")
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1   " to "Value1", "host" to "test2"),
+                mapOf("Header1" to "Value1"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         loadUriHeaderTest(
                 mapOf("Header1" to "Value1", "host" to "test2"),
-                mapOf("Header1" to "Value1")
+                mapOf()
+        )
+        loadUriHeaderTest(
+                mapOf("Header1" to "Value1", "host" to "test2"),
+                mapOf("Header1" to "Value1"),
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
         )
 
         // Adding white space at the end of a forbidden header still prevents override
@@ -1482,6 +1535,31 @@ class NavigationDelegateTest : BaseSessionTest() {
         loadUriHeaderTest(
                 mapOf("abc\ra\n" to "amazon.com"),
                 mapOf()
+        )
+
+        // CORS Safelist test
+        loadUriHeaderTest(
+                mapOf("Accept-Language" to "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+                      "Accept" to "text/html",
+                      "Content-Language" to "de-DE, en-CA",
+                      "Content-Type" to "multipart/form-data; boundary=something"),
+                mapOf("Accept-Language" to "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+                      "Accept" to "text/html",
+                      "Content-Language" to "de-DE, en-CA",
+                      "Content-Type" to "multipart/form-data; boundary=something"),
+                GeckoSession.HEADER_FILTER_CORS_SAFELISTED
+        )
+
+        // CORS safelist doesn't allow Content-type image/svg
+        loadUriHeaderTest(
+                mapOf("Accept-Language" to "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+                      "Accept" to "text/html",
+                      "Content-Language" to "de-DE, en-CA",
+                      "Content-Type" to "image/svg; boundary=something"),
+                mapOf("Accept-Language" to "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+                      "Accept" to "text/html",
+                      "Content-Language" to "de-DE, en-CA"),
+                GeckoSession.HEADER_FILTER_CORS_SAFELISTED
         )
     }
 
