@@ -5,6 +5,9 @@
 "use strict";
 
 const { showMenu } = require("devtools/client/shared/components/menu/utils");
+const {
+  MESSAGE_HEADERS,
+} = require("devtools/client/netmonitor/src/constants.js");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 
 class MessageListHeaderContextMenu {
@@ -19,7 +22,11 @@ class MessageListHeaderContextMenu {
     const visibleColumns = Object.values(columns).filter(state => state);
     const onlyOneColumn = visibleColumns.length === 1;
 
-    const menuItems = Object.entries(columns).map(([column, shown]) => {
+    const columnsToShow = Object.keys(columns);
+    const menuItems = MESSAGE_HEADERS.filter(({ name }) =>
+      columnsToShow.includes(name)
+    ).map(({ name: column }) => {
+      const shown = columns[column];
       const label = L10N.getStr(`netmonitor.ws.toolbar.${column}`);
       return {
         id: `message-list-header-${column}-toggle`,
