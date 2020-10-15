@@ -1450,20 +1450,20 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
   // The expression stack slots are stored on the stack in reverse order, so
   // we copy them to a Vector and pass a pointer to that instead. We use
   // stackDepth - 1 because we don't want to include the return value.
-  RootedValueVector exprStack(cx);
-  if (!exprStack.reserve(stackDepth - 1)) {
+  RootedValueVector stackStorage(cx);
+  if (!stackStorage.reserve(stackDepth - 1)) {
     return false;
   }
 
   size_t firstSlot = numValueSlots - stackDepth;
   for (size_t i = 0; i < stackDepth - 1; i++) {
-    exprStack.infallibleAppend(*frame->valueSlot(firstSlot + i));
+    stackStorage.infallibleAppend(*frame->valueSlot(firstSlot + i));
   }
 
-  MOZ_ASSERT(exprStack.length() == stackDepth - 1);
+  MOZ_ASSERT(stackStorage.length() == stackDepth - 1);
 
   return AbstractGeneratorObject::normalSuspend(
-      cx, obj, frame, pc, exprStack.begin(), stackDepth - 1);
+      cx, obj, frame, pc, stackStorage.begin(), stackDepth - 1);
 }
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
