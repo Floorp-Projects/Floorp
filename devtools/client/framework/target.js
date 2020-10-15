@@ -39,7 +39,9 @@ exports.TargetFactory = {
     if (target) {
       return target;
     }
-    const promise = this.createTargetForTab(tab, client);
+
+    const promise = this._createTargetForTab(tab, client);
+
     // Immediately set the target's promise in cache to prevent race
     targets.set(tab, promise);
     target = await promise;
@@ -51,8 +53,13 @@ exports.TargetFactory = {
     return target;
   },
 
+  async _createTargetForTab(tab, client) {
+    const tabDescriptor = await this.createDescriptorForTab(tab, client);
+    return tabDescriptor.getTarget();
+  },
+
   /**
-   * Instantiate a target for the given tab.
+   * Create a tab target descriptor for the given tab.
    *
    * This will automatically:
    * - if no client is passed, spawn a DevToolsServer in the parent process,
@@ -65,9 +72,9 @@ exports.TargetFactory = {
    * @param {DevToolsClient} client
    *        Optional client to fetch the target actor from.
    *
-   * @return A target object
+   * @return {TabDescriptorFront} The tab descriptor for the provided tab.
    */
-  async createTargetForTab(tab, client) {
+  async createDescriptorForTab(tab, client) {
     function createLocalServer() {
       // Since a remote protocol connection will be made, let's start the
       // DevToolsServer here, once and for all tools.
@@ -96,9 +103,7 @@ exports.TargetFactory = {
       await client.connect();
     }
 
-    // Fetch the FrameTargetActor's Front which is a BrowsingContextTargetFront
-    const descriptor = await client.mainRoot.getTab({ tab });
-    return descriptor.getTarget();
+    return client.mainRoot.getTab({ tab });
   },
 
   /**
