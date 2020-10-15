@@ -450,10 +450,11 @@ enum class LuminanceType : int8_t {
 /* Color is stored in non-premultiplied form in sRGB color space */
 struct sRGBColor {
  public:
-  sRGBColor() : r(0.0f), g(0.0f), b(0.0f), a(0.0f) {}
-  sRGBColor(Float aR, Float aG, Float aB, Float aA)
+  constexpr sRGBColor() : r(0.0f), g(0.0f), b(0.0f), a(0.0f) {}
+  constexpr sRGBColor(Float aR, Float aG, Float aB, Float aA)
       : r(aR), g(aG), b(aB), a(aA) {}
-  sRGBColor(Float aR, Float aG, Float aB) : r(aR), g(aG), b(aB), a(1.0f) {}
+  constexpr sRGBColor(Float aR, Float aG, Float aB)
+      : r(aR), g(aG), b(aB), a(1.0f) {}
 
   static sRGBColor White(float aA) { return sRGBColor(1.f, 1.f, 1.f, aA); }
 
