@@ -3637,9 +3637,11 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     bool addScrollBars =
         mIsRoot && mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow();
 
+    nsDisplayListCollection set(aBuilder);
+
     if (addScrollBars) {
       // Add classic scrollbars.
-      AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
+      AppendScrollPartsTo(aBuilder, set, createLayersForScrollbars, false);
     }
 
     {
@@ -3649,16 +3651,20 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
       // The scrolled frame shouldn't have its own background/border, so we
       // can just pass aLists directly.
-      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, aLists);
+      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, set);
     }
 
-    MaybeAddTopLayerItems(aBuilder, aLists);
+    if (nsDisplayWrapList* topLayerWrapList =
+            MaybeCreateTopLayerItems(aBuilder, nullptr)) {
+      set.PositionedDescendants()->AppendToTop(topLayerWrapList);
+    }
 
     if (addScrollBars) {
       // Add overlay scrollbars.
-      AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, true);
+      AppendScrollPartsTo(aBuilder, set, createLayersForScrollbars, true);
     }
 
+    set.MoveTo(aLists);
     return;
   }
 
@@ -3957,7 +3963,23 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  MaybeAddTopLayerItems(aBuilder, set);
+  // Create any required items for the 'top layer' and check if they'll be
+  // opaque over the entire area of the viewport. If they are, then we can
+  // skip building display items for the rest of the page.
+  bool topLayerIsOpaque = false;
+  if (nsDisplayWrapList* topLayerWrapList =
+          MaybeCreateTopLayerItems(aBuilder, &topLayerIsOpaque)) {
+    // If the top layer content is opaque, and we're the root content document,
+    // we can drop the display items behind it. We only support doing this for
+    // the root document, since the top layer content might have fixed position
+    // items that have a scrolltarget referencing the APZ data for the document.
+    // APZ builds this data implicitly for the root document, but subdocuments
+    // need their display items to generate it, so we can't cull those.
+    if (topLayerIsOpaque && mOuter->PresContext()->IsRootContentDocument()) {
+      set.DeleteAll(aBuilder);
+    }
+    set.PositionedDescendants()->AppendToTop(topLayerWrapList);
+  }
 
   if (willBuildAsyncZoomContainer) {
     MOZ_ASSERT(mClipAllDescendants);
@@ -4060,12 +4082,13 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   scrolledContent.MoveTo(aLists);
 }
 
-void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
-                                              const nsDisplayListSet& aLists) {
+nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
+    nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
   if (mIsRoot) {
     if (ViewportFrame* viewportFrame = do_QueryFrame(mOuter->GetParent())) {
       nsDisplayList topLayerList;
-      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
+      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList,
+                                                 aIsOpaque);
       if (!topLayerList.IsEmpty()) {
         nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
             aBuilder, viewportFrame);
@@ -4079,11 +4102,12 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
         if (wrapList) {
           wrapList->SetOverrideZIndex(
               std::numeric_limits<decltype(wrapList->ZIndex())>::max());
-          aLists.PositionedDescendants()->AppendToTop(wrapList);
+          return wrapList;
         }
       }
     }
   }
+  return nullptr;
 }
 
 nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
