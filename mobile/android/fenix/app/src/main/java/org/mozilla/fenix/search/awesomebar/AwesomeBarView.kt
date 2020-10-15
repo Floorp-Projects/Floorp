@@ -148,7 +148,9 @@ class AwesomeBarView(
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
                 context = activity,
-                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(activity),
+                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(
+                    activity
+                ),
                 searchUseCase = searchUseCase,
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
@@ -161,7 +163,9 @@ class AwesomeBarView(
 
         defaultSearchActionProvider =
             SearchActionProvider(
-                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(activity),
+                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(
+                    activity
+                ),
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
                 showDescription = false
@@ -315,7 +319,8 @@ class AwesomeBarView(
                 SearchActionProvider(
                     defaultSearchEngineProvider = object : DefaultSearchEngineProvider {
                         override fun getDefaultSearchEngine(): SearchEngine? = searchEngine
-                        override suspend fun retrieveDefaultSearchEngine(): SearchEngine? = searchEngine
+                        override suspend fun retrieveDefaultSearchEngine(): SearchEngine? =
+                            searchEngine
                     },
                     searchUseCase = shortcutSearchUseCase,
                     icon = searchBitmap
