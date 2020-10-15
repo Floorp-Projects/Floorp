@@ -13186,11 +13186,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     const bool aInitializing, UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
-  IDB_TRY_INSPECT(
-      const nsCOMPtr<nsIFile>& directory,
-      GetDirectory(aPersistenceType, aOrigin), QM_PROPAGATE, [](const auto&) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDirectory);
-      });
+  IDB_TRY_INSPECT(const nsCOMPtr<nsIFile>& directory,
+                  GetDirectory(aPersistenceType, aOrigin));
 
   // We need to see if there are any files in the directory already. If they
   // are database files then we need to cleanup stored files (if it's needed)
@@ -13201,52 +13198,67 @@ nsresult QuotaClient::GetUsageForOriginInternal(
   IDB_TRY_UNWRAP(
       (auto [subdirsToProcess, databaseFilenames, obsoleteFilenames]),
       GetDatabaseFilenames<ObsoleteFilenamesHandling::Include>(*directory,
-                                                               aCanceled),
-      QM_PROPAGATE, [](const auto&) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
-      });
+                                                               aCanceled));
 
   if (aInitializing) {
-    for (const nsString& subdirName : subdirsToProcess) {
-      // The directory must have the correct suffix.
-      nsDependentSubstring subdirNameBase;
-      if (NS_WARN_IF(!GetFilenameBase(
-              subdirName, kFileManagerDirectoryNameSuffix, subdirNameBase))) {
-        // If there is an unexpected directory in the idb directory, trying to
-        // delete at first instead of breaking the whole initialization.
-        if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
-          REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetBaseFilename);
-          return NS_ERROR_UNEXPECTED;
-        }
+    IDB_TRY(CollectEachInRange(
+        subdirsToProcess,
+        [&directory, &obsoleteFilenames = obsoleteFilenames,
+         &databaseFilenames = databaseFilenames, aPersistenceType, &aGroup,
+         &aOrigin](const nsString& subdirName) -> Result<Ok, nsresult> {
+          // The directory must have the correct suffix.
+          nsDependentSubstring subdirNameBase;
+          IDB_TRY(([&subdirName, &subdirNameBase] {
+                    IDB_TRY_RETURN(OkIf(GetFilenameBase(
+                        subdirName, kFileManagerDirectoryNameSuffix,
+                        subdirNameBase)));
+                  }()
+                       .orElse([&directory, &subdirName](
+                                   const NotOk) -> Result<Ok, nsresult> {
+                         // If there is an unexpected directory in the idb
+                         // directory, trying to delete at first instead of
+                         // breaking the whole initialization.
+                         IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
+                                 Err(NS_ERROR_UNEXPECTED));
 
-        continue;
-      }
+                         return Ok{};
+                       })),
+                  Ok{});
 
-      if (obsoleteFilenames.Contains(subdirNameBase)) {
-        nsresult rv = RemoveDatabaseFilesAndDirectory(
-            *directory, subdirNameBase, nullptr, aPersistenceType, aGroup,
-            aOrigin, u""_ns);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          // If we somehow running into here, it probably means we are in a
-          // serious situation. e.g. Filesystem corruption.
-          // Will handle this in bug 1521541.
-          REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_RemoveDBFiles);
-          return NS_ERROR_UNEXPECTED;
-        }
+          if (obsoleteFilenames.Contains(subdirNameBase)) {
+            // If this fails, it probably means we are in a serious situation.
+            // e.g. Filesystem corruption. Will handle this in bug 1521541.
+            IDB_TRY(RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
+                                                    nullptr, aPersistenceType,
+                                                    aGroup, aOrigin, u""_ns),
+                    Err(NS_ERROR_UNEXPECTED));
 
-        databaseFilenames.RemoveEntry(subdirNameBase);
-        continue;
-      }
+            databaseFilenames.RemoveEntry(subdirNameBase);
+            return Ok{};
+          }
 
-      // The directory base must exist in databaseFilenames.
-      // If there is an unexpected directory in the idb directory, trying to
-      // delete at first instead of breaking the whole initialization.
-      if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase)) &&
-          NS_WARN_IF((NS_FAILED(DeleteFilesNoQuota(directory, subdirName))))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetEntry);
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
+          // The directory base must exist in databaseFilenames.
+          // If there is an unexpected directory in the idb directory, trying to
+          // delete at first instead of breaking the whole initialization.
+
+          IDB_TRY(([&databaseFilenames, &subdirNameBase] {
+                    IDB_TRY_RETURN(
+                        OkIf(databaseFilenames.GetEntry(subdirNameBase)));
+                  }()
+                       .orElse([&directory, &subdirName](
+                                   const NotOk) -> Result<Ok, nsresult> {
+                         // XXX It seems if we really got here, we can fail the
+                         // MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
+                         // assertion in DeleteFilesNoQuota.
+                         IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
+                                 Err(NS_ERROR_UNEXPECTED));
+
+                         return Ok{};
+                       })),
+                  Ok{});
+
+          return Ok{};
+        }));
   }
 
   for (const auto& databaseEntry : databaseFilenames) {
@@ -13256,86 +13268,59 @@ nsresult QuotaClient::GetUsageForOriginInternal(
 
     const auto& databaseFilename = databaseEntry.GetKey();
 
-    nsCOMPtr<nsIFile> fmDirectory;
-    nsresult rv = directory->Clone(getter_AddRefs(fmDirectory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone);
-      return rv;
-    }
+    IDB_TRY_INSPECT(
+        const auto& fmDirectory,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
 
-    rv =
-        fmDirectory->Append(databaseFilename + kFileManagerDirectoryNameSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append);
-      return rv;
-    }
+    IDB_TRY(fmDirectory->Append(databaseFilename +
+                                kFileManagerDirectoryNameSuffix));
 
-    nsCOMPtr<nsIFile> databaseFile;
-    rv = directory->Clone(getter_AddRefs(databaseFile));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone2);
-      return rv;
-    }
+    IDB_TRY_INSPECT(
+        const auto& databaseFile,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
 
-    rv = databaseFile->Append(databaseFilename + kSQLiteSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append2);
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> walFile;
-    if (aUsageInfo) {
-      rv = directory->Clone(getter_AddRefs(walFile));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone3);
-        return rv;
-      }
-
-      rv = walFile->Append(databaseFilename + kSQLiteWALSuffix);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append3);
-        return rv;
-      }
-    }
+    IDB_TRY(databaseFile->Append(databaseFilename + kSQLiteSuffix));
 
     if (aInitializing) {
-      rv = FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
-                                      TelemetryIdForFile(databaseFile));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
-        return rv;
-      }
+      IDB_TRY(FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
+                                         TelemetryIdForFile(databaseFile)));
     }
 
     if (aUsageInfo) {
-      int64_t fileSize;
-      rv = databaseFile->GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetFileSize);
-        return rv;
-      }
+      {
+        IDB_TRY_INSPECT(const int64_t& fileSize,
+                        MOZ_TO_RESULT_INVOKE(databaseFile, GetFileSize));
 
-      MOZ_ASSERT(fileSize >= 0);
-
-      *aUsageInfo += DatabaseUsageType(Some(uint64_t(fileSize)));
-
-      rv = walFile->GetFileSize(&fileSize);
-      if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(fileSize >= 0);
+
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(fileSize)));
-      } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
-                            rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetWalFileSize);
-        return rv;
       }
 
-      IDB_TRY_INSPECT(const auto& fileUsage, FileManager::GetUsage(fmDirectory),
-                      QM_PROPAGATE, [](const auto&) {
-                        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError,
-                                                  IDB_GetUsage);
-                      });
+      {
+        IDB_TRY_INSPECT(
+            const auto& walFile,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
 
-      *aUsageInfo += fileUsage;
+        IDB_TRY(walFile->Append(databaseFilename + kSQLiteWALSuffix));
+
+        IDB_TRY_INSPECT(const int64_t& walFileSize,
+                        MOZ_TO_RESULT_INVOKE(walFile, GetFileSize)
+                            .orElse([](const nsresult rv) {
+                              return (rv == NS_ERROR_FILE_NOT_FOUND ||
+                                      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+                                         ? Result<int64_t, nsresult>{0}
+                                         : Err(rv);
+                            }));
+        MOZ_ASSERT(walFileSize >= 0);
+        *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
+      }
+
+      {
+        IDB_TRY_INSPECT(const auto& fileUsage,
+                        FileManager::GetUsage(fmDirectory));
+
+        *aUsageInfo += fileUsage;
+      }
     }
   }
 
@@ -16732,8 +16717,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
         IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
         MOZ_ASSERT(mgr);
 
-        SafeRefPtr<FileManager> fileManager = mgr->GetFileManager(
-            persistenceType, mOrigin, databaseName);
+        SafeRefPtr<FileManager> fileManager =
+            mgr->GetFileManager(persistenceType, mOrigin, databaseName);
 
         if (!fileManager) {
           fileManager = MakeSafeRefPtr<FileManager>(
