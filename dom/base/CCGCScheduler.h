@@ -116,6 +116,10 @@ class CCGCScheduler {
 
   void UnblockCC() { mCCBlockStart = TimeStamp(); }
 
+  void NoteForgetSkippableComplete(TimeStamp now) {
+    mLastForgetSkippableEndTime = aNow;
+  }
+
   // Scheduling
 
   TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline) const {
@@ -184,6 +188,41 @@ class CCGCScheduler {
         std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
   }
 
+  // aStartTimeStamp : when the ForgetSkippable timer fired. This may be some
+  // time ago, if an incremental GC needed to be finished.
+  js::SliceBudget ComputeForgetSkippableBudget(TimeStamp aStartTimeStamp,
+                                               TimeStamp aDeadline) {
+    if (mForgetSkippableFrequencyStartTime.IsNull()) {
+      mForgetSkippableFrequencyStartTime = aStartTimeStamp;
+    } else if (aStartTimeStamp - mForgetSkippableFrequencyStartTime >
+               kOneMinute) {
+      TimeStamp startPlusMinute =
+          mForgetSkippableFrequencyStartTime + kOneMinute;
+
+      // If we had forget skippables only at the beginning of the interval, we
+      // still want to use the whole time, minute or more, for frequency
+      // calculation. mLastForgetSkippableEndTime is needed if forget skippable
+      // takes enough time to push the interval to be over a minute.
+      TimeStamp endPoint =
+          std::max(startPlusMinute, mLastForgetSkippableEndTime);
+
+      // Duration in minutes.
+      double duration =
+          (endPoint - mForgetSkippableFrequencyStartTime).ToSeconds() / 60;
+      uint32_t frequencyPerMinute =
+          uint32_t(mForgetSkippableCounter / duration);
+      Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_FREQUENCY,
+                            frequencyPerMinute);
+      mForgetSkippableCounter = 0;
+      mForgetSkippableFrequencyStartTime = aStartTimeStamp;
+    }
+    ++mForgetSkippableCounter;
+
+    TimeDuration budgetTime = aDeadline ? (aDeadline - aStartTimeStamp)
+                                        : kForgetSkippableSliceDuration;
+    return BudgetFromDuration(budgetTime);
+  }
+
   // State
 
   // An incremental GC is in progress, which blocks the CC from running for its
@@ -193,6 +232,9 @@ class CCGCScheduler {
   // When the CC started actually waiting for the GC to finish. This will be
   // set to non-null at a later time than mCCLockedOut.
   TimeStamp mCCBlockStart;
+  TimeStamp mLastForgetSkippableEndTime;
+  uint32_t mForgetSkippableCounter = 0;
+  TimeStamp mForgetSkippableFrequencyStartTime;
 
   // Configuration parameters
 
