@@ -9,14 +9,14 @@ const TEST_DATA = [
   {
     targetClass: "cssanimation-normal",
     expectedResult: {
-      nameAndType: "cssanimation - CSS Animation",
+      nameAndType: "cssanimation — CSS Animation",
       duration: "1,000s",
     },
   },
   {
     targetClass: "cssanimation-linear",
     expectedResult: {
-      nameAndType: "cssanimation - CSS Animation",
+      nameAndType: "cssanimation — CSS Animation",
       duration: "1,000s",
       animationTimingFunction: "linear",
     },
@@ -24,7 +24,7 @@ const TEST_DATA = [
   {
     targetClass: "delay-positive",
     expectedResult: {
-      nameAndType: "test-delay-animation - Script Animation",
+      nameAndType: "test-delay-animation — Script Animation",
       delay: "500s",
       duration: "1,000s",
     },
@@ -32,7 +32,7 @@ const TEST_DATA = [
   {
     targetClass: "delay-negative",
     expectedResult: {
-      nameAndType: "test-negative-delay-animation - Script Animation",
+      nameAndType: "test-negative-delay-animation — Script Animation",
       delay: "-500s",
       duration: "1,000s",
     },
