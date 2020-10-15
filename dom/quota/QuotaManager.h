@@ -464,7 +464,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static void ChromeOrigin(nsACString& aOrigin);
 
-  static bool AreOriginsEqualOnDisk(nsACString& aOrigin1, nsACString& aOrigin2);
+  static bool AreOriginsEqualOnDisk(const nsACString& aOrigin1,
+                                    const nsACString& aOrigin2);
 
   static bool ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
                           OriginAttributes* aAttrs);

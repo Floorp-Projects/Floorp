@@ -7340,8 +7340,8 @@ void QuotaManager::ChromeOrigin(nsACString& aOrigin) {
 }
 
 // static
-bool QuotaManager::AreOriginsEqualOnDisk(nsACString& aOrigin1,
-                                         nsACString& aOrigin2) {
+bool QuotaManager::AreOriginsEqualOnDisk(const nsACString& aOrigin1,
+                                         const nsACString& aOrigin2) {
   nsCString origin1Sanitized(aOrigin1);
   SanitizeOriginString(origin1Sanitized);
 
