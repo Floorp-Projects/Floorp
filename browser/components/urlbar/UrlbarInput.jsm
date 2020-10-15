@@ -1717,6 +1717,17 @@ class UrlbarInput {
     if (startQuery) {
       this.startQuery({ allowAutofill: false });
     }
+
+    // If the user highlights the tab-to-search onboarding result, never show it
+    // again.
+    if (
+      result.providerName == "TabToSearch" &&
+      result.payload.dynamicType &&
+      UrlbarPrefs.get("tabToSearch.onboard.oneInteraction")
+    ) {
+      UrlbarPrefs.set("tabToSearch.onboard.maxShown", 0);
+    }
+
     return true;
   }
 
