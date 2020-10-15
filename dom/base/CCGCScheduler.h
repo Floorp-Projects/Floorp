@@ -335,6 +335,24 @@ class CCGCScheduler {
       // synchronously.
     }
 
+    if (mCCRunnerState != CCRunnerState::EarlyTimer) {
+      // If we don't pass the threshold for wanting to cycle collect, stop now
+      // (after possibly doing a final ForgetSkippable).
+      if (!IsCCNeeded(aSuspected, now)) {
+        mCCRunnerState = CCRunnerState::Inactive;
+        NoteForgetSkippableOnlyCycle();
+        if (mCCRunnerState == CCRunnerState::LateTimerPostForgetSkippable) {
+          return {CCRunnerAction::StopRunning, Yield};
+        }
+        if (ShouldFireForgetSkippable(aSuspected)) {
+          // The Inactive state will make us StopRunning after this action is
+          // performed (see conditional at top of function).
+          return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+        }
+        return {CCRunnerAction::StopRunning, Yield};
+      }
+    }
+
     switch (mCCRunnerState) {
       // EarlyTimer: a GC ran (or we otherwise decided to try CC'ing). Wait for
       // some amount of time (kCCDelay, or less if incremental GC blocked this
@@ -357,7 +375,9 @@ class CCGCScheduler {
         // advancing to the next state, effectively bypassing some possible
         // forget skippable calls.
         mCCRunnerState = CCRunnerState::LateTimer;
-        [[fallthrough]];
+
+        // Continue on to LateTimer, but only after checking IsCCNeeded again.
+        return GetNextCCRunnerAction(aDeadline, aSuspected);
 
       // LateTimer: do a stronger ForgetSkippable that removes nodes with no
       // children in the cycle collector graph. This state is split into two
@@ -365,27 +385,12 @@ class CCGCScheduler {
       // callback (unless the ForgetSkippable shrinks the purple buffer enough
       // for the CC to be skipped entirely.)
       case CCRunnerState::LateTimer:
-        if (!IsCCNeeded(aSuspected, now)) {
-          mCCRunnerState = CCRunnerState::Inactive;
-          NoteForgetSkippableOnlyCycle();
-          if (ShouldFireForgetSkippable(aSuspected)) {
-            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
-          }
-          return {CCRunnerAction::StopRunning, Yield};
-        }
-
         mCCRunnerState = CCRunnerState::LateTimerPostForgetSkippable;
         return {CCRunnerAction::ForgetSkippable, Yield, RemoveChildless};
 
       // LateTimerPostForgetSkippable: continuing LateTimer, possibly do some
       // final setup before the actual cycle collection slice.
       case CCRunnerState::LateTimerPostForgetSkippable:
-        if (!IsCCNeeded(aSuspected, now)) {
-          mCCRunnerState = CCRunnerState::Inactive;
-          NoteForgetSkippableOnlyCycle();
-          return {CCRunnerAction::StopRunning, Yield};
-        }
-
         // Our efforts to avoid a CC have failed. Let the timer fire once more
         // to trigger a CC.
         mCCRunnerState = CCRunnerState::FinalTimer;
@@ -399,15 +404,6 @@ class CCGCScheduler {
       // FinalTimer: the final state where we actually do a slice of cycle
       // collection and reset the timer.
       case CCRunnerState::FinalTimer:
-        if (!IsCCNeeded(aSuspected, now)) {
-          mCCRunnerState = CCRunnerState::Inactive;
-          NoteForgetSkippableOnlyCycle();
-          if (ShouldFireForgetSkippable(aSuspected)) {
-            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
-          }
-          return {CCRunnerAction::StopRunning, Yield};
-        }
-
         // We are in the final timer fire and still meet the conditions for
         // triggering a CC. Let RunCycleCollectorSlice finish the current IGC
         // if any, because that will allow us to include the GC time in the CC
