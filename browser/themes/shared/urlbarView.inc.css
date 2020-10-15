@@ -26,7 +26,6 @@
   --urlbarView-primary-button-background: #0060df;
   --urlbarView-primary-button-background-hover: #003eaa;
   --urlbarView-primary-button-background-active: #002275;
-  --urlbarView-action-slide-in-distance: 200px;
 }
 
 :root:-moz-lwtheme {
@@ -42,10 +41,6 @@
   --urlbarView-button-background: rgba(249, 249, 250, 0.24);
   --urlbarView-button-background-hover: rgba(249, 249, 250, 0.15);
   --urlbarView-button-background-active: rgba(249, 249, 250, 0.2);
-}
-
-:root:-moz-locale-dir(rtl) {
-  --urlbarView-action-slide-in-distance: -200px;
 }
 
 .urlbarView {
@@ -456,7 +451,7 @@
 @media (prefers-reduced-motion: no-preference) {
   @keyframes urlbarView-action-slide-in {
     0% {
-      transform: translateX(var(--urlbarView-action-slide-in-distance));
+      transform: translateX(200px);
       opacity: 0;
     }
     100% {
