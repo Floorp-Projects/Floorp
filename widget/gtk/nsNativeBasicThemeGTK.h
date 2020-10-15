@@ -20,22 +20,14 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
 
   nsITheme::Transparency GetWidgetTransparency(
       nsIFrame* aFrame, StyleAppearance aAppearance) override;
-  void PaintScrollbarthumbHorizontal(
-      DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
-      const EventStates& aElementState,
-      const EventStates& aDocumentState) override;
+  void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget, const Rect& aRect,
+                                     const EventStates& aState) override;
   void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget, const Rect& aRect,
-                                   const ComputedStyle& aStyle,
-                                   const EventStates& aElementState,
-                                   const EventStates& aDocumentState) override;
+                                   const EventStates& aState) override;
   void PaintScrollbarHorizontal(DrawTarget* aDrawTarget, const Rect& aRect,
-                                const ComputedStyle& aStyle,
-                                const EventStates& aDocumentState,
                                 bool aIsRoot) override;
   void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
                                        const Rect& aRect,
-                                       const ComputedStyle& aStyle,
-                                       const EventStates& aDocumentState,
                                        uint32_t aDpiRatio,
                                        bool aIsRoot) override;
 

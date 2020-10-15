@@ -565,20 +565,13 @@ struct LookAndFeelFont {
   bool bold;
 };
 
-struct LookAndFeelColor {
-  mozilla::LookAndFeel::ColorID id;
-  nscolor color;
-};
-
 struct LookAndFeelCache {
   void Clear() {
     mInts.Clear();
     mFonts.Clear();
-    mColors.Clear();
   }
   nsTArray<LookAndFeelInt> mInts;
   nsTArray<LookAndFeelFont> mFonts;
-  nsTArray<LookAndFeelColor> mColors;
 };
 
 // On the Mac, GetColor(ColorID::TextSelectForeground, color) returns this
