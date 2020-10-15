@@ -738,7 +738,13 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     this._currentDevToolsTarget = await DevToolsShim.createTargetForTab(
       targetFront.localTab
     );
-    this._currentDevToolsTarget.isDevToolsExtensionContext = true;
+
+    // Update the TabDescriptor `isDevToolsExtensionContext` flag.
+    // This is a duplicated target, attached to no toolbox, DevTools needs to
+    // handle it differently compared to a regular top-level target.
+    const descriptorFront = this._currentDevToolsTarget.descriptorFront;
+    descriptorFront.isDevToolsExtensionContext = true;
+
     await this._currentDevToolsTarget.attach();
   }
 
