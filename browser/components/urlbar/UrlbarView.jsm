@@ -1126,12 +1126,6 @@ class UrlbarView {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
 
-    if (result.payload.isPinned) {
-      item.toggleAttribute("pinned", true);
-    } else {
-      item.removeAttribute("pinned");
-    }
-
     let title = item._elements.get("title");
     this._setResultTitle(result, title);
 
@@ -1253,6 +1247,24 @@ class UrlbarView {
       action.toggleAttribute("slide-in", true);
     } else {
       action.removeAttribute("slide-in");
+    }
+
+    if (result.payload.isPinned) {
+      item.toggleAttribute("pinned", true);
+    } else {
+      item.removeAttribute("pinned");
+    }
+
+    if (result.payload.isSponsored) {
+      item.toggleAttribute("sponsored", true);
+      actionSetter = () => {
+        this.document.l10n.setAttributes(
+          action,
+          "urlbar-result-action-sponsored"
+        );
+      };
+    } else {
+      item.removeAttribute("sponsored");
     }
 
     let url = item._elements.get("url");
