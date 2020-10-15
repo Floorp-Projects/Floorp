@@ -1581,11 +1581,8 @@ static bool ICCRunnerFired(TimeStamp aDeadline) {
 
   if (sScheduler.InIncrementalGC()) {
     TimeStamp now = TimeStamp::Now();
-    if (!sScheduler.mCCLockedOutTime) {
-      sScheduler.mCCLockedOutTime = now;
-      return false;
-    }
-    if (now - sScheduler.mCCLockedOutTime < kMaxCCLockedoutTime) {
+    sScheduler.EnsureCCIsBlocked(now);
+    if (sScheduler.GetCCBlockedTime(now).value() < kMaxCCLockedoutTime) {
       return false;
     }
   }
@@ -1774,7 +1771,7 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
 
   if (sScheduler.InIncrementalGC()) {
     TimeStamp now = TimeStamp::Now();
-    if (!sScheduler.mCCLockedOutTime) {
+    if (sScheduler.EnsureCCIsBlocked(now) == sScheduler.StartingLockout) {
       // Reset our state so that we run forgetSkippable often enough before
       // CC. Because of reduced sCCDelay forgetSkippable will be called just a
       // few times. kMaxCCLockedoutTime limit guarantees that we end up calling
@@ -1782,11 +1779,10 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       sCCRunnerState = CCRunnerState::EarlyTimer;
       sCCRunnerEarlyFireCount = 0;
       sCCDelay = kCCDelay / int64_t(3);
-      sScheduler.mCCLockedOutTime = now;
       return false;
     }
 
-    if (now - sScheduler.mCCLockedOutTime < kMaxCCLockedoutTime) {
+    if (sScheduler.GetCCBlockedTime(now).value() < kMaxCCLockedoutTime) {
       return false;
     }
   }
@@ -2128,7 +2124,7 @@ void nsJSContext::KillShrinkingGCTimer() {
 
 // static
 void nsJSContext::KillCCRunner() {
-  sScheduler.mCCLockedOutTime = TimeStamp();
+  sScheduler.UnblockCC();
   sCCRunnerState = CCRunnerState::Inactive;
   if (sCCRunner) {
     sCCRunner->Cancel();
@@ -2138,7 +2134,7 @@ void nsJSContext::KillCCRunner() {
 
 // static
 void nsJSContext::KillICCRunner() {
-  sScheduler.mCCLockedOutTime = TimeStamp();
+  sScheduler.UnblockCC();
 
   if (sICCRunner) {
     sICCRunner->Cancel();
