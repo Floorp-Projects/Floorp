@@ -126,7 +126,19 @@ def test_browsertime_no_reinstall():
     with mock.patch(
         "mozperftest.test.browsertime.runner.pathlib.Path.open",
         build_mock_open(
-            [{"devDependencies": {"browsertime": "good"}}, {"_resolved": "good"}]
+            [
+                {
+                    "devDependencies": {
+                        "browsertime": "89771a1d6be54114db190427dbc281582cba3d47"
+                    }
+                },
+                {
+                    "_from": (
+                        "browsertime@https://github.com/sitespeedio/browsertime"
+                        "/tarball/89771a1d6be54114db190427dbc281582cba3d47"
+                    )
+                },
+            ]
         ),
     ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
@@ -150,7 +162,19 @@ def test_browsertime_should_reinstall():
     with mock.patch(
         "mozperftest.test.browsertime.runner.pathlib.Path.open",
         build_mock_open(
-            [{"devDependencies": {"browsertime": "bad"}}, {"_resolved": "good"}]
+            [
+                {
+                    "devDependencies": {
+                        "browsertime": "89771a1d6be54114db190427dbc281582cba3d47"
+                    }
+                },
+                {
+                    "_from": (
+                        "browsertime@https://github.com/sitespeedio/browsertime"
+                        "/tarball/98747854be54114db190427dbc281582cba3d47"
+                    )
+                },
+            ]
         ),
     ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
