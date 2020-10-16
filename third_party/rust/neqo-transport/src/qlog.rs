@@ -169,7 +169,7 @@ pub fn packet_dropped(qlog: &mut NeqoQlog, payload: &PublicPacket) {
     qlog.add_event(|| {
         Some(Event::packet_dropped(
             Some(to_qlog_pkt_type(payload.packet_type())),
-            Some(u64::try_from(payload.packet_len()).unwrap()),
+            Some(u64::try_from(payload.len()).unwrap()),
             None,
         ))
     })
@@ -202,7 +202,7 @@ pub fn packet_received(
             to_qlog_pkt_type(payload.packet_type()),
             PacketHeader::new(
                 payload.pn(),
-                Some(u64::try_from(public_packet.packet_len()).unwrap()),
+                Some(u64::try_from(public_packet.len()).unwrap()),
                 None,
                 None,
                 None,
@@ -226,44 +226,6 @@ pub fn packet_received(
 
         stream.finish_frames()
     })
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CongestionState {
-    SlowStart,
-    CongestionAvoidance,
-    ApplicationLimited,
-    Recovery,
-}
-
-impl CongestionState {
-    fn to_str(&self) -> &str {
-        match self {
-            Self::SlowStart => "slow_start",
-            Self::CongestionAvoidance => "congestion_avoidance",
-            Self::ApplicationLimited => "application_limited",
-            Self::Recovery => "recovery",
-        }
-    }
-}
-
-pub fn congestion_state_updated(
-    qlog: &mut NeqoQlog,
-    curr_state: &mut CongestionState,
-    new_state: CongestionState,
-) {
-    qlog.add_event(|| {
-        if *curr_state != new_state {
-            let evt = Event::congestion_state_updated(
-                Some(curr_state.to_str().to_owned()),
-                new_state.to_str().to_owned(),
-            );
-            *curr_state = new_state;
-            Some(evt)
-        } else {
-            None
-        }
-    });
 }
 
 #[allow(dead_code)]

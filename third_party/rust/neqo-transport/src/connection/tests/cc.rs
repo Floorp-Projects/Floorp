@@ -6,18 +6,19 @@
 
 use super::super::{Connection, Output};
 use super::{
-    assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, cwnd_packets, default_client,
-    default_server, fill_cwnd, AT_LEAST_PTO, POST_HANDSHAKE_CWND,
+    assert_full_cwnd, connect_force_idle, connect_rtt_idle, cwnd_packets, default_client,
+    default_server, fill_cwnd, send_something, AT_LEAST_PTO, DEFAULT_RTT, POST_HANDSHAKE_CWND,
 };
-use crate::cc::{CWND_MIN, MAX_DATAGRAM_SIZE, PACING_BURST_SIZE};
+use crate::cc::{CWND_MIN, MAX_DATAGRAM_SIZE};
 use crate::frame::{Frame, StreamType};
 use crate::packet::PacketNumber;
-use crate::recovery::ACK_ONLY_SIZE_LIMIT;
+use crate::recovery::{ACK_ONLY_SIZE_LIMIT, PACKET_THRESHOLD};
+use crate::sender::PACING_BURST_SIZE;
 use crate::stats::MAX_PTO_COUNTS;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::{PNSpace, MAX_UNACKED_PKTS};
 
-use neqo_common::{qdebug, qtrace, Datagram};
+use neqo_common::{qdebug, qinfo, qtrace, Datagram};
 use std::convert::TryFrom;
 use std::time::{Duration, Instant};
 use test_fixture::{self, now};
@@ -127,9 +128,7 @@ fn cc_slow_start() {
             TransportParameter::Integer(65536),
         )
         .unwrap();
-    connect_force_idle(&mut client, &mut server);
-
-    let now = now();
+    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Try to send a lot of data
     assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
@@ -143,13 +142,13 @@ fn cc_slow_start() {
 fn cc_slow_start_to_cong_avoidance_recovery_period() {
     let mut client = default_client();
     let mut server = default_server();
-    connect_force_idle(&mut client, &mut server);
+    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now());
+    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
     // Predict the packet number of the last packet sent.
     // We have already sent one packet in `connect_force_idle` (an ACK),
@@ -157,9 +156,11 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
     let flight1_largest = PacketNumber::try_from(c_tx_dgrams.len()).unwrap();
 
     // Server: Receive and generate ack
+    now += DEFAULT_RTT / 2;
     let (s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // Client: Process ack
+    now += DEFAULT_RTT / 2;
     for dgram in s_tx_dgram {
         let recvd_frames = client.test_process_input(dgram, now);
 
@@ -179,15 +180,17 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
     }
 
     // Client: send more
-    let (mut c_tx_dgrams, now) = fill_cwnd(&mut client, 0, now);
+    let (mut c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND * 2);
     let flight2_largest = flight1_largest + u64::try_from(c_tx_dgrams.len()).unwrap();
 
     // Server: Receive and generate ack again, but drop first packet
+    now += DEFAULT_RTT / 2;
     c_tx_dgrams.remove(0);
     let (s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // Client: Process ack
+    now += DEFAULT_RTT / 2;
     for dgram in s_tx_dgram {
         let recvd_frames = client.test_process_input(dgram, now);
 
@@ -205,9 +208,6 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
             panic!("Expected an application ACK");
         }
     }
-
-    // If we just triggered cong avoidance, these should be equal
-    assert_eq!(client.loss_recovery.cwnd(), client.loss_recovery.ssthresh());
 }
 
 #[test]
@@ -233,19 +233,17 @@ fn cc_cong_avoidance_recovery_period_unchanged() {
     // Server: Receive and generate ack
     let (s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams, now);
     for dgram in s_tx_dgram {
-        client.test_process_input(dgram, now);
+        client.process_input(dgram, now);
     }
 
-    // If we just triggered cong avoidance, these should be equal
     let cwnd1 = client.loss_recovery.cwnd();
-    assert_eq!(cwnd1, client.loss_recovery.ssthresh());
 
     // Generate ACK for more received packets
     let (s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams2, now);
 
     // ACK more packets but they were sent before end of recovery period
     for dgram in s_tx_dgram {
-        client.test_process_input(dgram, now);
+        client.process_input(dgram, now);
     }
 
     // cwnd should not have changed since ACKed packets were sent before
@@ -255,46 +253,85 @@ fn cc_cong_avoidance_recovery_period_unchanged() {
 }
 
 #[test]
+/// Ensure that a single packet is sent after entering recovery, even
+/// when that exceeds the available congestion window.
+fn single_packet_on_recovery() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    // Drop a few packets, up to the reordering threshold.
+    for _ in 0..PACKET_THRESHOLD {
+        let _dropped = send_something(&mut client, now());
+    }
+    let delivered = send_something(&mut client, now());
+
+    // Now fill the congestion window.
+    assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+    let _ = fill_cwnd(&mut client, 0, now());
+    assert!(client.loss_recovery.cwnd_avail() < ACK_ONLY_SIZE_LIMIT);
+
+    // Acknowledge just one packet and cause one packet to be declared lost.
+    // The length is the amount of credit the client should have.
+    let ack = server.process(Some(delivered), now()).dgram();
+    assert!(ack.is_some());
+
+    // The client should see the loss and enter recovery.
+    // As there are many outstanding packets, there should be no available cwnd.
+    client.process_input(ack.unwrap(), now());
+    assert_eq!(client.loss_recovery.cwnd_avail(), 0);
+
+    // The client should send one packet, ignoring the cwnd.
+    let dgram = client.process_output(now()).dgram();
+    assert!(dgram.is_some());
+}
+
+#[test]
 /// Verify that CC moves out of recovery period when packet sent after start
 /// of recovery period is acked.
 fn cc_cong_avoidance_recovery_period_to_cong_avoidance() {
     let mut client = default_client();
     let mut server = default_server();
-    connect(&mut client, &mut server);
+    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (mut c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now());
+    let (mut c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
 
     // Drop 0th packet. When acked, this should put client into CARP.
     c_tx_dgrams.remove(0);
 
     // Server: Receive and generate ack
+    now += DEFAULT_RTT / 2;
     let (s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // Client: Process ack
+    now += DEFAULT_RTT / 2;
     for dgram in s_tx_dgram {
-        client.test_process_input(dgram, now);
+        client.process_input(dgram, now);
     }
 
     // Should be in CARP now.
-
-    now += Duration::from_millis(10); // Time passes. CARP -> CA
+    now += DEFAULT_RTT / 2;
+    qinfo!(
+        "moving to congestion avoidance {}",
+        client.loss_recovery.cwnd()
+    );
 
     // Now make sure that we increase congestion window according to the
     // accurate byte counting version of congestion avoidance.
     // Check over several increases to be sure.
     let mut expected_cwnd = client.loss_recovery.cwnd();
     for i in 0..5 {
-        println!("{}", i);
+        qinfo!("iteration {}", i);
         // Client: Send more data
         let (mut c_tx_dgrams, next_now) = fill_cwnd(&mut client, 0, now);
         now = next_now;
 
         let c_tx_size: usize = c_tx_dgrams.iter().map(|d| d.len()).sum();
-        println!(
+        qinfo!(
             "client sending {} bytes into cwnd of {}",
             c_tx_size,
             client.loss_recovery.cwnd()
@@ -325,21 +362,20 @@ fn cc_cong_avoidance_recovery_period_to_cong_avoidance() {
 fn cc_slow_start_to_persistent_congestion_no_acks() {
     let mut client = default_client();
     let mut server = default_server();
-    connect_force_idle(&mut client, &mut server);
+    let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
     assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
 
     // Buffer up lot of data and generate packets
-    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now());
+    let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
 
     // Server: Receive and generate ack
-    now += Duration::from_millis(100);
+    now += DEFAULT_RTT / 2;
     let (_s_tx_dgram, _) = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // ACK lost.
-
     induce_persistent_congestion(&mut client, &mut server, now);
 }
 
@@ -411,7 +447,7 @@ fn cc_persistent_congestion_to_slow_start() {
     // No longer in CARP. (pkts acked from after start of CARP)
     // Should be in slow start now.
     for dgram in s_tx_dgram {
-        client.test_process_input(dgram, now);
+        client.process_input(dgram, now);
     }
 
     // ACKing 2 packets should let client send 4.

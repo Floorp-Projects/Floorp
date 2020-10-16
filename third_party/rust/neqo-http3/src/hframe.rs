@@ -9,6 +9,7 @@ use neqo_common::{
     hex_with_len, qtrace, Decoder, Encoder, IncrementalDecoderBuffer, IncrementalDecoderIgnore,
     IncrementalDecoderUint,
 };
+use neqo_crypto::random;
 use neqo_transport::Connection;
 use std::convert::TryFrom;
 use std::mem;
@@ -53,6 +54,7 @@ pub(crate) enum HFrame {
     MaxPushId {
         push_id: u64,
     },
+    Grease,
 }
 
 impl HFrame {
@@ -65,6 +67,10 @@ impl HFrame {
             Self::PushPromise { .. } => H3_FRAME_TYPE_PUSH_PROMISE,
             Self::Goaway { .. } => H3_FRAME_TYPE_GOAWAY,
             Self::MaxPushId { .. } => H3_FRAME_TYPE_MAX_PUSH_ID,
+            Self::Grease => {
+                let r = random(7);
+                Decoder::from(&r).decode_uint(7).unwrap() * 0x1f + 0x21
+            }
         }
     }
 
@@ -104,6 +110,11 @@ impl HFrame {
                 enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*push_id);
                 });
+            }
+            Self::Grease => {
+                // Encode some number of random bytes.
+                let r = random(8);
+                enc.encode_vvec(&r[1..usize::from(1 + (r[0] & 0x7))]);
             }
         }
     }
@@ -168,7 +179,6 @@ impl HFrameReader {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
     /// returns true if quic stream was closed.
     /// # Errors
     /// May return `HttpFrame` if a frame cannot be decoded.
@@ -345,11 +355,11 @@ impl HFrameReader {
 
 #[cfg(test)]
 mod tests {
-    use super::{Encoder, Error, HFrame, HFrameReader, HSettings};
+    use super::{Decoder, Encoder, Error, HFrame, HFrameReader, HSettings};
     use crate::settings::{HSetting, HSettingType};
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::{Connection, StreamType};
-    use test_fixture::{connect, default_client, default_server, now};
+    use test_fixture::{connect, default_client, default_server, fixture_init, now};
 
     #[allow(clippy::many_single_char_names)]
     fn enc_dec(f: &HFrame, st: &str, remaining: usize) {
@@ -440,6 +450,25 @@ mod tests {
     fn test_max_push_id_frame4() {
         let f = HFrame::MaxPushId { push_id: 5 };
         enc_dec(&f, "0d0105", 0);
+    }
+
+    #[test]
+    fn grease() {
+        fn make_grease() -> u64 {
+            let mut enc = Encoder::default();
+            HFrame::Grease.encode(&mut enc);
+            let mut dec = Decoder::from(&enc);
+            let ft = dec.decode_varint().unwrap();
+            assert_eq!((ft - 0x21) % 0x1f, 0);
+            let body = dec.decode_vvec().unwrap();
+            assert!(body.len() <= 7);
+            ft
+        }
+
+        fixture_init();
+        let t1 = make_grease();
+        let t2 = make_grease();
+        assert_ne!(t1, t2);
     }
 
     struct HFrameReaderTest {

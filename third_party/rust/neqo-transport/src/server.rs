@@ -7,13 +7,14 @@
 // This file implements a server that can handle multiple connections.
 
 use neqo_common::{
-    self as common, hex, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn, timer::Timer,
-    Datagram, Decoder, Role,
+    self as common, event::Provider, hex, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn,
+    timer::Timer, Datagram, Decoder, Role,
 };
-use neqo_crypto::{AntiReplay, ZeroRttCheckResult, ZeroRttChecker};
+use neqo_crypto::{AntiReplay, Cipher, ZeroRttCheckResult, ZeroRttChecker};
 
 pub use crate::addr_valid::ValidateAddress;
 use crate::addr_valid::{AddressValidation, AddressValidationResult};
+use crate::cc::CongestionControlAlgorithm;
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdManager, ConnectionIdRef};
 use crate::connection::{Connection, Output, State};
 use crate::packet::{PacketBuilder, PacketType, PublicPacket};
@@ -121,6 +122,8 @@ pub struct Server {
     certs: Vec<String>,
     /// The ALPN values that the server supports.
     protocols: Vec<String>,
+    /// The cipher suites that the server supports.
+    ciphers: Vec<Cipher>,
     /// Anti-replay configuration for 0-RTT.
     anti_replay: AntiReplay,
     /// A function for determining if 0-RTT can be accepted.
@@ -168,6 +171,7 @@ impl Server {
         Ok(Self {
             certs: certs.iter().map(|x| String::from(x.as_ref())).collect(),
             protocols: protocols.iter().map(|x| String::from(x.as_ref())).collect(),
+            ciphers: Vec::new(),
             anti_replay,
             zero_rtt_checker: ServerZeroRttChecker::new(zero_rtt_checker),
             cid_manager,
@@ -189,6 +193,12 @@ impl Server {
     /// Set the policy for address validation.
     pub fn set_validation(&mut self, v: ValidateAddress) {
         self.address_validation.borrow_mut().set_validation(v);
+    }
+
+    /// Set the cipher suites that should be used.  Set an empty value to use
+    /// default values.
+    pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
+        self.ciphers = Vec::from(ciphers.as_ref());
     }
 
     fn remove_timer(&mut self, c: &StateRef) {
@@ -397,6 +407,7 @@ impl Server {
             &self.certs,
             &self.protocols,
             Rc::clone(&cid_mgr) as _,
+            &CongestionControlAlgorithm::NewReno,
             initial.quic_version,
         );
 

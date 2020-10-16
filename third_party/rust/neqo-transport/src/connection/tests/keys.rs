@@ -4,11 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, Output, LOCAL_IDLE_TIMEOUT};
+use super::super::super::{ConnectionError, ERROR_AEAD_LIMIT_REACHED};
+use super::super::{Connection, Error, Output, State, StreamType, LOCAL_IDLE_TIMEOUT};
 use super::{
     connect, connect_force_idle, default_client, default_server, maybe_authenticate,
     send_and_receive, send_something, AT_LEAST_PTO,
 };
+use crate::crypto::{OVERWRITE_INVOCATIONS, UPDATE_WRITE_KEYS_AT};
+use crate::packet::PacketNumber;
 use crate::path::PATH_MTU_V6;
 
 use neqo_common::{qdebug, Datagram};
@@ -24,6 +27,19 @@ fn check_discarded(peer: &mut Connection, pkt: Datagram, dropped: usize, dups: u
     let after = peer.stats();
     assert_eq!(dropped, after.dropped_rx - before.dropped_rx);
     assert_eq!(dups, after.dups_rx - before.dups_rx);
+}
+
+fn assert_update_blocked(c: &mut Connection) {
+    assert_eq!(
+        c.initiate_key_update().unwrap_err(),
+        Error::KeyUpdateBlocked
+    )
+}
+
+fn overwrite_invocations(n: PacketNumber) {
+    OVERWRITE_INVOCATIONS.with(|v| {
+        *v.borrow_mut() = Some(n);
+    });
 }
 
 #[test]
@@ -83,10 +99,8 @@ fn key_update_client() {
     assert_eq!(client.get_epochs(), (Some(3), Some(3))); // (write, read)
     assert_eq!(server.get_epochs(), (Some(3), Some(3)));
 
-    // TODO(mt) this needs to wait for handshake confirmation,
-    // but for now, we can do this immediately.
     assert!(client.initiate_key_update().is_ok());
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
 
     // Initiating an update should only increase the write epoch.
     assert_eq!(
@@ -109,9 +123,9 @@ fn key_update_client() {
 
     // Without having had time to purge old keys, more updates are blocked.
     // The spec would permits it at this point, but we are more conservative.
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
     // The server can't update until it receives an ACK for a packet.
-    assert!(server.initiate_key_update().is_err());
+    assert_update_blocked(&mut server);
 
     // Waiting now for at least a PTO should cause the server to drop old keys.
     // But at this point the client hasn't received a key update from the server.
@@ -124,7 +138,7 @@ fn key_update_client() {
     assert_eq!(server.get_epochs(), (Some(4), Some(4)));
 
     // Even though the server has updated, it hasn't received an ACK yet.
-    assert!(server.initiate_key_update().is_err());
+    assert_update_blocked(&mut server);
 
     // Now get an ACK from the server.
     // The previous PTO packet (see above) was dropped, so we should get an ACK here.
@@ -139,10 +153,10 @@ fn key_update_client() {
         panic!("client should now be waiting to clear keys");
     }
 
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
     assert_eq!(client.get_epochs(), (Some(4), Some(3)));
     // The server can't update until it gets something from the client.
-    assert!(server.initiate_key_update().is_err());
+    assert_update_blocked(&mut server);
 
     now += AT_LEAST_PTO;
     let _ = client.process(None, now);
@@ -194,30 +208,30 @@ fn key_update_consecutive() {
 #[test]
 fn key_update_before_confirmed() {
     let mut client = default_client();
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
     let mut server = default_server();
-    assert!(server.initiate_key_update().is_err());
+    assert_update_blocked(&mut server);
 
     // Client Initial
     let dgram = client.process(None, now()).dgram();
     assert!(dgram.is_some());
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
 
     // Server Initial + Handshake
     let dgram = server.process(dgram, now()).dgram();
     assert!(dgram.is_some());
-    assert!(server.initiate_key_update().is_err());
+    assert_update_blocked(&mut server);
 
     // Client Handshake
     client.process_input(dgram.unwrap(), now());
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
 
     assert!(maybe_authenticate(&mut client));
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
 
     let dgram = client.process(None, now()).dgram();
     assert!(dgram.is_some());
-    assert!(client.initiate_key_update().is_err());
+    assert_update_blocked(&mut client);
 
     // Server HANDSHAKE_DONE
     let dgram = server.process(dgram, now()).dgram();
@@ -228,4 +242,89 @@ fn key_update_before_confirmed() {
     let dgram = client.process(dgram, now()).dgram();
     assert!(dgram.is_none());
     assert!(client.initiate_key_update().is_ok());
+}
+
+#[test]
+fn exhaust_write_keys() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    overwrite_invocations(0);
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert!(client.stream_send(stream_id, b"explode!").is_ok());
+    let dgram = client.process_output(now()).dgram();
+    assert!(dgram.is_none());
+    assert!(matches!(
+        client.state(),
+        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+    ));
+}
+
+#[test]
+fn exhaust_read_keys() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    let dgram = send_something(&mut client, now());
+
+    overwrite_invocations(0);
+    let dgram = server.process(Some(dgram), now()).dgram();
+    assert!(matches!(
+        server.state(),
+        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+    ));
+
+    client.process_input(dgram.unwrap(), now());
+    assert!(matches!(client.state(), State::Draining {
+        error: ConnectionError::Transport(Error::PeerError(ERROR_AEAD_LIMIT_REACHED)), ..
+    }));
+}
+
+#[test]
+fn automatic_update_write_keys() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    overwrite_invocations(UPDATE_WRITE_KEYS_AT);
+    let _ = send_something(&mut client, now());
+    assert_eq!(client.get_epochs(), (Some(4), Some(3)));
+}
+
+#[test]
+fn automatic_update_write_keys_later() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    overwrite_invocations(UPDATE_WRITE_KEYS_AT + 2);
+    // No update after the first.
+    let _ = send_something(&mut client, now());
+    assert_eq!(client.get_epochs(), (Some(3), Some(3)));
+    // The second will update though.
+    let _ = send_something(&mut client, now());
+    assert_eq!(client.get_epochs(), (Some(4), Some(3)));
+}
+
+#[test]
+fn automatic_update_write_keys_blocked() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    // An outstanding key update will block the automatic update.
+    client.initiate_key_update().unwrap();
+
+    overwrite_invocations(UPDATE_WRITE_KEYS_AT);
+    let stream_id = client.stream_create(StreamType::UniDi).unwrap();
+    assert!(client.stream_send(stream_id, b"explode!").is_ok());
+    let dgram = client.process_output(now()).dgram();
+    // Not being able to update is fatal.
+    assert!(dgram.is_none());
+    assert!(matches!(
+        client.state(),
+        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+    ));
 }

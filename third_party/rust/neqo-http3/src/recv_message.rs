@@ -145,14 +145,14 @@ impl RecvMessage {
         }
     }
 
-    fn set_state_to_close_pending(&mut self, decoder: &mut QPackDecoder) {
+    fn set_state_to_close_pending(
+        &mut self,
+        decoder: &mut QPackDecoder,
+        post_readable_event: bool,
+    ) {
         // Stream has received fin. Depending on headers state set header_ready
         // or data_readable event so that app can pick up the fin.
-        qtrace!(
-            [self],
-            "set_state_to_close_pending:  state={:?}",
-            self.state
-        );
+        qtrace!([self], "set_state_to_close_pending: state={:?}", self.state);
 
         match self.state {
             RecvMessageState::WaitingForResponseHeaders { .. } => {
@@ -162,7 +162,9 @@ impl RecvMessage {
             RecvMessageState::ReadingData { .. } => {}
             RecvMessageState::WaitingForData { .. }
             | RecvMessageState::WaitingForFinAfterTrailers { .. } => {
-                self.conn_events.data_readable(self.stream_id)
+                if post_readable_event {
+                    self.conn_events.data_readable(self.stream_id)
+                }
             }
             _ => unreachable!("Closing an already closed transaction."),
         }
@@ -217,16 +219,17 @@ impl RecvMessage {
                 | RecvMessageState::WaitingForFinAfterTrailers { frame_reader } => {
                     match frame_reader.receive(conn, self.stream_id)? {
                         (None, true) => {
-                            self.set_state_to_close_pending(decoder);
+                            self.set_state_to_close_pending(decoder, post_readable_event);
                             break Ok(());
                         }
                         (None, false) => break Ok(()),
                         (Some(frame), fin) => {
                             qinfo!(
                                 [self],
-                                "A new frame has been received: {:?}; state={:?}",
+                                "A new frame has been received: {:?}; state={:?} fin={}",
                                 frame,
-                                self.state
+                                self.state,
+                                fin,
                             );
                             match frame {
                                 HFrame::Headers { header_block } => {
@@ -243,7 +246,7 @@ impl RecvMessage {
                                 break Ok(());
                             }
                             if fin && !matches!(self.state, RecvMessageState::DecodingHeaders{..}) {
-                                self.set_state_to_close_pending(decoder);
+                                self.set_state_to_close_pending(decoder, post_readable_event);
                                 break Ok(());
                             }
                         }

@@ -17,6 +17,7 @@ use crate::frame::Frame;
 use crate::recovery::RecoveryToken;
 use crate::Res;
 
+use smallvec::SmallVec;
 use std::convert::TryFrom;
 use std::net::{IpAddr, SocketAddr};
 use std::time::{Duration, Instant};
@@ -24,11 +25,17 @@ use std::time::{Duration, Instant};
 /// A prefix we add to Retry tokens to distinguish them from NEW_TOKEN tokens.
 const TOKEN_IDENTIFIER_RETRY: &[u8] = &[0x52, 0x65, 0x74, 0x72, 0x79];
 /// A prefix on NEW_TOKEN tokens, that is maximally Hamming distant from NEW_TOKEN.
+/// Together, these need to have a low probability of collision, even if there is
+/// corruption of individual bits in transit.
 const TOKEN_IDENTIFIER_NEW_TOKEN: &[u8] = &[0xad, 0x9a, 0x8b, 0x8d, 0x86];
 
-/// The maximum number of tokens we'll save from NEW_TOKEN.
+/// The maximum number of tokens we'll save from NEW_TOKEN frames.
 /// This should be the same as the value of MAX_TICKETS in neqo-crypto.
 const MAX_NEW_TOKEN: usize = 4;
+/// The number of tokens we'll track for the purposes of looking for duplicates.
+/// This is based on how many might be received over a period where could be
+/// retransmissions.  It should be at least `MAX_NEW_TOKEN`.
+const MAX_SAVED_TOKENS: usize = 8;
 
 /// `ValidateAddress` determines what sort of address validation is performed.
 /// In short, this determines when a Retry packet is sent.
@@ -262,15 +269,26 @@ impl AddressValidation {
     }
 }
 
+// Note: these lint override can be removed in later versions where the lints
+// either don't trip a false positive or don't apply.  rustc 1.46 is fine.
+#[allow(dead_code, clippy::large_enum_variant)]
 pub enum NewTokenState {
-    Client(Vec<Vec<u8>>),
+    Client {
+        /// Tokens that haven't been taken yet.
+        pending: SmallVec<[Vec<u8>; MAX_NEW_TOKEN]>,
+        /// Tokens that have been taken, saved so that we can discard duplicates.
+        old: SmallVec<[Vec<u8>; MAX_SAVED_TOKENS]>,
+    },
     Server(NewTokenSender),
 }
 
 impl NewTokenState {
     pub fn new(role: Role) -> Self {
         match role {
-            Role::Client => Self::Client(Vec::new()),
+            Role::Client => Self::Client {
+                pending: SmallVec::<[_; MAX_NEW_TOKEN]>::new(),
+                old: SmallVec::<[_; MAX_SAVED_TOKENS]>::new(),
+            },
             Role::Server => Self::Server(NewTokenSender::default()),
         }
     }
@@ -278,16 +296,28 @@ impl NewTokenState {
     /// Is there a token available?
     pub fn has_token(&self) -> bool {
         match self {
-            Self::Client(ref token) => !token.is_empty(),
+            Self::Client { ref pending, .. } => !pending.is_empty(),
             Self::Server(..) => false,
         }
     }
 
     /// If this is a client, take a token if there is one.
     /// If this is a server, panic.
-    pub fn take_token(&mut self) -> Option<Vec<u8>> {
-        if let Self::Client(ref mut tokens) = self {
-            tokens.pop()
+    pub fn take_token(&mut self) -> Option<&[u8]> {
+        if let Self::Client {
+            ref mut pending,
+            ref mut old,
+        } = self
+        {
+            if let Some(t) = pending.pop() {
+                if old.len() >= MAX_SAVED_TOKENS {
+                    old.remove(0);
+                }
+                old.push(t);
+                Some(&old[old.len() - 1])
+            } else {
+                None
+            }
         } else {
             unreachable!();
         }
@@ -296,18 +326,22 @@ impl NewTokenState {
     /// If this is a client, save a token.
     /// If this is a server, panic.
     pub fn save_token(&mut self, token: Vec<u8>) {
-        if let Self::Client(ref mut tokens) = self {
-            for t in tokens.iter().rev() {
+        if let Self::Client {
+            ref mut pending,
+            ref old,
+        } = self
+        {
+            for t in old.iter().rev().chain(pending.iter().rev()) {
                 if t == &token {
                     qinfo!("NewTokenState discarding duplicate NEW_TOKEN");
                     return;
                 }
             }
 
-            if tokens.len() >= MAX_NEW_TOKEN {
-                tokens.remove(0);
+            if pending.len() >= MAX_NEW_TOKEN {
+                pending.remove(0);
             }
-            tokens.push(token);
+            pending.push(token);
         } else {
             unreachable!();
         }
@@ -413,5 +447,56 @@ impl NewTokenSender {
 
     pub fn acked(&mut self, seqno: usize) {
         self.tokens.retain(|i| i.seqno != seqno);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NewTokenState;
+    use neqo_common::Role;
+
+    const ONE: &[u8] = &[1, 2, 3];
+    const TWO: &[u8] = &[4, 5];
+
+    #[test]
+    fn duplicate_saved() {
+        let mut tokens = NewTokenState::new(Role::Client);
+        tokens.save_token(ONE.to_vec());
+        tokens.save_token(TWO.to_vec());
+        tokens.save_token(ONE.to_vec());
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably TWO
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably ONE
+        assert!(!tokens.has_token());
+        assert!(tokens.take_token().is_none());
+    }
+
+    #[test]
+    fn duplicate_after_take() {
+        let mut tokens = NewTokenState::new(Role::Client);
+        tokens.save_token(ONE.to_vec());
+        tokens.save_token(TWO.to_vec());
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably TWO
+        tokens.save_token(ONE.to_vec());
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably ONE
+        assert!(!tokens.has_token());
+        assert!(tokens.take_token().is_none());
+    }
+
+    #[test]
+    fn duplicate_after_empty() {
+        let mut tokens = NewTokenState::new(Role::Client);
+        tokens.save_token(ONE.to_vec());
+        tokens.save_token(TWO.to_vec());
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably TWO
+        assert!(tokens.has_token());
+        assert!(tokens.take_token().is_some()); // probably ONE
+        tokens.save_token(ONE.to_vec());
+        assert!(!tokens.has_token());
+        assert!(tokens.take_token().is_none());
     }
 }

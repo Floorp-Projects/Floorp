@@ -15,14 +15,14 @@ use crate::events::ConnectionEvent;
 use crate::frame::StreamType;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;
-use crate::QuicVersion;
+use crate::{CongestionControlAlgorithm, QuicVersion};
 
 use std::cell::RefCell;
 use std::mem;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use neqo_common::{qdebug, qtrace, Datagram, Decoder};
+use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder};
 use neqo_crypto::{AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{self, fixture_init, loopback, now};
 
@@ -38,6 +38,7 @@ mod stream;
 mod vn;
 mod zerortt;
 
+const DEFAULT_RTT: Duration = Duration::from_millis(100);
 const AT_LEAST_PTO: Duration = Duration::from_secs(1);
 const DEFAULT_STREAM_DATA: &[u8] = b"message";
 
@@ -55,6 +56,7 @@ pub fn default_client() -> Connection {
         Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
         loopback(),
         loopback(),
+        &CongestionControlAlgorithm::NewReno,
         QuicVersion::default(),
     )
     .expect("create a default client")
@@ -66,6 +68,7 @@ pub fn default_server() -> Connection {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
+        &CongestionControlAlgorithm::NewReno,
         QuicVersion::default(),
     )
     .expect("create a default server");

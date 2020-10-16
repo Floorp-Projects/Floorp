@@ -400,6 +400,10 @@ impl RecvStream {
     }
 
     pub fn inbound_stream_frame(&mut self, fin: bool, offset: u64, data: Vec<u8>) -> Res<()> {
+        // We should post a DataReadable event only once when we change from no-data-ready to
+        // data-ready. Therefore remember the state before processing a new frame.
+        let already_data_ready = self.data_ready();
+
         let new_end = offset + data.len() as u64;
 
         // Send final size errors even if stream is closed
@@ -457,7 +461,7 @@ impl RecvStream {
             }
         }
 
-        if self.data_ready() || self.needs_to_inform_app_about_fin() {
+        if !already_data_ready && (self.data_ready() || self.needs_to_inform_app_about_fin()) {
             self.conn_events.recv_stream_readable(self.stream_id)
         }
 

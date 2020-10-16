@@ -14,6 +14,7 @@ use crate::connection::State;
 use crate::frame::StreamType;
 use crate::stream_id::StreamId;
 use crate::AppError;
+use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
@@ -143,18 +144,6 @@ impl ConnectionEvents {
         self.remove(|evt| matches!(evt, ConnectionEvent::RecvStreamReadable { stream_id: x } if *x == stream_id.as_u64()));
     }
 
-    pub fn events(&self) -> impl Iterator<Item = ConnectionEvent> {
-        self.events.replace(VecDeque::new()).into_iter()
-    }
-
-    pub fn has_events(&self) -> bool {
-        !self.events.borrow().is_empty()
-    }
-
-    pub fn next_event(&self) -> Option<ConnectionEvent> {
-        self.events.borrow_mut().pop_front()
-    }
-
     fn insert(&self, event: ConnectionEvent) {
         let mut q = self.events.borrow_mut();
 
@@ -184,6 +173,18 @@ impl ConnectionEvents {
     }
 }
 
+impl EventProvider for ConnectionEvents {
+    type Event = ConnectionEvent;
+
+    fn has_events(&self) -> bool {
+        !self.events.borrow().is_empty()
+    }
+
+    fn next_event(&mut self) -> Option<Self::Event> {
+        self.events.borrow_mut().pop_front()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,7 +192,7 @@ mod tests {
 
     #[test]
     fn event_culling() {
-        let evts = ConnectionEvents::default();
+        let mut evts = ConnectionEvents::default();
 
         evts.client_0rtt_rejected();
         evts.client_0rtt_rejected();
