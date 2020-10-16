@@ -2421,6 +2421,7 @@ class Database final
   const PersistenceType mPersistenceType;
   const bool mFileHandleDisabled;
   const bool mChromeWriteAccessAllowed;
+  const bool mInPrivateBrowsing;
   FlippedOnce<false> mClosed;
   FlippedOnce<false> mInvalidated;
   FlippedOnce<false> mActorWasAlive;
@@ -2438,7 +2439,7 @@ class Database final
            uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
            SafeRefPtr<FileManager> aFileManager,
            RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
-           bool aChromeWriteAccessAllowed);
+           bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing);
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -3361,6 +3362,7 @@ class FactoryOp
   const bool mDeleting;
   bool mChromeWriteAccessAllowed;
   bool mFileHandleDisabled;
+  FlippedOnce<false> mInPrivateBrowsing;
 
  public:
   const nsCString& Origin() const {
@@ -9787,7 +9789,8 @@ Database::Database(SafeRefPtr<Factory> aFactory,
                    SafeRefPtr<FullDatabaseMetadata> aMetadata,
                    SafeRefPtr<FileManager> aFileManager,
                    RefPtr<DirectoryLock> aDirectoryLock,
-                   bool aFileHandleDisabled, bool aChromeWriteAccessAllowed)
+                   bool aFileHandleDisabled, bool aChromeWriteAccessAllowed,
+                   bool aInPrivateBrowsing)
     : mFactory(std::move(aFactory)),
       mMetadata(std::move(aMetadata)),
       mFileManager(std::move(aFileManager)),
@@ -9804,6 +9807,7 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
       mFileHandleDisabled(aFileHandleDisabled),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
+      mInPrivateBrowsing(aInPrivateBrowsing),
       mBackgroundThread(GetCurrentEventTarget())
 #ifdef DEBUG
       ,
@@ -16146,8 +16150,13 @@ FactoryOp::CheckPermission(ContentParent* aContentParent) {
     const ContentPrincipalInfo& contentPrincipalInfo =
         principalInfo.get_ContentPrincipalInfo();
     if (contentPrincipalInfo.attrs().mPrivateBrowsingId != 0) {
-      // IndexedDB is currently disabled in privateBrowsing.
-      return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+      if (StaticPrefs::dom_indexedDB_privateBrowsing_enabled()) {
+        // XXX Not sure if this should be done from here, it goes beyond
+        // checking the permissions.
+        mInPrivateBrowsing.Flip();
+      } else {
+        return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+      }
     }
   }
 
@@ -17401,8 +17410,8 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
                  AcquireStrongRefFromRawPtr{}},
       mCommonParams.principalInfo(), mOptionalContentParentId, mGroup, mOrigin,
       mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
-      std::move(mDirectoryLock), mFileHandleDisabled,
-      mChromeWriteAccessAllowed);
+      std::move(mDirectoryLock), mFileHandleDisabled, mChromeWriteAccessAllowed,
+      mInPrivateBrowsing);
 
   if (info) {
     info->mLiveDatabases.AppendElement(mDatabase.unsafeGetRawPtr());

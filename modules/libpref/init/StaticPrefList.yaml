@@ -1867,6 +1867,12 @@
   value: false
   mirror: always
 
+# Enable indexedDB in private browsing mode.
+- name: dom.indexedDB.privateBrowsing.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.input_events.beforeinput.enabled
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
