@@ -27,30 +27,6 @@ job-defaults:
             - --binary-path=org.mozilla.fenix
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
-raptor-youtube-playback-fenix:
-    description: "Raptor YouTube Playback on Fenix"
-    try-name: raptor-youtube-playback-fenix
-    treeherder-symbol: Rap-fenix(ytp)
-    run-on-projects: []
-    max-run-time: 3600
-    test-url-param:
-        by-test-platform:
-            android-hw-g5.*:
-                "exclude=1,2,
-                3,4,5,6,7,8,9,10,19,20,21,22,25,26,29,30,33,34,35,36,37,38,39,40,49,50,51,52,
-                53,54,55,56,65,66,67,68,69,70,71,72,81,82,83,84,87,88,89,90,93,94,95,96,
-                17,18,28,32,47,48,63,64,79,80"
-            android-hw-p2.*:  # remove high resolution tests
-                "exclude=1,2,
-                17,18,28,32,47,48,63,64,79,80"
-            default: ""
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback
-            # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
-            # - --test-url-params is dynamically added from setup_raptor transform depending
-            # on platform and project
-
 raptor-youtube-playback-h264-sfr-fenix:
     description: "Raptor YouTube Playback H264 SFR on Fenix"
     try-name: raptor-youtube-playback-h264-sfr-fenix

@@ -35,27 +35,6 @@ raptor-speedometer-fennec68:
             - --app=fennec
             - --binary=org.mozilla.firefox
 
-raptor-youtube-playback-fennec68:
-    description: "Raptor YouTube Playback on Fennec68"
-    try-name: raptor-youtube-playback-fennec68
-    treeherder-symbol: Rap(ytp)
-    max-run-time: 3600
-    test-url-param:
-        by-test-platform:
-            android-hw-g5.*:
-                "exclude=1,2,
-                3,4,5,6,7,8,9,10,19,20,21,22,25,26,29,30,33,34,35,36,37,38,39,40,49,50,51,
-                52,53,54,55,56,65,66,67,68,69,70,71,72,81,82,83,84,87,88,89,90,93,94,95,96,
-                17,18,28,32,47,48,63,64,79,80"
-            android-hw-p2.*:  # remove high resolution tests
-                "exclude=1,2,17,18,28,32,47,48,63,64,79,80"
-            default: ""
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-fennec68
-            - --app=fennec
-            - --binary=org.mozilla.firefox
-
 raptor-youtube-playback-h264-sfr-fennec68:
     description: "Raptor YouTube Playback H264 SFR on Fennec68"
     try-name: raptor-youtube-playback-h264-sfr-fennec68
