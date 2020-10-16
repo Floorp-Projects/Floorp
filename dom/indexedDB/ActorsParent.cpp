@@ -2421,6 +2421,7 @@ class Database final
   const nsCString mOrigin;
   const nsCString mId;
   const nsString mFilePath;
+  const Maybe<const CipherKey> mKey;
   uint32_t mActiveMutableFileCount;
   uint32_t mPendingCreateFileOpCount;
   int64_t mDirectoryLockId;
@@ -2434,8 +2435,6 @@ class Database final
   FlippedOnce<false> mActorWasAlive;
   FlippedOnce<false> mActorDestroyed;
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
-  // XXX Move to DatabaseActorInfo, and try to make it const
-  Maybe<const CipherKey> mKey;
 #ifdef DEBUG
   bool mAllBlobsUnmapped;
 #endif
@@ -2448,7 +2447,8 @@ class Database final
            uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
            SafeRefPtr<FileManager> aFileManager,
            RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
-           bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing);
+           bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing,
+           const Maybe<const CipherKey>& aMaybeKey);
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -2576,8 +2576,14 @@ class Database final
 
   void Stringify(nsACString& aResult) const;
 
+  bool IsInPrivateBrowsing() const {
+    AssertIsOnBackgroundThread();
+
+    return mInPrivateBrowsing;
+  }
+
   const Maybe<const CipherKey>& MaybeKeyRef() const {
-    // This can be called on any thread, as it is quasi-const.
+    // This can be called on any thread, as it is const.
     MOZ_ASSERT(mKey.isSome() == mInPrivateBrowsing);
     return mKey;
   }
@@ -6185,6 +6191,10 @@ typedef nsClassHashtable<nsCStringHashKey, DatabaseActorInfo>
 
 StaticAutoPtr<DatabaseActorHashtable> gLiveDatabaseHashtable;
 
+using PrivateBrowsingInfoHashtable =
+    nsDataHashtable<nsCStringHashKey, CipherKey>;
+StaticAutoPtr<PrivateBrowsingInfoHashtable> gPrivateBrowsingInfoHashtable;
+
 StaticRefPtr<ConnectionPool> gConnectionPool;
 
 StaticRefPtr<FileHandleThreadPool> gFileHandleThreadPool;
@@ -6217,6 +6227,9 @@ void IncreaseBusyCount() {
 
     MOZ_ASSERT(!gLiveDatabaseHashtable);
     gLiveDatabaseHashtable = new DatabaseActorHashtable();
+
+    MOZ_ASSERT(!gPrivateBrowsingInfoHashtable);
+    gPrivateBrowsingInfoHashtable = new PrivateBrowsingInfoHashtable();
 
     MOZ_ASSERT(!gLoggingInfoHashtable);
     gLoggingInfoHashtable = new DatabaseLoggingInfoHashtable();
@@ -6263,6 +6276,12 @@ void DecreaseBusyCount() {
     MOZ_ASSERT(gLiveDatabaseHashtable);
     MOZ_ASSERT(!gLiveDatabaseHashtable->Count());
     gLiveDatabaseHashtable = nullptr;
+
+    MOZ_ASSERT(gPrivateBrowsingInfoHashtable);
+    // XXX After we add the private browsing session end listener, we can assert
+    // this.
+    // MOZ_ASSERT(!gPrivateBrowsingInfoHashtable->Count());
+    gPrivateBrowsingInfoHashtable = nullptr;
 
     MOZ_ASSERT(gFactoryOps);
     MOZ_ASSERT(gFactoryOps->IsEmpty());
@@ -9854,16 +9873,14 @@ WaitForTransactionsHelper::Run() {
  * Database
  ******************************************************************************/
 
-Database::Database(SafeRefPtr<Factory> aFactory,
-                   const PrincipalInfo& aPrincipalInfo,
-                   const Maybe<ContentParentId>& aOptionalContentParentId,
-                   const nsACString& aGroup, const nsACString& aOrigin,
-                   uint32_t aTelemetryId,
-                   SafeRefPtr<FullDatabaseMetadata> aMetadata,
-                   SafeRefPtr<FileManager> aFileManager,
-                   RefPtr<DirectoryLock> aDirectoryLock,
-                   bool aFileHandleDisabled, bool aChromeWriteAccessAllowed,
-                   bool aInPrivateBrowsing)
+Database::Database(
+    SafeRefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
+    const Maybe<ContentParentId>& aOptionalContentParentId,
+    const nsACString& aGroup, const nsACString& aOrigin, uint32_t aTelemetryId,
+    SafeRefPtr<FullDatabaseMetadata> aMetadata,
+    SafeRefPtr<FileManager> aFileManager, RefPtr<DirectoryLock> aDirectoryLock,
+    bool aFileHandleDisabled, bool aChromeWriteAccessAllowed,
+    bool aInPrivateBrowsing, const Maybe<const CipherKey>& aMaybeKey)
     : mFactory(std::move(aFactory)),
       mMetadata(std::move(aMetadata)),
       mFileManager(std::move(aFileManager)),
@@ -9874,6 +9891,7 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mOrigin(aOrigin),
       mId(mMetadata->mDatabaseId),
       mFilePath(mMetadata->mFilePath),
+      mKey(aMaybeKey),
       mActiveMutableFileCount(0),
       mPendingCreateFileOpCount(0),
       mTelemetryId(aTelemetryId),
@@ -9897,18 +9915,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
   mDirectoryLockId = mDirectoryLock->Id();
-
-  if (mInPrivateBrowsing) {
-    // XXX Generate key using proper random data, such that we can ensure the
-    // use of unique IVs per key by discriminating by database's file id &
-    // offset.
-    IndexedDBCipherStrategy cipherStrategy;
-
-    auto keyOrErr = cipherStrategy.GenerateKey();
-    MOZ_RELEASE_ASSERT(keyOrErr.isOk());
-
-    mKey.emplace(keyOrErr.unwrap());
-  }
 }
 
 template <typename T>
@@ -16032,6 +16038,22 @@ nsresult FactoryOp::Open() {
 
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
+  if (mInPrivateBrowsing) {
+    if (!gPrivateBrowsingInfoHashtable->Contains(mDatabaseId)) {
+      IndexedDBCipherStrategy cipherStrategy;
+
+      // XXX Generate key using proper random data, such that we can ensure the
+      // use of unique IVs per key by discriminating by database's file id &
+      // offset.
+      auto keyOrErr = cipherStrategy.GenerateKey();
+
+      // XXX Propagate the error to the caller rather than asserting.
+      MOZ_RELEASE_ASSERT(keyOrErr.isOk());
+
+      gPrivateBrowsingInfoHashtable->Put(mDatabaseId, keyOrErr.unwrap());
+    }
+  }
+
   mState = State::FinishOpen;
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
@@ -17488,6 +17510,14 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     mMetadata = info->mMetadata.clonePtr();
   }
 
+  Maybe<const CipherKey> maybeKey;
+  if (mInPrivateBrowsing) {
+    CipherKey key;
+    MOZ_ALWAYS_TRUE(gPrivateBrowsingInfoHashtable->Get(mDatabaseId, &key));
+
+    maybeKey.emplace(std::move(key));
+  }
+
   // XXX Shouldn't Manager() return already_AddRefed when
   // PBackgroundIDBFactoryParent is declared refcounted?
   mDatabase = MakeSafeRefPtr<Database>(
@@ -17496,7 +17526,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
       mCommonParams.principalInfo(), mOptionalContentParentId, mGroup, mOrigin,
       mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
       std::move(mDirectoryLock), mFileHandleDisabled, mChromeWriteAccessAllowed,
-      mInPrivateBrowsing);
+      mInPrivateBrowsing, maybeKey);
 
   if (info) {
     info->mLiveDatabases.AppendElement(mDatabase.unsafeGetRawPtr());
