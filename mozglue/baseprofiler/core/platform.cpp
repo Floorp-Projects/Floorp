@@ -3371,10 +3371,8 @@ ProfilingStack* profiler_register_thread(const char* aName,
     text += "\" attempted to re-register as \"";
     text += aName;
     text += "\"";
-    maybelocked_profiler_add_marker_for_thread(
-        profiler_main_thread_id(), ProfilingCategoryPair::OTHER_Profiling,
-        "profiler_register_thread again",
-        TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
+    BASE_PROFILER_MARKER_TEXT("profiler_register_thread again", OTHER_Profiling,
+                              MarkerThreadId::MainThread(), text);
 
     return &thread->RacyRegisteredThread().ProfilingStack();
   }
@@ -3419,12 +3417,9 @@ void profiler_unregister_thread() {
     // mismatched register/unregister pairs in Firefox.
     if (int tid = profiler_current_thread_id();
         tid != profiler_main_thread_id()) {
-      maybelocked_profiler_add_marker_for_thread(
-          profiler_main_thread_id(), ProfilingCategoryPair::OTHER_Profiling,
-          "profiler_unregister_thread again",
-          TextMarkerPayload(std::to_string(profiler_current_thread_id()),
-                            TimeStamp::NowUnfuzzed()),
-          &lock);
+      BASE_PROFILER_MARKER_TEXT("profiler_unregister_thread again",
+                                OTHER_Profiling, MarkerThreadId::MainThread(),
+                                std::to_string(profiler_current_thread_id()));
     }
     // There are two ways FindCurrentThreadRegisteredThread() might have failed.
     //
