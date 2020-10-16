@@ -202,8 +202,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
 
   virtual bool IsRemote() const { return false; }
 
-  virtual UniquePtr<SurfaceDescriptor>
-  LookupSurfaceDescriptorForClientDrawTarget(const uintptr_t aDrawTarget) {
+  virtual UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
+      const int64_t aTextureId) {
     MOZ_CRASH("Should only be called on ContentCompositorBridgeParent.");
   }
 

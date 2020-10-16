@@ -11,6 +11,14 @@
 namespace mozilla {
 namespace layers {
 
+// The texture ID is used in the GPU process both to lookup the real texture in
+// the canvas threads and to lookup the SurfaceDescriptor for that texture in
+// the compositor thread. It is therefore important that the ID is unique (per
+// recording process), otherwise an old descriptor can be picked up. This means
+// we can't use the pointer in the recording process as an ID like we do for
+// other objects.
+static int64_t sNextRecordedTextureId = 0;
+
 RecordedTextureData::RecordedTextureData(
     already_AddRefed<CanvasChild> aCanvasChild, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, TextureType aTextureType)
@@ -18,7 +26,9 @@ RecordedTextureData::RecordedTextureData(
   mCanvasChild->EnsureRecorder(aTextureType);
 }
 
-RecordedTextureData::~RecordedTextureData() = default;
+RecordedTextureData::~RecordedTextureData() {
+  mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
+}
 
 void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
@@ -31,6 +41,8 @@ void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
 bool RecordedTextureData::Lock(OpenMode aMode) {
   mCanvasChild->EnsureBeginTransaction();
   if (!mDT) {
+    mTextureId = sNextRecordedTextureId++;
+    mCanvasChild->RecordEvent(RecordedNextTextureId(mTextureId));
     mDT = mCanvasChild->CreateDrawTarget(mSize, mFormat);
 
     // We lock the TextureData when we create it to get the remote DrawTarget.
@@ -38,7 +50,7 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     return true;
   }
 
-  mCanvasChild->RecordEvent(RecordedTextureLock(mDT.get(), aMode));
+  mCanvasChild->RecordEvent(RecordedTextureLock(mTextureId, aMode));
   if (aMode & OpenMode::OPEN_WRITE) {
     mCanvasChild->OnTextureWriteLock();
     mSnapshot = nullptr;
@@ -47,7 +59,7 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
 }
 
 void RecordedTextureData::Unlock() {
-  mCanvasChild->RecordEvent(RecordedTextureUnlock(mDT.get()));
+  mCanvasChild->RecordEvent(RecordedTextureUnlock(mTextureId));
 }
 
 already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
@@ -64,9 +76,7 @@ already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
 void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {}
 
 bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
-  SurfaceDescriptorRecorded descriptor;
-  descriptor.drawTarget() = reinterpret_cast<uintptr_t>(mDT.get());
-  aDescriptor = std::move(descriptor);
+  aDescriptor = SurfaceDescriptorRecorded(mTextureId);
   return true;
 }
 
