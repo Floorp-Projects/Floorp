@@ -4688,6 +4688,24 @@ browser.searchinit:
       - 'firefox'
     record_in_processes:
       - main
+  engine_invalid_webextension:
+    bug_numbers:
+      - 1665938
+    description: >
+      Records the WebExtension ID of a search engine where the WebExtension
+      is not installed (= 1), disabled (= 2) or where the submission URL
+      is different between the search engine and the WebExtension (= 3)
+    expires: "89"
+    keyed: true
+    kind: uint
+    notification_emails:
+      - fx-search@mozilla.com
+      - mbanner@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
 
 encoding:
   override_used:
