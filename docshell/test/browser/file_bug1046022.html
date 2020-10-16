@@ -19,6 +19,10 @@ var testFns = [
     return "stop";
   },
   function(e) {
+    e.currentTarget.stop();
+    return "stop";
+  },
+  function(e) {
     e.target.location.replace("otherpage-location-replaced.html");
     return "stop";
   },

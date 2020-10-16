@@ -81,7 +81,7 @@ add_task(async function test() {
     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
   );
 
-  const NUM_TESTS = 6;
+  const NUM_TESTS = 7;
   await SpecialPowers.spawn(browser, [NUM_TESTS], testCount => {
     let { testFns } = this.content.wrappedJSObject;
     Assert.equal(
