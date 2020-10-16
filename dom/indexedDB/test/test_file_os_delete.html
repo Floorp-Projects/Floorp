@@ -62,13 +62,9 @@
       is(event.type, "success", "Got correct event type");
 
       getCurrentUsage(grabFileUsageAndContinueHandler);
-      let originalUsage = yield undefined;
+      let usage = yield undefined;
 
-      // FIXME This might not work in private browsing mode because of the
-      // encryption overhead. We need to decide how to handle that. We might
-      // change the usage reporting to remove the overhead.
-
-      is(originalUsage, startUsage + fileData1.obj.file.size + fileData2.obj.file.size,
+      is(usage, startUsage + fileData1.obj.file.size + fileData2.obj.file.size,
          "Correct file usage");
 
       let trans = db.transaction([objectStoreName], READ_WRITE);
@@ -79,9 +75,10 @@
       is(event.type, "complete", "Got correct event type");
 
       getCurrentUsage(grabFileUsageAndContinueHandler);
-      let usage = yield undefined;
+      usage = yield undefined;
 
-      is(usage, originalUsage, "OS files exists");
+      is(usage, startUsage + fileData1.obj.file.size + fileData2.obj.file.size,
+         "OS files exists");
 
       fileData1.obj.file = null;
       fileData2.obj.file = null;
