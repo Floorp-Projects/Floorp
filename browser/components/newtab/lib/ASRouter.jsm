@@ -357,38 +357,40 @@ const MessageLoaderUtils = {
       let experimentData;
       try {
         experimentData = ExperimentAPI.getExperiment({ featureId });
+        // Not enrolled in any experiment for this feature, we can skip
+        if (!experimentData) {
+          continue;
+        }
       } catch (e) {
         MessageLoaderUtils.reportError(e);
         continue;
       }
 
-      if (experimentData?.branch?.feature) {
-        experiments.push(experimentData.branch.feature.value);
+      // If the feature is not enabled there is no message to send back.
+      // Other branches might be enabled so we check those as well in case we
+      // need to send a reach ping.
+      if (ExperimentAPI.isFeatureEnabled(featureId, false)) {
+        experiments.push(ExperimentAPI.getFeatureValue(featureId));
+      }
 
-        if (!REACH_EVENT_GROUPS.includes(featureId)) {
-          continue;
-        }
-        // Check other sibling branches for triggers, add them to the return
-        // array if found any. The `forReachEvent` label is used to identify
-        // those branches so that they would only used to record the Reach
-        // event.
-        const branches =
-          (await ExperimentAPI.getAllBranches(experimentData.slug)) || [];
-        for (const branch of branches) {
-          let branchValue = branch.feature.value;
-          if (
-            branch.slug !== experimentData.branch.slug &&
-            branchValue.trigger
-          ) {
-            experiments.push({
-              // Used by `_recordReachEvent` to filter and decide if a reach
-              // ping should be sent
-              forReachEvent: { sent: false, group: featureId },
-              experimentSlug: experimentData.slug,
-              branchSlug: branch.slug,
-              ...branchValue,
-            });
-          }
+      if (!REACH_EVENT_GROUPS.includes(featureId)) {
+        continue;
+      }
+      // Check other sibling branches for triggers, add them to the return
+      // array if found any. The `forReachEvent` label is used to identify
+      // those branches so that they would only used to record the Reach
+      // event.
+      const branches =
+        (await ExperimentAPI.getAllBranches(experimentData.slug)) || [];
+      for (const branch of branches) {
+        let branchValue = branch.feature.value;
+        if (branch.slug !== experimentData.branch.slug && branchValue.trigger) {
+          experiments.push({
+            forReachEvent: { sent: false, group: featureId },
+            experimentSlug: experimentData.slug,
+            branchSlug: branch.slug,
+            ...branchValue,
+          });
         }
       }
     }

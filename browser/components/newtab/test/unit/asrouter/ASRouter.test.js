@@ -213,19 +213,28 @@ describe("ASRouter", () => {
         getExperiment: sandbox.stub().returns({
           branch: {
             slug: "unit-slug",
-            feature: { featureId: "foo", value: { id: "test-message" } },
+            feature: {
+              featureId: "foo",
+              enabled: true,
+              value: { id: "test-message" },
+            },
           },
         }),
-        getAllBranches: sandbox.stub().returns([
+        getAllBranches: sandbox.stub().resolves([
           {
             branch: {
               slug: "unit-slug",
-              feature: { featureId: "bar", value: { id: "test-message" } },
+              feature: {
+                featureId: "bar",
+                enabled: true,
+                value: { id: "test-message" },
+              },
             },
           },
         ]),
         ready: sandbox.stub().resolves(),
         getFeatureValue: sandbox.stub().returns(null),
+        isFeatureEnabled: sandbox.stub().returns(false),
       },
       SpecialMessageActions: {
         handleAction: sandbox.stub(),
@@ -3792,20 +3801,72 @@ describe("ASRouter", () => {
         type: "remote-experiments",
         messageGroups: ["asrouter"],
       };
-
-      global.ExperimentAPI.getExperiment.returns({
+      const enrollment = {
         branch: {
           slug: "branch01",
           feature: {
             featureId: "asrouter",
+            enabled: true,
             value: { id: "id01", trigger: { id: "openURL" } },
           },
         },
-      });
+      };
+
+      global.ExperimentAPI.getExperiment.returns(enrollment);
+      global.ExperimentAPI.isFeatureEnabled.returns(
+        enrollment.branch.feature.enabled
+      );
+      global.ExperimentAPI.getFeatureValue.returns(
+        enrollment.branch.feature.value
+      );
 
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
 
+      assert.calledWithExactly(
+        global.ExperimentAPI.isFeatureEnabled,
+        "asrouter",
+        false
+      );
+      assert.calledWithExactly(
+        global.ExperimentAPI.getFeatureValue,
+        "asrouter"
+      );
       assert.lengthOf(result.messages, 1);
+    });
+    it("should skip disabled features and not load the messages", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+      const enrollment = {
+        branch: {
+          slug: "branch01",
+          feature: {
+            featureId: "asrouter",
+            enabled: false,
+            value: { id: "id01", trigger: { id: "openURL" } },
+          },
+        },
+      };
+
+      global.ExperimentAPI.getExperiment.returns(enrollment);
+      global.ExperimentAPI.isFeatureEnabled.returns(
+        enrollment.branch.feature.enabled
+      );
+      global.ExperimentAPI.getFeatureValue.returns(
+        enrollment.branch.feature.value
+      );
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.calledOnce(global.ExperimentAPI.isFeatureEnabled);
+      assert.notCalled(global.ExperimentAPI.getFeatureValue);
+      assert.calledWithExactly(
+        global.ExperimentAPI.isFeatureEnabled,
+        "asrouter",
+        false
+      );
+      assert.lengthOf(result.messages, 0);
     });
     it("should fetch messages from the ExperimentAPI", async () => {
       global.ExperimentAPI.ready.throws();
@@ -3825,35 +3886,43 @@ describe("ASRouter", () => {
         type: "remote-experiments",
         messageGroups: ["cfr"],
       };
-      global.ExperimentAPI.getExperiment.returns({
+      const enrollment = {
         slug: "exp01",
         branch: {
           slug: "branch01",
           feature: {
             featureId: "cfr",
+            enabled: true,
             value: { id: "id01", trigger: { id: "openURL" } },
           },
         },
-      });
-      global.ExperimentAPI.getAllBranches.returns([
-        {
-          slug: "branch01",
-          feature: {
-            featureId: "cfr",
-            value: { id: "id01", trigger: { id: "openURL" } },
-          },
-        },
+      };
+
+      global.ExperimentAPI.getExperiment.returns(enrollment);
+      global.ExperimentAPI.isFeatureEnabled.returns(
+        enrollment.branch.feature.enabled
+      );
+      global.ExperimentAPI.getFeatureValue.returns(
+        enrollment.branch.feature.value
+      );
+      global.ExperimentAPI.getAllBranches.resolves([
+        enrollment.branch,
         {
           slug: "branch02",
           feature: {
             featureId: "cfr",
+            enabled: true,
             value: { id: "id02", trigger: { id: "openURL" } },
           },
         },
         {
           // This branch should not be loaded as it doesn't have the trigger
           slug: "branch03",
-          feature: { featureId: "cfr", value: { id: "id03" } },
+          feature: {
+            featureId: "cfr",
+            enabled: true,
+            value: { id: "id03" },
+          },
         },
       ]);
 
@@ -3865,6 +3934,56 @@ describe("ASRouter", () => {
       assert.equal(result.messages[1].experimentSlug, "exp01");
       assert.equal(result.messages[1].branchSlug, "branch02");
       assert.deepEqual(result.messages[1].forReachEvent, {
+        sent: false,
+        group: "cfr",
+      });
+    });
+    it("should fetch branches with trigger even if enrolled branch is disabled", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["cfr"],
+      };
+      const enrollment = {
+        slug: "exp01",
+        branch: {
+          slug: "branch01",
+          feature: {
+            featureId: "cfr",
+            enabled: false,
+            value: { id: "id01", trigger: { id: "openURL" } },
+          },
+        },
+      };
+
+      global.ExperimentAPI.getExperiment.returns(enrollment);
+      global.ExperimentAPI.getAllBranches.resolves([
+        enrollment.branch,
+        {
+          slug: "branch02",
+          feature: {
+            featureId: "cfr",
+            enabled: true,
+            value: { id: "id02", trigger: { id: "openURL" } },
+          },
+        },
+        {
+          // This branch should not be loaded as it doesn't have the trigger
+          slug: "branch03",
+          feature: {
+            featureId: "cfr",
+            enabled: true,
+            value: { id: "id03" },
+          },
+        },
+      ]);
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.equal(result.messages.length, 1);
+      assert.equal(result.messages[0].id, "id02");
+      assert.equal(result.messages[0].experimentSlug, "exp01");
+      assert.equal(result.messages[0].branchSlug, "branch02");
+      assert.deepEqual(result.messages[0].forReachEvent, {
         sent: false,
         group: "cfr",
       });
