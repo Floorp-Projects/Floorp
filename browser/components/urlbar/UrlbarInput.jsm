@@ -533,8 +533,10 @@ class UrlbarInput {
       return;
     }
 
-    let selectedResult = result || this.view.selectedResult;
-    this.controller.recordSelectedResult(event, selectedResult);
+    this.controller.recordSelectedResult(
+      event,
+      result || this.view.selectedResult
+    );
 
     let where = oneOffParams?.openWhere || this._whereToOpen(event);
     if (selectedPrivateResult) {
@@ -548,7 +550,6 @@ class UrlbarInput {
       searchString: typedValue,
       selIndex: this.view.selectedRowIndex,
       selType,
-      provider: selectedResult?.providerName,
     });
 
     let isValidUrl = false;
@@ -683,7 +684,6 @@ class UrlbarInput {
         searchString: this._lastSearchString,
         selIndex,
         selType: "canonized",
-        provider: result.providerName,
       });
       this._loadURL(this.value, where, openParams, browser);
       return;
@@ -745,7 +745,6 @@ class UrlbarInput {
           searchString: this._lastSearchString,
           selIndex,
           selType: "tabswitch",
-          provider: result.providerName,
         });
 
         let switched = this.window.switchToTabHavingURI(
@@ -772,7 +771,6 @@ class UrlbarInput {
               searchString: this._lastSearchString,
               selIndex,
               selType: "keywordoffer",
-              provider: result.providerName,
             });
 
             // The user confirmed a token alias, so just move the caret
@@ -858,7 +856,6 @@ class UrlbarInput {
             searchString: this._lastSearchString,
             selIndex,
             selType: "tip",
-            provider: result.providerName,
           });
           let provider = UrlbarProvidersManager.getProvider(
             result.providerName
@@ -878,7 +875,6 @@ class UrlbarInput {
           selIndex,
           numChars: this._lastSearchString.length,
           selType: this.controller.engagementEvent.typeFromElement(element),
-          provider: result.providerName,
         });
         let provider = UrlbarProvidersManager.getProvider(result.providerName);
         if (!provider) {
@@ -893,7 +889,6 @@ class UrlbarInput {
           searchString: this._lastSearchString,
           selIndex,
           selType: "extension",
-          provider: result.providerName,
         });
 
         // The urlbar needs to revert to the loaded url when a command is
@@ -929,7 +924,6 @@ class UrlbarInput {
       searchString: this._lastSearchString,
       selIndex,
       selType: this.controller.engagementEvent.typeFromElement(element),
-      provider: result.providerName,
     });
 
     this._loadURL(
