@@ -181,17 +181,17 @@ raptor-youtube-playback-h264-sfr-chrome:
             - --test=raptor-youtube-playback-h264-sfr
             - --app=chrome
 
-raptor-youtube-playback-h264-chrome:
-    description: "Raptor YouTube Playback H264 on Chrome"
-    try-name: raptor-youtube-playback-h264-chrome
-    treeherder-symbol: Rap-ChR(ytp-h264)
+raptor-youtube-playback-hfr-chrome:
+    description: "Raptor YouTube Playback HFR on Chrome"
+    try-name: raptor-youtube-playback-hfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-hfr)
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 2700
     mozharness:
         extra-options:
-            - --test=raptor-youtube-playback-h264-std
+            - --test=raptor-youtube-playback-hfr
             - --app=chrome
 
 raptor-youtube-playback-vp9-sfr-chrome:
