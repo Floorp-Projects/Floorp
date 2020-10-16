@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  for (let i = 0; i < 50; i++) {
+    canvas.width = 20;
+    ctx.fillStyle = 'green';
+    ctx.fillRect(1, 1, 20, 20);
+    canvas.width = 10;
+    ctx.fillStyle = 'green';
+    ctx.fillRect(1, 1, 10, 10);
+  }
+}
+
+</script>
+</head>
+<body onload="boom();">
+<canvas id="canvas"></canvas>
+</body>
+</html>
