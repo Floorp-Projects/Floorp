@@ -29,10 +29,8 @@
 #  include <utility>
 #  include <vector>
 
-namespace mozilla::baseprofiler {
-// Implemented in platform.cpp
-MFBT_API int profiler_current_thread_id();
-}  // namespace mozilla::baseprofiler
+// TODO: Move common stuff to shared header instead.
+#  include "BaseProfiler.h"
 
 namespace mozilla {
 
@@ -280,6 +278,12 @@ class MarkerThreadId {
   // Use the current thread's id.
   static MarkerThreadId CurrentThread() {
     return MarkerThreadId(baseprofiler::profiler_current_thread_id());
+  }
+
+  // Use the main thread's id. This can be useful to record a marker from a
+  // possibly-unregistered thread, and display it in the main thread track.
+  static MarkerThreadId MainThread() {
+    return MarkerThreadId(baseprofiler::profiler_main_thread_id());
   }
 
   [[nodiscard]] constexpr int ThreadId() const { return mThreadId; }
