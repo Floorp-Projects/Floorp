@@ -62,6 +62,7 @@ class TabTrayViewHolder(
     @VisibleForTesting
     internal val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val playPauseButtonView: ImageButton = itemView.findViewById(R.id.play_pause_button)
+    private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
 
     override var tab: Tab? = null
 
@@ -86,6 +87,10 @@ class TabTrayViewHolder(
             thumbnailView.setImageBitmap(tab.thumbnail)
         } else {
             loadIntoThumbnailView(thumbnailView, tab.id)
+        }
+
+        if (itemView.context.settings().gridTabView) {
+            closeButton.increaseTapArea(GRID_ITEM_CLOSE_BUTTON_EXTRA_DPS)
         }
 
         // Media state
@@ -236,5 +241,6 @@ class TabTrayViewHolder(
 
     companion object {
         private const val PLAY_PAUSE_BUTTON_EXTRA_DPS = 24
+        private const val GRID_ITEM_CLOSE_BUTTON_EXTRA_DPS = 24
     }
 }

@@ -70,8 +70,8 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
 
             <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/mozac_browser_tabstray_close"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/close_tab"
                 app:layout_constraintBottom_toTopOf="@+id/horizonatal_divider"
