@@ -49,6 +49,65 @@ async function closeContextMenu(contextMenu) {
 }
 
 /**
+ * Tests that Picture-in-Picture can be opened and closed through the
+ * context menu
+ */
+add_task(async () => {
+  for (const videoId of ["with-controls", "no-controls"]) {
+    info(`Testing ${videoId} case.`);
+
+    await BrowserTestUtils.withNewTab(
+      {
+        url: TEST_PAGE,
+        gBrowser,
+      },
+      async browser => {
+        await openContextMenu(browser, videoId);
+
+        info("Context menu is open.");
+
+        const pipMenuItemId = "context-video-pictureinpicture";
+        let menuItem = document.getElementById(pipMenuItemId);
+
+        Assert.ok(
+          !menuItem.hidden,
+          "Should show Picture-in-Picture menu item."
+        );
+        Assert.equal(
+          menuItem.getAttribute("checked"),
+          "false",
+          "Picture-in-Picture should be unchecked."
+        );
+
+        await EventUtils.synthesizeMouseAtCenter(menuItem, {});
+
+        await SpecialPowers.spawn(browser, [videoId], async videoID => {
+          let video = content.document.getElementById(videoID);
+          await ContentTaskUtils.waitForCondition(() => {
+            return video.isCloningElementVisually;
+          }, "Video has started being cloned.");
+        });
+
+        info("PiP player is now open.");
+
+        await openContextMenu(browser, videoId);
+
+        info("Context menu is open again.");
+
+        await EventUtils.synthesizeMouseAtCenter(menuItem, {});
+
+        await SpecialPowers.spawn(browser, [videoId], async videoID => {
+          let video = content.document.getElementById(videoID);
+          await ContentTaskUtils.waitForCondition(() => {
+            return !video.isCloningElementVisually;
+          }, "Video has stopped being cloned.");
+        });
+      }
+    );
+  }
+});
+
+/**
  * Tests that the Picture-in-Picture context menu is correctly updated
  * based on the Picture-in-Picture state of the video.
  */
