@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  window.requestIdleCallback(() => {
+    SpecialPowers.wrap(window).printPreview()?.close()
+    SpecialPowers.wrap(window).printPreview()?.close()
+    document.documentElement.className = "";
+  })
+})
+</script>
+<iframe src='data:text/html,foo'></iframe>
+</html>
