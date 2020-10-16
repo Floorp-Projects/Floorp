@@ -195,12 +195,12 @@ browsertime-youtube-playback-mobile:
         by-test-platform:
             android-hw-g5.*:
                 - [youtube-playback-h264-sfr, ytp-h264-sfr]
-                - [youtube-playback-h264-std, ytp-h264-std]
+                - [youtube-playback-hfr, ytp-hfr]
                 - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
                 - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
             android-hw-p2.*:
                 - [youtube-playback-h264-sfr, ytp-h264-sfr]
-                - [youtube-playback-h264-std, ytp-h264-std]
+                - [youtube-playback-hfr, ytp-hfr]
                 - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
                 - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
                 - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
@@ -219,7 +219,7 @@ browsertime-youtube-playback-mobile:
             youtube-playback-h264-sfr:  # remove high resolution tests
                 "exclude=1,2,
                 23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38"
-            youtube-playback-h264-std:
+            youtube-playback-hfr:
                 by-test-platform:
                     android-hw-g5.*:  # remove VP9(1-34) and AV1(51-74) tests
                         "exclude=1,2,
