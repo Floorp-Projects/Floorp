@@ -131,6 +131,10 @@ internal class AccountObserver(
             }
         }
 
+        // NB: can we just expose registerDeviceObserver on account manager?
+        // registration could happen after onDevicesUpdate has been called, without having to tie this
+        // into the account "auth lifecycle".
+        // See https://github.com/mozilla-mobile/android-components/issues/8766
         account.deviceConstellation().registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
     }
 
@@ -159,19 +163,27 @@ internal class ConstellationObserver(
     private val logger = Logger(ConstellationObserver::class.java.simpleName)
 
     override fun onDevicesUpdate(constellation: ConstellationState) {
+        logger.info("onDevicesUpdate triggered.")
         val updateSubscription = constellation.currentDevice?.subscriptionExpired ?: false
 
         // If our subscription has not expired, we do nothing.
         // If our last check was recent (see: PERIODIC_INTERVAL_MILLISECONDS), we do nothing.
-        if (!updateSubscription || !verifier.allowedToRenew()) {
+        val allowedToRenew = verifier.allowedToRenew()
+        if (!updateSubscription || !allowedToRenew) {
+            logger.info("Short-circuiting onDevicesUpdate: " +
+                "updateSubscription($updateSubscription), allowedToRenew($allowedToRenew)")
             return
+        } else {
+            logger.info("Proceeding to renew registration")
         }
 
-        logger.warn("We have been notified that our push subscription has expired; renewing registration.")
-
+        logger.info("Renewing registration")
         push.renewRegistration()
 
+        logger.info("Incrementing verifier")
+        logger.info("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
         verifier.increment()
+        logger.info("Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
     }
 }
 
@@ -263,24 +275,32 @@ internal class VerificationDelegate(context: Context) : SharedPreferencesCache<V
      * Checks whether we're within our rate limiting constraints.
      */
     fun allowedToRenew(): Boolean {
-        val withinTimeFrame = System.currentTimeMillis() - innerTimestamp < PERIODIC_INTERVAL_MILLISECONDS
-        val withinIntervalCounter = innerCount <= MAX_REQUEST_IN_INTERVAL
-        val shouldAllow = withinTimeFrame && withinIntervalCounter
+        logger.info("Allowed to renew?")
 
-        // If it's been PERIODIC_INTERVAL_MILLISECONDS since we last checked, we can reset
-        // out rate limiter and verify now.
-        if (!withinTimeFrame) {
+        // within time frame
+        val currentTime = System.currentTimeMillis()
+        if ((currentTime - innerTimestamp) >= PERIODIC_INTERVAL_MILLISECONDS) {
+            logger.info("Resetting. currentTime($currentTime) - $innerTimestamp < $PERIODIC_INTERVAL_MILLISECONDS")
             reset()
-            return true
+        } else {
+            logger.info("No need to reset inner timestamp and count.")
         }
 
-        return shouldAllow
+        // within interval counter
+        if (innerCount > MAX_REQUEST_IN_INTERVAL) {
+            logger.info("Not allowed: innerCount($innerCount) > $MAX_REQUEST_IN_INTERVAL")
+            return false
+        }
+
+        logger.info("Allowed to renew!")
+        return true
     }
 
     /**
      * Should be called whenever a successful invocation has taken place and we want to record it.
      */
     fun increment() {
+        logger.info("Incrementing verification state.")
         val count = innerCount + 1
 
         setToCache(VerificationState(innerTimestamp, count))
@@ -289,6 +309,7 @@ internal class VerificationDelegate(context: Context) : SharedPreferencesCache<V
     }
 
     private fun reset() {
+        logger.info("Resetting verification state.")
         val timestamp = System.currentTimeMillis()
         innerCount = 0
         innerTimestamp = timestamp

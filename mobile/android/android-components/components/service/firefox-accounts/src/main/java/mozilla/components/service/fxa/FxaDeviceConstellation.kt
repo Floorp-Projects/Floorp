@@ -206,7 +206,10 @@ class FxaDeviceConstellation(
 
             // NB: at this point, 'constellationState' might have changed.
             // Notify with an immutable, local 'newState' instead.
-            deviceObserverRegistry.notifyObservers { onDevicesUpdate(newState) }
+            deviceObserverRegistry.notifyObservers {
+                logger.info("Notifying observer about constellation updates.")
+                onDevicesUpdate(newState)
+            }
 
             true
         }

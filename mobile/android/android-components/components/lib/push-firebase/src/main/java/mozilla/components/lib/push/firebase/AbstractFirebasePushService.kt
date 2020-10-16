@@ -40,23 +40,31 @@ abstract class AbstractFirebasePushService(
      * Initializes Firebase and starts the messaging service if not already started and enables auto-start as well.
      */
     override fun start(context: Context) {
+        logger.info("start")
         FirebaseApp.initializeApp(context)
     }
 
     override fun onNewToken(newToken: String) {
+        logger.info("Got new Firebase token: $newToken")
         PushProcessor.requireInstance.onNewToken(newToken)
     }
 
     @SuppressWarnings("TooGenericExceptionCaught")
     override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+        logger.info("onMessageReceived")
         remoteMessage?.let {
             // This is not an AutoPush message we can handle.
-            if (it.data[MESSAGE_KEY_CHANNEL_ID] == null) {
+            val chId = it.data.getOrElse(MESSAGE_KEY_CHANNEL_ID) { null }
+
+            if (chId == null) {
+                logger.info("Missing $MESSAGE_KEY_CHANNEL_ID key, skipping this message")
                 return
+            } else {
+                logger.info("Processing message with chId: $chId")
             }
 
             val message = EncryptedPushMessage(
-                channelId = it.data.getValue(MESSAGE_KEY_CHANNEL_ID),
+                channelId = chId,
                 encoding = it.data[MESSAGE_KEY_ENCODING],
                 body = it.data[MESSAGE_KEY_BODY],
                 salt = it.data[MESSAGE_KEY_SALT],

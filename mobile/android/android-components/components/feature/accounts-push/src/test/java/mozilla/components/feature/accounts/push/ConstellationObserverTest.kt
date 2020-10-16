@@ -31,7 +31,6 @@ class ConstellationObserverTest {
         observer.onDevicesUpdate(state)
 
         verifyZeroInteractions(push)
-        verifyZeroInteractions(verifier)
 
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscriptionExpired).thenReturn(false)
@@ -48,7 +47,6 @@ class ConstellationObserverTest {
         observer.onDevicesUpdate(state)
 
         verifyZeroInteractions(push)
-        verifyZeroInteractions(verifier)
 
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscriptionExpired).thenReturn(true)
