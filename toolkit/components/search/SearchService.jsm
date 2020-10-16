@@ -1348,6 +1348,67 @@ SearchService.prototype = {
     return this._initialized;
   },
 
+  /**
+   * Checks if Search Engines associated with WebExtensions are valid and
+   * up-to-date, and reports them via telemetry if not.
+   */
+  async checkWebExtensionEngines() {
+    await this.init();
+    logConsole.debug("Running check on WebExtension engines");
+
+    for (let engine of this._engines.values()) {
+      if (
+        engine.isAppProvided ||
+        !engine._extensionID ||
+        engine._extensionID == "set-via-policy" ||
+        engine._extensionID == "set-via-user"
+      ) {
+        continue;
+      }
+
+      let addon = await AddonManager.getAddonByID(engine._extensionID);
+
+      if (!addon) {
+        logConsole.debug(
+          `Add-on ${engine._extensionID} for search engine ${engine.name} is not installed!`
+        );
+        Services.telemetry.keyedScalarSet(
+          "browser.searchinit.engine_invalid_webextension",
+          engine._extensionID,
+          1
+        );
+      } else if (!addon.isActive) {
+        logConsole.debug(
+          `Add-on ${engine._extensionID} for search engine ${engine.name} is not active!`
+        );
+        Services.telemetry.keyedScalarSet(
+          "browser.searchinit.engine_invalid_webextension",
+          engine._extensionID,
+          2
+        );
+      } else {
+        let policy = await this._getExtensionPolicy(engine._extensionID);
+        let manifest = policy.extension.manifest;
+
+        if (
+          !engine.checkSearchUrlMatchesManifest(
+            manifest?.chrome_settings_overrides?.search_provider
+          )
+        ) {
+          logConsole.debug(
+            `Add-on ${engine._extensionID} for search engine ${engine.name} has out-of-date manifest!`
+          );
+          Services.telemetry.keyedScalarSet(
+            "browser.searchinit.engine_invalid_webextension",
+            engine._extensionID,
+            3
+          );
+        }
+      }
+    }
+    logConsole.debug("WebExtension engine check complete");
+  },
+
   async getEngines() {
     await this.init();
     logConsole.debug("getEngines: getting all engines");
