@@ -26,6 +26,15 @@ class ClangdBackend(CompileDBBackend):
     def _init(self):
         CompileDBBackend._init(self)
 
+    def _get_compiler_args(self, cenv, canonical_suffix):
+        compiler_args = super(ClangdBackend, self)._get_compiler_args(cenv, canonical_suffix)
+        if compiler_args is None:
+            return None
+
+        if compiler_args[0][-6:] == "ccache":
+            compiler_args.pop(0)
+        return compiler_args
+
     def _build_cmd(self, cmd, filename, unified):
         cmd = list(cmd)
 
