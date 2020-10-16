@@ -218,7 +218,7 @@ The <a>containing block</a> for a <a>grid item</a> is formed by its <a>grid area
 <h2 id="#implicit-grid">
 The Implicit Grid
 </h2>
-The [=implicit grid=] is formed in the same way as for a regular grid container.  However, it's only used in the [=grid axis=].  The flow axis specified by ''grid-auto-flow'' is ignored &mdash; items are always placed by filling the [=grid axis=] (note that the ''grid-auto-flow/dense'' keyword does have an effect though in determining which items end up at line 1 in the [=masonry axis=], in [[#grid-item-placement]] step 1).  ''direction:rtl'' reverses the grid if the inline-axis is the [=grid axis=] (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the [=masonry axis=].
+The [=implicit grid=] is formed in the same way as for a regular grid container.  However, it's only used in the [=grid axis=].  The flow axis specified by ''grid-auto-flow'' is ignored &mdash; items are always placed by filling the [=grid axis=] (though note that the ''grid-auto-flow'' property's ''grid-auto-flow/dense'' keyword does have an effect in determining which items end up at line 1 in the [=masonry axis=], in [[#grid-item-placement]] step 1).  ''direction:rtl'' reverses the grid if the inline-axis is the [=grid axis=] (as usual for a regular grid container) and it makes items flow from right to left if the inline-axis is the [=masonry axis=].
 
 
 <div class="example">
@@ -331,11 +331,11 @@ item { background: silver; margin: 5px; }
 <h2 id="alignment">
 Alignment and Spacing</h2>
 
-<a href="https://www.w3.org/TR/css-grid-2/#gutters">Gutters</a> are supported in both axes. In the [=masonry axis=] the gap is applied between each pair of adjacent items margin-box.  Margins do not collapse in either axis.
+<a href="https://www.w3.org/TR/css-grid-2/#gutters">Gutters</a> are supported in both axes. In the [=masonry axis=], the gap is applied between the margin boxes of each pair of adjacent items.  Margins do not collapse in either axis.
 
-<a href="https://drafts.csswg.org/css-grid-2/#alignment">Alignment</a> works the same as in a regular [=grid container=] in the [=grid axis=].
+In the [=grid axis=], <a href="https://drafts.csswg.org/css-grid-2/#alignment">alignment</a> works the same as in a regular [=grid container=].
 
-<a href="https://drafts.csswg.org/css-align/#content-distribution">Content Distribution</a> in the [=masonry axis=] is applied to the content as a whole, same as for block containers.  More specifically, the <a>alignment subject</a> is the <dfn>masonry box</dfn>, which is the area formed by the content-box edge of the [=grid container=] to the margin-box end edge of the item that is the furthest away in the [=masonry axis=], as indicated by the dashed border here:
+In the [=masonry axis=], <a href="https://drafts.csswg.org/css-align/#content-distribution">content-distribution</a> is applied to the content as a whole, similarly to how it behaves in block containers.  More specifically, the <a>alignment subject</a> is the <dfn>masonry box</dfn>, which is the area between the content-box edge of the [=grid container=] and the margin-box end edge of the item that is the furthest away in the [=masonry axis=], as indicated by the dashed border here:
 
 <figure>
 	<img src="images/masonry-box.png">
@@ -346,10 +346,10 @@ Alignment and Spacing</h2>
 </figure>
 
 
-Note that there is only ever one <a>alignment subject</a> for these properties in the [=masonry axis=], so the unique 'align-content' / 'justify-content' values boil down to ''align-content/start'', ''align-content/center'', ''align-content/end'', ''align-content/stretch'' and [=baseline alignment=]. (''align-content/normal'' behaves as ''align-content/stretch'' as usual for [=grid containers=]).  In the figure above the [=grid container=] has ''align-content: start''.  By default, the [=masonry box=] is the same as the [=grid container=]'s content-box due to being stretched.
+Note that there is only ever one <a>alignment subject</a> for these properties in the [=masonry axis=], so the unique 'align-content' / 'justify-content' values boil down to ''align-content/start'', ''align-content/center'', ''align-content/end'', ''align-content/stretch'' and [=baseline alignment=]. (''align-content/normal'' behaves as ''align-content/stretch'' as usual for [=grid containers=]).  In the figure above, the [=grid container=] has ''align-content: start''; but if ''align-content'' were at its default ''normal'' value, then the [=masonry box=] would fill the [=grid container=]'s content box, due to being stretched.  Moreover: if the grid items overflowed the [=grid container=]'s content box in the masonry axis, then the masonry box would be larger than the [=grid container=]'s content box.
 
 <h3 id="tracks-alignment">
-The align-tracks and justify-tracks Properties
+The ''align-tracks'' and ''justify-tracks'' Properties
 </h3>
 
 This specification adds two new properties to align the items in the [=masonry axis=] for each individual [=grid axis=] track:
@@ -378,7 +378,7 @@ This specification adds two new properties to align the items in the [=masonry a
 
 Note: These values are the same as for 'align-content' / 'justify-content', but here we accept multiple values in a comma-separated list.
 
-Unlike 'align-content' / 'justify-content', ''align-tracks/normal'' behaves as ''align-tracks/start'' for these properties.  So the default rendering is the expected packed masonry layout as shown in the top left corner in the example below.  When multiple values are specified the first track in the [=grid axis=] uses the first value, the second track uses the second value, etc.  If there are fewer values than tracks then the last value is used for the remaining tracks.  If there are more values than tracks then the remaining values have no effect on the rendering.
+Unlike 'align-content' / 'justify-content', ''align-tracks/normal'' behaves as ''align-tracks/start'' for these properties.  So the default rendering is the expected packed masonry layout as shown in the top left corner in the example below.  When multiple values are specified, the first track in the [=grid axis=] uses the first value, the second track uses the second value, etc.  If there are fewer values than tracks, then the last value is used for the remaining tracks.  If there are more values than tracks, then the remaining values have no effect on the rendering.
 
 <div class="example">
      Here's a <a href="examples/align-tracks-example-1.html">testcase</a> that demonstrates a few 'align-tracks' alignment possibilities.
@@ -394,7 +394,7 @@ Unlike 'align-content' / 'justify-content', ''align-tracks/normal'' behaves as '
 <h3 id="masonry-axis-stretch-alignment">
 Stretch Alignment in the Masonry Axis</h3>
 
-''align-tracks/stretch'' will stretch the items in the [=masonry axis=] for each track separately to fill the content-box.  Any item can opt out from stretching by setting ''align-self'' / ''justify-self'' to something other than ''align-self/normal'' or ''align-self/stretch'' in the relevant axis.  Items with a [=definite size=] don't stretch and items with an ''margin/auto'' margin in the [=masonry axis=] stretch by increasing its margin(s) instead of its content-box size.  An item only grows up to its <a>max size</a>.
+''align-tracks/stretch'' will stretch the items in the [=masonry axis=] for each track separately, to fill the grid container's content-box.  Any item can opt out from stretching by setting ''align-self'' / ''justify-self'' to something other than ''align-self/normal'' or ''align-self/stretch'' in the relevant axis.  A stretched item with an [=indefinite size=] in the [=masonry axis=] will stretch its content-box size, but only up to its [=max size=]. An item with a [=definite size=] and an ''margin/auto'' margin in the [=masonry axis=] will stretch by increasing ''margin/auto'' margin(s).  Otherwise, the item doesn't stretch.
 
 <div class="example">
 Here's a <a href="examples/align-tracks-example-2.html">testcase</a> that demonstrates stretching items in the [=masonry axis=].
@@ -405,7 +405,7 @@ Here's a <a href="examples/align-tracks-example-2.html">testcase</a> that demons
 	</figcaption>
 </figure>
 
-Only the purple items have ''height/auto'' height, so they are the ones that may grow by default.  A few items worth noting: item 4 has ''max-height: 40px'' so it only grows up to that size and then the other items in its track picks up the remaining size. Item 16 opts out from resizing by setting ''align-self: end''. Item 18 has ''margin-top/bottom: auto'' so it's centered in its allotted space instead of growing. Item 20 has ''margin-top: auto'' so it's aligned to the end while its top-margin grows.
+Only the purple items have ''height/auto'' height, so they are the ones that may grow by default.  A few items worth noting: item 4 has ''max-height: 40px'' so it only grows up to that size and then the other items in its track picks up the remaining size. Item 16 opts out from resizing by setting ''align-self: end''. Item 18 has ''margin-block: auto'' so it's centered in its allotted space instead of growing. Item 20 has ''margin-top: auto'' so it's aligned to the end while its top-margin grows.
 </div>
 
 <div class="example">
@@ -424,7 +424,7 @@ Individual Track Alignment in the Masonry Axis</h3>
 ''align-tracks'' / ''justify-tracks'' values can be specified per track.
 
 <div class="example">
-Here's an <a href="examples/masonry-axis-alignment-1.html">example</a> to illustrate this. Note that the 'align-tracks' value intentionally has one value less than the number of tracks to illustrate that the remaining track(s) use the last value (i.e. the right-most track also uses ''align-tracks/space-evenly''). (''align-tracks/baseline'' values are also supported but excluded in this test, see [[#masonry-axis-baseline-alignment]] for a description how that works with examples.)
+Here's an <a href="examples/masonry-axis-alignment-1.html">example</a> to illustrate this. Note that this example's 'align-tracks' value intentionally has one value less than the number of tracks to illustrate that the remaining track(s) use the last value (i.e. the right-most track also uses ''align-tracks/space-evenly''). (''align-tracks/baseline'' values are also supported but excluded in this test, see [[#masonry-axis-baseline-alignment]] for a description how that works with examples.)
 <figure>
 	<img src="images/masonry-axis-alignment-1.png">
 	<figcaption>
@@ -438,7 +438,7 @@ Baseline Alignment in the Masonry Axis</h3>
 
 Item [=baseline alignment=] inside the [=grid axis=] tracks works as usual for a regular [=grid container=], and the grid container's baseline is determined the same as for a regular grid container in that axis.
 
-[=Baseline alignment=] is supported also in the [=masonry axis=], on the first and last item in each track (but not on items "in the middle" of the track). Only tracks with the 'align-tracks' / 'justify-tracks' values ''align-tracks/start'', ''align-tracks/end'' or ''align-tracks/stretch'', support baseline alignment. There are four different sets of [=baseline-sharing groups=]:
+[=Baseline alignment=] is supported also in the [=masonry axis=], on the first and last item in each track (but not on items "in the middle" of the track). Only tracks with the 'align-tracks' / 'justify-tracks' values ''align-tracks/start'', ''align-tracks/end'' or ''align-tracks/stretch'' support baseline alignment. There are four different sets of [=baseline-sharing groups=]:
 
 <ol>
     <li>the first item in each ''align-tracks/start'' track + the first item in each ''align-tracks/stretch'' track
@@ -475,7 +475,7 @@ Fragmentation</h2>
 <h3 id="masonry-axis-pagination">
 Fragmentation in the Masonry Axis</h3>
 
-Each [=grid axis=] track is fragmented independently in the [=masonry axis=].  If a [=grid item=] is fragmented, or has a [=forced break=] before/after it, then the [=running position=] for the tracks that it spans in the [=grid axis=] are set to the size of the [=fragmentainer=] so that no further items will be placed in those tracks.  An item that is split into multiple fragments retains its placement in the [=grid axis=] for all its fragments.  A grid item that is pushed however, is placed again by the next grid container fragment.  Placement continues until all items are placed or pushed to a new fragment.
+Each [=grid axis=] track is fragmented independently in the [=masonry axis=].  If a [=grid item=] is fragmented, or has a [=forced break=] before/after it, then the [=running position=] for the tracks that it spans in the [=grid axis=] are set to the size of the [=fragmentainer=] so that no further items will be placed in those tracks.  An item that is split into multiple fragments retains its placement in the [=grid axis=] for all its fragments.  A grid item that is pushed, however, is placed again by the next grid container fragment.  Placement continues until all items are placed or pushed to a new fragment.
 
 <div class="example">
 Here's an <a href="examples/fragmentation-block-axis-example.html">example</a> illustrating fragmentation of a grid with masonry layout in its block-axis. It renders like this:
@@ -490,7 +490,7 @@ Here's an <a href="examples/fragmentation-block-axis-example.html">example</a> i
 <h3 id="grid-axis-pagination">
 Fragmentation in the Grid Axis</h3>
 
-Fragmentation in the [=grid axis=] with masonry layout in the other axis is also supported. In this case the fragmentation behaves more like in a regular [=grid container=], however which [=grid-axis=] track each item is placed into occurs as a separate step upfront before fragmentation occurs.
+Fragmentation in the [=grid axis=] with masonry layout in the other axis is also supported. In this case the fragmentation behaves more like in a regular [=grid container=]; however, there's a separate step to determine which [=grid-axis=] track each item is placed into, before fragmentation occurs.
 <div class="example">
 Here's an <a href="examples/fragmentation-inline-axis-example.html">example</a> illustrating fragmentation of a grid with masonry layout in its inline-axis. In this case the breaks occurs between the [=grid-axis=] rows.  It renders like this:
 <figure style="max-width:100%">
@@ -505,7 +505,7 @@ Here's an <a href="examples/fragmentation-inline-axis-example.html">example</a> 
 <h2 id="subgrids">
 Subgrids</h2>
 
-Masonry layout is supported also in [=subgrids=] (e.g. ''grid: subgrid / masonry'').  However, only a parent grid axis can be subgridded in the normal sense.  A subgrid axis with a parent [=masonry axis=] will behave as ''grid/masonry'', unless the subgrid's other axis is also ''grid/masonry'' in which case it behaves as ''grid/none'' (a [=grid container=] can only have one [=masonry axis=]). ''grid-column/auto''-placed subgrids don't inherit any line names from their parent grid because that would make the placement of the subgrid's grid items dependent on layout results, but subgrid's tracks are aligned to the parent's tracks as usual.  Here's a subgrid <a href="examples/subgrid-example-1.html">example</a>:
+Masonry layout is supported in [=subgrids=] (e.g. ''grid: subgrid / masonry''), and grids that use masonry can have subgrids as children.  However, only a parent grid axis can be subgridded in the normal sense.  A subgrid axis with a parent [=masonry axis=] will behave as ''grid/masonry'', unless the subgrid's other axis is also ''grid/masonry'' in which case it behaves as ''grid/none'' (because a [=grid container=] can only have one [=masonry axis=]). ''grid-column/auto''-placed subgrids don't inherit any line names from their parent grid, because that would make the placement of the subgrid's grid items dependent on layout results; but the subgrid's tracks are still aligned to the parent's tracks as usual.  Here's a subgrid <a href="examples/subgrid-example-1.html">example</a>:
 
 <div class="example">
 ```css
@@ -567,7 +567,7 @@ Note how the subgrid's first item ("subgrid.1") contributes to the intrinsic siz
 Absolute Positioning</h2>
 
 
-<a href="https://drafts.csswg.org/css-grid/#abspos-items">Grid-aligned absolute-positioned descendants</a> are supported.  In the [=masonry axis=] all [=grid positions=] except line 1 are treated as 'auto'. Line 1 in the [=masonry axis=] corresponds to the start of the [=masonry box=] (the content-box start edge usually) and 'auto' uses the [=grid container=] padding edge as usual. The [=containing block=] is the extent of the tracks the item spans in the [=grid axis=] and the position of line 1 and the padding-box edge in the [=masonry axis=].
+<a href="https://drafts.csswg.org/css-grid/#abspos-items">Grid-aligned absolute-positioned descendants</a> are supported.  In the [=masonry axis=], all [=grid positions=] except line 1 are treated as 'auto'. Line 1 in the [=masonry axis=] corresponds to the start of the [=masonry box=] (which is usually also the content-box start edge) and 'auto' uses the [=grid container=] padding edge as usual. The [=containing block=] is the extent of the tracks the item spans in the [=grid axis=] and the position of line 1 and the padding-box edge in the [=masonry axis=].
 
 ISSUE: It might be useful to define a static position in the [=masonry axis=]. Maybe it could defined as the max (or min?) current [=running position=] of the [=grid-axis=] tracks at that point?  Or the end of the item before it?
 
