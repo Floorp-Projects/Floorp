@@ -148,9 +148,6 @@ internal class ExperimentEvaluator(
         diceRoll: Int,
         branches: List<Experiment.Branch>
     ): Experiment.Branch {
-        assert(diceRoll >= 0) { "Dice roll should be >= 0." }
-        assert(branches.isNotEmpty()) { "Branches list should not be empty." }
-
         var value = diceRoll
         for (branch in branches) {
             if (value < branch.ratio) {
@@ -159,7 +156,6 @@ internal class ExperimentEvaluator(
             value -= branch.ratio
         }
 
-        assert(false) { "Should have found matching branch." }
         return branches.last()
     }
 

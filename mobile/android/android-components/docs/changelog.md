@@ -52,7 +52,8 @@ permalink: /changelog/
   * 🌟 Added support for new download [GeckoView API](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-).
 
 * **service-glean**
-  * Glean was upgraded to v32.4.1
+  * Glean was upgraded to v33.0.0
+    * ⚠️ **This is a breaking change**: Updated to the Android Gradle Plugin v4.0.1 and Gradle 6.5.1. Projects using older versions of these components will need to update in order to use newer versions of the Glean SDK.
     * Update `glean_parser` to 1.28.6
       * BUGFIX: Ensure Kotlin arguments are deterministically ordered
     * BUGFIX: Transform ping directory size from bytes to kilobytes before accumulating to `glean.upload.pending_pings_directory_size`
@@ -127,7 +128,6 @@ permalink: /changelog/
   * Added `SessionManager.removeNormalSessions()` and `SessionManager.removePrivateSessions()`.
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8456](https://github.com/mozilla-mobile/android-components/issues/8456) Crash SQLiteConstraintException UNIQUE constraint failed: downloads.id (code 1555).
-
 * **service-glean**
   * Glean was upgraded to v32.4.0
     * Allow using quantity metric type outside of Gecko ([#1198](https://github.com/mozilla/glean/pull/1198))

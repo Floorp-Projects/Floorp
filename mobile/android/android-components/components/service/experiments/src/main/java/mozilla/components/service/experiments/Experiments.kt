@@ -165,8 +165,6 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     @Synchronized
     internal fun onExperimentsUpdated(serverState: ExperimentsSnapshot) {
-        assert(experimentsLoaded) { "Experiments should have been loaded." }
-
         experimentsResult = serverState
         storage.save(serverState)
 
@@ -208,8 +206,6 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findAndStartActiveExperiment() {
-        assert(activeExperiment == null) { "Should not have an active experiment" }
-
         evaluator.findActiveExperiment(context, experimentsResult.experiments)?.let {
             logger.info("""Activating experiment - id="${it.experiment.id}", branch="${it.branch}"""")
             activeExperiment = it
@@ -223,8 +219,6 @@ open class ExperimentsInternalAPI internal constructor() {
      * telemetry via Glean.
      */
     private fun stopActiveExperiment() {
-        assert(activeExperiment != null) { "Should have an active experiment" }
-
         activeExperiment?.let {
             Glean.setExperimentInactive(it.experiment.id)
         }
@@ -241,8 +235,6 @@ open class ExperimentsInternalAPI internal constructor() {
         context: Context,
         experiments: List<Experiment>
     ): ActiveExperiment? {
-        assert(activeExperiment == null) { "Should not have an active experiment" }
-
         val activeExperiment = ActiveExperiment.load(context, experiments)
 
         activeExperiment?.let {

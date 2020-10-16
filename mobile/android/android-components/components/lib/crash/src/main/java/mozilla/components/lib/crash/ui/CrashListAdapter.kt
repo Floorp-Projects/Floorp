@@ -86,9 +86,9 @@ internal class CrashListAdapter(
         val text = StringBuilder()
 
         text.append(crashWithReports.crash.uuid)
-        text.appendln()
+        text.appendLine()
         text.append(crashWithReports.crash.stacktrace.lines().first())
-        text.appendln()
+        text.appendLine()
 
         crashWithReports.reports.forEach { report ->
             val service = crashReporter.getCrashReporterServiceById(report.serviceId)
@@ -96,13 +96,13 @@ internal class CrashListAdapter(
             text.append(service?.name ?: report.serviceId)
             text.append(": ")
             text.append(service?.createCrashReportUrl(report.reportId) ?: "<No URL>")
-            text.appendln()
+            text.appendLine()
         }
 
         text.append("----")
-        text.appendln()
+        text.appendLine()
         text.append(crashWithReports.crash.stacktrace)
-        text.appendln()
+        text.appendLine()
 
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"

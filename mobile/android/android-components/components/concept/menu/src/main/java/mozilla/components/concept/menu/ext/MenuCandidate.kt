@@ -54,7 +54,7 @@ fun List<MenuCandidate>.findNestedMenuCandidate(id: Int): NestedMenuCandidate? =
 /**
  * Select the highlight with the highest priority.
  */
-fun Sequence<MenuEffect>.max() = maxBy {
+fun Sequence<MenuEffect>.max() = maxByOrNull {
     // Select the highlight with the highest priority
     when (it) {
         is HighPriorityHighlightEffect -> 2
