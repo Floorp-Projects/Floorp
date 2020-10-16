@@ -430,7 +430,7 @@ const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable, region]);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: `outer-wrapper multistageContainer`
+    className: `outer-wrapper onboardingContainer`
   }, props.screens.map(screen => {
     return index === screen.order ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
       key: screen.id,
@@ -932,7 +932,7 @@ const DEFAULT_RTAMO_CONTENT = {
     },
     startButton: {
       label: {
-        string_id: "onboarding-start-browsing-button-label"
+        string_id: "onboarding-not-now-button-label"
       },
       message_id: "RTAMO_START_BROWSING_BUTTON",
       action: {
@@ -1453,39 +1453,37 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
 
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "ReturnToAMOOverlay"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
-      text: content.header
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "ReturnToAMOContainer"
+      className: "outer-wrapper onboardingContainer"
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
+      className: "screen"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "ReturnToAMOAddonContents"
+      className: "brand-logo"
+    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "welcome-text"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.subtitle
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "ReturnToAMOText",
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
       "data-l10n-args": this.props.name ? JSON.stringify({
         "addon-name": this.props.name
       }) : null
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
       "data-l10n-name": "icon",
       src: this.props.iconURL,
+      role: "presentation",
       alt: ""
     }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.primary_button.label
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       onClick: this.onClickAddExtension,
-      className: "puffy blue ReturnToAMOAddExtension"
-    }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "ReturnToAMOIcon"
+      className: "primary"
     })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.startButton.label
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       onClick: this.handleStartBtnClick,
-      className: "default grey ReturnToAMOGetStarted"
-    }))));
+      className: "secondary"
+    })))));
   }
 
 }

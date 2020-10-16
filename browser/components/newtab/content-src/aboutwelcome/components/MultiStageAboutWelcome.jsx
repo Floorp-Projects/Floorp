@@ -106,7 +106,7 @@ export const MultiStageAboutWelcome = props => {
 
   return (
     <React.Fragment>
-      <div className={`outer-wrapper multistageContainer`}>
+      <div className={`outer-wrapper onboardingContainer`}>
         {props.screens.map(screen => {
           return index === screen.order ? (
             <WelcomeScreen

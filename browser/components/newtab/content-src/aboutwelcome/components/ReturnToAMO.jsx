@@ -58,44 +58,40 @@ export class ReturnToAMO extends React.PureComponent {
     // For experiments, when needed below rendered UI allows settings hard coded strings
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
     return (
-      <div className="ReturnToAMOOverlay">
-        <div>
-          <Localized text={content.header}>
-            <h2 />
-          </Localized>
-          <div className="ReturnToAMOContainer">
-            <div className="ReturnToAMOAddonContents">
-              <Localized text={content.subtitle}>
-                <p />
-              </Localized>
-              <Localized text={content.text}>
-                <div
-                  className="ReturnToAMOText"
-                  data-l10n-args={
-                    this.props.name
-                      ? JSON.stringify({ "addon-name": this.props.name })
-                      : null
-                  }
-                >
-                  <img data-l10n-name="icon" src={this.props.iconURL} alt="" />
-                </div>
-              </Localized>
-              <Localized text={content.primary_button.label}>
-                <button
-                  onClick={this.onClickAddExtension}
-                  className="puffy blue ReturnToAMOAddExtension"
+      <div className="outer-wrapper onboardingContainer">
+        <main className="screen">
+          <div className="brand-logo" />
+          <div className="welcome-text">
+            <Localized text={content.subtitle}>
+              <h1 />
+            </Localized>
+            <Localized text={content.text}>
+              <h2
+                data-l10n-args={
+                  this.props.name
+                    ? JSON.stringify({ "addon-name": this.props.name })
+                    : null
+                }
+              >
+                <img
+                  data-l10n-name="icon"
+                  src={this.props.iconURL}
+                  role="presentation"
+                  alt=""
                 />
-              </Localized>
-            </div>
-            <div className="ReturnToAMOIcon" />
+              </h2>
+            </Localized>
+            <Localized text={content.primary_button.label}>
+              <button onClick={this.onClickAddExtension} className="primary" />
+            </Localized>
+            <Localized text={content.startButton.label}>
+              <button
+                onClick={this.handleStartBtnClick}
+                className="secondary"
+              />
+            </Localized>
           </div>
-          <Localized text={content.startButton.label}>
-            <button
-              onClick={this.handleStartBtnClick}
-              className="default grey ReturnToAMOGetStarted"
-            />
-          </Localized>
-        </div>
+        </main>
       </div>
     );
   }
