@@ -206,7 +206,14 @@ browsertime-youtube-playback-mobile:
                 - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
                 - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     apps: ["fenix", "geckoview", "refbrow"]
-    run-on-projects: []
+    run-on-projects:
+        by-app:
+            geckoview:
+                by-test-platform:
+                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ["mozilla-central"]
+                    android-hw-p2-8-0-android-aarch64-shippable/opt: ["mozilla-central"]
+                    default: []
+            default: []
     test-url-param:
         by-subtest:
             youtube-playback-h264-sfr:  # remove high resolution tests
