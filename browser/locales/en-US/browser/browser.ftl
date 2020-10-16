@@ -303,8 +303,8 @@ identity-https-only-dropdown-off =
     .label = Off
 identity-https-only-dropdown-off-temporarily =
     .label = Off temporarily
-identity-https-only-info-turn-on = Turn on if you want { -brand-short-name } to upgrade to a secure connection when possible.
-identity-https-only-info-turn-off = If the site seems broken, you may want to turn off HTTPS-Only Mode to reload using insecure HTTP.
+identity-https-only-info-turn-on2 = Turn on HTTPS-Only Mode for this site if you want { -brand-short-name } to upgrade the connection when possible.
+identity-https-only-info-turn-off2 = If the page seems broken, you may want to turn off HTTPS-Only Mode for this site to reload using insecure HTTP.
 identity-https-only-info-no-upgrade = Unable to upgrade connection from HTTP.
 
 identity-permissions =
