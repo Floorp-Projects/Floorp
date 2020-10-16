@@ -98,6 +98,10 @@ def build_browsertime_task(config, tasks):
             task["run"]["command"].append("--browsertime-no-ffwindowrecorder")
             task["attributes"]["run-visual-metrics"] = True
 
+        # Setup chimera for combined warm+cold testing
+        if task.pop("chimera", False):
+            task["run"]["command"].append("--chimera")
+
         # taskcluster is merging task attributes with the default ones
         # resulting the --cold extra option in the ytp warm tasks
         if 'youtube-playback' in task["name"]:

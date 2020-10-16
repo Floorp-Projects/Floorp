@@ -71,6 +71,7 @@ job-defaults:
               path: workspace/build/blobber_upload_dir
               type: directory
     run-visual-metrics: True
+    chimera: True
     run:
         using: run-task
         checkout: false
@@ -233,22 +234,11 @@ jobs:
         treeherder:
             symbol: 'Btime(tp6m-28-c)'
 
-    youtube-playback:
-        test-name: youtube-playback
-        run-visual-metrics: False
-        treeherder:
-            symbol: 'Btime(ytp)'
-        args:
-            by-abi:
-                # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
-                armeabi-v7a:
-                    - '--test-url-params=exclude=1,2,9,10,17,18,21,22,26,28,30,32,39,40,47,48,55,56,63,64,71,72,79,80,83,84,89,90,95,96'
-                default: []
-
     youtube-playback-av1-sfr:
         description: "Raptor YouTube Playback AV1 SFR on Fenix"
         test-name: youtube-playback-av1-sfr
         run-visual-metrics: False
+        chimera: False
         treeherder:
             symbol: 'Btime(ytp-av1-sfr)'
 
@@ -256,12 +246,14 @@ jobs:
         description: "Raptor YouTube Playback H264 SFR on Fenix"
         test-name: youtube-playback-h264-sfr
         run-visual-metrics: False
+        chimera: False
         treeherder:
             symbol: Btime(ytp-h264-sfr)
 
     youtube-playback-vp9-sfr:
         description: "Raptor YouTube Playback VP9 SFR on Fenix"
         run-visual-metrics: False
+        chimera: False
         test-name: youtube-playback-vp9-sfr
         treeherder:
             symbol: Btime(ytp-vp9-sfr)
