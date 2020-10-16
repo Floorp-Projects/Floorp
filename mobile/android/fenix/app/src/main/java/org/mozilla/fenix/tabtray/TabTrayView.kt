@@ -44,6 +44,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.InfoBanner
 import org.mozilla.fenix.components.metrics.Event
@@ -399,6 +400,15 @@ class TabTrayView(
             }
 
             layoutManager = gridLayoutManager
+
+            // Ensure items have the same all around padding - 16 dp. Avoid the double spacing issue.
+            // A 8dp padding is already set in xml, pad the parent with the remaining needed 8dp.
+            updateLayoutParams<ConstraintLayout.LayoutParams> {
+                val padding = GRID_ITEM_PARENT_PADDING.dpToPx(resources.displayMetrics)
+                // Account for the already set bottom padding needed to accommodate the fab.
+                val bottomPadding = paddingBottom + padding
+                setPadding(padding, padding, padding, bottomPadding)
+            }
         }
     }
 
@@ -702,6 +712,8 @@ class TabTrayView(
         private const val SELECTION_DELAY = 500
         private const val NORMAL_HANDLE_PERCENT_WIDTH = 0.1F
         private const val COLUMN_WIDTH_DP = 180
+        // The remaining padding offset needed to provide a 16dp column spacing between the grid items.
+        const val GRID_ITEM_PARENT_PADDING = 8
     }
 }
 

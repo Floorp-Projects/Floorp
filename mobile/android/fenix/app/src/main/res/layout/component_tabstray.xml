@@ -181,6 +181,7 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingBottom="140dp"
+        android:scrollbarStyle="outsideOverlay"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
