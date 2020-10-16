@@ -785,8 +785,8 @@ public class Autofill {
                     .setId(bundle.getInt("id"))
                     .setParentId(bundle.getInt("parent", View.NO_ID))
                     .setRootId(bundle.getInt("root", View.NO_ID))
-                    .setDomain(bundle.getString("origin"))
-                    .setValue(bundle.getString("value"))
+                    .setDomain(bundle.getString("origin", ""))
+                    .setValue(bundle.getString("value", ""))
                     .setDimensions(
                         new Rect(bounds.getInt("left"),
                                  bounds.getInt("top"),
@@ -1143,7 +1143,7 @@ public class Autofill {
             }
 
             final Node node = getAutofillSession().getNode(id);
-            final String value = message.getString("value");
+            final String value = message.getString("value", "");
 
             if (node == null) {
                 Log.d(LOGTAG, "could not find node " + id);
