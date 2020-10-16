@@ -400,7 +400,7 @@ class GeckoEngineSessionTest {
             "http://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         engineSession.loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
@@ -408,7 +408,7 @@ class GeckoEngineSessionTest {
             "http://www.mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_EXTERNAL,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         engineSession.loadUrl("http://www.mozilla.org", parent = parentEngineSession)
@@ -416,7 +416,7 @@ class GeckoEngineSessionTest {
             "http://www.mozilla.org",
             parentEngineSession.geckoSession,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         val extraHeaders = mapOf("X-Extra-Header" to "true")
@@ -486,7 +486,7 @@ class GeckoEngineSessionTest {
             "http://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null
+            emptyMap()
         )
 
         // Subsequent reloads should simply call reload on the gecko session.
@@ -1372,7 +1372,7 @@ class GeckoEngineSessionTest {
             "https://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
     }
 
@@ -2602,7 +2602,7 @@ class GeckoEngineSessionTest {
         // loadUrl(url: String)
         engineSession.loadUrl(fakeUrl)
         verify(geckoSession).loadUri(
-            fakeUrl, null as GeckoSession?, GeckoSession.LOAD_FLAGS_NONE, null as Map<String, String>?
+            fakeUrl, null as GeckoSession?, GeckoSession.LOAD_FLAGS_NONE, emptyMap()
         )
         fakePageLoad(false)
 

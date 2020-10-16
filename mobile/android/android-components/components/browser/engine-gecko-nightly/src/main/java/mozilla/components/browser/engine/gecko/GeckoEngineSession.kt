@@ -146,7 +146,12 @@ class GeckoEngineSession(
             initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
         }
         @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
-        geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value, additionalHeaders)
+        geckoSession.loadUri(
+            url,
+            (parent as? GeckoEngineSession)?.geckoSession,
+            flags.value,
+            additionalHeaders ?: emptyMap()
+        )
     }
 
     /**
