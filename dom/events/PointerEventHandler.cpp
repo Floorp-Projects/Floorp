@@ -122,6 +122,10 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent) {
 void PointerEventHandler::SetPointerCaptureById(uint32_t aPointerId,
                                                 Element* aElement) {
   MOZ_ASSERT(aElement);
+  if (MouseEvent_Binding::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
+    PresShell::SetCapturingContent(aElement, CaptureFlags::PreventDragStart);
+  }
+
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
   if (pointerCaptureInfo) {
     pointerCaptureInfo->mPendingElement = aElement;
@@ -142,6 +146,10 @@ PointerCaptureInfo* PointerEventHandler::GetPointerCaptureInfo(
 void PointerEventHandler::ReleasePointerCaptureById(uint32_t aPointerId) {
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
   if (pointerCaptureInfo && pointerCaptureInfo->mPendingElement) {
+    if (MouseEvent_Binding::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
+      // XXX Why do we need CaptureFlags::PreventDragStart here?
+      PresShell::SetCapturingContent(nullptr, CaptureFlags::PreventDragStart);
+    }
     pointerCaptureInfo->mPendingElement = nullptr;
   }
 }
