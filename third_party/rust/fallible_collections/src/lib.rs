@@ -58,7 +58,7 @@ pub mod try_clone;
 #[cfg(feature = "unstable")]
 pub use alloc::collections::TryReserveError;
 #[cfg(not(feature = "unstable"))]
-pub use hashbrown::CollectionAllocErr as TryReserveError;
+pub use hashbrown::TryReserveError;
 
 #[cfg(feature = "std_io")]
 pub use vec::std_io::*;
