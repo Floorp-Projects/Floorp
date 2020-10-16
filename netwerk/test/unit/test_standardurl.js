@@ -637,16 +637,13 @@ add_test(function test_filterWhitespace() {
     .mutate()
     .setRef("ha\r\n\tsh")
     .finalize();
-  Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#ha%0D%0A%09sh");
+  Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
   url = url
     .mutate()
     .QueryInterface(Ci.nsIURLMutator)
     .setFileName("fi\r\n\tle.name")
     .finalize();
-  Assert.equal(
-    url.spec,
-    "http://test.com/fi%0D%0A%09le.name?query#ha%0D%0A%09sh"
-  );
+  Assert.equal(url.spec, "http://test.com/fi%0D%0A%09le.name?query#hash");
 
   run_next_test();
 });
