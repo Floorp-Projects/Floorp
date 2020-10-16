@@ -159,6 +159,9 @@ include cssom/reftest.list
 # columns/
 include columns/reftest.list
 
+# conditional/
+include conditional/reftest.list
+
 # content/
 include ../../dom/tests/reftest/reftest.list
 
