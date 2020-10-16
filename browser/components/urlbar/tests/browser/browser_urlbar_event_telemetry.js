@@ -56,6 +56,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -82,6 +83,7 @@ const tests = [
         numWords: "3",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -109,6 +111,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -143,6 +146,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "oneoff",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -188,6 +192,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -223,6 +228,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "oneoff",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -268,6 +274,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -292,6 +299,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -318,6 +326,7 @@ const tests = [
         numWords: "2",
         selIndex: "0",
         selType: "keyword",
+        provider: "UnifiedComplete",
       },
     };
   },
@@ -342,6 +351,7 @@ const tests = [
         numWords: "1",
         selIndex: "1",
         selType: "tip",
+        provider: tipProvider.name,
       },
     };
   },
@@ -369,6 +379,7 @@ const tests = [
         numWords: "1",
         selIndex: "1",
         selType: "tiphelp",
+        provider: tipProvider.name,
       },
     };
   },
@@ -395,6 +406,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "canonized",
+        provider: "Autofill",
       },
     };
   },
@@ -430,6 +442,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "bookmark",
+        provider: "UnifiedComplete",
       },
     };
   },
@@ -459,6 +472,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "autofill",
+        provider: "Autofill",
       },
     };
   },
@@ -488,6 +502,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "bookmark",
+        provider: "UnifiedComplete",
       },
     };
   },
@@ -517,6 +532,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "searchsuggestion",
+        provider: "SearchSuggestions",
       },
     };
   },
@@ -550,6 +566,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "formhistory",
+        provider: "SearchSuggestions",
       },
     };
   },
@@ -585,6 +602,7 @@ const tests = [
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "keywordoffer",
+        provider: "TokenAliasEngines",
       },
     };
   },
@@ -631,6 +649,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -682,6 +701,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -708,6 +728,7 @@ const tests = [
         numWords: "1",
         selIndex: "-1",
         selType: "none",
+        provider: "",
       },
     };
   },
@@ -744,6 +765,7 @@ const tests = [
         numWords: "1",
         selIndex: "-1",
         selType: "none",
+        provider: "",
       },
     };
   },
@@ -777,6 +799,7 @@ const tests = [
         numWords: "0",
         selType: "history",
         selIndex: val => parseInt(val) >= 0,
+        provider: "UrlbarProviderTopSites",
       },
     };
   },
@@ -807,6 +830,7 @@ const tests = [
         numWords: "0",
         selType: "history",
         selIndex: "0",
+        provider: "UrlbarProviderTopSites",
       },
     };
   },
@@ -842,6 +866,7 @@ const tests = [
         numWords: "0",
         selType: "history",
         selIndex: val => parseInt(val) >= 0,
+        provider: "UrlbarProviderTopSites",
       },
     };
   },
@@ -873,6 +898,7 @@ const tests = [
         numWords: "0",
         selType: "history",
         selIndex: "0",
+        provider: "UrlbarProviderTopSites",
       },
     };
   },
@@ -900,6 +926,7 @@ const tests = [
         numWords: "1",
         selType: "autofill",
         selIndex: "0",
+        provider: "Autofill",
       },
     };
   },
@@ -929,6 +956,7 @@ const tests = [
         numWords: "1",
         selType: "autofill",
         selIndex: "0",
+        provider: "Autofill",
       },
     };
   },
@@ -973,6 +1001,7 @@ const tests = [
           numWords: "1",
           selType: "search",
           selIndex: "0",
+          provider: "HeuristicFallback",
         },
       },
     ];
@@ -1017,6 +1046,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -1083,6 +1113,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -1109,6 +1140,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -1156,6 +1188,7 @@ const tests = [
           numWords: "1",
           selType: "search",
           selIndex: "0",
+          provider: "HeuristicFallback",
         },
       },
     ];
@@ -1202,6 +1235,7 @@ const tests = [
           numWords: "1",
           selType: "search",
           selIndex: "0",
+          provider: "HeuristicFallback",
         },
       },
     ];
@@ -1229,6 +1263,7 @@ const tests = [
         numWords: "1",
         selIndex: "0",
         selType: "search",
+        provider: "HeuristicFallback",
       },
     };
   },
@@ -1485,6 +1520,9 @@ const noEventTests = [
 ];
 
 add_task(async function test() {
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.eventTelemetry.enabled", true],
