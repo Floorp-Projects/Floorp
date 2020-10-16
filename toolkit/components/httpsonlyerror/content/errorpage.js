@@ -21,7 +21,7 @@ function initPage() {
 
   document.l10n.setAttributes(
     explanation1,
-    "about-httpsonly-explanation-unavailable",
+    "about-httpsonly-explanation-unavailable2",
     { websiteUrl: pageUrl.host }
   );
 
