@@ -2,20 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  border: 1em solid #ffe900;
-}
-
-button {
-  padding-block: 0.5em;
+ .title > h2 {
+  padding: 0;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
 }
 
 .title {
-  background-image: url("chrome://global/content/httpsonlyerror/cert-error.svg");
+  background-image: url("chrome://global/content/httpsonlyerror/secure-broken.svg");
+  background-position-y: center;
 }
 
 em {
@@ -23,8 +19,14 @@ em {
   font-weight: 600;
 }
 
-.learn-more-container {
-  margin-block-start: 2rem;
+#insecure-explanation-unavailable {
+  margin-bottom: 0.5em;
+}
+#learn-more-container {
+  margin-block: 0 2em;
+}
+#explanation-continue {
+  margin-block: 2em;
 }
 
 .button-container {
@@ -38,4 +40,8 @@ em {
     width: 100%;
     margin: 0.66em 0 0;
   }
+}
+
+ul > li {
+  line-height: 1.5em;
 }
