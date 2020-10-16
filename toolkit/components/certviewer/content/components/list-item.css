@@ -6,14 +6,14 @@
   display: grid;
   padding: 1em 0 1em;
   background-color: var(--in-content-box-background);
-  border-style: solid;
-  border-color: var(--in-content-box-border-color);
-  border-width: .5px;
+  border-block: 0.5px solid var(--in-content-box-border-color);
+  border-inline: 0.5px solid transparent;
   position: relative;
 }
 
 :host(:hover) {
   background-color: var(--in-content-box-background-hover);
+  border-inline-color: var(--in-content-box-border-color);
   cursor: pointer;
 }
 
