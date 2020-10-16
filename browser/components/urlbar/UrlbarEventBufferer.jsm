@@ -21,8 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   UrlbarUtils.getLogger({ prefix: "EventBufferer" })
 );
 
-// Maximum time events can be deferred for.
-const DEFERRING_TIMEOUT_MS = 200;
+// Maximum time events can be deferred for. In automation providers can be quite
+// slow, thus we need a longer timeout to avoid intermittent failures.
+const DEFERRING_TIMEOUT_MS = Cu.isInAutomation ? 1000 : 300;
 
 // Array of keyCodes to defer.
 const DEFERRED_KEY_CODES = new Set([
@@ -81,10 +82,8 @@ class UrlbarEventBufferer {
       startDate: Cu.now(),
       // Status of the query; one of QUERY_STATUS.*
       status: QUERY_STATUS.UKNOWN,
-      // The searchString from the query context.
-      searchString: "",
-      // The currently returned results.
-      results: [],
+      // The query context.
+      context: null,
     };
 
     // Start listening for queries.
@@ -96,8 +95,7 @@ class UrlbarEventBufferer {
     this._lastQuery = {
       startDate: Cu.now(),
       status: QUERY_STATUS.RUNNING,
-      searchString: queryContext.searchString,
-      results: [],
+      context: queryContext,
     };
     if (this._deferringTimeout) {
       clearTimeout(this._deferringTimeout);
@@ -114,7 +112,6 @@ class UrlbarEventBufferer {
   }
 
   onQueryResults(queryContext) {
-    this._lastQuery.results = queryContext.results;
     // Ensure this runs after other results handling code.
     Services.tm.dispatchToMainThread(() => {
       this.replayDeferredEvents(true);
@@ -178,7 +175,7 @@ class UrlbarEventBufferer {
     event.urlbarDeferred = true;
     // Also store the current search string, as an added safety check. If the
     // string will differ later, the event is stale and should be dropped.
-    event.searchString = this._lastQuery.searchString;
+    event.searchString = this._lastQuery.context.searchString;
     this._eventsQueue.push({ event, callback });
 
     if (!this._deferringTimeout) {
@@ -214,7 +211,7 @@ class UrlbarEventBufferer {
     // Remove the event from the queue and play it.
     this._eventsQueue.shift();
     // Safety check: handle only if the search string didn't change meanwhile.
-    if (event.searchString == this._lastQuery.searchString) {
+    if (event.searchString == this._lastQuery.context.searchString) {
       callback();
     }
     Services.tm.dispatchToMainThread(() => {
@@ -259,13 +256,34 @@ class UrlbarEventBufferer {
       return false;
     }
 
-    if (event.keyCode == KeyEvent.DOM_VK_TAB && !this.input.view.isOpen) {
+    if (
+      event.keyCode == KeyEvent.DOM_VK_TAB &&
+      !this.input.view.isOpen &&
+      !this.waitingDeferUserSelectionProviders
+    ) {
       // The view is closed and the user pressed the Tab key.  The focus should
       // move out of the urlbar immediately.
       return false;
     }
 
     return !this.isSafeToPlayDeferredEvent(event);
+  }
+
+  /**
+   * Checks if the bufferer is deferring events.
+   * @returns {boolean} Whether the bufferer is deferring events.
+   */
+  get isDeferringEvents() {
+    return !!this._eventsQueue.length;
+  }
+
+  /**
+   * Checks if any of the current query provider asked to defer user selection
+   * events.
+   * @returns {boolean} Whether a provider asked to defer events.
+   */
+  get waitingDeferUserSelectionProviders() {
+    return !!this._lastQuery.context?.deferUserSelectionProviders.size;
   }
 
   /**
@@ -286,8 +304,12 @@ class UrlbarEventBufferer {
 
     let waitingFirstResult =
       this._lastQuery.status == QUERY_STATUS.RUNNING &&
-      !this._lastQuery.results.length;
+      !this._lastQuery.context.results.length;
     if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
+      // Check if we're waiting for providers that requested deferring.
+      if (this.waitingDeferUserSelectionProviders) {
+        return false;
+      }
       // Play a deferred Enter if the heuristic result is not selected, or we
       // are not waiting for the first results yet.
       let selectedResult = this.input.view.selectedResult;
@@ -296,9 +318,12 @@ class UrlbarEventBufferer {
       );
     }
 
-    if (waitingFirstResult || !this.input.view.isOpen) {
-      // We're still waiting on the first results, or the popup hasn't opened
-      // yet, so not safe.
+    if (
+      waitingFirstResult ||
+      !this.input.view.isOpen ||
+      this.waitingDeferUserSelectionProviders
+    ) {
+      // We're still waiting on some results, or the popup hasn't opened yet.
       return false;
     }
 
@@ -310,7 +335,8 @@ class UrlbarEventBufferer {
     if (event.keyCode == KeyEvent.DOM_VK_DOWN || isMacDownNavigation) {
       // Don't play the event if the last result is selected so that the user
       // doesn't accidentally arrow down into the one-off buttons when they
-      // didn't mean to.
+      // didn't mean to. Note TAB is unaffected because it only navigates
+      // results, not one-offs.
       return !this.lastResultIsSelected;
     }
 
@@ -320,7 +346,7 @@ class UrlbarEventBufferer {
   get lastResultIsSelected() {
     // TODO Bug 1536818: Once one-off buttons are fully implemented, it would be
     // nice to have a better way to check if the next down will focus one-off buttons.
-    let results = this._lastQuery.results;
+    let results = this._lastQuery.context.results;
     return (
       results.length &&
       results[results.length - 1] == this.input.view.selectedResult

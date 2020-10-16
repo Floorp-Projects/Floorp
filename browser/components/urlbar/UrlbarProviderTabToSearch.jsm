@@ -129,6 +129,8 @@ class ProviderTabToSearch extends UrlbarProvider {
    */
   async isActive(queryContext) {
     return (
+      queryContext.searchString &&
+      queryContext.tokens.length == 1 &&
       !queryContext.searchMode &&
       UrlbarPrefs.get("update2") &&
       UrlbarPrefs.get("update2.tabToComplete")
@@ -198,6 +200,16 @@ class ProviderTabToSearch extends UrlbarProvider {
       result,
       checkValue: false,
     });
+  }
+
+  /**
+   * Defines whether the view should defer user selection events while waiting
+   * for the first result from this provider.
+   * @returns {boolean} Whether the provider wants to defer user selection
+   *          events.
+   */
+  get deferUserSelection() {
+    return true;
   }
 
   /**

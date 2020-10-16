@@ -1250,7 +1250,10 @@ class UrlbarQueryContext {
     }
 
     this.lastResultCount = 0;
+    // Note that Set is not serializable through JSON, so these may not be
+    // easily shared with add-ons.
     this.pendingHeuristicProviders = new Set();
+    this.deferUserSelectionProviders = new Set();
     this.trimmedSearchString = this.searchString.trim();
     this.userContextId =
       options.userContextId ||
@@ -1527,6 +1530,20 @@ class UrlbarProvider {
    */
   getViewUpdate(result) {
     return null;
+  }
+
+  /**
+   * Defines whether the view should defer user selection events while waiting
+   * for the first result from this provider.
+   *
+   * @returns {boolean} Whether the provider wants to defer user selection
+   *          events.
+   * @see UrlbarEventBufferer
+   * @note UrlbarEventBufferer has a timeout after which user events will be
+   *       processed regardless.
+   */
+  get deferUserSelection() {
+    return false;
   }
 }
 

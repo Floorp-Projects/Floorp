@@ -333,8 +333,11 @@ class UrlbarView {
       );
     }
 
-    // Freeze results as the user is interacting with them.
-    this.controller.cancelQuery();
+    // Freeze results as the user is interacting with them, unless we are
+    // deferring events while waiting for critical results.
+    if (!this.input.eventBufferer.isDeferringEvents) {
+      this.controller.cancelQuery();
+    }
 
     let selectedElement = this._selectedElement;
 
@@ -642,6 +645,17 @@ class UrlbarView {
       // if necessary.  Conversely, the heuristic result of the previous query
       // may have been an alias, so remove formatting if necessary.
       this.input.formatValue();
+    }
+
+    if (queryContext.deferUserSelectionProviders.size) {
+      // DeferUserSelectionProviders block user selection until the result is
+      // shown, so it's the view's duty to remove them.
+      // Doing it sooner, like when the results are added by the provider,
+      // would not suffice because there's still a delay before those results
+      // reach the view.
+      queryContext.results.forEach(r => {
+        queryContext.deferUserSelectionProviders.delete(r.providerName);
+      });
     }
   }
 
