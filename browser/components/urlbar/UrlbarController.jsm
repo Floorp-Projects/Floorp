@@ -331,7 +331,9 @@ class UrlbarController {
           (this.input.value &&
             this.input.getAttribute("pageproxystate") != "valid");
         if (
-          this.view.isOpen &&
+          // Even if the view is closed, we may be waiting results, and in
+          // such a case we don't want to tab out of the urlbar.
+          (this.view.isOpen || !executeAction) &&
           !event.ctrlKey &&
           !event.altKey &&
           allowTabbingThroughResults

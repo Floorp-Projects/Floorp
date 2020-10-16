@@ -317,6 +317,10 @@ class Query {
   constructor(queryContext, controller, muxer, providers) {
     this.context = queryContext;
     this.context.results = [];
+    // Clear any state in the context object, since it could be reused by the
+    // caller and we don't want to port previous query state over.
+    this.context.pendingHeuristicProviders.clear();
+    this.context.deferUserSelectionProviders.clear();
     this.muxer = muxer;
     this.controller = controller;
     this.providers = providers;
@@ -369,6 +373,9 @@ class Query {
                   maxPriority = priority;
                 }
                 activeProviders.push(provider);
+                if (provider.deferUserSelection) {
+                  this.context.deferUserSelectionProviders.add(provider.name);
+                }
               }
             }
           })
@@ -387,17 +394,19 @@ class Query {
     }
 
     // Start querying active providers.
-
-    let queryPromises = [];
-    let startQuery = provider => {
+    let startQuery = async provider => {
       provider.logger.info(`Starting query for "${this.context.searchString}"`);
-      return provider.tryMethod(
-        "startQuery",
-        this.context,
-        this.add.bind(this)
-      );
+      let addedResult = false;
+      await provider.tryMethod("startQuery", this.context, (...args) => {
+        addedResult = true;
+        this.add(...args);
+      });
+      if (!addedResult) {
+        this.context.deferUserSelectionProviders.delete(provider.name);
+      }
     };
 
+    let queryPromises = [];
     for (let provider of activeProviders) {
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
         this.context.pendingHeuristicProviders.add(provider.name);
@@ -447,6 +456,7 @@ class Query {
       return;
     }
     this.canceled = true;
+    this.context.deferUserSelectionProviders.clear();
     for (let provider of this.providers) {
       provider.logger.info(
         `Canceling query for "${this.context.searchString}"`
