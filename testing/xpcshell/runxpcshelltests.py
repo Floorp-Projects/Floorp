@@ -983,8 +983,10 @@ class XPCShellTests(object):
         if test_tags:
             filters.append(tags(test_tags))
 
+        path_filter = None
         if test_paths:
-            filters.append(pathprefix(test_paths))
+            path_filter = pathprefix(test_paths)
+            filters.append(path_filter)
 
         if self.totalChunks > 1:
             filters.append(chunk_by_slice(self.thisChunk, self.totalChunks))
@@ -994,11 +996,26 @@ class XPCShellTests(object):
             sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
             raise
 
+        if path_filter and path_filter.missing:
+            self.log.warning("The following path(s) didn't resolve any tests:\n  {}".format(
+                "  \n".join(sorted(path_filter.missing))))
+
         if len(self.alltests) == 0:
-            self.log.error("no tests to run using specified "
-                           "combination of filters: {}".format(
-                                mp.fmt_filters()))
-            sys.exit(1)
+            if (
+                test_paths and
+                path_filter.missing == set(test_paths) and
+                os.environ.get("MOZ_AUTOMATION") == "1"
+            ):
+                # This can happen in CI when a manifest doesn't exist due to a
+                # build config variable in moz.build traversal. Don't generate
+                # an error in this case. Adding a todo count avoids mozharness
+                # raising an error.
+                self.todoCount += len(path_filter.missing)
+            else:
+                self.log.error("no tests to run using specified "
+                               "combination of filters: {}".format(
+                                    mp.fmt_filters()))
+                sys.exit(1)
 
         if len(self.alltests) == 1 and not verify:
             self.singleFile = os.path.basename(self.alltests[0]['path'])
@@ -1879,7 +1896,7 @@ class XPCShellTests(object):
                 self.log.error(t)
             raise exceptions[0]
 
-        if self.testCount == 0 and os.environ.get('TRY_SELECTOR') != 'coverage':
+        if self.testCount == 0 and os.environ.get("MOZ_AUTOMATION") != "1":
             self.log.error("No tests run. Did you pass an invalid --test-path?")
             self.failCount = 1
 
