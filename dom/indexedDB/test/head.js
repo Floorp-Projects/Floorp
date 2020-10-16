@@ -63,12 +63,15 @@ function triggerMainCommand(popup) {
   EventUtils.synthesizeMouseAtCenter(notification.button, {});
 }
 
-function triggerSecondaryCommand(popup) {
+function triggerSecondaryCommand(popup, win) {
+  if (!win) {
+    win = window;
+  }
   info("triggering secondary command");
   let notifications = popup.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
   let notification = notifications[0];
-  EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
+  EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {}, win);
 }
 
 function dismissNotification(popup) {
@@ -115,11 +118,11 @@ function dispatchEvent(eventName) {
   gBrowser.selectedBrowser.contentWindow.dispatchEvent(event);
 }
 
-function setPermission(url, permission) {
+function setPermission(url, permission, originAttributes = {}) {
   let uri = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
-    {}
+    originAttributes
   );
 
   Services.perms.addFromPrincipal(
@@ -129,21 +132,21 @@ function setPermission(url, permission) {
   );
 }
 
-function removePermission(url, permission) {
+function removePermission(url, permission, originAttributes = {}) {
   let uri = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
-    {}
+    originAttributes
   );
 
   Services.perms.removeFromPrincipal(principal, permission);
 }
 
-function getPermission(url, permission) {
+function getPermission(url, permission, originAttributes = {}) {
   let uri = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
-    {}
+    originAttributes
   );
 
   return Services.perms.testPermissionFromPrincipal(principal, permission);

@@ -8,29 +8,33 @@ const testPageURL =
   "dom/indexedDB/test/browser_permissionsPrompt.html";
 const notificationID = "indexedDB-permissions-prompt";
 
+async function doTest(browser) {
+  info("creating tab");
+  browser.selectedTab = BrowserTestUtils.addTab(browser);
+
+  info("loading test page: " + testPageURL);
+  BrowserTestUtils.loadURI(browser.selectedBrowser, testPageURL);
+
+  await waitForMessage(true, browser);
+  browser.removeCurrentTab();
+}
+
 add_task(async function test1() {
   // Avoids the actual prompt
   setPermission(testPageURL, "indexedDB");
 
-  info("creating tab");
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
-  info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
-
-  await waitForMessage(true, gBrowser);
-  gBrowser.removeCurrentTab();
+  await doTest(gBrowser);
 });
 
 add_task(async function test2() {
   info("creating private window");
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  info("creating tab");
-  win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testPageURL);
-  await waitForMessage("InvalidStateError", win.gBrowser);
-  win.gBrowser.removeCurrentTab();
+  // Avoids the actual prompt
+  setPermission(testPageURL, "indexedDB", { privateBrowsingId: 1 });
+
+  await doTest(win.gBrowser);
+
   await BrowserTestUtils.closeWindow(win);
   win = null;
 });
