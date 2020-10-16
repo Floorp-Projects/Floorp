@@ -9,6 +9,7 @@ fails print test-text.html test-text-noref.html
 print test-number-of-pages.html test-number-of-pages.html
 fails print test-number-of-pages.html test-number-of-pages-noref.html
 print test-print-selection.html test-text-ref.html
+print test-print-selection-shadow-dom.html test-text-ref.html
 print test-print-range.html test-print-range-ref.html
 fails print test-print-single-page.html test-print-single-page-noref.html
 print test-async-print.html test-text-ref.html

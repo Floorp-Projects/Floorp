@@ -631,6 +631,12 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
   nsINode* start = aRange.GetStartContainer();
   // If the nodes that we're comparing are not in the same document or in the
   // same subtree, assume that aCompareNode will fall at the end of the ranges.
+  // NOTE(emilio): This is broken (bug 1590379). When fixed, shadow-including
+  // tree order[1] seems the most reasonable order, but if we choose other order
+  // than that code in nsPrintJob.cpp to deal with selection printing might need
+  // to be fixed.
+  //
+  // [1]: https://dom.spec.whatwg.org/#concept-shadow-including-tree-order
   if (aCompareNode.GetComposedDoc() != start->GetComposedDoc() ||
       !start->GetComposedDoc() ||
       aCompareNode.SubtreeRoot() != start->SubtreeRoot()) {

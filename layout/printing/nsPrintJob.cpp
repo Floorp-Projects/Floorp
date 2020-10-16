@@ -1952,7 +1952,115 @@ bool nsPrintJob::PrintDocContent(const UniquePtr<nsPrintObject>& aPO,
   return false;
 }
 
-static constexpr auto kEllipsis = u"\x2026"_ns;
+// A helper struct to aid with DeleteNonSelectedNodes.
+struct MOZ_STACK_CLASS SelectionRangeState {
+  explicit SelectionRangeState(RefPtr<Selection> aSelection)
+      : mSelection(std::move(aSelection)) {
+    MOZ_ASSERT(mSelection);
+    MOZ_ASSERT(!mSelection->RangeCount());
+  }
+
+  // Selects all the nodes that are _not_ included in a given set of ranges.
+  MOZ_CAN_RUN_SCRIPT void SelectComplementOf(Span<const RefPtr<nsRange>>);
+  // Removes the selected ranges from the document.
+  MOZ_CAN_RUN_SCRIPT void RemoveSelectionFromDocument();
+
+ private:
+  struct Position {
+    nsINode* mNode;
+    uint32_t mOffset;
+  };
+
+  MOZ_CAN_RUN_SCRIPT void SelectRange(nsRange*);
+  MOZ_CAN_RUN_SCRIPT void SelectNodesExcept(const Position& aStart,
+                                            const Position& aEnd);
+  MOZ_CAN_RUN_SCRIPT void SelectNodesExceptInSubtree(const Position& aStart,
+                                                     const Position& aEnd);
+
+  // A map from subtree root (document or shadow root) to the start position of
+  // the non-selected content (so far).
+  nsDataHashtable<nsPtrHashKey<nsINode>, Position> mPositions;
+
+  // The selection we're adding the ranges to.
+  const RefPtr<Selection> mSelection;
+};
+
+void SelectionRangeState::SelectComplementOf(
+    Span<const RefPtr<nsRange>> aRanges) {
+  for (const auto& range : aRanges) {
+    auto start = Position{range->GetStartContainer(), range->StartOffset()};
+    auto end = Position{range->GetEndContainer(), range->EndOffset()};
+    SelectNodesExcept(start, end);
+  }
+}
+
+void SelectionRangeState::SelectRange(nsRange* aRange) {
+  if (aRange && !aRange->Collapsed()) {
+    mSelection->AddRangeAndSelectFramesAndNotifyListeners(*aRange,
+                                                          IgnoreErrors());
+  }
+}
+
+void SelectionRangeState::SelectNodesExcept(const Position& aStart,
+                                            const Position& aEnd) {
+  SelectNodesExceptInSubtree(aStart, aEnd);
+  if (auto* shadow = ShadowRoot::FromNode(aStart.mNode->SubtreeRoot())) {
+    auto* host = shadow->Host();
+    SelectNodesExcept(Position{host, 0}, Position{host, host->GetChildCount()});
+  } else {
+    MOZ_ASSERT(aStart.mNode->IsInUncomposedDoc());
+  }
+}
+
+void SelectionRangeState::SelectNodesExceptInSubtree(const Position& aStart,
+                                                     const Position& aEnd) {
+  static constexpr auto kEllipsis = u"\x2026"_ns;
+
+  nsINode* root = aStart.mNode->SubtreeRoot();
+  auto& start = mPositions.LookupForAdd(root).OrInsert([&] {
+    return Position{root, 0};
+  });
+
+  bool ellipsizedStart = false;
+  if (auto* text = Text::FromNode(aStart.mNode)) {
+    if (start.mNode != text && aStart.mOffset &&
+        aStart.mOffset < text->Length()) {
+      text->InsertData(aStart.mOffset, kEllipsis, IgnoreErrors());
+      ellipsizedStart = true;
+    }
+  }
+
+  RefPtr<nsRange> range = nsRange::Create(
+      start.mNode, start.mOffset, aStart.mNode, aStart.mOffset, IgnoreErrors());
+  SelectRange(range);
+
+  start = aEnd;
+
+  // If we added an ellipsis at the start and the end position was relative to
+  // the same node account for it here.
+  if (ellipsizedStart && aStart.mNode == aEnd.mNode) {
+    start.mOffset += kEllipsis.Length();
+  }
+
+  // If the end is mid text then add an ellipsis.
+  if (auto* text = Text::FromNode(start.mNode)) {
+    if (start.mOffset && start.mOffset < text->Length()) {
+      text->InsertData(start.mOffset, kEllipsis, IgnoreErrors());
+      start.mOffset += kEllipsis.Length();
+    }
+  }
+}
+
+void SelectionRangeState::RemoveSelectionFromDocument() {
+  for (auto& entry : mPositions) {
+    const Position& pos = entry.GetData();
+    nsINode* root = entry.GetKey();
+    RefPtr<nsRange> range = nsRange::Create(
+        pos.mNode, pos.mOffset, root, root->GetChildCount(), IgnoreErrors());
+    SelectRange(range);
+  }
+  mSelection->DeleteFromDocument(IgnoreErrors());
+}
 
 /**
  * Builds the complement set of ranges and adds those to the selection.
@@ -1976,60 +2084,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteNonSelectedNodes(
       presShell->GetCurrentSelection(SelectionType::eNormal);
   NS_ENSURE_STATE(selection);
 
-  MOZ_ASSERT(!selection->RangeCount());
-  nsINode* bodyNode = aDoc.GetBodyElement();
-  if (!bodyNode) {
-    // We don't currently support printing selections that are not in a body.
-    return NS_ERROR_FAILURE;
-  }
-
-  nsINode* startNode = bodyNode;
-  uint32_t startOffset = 0;
-
-  for (nsRange* origRange : *printRanges) {
-    // New end is start of original range.
-    nsINode* endNode = origRange->GetStartContainer();
-    uint32_t endOffset = origRange->StartOffset();
-
-    // Create the range that we want to remove. Note that if startNode or
-    // endNode are null nsRange::Create() will fail and we won't remove
-    // that section.
-    RefPtr<nsRange> nonselectedRange = nsRange::Create(
-        startNode, startOffset, endNode, endOffset, IgnoreErrors());
-
-    if (nonselectedRange && !nonselectedRange->Collapsed()) {
-      selection->AddRangeAndSelectFramesAndNotifyListeners(*nonselectedRange,
-                                                           IgnoreErrors());
-      // Unless we've already added an ellipsis at the start, if we ended mid
-      // text node then add ellipsis.
-      Text* text = endNode->GetAsText();
-      if (startNode != endNode && text && endOffset &&
-          endOffset < text->Length()) {
-        text->InsertData(endOffset, kEllipsis, IgnoreErrors());
-      }
-    }
-
-    // Next new start is end of original range.
-    startNode = origRange->GetEndContainer();
-    startOffset = origRange->EndOffset();
-
-    // If the next node will start mid text node then add ellipsis.
-    Text* text = startNode ? startNode->GetAsText() : nullptr;
-    if (text && startOffset && startOffset < text->Length()) {
-      text->InsertData(startOffset, kEllipsis, IgnoreErrors());
-      startOffset += kEllipsis.Length();
-    }
-  }
-
-  // Add in the last range to the end of the body.
-  RefPtr<nsRange> lastRange =
-      nsRange::Create(startNode, startOffset, bodyNode,
-                      bodyNode->GetChildCount(), IgnoreErrors());
-  if (lastRange && !lastRange->Collapsed()) {
-    selection->AddRangeAndSelectFramesAndNotifyListeners(*lastRange,
-                                                         IgnoreErrors());
-  }
-  selection->DeleteFromDocument(IgnoreErrors());
+  SelectionRangeState state(std::move(selection));
+  state.SelectComplementOf(*printRanges);
+  state.RemoveSelectionFromDocument();
   return NS_OK;
 }
 
