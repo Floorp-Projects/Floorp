@@ -85,9 +85,9 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D() {
       (HANDLE)mHandle, __uuidof(ID3D11Texture2D),
       (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture));
   if (FAILED(hr)) {
-    NS_WARNING(
-        "RenderDXGITextureHost::EnsureLockable(): Failed to open shared "
-        "texture");
+    MOZ_ASSERT(false,
+               "RenderDXGITextureHost::EnsureLockable(): Failed to open shared "
+               "texture");
     gfxCriticalNote
         << "RenderDXGITextureHost Failed to open shared texture, hr="
         << gfx::hexa(hr);
