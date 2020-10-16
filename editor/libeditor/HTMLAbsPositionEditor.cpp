@@ -345,6 +345,21 @@ void HTMLEditor::HideGrabberInternal() {
   ManualNACPtr grabber = std::move(mGrabber);
   ManualNACPtr positioningShadow = std::move(mPositioningShadow);
 
+  // If we're still in dragging mode, it means that the dragging is canceled
+  // by the web app.
+  if (mGrabberClicked || mIsMoving) {
+    mGrabberClicked = false;
+    mIsMoving = false;
+    if (mEventListener) {
+      DebugOnly<nsresult> rvIgnored =
+          static_cast<HTMLEditorEventListener*>(mEventListener.get())
+              ->ListenToMouseMoveEventForGrabber(false);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "HTMLEditorEventListener::"
+                           "ListenToMouseMoveEventForGrabber(false) failed");
+    }
+  }
+
   DebugOnly<nsresult> rv = absolutePositioningObject->UnsetAttr(
       kNameSpaceID_None, nsGkAtoms::_moz_abspos, true);
   NS_WARNING_ASSERTION(
@@ -412,6 +427,8 @@ nsresult HTMLEditor::ShowGrabberInternal(Element& aElement) {
 }
 
 nsresult HTMLEditor::StartMoving() {
+  MOZ_ASSERT(mGrabber);
+
   RefPtr<Element> parentElement = mGrabber->GetParentElement();
   if (NS_WARN_IF(!parentElement) || NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
