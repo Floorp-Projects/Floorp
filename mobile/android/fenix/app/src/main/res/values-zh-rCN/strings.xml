@@ -224,6 +224,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">详细了解</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">新建 Firefox 标签页</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">搜索</string>
     <!-- Text preview for larger sized widgets -->
@@ -644,6 +646,8 @@
     <string name="collection_open_tabs">打开标签页</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">收藏集名称</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">移除</string>
 
@@ -1655,6 +1659,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">全面体验 %s。</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">点击了解更多信息</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">有用的东西收藏在这</string>

@@ -217,6 +217,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">További tudnivalók</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Új Firefox-lap megnyitása</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Keresés</string>
     <!-- Text preview for larger sized widgets -->
@@ -632,6 +634,8 @@
     <string name="collection_open_tabs">Nyitott lapok</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Gyűjtemény neve</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eltávolítás</string>
 
@@ -1629,6 +1633,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Hozza ki a legtöbbet a %s böngészőből.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Kattintson a további részletekért</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Gyűjtse össze az Önnek fontos dolgokat</string>

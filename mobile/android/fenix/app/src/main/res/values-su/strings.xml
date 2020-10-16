@@ -471,6 +471,9 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Betot pikeun nyegerkeun</string>
 
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Gorolongkeun pikeun nyumputkeun tulbar</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Sesi</string>
@@ -517,7 +520,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Taya tab nu anyar ditutup di dieu</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Tutup tab</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

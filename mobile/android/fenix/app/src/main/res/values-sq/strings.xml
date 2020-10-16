@@ -343,6 +343,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Njoftime</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Koleksion vetjak shtesash</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Anuloje</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Emër koleksioni</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">I zoti i koleksionit (ID Përdoruesi)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Koleksioni i shtesave u ndryshua. Po dilet nga aplikacioni, për të zbatuar ndryshimet…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Njëkohësoje tani</string>
@@ -525,6 +539,14 @@
     <string name="recently_closed_empty_message">S’ka skeda të mbyllura së fundi këtu</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Skeda</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Parje skedash</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Listë</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Rrjetë</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Mbylli skedat</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -641,6 +663,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Fshi %1$d objekte</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Sot</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Dje</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 orët e fundit</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -779,6 +805,8 @@
     <string name="preference_phone_feature_location">Vendndodhje</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Njoftim</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Depozitë e Qëndrueshme</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Kërko të lejohet</string>
     <!-- Label that indicates that a permission must be blocked -->

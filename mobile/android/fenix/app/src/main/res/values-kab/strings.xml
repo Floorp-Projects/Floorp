@@ -348,6 +348,21 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ilɣa</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Sagen tagrumma n yizegrar</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">IH</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Sefsex</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Isem n tegrumma</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Bab n tegrumma (ID n useqdac)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Tagrumma n yizegrar tettwabeddel. Ffeɣ seg usnas akken ad ddun  yibeddilen…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Mtawi tura</string>
@@ -534,6 +549,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="recently_closed_empty_message">Ulac iccaren imedlen melmi kan</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Iccaren</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Sker iccer</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Tabdart</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Iẓiki</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Mdel iccaren</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -649,6 +672,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Kkes %1$d iferdisen</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Ass-a</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Iḍelli</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 isragen ineggura</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -789,6 +816,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_phone_feature_location">Adig</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Alɣu</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Aklas imezgi</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Suter asireg</string>
     <!-- Label that indicates that a permission must be blocked -->

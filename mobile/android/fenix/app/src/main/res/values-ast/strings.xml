@@ -1007,7 +1007,7 @@
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Consigui les rempuestes equí</string>
     <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Apenza a sincronizar los marcadores, les contraseñes y muncho más cola to cuenta de Firefox.</string>
+    <string name="onboarding_account_sign_in_header">Comienza a sincronizar los marcadores, les contraseñes y muncho más cola to cuenta de Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Deprender más</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1063,7 +1063,7 @@
     <string name="onboarding_close">Zarrar</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Apenzar a restolar</string>
+    <string name="onboarding_finish">Comenzar a restolar</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->

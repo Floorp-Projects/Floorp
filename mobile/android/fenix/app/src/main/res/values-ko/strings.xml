@@ -225,6 +225,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">더 알아보기</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">새 Firefox 탭 열기</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">검색</string>
     <!-- Text preview for larger sized widgets -->
@@ -644,6 +646,8 @@
     <string name="collection_open_tabs">열린 탭</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">모음집 이름</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">삭제</string>
 
@@ -1668,6 +1672,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s를 최대한 활용해 보세요.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">상세 정보</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">중요한 것들 수집하기</string>
