@@ -29,6 +29,15 @@ add_task(async function aboutDialog_foregroundCheck_downloadAuto() {
       downloadInfo,
     },
     async function aboutDialog_restart_notification() {
+      await TestUtils.waitForCondition(
+        () => PanelUI.menuButton.hasAttribute("badge-status"),
+        "Waiting for update badge",
+        undefined,
+        200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test.
+        logTestInfo(e);
+      });
       is(
         PanelUI.notificationPanel.state,
         "closed",

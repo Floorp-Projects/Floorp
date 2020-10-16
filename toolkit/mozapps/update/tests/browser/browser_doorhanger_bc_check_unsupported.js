@@ -14,6 +14,15 @@ add_task(async function doorhanger_bc_check_unsupported() {
       pageURLs: { manual: gDetailsURL },
     },
     async function doorhanger_unsupported_persist() {
+      await TestUtils.waitForCondition(
+        () => PanelUI.menuButton.hasAttribute("badge-status"),
+        "Waiting for update badge",
+        undefined,
+        200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test.
+        logTestInfo(e);
+      });
       is(
         PanelUI.notificationPanel.state,
         "closed",
