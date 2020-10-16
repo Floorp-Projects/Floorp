@@ -112,16 +112,15 @@ add_task(async function test_rtamo_aboutwelcome() {
     "RTAMO UI",
     // Expected selectors:
     [
-      "div.ReturnToAMOContainer",
-      "div.ReturnToAMOText",
-      "div[data-l10n-id='return-to-amo-addon-title']",
+      "div.onboardingContainer",
+      "div.brand-logo",
+      "h2[data-l10n-id='return-to-amo-addon-title']",
       "img[data-l10n-name='icon']",
-      "button.puffy.blue.ReturnToAMOAddExtension",
-      "button.default.grey.ReturnToAMOGetStarted",
+      "button.primary",
+      "button.secondary",
     ],
     // Unexpected selectors:
     [
-      "div.multistageContainer",
       "main.AW_STEP1",
       "main.AW_STEP2",
       "main.AW_STEP3",
@@ -129,7 +128,7 @@ add_task(async function test_rtamo_aboutwelcome() {
     ]
   );
 
-  await onButtonClick(browser, "button.default.grey.ReturnToAMOGetStarted");
+  await onButtonClick(browser, "button.secondary");
   Assert.ok(gURLBar.focused, "Focus should be on awesome bar");
 
   let windowGlobalParent = browser.browsingContext.currentWindowGlobal;
@@ -141,7 +140,7 @@ add_task(async function test_rtamo_aboutwelcome() {
     sandbox.restore();
   });
 
-  await onButtonClick(browser, "button.puffy.blue.ReturnToAMOAddExtension");
+  await onButtonClick(browser, "button.primary");
   const { callCount } = aboutWelcomeActor.onContentMessage;
   ok(
     callCount === 2,

@@ -246,7 +246,7 @@ body {
 }
 
 
-.multistageContainer {
+.onboardingContainer {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
@@ -337,6 +337,12 @@ body {
       line-height: 28px;
       max-width: 750px;
       letter-spacing: -0.01em;
+    }
+
+    img {
+      margin-inline: 2px;
+      width: 20px;
+      height: 20px;
     }
   }
 
@@ -654,5 +660,3 @@ body {
     }
   }
 }
-
-@import './ReturnToAMO';
