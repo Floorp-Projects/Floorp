@@ -637,6 +637,10 @@ Function un.preWelcome
   ShowWindow $0 ${SW_HIDE}
 
   ${If} $ShouldPromptForRefresh == "1"
+    ; Note: INI strings added here (rather than overwriting an existing value)
+    ; should be removed in un.leaveWelcome, since ioSpecial.ini is reused
+    ; for the Finish page.
+
     ; Replace title and body text
     WriteINIStr "$PLUGINSDIR\ioSpecial.ini" "Field 2" Text "$(UN_REFRESH_PAGE_TITLE)"
     ; Convert to translate newlines, this includes $PLUGINSDIR internally.
@@ -747,6 +751,13 @@ Function un.leaveWelcome
   ${If} $RefreshRequested == "1"
     Call un.LaunchAppForRefresh
     Quit
+  ${EndIf}
+
+  ${If} $ShouldPromptForRefresh == "1"
+    ; Remove the custom controls.
+    WriteINIStr "$PLUGINSDIR\ioSpecial.ini" "Settings" NumFields 3
+    DeleteIniSec "$PLUGINSDIR\ioSpecial.ini" "Field 4"
+    DeleteIniSec "$PLUGINSDIR\ioSpecial.ini" "Field 5"
   ${EndIf}
 
   ; Bring back the header bitmap for the next pages.
