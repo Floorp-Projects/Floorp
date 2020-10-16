@@ -45,6 +45,15 @@ permalink: /changelog/
 
 * **service-nimbus**
   * Added a `NimbusDisabled` class to provide implementers who are not able to use Nimbus yet.
+  
+* **support-base**
+  * 🌟 Add an `ActivityResultHandler` for features that want to consume the result.
+  
+* **concept-engine**
+  * 🌟 Added a new `ActivityDelegate` for handling intent requests from the engine.
+  
+* **browser-engine-gecko(-nightly)**
+  * Added `GeckoActivityDelegate` for the GeckoView `activityDelegate`.
 
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: Removed the `TabCounterToolbarButton#privateColor` attribute which are replaced by the `tabCounterTintColor` Android styleable attribute.
