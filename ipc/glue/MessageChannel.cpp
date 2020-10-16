@@ -2784,10 +2784,10 @@ void MessageChannel::DumpInterruptStack(const char* const pfx) const {
 
 void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
                                        MessageDirection aDirection) {
+  mMonitor->AssertCurrentThreadOwns();
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::IPCMessages)) {
-    // If mPeerPid is -1, messages are being sent to the current process.
-    int32_t pid = mPeerPid == -1 ? base::GetCurrentProcId() : mPeerPid;
+    int32_t pid = mListener->OtherPid();
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "IPC", IPC, IPCMarkerPayload,
         (pid, aMessage.seqno(), aMessage.type(), mSide, aDirection,
