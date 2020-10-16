@@ -26,6 +26,15 @@ add_task(async function aboutDialog_backgroundCheck_downloading_notify() {
   };
   await runAboutDialogUpdateTest(params, [
     async function aboutDialog_downloading_notification() {
+      await TestUtils.waitForCondition(
+        () => PanelUI.menuButton.hasAttribute("badge-status"),
+        "Waiting for update badge",
+        undefined,
+        200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test.
+        logTestInfo(e);
+      });
       is(
         PanelUI.notificationPanel.state,
         "closed",
