@@ -529,9 +529,9 @@ urlbar:
       search result.
       The value field records the initial interaction type. One of:
         "typed", "dropped", "pasted", "topsites"
-    bug_numbers: [1559136]
+    bug_numbers: [1559136, 1671404]
     notification_emails:
-      - "rharter@mozilla.com"
+      - "tbrooks@mozilla.com"
       - "fx-search@mozilla.com"
     expiry_version: never
     extra_keys:
@@ -545,6 +545,7 @@ urlbar:
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
           "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
           "tabtosearch", "none"
+      provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]
     release_channel_collection: opt-out
@@ -863,33 +864,33 @@ pwmgr:
     record_in_processes: [content, main]
   doorhanger_submitted:
     description: >
-      A login is saved or updated via the capture doorhanger. Carries information about whether 
-      the username and password _that were saved/updated by the user_ were modified in the 
-      doorhanger, selected from the suggestion autocomplete, or neither. `did_edit_X` and 
+      A login is saved or updated via the capture doorhanger. Carries information about whether
+      the username and password _that were saved/updated by the user_ were modified in the
+      doorhanger, selected from the suggestion autocomplete, or neither. `did_edit_X` and
       `did_select_X` will never both be true in the same event.
-      
-      The `object` describes the type of doorhanger when it was originally created. Note that user 
-      updates to the doorhanger may change whether a login is actually saved or updated, but will 
+
+      The `object` describes the type of doorhanger when it was originally created. Note that user
+      updates to the doorhanger may change whether a login is actually saved or updated, but will
       not impact the sent object.
     objects: ["save", "update"]
     bug_numbers: [1650929, 1650941]
     expiry_version: "86"
     release_channel_collection: opt-out
     products: ["firefox"]
-    record_in_processes: [main] 
+    record_in_processes: [main]
     notification_emails: ["srudie@mozilla.com", "passwords-dev@mozilla.org"]
     extra_keys:
       did_edit_un: >
-        Whether or not the saved/updated username was modified by the user typing into the 
+        Whether or not the saved/updated username was modified by the user typing into the
         username field.
       did_select_un: >
-        Whether or not the saved/updated username was selected by the user choosing a suggested 
+        Whether or not the saved/updated username was selected by the user choosing a suggested
         value from the autocomplete popup.
       did_edit_pw: >
-        Whether or not the saved/updated password was modified by the user typing into the 
+        Whether or not the saved/updated password was modified by the user typing into the
         password field.
       did_select_pw: >
-        Whether or not the saved/updated password was selected by the user choosing a suggested 
+        Whether or not the saved/updated password was selected by the user choosing a suggested
         value from the autocomplete popup.
 
 jsonfile:

@@ -286,6 +286,13 @@ Event Extra
     directly decide whether to search or visit the given string without having
     a fully built result.
     This is only present for ``engagement`` events.
+  - ``provider``
+    The name of the result provider for the selected result. Existing values
+    are: ``HeuristicFallback``, ``Autofill``, ``UnifiedComplete``,
+    ``TokenAliasEngines``, ``SearchSuggestions``, ``UrlbarProviderTopSites``.
+    Values can also be defined by `URLBar provider experiments`_.
+
+    .. _URLBar provider experiments: experiments.html#developing-address-bar-extensions
 
 Search probes relevant to the Address Bar
 -----------------------------------------
