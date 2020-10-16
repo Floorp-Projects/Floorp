@@ -61,7 +61,7 @@ TEST_VULNERABLE_MAP.set(TEST_LOGIN_2.guid, true);
 add_task(async function setup() {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
-  importDependencies(templateFrame, displayEl);
+  await importDependencies(templateFrame, displayEl);
 
   gLoginItem = document.createElement("login-item");
   displayEl.appendChild(gLoginItem);
