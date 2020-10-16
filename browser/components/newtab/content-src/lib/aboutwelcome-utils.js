@@ -71,7 +71,7 @@ export const DEFAULT_RTAMO_CONTENT = {
     },
     startButton: {
       label: {
-        string_id: "onboarding-start-browsing-button-label",
+        string_id: "onboarding-not-now-button-label",
       },
       message_id: "RTAMO_START_BROWSING_BUTTON",
       action: {

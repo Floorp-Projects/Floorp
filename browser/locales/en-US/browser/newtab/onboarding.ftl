@@ -10,6 +10,7 @@
 
 onboarding-welcome-header = Welcome to { -brand-short-name }
 onboarding-start-browsing-button-label = Start Browsing
+onboarding-not-now-button-label = Not now
 onboarding-cards-dismiss =
     .title = Dismiss
     .aria-label = Dismiss

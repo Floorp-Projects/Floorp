@@ -263,26 +263,26 @@ body {
   .start-button:active {
     background: var(--welcome-button-background-active-color); }
 
-.multistageContainer {
+.onboardingContainer {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
   background-color: var(--newtab-background-color-1); }
-  .multistageContainer .screen {
+  .onboardingContainer .screen {
     display: flex;
     flex-flow: column nowrap;
     height: 100%; }
-  .multistageContainer .brand-logo {
+  .onboardingContainer .brand-logo {
     background: url("chrome://branding/content/about-logo.svg") top center/112px no-repeat;
     padding: 112px 0 20px;
     margin-top: 60px; }
-    .multistageContainer .brand-logo.cta-top {
+    .onboardingContainer .brand-logo.cta-top {
       margin-top: 25px; }
-  .multistageContainer .welcomeZap span {
+  .onboardingContainer .welcomeZap span {
     position: relative;
     z-index: 1;
     white-space: nowrap; }
-  .multistageContainer .welcomeZap .zap::after {
+  .onboardingContainer .welcomeZap .zap::after {
     display: block;
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -293,34 +293,34 @@ body {
     height: 0.3em;
     left: 0;
     z-index: -1; }
-  .multistageContainer .welcomeZap .zap.short::after {
+  .onboardingContainer .welcomeZap .zap.short::after {
     background-image: url("chrome://activity-stream/content/data/content/assets/short-zap.svg"); }
-  .multistageContainer .welcomeZap .zap.long::after {
+  .onboardingContainer .welcomeZap .zap.long::after {
     background-image: url("chrome://activity-stream/content/data/content/assets/long-zap.svg"); }
-  .multistageContainer .welcome-text {
+  .onboardingContainer .welcome-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-bottom: 20px; }
-    .multistageContainer .welcome-text h1,
-    .multistageContainer .welcome-text h2 {
+    .onboardingContainer .welcome-text h1,
+    .onboardingContainer .welcome-text h2 {
       width: 860px; }
       @media (max-width: 866px) {
-        .multistageContainer .welcome-text h1,
-        .multistageContainer .welcome-text h2 {
+        .onboardingContainer .welcome-text h1,
+        .onboardingContainer .welcome-text h2 {
           width: 530px; } }
       @media (max-width: 610px) {
-        .multistageContainer .welcome-text h1,
-        .multistageContainer .welcome-text h2 {
+        .onboardingContainer .welcome-text h1,
+        .onboardingContainer .welcome-text h2 {
           width: 430px; } }
-    .multistageContainer .welcome-text h1 {
+    .onboardingContainer .welcome-text h1 {
       font-size: 48px;
       line-height: 56px;
       font-weight: bold;
       margin: 0 6px;
       color: var(--welcome-header-text-color-1); }
-    .multistageContainer .welcome-text h2 {
+    .onboardingContainer .welcome-text h2 {
       font-size: 18px;
       font-weight: normal;
       margin: 10px 6px 0;
@@ -328,17 +328,21 @@ body {
       line-height: 28px;
       max-width: 750px;
       letter-spacing: -0.01em; }
-  .multistageContainer .tiles-theme-container {
+    .onboardingContainer .welcome-text img {
+      margin-inline: 2px;
+      width: 20px;
+      height: 20px; }
+  .onboardingContainer .tiles-theme-container {
     margin: 10px auto;
     border: 0; }
-  .multistageContainer .sr-only {
+  .onboardingContainer .sr-only {
     opacity: 0;
     overflow: hidden;
     position: absolute; }
-    .multistageContainer .sr-only.input {
+    .onboardingContainer .sr-only.input {
       height: 1px;
       width: 1px; }
-  .multistageContainer .tiles-theme-section {
+  .onboardingContainer .tiles-theme-section {
     display: grid;
     grid-gap: 21px;
     grid-template-columns: repeat(4, auto);
@@ -349,11 +353,11 @@ body {
      */
     border: var(--tiles-theme-section-border-width) solid var(--newtab-background-color-1); }
     @media (max-width: 610px) {
-      .multistageContainer .tiles-theme-section {
+      .onboardingContainer .tiles-theme-section {
         grid-template-columns: repeat(2, auto); } }
-    .multistageContainer .tiles-theme-section:focus-within {
+    .onboardingContainer .tiles-theme-section:focus-within {
       border: var(--tiles-theme-section-border-width) dotted; }
-    .multistageContainer .tiles-theme-section .theme {
+    .onboardingContainer .tiles-theme-section .theme {
       display: flex;
       flex-direction: column;
       padding: 0;
@@ -364,42 +368,42 @@ body {
       box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.4);
       border-radius: 4px;
       cursor: pointer; }
-      .multistageContainer .tiles-theme-section .theme .icon {
+      .onboardingContainer .tiles-theme-section .theme .icon {
         background-size: cover;
         border-top-left-radius: 4px;
         border-top-right-radius: 4px;
         height: 91px; }
-        .multistageContainer .tiles-theme-section .theme .icon:dir(rtl) {
+        .onboardingContainer .tiles-theme-section .theme .icon:dir(rtl) {
           transform: scaleX(-1); }
-        .multistageContainer .tiles-theme-section .theme .icon.light {
+        .onboardingContainer .tiles-theme-section .theme .icon.light {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-light.svg"); }
-        .multistageContainer .tiles-theme-section .theme .icon.dark {
+        .onboardingContainer .tiles-theme-section .theme .icon.dark {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-dark.svg"); }
-        .multistageContainer .tiles-theme-section .theme .icon.automatic {
+        .onboardingContainer .tiles-theme-section .theme .icon.automatic {
           background-image: url("chrome://mozapps/content/extensions/default-theme.svg"); }
-        .multistageContainer .tiles-theme-section .theme .icon.alpenglow {
+        .onboardingContainer .tiles-theme-section .theme .icon.alpenglow {
           background-image: url("chrome://mozapps/content/extensions/firefox-alpenglow.svg"); }
-      .multistageContainer .tiles-theme-section .theme .text {
+      .onboardingContainer .tiles-theme-section .theme .text {
         display: flex;
         font-size: 14px;
         font-weight: bold;
         line-height: 22px;
         margin-inline-start: 12px;
         margin-top: 9px; }
-      .multistageContainer .tiles-theme-section .theme.selected {
+      .onboardingContainer .tiles-theme-section .theme.selected {
         outline: 4px solid #0090ED;
         outline-offset: -4px; }
-      .multistageContainer .tiles-theme-section .theme:focus, .multistageContainer .tiles-theme-section .theme:active {
+      .onboardingContainer .tiles-theme-section .theme:focus, .onboardingContainer .tiles-theme-section .theme:active {
         outline: 4px solid #0090ED;
         outline-offset: -4px; }
-  .multistageContainer .tiles-container {
+  .onboardingContainer .tiles-container {
     margin: 10px auto; }
-    .multistageContainer .tiles-container.info {
+    .onboardingContainer .tiles-container.info {
       padding: 6px 12px 12px; }
-      .multistageContainer .tiles-container.info:hover, .multistageContainer .tiles-container.info:focus {
+      .onboardingContainer .tiles-container.info:hover, .onboardingContainer .tiles-container.info:focus {
         background-color: rgba(217, 217, 227, 0.3);
         border-radius: 4px; }
-  .multistageContainer .tiles-topsites-disclaimer {
+  .onboardingContainer .tiles-topsites-disclaimer {
     display: flex;
     flex-direction: column;
     padding: 1em;
@@ -407,16 +411,16 @@ body {
     color: var(--grey-subtitle-1);
     font-size: 12px;
     line-height: 18px; }
-  .multistageContainer .tiles-topsites-section {
+  .onboardingContainer .tiles-topsites-section {
     display: grid;
     grid-gap: 24px;
     grid-template-columns: repeat(5, auto); }
     @media (max-width: 610px) {
-      .multistageContainer .tiles-topsites-section {
+      .onboardingContainer .tiles-topsites-section {
         grid-template-columns: repeat(3, auto); } }
-    .multistageContainer .tiles-topsites-section .site {
+    .onboardingContainer .tiles-topsites-section .site {
       width: 96px; }
-    .multistageContainer .tiles-topsites-section .icon {
+    .onboardingContainer .tiles-topsites-section .icon {
       background-size: cover;
       border-radius: 4px;
       box-shadow: var(--newtab-card-shadow);
@@ -425,50 +429,50 @@ body {
       font-weight: bold;
       height: 96px;
       line-height: 96px; }
-    .multistageContainer .tiles-topsites-section .host {
+    .onboardingContainer .tiles-topsites-section .host {
       font-size: 12px;
       line-height: 36px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap; }
-    .multistageContainer .tiles-topsites-section .site:nth-child(1) .icon {
+    .onboardingContainer .tiles-topsites-section .site:nth-child(1) .icon {
       background-color: #7542E5; }
-    .multistageContainer .tiles-topsites-section .site:nth-child(2) .icon {
+    .onboardingContainer .tiles-topsites-section .site:nth-child(2) .icon {
       background-color: #952BB9; }
-    .multistageContainer .tiles-topsites-section .site:nth-child(3) .icon {
+    .onboardingContainer .tiles-topsites-section .site:nth-child(3) .icon {
       background-color: #E31587; }
-    .multistageContainer .tiles-topsites-section .site:nth-child(4) .icon {
+    .onboardingContainer .tiles-topsites-section .site:nth-child(4) .icon {
       background-color: #E25920; }
-    .multistageContainer .tiles-topsites-section .site:nth-child(5) .icon {
+    .onboardingContainer .tiles-topsites-section .site:nth-child(5) .icon {
       background-color: #0250BB; }
-  .multistageContainer .tiles-media-section {
+  .onboardingContainer .tiles-media-section {
     align-self: center;
     position: relative;
     margin-top: -12px;
     margin-bottom: -155px; }
-    .multistageContainer .tiles-media-section .fade {
+    .onboardingContainer .tiles-media-section .fade {
       height: 390px;
       width: 800px;
       position: absolute;
       background-image: var(--about-welcome-media-fade); }
-    .multistageContainer .tiles-media-section .media {
+    .onboardingContainer .tiles-media-section .media {
       height: 390px;
       width: 800px; }
     @media (prefers-reduced-motion) {
-      .multistageContainer .tiles-media-section {
+      .onboardingContainer .tiles-media-section {
         height: 200px;
         width: 800px;
         margin: 0; }
-        .multistageContainer .tiles-media-section.privacy {
+        .onboardingContainer .tiles-media-section.privacy {
           background: top no-repeat url("chrome://activity-stream/content/data/content/assets/firefox-protections.svg"); }
-        .multistageContainer .tiles-media-section .media {
+        .onboardingContainer .tiles-media-section .media {
           opacity: 0; } }
-  .multistageContainer button {
+  .onboardingContainer button {
     font-family: inherit;
     cursor: pointer;
     border: 0;
     border-radius: 4px; }
-    .multistageContainer button.primary {
+    .onboardingContainer button.primary {
       font-size: 16px;
       margin-inline-start: 12px;
       margin: 20px 0 0;
@@ -480,14 +484,14 @@ body {
       position: relative;
       z-index: 1;
       border: 1px solid transparent; }
-      .multistageContainer button.primary:focus {
+      .onboardingContainer button.primary:focus {
         background: var(--welcome-button-background-hover-color);
         box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
-      .multistageContainer button.primary:hover {
+      .onboardingContainer button.primary:hover {
         background: var(--welcome-button-background-hover-color); }
-      .multistageContainer button.primary:active {
+      .onboardingContainer button.primary:active {
         background: var(--welcome-button-background-active-color); }
-    .multistageContainer button.secondary {
+    .onboardingContainer button.secondary {
       background-color: initial;
       text-decoration: underline;
       display: block;
@@ -495,34 +499,34 @@ body {
       width: auto;
       color: var(--newtab-button-secondary-color);
       margin-top: 14px; }
-      .multistageContainer button.secondary:hover, .multistageContainer button.secondary:active {
+      .onboardingContainer button.secondary:hover, .onboardingContainer button.secondary:active {
         background-color: initial; }
-  .multistageContainer .secondary-cta {
+  .onboardingContainer .secondary-cta {
     display: flex;
     flex-direction: row;
     justify-content: center;
     font-size: 14px; }
-    .multistageContainer .secondary-cta.top {
+    .onboardingContainer .secondary-cta.top {
       justify-content: end;
       align-items: end;
       padding-inline-end: 30px;
       padding-top: 4px; }
       @media (max-width: 610px) {
-        .multistageContainer .secondary-cta.top {
+        .onboardingContainer .secondary-cta.top {
           justify-content: center; } }
-    .multistageContainer .secondary-cta span {
+    .onboardingContainer .secondary-cta span {
       color: var(--grey-subtitle-1);
       margin: 0 4px; }
-  .multistageContainer .steps {
+  .onboardingContainer .steps {
     display: flex;
     flex-direction: row;
     justify-content: center;
     margin-top: auto;
     padding: 32px 0 66px;
     z-index: 1; }
-    .multistageContainer .steps.has-disclaimer {
+    .onboardingContainer .steps.has-disclaimer {
       padding-bottom: 0; }
-    .multistageContainer .steps .indicator {
+    .onboardingContainer .steps .indicator {
       width: 60px;
       height: 4px;
       margin-inline-end: 4px;
@@ -531,92 +535,5 @@ body {
       border-radius: 5px;
       border: 1px solid transparent;
       opacity: 0.25; }
-      .multistageContainer .steps .indicator.current {
+      .onboardingContainer .steps .indicator.current {
         opacity: 1; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-.ReturnToAMOOverlay {
-  background: #F9F9FA;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center; }
-  .ReturnToAMOOverlay .ReturnToAMOText {
-    color: #0C0C0D;
-    line-height: 32px;
-    font-size: 23px;
-    width: 100%; }
-    .ReturnToAMOOverlay .ReturnToAMOText img {
-      margin-inline: 2px;
-      width: 20px;
-      height: 20px; }
-  .ReturnToAMOOverlay h2 {
-    color: #4A4A4F;
-    font-weight: 100;
-    margin: 0 0 36px;
-    font-size: 36px;
-    line-height: 48px;
-    letter-spacing: 1.2px; }
-  .ReturnToAMOOverlay p {
-    color: #4A4A4F;
-    font-size: 14px;
-    line-height: 18px;
-    margin-bottom: 16px; }
-  .ReturnToAMOOverlay button {
-    font-family: inherit;
-    cursor: pointer;
-    border: 0; }
-  .ReturnToAMOOverlay .puffy {
-    border-radius: 4px;
-    height: 48px;
-    padding: 0 16px;
-    font-size: 15px; }
-  .ReturnToAMOOverlay .blue {
-    color: #FFF;
-    background-color: #0060DF; }
-    .ReturnToAMOOverlay .blue:hover {
-      box-shadow: none;
-      background-color: #003EAA; }
-    .ReturnToAMOOverlay .blue:active {
-      background-color: #002275; }
-  .ReturnToAMOOverlay .default {
-    border-radius: 2px;
-    height: 40px;
-    padding: 0 12px;
-    font-size: 15px; }
-  .ReturnToAMOOverlay .grey {
-    color: #000;
-    background-color: rgba(12, 12, 13, 0.1); }
-    .ReturnToAMOOverlay .grey:hover {
-      box-shadow: none;
-      background-color: rgba(12, 12, 13, 0.2); }
-    .ReturnToAMOOverlay .grey:active {
-      background-color: rgba(12, 12, 13, 0.3); }
-  .ReturnToAMOOverlay .ReturnToAMOGetStarted {
-    margin-top: 40px;
-    float: inline-end; }
-  .ReturnToAMOOverlay .ReturnToAMOAddExtension {
-    margin-top: 20px; }
-  .ReturnToAMOOverlay .ReturnToAMOContainer {
-    width: 960px;
-    background: #FFF;
-    box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    display: flex;
-    padding: 64px 64px 72px; }
-  .ReturnToAMOOverlay .ReturnToAMOAddonContents {
-    width: 560px;
-    margin-top: 32px;
-    margin-inline-end: 24px; }
-  .ReturnToAMOOverlay .ReturnToAMOIcon {
-    width: 292px;
-    height: 254px;
-    background-size: 292px 254px;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-image: url("chrome://activity-stream/content/data/content/assets/gift-extension.svg"); }

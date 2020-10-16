@@ -66,7 +66,7 @@ add_task(async function test_Separate_About_Welcome_branches() {
     "default",
     // Expected selectors:
     [
-      "div.multistageContainer",
+      "div.onboardingContainer",
       "nav.steps",
       "button.primary",
       "button.secondary",
