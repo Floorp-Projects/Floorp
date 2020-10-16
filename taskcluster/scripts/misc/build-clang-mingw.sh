@@ -10,7 +10,7 @@ elif [ "$1" == "x86" ]; then
   machine="i686"
   compiler_rt_machine="i386"
   crt_flags="--enable-lib32 --disable-lib64"
-  WRAPPER_FLAGS="-fsjlj-exceptions"
+  WRAPPER_FLAGS=""
 elif [ "$1" == "x64" ]; then
   machine="x86_64"
   compiler_rt_machine="x86_64"
