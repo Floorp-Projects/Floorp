@@ -145,6 +145,24 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
    * has been requested.
    */
   async togglePictureInPicture(video) {
+    if (inPictureInPicture(video)) {
+      // The only way we could have entered here for the same video is if
+      // we are toggling via the context menu, since we hide the inline
+      // Picture-in-Picture toggle when a video is being displayed in
+      // Picture-in-Picture. Turn off PiP in this case
+      const stopPipEvent = new this.contentWindow.CustomEvent(
+        "MozStopPictureInPicture",
+        {
+          bubbles: true,
+          detail: { reason: "context-menu" },
+        }
+      );
+      video.dispatchEvent(stopPipEvent);
+      return;
+    }
+
+    // All other requests to toggle PiP should open a new PiP
+    // window
     const videoRef = ContentDOMReference.get(video);
     this.sendAsyncMessage("PictureInPicture:Request", {
       isMuted: PictureInPictureChild.videoIsMuted(video),
@@ -1123,7 +1141,8 @@ class PictureInPictureChild extends JSWindowActorChild {
     switch (event.type) {
       case "MozStopPictureInPicture": {
         if (event.isTrusted && event.target === getWeakVideo()) {
-          this.closePictureInPicture({ reason: "video-el-remove" });
+          const reason = event.detail?.reason || "video-el-remove";
+          this.closePictureInPicture({ reason });
         }
         break;
       }
@@ -1327,21 +1346,7 @@ class PictureInPictureChild extends JSWindowActorChild {
    */
   async setupPlayer(videoRef) {
     const video = await ContentDOMReference.resolve(videoRef);
-    const weakVideo = Cu.getWeakReference(video);
-
-    if (inPictureInPicture(weakVideo)) {
-      // The only way we could have entered here for the same video is if
-      // we are toggling via the context menu, since we hide the inline
-      // Picture-in-Picture toggle when a video is being displayed in
-      // Picture-in-Picture. Turn off PiP in this case
-      this.closePictureInPicture({ reason: "context-menu" });
-    } else {
-      if (getWeakVideo()) {
-        this.closePictureInPicture({ reason: "new-pip" });
-      }
-
-      gWeakVideo = weakVideo;
-    }
+    gWeakVideo = Cu.getWeakReference(video);
 
     let originatingVideo = getWeakVideo();
     if (!originatingVideo) {
