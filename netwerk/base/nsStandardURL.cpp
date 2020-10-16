@@ -2951,7 +2951,13 @@ nsresult nsStandardURL::SetRef(const nsACString& input) {
     return NS_OK;
   }
 
-  int32_t refLen = flat.Length();
+  // filter out unexpected chars "\r\n\t" if necessary
+  nsAutoCString filteredURI(flat);
+  const ASCIIMaskArray& mask = ASCIIMask::MaskCRLFTab();
+  filteredURI.StripTaggedASCII(mask);
+
+  ref = filteredURI.get();
+  int32_t refLen = filteredURI.Length();
   if (ref[0] == '#') {
     ref++;
     refLen--;
