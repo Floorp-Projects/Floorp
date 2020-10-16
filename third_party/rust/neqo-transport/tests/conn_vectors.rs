@@ -8,7 +8,9 @@
 #![deny(clippy::pedantic)]
 
 use neqo_common::{Datagram, Encoder};
-use neqo_transport::{Connection, FixedConnectionIdManager, QuicVersion, State};
+use neqo_transport::{
+    CongestionControlAlgorithm, Connection, FixedConnectionIdManager, QuicVersion, State,
+};
 use test_fixture::{self, loopback, now};
 
 use std::cell::RefCell;
@@ -172,6 +174,7 @@ fn make_server(quic_version: QuicVersion) -> Connection {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
+        &CongestionControlAlgorithm::NewReno,
         quic_version,
     )
     .expect("create a default server")

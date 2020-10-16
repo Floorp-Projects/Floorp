@@ -3,12 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Role};
+use neqo_common::event::Provider;
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::Error as TransportError;
-use neqo_transport::{FixedConnectionIdManager, Output, QuicVersion};
+use neqo_transport::{CongestionControlAlgorithm, FixedConnectionIdManager, Output, QuicVersion};
 use nserror::*;
 use nsstring::*;
 use qlog::QlogStreamer;
@@ -86,10 +87,10 @@ impl NeqoHttp3Conn {
 
         let mut conn = match Http3Client::new(
             origin_conv,
-            &[alpn_conv],
             Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
             local,
             remote,
+            &CongestionControlAlgorithm::NewReno,
             quic_version,
             &http3_settings,
         ) {

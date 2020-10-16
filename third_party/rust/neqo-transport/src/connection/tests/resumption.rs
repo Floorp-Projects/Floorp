@@ -97,7 +97,7 @@ fn can_resume(token: impl AsRef<[u8]>, initial_has_token: bool) {
 }
 
 #[test]
-fn two_tickets() {
+fn two_tickets_on_timer() {
     let mut client = default_client();
     let mut server = default_server();
     connect(&mut client, &mut server);
@@ -125,7 +125,7 @@ fn two_tickets() {
     let mut recv_tokens = get_tokens(&mut client);
     assert_eq!(recv_tokens.len(), 1);
     let token2 = recv_tokens.pop().unwrap();
-    // Wai for next 3 * PTO, but now there are no more tokens.
+    // Wait for 3 * PTO, but now there are no more tokens.
     now += 3 * client.get_pto();
     let _ = client.process(None, now);
     assert_eq!(get_tokens(&mut client).len(), 0);
@@ -136,7 +136,7 @@ fn two_tickets() {
 }
 
 #[test]
-fn two_tickets_and_tokens() {
+fn two_tickets_with_new_token() {
     let mut client = default_client();
     let mut server = default_server();
     let validation = AddressValidation::new(now(), ValidateAddress::Always).unwrap();
@@ -158,4 +158,25 @@ fn two_tickets_and_tokens() {
 
     can_resume(&token1, true);
     can_resume(&token2, true);
+}
+
+/// By disabling address validation, the server won't send `NEW_TOKEN`, but
+/// we can take the session ticket still.
+#[test]
+fn take_token() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect(&mut client, &mut server);
+
+    server.send_ticket(now(), &[]).unwrap();
+    let dgram = server.process(None, now()).dgram();
+    client.process_input(dgram.unwrap(), now());
+
+    // There should be no ResumptionToken event here.
+    let tokens = get_tokens(&mut client);
+    assert_eq!(tokens.len(), 0);
+
+    // But we should be able to get the token directly, and use it.
+    let token = client.take_resumption_token(now()).unwrap();
+    can_resume(&token, false);
 }

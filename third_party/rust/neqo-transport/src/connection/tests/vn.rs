@@ -13,6 +13,9 @@ use neqo_common::{Datagram, Decoder, Encoder};
 use std::time::Duration;
 use test_fixture::{self, loopback, now};
 
+// The expected PTO duration after the first Initial is sent.
+const INITIAL_PTO: Duration = Duration::from_millis(300);
+
 #[test]
 fn unknown_version() {
     let mut client = default_client();
@@ -88,7 +91,7 @@ fn version_negotiation_current_version() {
 
     let dgram = Datagram::new(loopback(), loopback(), vn);
     let delay = client.process(Some(dgram), now()).callback();
-    assert_eq!(delay, Duration::from_millis(300));
+    assert_eq!(delay, INITIAL_PTO);
     assert_eq!(*client.state(), State::WaitInitial);
     assert_eq!(1, client.stats().dropped_rx);
 }
@@ -129,7 +132,7 @@ fn version_negotiation_corrupted() {
 
     let dgram = Datagram::new(loopback(), loopback(), &vn[..vn.len() - 1]);
     let delay = client.process(Some(dgram), now()).callback();
-    assert_eq!(delay, Duration::from_millis(300));
+    assert_eq!(delay, INITIAL_PTO);
     assert_eq!(*client.state(), State::WaitInitial);
     assert_eq!(1, client.stats().dropped_rx);
 }
@@ -148,7 +151,7 @@ fn version_negotiation_empty() {
 
     let dgram = Datagram::new(loopback(), loopback(), vn);
     let delay = client.process(Some(dgram), now()).callback();
-    assert_eq!(delay, Duration::from_millis(300));
+    assert_eq!(delay, INITIAL_PTO);
     assert_eq!(*client.state(), State::WaitInitial);
     assert_eq!(1, client.stats().dropped_rx);
 }
@@ -175,4 +178,24 @@ fn version_negotiation_not_supported() {
         }
         _ => panic!("Invalid client state"),
     }
+}
+
+#[test]
+fn version_negotiation_bad_cid() {
+    let mut client = default_client();
+    // Start the handshake.
+    let initial_pkt = client
+        .process(None, now())
+        .dgram()
+        .expect("a datagram")
+        .to_vec();
+
+    let mut vn = create_vn(&initial_pkt, &[0x1a1a_1a1a, 0x2a2a_2a2a, 0xff00_0001]);
+    vn[6] ^= 0xc4;
+
+    let dgram = Datagram::new(loopback(), loopback(), vn);
+    let delay = client.process(Some(dgram), now()).callback();
+    assert_eq!(delay, INITIAL_PTO);
+    assert_eq!(*client.state(), State::WaitInitial);
+    assert_eq!(1, client.stats().dropped_rx);
 }

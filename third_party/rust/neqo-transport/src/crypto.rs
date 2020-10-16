@@ -30,6 +30,19 @@ use crate::tracking::PNSpace;
 use crate::{Error, Res};
 
 const MAX_AUTH_TAG: usize = 32;
+/// The number of invocations remaining on a write cipher before we try
+/// to update keys.  This has to be much smaller than the number returned
+/// by `CryptoDxState::limit` or updates will happen too often.  As we don't
+/// need to ask permission to update, this can be quite small.
+pub(crate) const UPDATE_WRITE_KEYS_AT: PacketNumber = 100;
+
+// This is a testing kludge that allows for overwriting the number of
+// invocations of the next cipher to operate.  With this, it is possible
+// to test what happens when the number of invocations reaches 0, or
+// when it hits `UPDATE_WRITE_KEYS_AT` and an automatic update should occur.
+// This is a little crude, but it saves a lot of plumbing.
+#[cfg(test)]
+thread_local!(pub(crate) static OVERWRITE_INVOCATIONS: RefCell<Option<PacketNumber>> = RefCell::default());
 
 #[derive(Debug)]
 pub struct Crypto {
@@ -247,7 +260,7 @@ impl Crypto {
 
     pub fn create_resumption_token(
         &mut self,
-        new_token: Option<Vec<u8>>,
+        new_token: Option<&[u8]>,
         tps: &TransportParameters,
         rtt: u64,
     ) -> Option<ResumptionToken> {
@@ -259,7 +272,7 @@ impl Crypto {
                 enc.encode_vvec_with(|enc_inner| {
                     tps.encode(enc_inner);
                 });
-                enc.encode_vvec(new_token.as_ref().map_or(&[], |t| &t[..]));
+                enc.encode_vvec(new_token.unwrap_or(&[]));
                 enc.encode(t.as_ref());
                 qinfo!("resumption token {}", hex_snip_middle(&enc[..]));
                 Some(ResumptionToken::new(enc.into(), t.expiration_time()))
@@ -306,8 +319,11 @@ pub struct CryptoDxState {
     /// for verifying that packet numbers before a key update are strictly lower
     /// than packet numbers after a key update.
     used_pn: Range<PacketNumber>,
-    /// This is the minimum allowed.
+    /// This is the minimum packet number that is allowed.
     min_pn: PacketNumber,
+    /// The total number of operations that are remaining before the keys
+    /// become exhausted and can't be used any more.
+    invocations: PacketNumber,
 }
 
 impl CryptoDxState {
@@ -332,6 +348,7 @@ impl CryptoDxState {
             hpkey: HpKey::extract(TLS_VERSION_1_3, cipher, secret, "quic hp").unwrap(),
             used_pn: 0..0,
             min_pn: 0,
+            invocations: Self::limit(direction, cipher),
         }
     }
 
@@ -375,8 +392,58 @@ impl CryptoDxState {
         Self::new(direction, TLS_EPOCH_INITIAL, &secret, cipher)
     }
 
+    /// Determine the confidentiality and integrity limits for the cipher.
+    fn limit(direction: CryptoDxDirection, cipher: Cipher) -> PacketNumber {
+        match direction {
+            // This uses the smaller limits for 2^16 byte packets
+            // as we don't control incoming packet size.
+            CryptoDxDirection::Read => match cipher {
+                TLS_AES_128_GCM_SHA256 => 1 << 52,
+                TLS_AES_256_GCM_SHA384 => PacketNumber::MAX,
+                TLS_CHACHA20_POLY1305_SHA256 => 1 << 36,
+                _ => unreachable!(),
+            },
+            // This uses the larger limits for 2^11 byte packets.
+            CryptoDxDirection::Write => match cipher {
+                TLS_AES_128_GCM_SHA256 | TLS_AES_256_GCM_SHA384 => 1 << 28,
+                TLS_CHACHA20_POLY1305_SHA256 => PacketNumber::MAX,
+                _ => unreachable!(),
+            },
+        }
+    }
+
+    fn invoked(&mut self) -> Res<()> {
+        #[cfg(test)]
+        OVERWRITE_INVOCATIONS.with(|v| {
+            if let Some(i) = v.borrow_mut().take() {
+                neqo_common::qwarn!("Setting {:?} invocations to {}", self.direction, i);
+                self.invocations = i;
+            }
+        });
+        self.invocations = self
+            .invocations
+            .checked_sub(1)
+            .ok_or(Error::KeysExhausted)?;
+        Ok(())
+    }
+
+    /// Determine whether we should initiate a key update.
+    pub fn should_update(&self) -> bool {
+        // There is no point in updating read keys as the limit is global.
+        debug_assert_eq!(self.direction, CryptoDxDirection::Write);
+        self.invocations <= UPDATE_WRITE_KEYS_AT
+    }
+
     pub fn next(&self, next_secret: &SymKey, cipher: Cipher) -> Self {
         let pn = self.next_pn();
+        // We count invocations of each write key just for that key, but all
+        // attempts to invocations to read count toward a single limit.
+        // This doesn't count use of Handshake keys.
+        let invocations = if self.direction == CryptoDxDirection::Read {
+            self.invocations
+        } else {
+            Self::limit(CryptoDxDirection::Write, cipher)
+        };
         Self {
             direction: self.direction,
             epoch: self.epoch + 1,
@@ -384,6 +451,7 @@ impl CryptoDxState {
             hpkey: self.hpkey.clone(),
             used_pn: pn..pn,
             min_pn: pn,
+            invocations,
         }
     }
 
@@ -477,6 +545,9 @@ impl CryptoDxState {
             hex(hdr),
             hex(body)
         );
+        // The numbers in `Self::limit` assume a maximum packet size of 2^11.
+        assert!(body.len() <= 2048);
+        self.invoked()?;
 
         let size = body.len() + MAX_AUTH_TAG;
         let mut out = vec![0; size];
@@ -502,6 +573,7 @@ impl CryptoDxState {
             hex(hdr),
             hex(body)
         );
+        self.invoked()?;
         let mut out = vec![0; body.len()];
         let res = self.aead.decrypt(pn, hdr, body, &mut out)?;
         self.used(pn)?;
@@ -584,10 +656,14 @@ impl CryptoDxAppData {
         }
         let next_secret = Self::update_secret(self.cipher, &self.next_secret)?;
         Ok(Self {
-            dx: self.dx.next(&next_secret, self.cipher),
+            dx: self.dx.next(&self.next_secret, self.cipher),
             cipher: self.cipher,
             next_secret,
         })
+    }
+
+    pub fn epoch(&self) -> usize {
+        self.dx.epoch
     }
 }
 
@@ -832,15 +908,30 @@ impl CryptoStates {
         // ahead of the read keys.  If we initiated the key update, the write keys
         // will already be ahead.
         debug_assert!(self.read_update_time.is_none());
-        let write = &self.app_write.as_ref().unwrap().dx;
-        let read = &self.app_read.as_ref().unwrap().dx;
-        if write.epoch == read.epoch {
-            qdebug!([self], "Updating write keys to epoch={}", write.epoch + 1);
-            self.app_write = Some(self.app_write.as_ref().unwrap().next()?);
+        let write = &self.app_write.as_ref().unwrap();
+        let read = &self.app_read.as_ref().unwrap();
+        if write.epoch() == read.epoch() {
+            qdebug!([self], "Update write keys to epoch={}", write.epoch() + 1);
+            self.app_write = Some(write.next()?);
             Ok(true)
         } else {
             Ok(false)
         }
+    }
+
+    /// Check whether write keys are close to running out of invocations.
+    /// If that is close, update them if possible.  Failing to update at
+    /// this stage is cause for a fatal error.
+    pub fn auto_update(&mut self) -> Res<()> {
+        if let Some(app_write) = self.app_write.as_ref() {
+            if app_write.dx.should_update() {
+                qinfo!([self], "Initiating automatic key update");
+                if !self.maybe_update_write()? {
+                    return Err(Error::KeysExhausted);
+                }
+            }
+        }
+        Ok(())
     }
 
     fn has_0rtt_read(&self) -> bool {
@@ -854,6 +945,7 @@ impl CryptoStates {
     /// we want to ensure that we can continue to receive any delayed
     /// packets that use the old keys.  So we just set a timer.
     pub fn key_update_received(&mut self, expiration: Instant) -> Res<()> {
+        qtrace!([self], "Key update received");
         // If we received a key update, then we assume that the peer has
         // acknowledged a packet we sent in this epoch. It's OK to do that
         // because they aren't allowed to update without first having received
@@ -977,6 +1069,7 @@ impl CryptoStates {
                 .unwrap(),
                 used_pn: 0..645_971_972,
                 min_pn: 0,
+                invocations: 10,
             },
             cipher: TLS_CHACHA20_POLY1305_SHA256,
             next_secret: secret.clone(),

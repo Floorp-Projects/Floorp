@@ -226,6 +226,13 @@ impl Encoder {
         }
     }
 
+    /// Get the capacity of the underlying buffer: the number of bytes that can be
+    /// written without causing an allocation to occur.
+    #[must_use]
+    pub fn capacity(&self) -> usize {
+        self.buf.capacity()
+    }
+
     /// Create a view of the current contents of the buffer.
     /// Note: for a view of a slice, use `Decoder::new(&enc[s..e])`
     #[must_use]
@@ -360,6 +367,12 @@ impl Encoder {
 impl Debug for Encoder {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(&hex_with_len(self))
+    }
+}
+
+impl AsRef<[u8]> for Encoder {
+    fn as_ref(&self) -> &[u8] {
+        self.buf.as_ref()
     }
 }
 
