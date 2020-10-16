@@ -413,6 +413,12 @@ class UrlbarView {
       return;
     }
 
+    // We exit search mode preview on close since the result previewing it is
+    // implicitly unselected.
+    if (this.input.searchMode?.isPreview) {
+      this.input.searchMode = null;
+    }
+
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
     this._openPanelInstance = null;

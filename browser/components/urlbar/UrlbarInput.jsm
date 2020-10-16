@@ -2649,12 +2649,6 @@ class UrlbarInput {
     }
     this._focusUntrimmedValue = null;
 
-    // We exit previewed search mode on blur since the result previewing it is
-    // implictly unselected.
-    if (this.searchMode?.isPreview) {
-      this.searchMode = null;
-    }
-
     this.formatValue();
     this._resetSearchState();
 
