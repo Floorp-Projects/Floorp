@@ -421,7 +421,7 @@ void CanvasTranslator::NotifyDeviceChanged() {
                         &CanvasTranslator::SendNotifyDeviceChanged));
 }
 
-void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
+void CanvasTranslator::AddSurfaceDescriptor(int64_t aTextureId,
                                             TextureData* aTextureData) {
   UniquePtr<SurfaceDescriptor> descriptor = MakeUnique<SurfaceDescriptor>();
   if (!aTextureData->Serialize(*descriptor)) {
@@ -429,7 +429,7 @@ void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
   }
 
   MonitorAutoLock lock(mSurfaceDescriptorsMonitor);
-  mSurfaceDescriptors[aRefPtr] = std::move(descriptor);
+  mSurfaceDescriptors[aTextureId] = std::move(descriptor);
   mSurfaceDescriptorsMonitor.Notify();
 }
 
@@ -444,33 +444,31 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
     TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
     if (textureData) {
+      MOZ_DIAGNOSTIC_ASSERT(mNextTextureId >= 0, "No texture ID set");
       textureData->Lock(OpenMode::OPEN_READ_WRITE);
-      mTextureDatas[aRefPtr] = UniquePtr<TextureData>(textureData);
-      AddSurfaceDescriptor(aRefPtr, textureData);
+      mTextureDatas[mNextTextureId] = UniquePtr<TextureData>(textureData);
+      AddSurfaceDescriptor(mNextTextureId, textureData);
       dt = textureData->BorrowDrawTarget();
     }
   } while (!dt && CheckForFreshCanvasDevice(__LINE__));
   AddDrawTarget(aRefPtr, dt);
+  mNextTextureId = -1;
 
   return dt.forget();
 }
 
-void CanvasTranslator::RemoveDrawTarget(gfx::ReferencePtr aDrawTarget) {
-  InlineTranslator::RemoveDrawTarget(aDrawTarget);
+void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
   gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
-  mTextureDatas.erase(aDrawTarget);
+  mTextureDatas.erase(aTextureId);
 
   // It is possible that the texture from the content process has never been
-  // forwarded to the GPU process, so we have to make sure it is removed here
-  // otherwise if the same pointer gets used for a DrawTarget again in the
-  // content process then it could pick up the old (now invalid) descriptor.
+  // forwarded to the GPU process, so make sure its descriptor is removed.
   MonitorAutoLock lock(mSurfaceDescriptorsMonitor);
-  mSurfaceDescriptors.erase(aDrawTarget);
+  mSurfaceDescriptors.erase(aTextureId);
 }
 
-TextureData* CanvasTranslator::LookupTextureData(
-    gfx::ReferencePtr aDrawTarget) {
-  TextureMap::const_iterator result = mTextureDatas.find(aDrawTarget);
+TextureData* CanvasTranslator::LookupTextureData(int64_t aTextureId) {
+  TextureMap::const_iterator result = mTextureDatas.find(aTextureId);
   if (result == mTextureDatas.end()) {
     return nullptr;
   }
@@ -478,10 +476,10 @@ TextureData* CanvasTranslator::LookupTextureData(
 }
 
 UniquePtr<SurfaceDescriptor> CanvasTranslator::WaitForSurfaceDescriptor(
-    gfx::ReferencePtr aDrawTarget) {
+    int64_t aTextureId) {
   MonitorAutoLock lock(mSurfaceDescriptorsMonitor);
   DescriptorMap::iterator result;
-  while ((result = mSurfaceDescriptors.find(aDrawTarget)) ==
+  while ((result = mSurfaceDescriptors.find(aTextureId)) ==
          mSurfaceDescriptors.end()) {
     // If remote canvas has been deactivated just return null.
     if (mDeactivated) {
@@ -492,7 +490,7 @@ UniquePtr<SurfaceDescriptor> CanvasTranslator::WaitForSurfaceDescriptor(
   }
 
   UniquePtr<SurfaceDescriptor> descriptor = std::move(result->second);
-  mSurfaceDescriptors.erase(aDrawTarget);
+  mSurfaceDescriptors.erase(aTextureId);
   return descriptor;
 }
 

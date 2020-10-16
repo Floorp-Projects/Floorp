@@ -38,6 +38,8 @@ const EventType GET_DATA_FOR_SURFACE = EventType(EventType::LAST + 7);
 const EventType ADD_SURFACE_ALIAS = EventType(EventType::LAST + 8);
 const EventType REMOVE_SURFACE_ALIAS = EventType(EventType::LAST + 9);
 const EventType DEVICE_CHANGE_ACKNOWLEDGED = EventType(EventType::LAST + 10);
+const EventType NEXT_TEXTURE_ID = EventType(EventType::LAST + 11);
+const EventType TEXTURE_DESTRUCTION = EventType(EventType::LAST + 12);
 
 class RecordedCanvasBeginTransaction final
     : public RecordedEventDerived<RecordedCanvasBeginTransaction> {
@@ -131,8 +133,10 @@ RecordedCanvasFlush::RecordedCanvasFlush(S& aStream)
 class RecordedTextureLock final
     : public RecordedEventDerived<RecordedTextureLock> {
  public:
-  RecordedTextureLock(DrawTarget* aDT, const OpenMode aMode)
-      : RecordedEventDerived(TEXTURE_LOCK), mDT(aDT), mMode(aMode) {}
+  RecordedTextureLock(int64_t aTextureId, const OpenMode aMode)
+      : RecordedEventDerived(TEXTURE_LOCK),
+        mTextureId(aTextureId),
+        mMode(aMode) {}
 
   template <class S>
   MOZ_IMPLICIT RecordedTextureLock(S& aStream);
@@ -145,13 +149,13 @@ class RecordedTextureLock final
   std::string GetName() const final { return "TextureLock"; }
 
  private:
-  ReferencePtr mDT;
+  int64_t mTextureId;
   OpenMode mMode;
 };
 
 inline bool RecordedTextureLock::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  TextureData* textureData = aTranslator->LookupTextureData(mDT);
+  TextureData* textureData = aTranslator->LookupTextureData(mTextureId);
   if (!textureData) {
     return false;
   }
@@ -163,14 +167,14 @@ inline bool RecordedTextureLock::PlayCanvasEvent(
 
 template <class S>
 void RecordedTextureLock::Record(S& aStream) const {
-  WriteElement(aStream, mDT);
+  WriteElement(aStream, mTextureId);
   WriteElement(aStream, mMode);
 }
 
 template <class S>
 RecordedTextureLock::RecordedTextureLock(S& aStream)
     : RecordedEventDerived(TEXTURE_LOCK) {
-  ReadElement(aStream, mDT);
+  ReadElement(aStream, mTextureId);
   ReadElementConstrained(aStream, mMode, OpenMode::OPEN_NONE,
                          OpenMode::OPEN_READ_WRITE_ASYNC);
 }
@@ -178,8 +182,8 @@ RecordedTextureLock::RecordedTextureLock(S& aStream)
 class RecordedTextureUnlock final
     : public RecordedEventDerived<RecordedTextureUnlock> {
  public:
-  explicit RecordedTextureUnlock(DrawTarget* aDT)
-      : RecordedEventDerived(TEXTURE_UNLOCK), mDT(aDT) {}
+  explicit RecordedTextureUnlock(int64_t aTextureId)
+      : RecordedEventDerived(TEXTURE_UNLOCK), mTextureId(aTextureId) {}
 
   template <class S>
   MOZ_IMPLICIT RecordedTextureUnlock(S& aStream);
@@ -192,12 +196,12 @@ class RecordedTextureUnlock final
   std::string GetName() const final { return "TextureUnlock"; }
 
  private:
-  ReferencePtr mDT;
+  int64_t mTextureId;
 };
 
 inline bool RecordedTextureUnlock::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  TextureData* textureData = aTranslator->LookupTextureData(mDT);
+  TextureData* textureData = aTranslator->LookupTextureData(mTextureId);
   if (!textureData) {
     return false;
   }
@@ -209,13 +213,13 @@ inline bool RecordedTextureUnlock::PlayCanvasEvent(
 
 template <class S>
 void RecordedTextureUnlock::Record(S& aStream) const {
-  WriteElement(aStream, mDT);
+  WriteElement(aStream, mTextureId);
 }
 
 template <class S>
 RecordedTextureUnlock::RecordedTextureUnlock(S& aStream)
     : RecordedEventDerived(TEXTURE_UNLOCK) {
-  ReadElement(aStream, mDT);
+  ReadElement(aStream, mTextureId);
 }
 
 class RecordedCacheDataSurface final
@@ -496,18 +500,94 @@ template <class S>
 RecordedDeviceChangeAcknowledged::RecordedDeviceChangeAcknowledged(S& aStream)
     : RecordedEventDerived(DEVICE_CHANGE_ACKNOWLEDGED) {}
 
-#define FOR_EACH_CANVAS_EVENT(f)                               \
-  f(CANVAS_BEGIN_TRANSACTION, RecordedCanvasBeginTransaction); \
-  f(CANVAS_END_TRANSACTION, RecordedCanvasEndTransaction);     \
-  f(CANVAS_FLUSH, RecordedCanvasFlush);                        \
-  f(TEXTURE_LOCK, RecordedTextureLock);                        \
-  f(TEXTURE_UNLOCK, RecordedTextureUnlock);                    \
-  f(CACHE_DATA_SURFACE, RecordedCacheDataSurface);             \
-  f(PREPARE_DATA_FOR_SURFACE, RecordedPrepareDataForSurface);  \
-  f(GET_DATA_FOR_SURFACE, RecordedGetDataForSurface);          \
-  f(ADD_SURFACE_ALIAS, RecordedAddSurfaceAlias);               \
-  f(REMOVE_SURFACE_ALIAS, RecordedRemoveSurfaceAlias);         \
-  f(DEVICE_CHANGE_ACKNOWLEDGED, RecordedDeviceChangeAcknowledged);
+class RecordedNextTextureId final
+    : public RecordedEventDerived<RecordedNextTextureId> {
+ public:
+  explicit RecordedNextTextureId(int64_t aNextTextureId)
+      : RecordedEventDerived(NEXT_TEXTURE_ID), mNextTextureId(aNextTextureId) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedNextTextureId(S& aStream);
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const;
+
+  template <class S>
+  void Record(S& aStream) const;
+
+  std::string GetName() const final { return "RecordedNextTextureId"; }
+
+ private:
+  int64_t mNextTextureId;
+};
+
+inline bool RecordedNextTextureId::PlayCanvasEvent(
+    CanvasTranslator* aTranslator) const {
+  aTranslator->SetNextTextureId(mNextTextureId);
+  return true;
+}
+
+template <class S>
+void RecordedNextTextureId::Record(S& aStream) const {
+  WriteElement(aStream, mNextTextureId);
+}
+
+template <class S>
+RecordedNextTextureId::RecordedNextTextureId(S& aStream)
+    : RecordedEventDerived(NEXT_TEXTURE_ID) {
+  ReadElement(aStream, mNextTextureId);
+}
+
+class RecordedTextureDestruction final
+    : public RecordedEventDerived<RecordedTextureDestruction> {
+ public:
+  explicit RecordedTextureDestruction(int64_t aTextureId)
+      : RecordedEventDerived(TEXTURE_DESTRUCTION), mTextureId(aTextureId) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedTextureDestruction(S& aStream);
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const;
+
+  template <class S>
+  void Record(S& aStream) const;
+
+  std::string GetName() const final { return "RecordedTextureDestruction"; }
+
+ private:
+  int64_t mTextureId;
+};
+
+inline bool RecordedTextureDestruction::PlayCanvasEvent(
+    CanvasTranslator* aTranslator) const {
+  aTranslator->RemoveTexture(mTextureId);
+  return true;
+}
+
+template <class S>
+void RecordedTextureDestruction::Record(S& aStream) const {
+  WriteElement(aStream, mTextureId);
+}
+
+template <class S>
+RecordedTextureDestruction::RecordedTextureDestruction(S& aStream)
+    : RecordedEventDerived(TEXTURE_DESTRUCTION) {
+  ReadElement(aStream, mTextureId);
+}
+
+#define FOR_EACH_CANVAS_EVENT(f)                                   \
+  f(CANVAS_BEGIN_TRANSACTION, RecordedCanvasBeginTransaction);     \
+  f(CANVAS_END_TRANSACTION, RecordedCanvasEndTransaction);         \
+  f(CANVAS_FLUSH, RecordedCanvasFlush);                            \
+  f(TEXTURE_LOCK, RecordedTextureLock);                            \
+  f(TEXTURE_UNLOCK, RecordedTextureUnlock);                        \
+  f(CACHE_DATA_SURFACE, RecordedCacheDataSurface);                 \
+  f(PREPARE_DATA_FOR_SURFACE, RecordedPrepareDataForSurface);      \
+  f(GET_DATA_FOR_SURFACE, RecordedGetDataForSurface);              \
+  f(ADD_SURFACE_ALIAS, RecordedAddSurfaceAlias);                   \
+  f(REMOVE_SURFACE_ALIAS, RecordedRemoveSurfaceAlias);             \
+  f(DEVICE_CHANGE_ACKNOWLEDGED, RecordedDeviceChangeAcknowledged); \
+  f(NEXT_TEXTURE_ID, RecordedNextTextureId);                       \
+  f(TEXTURE_DESTRUCTION, RecordedTextureDestruction);
 
 }  // namespace layers
 }  // namespace mozilla

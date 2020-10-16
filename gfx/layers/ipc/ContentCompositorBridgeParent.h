@@ -214,8 +214,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   bool IsRemote() const override { return true; }
 
-  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientDrawTarget(
-      const uintptr_t aDrawTarget) final;
+  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
+      const int64_t aTextureId) final;
 
   mozilla::ipc::IPCResult RecvSupportsAsyncDXGISurface(bool* value) override;
   mozilla::ipc::IPCResult RecvPreferredDXGIAdapter(

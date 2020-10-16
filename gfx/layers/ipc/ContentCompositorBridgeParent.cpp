@@ -666,10 +666,9 @@ ContentCompositorBridgeParent::RecvReleasePCanvasParent() {
 }
 
 UniquePtr<SurfaceDescriptor>
-ContentCompositorBridgeParent::LookupSurfaceDescriptorForClientDrawTarget(
-    const uintptr_t aDrawTarget) {
-  return mCanvasTranslator->WaitForSurfaceDescriptor(
-      reinterpret_cast<void*>(aDrawTarget));
+ContentCompositorBridgeParent::LookupSurfaceDescriptorForClientTexture(
+    const int64_t aTextureId) {
+  return mCanvasTranslator->WaitForSurfaceDescriptor(aTextureId);
 }
 
 bool ContentCompositorBridgeParent::IsSameProcess() const {
