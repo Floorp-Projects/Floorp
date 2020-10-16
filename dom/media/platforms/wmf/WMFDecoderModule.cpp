@@ -32,6 +32,15 @@
 #include "nsWindowsHelpers.h"
 #include "prsystem.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define WFM_DECODER_MODULE_STATUS_MARKER(tag, text, markerTime)            \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
+                                     (text, markerTime))
+#else
+#  define WFM_DECODER_MODULE_STATUS_MARKER(tag, text, markerTime)
+#endif
+
 extern const GUID CLSID_WebmMfVpxDec;
 
 namespace mozilla {
@@ -133,11 +142,25 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     if (aParams.mError) {
       *aParams.mError = result;
     }
+    nsPrintfCString markerString(
+        "WMFDecoderModule::CreateVideoDecoder failed for manager with "
+        "description %s with result: %s",
+        manager->GetDescriptionName().get(), result.Description().get());
+    LOG(markerString.get());
+    WFM_DECODER_MODULE_STATUS_MARKER("WMFVDecoderCreation Failure",
+                                     markerString, TimeStamp::NowUnfuzzed());
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
+  nsPrintfCString markerString(
+      "WMFDecoderModule::CreateVideoDecoder success for manager with "
+      "description %s",
+      manager->GetDescriptionName().get());
+  LOG(markerString.get());
+  WFM_DECODER_MODULE_STATUS_MARKER("WMFVDecoderCreation Success", markerString,
+                                   TimeStamp::NowUnfuzzed());
 
+  RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
   return decoder.forget();
 }
 
@@ -147,8 +170,23 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
       new WMFAudioMFTManager(aParams.AudioConfig()));
 
   if (!manager->Init()) {
+    nsPrintfCString markerString(
+        "WMFDecoderModule::CreateAudioDecoder failed for manager with "
+        "description %s",
+        manager->GetDescriptionName().get());
+    LOG(markerString.get());
+    WFM_DECODER_MODULE_STATUS_MARKER("WMFADecoderCreation Failure",
+                                     markerString, TimeStamp::NowUnfuzzed());
     return nullptr;
   }
+
+  nsPrintfCString markerString(
+      "WMFDecoderModule::CreateAudioDecoder success for manager with "
+      "description %s",
+      manager->GetDescriptionName().get());
+  LOG(markerString.get());
+  WFM_DECODER_MODULE_STATUS_MARKER("WMFADecoderCreation Success", markerString,
+                                   TimeStamp::NowUnfuzzed());
 
   RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
   return decoder.forget();
