@@ -171,3 +171,23 @@ add_task(async function testEnterPrintsFromOrientation() {
     is(helper.doc.activeElement, portrait, "Portrait is focused");
   }, "print_orientation_focused.pdf");
 });
+
+add_task(async function testPrintOnNewWindowDoesntClose() {
+  info("Test that printing doesn't close a window with a single tab");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let browser = win.gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, PrintHelper.defaultTestPageUrl);
+  await BrowserTestUtils.browserLoaded(
+    browser,
+    true,
+    PrintHelper.defaultTestPageUrl
+  );
+  let helper = new PrintHelper(browser);
+  await helper.startPrint();
+  let file = helper.mockFilePicker("print_new_window_close.pdf");
+  await helper.assertPrintToFile(file, () => {
+    EventUtils.sendKey("return", helper.win);
+  });
+  ok(!win.closed, "Shouldn't be closed");
+  await BrowserTestUtils.closeWindow(win);
+});
