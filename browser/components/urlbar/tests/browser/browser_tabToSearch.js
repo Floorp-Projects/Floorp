@@ -195,6 +195,73 @@ add_task(async function activedescendant_arrow() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
+add_task(async function tab_key_race() {
+  // Mac Debug tinderboxes are just too slow and fail intermittently
+  // even if the EventBufferer timeout is set to an high value.
+  if (AppConstants.platform == "macosx" && AppConstants.DEBUG) {
+    return;
+  }
+  info(
+    "Test typing a letter followed shortly by Tab consistently selects a tab-to-search result"
+  );
+  Assert.equal(gURLBar.value, "", "Sanity check urlbar is empty");
+  let promiseQueryStarted = new Promise(resolve => {
+    /**
+     * A no-op test provider.
+     * We use this to wait for the query to start, because otherwise TAB will
+     * move to the next widget since the panel is closed and there's no running
+     * query. This means waiting for the UrlbarProvidersManager to at least
+     * evaluate the isActive status of providers.
+     * In the future we should try to reduce this latency, to defer user events
+     * even more efficiently.
+     */
+    class ListeningTestProvider extends UrlbarProvider {
+      constructor() {
+        super();
+      }
+      get name() {
+        return "ListeningTestProvider";
+      }
+      get type() {
+        return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+      }
+      isActive(context) {
+        executeSoon(resolve);
+        return false;
+      }
+      isRestricting(context) {
+        return false;
+      }
+      async startQuery(context, addCallback) {
+        // Nothing to do.
+      }
+    }
+    let provider = new ListeningTestProvider();
+    UrlbarProvidersManager.registerProvider(provider);
+    registerCleanupFunction(async function() {
+      UrlbarProvidersManager.unregisterProvider(provider);
+    });
+  });
+  info("Type the beginning of the search string to get tab-to-search");
+  EventUtils.synthesizeKey(TEST_ENGINE_DOMAIN.slice(0, 1));
+  info("Awaiting for the query to start");
+  await promiseQueryStarted;
+  EventUtils.synthesizeKey("KEY_Tab");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await TestUtils.waitForCondition(
+    () => UrlbarTestUtils.getSelectedRowIndex(window) == 1,
+    "Wait for tab key to be handled"
+  );
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: TEST_ENGINE_NAME,
+    entry: "tabtosearch",
+    isPreview: true,
+  });
+
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 // Test that large-style onboarding results appear and have the correct
 // properties.
 add_task(async function onboard() {
