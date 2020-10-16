@@ -273,12 +273,13 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   constexpr IntID kIntIdsToCache[] = {IntID::SystemUsesDarkTheme,
                                       IntID::PrefersReducedMotion,
                                       IntID::UseAccessibilityTheme};
-  constexpr ColorID kColorIdsToCache[] = {ColorID::Scrollbar,
-                                          ColorID::ScrollbarInactive,
-                                          ColorID::ScrollbarThumb,
-                                          ColorID::ScrollbarThumbHover,
-                                          ColorID::ScrollbarThumbActive,
-                                          ColorID::ScrollbarThumbInactive};
+  constexpr ColorID kColorIdsToCache[] = {
+      ColorID::ThemedScrollbar,
+      ColorID::ThemedScrollbarInactive,
+      ColorID::ThemedScrollbarThumb,
+      ColorID::ThemedScrollbarThumbHover,
+      ColorID::ThemedScrollbarThumbActive,
+      ColorID::ThemedScrollbarThumbInactive};
 
   for (IntID id : kIntIdsToCache) {
     cache.mInts.AppendElement(LookAndFeelInt{.id = id, .value = GetInt(id)});
@@ -310,23 +311,23 @@ void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
   }
   for (const auto& entry : aCache.mColors) {
     switch (entry.id) {
-      case ColorID::Scrollbar:
-        mMozScrollbar = entry.color;
+      case ColorID::ThemedScrollbar:
+        mThemedScrollbar = entry.color;
         break;
-      case ColorID::ScrollbarInactive:
-        mScrollbarInactive = entry.color;
+      case ColorID::ThemedScrollbarInactive:
+        mThemedScrollbarInactive = entry.color;
         break;
-      case ColorID::ScrollbarThumb:
-        mScrollbarThumb = entry.color;
+      case ColorID::ThemedScrollbarThumb:
+        mThemedScrollbarThumb = entry.color;
         break;
-      case ColorID::ScrollbarThumbHover:
-        mScrollbarThumbHover = entry.color;
+      case ColorID::ThemedScrollbarThumbHover:
+        mThemedScrollbarThumbHover = entry.color;
         break;
-      case ColorID::ScrollbarThumbActive:
-        mScrollbarThumbActive = entry.color;
+      case ColorID::ThemedScrollbarThumbActive:
+        mThemedScrollbarThumbActive = entry.color;
         break;
-      case ColorID::ScrollbarThumbInactive:
-        mScrollbarThumbInactive = entry.color;
+      case ColorID::ThemedScrollbarThumbInactive:
+        mThemedScrollbarThumbInactive = entry.color;
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Color ID in cache");
@@ -413,20 +414,23 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::SpellCheckerUnderline:
       aColor = NS_RGB(0xff, 0, 0);
       break;
-    case ColorID::ScrollbarInactive:
-      aColor = mScrollbarInactive;
+    case ColorID::ThemedScrollbar:
+      aColor = mThemedScrollbar;
       break;
-    case ColorID::ScrollbarThumb:
-      aColor = mScrollbarThumb;
+    case ColorID::ThemedScrollbarInactive:
+      aColor = mThemedScrollbarInactive;
       break;
-    case ColorID::ScrollbarThumbHover:
-      aColor = mScrollbarThumbHover;
+    case ColorID::ThemedScrollbarThumb:
+      aColor = mThemedScrollbarThumb;
       break;
-    case ColorID::ScrollbarThumbActive:
-      aColor = mScrollbarThumbActive;
+    case ColorID::ThemedScrollbarThumbHover:
+      aColor = mThemedScrollbarThumbHover;
       break;
-    case ColorID::ScrollbarThumbInactive:
-      aColor = mScrollbarThumbInactive;
+    case ColorID::ThemedScrollbarThumbActive:
+      aColor = mThemedScrollbarThumbActive;
+      break;
+    case ColorID::ThemedScrollbarThumbInactive:
+      aColor = mThemedScrollbarThumbInactive;
       break;
 
       // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
@@ -1080,25 +1084,25 @@ void nsLookAndFeel::EnsureInit() {
     style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
                                            &color);
-    mMozScrollbar = GDK_RGBA_TO_NS_RGBA(color);
+    mMozScrollbar = mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
                                            &color);
-    mScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
+    mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
 
     style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
                                            &color);
-    mScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
+    mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
                                            &color);
-    mScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
+    mThemedScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_background_color(
         style, GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
         &color);
-    mScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
+    mThemedScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
                                            &color);
-    mScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
+    mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
   }
 
   // The label is not added to a parent widget, but shared for constructing
