@@ -307,8 +307,15 @@ void CheckEdgeTracer::onChild(const JS::GCCellPtr& thing) {
 }
 
 void js::gc::AssertSafeToSkipPreWriteBarrier(TenuredCell* thing) {
-  mozilla::DebugOnly<Zone*> zone = thing->zoneFromAnyThread();
-  MOZ_ASSERT(!zone->needsIncrementalBarrier() || zone->isAtomsZone());
+#ifdef DEBUG
+  Zone* zone = thing->zoneFromAnyThread();
+  if (!zone->needsIncrementalBarrier()) {
+    // Barriers are disabled and would be skipped anyway.
+    return;
+  }
+
+  MOZ_ASSERT(zone->isAtomsZone() || zone->isSelfHostingZone());
+#endif
 }
 
 static bool IsMarkedOrAllocated(const EdgeValue& edge) {
