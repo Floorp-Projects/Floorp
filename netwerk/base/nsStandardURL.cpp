@@ -2875,7 +2875,13 @@ nsresult nsStandardURL::SetQueryWithEncoding(const nsACString& input,
     return NS_OK;
   }
 
-  int32_t queryLen = flat.Length();
+  // filter out unexpected chars "\r\n\t" if necessary
+  nsAutoCString filteredURI(flat);
+  const ASCIIMaskArray& mask = ASCIIMask::MaskCRLFTab();
+  filteredURI.StripTaggedASCII(mask);
+
+  query = filteredURI.get();
+  int32_t queryLen = filteredURI.Length();
   if (query[0] == '?') {
     query++;
     queryLen--;
