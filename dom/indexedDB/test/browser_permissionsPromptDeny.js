@@ -8,33 +8,62 @@ const testPageURL =
   "dom/indexedDB/test/browser_permissionsPrompt.html";
 const notificationID = "indexedDB-permissions-prompt";
 
-async function doTest(win, originAttributes) {
-  removePermission(testPageURL, "indexedDB", originAttributes);
+add_task(async function test1() {
+  removePermission(testPageURL, "indexedDB");
+
+  registerPopupEventHandler("popupshowing", function() {
+    ok(true, "prompt showing");
+  });
+  registerPopupEventHandler("popupshown", function() {
+    ok(true, "prompt shown");
+    triggerSecondaryCommand(this);
+  });
+  registerPopupEventHandler("popuphidden", function() {
+    ok(true, "prompt hidden");
+  });
+
+  info("creating tab");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
+  info("loading test page: " + testPageURL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  await waitForMessage("InvalidStateError", gBrowser);
+
+  is(
+    getPermission(testPageURL, "indexedDB"),
+    Ci.nsIPermissionManager.DENY_ACTION,
+    "Correct permission set"
+  );
+  gBrowser.removeCurrentTab();
+});
+
+add_task(async function test2() {
+  info("creating private window");
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   registerPopupEventHandler(
     "popupshowing",
     function() {
-      ok(true, "prompt showing");
+      ok(false, "prompt showing");
     },
     win
   );
   registerPopupEventHandler(
     "popupshown",
     function() {
-      ok(true, "prompt shown");
-      triggerSecondaryCommand(this, win);
+      ok(false, "prompt shown");
     },
     win
   );
   registerPopupEventHandler(
     "popuphidden",
     function() {
-      ok(true, "prompt hidden");
+      ok(false, "prompt hidden");
     },
     win
   );
 
-  info("creating tab");
+  info("creating private tab");
   win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
 
   info("loading test page: " + testPageURL);
@@ -42,26 +71,12 @@ async function doTest(win, originAttributes) {
   await waitForMessage("InvalidStateError", win.gBrowser);
 
   is(
-    getPermission(testPageURL, "indexedDB", originAttributes),
+    getPermission(testPageURL, "indexedDB"),
     Ci.nsIPermissionManager.DENY_ACTION,
     "Correct permission set"
   );
-  // unregisterAllPopupEventHandlers(win);
+  unregisterAllPopupEventHandlers();
   win.gBrowser.removeCurrentTab();
-}
-
-add_task(async function test1() {
-  removePermission(testPageURL, "indexedDB");
-
-  await doTest(window, {});
-});
-
-add_task(async function test2() {
-  info("creating private window");
-  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-
-  await doTest(win, { privateBrowsingId: 1 });
-
   await BrowserTestUtils.closeWindow(win);
 });
 

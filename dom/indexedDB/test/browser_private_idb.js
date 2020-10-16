@@ -164,8 +164,8 @@ add_task(async function() {
   );
   is(
     await checkTabWindowIDB(privateTab),
-    "created",
-    "IndexedDB works in a private-browsing page."
+    "error",
+    "IndexedDB does not work in a private-browsing page."
   );
 
   is(
@@ -175,8 +175,8 @@ add_task(async function() {
   );
   is(
     await checkTabDedicatedWorkerIDB(privateTab),
-    "created",
-    "IndexedDB works in a private-browsing Worker."
+    "error",
+    "IndexedDB does not work in a private-browsing Worker."
   );
 
   is(
@@ -186,8 +186,8 @@ add_task(async function() {
   );
   is(
     await checkTabSharedWorkerIDB(privateTab),
-    "created",
-    "IndexedDB works in a private-browsing SharedWorker."
+    "error",
+    "IndexedDB does not work in a private-browsing SharedWorker."
   );
 
   await BrowserTestUtils.closeWindow(normalWin);
