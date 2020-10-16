@@ -281,10 +281,6 @@ cfr-doorhanger-fission-primary-button = OK, Got it
 cfr-doorhanger-fission-secondary-button = Learn more
   .accesskey = L
 
-# Deprecated
-cfr-doorhanger-fission-body = { -brand-short-name } has enabled an experimental feature Fission (site isolation) for you. By isolating each site into a separate process, Fission provides an additional layer of security for you and the websites you visit.
-
-
 ## What's new: Cookies message
 
 cfr-whatsnew-clear-cookies-header = Automatic protection from sneaky tracking tactics
