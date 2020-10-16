@@ -72,7 +72,7 @@ fn alloc(layout: Layout) -> Result<NonNull<u8>, TryReserveError> {
             }
             1..=core::usize::MAX => {
                 let ptr = unsafe { alloc::alloc::alloc(layout) };
-                core::ptr::NonNull::new(ptr).ok_or(TryReserveError::AllocErr { layout })
+                core::ptr::NonNull::new(ptr).ok_or(TryReserveError::AllocError { layout })
             }
             _ => unreachable!("size must be non-negative"),
         }

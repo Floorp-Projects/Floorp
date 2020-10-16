@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fallible_collections"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["vcombey <vcombey@student.42.fr>"]
 description = "a crate which adds fallible allocation api to std collections"
 readme = "README.md"
@@ -21,7 +21,7 @@ keywords = ["fallible", "collections"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/vcombey/fallible_collections.git"
 [dependencies.hashbrown]
-version = "0.7.1"
+version = "0.9"
 
 [features]
 std_io = []

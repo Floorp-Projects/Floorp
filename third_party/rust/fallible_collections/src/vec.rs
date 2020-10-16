@@ -444,7 +444,7 @@ fn vec_try_extend<T>(v: &mut Vec<T>, new_cap: usize) -> Result<(), TryReserveErr
     };
 
     if new_ptr.is_null() {
-        return Err(TryReserveError::AllocErr { layout });
+        return Err(TryReserveError::AllocError { layout });
     }
 
     let new_vec = unsafe { Vec::from_raw_parts(new_ptr.cast(), old_len, new_cap) };
