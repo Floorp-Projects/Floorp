@@ -16,26 +16,29 @@
     <link rel="icon" id="favicon" href="chrome://global/skin/icons/warning.svg"/>
     <title data-l10n-id="about-httpsonly-title"></title>
   </head>
-  <body class="caution">
+  <body>
     <main class="container">
       <div class="title">
-        <h1 class="title-text" data-l10n-id="about-httpsonly-title"></h1>
+        <h2 data-l10n-id="about-httpsonly-title-alert"></h2>
+        <h1 class="title-text" data-l10n-id="about-httpsonly-title-connection-not-available"></h1>
       </div>
-      <p id="insecure-explanation-unavailable" data-l10n-id="about-httpsonly-explanation-unavailable"></p>
-      <br/>
+      <p id="insecure-explanation-unavailable" data-l10n-id="about-httpsonly-explanation-unavailable2"></p>
+      <p id="learn-more-container">
+        <a id="learnMoreLink" target="_blank" data-l10n-id="about-httpsonly-link-learn-more"></a>
+      </p>
+
       <b data-l10n-id="about-httpsonly-explanation-question"></b>
       <ul>
         <li data-l10n-id="about-httpsonly-explanation-nosupport"></li>
         <li data-l10n-id="about-httpsonly-explanation-risk"></li>
       </ul>
-      <p class="learn-more-container">
-        <a id="learnMoreLink" data-l10n-id="about-httpsonly-link-learn-more"></a>
-      </p>
+
+      <p id="explanation-continue" data-l10n-id="about-httpsonly-explanation-continue"></p>
       <div class="button-container">
         <button id="goBack" class="primary" data-l10n-id="about-httpsonly-button-go-back"></button>
-        <button id="openInsecure" data-l10n-id="about-httpsonly-button-accept-and-continue"></button>
+        <button id="openInsecure" data-l10n-id="about-httpsonly-button-continue-to-site"></button>
       </div>
     </main>
-    <script xmlns="http://www.w3.org/1999/xhtml" src="chrome://global/content/httpsonlyerror/errorpage.js"></script>
+    <script src="chrome://global/content/httpsonlyerror/errorpage.js"></script>
   </body>
   </html>

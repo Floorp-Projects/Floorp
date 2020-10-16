@@ -40,7 +40,7 @@ add_task(async function avoid_timeout_and_show_https_only_error_page() {
       // chaos mode, hence let's rather use an element id for verification
       // that the https-only mode error page has loaded.
       ok(
-        errorPage.includes("about-httpsonly-button-accept-and-continue"),
+        errorPage.includes("about-httpsonly-button-continue-to-site"),
         "Potential time-out in https-only mode should cause error page to appear!"
       );
     });
