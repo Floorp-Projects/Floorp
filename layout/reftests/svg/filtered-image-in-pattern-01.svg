@@ -1,0 +1,14 @@
+<svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="no-op">
+      <feColorMatrix type="saturate" values="1" />
+    </filter>
+    <pattern id="pattern" height="50%" width="50%">
+      <rect width="24" height="24" fill="red"/>
+      <!-- 100 x 100 lime image, bigger than the width/height of the element -->
+      <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjA4ZXKc4QAAAeNJREFUeF7t0sERgDAQw0DSf9FAqvA+lBRwGsnnef/fgwzcIH3HQDEwAxiOs9QVSUEwAxjOapfO3YJgBjAcZ6krkoJgBjCc1S6duwXBDGA4zlJXJAXBDGA4q106dwuCGcBwnKWuSAqCGcBwVrt07hYEM4DhOEtdkRQEM4DhrHbp3C0IZgDDcZa6IikIZgDDWe3SuVsQzACG4yx1RVIQzACGs9qlc7cgmAEMx1nqiqQgmAEMZ7VL525BMAMYjrPUFUlBMAMYzmqXzt2CYAYwHGepK5KCYAYwnNUunbsFwQxgOM5SVyQFwQxgOKtdOncLghnAcJylrkgKghnAcFa7dO4WBDOA4ThLXZEUBDOA4ax26dwtCGYAw3GWuiIpCGYAw1nt0rlbEMwAhuMsdUVSEMwAhrPapXO3IJgBDMdZ6oqkIJgBDGe1S+duQTADGI6z1BVJQTADGM5ql87dgmAGMBxnqSuSgmAGMJzVLp27BcEMYDjOUlckBcEMYDirXTp3C4IZwHCcpa5ICoIZwHBWu3TuFgQzgOE4S12RFAQzgOGsduncLQhmAMNxlroiKQhmAMNZ7dK5WxDMAIbjLHVFUhDMAIaz2qVztyCYAQzHWeqKpCCYAQxntUvnbkEwAxiOs9QRyQemSBErQhZ+LAAAAABJRU5ErkJggg==" height="24" width="24" filter="url(#no-op)"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect x="100" y="100" width="48" height="48" fill="url(#pattern)" />
+</svg>
