@@ -5430,6 +5430,11 @@
   value: 5000
   mirror: once
 
+- name: layers.gpu-process.crash-also-crashes-browser
+  type: bool
+  value: false
+  mirror: always
+
 - name: layers.low-precision-buffer
   type: RelaxedAtomicBool
   value: false

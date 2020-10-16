@@ -555,6 +555,10 @@ void GPUProcessManager::NotifyListenersOnCompositeDeviceReset() {
 void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
+  if (StaticPrefs::layers_gpu_process_crash_also_crashes_browser()) {
+    MOZ_CRASH("GPU process crashed and pref is set to crash the browser.");
+  }
+
   CompositorManagerChild::OnGPUProcessLost(aHost->GetProcessToken());
   DestroyProcess();
 
