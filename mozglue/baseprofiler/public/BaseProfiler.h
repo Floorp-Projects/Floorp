@@ -53,14 +53,6 @@
 #  define AUTO_BASE_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, \
                                                 categoryPair, ctx, flags)
 
-#  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD( \
-      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)
-
-#  define BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
-                                       categoryPair, kind)
-#  define AUTO_BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
-                                            categoryPair)
-
 #  define AUTO_PROFILER_STATS(name)
 
 // Function stubs for when MOZ_GECKO_PROFILER is not defined.
@@ -122,7 +114,6 @@ class Vector;
 namespace baseprofiler {
 
 class ProfilerBacktrace;
-class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
 
 // Macros used by the AUTO_PROFILER_* macros below.
@@ -458,8 +449,7 @@ inline bool profiler_is_active() {
 // doing some potentially-expensive work that's used in a marker. E.g.:
 //
 //   if (profiler_can_accept_markers()) {
-//     ExpensiveMarkerPayload expensivePayload = CreateExpensivePayload();
-//     BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(name, OTHER, expensivePayload);
+//     BASE_PROFILER_MARKER(name, OTHER, SomeMarkerType, expensivePayload);
 //   }
 inline bool profiler_can_accept_markers() {
   return baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused();
@@ -813,24 +803,6 @@ namespace baseprofiler {
         ctx, label, dynamicString,                                        \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, flags)
 
-// `PayloadType` is a sub-class of BaseMarkerPayload, `parenthesizedPayloadArgs`
-// is the argument list used to construct that `PayloadType`. E.g.:
-// `BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD("Load", DOM, TextMarkerPayload,
-//                                        ("text", start, end, ds, dsh))`
-#  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(                        \
-      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)  \
-    do {                                                                \
-      AUTO_PROFILER_STATS(base_add_marker_with_##PayloadType);          \
-      ::mozilla::baseprofiler::profiler_add_marker(                     \
-          markerName,                                                   \
-          ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, \
-          PayloadType parenthesizedPayloadArgs);                        \
-    } while (false)
-
-MFBT_API void profiler_add_marker(const char* aMarkerName,
-                                  ProfilingCategoryPair aCategoryPair,
-                                  const ProfilerMarkerPayload& aPayload);
-
 MFBT_API void profiler_add_js_marker(const char* aMarkerName,
                                      const char* aMarkerText);
 
@@ -838,50 +810,6 @@ MFBT_API void profiler_add_js_marker(const char* aMarkerName,
 // This may be used by re-entrant code that may call profiler functions while
 // the profiler already has the lock (which would deadlock).
 bool profiler_is_locked_on_current_thread();
-
-// Insert a marker in the profile timeline for a specified thread.
-MFBT_API void profiler_add_marker_for_thread(
-    int aThreadId, ProfilingCategoryPair aCategoryPair, const char* aMarkerName,
-    const ProfilerMarkerPayload& aPayload);
-
-// Insert a marker in the profile timeline for the main thread.
-// This may be used to gather some markers from any thread, that should be
-// displayed in the main thread track.
-MFBT_API void profiler_add_marker_for_mainthread(
-    ProfilingCategoryPair aCategoryPair, const char* aMarkerName,
-    const ProfilerMarkerPayload& aPayload);
-
-enum TracingKind {
-  TRACING_EVENT,
-  TRACING_INTERVAL_START,
-  TRACING_INTERVAL_END,
-};
-
-// Adds a tracing marker to the profile. A no-op if the profiler is inactive.
-
-#  define BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
-                                       categoryPair, kind)         \
-    ::mozilla::baseprofiler::profiler_tracing_marker(              \
-        categoryString, markerName,                                \
-        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, kind)
-
-MFBT_API void profiler_tracing_marker(
-    const char* aCategoryString, const char* aMarkerName,
-    ProfilingCategoryPair aCategoryPair, TracingKind aKind,
-    const Maybe<uint64_t>& aInnerWindowID = Nothing());
-MFBT_API void profiler_tracing_marker(
-    const char* aCategoryString, const char* aMarkerName,
-    ProfilingCategoryPair aCategoryPair, TracingKind aKind,
-    UniqueProfilerBacktrace aCause,
-    const Maybe<uint64_t>& aInnerWindowID = Nothing());
-
-// Adds a START/END pair of tracing markers.
-#  define AUTO_BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
-                                            categoryPair)               \
-    ::mozilla::baseprofiler::AutoProfilerTracing BASE_PROFILER_RAII(    \
-        categoryString, markerName,                                     \
-        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,   \
-        Nothing())
 
 //---------------------------------------------------------------------------
 // Output profiles
@@ -1013,44 +941,6 @@ class MOZ_RAII AutoProfilerLabel {
  public:
   // See the comment on the definition in platform.cpp for details about this.
   static MOZ_THREAD_LOCAL(ProfilingStack*) sProfilingStack;
-};
-
-class MOZ_RAII AutoProfilerTracing {
- public:
-  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
-                      ProfilingCategoryPair aCategoryPair,
-                      const Maybe<uint64_t>& aInnerWindowID)
-      : mCategoryString(aCategoryString),
-        mMarkerName(aMarkerName),
-        mCategoryPair(aCategoryPair),
-        mInnerWindowID(aInnerWindowID) {
-    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
-                            TRACING_INTERVAL_START, mInnerWindowID);
-  }
-
-  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
-                      ProfilingCategoryPair aCategoryPair,
-                      UniqueProfilerBacktrace aBacktrace,
-                      const Maybe<uint64_t>& aInnerWindowID)
-      : mCategoryString(aCategoryString),
-        mMarkerName(aMarkerName),
-        mCategoryPair(aCategoryPair),
-        mInnerWindowID(aInnerWindowID) {
-    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
-                            TRACING_INTERVAL_START, std::move(aBacktrace),
-                            mInnerWindowID);
-  }
-
-  ~AutoProfilerTracing() {
-    profiler_tracing_marker(mCategoryString, mMarkerName, mCategoryPair,
-                            TRACING_INTERVAL_END, mInnerWindowID);
-  }
-
- protected:
-  const char* mCategoryString;
-  const char* mMarkerName;
-  const ProfilingCategoryPair mCategoryPair;
-  const Maybe<uint64_t> mInnerWindowID;
 };
 
 // Get the MOZ_PROFILER_STARTUP* environment variables that should be

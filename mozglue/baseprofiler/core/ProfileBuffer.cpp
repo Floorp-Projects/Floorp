@@ -146,7 +146,7 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
   mLastSamplingTimeNs = timeNs;
   // Time to take the lock before sampling.
   double lockingNs = aLocking.ToMilliseconds() * 1000.0;
-  // Time to discard expired markers.
+  // Time to discard expired data.
   double cleaningNs = aCleaning.ToMilliseconds() * 1000.0;
   // Time to gather all counters.
   double countersNs = aCounters.ToMilliseconds() * 1000.0;
