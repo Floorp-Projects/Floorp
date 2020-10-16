@@ -879,16 +879,19 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarthumbColor(
   if (ui->mScrollbarColor.IsColors()) {
     color = ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle);
   } else if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ScrollbarThumbInactive,
-                                  sScrollbarThumbColor.ToABGR());
+    color = LookAndFeel::GetColor(
+        LookAndFeel::ColorID::ThemedScrollbarThumbInactive,
+        sScrollbarThumbColor.ToABGR());
   } else if (aElementState.HasAllStates(NS_EVENT_STATE_ACTIVE)) {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ScrollbarThumbActive,
-                                  sScrollbarThumbColorActive.ToABGR());
+    color =
+        LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbarThumbActive,
+                              sScrollbarThumbColorActive.ToABGR());
   } else if (aElementState.HasAllStates(NS_EVENT_STATE_HOVER)) {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ScrollbarThumbHover,
-                                  sScrollbarThumbColorHover.ToABGR());
+    color =
+        LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbarThumbHover,
+                              sScrollbarThumbColorHover.ToABGR());
   } else {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ScrollbarThumb,
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbarThumb,
                                   sScrollbarThumbColor.ToABGR());
   }
   return gfx::sRGBColor::FromABGR(color);
@@ -902,10 +905,10 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarColor(
   if (ui->mScrollbarColor.IsColors()) {
     color = ui->mScrollbarColor.AsColors().track.CalcColor(aStyle);
   } else if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ScrollbarInactive,
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbarInactive,
                                   sScrollbarColor.ToABGR());
   } else {
-    color = LookAndFeel::GetColor(LookAndFeel::ColorID::Scrollbar,
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbar,
                                   sScrollbarColor.ToABGR());
   }
   if (aIsRoot) {
