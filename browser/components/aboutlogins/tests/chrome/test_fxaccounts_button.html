@@ -29,7 +29,7 @@ let gFxAccountsButton;
 add_task(async function setup() {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
-  importDependencies(templateFrame, displayEl);
+  await importDependencies(templateFrame, displayEl);
 
   gFxAccountsButton = document.createElement("fxaccounts-button");
   displayEl.appendChild(gFxAccountsButton);

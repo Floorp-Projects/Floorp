@@ -29,7 +29,7 @@ let gMenuButton;
 add_task(async function setup() {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
-  importDependencies(templateFrame, displayEl);
+  await importDependencies(templateFrame, displayEl);
 
   gMenuButton = document.createElement("menu-button");
   displayEl.appendChild(gMenuButton);
