@@ -281,7 +281,13 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
 
     RefPtr<Document> doc = docShell->GetDocument();
     MOZ_DIAGNOSTIC_ASSERT(doc);
-    MOZ_DIAGNOSTIC_ASSERT(doc->IsStaticDocument());
+    // We might find non-static documents here if the fission remoteness change
+    // hasn't happened / finished yet. In that case, just skip them, the same
+    // way we do for remote frames above.
+    MOZ_DIAGNOSTIC_ASSERT(doc->IsStaticDocument() || doc->IsInitialDocument());
+    if (!doc || !doc->IsStaticDocument()) {
+      continue;
+    }
 
     auto childPO = MakeUnique<nsPrintObject>();
     nsresult rv = childPO->InitAsNestedObject(docShell, doc, aParentPO.get());
