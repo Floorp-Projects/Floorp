@@ -523,12 +523,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<DtoaState*> dtoaState;
 
   /*
-   * When this flag is non-zero, any attempt to GC will be skipped. It is used
-   * to suppress GC when reporting an OOM (see ReportOutOfMemory) and in
-   * debugging facilities that cannot tolerate a GC and would rather OOM
-   * immediately, such as utilities exposed to GDB. Setting this flag is
-   * extremely dangerous and should only be used when in an OOM situation or
-   * in non-exposed debugging facilities.
+   * When this flag is non-zero, any attempt to GC will be skipped. See the
+   * AutoSuppressGC class for for details.
    */
   js::ContextData<int32_t> suppressGC;
 
