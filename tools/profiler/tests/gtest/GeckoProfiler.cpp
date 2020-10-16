@@ -134,6 +134,25 @@ static void ActiveParamsCheck(int aEntries, double aInterval,
   }
 }
 
+TEST(GeckoProfiler, Utilities)
+{
+  // We'll assume that this test runs in the main thread (which should be true
+  // when called from the `main` function).
+  const int mainThreadId = profiler_current_thread_id();
+
+  MOZ_RELEASE_ASSERT(profiler_main_thread_id() == mainThreadId);
+  MOZ_RELEASE_ASSERT(profiler_is_main_thread());
+
+  std::thread testThread([&]() {
+    const int testThreadId = profiler_current_thread_id();
+    MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
+
+    MOZ_RELEASE_ASSERT(profiler_main_thread_id() != testThreadId);
+    MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
+  });
+  testThread.join();
+}
+
 TEST(GeckoProfiler, FeaturesAndParams)
 {
   InactiveFeaturesAndParamsCheck();

@@ -640,6 +640,14 @@ int profiler_current_process_id();
 // Get the current thread's ID.
 int profiler_current_thread_id();
 
+extern const int scProfilerMainThreadId;
+
+inline int profiler_main_thread_id() { return scProfilerMainThreadId; }
+
+inline bool profiler_is_main_thread() {
+  return profiler_current_thread_id() == profiler_main_thread_id();
+}
+
 // An object of this class is passed to profiler_suspend_and_sample_thread().
 // For each stack frame, one of the Collect methods will be called.
 class ProfilerStackCollector {
