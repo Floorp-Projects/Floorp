@@ -248,7 +248,7 @@ already_AddRefed<TextureHost> TextureHost::Create(
           aDesc.get_SurfaceDescriptorRecorded();
       UniquePtr<SurfaceDescriptor> realDesc =
           aDeallocator->AsCompositorBridgeParentBase()
-              ->LookupSurfaceDescriptorForClientDrawTarget(desc.drawTarget());
+              ->LookupSurfaceDescriptorForClientTexture(desc.textureId());
       if (!realDesc) {
         gfxCriticalNote << "Failed to get descriptor for recorded texture.";
         // Create a dummy to prevent any crashes due to missing IPDL actors.

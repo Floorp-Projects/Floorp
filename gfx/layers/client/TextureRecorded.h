@@ -9,6 +9,7 @@
 
 #include "TextureClient.h"
 #include "mozilla/layers/CanvasChild.h"
+#include "mozilla/layers/LayersTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -40,6 +41,7 @@ class RecordedTextureData final : public TextureData {
 
   ~RecordedTextureData() override;
 
+  int64_t mTextureId;
   RefPtr<CanvasChild> mCanvasChild;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
