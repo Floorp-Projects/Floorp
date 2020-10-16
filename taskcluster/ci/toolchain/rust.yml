@@ -173,12 +173,12 @@ mingw32-rust-1.41:
             '--target', 'x86_64-unknown-linux-gnu',
         ]
 
-mingw32-rust-1.43:
+mingw32-rust-1.44:
     treeherder:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.43.0',
+            '--channel', '1.44.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',

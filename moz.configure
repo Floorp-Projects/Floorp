@@ -216,7 +216,6 @@ def library_name_info_template(host_or_target):
                     dll=namespace(prefix='', suffix='.dll'),
                     lib=namespace(prefix='lib', suffix='a'),
                     import_lib=namespace(prefix='lib', suffix='a'),
-                    rust_lib=namespace(prefix='', suffix='lib'),
                     obj=namespace(prefix='', suffix='o'),
                 )
 
@@ -224,7 +223,6 @@ def library_name_info_template(host_or_target):
                 dll=namespace(prefix='', suffix='.dll'),
                 lib=namespace(prefix='', suffix='lib'),
                 import_lib=namespace(prefix='', suffix='lib'),
-                rust_lib=namespace(prefix='', suffix='lib'),
                 obj=namespace(prefix='', suffix='obj'),
             )
 
@@ -233,7 +231,6 @@ def library_name_info_template(host_or_target):
                 dll=namespace(prefix='lib', suffix='.dylib'),
                 lib=namespace(prefix='lib', suffix='a'),
                 import_lib=namespace(prefix=None, suffix=''),
-                rust_lib=namespace(prefix='lib', suffix='a'),
                 obj=namespace(prefix='', suffix='o'),
             )
         elif so_version:
@@ -245,7 +242,6 @@ def library_name_info_template(host_or_target):
             dll=namespace(prefix='lib', suffix=so),
             lib=namespace(prefix='lib', suffix='a'),
             import_lib=namespace(prefix=None, suffix=''),
-            rust_lib=namespace(prefix='lib', suffix='a'),
             obj=namespace(prefix='', suffix='o'),
         )
 
@@ -260,8 +256,6 @@ set_config('HOST_DLL_PREFIX', host_library_name_info.dll.prefix)
 set_config('HOST_DLL_SUFFIX', host_library_name_info.dll.suffix)
 set_config('LIB_PREFIX', library_name_info.lib.prefix)
 set_config('LIB_SUFFIX', library_name_info.lib.suffix)
-set_config('RUST_LIB_PREFIX', library_name_info.rust_lib.prefix)
-set_config('RUST_LIB_SUFFIX', library_name_info.rust_lib.suffix)
 set_config('OBJ_SUFFIX', library_name_info.obj.suffix)
 # Lots of compilation tests depend on this variable being present.
 add_old_configure_assignment('OBJ_SUFFIX', library_name_info.obj.suffix)

@@ -726,9 +726,9 @@ class BaseRustLibrary(object):
         # filenames. But we need to keep the basename consistent because
         # many other things in the build system depend on that.
         assert self.crate_type == 'staticlib'
-        self.lib_name = '%s%s%s' % (context.config.rust_lib_prefix,
+        self.lib_name = '%s%s%s' % (context.config.lib_prefix,
                                     basename.replace('-', '_'),
-                                    context.config.rust_lib_suffix)
+                                    context.config.lib_suffix)
         self.dependencies = dependencies
         self.features = features
         self.target_dir = target_dir

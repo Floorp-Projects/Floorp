@@ -324,8 +324,6 @@ LIBRARY_NAME_INFOS = {
         'LIB_PREFIX': 'lib',
         'LIB_SUFFIX': 'a',
         'IMPORT_LIB_SUFFIX': '',
-        'RUST_LIB_PREFIX': 'lib',
-        'RUST_LIB_SUFFIX': 'a',
         'OBJ_SUFFIX': 'o',
     },
     'darwin11.2.0': {
@@ -334,8 +332,6 @@ LIBRARY_NAME_INFOS = {
         'LIB_PREFIX': 'lib',
         'LIB_SUFFIX': 'a',
         'IMPORT_LIB_SUFFIX': '',
-        'RUST_LIB_PREFIX': 'lib',
-        'RUST_LIB_SUFFIX': 'a',
         'OBJ_SUFFIX': 'o',
     },
     'mingw32': {
@@ -344,8 +340,6 @@ LIBRARY_NAME_INFOS = {
         'LIB_PREFIX': 'lib',
         'LIB_SUFFIX': 'a',
         'IMPORT_LIB_SUFFIX': 'a',
-        'RUST_LIB_PREFIX': '',
-        'RUST_LIB_SUFFIX': 'lib',
         'OBJ_SUFFIX': 'o',
     },
     'msvc': {
@@ -354,8 +348,6 @@ LIBRARY_NAME_INFOS = {
         'LIB_PREFIX': '',
         'LIB_SUFFIX': 'lib',
         'IMPORT_LIB_SUFFIX': 'lib',
-        'RUST_LIB_PREFIX': '',
-        'RUST_LIB_SUFFIX': 'lib',
         'OBJ_SUFFIX': 'obj',
     },
     'openbsd6.1': {
@@ -364,8 +356,6 @@ LIBRARY_NAME_INFOS = {
         'LIB_PREFIX': 'lib',
         'LIB_SUFFIX': 'a',
         'IMPORT_LIB_SUFFIX': '',
-        'RUST_LIB_PREFIX': 'lib',
-        'RUST_LIB_SUFFIX': 'a',
         'OBJ_SUFFIX': 'o',
     },
 }
@@ -461,8 +451,6 @@ class BaseToolchainTest(BaseConfigureTest):
             'LIB_PREFIX',
             'LIB_SUFFIX',
             'IMPORT_LIB_SUFFIX',
-            'RUST_LIB_PREFIX',
-            'RUST_LIB_SUFFIX',
             'OBJ_SUFFIX',
         ):
             self.assertEquals('%s=%s' % (k, sandbox.get_config(k)),
