@@ -33,9 +33,6 @@
 
 #include "mozilla/BaseProfilerMarkersDetail.h"
 
-// TODO: Move common stuff to shared header instead.
-#include "BaseProfiler.h"
-
 #ifndef MOZ_GECKO_PROFILER
 
 #  define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)
