@@ -227,6 +227,7 @@ fuzzy(0-71,0-821) fails-if(winWidget) fuzzy-if(webrender&&OSX,1-1,216-216) == fi
 fuzzy-if(skiaContent,0-1,0-500) == filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
 == filter-use-element-01.svg pass.svg
+== filtered-image-in-pattern-01.svg pass.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-800000) == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
 
 == foreignObject-01.svg pass.svg
