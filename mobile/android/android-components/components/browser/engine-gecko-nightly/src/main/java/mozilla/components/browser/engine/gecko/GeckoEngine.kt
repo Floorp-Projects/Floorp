@@ -298,12 +298,11 @@ class GeckoEngine(
                 newPermissions: Array<out String>,
                 newOrigins: Array<out String>
             ): GeckoResult<AllowOrDeny>? {
-                // NB: We don't have a user flow for handling updated origins so we ignore them for now.
                 val result = GeckoResult<AllowOrDeny>()
                 webExtensionDelegate.onUpdatePermissionRequest(
                     GeckoWebExtension(current, runtime),
                     GeckoWebExtension(updated, runtime),
-                    newPermissions.toList()
+                    newPermissions.toList() + newOrigins.toList()
                 ) {
                     allow -> if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
                 }

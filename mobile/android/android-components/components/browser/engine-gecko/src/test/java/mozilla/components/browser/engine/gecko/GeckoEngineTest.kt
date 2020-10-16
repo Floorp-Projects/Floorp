@@ -878,6 +878,48 @@ class GeckoEngineTest {
         val currentExtension = mockNativeExtension("test", "uri")
         val updatedExtension = mockNativeExtension("testUpdated", "uri")
         val updatedPermissions = arrayOf("p1", "p2")
+        val hostPermissions = arrayOf("p3", "p4")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
+        verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
+
+        val result = geckoDelegateCaptor.value.onUpdatePrompt(
+                currentExtension, updatedExtension, updatedPermissions, hostPermissions
+        )
+        assertNotNull(result)
+
+        val currentExtensionCaptor = argumentCaptor<WebExtension>()
+        val updatedExtensionCaptor = argumentCaptor<WebExtension>()
+        val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
+        verify(webExtensionsDelegate).onUpdatePermissionRequest(
+            currentExtensionCaptor.capture(),
+            updatedExtensionCaptor.capture(),
+            eq(updatedPermissions.toList() + hostPermissions.toList()),
+            onPermissionsGrantedCaptor.capture()
+        )
+        val current =
+                currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(currentExtension, current.nativeExtension)
+        val updated =
+                updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(updatedExtension, updated.nativeExtension)
+
+        onPermissionsGrantedCaptor.value.invoke(true)
+        assertEquals(GeckoResult.ALLOW, result)
+    }
+
+    @Test
+    fun `web extension delegate handles update prompt with empty host permissions`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val currentExtension = mockNativeExtension("test", "uri")
+        val updatedExtension = mockNativeExtension("testUpdated", "uri")
+        val updatedPermissions = arrayOf("p1", "p2")
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
         engine.registerWebExtensionDelegate(webExtensionsDelegate)
