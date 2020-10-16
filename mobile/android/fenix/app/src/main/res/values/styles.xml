@@ -106,7 +106,6 @@
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
         <item name="privateBrowsingButtonAccent">@color/primary_text_normal_theme</item>
-        <item name="shieldLottieFile">@raw/shield_json</item>
     </style>
 
     <style name="NormalTheme" parent="NormalThemeBase" />
@@ -256,7 +255,6 @@
         <item name="bottomBarBackgroundTop">@drawable/private_home_bottom_bar_background_gradient_top</item>
         <item name="privateBrowsingButtonBackground">@color/primary_text_private_theme</item>
         <item name="privateBrowsingButtonAccent">@color/above_private_theme</item>
-        <item name="shieldLottieFile">@raw/shield_json_dark</item>
     </style>
 
     <style name="Mozac.Browser.Menu" parent="" tools:ignore="UnusedResources">

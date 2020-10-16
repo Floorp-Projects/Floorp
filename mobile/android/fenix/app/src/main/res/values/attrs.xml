@@ -38,7 +38,6 @@
     <attr name="toolbarStartGradient" format="reference"/>
     <attr name="toolbarCenterGradient" format="reference"/>
     <attr name="toolbarEndGradient" format="reference"/>
-    <attr name="shieldLottieFile" format="reference" />
     <attr name="fillLinkFromClipboard" format="reference"/>
     <attr name="syncDisconnected" format="reference" />
     <attr name="syncDisconnectedBackground" format="reference" />
