@@ -3709,7 +3709,7 @@
           ; The Maintenance Service uninstaller should do this, but it may not
           ; be up to date enough because of bug 1665193, so doing this here as
           ; well lets us make sure it really happens.
-          RmDir /REBOOTOK "$PROGRAMFILES32\Mozilla Maintenance Service\UpdateLogs"
+          RmDir "$PROGRAMFILES32\Mozilla Maintenance Service\UpdateLogs"
         ${EndIf}
       ${EndIf}
 
