@@ -217,15 +217,20 @@ class CompileDBBackend(CommonBackend):
         ".mm": "CXXFLAGS",
     }
 
+    def _get_compiler_args(self, cenv, canonical_suffix):
+        if canonical_suffix not in self.COMPILERS:
+            return None
+        return cenv.substs[self.COMPILERS[canonical_suffix]].split()
+
     def _build_db_line(
         self, objdir, reldir, cenv, filename, canonical_suffix, unified=None
     ):
-        if canonical_suffix not in self.COMPILERS:
+        compiler_args = self._get_compiler_args(cenv, canonical_suffix)
+        if compiler_args is None:
             return
         db = self._db.setdefault(
             (objdir, filename, unified),
-            cenv.substs[self.COMPILERS[canonical_suffix]].split()
-            + ["-o", "/dev/null", "-c"],
+            compiler_args + ["-o", "/dev/null", "-c"],
         )
         reldir = reldir or mozpath.relpath(objdir, cenv.topobjdir)
 
