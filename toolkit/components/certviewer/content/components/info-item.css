@@ -25,7 +25,6 @@ label {
   word-break: break-all;
   text-overflow: ellipsis;
   white-space: nowrap;
-  direction: ltr;
 }
 
 .download-link-chain {
@@ -35,7 +34,7 @@ label {
 .long-hex:hover {
   border-block: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background-hover);
-  padding: 0px;
+  padding: 0;
 }
 
 .hex-open {
@@ -46,4 +45,20 @@ label {
 :host(.method) *,
 :host(.padding) * {
   padding-bottom: 10px;
+}
+
+/* Elements that always need to be forced to LTR */
+.hex,
+:host(.dns-name) .info,
+.url {
+  direction: ltr;
+  text-align: match-parent;
+}
+
+/* Display some elements according to their text directionality */
+:host(.common-name) .info,
+:host(.name) .info,
+:host(.organization) .info {
+  unicode-bidi: plaintext;
+  text-align: match-parent;
 }

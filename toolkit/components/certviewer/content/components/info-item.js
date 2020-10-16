@@ -133,6 +133,7 @@ export class InfoItem extends HTMLElement {
     }
 
     if (isURL) {
+      info.classList.add("url");
       let link = document.createElement("a");
       link.setAttribute("href", this.item.info);
       link.setAttribute("rel", "noreferrer noopener");
