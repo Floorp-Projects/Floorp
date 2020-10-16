@@ -394,6 +394,7 @@ enum SendStreamState {
         send_buf: TxBuffer,
         final_size: u64,
         fin_sent: bool,
+        fin_acked: bool,
     },
     DataRecvd {
         final_size: u64,
@@ -490,6 +491,7 @@ impl SendStream {
                 ref send_buf,
                 fin_sent,
                 final_size,
+                ..
             } => {
                 let bytes = send_buf.next_bytes();
                 if bytes.is_some() {
@@ -533,10 +535,14 @@ impl SendStream {
             SendStreamState::DataSent {
                 ref mut send_buf,
                 final_size,
+                ref mut fin_acked,
                 ..
             } => {
                 send_buf.mark_as_acked(offset, len);
-                if fin && send_buf.buffered() == 0 {
+                if fin {
+                    *fin_acked = true;
+                }
+                if *fin_acked && send_buf.buffered() == 0 {
                     self.conn_events.send_stream_complete(self.stream_id);
                     self.state
                         .transition(SendStreamState::DataRecvd { final_size });
@@ -552,8 +558,13 @@ impl SendStream {
         }
 
         if fin {
-            if let SendStreamState::DataSent { fin_sent, .. } = &mut self.state {
-                *fin_sent = false;
+            if let SendStreamState::DataSent {
+                fin_sent,
+                fin_acked,
+                ..
+            } = &mut self.state
+            {
+                *fin_sent = *fin_acked;
             }
         }
     }
@@ -682,6 +693,7 @@ impl SendStream {
                     send_buf: TxBuffer::new(),
                     final_size: 0,
                     fin_sent: false,
+                    fin_acked: false,
                 });
             }
             SendStreamState::Send { send_buf } => {
@@ -691,6 +703,7 @@ impl SendStream {
                     send_buf: owned_buf,
                     final_size,
                     fin_sent: false,
+                    fin_acked: false,
                 });
             }
             SendStreamState::DataSent { .. } => qtrace!("already in DataSent state"),
@@ -742,6 +755,10 @@ impl SendStreams {
 
     pub fn get_mut(&mut self, id: StreamId) -> Res<&mut SendStream> {
         self.0.get_mut(&id).ok_or_else(|| Error::InvalidStreamId)
+    }
+
+    pub fn exists(&self, id: StreamId) -> bool {
+        self.0.contains_key(&id)
     }
 
     pub fn insert(&mut self, id: StreamId, stream: SendStream) {
@@ -842,6 +859,7 @@ mod tests {
     use super::*;
 
     use crate::events::ConnectionEvent;
+    use neqo_common::event::Provider;
 
     #[test]
     fn test_mark_range() {
@@ -1161,7 +1179,7 @@ mod tests {
     fn send_stream_writable_event_gen() {
         let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
         flow_mgr.borrow_mut().conn_increase_max_credit(2);
-        let conn_events = ConnectionEvents::default();
+        let mut conn_events = ConnectionEvents::default();
 
         let mut s = SendStream::new(4.into(), 0, Rc::clone(&flow_mgr), conn_events.clone());
 
@@ -1225,7 +1243,7 @@ mod tests {
     fn send_stream_writable_event_new_stream() {
         let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
         flow_mgr.borrow_mut().conn_increase_max_credit(2);
-        let conn_events = ConnectionEvents::default();
+        let mut conn_events = ConnectionEvents::default();
 
         let _s = SendStream::new(4.into(), 100, flow_mgr, conn_events.clone());
 
@@ -1408,5 +1426,58 @@ mod tests {
 
         // assert that atomic writing 10 byte works
         assert_eq!(s.send_atomic(b"abcdefghij").unwrap(), 10);
+    }
+
+    #[test]
+    fn ack_fin_first() {
+        const MESSAGE: &[u8] = b"hello";
+        let len_u64 = u64::try_from(MESSAGE.len()).unwrap();
+
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(len_u64);
+        let conn_events = ConnectionEvents::default();
+
+        let mut s = SendStream::new(StreamId::new(100), 0, Rc::clone(&flow_mgr), conn_events);
+        s.set_max_stream_data(len_u64);
+
+        // Send all the data, then the fin.
+        let _ = s.send(MESSAGE).unwrap();
+        s.mark_as_sent(0, MESSAGE.len(), false);
+        s.close();
+        s.mark_as_sent(len_u64, 0, true);
+
+        // Ack the fin, then the data.
+        s.mark_as_acked(len_u64, 0, true);
+        s.mark_as_acked(0, MESSAGE.len(), false);
+        assert!(s.is_terminal());
+    }
+
+    #[test]
+    fn ack_then_lose_fin() {
+        const MESSAGE: &[u8] = b"hello";
+        let len_u64 = u64::try_from(MESSAGE.len()).unwrap();
+
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(len_u64);
+        let conn_events = ConnectionEvents::default();
+
+        let id = StreamId::new(100);
+        let mut s = SendStream::new(id, 0, Rc::clone(&flow_mgr), conn_events);
+        s.set_max_stream_data(len_u64);
+
+        // Send all the data, then the fin.
+        let _ = s.send(MESSAGE).unwrap();
+        s.mark_as_sent(0, MESSAGE.len(), false);
+        s.close();
+        s.mark_as_sent(len_u64, 0, true);
+
+        // Ack the fin, then mark it lost.
+        s.mark_as_acked(len_u64, 0, true);
+        s.mark_as_lost(len_u64, 0, true);
+
+        // No frame should be sent here.
+        let mut builder = SendStreams(IndexMap::default());
+        builder.insert(id, s);
+        assert!(builder.get_frame(PNSpace::ApplicationData, 1000).is_none());
     }
 }

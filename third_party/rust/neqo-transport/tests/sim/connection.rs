@@ -7,7 +7,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use super::{Node, Rng};
-use neqo_common::{qdebug, qtrace, Datagram};
+use neqo_common::{event::Provider, qdebug, qtrace, Datagram};
 use neqo_crypto::AuthenticationStatus;
 use neqo_transport::{Connection, ConnectionEvent, Output, State, StreamId, StreamType};
 use std::cmp::min;

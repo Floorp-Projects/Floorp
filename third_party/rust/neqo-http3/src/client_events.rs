@@ -11,6 +11,7 @@ use crate::send_message::SendMessageEvents;
 use crate::Header;
 use crate::RecvMessageEvents;
 
+use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
 use neqo_transport::{AppError, StreamType};
 
@@ -161,21 +162,6 @@ impl Http3ClientEvents {
         self.insert(Http3ClientEvent::GoawayReceived);
     }
 
-    /// Take all events currently in the queue.
-    pub(crate) fn events(&self) -> impl Iterator<Item = Http3ClientEvent> {
-        self.events.replace(VecDeque::new()).into_iter()
-    }
-
-    /// Check if there is any event present.
-    pub fn has_events(&self) -> bool {
-        !self.events.borrow().is_empty()
-    }
-
-    /// Take the first event.
-    pub fn next_event(&self) -> Option<Http3ClientEvent> {
-        self.events.borrow_mut().pop_front()
-    }
-
     pub fn insert(&self, event: Http3ClientEvent) {
         self.events.borrow_mut().push_back(event);
     }
@@ -232,5 +218,19 @@ impl Http3ClientEvents {
                 | Http3ClientEvent::PushDataReadable{ push_id: x, .. }
                 | Http3ClientEvent::PushCanceled{ push_id: x, .. } if *x == push_id)
         });
+    }
+}
+
+impl EventProvider for Http3ClientEvents {
+    type Event = Http3ClientEvent;
+
+    /// Check if there is any event present.
+    fn has_events(&self) -> bool {
+        !self.events.borrow().is_empty()
+    }
+
+    /// Take the first event.
+    fn next_event(&mut self) -> Option<Self::Event> {
+        self.events.borrow_mut().pop_front()
     }
 }

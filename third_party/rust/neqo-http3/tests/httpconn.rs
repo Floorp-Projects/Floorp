@@ -6,7 +6,7 @@
 
 #![allow(unused_assignments)]
 
-use neqo_common::Datagram;
+use neqo_common::{event::Provider, Datagram};
 use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State};
 use test_fixture::*;

@@ -13,7 +13,7 @@ use crate::server_events::{ClientRequestStream, Http3ServerEvent, Http3ServerEve
 use crate::settings::HttpZeroRttChecker;
 use crate::Res;
 use neqo_common::{qtrace, Datagram};
-use neqo_crypto::AntiReplay;
+use neqo_crypto::{AntiReplay, Cipher};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
 use neqo_transport::{ConnectionIdManager, Output};
@@ -74,6 +74,10 @@ impl Http3Server {
 
     pub fn set_validation(&mut self, v: ValidateAddress) {
         self.server.set_validation(v);
+    }
+
+    pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
+        self.server.set_ciphers(ciphers);
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -222,6 +226,7 @@ fn prepare_data(
 mod tests {
     use super::{Http3Server, Http3ServerEvent, Http3State, Rc, RefCell};
     use crate::{Error, Header};
+    use neqo_common::event::Provider;
     use neqo_crypto::AuthenticationStatus;
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_qpack::QpackSettings;

@@ -14,7 +14,7 @@ mod drop;
 pub mod rng;
 mod taildrop;
 
-use neqo_common::{qdebug, qtrace, Datagram, Encoder};
+use neqo_common::{qdebug, qinfo, qtrace, Datagram, Encoder};
 use neqo_transport::Output;
 use rng::Random;
 use std::cell::RefCell;
@@ -161,9 +161,7 @@ impl Simulator {
                 Waiting(a) => next = Some(next.map_or(a, |b| min(a, b))),
             }
         }
-        let next = next.expect("a node cannot be idle and not done");
-        qdebug!([self.name], "advancing time by {:?}", next - now);
-        next
+        next.expect("a node cannot be idle and not done")
     }
 
     /// Runs the simulation.
@@ -218,7 +216,16 @@ impl Simulator {
             }
 
             if dgram.is_none() {
-                now = self.next_time(now);
+                let next = self.next_time(now);
+                if next > now {
+                    qinfo!(
+                        [self.name],
+                        "advancing time by {:?} to {:?}",
+                        next - now,
+                        next - start
+                    );
+                    now = next;
+                }
             }
         }
     }

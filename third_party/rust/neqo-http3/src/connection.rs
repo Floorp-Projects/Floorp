@@ -125,6 +125,7 @@ impl Http3Connection {
                 },
             ]),
         });
+        self.control_stream_local.queue_frame(&HFrame::Grease);
     }
 
     /// Save settings for adding to the session ticket.

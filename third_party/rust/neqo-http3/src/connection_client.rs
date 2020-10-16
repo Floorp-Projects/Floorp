@@ -15,13 +15,14 @@ use crate::settings::HSettings;
 use crate::Header;
 use crate::RecvMessageEvents;
 use neqo_common::{
-    hex, hex_with_len, qdebug, qinfo, qlog::NeqoQlog, qtrace, Datagram, Decoder, Encoder, Role,
+    event::Provider as EventProvider, hex, hex_with_len, qdebug, qinfo, qlog::NeqoQlog, qtrace,
+    Datagram, Decoder, Encoder, Role,
 };
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, ResumptionToken, SecretAgentInfo};
 use neqo_qpack::{stats::Stats, QpackSettings};
 use neqo_transport::{
-    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdManager, Output, QuicVersion,
-    StreamId, StreamType, ZeroRttState,
+    AppError, CongestionControlAlgorithm, Connection, ConnectionEvent, ConnectionId,
+    ConnectionIdManager, Output, QuicVersion, StreamId, StreamType, ZeroRttState,
 };
 use std::cell::RefCell;
 use std::fmt::Display;
@@ -56,6 +57,15 @@ where
     move |id, v| f((id, v)).is_none()
 }
 
+fn alpn_from_quic_version(version: QuicVersion) -> &'static str {
+    match version {
+        QuicVersion::Draft27 => "h3-27",
+        QuicVersion::Draft28 => "h3-28",
+        QuicVersion::Draft29 => "h3-29",
+        QuicVersion::Draft30 => "h3-30",
+    }
+}
+
 pub struct Http3Parameters {
     pub qpack_settings: QpackSettings,
     pub max_concurrent_push_streams: u64,
@@ -80,20 +90,21 @@ impl Http3Client {
     /// the socket can't be created or configured.
     pub fn new(
         server_name: &str,
-        protocols: &[impl AsRef<str>],
         cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
         local_addr: SocketAddr,
         remote_addr: SocketAddr,
+        cc_algorithm: &CongestionControlAlgorithm,
         quic_version: QuicVersion,
         http3_parameters: &Http3Parameters,
     ) -> Res<Self> {
         Ok(Self::new_with_conn(
             Connection::new_client(
                 server_name,
-                protocols,
+                &[alpn_from_quic_version(quic_version)],
                 cid_manager,
                 local_addr,
                 remote_addr,
+                cc_algorithm,
                 quic_version,
             )?,
             http3_parameters,
@@ -218,6 +229,15 @@ impl Http3Client {
             self.events
                 .connection_state_change(self.base_handler.state());
         }
+    }
+
+    /// Attempt to force a key update.
+    /// # Errors
+    /// If the connection isn't confirmed, or there is an outstanding key update, this
+    /// returns `Err(Error::TransportError(neqo_transport::Error::KeyUpdateBlocked))`.
+    pub fn initiate_key_update(&mut self) -> Res<()> {
+        self.conn.initiate_key_update()?;
+        Ok(())
     }
 
     // API: Request/response
@@ -397,27 +417,6 @@ impl Http3Client {
         } else {
             Err(Error::InvalidStreamId)
         }
-    }
-
-    // API: Events
-
-    /// Get all current events. Best used just in debug/testing code, use
-    /// `next_event` instead.
-    pub fn events(&mut self) -> impl Iterator<Item = Http3ClientEvent> {
-        self.events.events()
-    }
-
-    /// Return true if there are outstanding events.
-    #[must_use]
-    pub fn has_events(&self) -> bool {
-        self.events.has_events()
-    }
-
-    /// Get events that indicate state changes on the connection. This method
-    /// correctly handles cases where handling one event can obsolete
-    /// previously-queued events, or cause new events to be generated.
-    pub fn next_event(&mut self) -> Option<Http3ClientEvent> {
-        self.events.next_event()
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -685,6 +684,22 @@ impl Http3Client {
     }
 }
 
+impl EventProvider for Http3Client {
+    type Event = Http3ClientEvent;
+
+    /// Return true if there are outstanding events.
+    fn has_events(&self) -> bool {
+        self.events.has_events()
+    }
+
+    /// Get events that indicate state changes on the connection. This method
+    /// correctly handles cases where handling one event can obsolete
+    /// previously-queued events, or cause new events to be generated.
+    fn next_event(&mut self) -> Option<Self::Event> {
+        self.events.next_event()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -693,18 +708,16 @@ mod tests {
     };
     use crate::hframe::{HFrame, H3_FRAME_TYPE_SETTINGS, H3_RESERVED_FRAME_TYPES};
     use crate::settings::{HSetting, HSettingType, H3_RESERVED_SETTINGS};
-    use neqo_common::{Datagram, Encoder};
+    use neqo_common::{event::Provider, Datagram, Decoder, Encoder};
     use neqo_crypto::{AllowZeroRtt, AntiReplay, ResumptionToken};
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::{
-        CloseError, ConnectionEvent, FixedConnectionIdManager, QuicVersion, State,
-        RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
+        CloseError, CongestionControlAlgorithm, ConnectionEvent, FixedConnectionIdManager,
+        QuicVersion, State, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
     };
     use std::convert::TryFrom;
     use std::time::Duration;
-    use test_fixture::{
-        default_server, fixture_init, loopback, now, DEFAULT_ALPN, DEFAULT_SERVER_NAME,
-    };
+    use test_fixture::{default_server_h3, fixture_init, loopback, now, DEFAULT_SERVER_NAME};
 
     fn assert_closed(client: &Http3Client, expected: &Error) {
         match client.state() {
@@ -720,10 +733,10 @@ mod tests {
         fixture_init();
         Http3Client::new(
             DEFAULT_SERVER_NAME,
-            DEFAULT_ALPN,
             Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
             loopback(),
             loopback(),
+            &CongestionControlAlgorithm::NewReno,
             QuicVersion::default(),
             &Http3Parameters {
                 qpack_settings: QpackSettings {
@@ -736,17 +749,6 @@ mod tests {
         )
         .expect("create a default client")
     }
-
-    // default_http3_client use following setting:
-    //  - max_table_capacity = 100
-    //  - max_blocked_streams = 100
-    // The following is what the server will see on the control stream:
-    //  - 0x0 - control stream type
-    //  - 0x4, 0x6, 0x1, 0x40, 0x64, 0x7, 0x40, 0x64 0xd, 0x1, 0x5,- a setting frame with MaxTableCapacity
-    //    and BlockedStreams both equal to 100 and MaxPushStream equals to 5.
-    const CONTROL_STREAM_DATA: &[u8] = &[
-        0x0, 0x4, 0x6, 0x1, 0x40, 0x64, 0x7, 0x40, 0x64, 0xd, 0x1, 0x5,
-    ];
 
     const CONTROL_STREAM_TYPE: &[u8] = &[0x0];
 
@@ -796,7 +798,7 @@ mod tests {
                 settings: HFrame::Settings {
                     settings: HSettings::new(server_settings),
                 },
-                conn: default_server(),
+                conn: default_server_h3(),
                 control_stream_id: None,
                 encoder: QPackEncoder::new(
                     QpackSettings {
@@ -921,8 +923,7 @@ mod tests {
                     }
                     ConnectionEvent::RecvStreamReadable { stream_id } => {
                         if stream_id == CLIENT_SIDE_CONTROL_STREAM_ID {
-                            // the control stream
-                            self.read_and_check_stream_data(stream_id, CONTROL_STREAM_DATA, false);
+                            self.check_control_stream();
                             control_stream = true;
                         } else if stream_id == CLIENT_SIDE_ENCODER_STREAM_ID {
                             // the qpack encoder stream
@@ -954,6 +955,33 @@ mod tests {
             assert!(qpack_encoder_stream);
             assert!(qpack_decoder_stream);
             assert_eq!(request, expect_request);
+        }
+
+        // Check that the control stream contains default values.
+        // Expect a SETTINGS frame, some grease, and a MAX_PUSH_ID frame.
+        // The default test configuration uses:
+        //  - max_table_capacity = 100
+        //  - max_blocked_streams = 100
+        // and a maximum of 5 push streams.
+        fn check_control_stream(&mut self) {
+            let mut buf = [0_u8; 100];
+            let (amount, fin) = self
+                .conn
+                .stream_recv(CLIENT_SIDE_CONTROL_STREAM_ID, &mut buf)
+                .unwrap();
+            let mut dec = Decoder::from(&buf[..amount]);
+            assert_eq!(dec.decode_varint().unwrap(), 0); // control stream type
+            assert_eq!(dec.decode_varint().unwrap(), 4); // SETTINGS
+            assert_eq!(dec.decode_vvec().unwrap(), &[1, 0x40, 0x64, 7, 0x40, 0x64]);
+
+            assert_eq!((dec.decode_varint().unwrap() - 0x21) % 0x1f, 0); // Grease
+            assert!(dec.decode_vvec().unwrap().len() < 8);
+
+            assert_eq!(dec.decode_varint().unwrap(), 0xd); // MAX_PUSH_ID
+            assert_eq!(dec.decode_vvec().unwrap(), &[5]);
+
+            assert_eq!(dec.remaining(), 0);
+            assert!(!fin);
         }
 
         pub fn read_and_check_stream_data(
@@ -3379,8 +3407,9 @@ mod tests {
         let mut client = default_http3_client();
         let mut server = Connection::new_server(
             test_fixture::DEFAULT_KEYS,
-            test_fixture::DEFAULT_ALPN,
+            test_fixture::DEFAULT_ALPN_H3,
             Rc::new(RefCell::new(FixedConnectionIdManager::new(10))),
+            &CongestionControlAlgorithm::NewReno,
             QuicVersion::default(),
         )
         .unwrap();
@@ -4039,6 +4068,40 @@ mod tests {
                 .unwrap()
         );
         assert!(!client.events().any(data_readable_event));
+    }
+
+    #[test]
+    fn zero_length_data_at_end() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // send response - 200  Content-Length: 7
+        // with content: 'abcdefg'.
+        // The content will be send in 2 DATA frames.
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            HTTP_RESPONSE_1,
+            false,
+        );
+        // Send a zero-length frame at the end of the stream.
+        let _ = server.conn.stream_send(request_stream_id, &[0, 0]).unwrap();
+        server.conn.stream_close_send(request_stream_id).unwrap();
+        let dgram = server.conn.process_output(now()).dgram();
+        let dgram = client.process(dgram, now()).dgram();
+        server.conn.process_input(dgram.unwrap(), now());
+
+        let data_readable_event = |e: &_| matches!(e, Http3ClientEvent::DataReadable { stream_id } if *stream_id == request_stream_id);
+        assert_eq!(client.events().filter(data_readable_event).count(), 1);
+
+        let mut buf = [0_u8; 10];
+        assert_eq!(
+            (7, true),
+            client
+                .read_response_data(now(), request_stream_id, &mut buf)
+                .unwrap()
+        );
+        assert!(!client.events().any(|e| data_readable_event(&e)));
     }
 
     #[test]
