@@ -38,6 +38,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
+#include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -63,6 +64,7 @@ namespace mozilla::dom::indexedDB {
 using mozilla::ipc::IsOnBackgroundThread;
 
 namespace {
+
 bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
 constexpr StructuredCloneFileBase::FileType ToStructuredCloneFileType(
@@ -336,7 +338,8 @@ Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
                                    uint32_t aBlobDataLength,
                                    const FileManager& aFileManager,
-                                   const nsAString& aFileIds) {
+                                   const nsAString& aFileIds,
+                                   const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   AUTO_PROFILER_LABEL("GetStructuredCloneReadInfoFromBlob", DOM);
@@ -377,7 +380,8 @@ GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
                                            const FileManager& aFileManager,
-                                           const nsAString& aFileIds) {
+                                           const nsAString& aFileIds,
+                                           const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   AUTO_PROFILER_LABEL("GetStructuredCloneReadInfoFromExternalBlob", DOM);
@@ -416,6 +420,13 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
   IDB_TRY(
       NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile));
 
+  if (aMaybeKey) {
+    fileInputStream =
+        MakeRefPtr<quota::DecryptingInputStream<IndexedDBCipherStrategy>>(
+            WrapNotNull(std::move(fileInputStream)), kEncryptedStreamBlockSize,
+            *aMaybeKey);
+  }
+
   const auto snappyInputStream =
       MakeRefPtr<SnappyUncompressInputStream>(fileInputStream);
 
@@ -443,7 +454,8 @@ template <typename T>
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
                                      uint32_t aFileIdsIndex,
-                                     const FileManager& aFileManager) {
+                                     const FileManager& aFileManager,
+                                     const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
 
@@ -469,7 +481,7 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
       memcpy(&uintData, &intData, sizeof(uint64_t));
 
       return GetStructuredCloneReadInfoFromExternalBlob(uintData, aFileManager,
-                                                        fileIds);
+                                                        fileIds, aMaybeKey);
     }
 
     case mozIStorageStatement::VALUE_TYPE_BLOB: {
@@ -477,8 +489,8 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
       uint32_t blobDataLength;
       IDB_TRY(aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData));
 
-      return GetStructuredCloneReadInfoFromBlob(blobData, blobDataLength,
-                                                aFileManager, fileIds);
+      return GetStructuredCloneReadInfoFromBlob(
+          blobData, blobDataLength, aFileManager, fileIds, aMaybeKey);
     }
 
     default:
@@ -667,18 +679,20 @@ Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromValueArray(mozIStorageValueArray* aValues,
                                          uint32_t aDataIndex,
                                          uint32_t aFileIdsIndex,
-                                         const FileManager& aFileManager) {
-  return GetStructuredCloneReadInfoFromSource(aValues, aDataIndex,
-                                              aFileIdsIndex, aFileManager);
+                                         const FileManager& aFileManager,
+                                         const Maybe<CipherKey>& aMaybeKey) {
+  return GetStructuredCloneReadInfoFromSource(
+      aValues, aDataIndex, aFileIdsIndex, aFileManager, aMaybeKey);
 }
 
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
                                         uint32_t aDataIndex,
                                         uint32_t aFileIdsIndex,
-                                        const FileManager& aFileManager) {
-  return GetStructuredCloneReadInfoFromSource(aStatement, aDataIndex,
-                                              aFileIdsIndex, aFileManager);
+                                        const FileManager& aFileManager,
+                                        const Maybe<CipherKey>& aMaybeKey) {
+  return GetStructuredCloneReadInfoFromSource(
+      aStatement, aDataIndex, aFileIdsIndex, aFileManager, aMaybeKey);
 }
 
 Result<nsTArray<StructuredCloneFileParent>, nsresult>
