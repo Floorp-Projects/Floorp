@@ -240,34 +240,6 @@ with Files('unicode/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('view-source/**'):
     BUG_COMPONENT = ('Core', 'DOM: HTML Parser')
-with Files('w3c-css/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/conditional3/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
-with Files('w3c-css/submitted/css21/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/flexbox/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/fonts3/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
-with Files('w3c-css/submitted/ib-split/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
-with Files('w3c-css/submitted/images3/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/multicol3/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/ruby/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
-with Files('w3c-css/submitted/sizing/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/text-decor-3/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
-with Files('w3c-css/submitted/ui3/**'):
-    BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/submitted/values3/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
-with Files('w3c-css/submitted/variables/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('webcomponents/**'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 with Files('webm-video/**'):
