@@ -799,8 +799,6 @@ class TelemetryEvent {
    *        for "blur". One of "none", "autofill", "visit", "bookmark",
    *        "history", "keyword", "search", "searchsuggestion", "switchtab",
    *         "remotetab", "extension", "oneoff".
-   * @param {string} details.provider The name of the provider for the selected
-   *        result.
    * @note event can be null, that usually happens for paste&go or drop&go.
    *       If there's no _startEventInfo this is a no-op.
    */
@@ -882,7 +880,6 @@ class TelemetryEvent {
     if (method == "engagement") {
       extra.selIndex = details.selIndex.toString();
       extra.selType = details.selType;
-      extra.provider = details.provider || "";
     }
 
     // We invoke recordEvent regardless, if recording is disabled this won't
