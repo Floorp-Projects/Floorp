@@ -181,27 +181,28 @@ class Selection final : public nsSupportsWeakReference,
    *                  containing it. -1 if mStyledRanges.mRanges was empty and
    * no range was added.
    */
-  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT` instead.
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  AddRangesForSelectableNodes(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AddRangesForSelectableNodes(
       nsRange* aRange, int32_t* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
  public:
   nsresult RemoveCollapsedRanges();
   nsresult Clear(nsPresContext* aPresContext);
-  nsresult CollapseInLimiter(nsINode* aContainer, int32_t aOffset) {
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseInLimiter(nsINode* aContainer,
+                                                int32_t aOffset) {
     if (!aContainer) {
       return NS_ERROR_INVALID_ARG;
     }
     return CollapseInLimiter(RawRangeBoundary(aContainer, aOffset));
   }
-  nsresult CollapseInLimiter(const RawRangeBoundary& aPoint) {
+  MOZ_CAN_RUN_SCRIPT nsresult
+  CollapseInLimiter(const RawRangeBoundary& aPoint) {
     ErrorResult result;
     CollapseInLimiter(aPoint, result);
     return result.StealNSResult();
   }
-  void CollapseInLimiter(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
+  MOZ_CAN_RUN_SCRIPT void CollapseInLimiter(const RawRangeBoundary& aPoint,
+                                            ErrorResult& aRv) {
     CollapseInternal(InLimiter::eYes, aPoint, aRv);
   }
 
@@ -299,10 +300,10 @@ class Selection final : public nsSupportsWeakReference,
   // *JS() methods are mapped to Selection.*().
   // They may move focus only when the range represents normal selection.
   // These methods shouldn't be used by non-JS callers.
-  void CollapseJS(nsINode* aContainer, uint32_t aOffset,
-                  mozilla::ErrorResult& aRv);
-  void CollapseToStartJS(mozilla::ErrorResult& aRv);
-  void CollapseToEndJS(mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CollapseJS(nsINode* aContainer, uint32_t aOffset,
+                                     mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CollapseToStartJS(mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CollapseToEndJS(mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void ExtendJS(nsINode& aContainer, uint32_t aOffset,
@@ -313,9 +314,8 @@ class Selection final : public nsSupportsWeakReference,
   /**
    * Deletes this selection from document the nodes belong to.
    * Only if this has `SelectionType::eNormal`.
-   * TODO: mark as `MOZ_CAN_RUN_SCRIPT`.
    */
-  void DeleteFromDocument(mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
   uint32_t RangeCount() const { return mStyledRanges.Length(); }
 
@@ -376,11 +376,10 @@ class Selection final : public nsSupportsWeakReference,
    * "documentboundary".  Throws NS_ERROR_INVALID_ARG if alter, direction,
    * or granularity has an unrecognized value.
    */
-  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Modify(const nsAString& aAlter,
-                                          const nsAString& aDirection,
-                                          const nsAString& aGranularity,
-                                          mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Modify(const nsAString& aAlter,
+                                 const nsAString& aDirection,
+                                 const nsAString& aGranularity,
+                                 mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
@@ -436,11 +435,9 @@ class Selection final : public nsSupportsWeakReference,
    * @param offset      Where in given dom node to place the selection (the
    *                    offset into the given node)
    */
-  // TODO: mark as `MOZ_CAN_RUN_SCRIPT`
-  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1615296).
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CollapseInLimiter(nsINode& aContainer,
-                                                     uint32_t aOffset,
-                                                     ErrorResult& aRv) {
+  MOZ_CAN_RUN_SCRIPT void CollapseInLimiter(nsINode& aContainer,
+                                            uint32_t aOffset,
+                                            ErrorResult& aRv) {
     CollapseInternal(InLimiter::eYes, RawRangeBoundary(&aContainer, aOffset),
                      aRv);
   }
@@ -454,9 +451,7 @@ class Selection final : public nsSupportsWeakReference,
     // is out of bounds, the method may return error.
     eNo,
   };
-  // TODO: this should be `MOZ_CAN_RUN_SCRIPT` instead
-  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1615296).
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   void CollapseInternal(InLimiter aInLimiter, const RawRangeBoundary& aPoint,
                         ErrorResult& aRv);
 
@@ -466,14 +461,14 @@ class Selection final : public nsSupportsWeakReference,
    * of the current selection (irrespective of direction).  If content
    * is focused and editable, the caret will blink there.
    */
-  void CollapseToStart(mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CollapseToStart(mozilla::ErrorResult& aRv);
 
   /**
    * Collapses the whole selection to a single point at the end
    * of the current selection (irrespective of direction).  If content
    * is focused and editable, the caret will blink there.
    */
-  void CollapseToEnd(mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void CollapseToEnd(mozilla::ErrorResult& aRv);
 
   /**
    * Extends the selection by moving the selection end to the specified node and

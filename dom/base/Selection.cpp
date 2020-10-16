@@ -3214,7 +3214,8 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
   // If we deleted one character, then we move back one element.
   // FIXME  We don't know how to do this past frame boundaries yet.
   if (AnchorOffset() > 0) {
-    CollapseInLimiter(GetAnchorNode(), AnchorOffset());
+    RefPtr<nsINode> anchor = GetAnchorNode();
+    CollapseInLimiter(anchor, AnchorOffset());
   }
 #ifdef DEBUG
   else {
@@ -3289,7 +3290,7 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
   // To avoid this, we need to collapse the selection first.
   nsresult rv = NS_OK;
   if (!extend) {
-    nsINode* focusNode = GetFocusNode();
+    RefPtr<nsINode> focusNode = GetFocusNode();
     // We should have checked earlier that there was a focus node.
     if (!focusNode) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
