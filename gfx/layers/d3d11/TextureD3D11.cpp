@@ -773,7 +773,7 @@ bool DXGITextureHostD3D11::EnsureTexture() {
       (HANDLE)mHandle, __uuidof(ID3D11Texture2D),
       (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture));
   if (FAILED(hr)) {
-    NS_WARNING("Failed to open shared texture");
+    MOZ_ASSERT(false, "Failed to open shared texture");
     return false;
   }
 
