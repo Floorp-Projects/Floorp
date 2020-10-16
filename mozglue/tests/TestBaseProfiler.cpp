@@ -3816,6 +3816,45 @@ void TestMarkerCategory() {
   printf("TestMarkerCategory done\n");
 }
 
+void TestMarkerThreadId() {
+  printf("TestMarkerThreadId...\n");
+
+  MOZ_RELEASE_ASSERT(MarkerThreadId{}.IsUnspecified());
+  MOZ_RELEASE_ASSERT(!MarkerThreadId::MainThread().IsUnspecified());
+  MOZ_RELEASE_ASSERT(!MarkerThreadId::CurrentThread().IsUnspecified());
+
+  MOZ_RELEASE_ASSERT(!MarkerThreadId{42}.IsUnspecified());
+  MOZ_RELEASE_ASSERT(MarkerThreadId{42}.ThreadId() == 42);
+
+  // We'll assume that this test runs in the main thread (which should be true
+  // when called from the `main` function).
+  MOZ_RELEASE_ASSERT(MarkerThreadId::MainThread().ThreadId() ==
+                     mozilla::baseprofiler::profiler_main_thread_id());
+
+  MOZ_RELEASE_ASSERT(MarkerThreadId::CurrentThread().ThreadId() ==
+                     mozilla::baseprofiler::profiler_current_thread_id());
+
+  MOZ_RELEASE_ASSERT(MarkerThreadId::CurrentThread().ThreadId() ==
+                     mozilla::baseprofiler::profiler_main_thread_id());
+
+  std::thread testThread([]() {
+    MOZ_RELEASE_ASSERT(!MarkerThreadId::MainThread().IsUnspecified());
+    MOZ_RELEASE_ASSERT(!MarkerThreadId::CurrentThread().IsUnspecified());
+
+    MOZ_RELEASE_ASSERT(MarkerThreadId::MainThread().ThreadId() ==
+                       mozilla::baseprofiler::profiler_main_thread_id());
+
+    MOZ_RELEASE_ASSERT(MarkerThreadId::CurrentThread().ThreadId() ==
+                       mozilla::baseprofiler::profiler_current_thread_id());
+
+    MOZ_RELEASE_ASSERT(MarkerThreadId::CurrentThread().ThreadId() !=
+                       mozilla::baseprofiler::profiler_main_thread_id());
+  });
+  testThread.join();
+
+  printf("TestMarkerThreadId done\n");
+}
+
 void TestMarkerNoPayload() {
   printf("TestMarkerNoPayload...\n");
 
@@ -3998,6 +4037,7 @@ void TestProfilerMarkers() {
   // ::SleepMilli(10000);
 
   TestMarkerCategory();
+  TestMarkerThreadId();
   TestMarkerNoPayload();
   TestUserMarker();
   TestPredefinedMarkers();
