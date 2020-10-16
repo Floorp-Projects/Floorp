@@ -423,8 +423,10 @@ class pathprefix(InstanceFilter):
         if isinstance(paths, string_types):
             paths = [paths]
         self.paths = paths
+        self.missing = set()
 
     def __call__(self, tests, values):
+        seen = set()
         for test in tests:
             for tp in self.paths:
                 tp = os.path.normpath(tp)
@@ -454,8 +456,12 @@ class pathprefix(InstanceFilter):
                 # matter what, even if it's disabled
                 if 'disabled' in test and os.path.normpath(test['relpath']) == tp:
                     del test['disabled']
+
+                seen.add(tp)
                 yield test
                 break
+
+        self.missing = set(self.paths) - seen
 
 
 # filter container
