@@ -6589,28 +6589,41 @@ void TSFTextStore::SetInputContext(nsWindowBase* aWidget,
            sEnabledTextStore ? sEnabledTextStore->mWidget.get() : nullptr,
            GetBoolName(ThinksHavingFocus())));
 
-  // When this is called when the widget is created, there is nothing to do.
-  if (aAction.mFocusChange == InputContextAction::WIDGET_CREATED) {
-    return;
-  }
-
-  NS_ENSURE_TRUE_VOID(IsInTSFMode());
-
-  if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
-    if (sEnabledTextStore) {
-      RefPtr<TSFTextStore> textStore(sEnabledTextStore);
-      textStore->SetInputScope(aContext.mHTMLInputType,
-                               aContext.mHTMLInputInputmode,
-                               aContext.mInPrivateBrowsing);
-    }
-    return;
+  switch (aAction.mFocusChange) {
+    case InputContextAction::WIDGET_CREATED:
+      // If this is called when the widget is created, there is nothing to do.
+      return;
+    case InputContextAction::FOCUS_NOT_CHANGED:
+    case InputContextAction::MENU_LOST_PSEUDO_FOCUS:
+      if (NS_WARN_IF(!IsInTSFMode())) {
+        return;
+      }
+      // In these cases, `NOTIFY_IME_OF_FOCUS` won't be sent.  Therefore,
+      // we need to reset text store for new state right now.
+      break;
+    default:
+      NS_WARNING_ASSERTION(IsInTSFMode(),
+                           "Why is this called when TSF is disabled?");
+      if (sEnabledTextStore) {
+        RefPtr<TSFTextStore> textStore(sEnabledTextStore);
+        textStore->SetInputScope(aContext.mHTMLInputType,
+                                 aContext.mHTMLInputInputmode,
+                                 aContext.mInPrivateBrowsing);
+      }
+      return;
   }
 
   // If focus isn't actually changed but the enabled state is changed,
   // emulate the focus move.
   if (!ThinksHavingFocus() && aContext.mIMEState.IsEditable()) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+            ("  TSFTextStore::SetInputContent() emulates focus for IME "
+             "state change"));
     OnFocusChange(true, aWidget, aContext);
   } else if (ThinksHavingFocus() && !aContext.mIMEState.IsEditable()) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+            ("  TSFTextStore::SetInputContent() emulates blur for IME "
+             "state change"));
     OnFocusChange(false, aWidget, aContext);
   }
 }
