@@ -508,48 +508,12 @@ android-hw-arm7-raptor:
     - raptor-speedometer-refbrow
     - raptor-speedometer-fenix
     - raptor-speedometer-fennec68
-    - raptor-youtube-playback-h264-sfr-fenix
-    - raptor-youtube-playback-h264-fenix
-    - raptor-youtube-playback-vp9-sfr-fenix
-    - raptor-youtube-playback-widevine-hfr-fenix
-    - raptor-youtube-playback-widevine-h264-sfr-fenix
-    - raptor-youtube-playback-widevine-vp9-sfr-fenix
-    - raptor-youtube-playback-h264-sfr-geckoview
-    - raptor-youtube-playback-h264-geckoview
-    - raptor-youtube-playback-vp9-sfr-geckoview
-    - raptor-youtube-playback-widevine-hfr-geckoview
-    - raptor-youtube-playback-widevine-h264-sfr-geckoview
-    - raptor-youtube-playback-widevine-vp9-sfr-geckoview
-    - raptor-youtube-playback-h264-sfr-fennec68
-    - raptor-youtube-playback-h264-fennec68
-    - raptor-youtube-playback-vp9-sfr-fennec68
-    - raptor-youtube-playback-widevine-hfr-fennec68
-    - raptor-youtube-playback-widevine-h264-sfr-fennec68
-    - raptor-youtube-playback-widevine-vp9-sfr-fennec68
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
     - raptor-speedometer-fenix
     - raptor-speedometer-fennec68
-    - raptor-youtube-playback-h264-sfr-fenix
-    - raptor-youtube-playback-h264-fenix
-    - raptor-youtube-playback-vp9-sfr-fenix
-    - raptor-youtube-playback-widevine-hfr-fenix
-    - raptor-youtube-playback-widevine-h264-sfr-fenix
-    - raptor-youtube-playback-widevine-vp9-sfr-fenix
-    - raptor-youtube-playback-h264-sfr-geckoview
-    - raptor-youtube-playback-h264-geckoview
-    - raptor-youtube-playback-vp9-sfr-geckoview
-    - raptor-youtube-playback-widevine-hfr-geckoview
-    - raptor-youtube-playback-widevine-h264-sfr-geckoview
-    - raptor-youtube-playback-widevine-vp9-sfr-geckoview
-    - raptor-youtube-playback-h264-sfr-fennec68
-    - raptor-youtube-playback-h264-fennec68
-    - raptor-youtube-playback-vp9-sfr-fennec68
-    - raptor-youtube-playback-widevine-hfr-fennec68
-    - raptor-youtube-playback-widevine-h264-sfr-fennec68
-    - raptor-youtube-playback-widevine-vp9-sfr-fennec68
 
 android-hw-arm7-raptor-cpu-memory:
     - raptor-speedometer-geckoview-cpu-memory
