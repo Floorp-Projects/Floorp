@@ -77,7 +77,6 @@ class NetworkEventWatcher {
     }
     const resourceUpdates = {
       updates: [...currentResource.updates, updateResource.updateType],
-      updateType: updateResource.updateType,
     };
 
     switch (updateResource.updateType) {
@@ -137,6 +136,7 @@ class NetworkEventWatcher {
         resourceType: currentResource.resourceType,
         resourceId: updateResource.resourceId,
         resourceUpdates,
+        updateType: updateResource.updateType,
       },
     ]);
   }
