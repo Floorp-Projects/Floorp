@@ -180,6 +180,53 @@ add_task(async function tabSearchModePreview() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function tabTabToSearch() {
+  info("Tab past a tab-to-search result after focusing with the keyboard.");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.tabToComplete", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+  let engineDomain = "example.com";
+  let testEngine = await Services.search.addEngineWithDetails("Test", {
+    template: `http://${engineDomain}/?search={searchTerms}`,
+  });
+  for (let i = 0; i < 3; i++) {
+    await PlacesTestUtils.addVisits([`https://${engineDomain}/`]);
+  }
+
+  // Search for a tab-to-search result.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: engineDomain.slice(0, 4),
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeKey("l", { accelKey: true });
+  });
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  let tabToSearchResult = (
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+  ).result;
+  Assert.equal(
+    tabToSearchResult.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+
+  await expectTabThroughResults();
+
+  await UrlbarTestUtils.promisePopupClose(window, async () => {
+    gURLBar.blur();
+    await UrlbarTestUtils.assertSearchMode(window, null);
+  });
+  await PlacesUtils.history.clear();
+  await Services.search.removeEngine(testEngine);
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function tabNoSearchStringSearchMode() {
   info(
     "Tab through the toolbar when refocusing a Urlbar in search mode with the keyboard."
