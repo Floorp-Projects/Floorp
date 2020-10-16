@@ -588,30 +588,6 @@ raptor-wasm-godot-ion-firefox-profiling:
             - --test=raptor-wasm-godot-ion
             - --gecko-profile
 
-raptor-youtube-playback-firefox:
-    description: "Raptor YouTube Playback on Firefox"
-    variants: ["fission"]
-    try-name: raptor-youtube-playback-firefox
-    treeherder-symbol: Rap(ytp)
-    run-on-projects:
-        by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
-            default: ['mozilla-central']
-    max-run-time: 3000
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback
-
-raptor-youtube-playback-firefox-profiling:
-    description: "Raptor YouTube Playback on Firefox with Gecko Profiling"
-    try-name: raptor-youtube-playback-firefox-profiling
-    treeherder-symbol: Rap-Prof(ytp)
-    max-run-time: 4000
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback
-            - --gecko-profile
-
 raptor-youtube-playback-v9-power-firefox:
     description: "Raptor V9 YouTube Playback on Firefox with Power Testing"
     try-name: raptor-youtube-playback-v9-power-firefox

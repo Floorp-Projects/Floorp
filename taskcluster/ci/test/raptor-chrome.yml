@@ -158,16 +158,6 @@ raptor-jetstream2-chrome:
         fetch:
             - jetstream2
 
-raptor-youtube-playback-chrome:
-    description: "Raptor YouTube Playback on Chrome"
-    try-name: raptor-youtube-playback-chrome
-    treeherder-symbol: Rap-ChR(ytp)
-    max-run-time: 2700
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback
-            - --app=chrome
-
 raptor-youtube-playback-av1-sfr-chrome:
     description: "Raptor YouTube Playback AV1 SFR on Chrome"
     try-name: raptor-youtube-playback-av1-sfr-chrome
