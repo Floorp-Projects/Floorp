@@ -4127,6 +4127,15 @@ printing:
       - 'OUT_OF_MEMORY'
       - 'UNEXPECTED'
       - 'FAILURE'
+      - 'FALLBACK_PAPER_LIST'
+      - 'LAST_USED_PRINTER'
+      - 'PAPER_MARGINS'
+      - 'PRINT_DESTINATIONS'
+      - 'PRINT_PREVIEW'
+      - 'PRINTER_LIST'
+      - 'PRINTER_PROPERTIES'
+      - 'PRINTER_SETTINGS'
+      - 'UNWRITEABLE_MARGIN'
     expires: never
     kind: uint
     notification_emails:
