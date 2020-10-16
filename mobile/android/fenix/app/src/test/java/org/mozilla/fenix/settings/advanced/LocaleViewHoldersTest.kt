@@ -71,7 +71,7 @@ class LocaleViewHoldersTest {
         systemLocaleViewHolder.bind(selectedLocale)
 
         assertEquals("Follow device language", view.locale_title_text.text)
-        assertFalse(view.locale_subtitle_text.isVisible)
+        assertEquals("English (United States)", view.locale_subtitle_text.text)
         assertTrue(view.locale_selected_icon.isVisible)
     }
 

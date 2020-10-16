@@ -39,7 +39,7 @@ class SystemLocaleViewHolder(
 
     override fun bind(locale: Locale) {
         locale_title_text.text = itemView.context.getString(R.string.default_locale_text)
-        locale_subtitle_text.visibility = View.GONE
+        locale_subtitle_text.text = locale.displayName.capitalize(Locale.getDefault())
         locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
         itemView.setOnClickListener {
             interactor.onDefaultLocaleSelected()
