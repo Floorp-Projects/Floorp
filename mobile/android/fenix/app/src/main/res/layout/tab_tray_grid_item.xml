@@ -13,6 +13,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab_tray_grid_item"
     android:layout_width="match_parent"
     android:layout_height="202dp"
     android:clipChildren="false"

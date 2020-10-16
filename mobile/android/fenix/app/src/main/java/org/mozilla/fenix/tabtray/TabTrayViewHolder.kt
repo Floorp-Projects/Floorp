@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import kotlinx.android.synthetic.main.tab_tray_grid_item.view.*
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
@@ -79,7 +80,7 @@ class TabTrayViewHolder(
         updateUrl(tab)
         updateFavicon(tab)
         updateCloseButtonDescription(tab.title)
-        updateBackgroundColor(isSelected)
+        updateSelectedTabIndicator(isSelected)
 
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
@@ -170,9 +171,13 @@ class TabTrayViewHolder(
     }
 
     @VisibleForTesting
-    internal fun updateBackgroundColor(isSelected: Boolean) {
+    internal fun updateSelectedTabIndicator(isSelected: Boolean) {
         if (itemView.context.settings().gridTabView) {
-            // No need to set a background color in the item view for grid tabs.
+            itemView.tab_tray_grid_item.background = if (isSelected) {
+                AppCompatResources.getDrawable(itemView.context, R.drawable.tab_tray_grid_item_selected_border)
+            } else {
+                null
+            }
             return
         }
 
