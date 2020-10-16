@@ -688,7 +688,6 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
 // There is going to be a patch from GV for adding [REPLACED_UNSAFE_CONTENT] as
 // a valid option for [BlockingData.category]
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1669577
-@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8709
 @SuppressLint("SwitchIntDef")
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
@@ -696,7 +695,7 @@ internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(
         Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
         Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
-        Event.REPLACED_UNSAFE_CONTENT -> TrackingCategory.SHIMMED
+        Event.REPLACED_TRACKING_CONTENT -> TrackingCategory.SHIMMED
         else -> TrackingCategory.NONE
     }
 }

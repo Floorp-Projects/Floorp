@@ -1864,8 +1864,7 @@ class GeckoEngineTest {
         val blockedFingerprintingContent = createBlockingData(Event.BLOCKED_FINGERPRINTING_CONTENT)
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
-        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8709
-        val shimmedContent = createBlockingData(Event.REPLACED_UNSAFE_CONTENT)
+        val shimmedContent = createBlockingData(Event.REPLACED_TRACKING_CONTENT)
 
         val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
         val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
