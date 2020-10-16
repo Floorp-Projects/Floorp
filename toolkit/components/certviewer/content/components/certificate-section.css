@@ -41,11 +41,11 @@ h1 {
 }
 
 .tab:first-of-type {
-  border-radius: 4px 0 0 0;
+  border-start-start-radius: 4px;
 }
 
 .tab:last-of-type {
-  border-radius: 0 4px 0 0;
+  border-start-end-radius: 4px;
 }
 
 .tab:hover {
@@ -63,4 +63,10 @@ h1 {
   color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;
+}
+
+.tab.dir-auto {
+  /* Display tabs on `about:certificate?cert=` pages as dir=auto
+     to avoid text like `mozilla.org.*` in RTL  */
+  unicode-bidi: plaintext;
 }
