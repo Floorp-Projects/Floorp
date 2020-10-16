@@ -12,7 +12,6 @@
 if CONFIG['MOZ_GECKO_PROFILER']:
     DEFINES['IMPL_MFBT'] = True
     EXPORTS += [
-        'public/BaseProfilerMarkerPayload.h',
         'public/BaseProfilerSharedLibraries.h',
         'public/BaseProfilingCategory.h',
         'public/BaseProfilingStack.h',
@@ -25,7 +24,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfileBufferEntry.cpp',
         'core/ProfiledThreadData.cpp',
         'core/ProfilerBacktrace.cpp',
-        'core/ProfilerMarkerPayload.cpp',
         'core/ProfilerMarkers.cpp',
         'core/ProfilingCategory.cpp',
         'core/ProfilingStack.cpp',

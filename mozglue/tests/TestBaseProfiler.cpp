@@ -10,7 +10,6 @@
 #include "mozilla/BaseProfileJSONWriter.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "BaseProfilerMarkerPayload.h"
 #  include "mozilla/BaseProfilerMarkerTypes.h"
 #  include "mozilla/BlocksRingBuffer.h"
 #  include "mozilla/leb128iterator.h"
@@ -3254,100 +3253,6 @@ void TestProfilerDependencies() {
   TestProfilerStringView();
 }
 
-class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
- public:
-  explicit BaseTestMarkerPayload(int aData) : mData(aData) {}
-
-  int GetData() const { return mData; }
-
-  // Exploded DECL_BASE_STREAM_PAYLOAD, but without `MFBT_API`s.
-  static UniquePtr<ProfilerMarkerPayload> Deserialize(
-      ProfileBufferEntryReader& aEntryReader);
-  ProfileBufferEntryWriter::Length TagAndSerializationBytes() const override;
-  void SerializeTagAndPayload(
-      ProfileBufferEntryWriter& aEntryWriter) const override;
-  void StreamPayload(
-      ::mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const ::mozilla::TimeStamp& aProcessStartTime,
-      ::mozilla::baseprofiler::UniqueStacks& aUniqueStacks) const override;
-
- private:
-  BaseTestMarkerPayload(CommonProps&& aProps, int aData)
-      : baseprofiler::ProfilerMarkerPayload(std::move(aProps)), mData(aData) {}
-
-  int mData;
-};
-
-// static
-UniquePtr<baseprofiler::ProfilerMarkerPayload>
-BaseTestMarkerPayload::Deserialize(ProfileBufferEntryReader& aEntryReader) {
-  CommonProps props = DeserializeCommonProps(aEntryReader);
-  int data = aEntryReader.ReadObject<int>();
-  return UniquePtr<baseprofiler::ProfilerMarkerPayload>(
-      new BaseTestMarkerPayload(std::move(props), data));
-}
-
-ProfileBufferEntryWriter::Length
-BaseTestMarkerPayload::TagAndSerializationBytes() const {
-  return CommonPropsTagAndSerializationBytes() + sizeof(int);
-}
-
-void BaseTestMarkerPayload::SerializeTagAndPayload(
-    ProfileBufferEntryWriter& aEntryWriter) const {
-  static const DeserializerTag tag = TagForDeserializer(Deserialize);
-  SerializeTagAndCommonProps(tag, aEntryWriter);
-  aEntryWriter.WriteObject(mData);
-}
-
-void BaseTestMarkerPayload::StreamPayload(
-    baseprofiler::SpliceableJSONWriter& aWriter,
-    const TimeStamp& aProcessStartTime,
-    baseprofiler::UniqueStacks& aUniqueStacks) const {
-  aWriter.IntProperty("data", mData);
-}
-
-void TestProfilerMarkerSerialization() {
-  printf("TestProfilerMarkerSerialization...\n");
-
-  constexpr uint32_t MBSize = 256;
-  uint8_t buffer[MBSize * 3];
-  for (size_t i = 0; i < MBSize * 3; ++i) {
-    buffer[i] = uint8_t('A' + i);
-  }
-  BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
-                      &buffer[MBSize], MakePowerOfTwo32<MBSize>());
-
-  constexpr int data = 42;
-  {
-    BaseTestMarkerPayload payload(data);
-    rb.PutObject(
-        static_cast<const baseprofiler::ProfilerMarkerPayload*>(&payload));
-  }
-
-  int read = 0;
-  rb.ReadEach([&](ProfileBufferEntryReader& aER) {
-    UniquePtr<baseprofiler::ProfilerMarkerPayload> payload =
-        aER.ReadObject<UniquePtr<baseprofiler::ProfilerMarkerPayload>>();
-    MOZ_RELEASE_ASSERT(!!payload);
-    ++read;
-    BaseTestMarkerPayload* testPayload =
-        static_cast<BaseTestMarkerPayload*>(payload.get());
-    MOZ_RELEASE_ASSERT(testPayload);
-    MOZ_RELEASE_ASSERT(testPayload->GetData() == data);
-  });
-  MOZ_RELEASE_ASSERT(read == 1);
-
-  // Everything around the sub-buffer should be unchanged.
-  for (size_t i = 0; i < MBSize; ++i) {
-    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
-  }
-  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
-    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
-  }
-
-  printf("TestProfilerMarkerSerialization done\n");
-}
-
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
   constexpr size_t MAX_DEPTH = 128;
@@ -3394,8 +3299,6 @@ void TestProfiler() {
   // ::SleepMilli(10000);
 
   TestProfilerDependencies();
-
-  TestProfilerMarkerSerialization();
 
   {
     printf("profiler_init()...\n");
@@ -3472,23 +3375,7 @@ void TestProfiler() {
     }
 
     // Just making sure all payloads know how to (de)serialize and stream.
-    baseprofiler::profiler_add_marker(
-        "TracingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::TracingMarkerPayload("category",
-                                           baseprofiler::TRACING_EVENT));
 
-    auto cause =
-#  if defined(__linux__) || defined(__ANDROID__)
-        // Currently disabled on these platforms, so just return a null.
-        decltype(baseprofiler::profiler_get_backtrace()){};
-#  else
-        baseprofiler::profiler_get_backtrace();
-#  endif
-    baseprofiler::profiler_add_marker(
-        "FileIOMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::FileIOMarkerPayload(
-            "operation", "source", "filename", TimeStamp::NowUnfuzzed(),
-            TimeStamp::NowUnfuzzed(), std::move(cause)));
     baseprofiler::AddMarker("m2fileio", mozilla::baseprofiler::category::OTHER,
                             {}, mozilla::baseprofiler::markers::FileIO{}, "op2",
                             "src2", "f2", MarkerThreadId{});
@@ -3501,34 +3388,6 @@ void TestProfiler() {
         MarkerStack::TakeBacktrace(baseprofiler::profiler_capture_backtrace()),
         mozilla::baseprofiler::markers::FileIO{}, "op2", "src2", "f2",
         MarkerThreadId{});
-
-    baseprofiler::profiler_add_marker(
-        "UserTimingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::UserTimingMarkerPayload("name", TimeStamp::NowUnfuzzed(),
-                                              Nothing{}));
-
-    baseprofiler::profiler_add_marker(
-        "HangMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::HangMarkerPayload(TimeStamp::NowUnfuzzed(),
-                                        TimeStamp::NowUnfuzzed()));
-
-    baseprofiler::profiler_add_marker(
-        "LongTaskMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::LongTaskMarkerPayload(TimeStamp::NowUnfuzzed(),
-                                            TimeStamp::NowUnfuzzed()));
-
-    {
-      std::string s = "text payload";
-      baseprofiler::profiler_add_marker(
-          "TextMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-          baseprofiler::TextMarkerPayload(s, TimeStamp::NowUnfuzzed(),
-                                          TimeStamp::NowUnfuzzed()));
-    }
-
-    baseprofiler::profiler_add_marker(
-        "LogMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        baseprofiler::LogMarkerPayload("module", "text",
-                                       TimeStamp::NowUnfuzzed()));
 
     MOZ_RELEASE_ASSERT(
         baseprofiler::AddMarker("markers 2.0 without options (omitted)",
