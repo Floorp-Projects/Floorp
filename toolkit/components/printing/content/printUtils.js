@@ -162,6 +162,42 @@ var PrintUtils = {
     }
   },
 
+  createPreviewBrowser(aBrowsingContext, aDialogBrowser) {
+    let browser = gBrowser.createBrowser({
+      remoteType: aBrowsingContext.currentRemoteType,
+      userContextId: aBrowsingContext.originAttributes.userContextId,
+      initialBrowsingContextGroupId: aBrowsingContext.group.id,
+      skipLoad: true,
+    });
+    browser.addEventListener("DOMWindowClose", function(e) {
+      // Ignore close events from printing, see the code creating browsers in
+      // printUtils.js and nsDocumentViewer::OnDonePrinting.
+      //
+      // When we print with the new print UI we don't bother creating a new
+      // <browser> element, so the close event gets dispatched to us.
+      //
+      // Ignoring it is harmless (and doesn't cause correctness issues, because
+      // the preview document can't run script anyways).
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    browser.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+    browser.classList.add("printPreviewBrowser");
+    browser.setAttribute("flex", "1");
+    browser.setAttribute("printpreview", "true");
+    document.l10n.setAttributes(browser, "printui-preview-label");
+
+    let previewStack = document.importNode(
+      document.getElementById("printPreviewStackTemplate").content,
+      true
+    ).firstElementChild;
+    previewStack.append(browser);
+    aDialogBrowser.parentElement.prepend(previewStack);
+    return browser;
+  },
+
   /**
    * Opens the tab modal version of the print UI for the current tab.
    *

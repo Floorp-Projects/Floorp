@@ -160,7 +160,10 @@ var PrintEventHandler = {
     // is initiated and the print preview clone must be a snapshot from the
     // time that the print was started.
     let sourceBrowsingContext = this.getSourceBrowsingContext();
-    this.previewBrowser = this._createPreviewBrowser(sourceBrowsingContext);
+    this.previewBrowser = PrintUtils.createPreviewBrowser(
+      sourceBrowsingContext,
+      ourBrowser
+    );
 
     // Get the temporary browser that will previously have been created for the
     // platform code to generate the static clone printing doc into if this
@@ -305,36 +308,6 @@ var PrintEventHandler = {
 
   unload() {
     this.previewBrowser.frameLoader.exitPrintPreview();
-  },
-
-  _createPreviewBrowser(sourceBrowsingContext) {
-    // Create a preview browser.
-    let printPreviewBrowser = gBrowser.createBrowser({
-      remoteType: sourceBrowsingContext.currentRemoteType,
-      userContextId: sourceBrowsingContext.originAttributes.userContextId,
-      initialBrowsingContextGroupId: sourceBrowsingContext.group.id,
-      skipLoad: true,
-    });
-    printPreviewBrowser.classList.add("printPreviewBrowser");
-    printPreviewBrowser.setAttribute("flex", "1");
-    printPreviewBrowser.setAttribute("printpreview", "true");
-    // Disable the context menu for this browser. This is set as an attribute
-    // on the browser instead of using addEventListener since the latter
-    // was causing memory leaks.
-    printPreviewBrowser.setAttribute("oncontextmenu", "return false;");
-    document.l10n.setAttributes(printPreviewBrowser, "printui-preview-label");
-
-    // Create the stack for the loading indicator.
-    let doc = ourBrowser.ownerDocument;
-    let previewStack = doc.importNode(
-      doc.getElementById("printPreviewStackTemplate").content,
-      true
-    ).firstElementChild;
-
-    previewStack.append(printPreviewBrowser);
-    ourBrowser.parentElement.prepend(previewStack);
-
-    return printPreviewBrowser;
   },
 
   async print(systemDialogSettings) {
