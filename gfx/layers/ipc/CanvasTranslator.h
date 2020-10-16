@@ -71,34 +71,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void ActorDestroy(ActorDestroyReason why) final;
 
   /**
-   * Used by the compositor thread to get the SurfaceDescriptor associated with
-   * the DrawTarget from another process.
-   *
-   * @param aDrawTarget the key to find the TextureData
-   * @returns the SurfaceDescriptor associated with the key
-   */
-  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientDrawTarget(
-      const uintptr_t aDrawTarget);
-
-  /**
-   * Initializes a canvas translator for a particular TextureType, which
-   * translates events from a CanvasEventRingBuffer.
-   *
-   * @param aTextureType the TextureType the translator will create
-   * @param aReadHandle handle to the shared memory for the
-   * CanvasEventRingBuffer
-   * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
-   * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
-   * @param aReaderServices provides functions required by the reader
-   * @returns true if the initialization works, false otherwise
-   */
-  bool Init(const TextureType& aTextureType,
-            const ipc::SharedMemoryBasic::Handle& aReadHandle,
-            const CrossProcessSemaphoreHandle& aReaderSem,
-            const CrossProcessSemaphoreHandle& aWriterSem,
-            UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices);
-
-  /**
    * Translates events until no more are available or the end of a transaction
    * If this returns false the caller of this is responsible for re-calling
    * this function.
