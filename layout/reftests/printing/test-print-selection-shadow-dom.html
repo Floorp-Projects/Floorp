@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html reftest-print-range="selection">
+<head>
+  <meta charset="utf-8">
+  <link href="print.css" rel="stylesheet">
+  <script>
+    function selectNodesInShadowTree() {
+      let host = document.getElementById("host");
+      host.attachShadow({ mode: "open" }).innerHTML = `
+        <p>This text should not be there</p>
+        <p id="selection">This text should appear on page 1</p>
+        <p>This text should not be there</p>
+      `;
+      let rng = document.createRange();
+      rng.selectNode(host.shadowRoot.getElementById("selection"));
+      window.getSelection().addRange(rng);
+    }
+  </script>
+</head>
+<body onload="selectNodesInShadowTree()">
+  <p>This text should not be there</p>
+  <div id="host">Shouldn't show up (in the shadows)</div>
+  <p>This text should not be there</p>
+</body>
+</html>
