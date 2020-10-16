@@ -87,6 +87,7 @@ class GeckoEngineSession(
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var lastLoadRequestUri: String? = null
+    internal var pageLoadingUrl: String? = null
     internal var scrollY: Int = 0
 
     internal var job: Job = Job()
@@ -599,6 +600,14 @@ class GeckoEngineSession(
             // This log statement is temporary and parsed by FNPRMS for performance measurements. It can be
             // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
             fnprmsLogger.info("handleMessage GeckoView:PageStart uri=") // uri intentionally blank
+
+            pageLoadingUrl = url
+
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && url == ABOUT_BLANK) {
+                return
+            }
+
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
@@ -612,6 +621,12 @@ class GeckoEngineSession(
             // by the time we reach here, any new request will come from web content.
             // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
             // false.
+
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && pageLoadingUrl == ABOUT_BLANK) {
+                return
+            }
+
             notifyObservers {
                 onProgress(PROGRESS_STOP)
                 onLoadingStateChange(false)
