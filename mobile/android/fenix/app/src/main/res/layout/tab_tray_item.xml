@@ -7,7 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tab_item"
     android:layout_width="match_parent"
-    android:layout_height="88dp"
+    android:layout_height="@dimen/tab_tray_tab_item_height"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:selectableItemBackground">
