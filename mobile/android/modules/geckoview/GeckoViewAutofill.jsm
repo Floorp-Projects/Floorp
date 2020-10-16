@@ -57,16 +57,18 @@ class GeckoViewAutofill {
 
     const window = aElement.ownerGlobal;
     const bounds = aElement.getBoundingClientRect();
+    const isInputElement = aElement instanceof window.HTMLInputElement;
 
     info = {
+      isInputElement,
       id: ++this._autofillId,
       parent: aParent,
       root: aRoot,
       tag: aElement.tagName,
-      type: aElement instanceof window.HTMLInputElement ? aElement.type : null,
-      value: aElement.value,
+      type: isInputElement ? aElement.type : null,
+      value: isInputElement ? aElement.value : null,
       editable:
-        aElement instanceof window.HTMLInputElement &&
+        isInputElement &&
         [
           "color",
           "date",
@@ -83,8 +85,7 @@ class GeckoViewAutofill {
           "url",
           "week",
         ].includes(aElement.type),
-      disabled:
-        aElement instanceof window.HTMLInputElement ? aElement.disabled : null,
+      disabled: isInputElement ? aElement.disabled : null,
       attributes: Object.assign(
         {},
         ...Array.from(aElement.attributes)
@@ -103,7 +104,7 @@ class GeckoViewAutofill {
 
     if (aElement === aUsernameField) {
       info.autofillhint = "username"; // AUTOFILL.HINT.USERNAME
-    } else if (aElement instanceof window.HTMLInputElement) {
+    } else if (isInputElement) {
       // Using autocomplete attribute if it is email.
       const autocompleteInfo = aElement.getAutocompleteInfo();
       if (autocompleteInfo) {
@@ -127,7 +128,8 @@ class GeckoViewAutofill {
     const updated = [];
     for (const element of aElements) {
       const info = this._autofillInfos.get(element);
-      if (!info || info.value === element.value) {
+
+      if (!info?.isInputElement || info.value === element.value) {
         continue;
       }
       debug`Updating value ${info.value} to ${element.value}`;
