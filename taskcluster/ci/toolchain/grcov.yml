@@ -19,7 +19,7 @@ linux64-grcov:
         symbol: TL(grcov)
     fetches:
         toolchain:
-            - linux64-rust-1.41
+            - linux64-rust-1.47
 
 macosx64-grcov:
     treeherder:
@@ -28,7 +28,7 @@ macosx64-grcov:
         - trunk
     fetches:
         toolchain:
-            - linux64-rust-1.41
+            - linux64-rust-1.47
 
 win64-grcov:
     treeherder:
@@ -44,4 +44,4 @@ win64-grcov:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust-1.41
+            - win64-rust-1.47
