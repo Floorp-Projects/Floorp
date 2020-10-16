@@ -94,6 +94,56 @@ class AutofillDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun autofillCommitIdValue() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "signon.rememberSignons" to true,
+                "signon.userInputRequiredToCapture.enabled" to false))
+
+        mainSession.loadTestPath(FORMS_ID_VALUE_HTML_PATH)
+        // Wait for the auto-fill nodes to populate.
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
+            @AssertCalled(count = 1)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+                assertThat("Should be starting auto-fill",
+                           notification,
+                           equalTo(forEachCall(
+                              Autofill.Notify.SESSION_STARTED,
+                              Autofill.Notify.NODE_ADDED)))
+            }
+        })
+
+        // Assign node values.
+        mainSession.evaluateJS("document.querySelector('#value').value = 'pass1x'")
+
+        // Submit the session.
+        mainSession.evaluateJS("document.querySelector('#form1').submit()")
+
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
+            @AssertCalled(count = 2)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+                val info = sessionRule.currentCall
+
+                if (info.counter < 2) {
+                    assertThat("Should be an update notification",
+                               notification,
+                               equalTo(Autofill.Notify.NODE_UPDATED))
+                } else {
+                    assertThat("Should be a commit notification",
+                               notification,
+                               equalTo(Autofill.Notify.SESSION_COMMITTED))
+
+                    assertThat("Values should match",
+                               countAutofillNodes({ it.value == "pass1x" }),
+                               equalTo(1))
+                }
+            }
+        })
+    }
+
     @Test fun autofill() {
         // Test parts of the Oreo auto-fill API; there is another autofill test in
         // SessionAccessibility for a11y auto-fill support.
