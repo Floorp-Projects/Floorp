@@ -101,11 +101,10 @@ class IDBError {
 
   template <typename... SpecialValueMappers>
   ErrorResult ExtractErrorResult(SpecialValueMappers... aSpecialValueMappers) {
-#if (defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)) && \
-    !defined(XGILL_PLUGIN)
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)
     return mVariant.match(
         [](ErrorResult& aException) { return std::move(aException); },
-        [aSpecialValueMappers...](const SpecialConstant<S>& aSpecialValue) {
+        [aSpecialValueMappers](const SpecialConstant<S>& aSpecialValue) {
           return ErrorResult{aSpecialValueMappers(aSpecialValue)};
         }...);
 #else
