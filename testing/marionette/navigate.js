@@ -198,7 +198,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
   return new TimedPromise(
     async (resolve, reject) => {
-      const frameRemovedMessage = "Marionette:FrameRemoved";
       const navigationMessage = "Marionette:NavigationEvent";
 
       let seenBeforeUnload = false;
@@ -208,14 +207,13 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
       const checkDone = ({ finished, error }) => {
         if (finished) {
+          Services.obs.removeObserver(
+            onBrowsingContextDiscarded,
+            "browsing-context-discarded"
+          );
           chromeWindow.removeEventListener("TabClose", onUnload);
           chromeWindow.removeEventListener("unload", onUnload);
           driver.dialogObserver.remove(onDialogOpened);
-          driver.mm.removeMessageListener(
-            frameRemovedMessage,
-            onFrameRemoved,
-            true
-          );
           driver.mm.removeMessageListener(
             navigationMessage,
             onNavigation,
@@ -308,15 +306,16 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
       // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
-      const onFrameRemoved = ({ json }) => {
-        if (json.browsingContextId != browsingContext.id) {
-          return;
+      const onBrowsingContextDiscarded = (subject, topic) => {
+        // With the currentWindowGlobal gone the browsing context hasn't been
+        // replaced due to a remoteness change but closed.
+        if (subject == browsingContext && !subject.currentWindowGlobal) {
+          logger.trace(
+            "Canceled page load listener " +
+              `because frame with id ${subject.id} has been removed`
+          );
+          checkDone({ finished: true });
         }
-
-        logger.trace(
-          "Canceled page load listener because current frame has been removed"
-        );
-        checkDone({ finished: true });
       };
 
       const onUnload = event => {
@@ -330,7 +329,10 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       chromeWindow.addEventListener("TabClose", onUnload);
       chromeWindow.addEventListener("unload", onUnload);
       driver.dialogObserver.add(onDialogOpened);
-      driver.mm.addMessageListener(frameRemovedMessage, onFrameRemoved, true);
+      Services.obs.addObserver(
+        onBrowsingContextDiscarded,
+        "browsing-context-discarded"
+      );
       driver.mm.addMessageListener(navigationMessage, onNavigation, true);
 
       try {
@@ -348,7 +350,11 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
           );
         }
       } catch (e) {
-        checkDone({ finished: true, error: e });
+        // Executing the callback above could destroy the actor pair before the
+        // command returns. Such an error has to be ignored.
+        if (e.name !== "AbortError") {
+          checkDone({ finished: true, error: e });
+        }
       }
     },
     {

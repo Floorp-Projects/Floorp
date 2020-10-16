@@ -1003,8 +1003,6 @@ const eventDispatcher = {
     addEventListener("hashchange", this, true);
     addEventListener("pageshow", this, true);
 
-    Services.obs.addObserver(this, "webnavigation-destroy");
-
     this.enabled = true;
   },
 
@@ -1022,13 +1020,6 @@ const eventDispatcher = {
     removeEventListener("DOMContentLoaded", this, true);
     removeEventListener("hashchange", this, true);
     removeEventListener("pageshow", this, true);
-
-    // In case the observer was added before the frame script has been moved
-    // to a different process, it will no longer be available. Exceptions can
-    // be ignored.
-    try {
-      Services.obs.removeObserver(this, "webnavigation-destroy");
-    } catch (e) {}
 
     this.enabled = false;
   },
@@ -1065,21 +1056,6 @@ const eventDispatcher = {
       readyState: target.readyState,
       type,
     });
-  },
-
-  observe(subject, topic) {
-    subject.QueryInterface(Ci.nsIDocShell);
-
-    const browsingContext = subject.browsingContext;
-    const isFrame = browsingContext !== subject.browsingContext.top;
-
-    // The currently selected iframe has been closed
-    if (isFrame && browsingContext.id === curContainer.id) {
-      logger.trace(`Frame with id ${browsingContext.id} got removed`);
-      sendAsyncMessage("Marionette:FrameRemoved", {
-        browsingContextId: browsingContext.id,
-      });
-    }
   },
 };
 
