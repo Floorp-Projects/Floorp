@@ -115,7 +115,7 @@
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Ekle</string>
     <!-- This is a button to cancel the add-on installation . -->
-    <string name="mozac_feature_addons_permissions_dialog_cancel">Vazgeç</string>
+    <string name="mozac_feature_addons_permissions_dialog_cancel">İptal</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Eklentiyi yükle</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
