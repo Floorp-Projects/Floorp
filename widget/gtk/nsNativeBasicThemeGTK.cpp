@@ -8,6 +8,7 @@
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static constexpr CSSIntCoord kGtkMinimumScrollbarSize = 12;
 static constexpr CSSIntCoord kGtkMinimumThinScrollbarSize = 6;
