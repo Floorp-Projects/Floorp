@@ -20,8 +20,9 @@ class LocaleViewHolder(
 ) : BaseLocaleViewHolder(view, selectedLocale) {
 
     override fun bind(locale: Locale) {
-        // capitalisation is done using the rules of the appropriate locale (endonym and exonym)
+        // Capitalisation is done using the rules of the appropriate locale (endonym and exonym).
         locale_title_text.text = locale.getDisplayName(locale).capitalize(locale)
+        // Show the given locale using the device locale for the subtitle.
         locale_subtitle_text.text = locale.displayName.capitalize(Locale.getDefault())
         locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = false)
 
@@ -39,7 +40,8 @@ class SystemLocaleViewHolder(
 
     override fun bind(locale: Locale) {
         locale_title_text.text = itemView.context.getString(R.string.default_locale_text)
-        locale_subtitle_text.text = locale.displayName.capitalize(Locale.getDefault())
+        // Use the device locale for the system locale subtitle.
+        locale_subtitle_text.text = locale.getDisplayName(locale).capitalize(locale)
         locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
         itemView.setOnClickListener {
             interactor.onDefaultLocaleSelected()
