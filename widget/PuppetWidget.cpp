@@ -162,7 +162,6 @@ void PuppetWidget::Destroy() {
 
   Base::OnDestroy();
   Base::Destroy();
-  mPaintTask.Revoke();
   if (mMemoryPressureObserver) {
     mMemoryPressureObserver->Unregister();
     mMemoryPressureObserver = nullptr;
@@ -269,11 +268,10 @@ void PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect) {
     return;
   }
 
-  if (mBrowserChild && !aRect.IsEmpty() && !mPaintTask.IsPending()) {
-    mPaintTask = new PaintTask(this, false);
-    nsCOMPtr<nsIRunnable> event(mPaintTask.get());
-    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
-    return;
+  if (mBrowserChild && !aRect.IsEmpty()) {
+    if (RefPtr<nsRefreshDriver> refreshDriver = GetTopLevelRefreshDriver()) {
+      refreshDriver->ScheduleViewManagerFlush();
+    }
   }
 }
 
@@ -701,6 +699,18 @@ bool PuppetWidget::HaveValidInputContextCache() const {
           IMEStateManager::GetWidgetForActiveInputContext() == this);
 }
 
+nsRefreshDriver* PuppetWidget::GetTopLevelRefreshDriver() const {
+  if (!mBrowserChild) {
+    return nullptr;
+  }
+
+  if (PresShell* presShell = mBrowserChild->GetTopLevelPresShell()) {
+    return presShell->GetRefreshDriver();
+  }
+
+  return nullptr;
+}
+
 void PuppetWidget::SetInputContext(const InputContext& aContext,
                                    const InputContextAction& aAction) {
   mInputContext = aContext;
@@ -979,30 +989,6 @@ void PuppetWidget::ClearCachedCursor() {
   mCustomCursor = nullptr;
 }
 
-nsresult PuppetWidget::Paint(bool aDoTick) {
-  if (!GetCurrentWidgetListener()) {
-    return NS_OK;
-  }
-
-  // reset repaint tracking
-  mPaintTask.Revoke();
-
-  RefPtr<PuppetWidget> strongThis(this);
-
-  if (PresShell* presShell = mBrowserChild->GetTopLevelPresShell()) {
-    if (RefPtr<nsRefreshDriver> refreshDriver = presShell->GetRefreshDriver()) {
-      refreshDriver->ScheduleViewManagerFlush();
-      // The Tick here is mainly for optimization purpose; Ticking
-      // here allows us to notify layer updates faster.
-      if (aDoTick) {
-        refreshDriver->DoTick();
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
 void PuppetWidget::SetChild(PuppetWidget* aChild) {
   MOZ_ASSERT(this != aChild, "can't parent a widget to itself");
   MOZ_ASSERT(!aChild->mChild,
@@ -1011,17 +997,11 @@ void PuppetWidget::SetChild(PuppetWidget* aChild) {
   mChild = aChild;
 }
 
-NS_IMETHODIMP
-PuppetWidget::PaintTask::Run() {
-  if (mWidget) {
-    mWidget->Paint(mDoTick);
-  }
-  return NS_OK;
-}
-
 void PuppetWidget::PaintNowIfNeeded() {
-  if (IsVisible() && mPaintTask.IsPending()) {
-    Paint(true);
+  if (IsVisible()) {
+    if (RefPtr<nsRefreshDriver> refreshDriver = GetTopLevelRefreshDriver()) {
+      refreshDriver->DoTick();
+    }
   }
 }
 
