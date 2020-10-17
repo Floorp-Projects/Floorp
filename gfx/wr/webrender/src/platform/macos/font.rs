@@ -222,7 +222,7 @@ fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, varia
             return ct_font;
         }
         let axes: CFArray<CFDictionary> = TCFType::wrap_under_create_rule(axes_ref);
-        let mut vals: Vec<(CFNumber, CFNumber)> = Vec::with_capacity(variations.len() as usize);
+        let mut vals: Vec<(CFString, CFNumber)> = Vec::with_capacity(variations.len() as usize);
         for axis in axes.iter() {
             if !axis.instance_of::<CFDictionary>() {
                 return ct_font;
@@ -244,6 +244,14 @@ fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, varia
                 Some(variation) => variation.value as f64,
                 None => continue,
             };
+
+            let name: CFString = match axis.find(kCTFontVariationAxisNameKey as *const _) {
+                Some(name_ptr) => TCFType::wrap_under_get_rule(*name_ptr as CFStringRef),
+                None => return ct_font,
+            };
+            if !name.instance_of::<CFString>() {
+                return ct_font;
+            }
 
             let min_val = match axis.find(kCTFontVariationAxisMinimumValueKey as *const _) {
                 Some(min_ptr) => {
@@ -287,7 +295,7 @@ fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, varia
 
             val = val.max(min_val).min(max_val);
             if val != def_val {
-                vals.push((CFNumber::from(tag_val), CFNumber::from(val)));
+                vals.push((name, CFNumber::from(val)));
             }
         }
         if vals.is_empty() {
