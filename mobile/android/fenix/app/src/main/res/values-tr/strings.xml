@@ -216,6 +216,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Daha fazla bilgi al</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Yeni Firefox sekmesi aç</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Ara</string>
     <!-- Text preview for larger sized widgets -->
@@ -351,8 +353,12 @@
     <string name="preferences_customize_amo_collection">Özel eklenti koleksiyonu</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Tamam</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">İptal</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Koleksiyon adı</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Koleksiyon sahibi (kullanıcı kimliği)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Eklenti koleksiyonu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
 
@@ -545,6 +551,8 @@
     <string name="preferences_tab_view">Sekme görünümü</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Liste</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Izgara</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Sekmeleri kapat</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -623,6 +631,8 @@
     <string name="collection_open_tabs">Sekmeleri aç</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Koleksiyon adı</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kaldır</string>
 
@@ -1609,6 +1619,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s tarayıcınızdan en iyi şekilde yararlanın.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Ayrıntılar için tıklayın</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Sizin için önemli olan şeyleri toplayın</string>

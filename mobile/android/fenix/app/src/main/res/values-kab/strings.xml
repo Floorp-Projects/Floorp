@@ -217,6 +217,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_suggestions_onboarding_learn_more_link">Issin ugar</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Ldi iccer amaynut n Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Nadi</string>
     <!-- Text preview for larger sized widgets -->
@@ -634,6 +636,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Iccaren yeldin</string>
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Isem n tegrumma</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kkes</string>
 
@@ -1633,6 +1637,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Awi %s amaynut akk.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Sit i wugar n telqayt</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Lqeḍ tiɣawsiwin i tḥemmleḍ</string>

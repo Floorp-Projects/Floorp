@@ -214,6 +214,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Dysgu rhagor</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Agorwch tab Firefox newydd</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Chwilio</string>
     <!-- Text preview for larger sized widgets -->
@@ -626,6 +628,8 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Agor tabiau</string>
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Enw’r casgliad</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Tynnu</string>
 
@@ -1615,6 +1619,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Cael y gorau o %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Cliciwch am ragor o fanylion</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Casglwch y pethau sy’n bwysig i chi</string>

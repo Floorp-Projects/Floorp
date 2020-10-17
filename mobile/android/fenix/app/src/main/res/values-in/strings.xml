@@ -221,6 +221,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Pelajari lebih lanjut</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Buka tab Firefox baru</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Cari</string>
     <!-- Text preview for larger sized widgets -->
@@ -640,6 +642,8 @@
     <string name="collection_open_tabs">Buka tab</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nama koleksi</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hapus</string>
 
@@ -1634,6 +1638,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Klik untuk lebih jelasnya</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
