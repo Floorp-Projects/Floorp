@@ -304,8 +304,13 @@ static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView*
 
 - (BOOL)_isToolbarMode {
   // This function is called during -[NSSearchFieldCell drawWithFrame:inView:].
-  // Returning YES from it selects the style that's appropriate for search
-  // fields inside toolbars.
+  // On earlier macOS versions, returning YES from it selects the style
+  // that's appropriate for search fields inside toolbars. On Big Sur,
+  // returning YES causes the search field to be drawn incorrectly, with
+  // the toolbar gradient appearing as the field background.
+  if (nsCocoaFeatures::OnBigSurOrLater()) {
+    return NO;
+  }
   return YES;
 }
 
@@ -3566,6 +3571,7 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDevic
 static const LayoutDeviceIntMargin kAquaDropdownBorder(1, 22, 2, 5);
 static const LayoutDeviceIntMargin kAquaComboboxBorder(3, 20, 3, 4);
 static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
+static const LayoutDeviceIntMargin kAquaSearchfieldBorderBigSur(5, 5, 4, 26);
 
 LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
                                                           nsIFrame* aFrame,
@@ -3627,9 +3633,12 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
       result.SizeTo(1, 1, 1, 1);
       break;
 
-    case StyleAppearance::Searchfield:
-      result = DirectionAwareMargin(kAquaSearchfieldBorder, aFrame);
+    case StyleAppearance::Searchfield: {
+      auto border = nsCocoaFeatures::OnBigSurOrLater() ? kAquaSearchfieldBorderBigSur
+                                                       : kAquaSearchfieldBorder;
+      result = DirectionAwareMargin(border, aFrame);
       break;
+    }
 
     case StyleAppearance::Listbox: {
       SInt32 frameOutset = 0;
@@ -3701,6 +3710,7 @@ bool nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* a
       return true;
 
     case StyleAppearance::Menuarrow:
+    case StyleAppearance::Searchfield:
       if (nsCocoaFeatures::OnBigSurOrLater()) {
         return true;
       }
