@@ -457,6 +457,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawTextBox(CGContextRef context, const HIRect& inBoxRect, TextBoxParams aParams);
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect, const MeterParams& aParams);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect, const SegmentParams& aParams);
+  void DrawSegmentBackground(CGContextRef cgContext, const HIRect& inBoxRect,
+                             const SegmentParams& aParams);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, bool aIsInsideActiveWindow);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect, const ScaleParams& aParams);
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox, const HIRect& inBoxRect,
