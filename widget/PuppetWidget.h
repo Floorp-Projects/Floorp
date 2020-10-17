@@ -326,8 +326,6 @@ class PuppetWidget : public nsBaseWidget,
   virtual void OnMemoryPressure(layers::MemoryPressureReason aWhy) override;
 
  private:
-  nsresult Paint(bool aDoTick);
-
   void SetChild(PuppetWidget* aChild);
 
   nsresult RequestIMEToCommitComposition(bool aCancel);
@@ -352,19 +350,7 @@ class PuppetWidget : public nsBaseWidget,
   // IMEStateManager, the cache is valid.
   bool HaveValidInputContextCache() const;
 
-  class PaintTask : public Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    explicit PaintTask(PuppetWidget* widget, bool aDoTick)
-        : Runnable("PuppetWidget::PaintTask"),
-          mWidget(widget),
-          mDoTick(aDoTick) {}
-    void Revoke() { mWidget = nullptr; }
-
-   private:
-    PuppetWidget* mWidget;
-    bool mDoTick;
-  };
+  nsRefreshDriver* GetTopLevelRefreshDriver() const;
 
   // BrowserChild normally holds a strong reference to this PuppetWidget
   // or its root ancestor, but each PuppetWidget also needs a
@@ -376,7 +362,6 @@ class PuppetWidget : public nsBaseWidget,
   // The "widget" to which we delegate events if we don't have an
   // event handler.
   RefPtr<PuppetWidget> mChild;
-  nsRevocableEventPtr<PaintTask> mPaintTask;
   RefPtr<layers::MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
