@@ -22,11 +22,6 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables showing the top frequently visited sites
-     */
-    const val topFrecentSite = true
-
-    /**
      * Shows the grid view settings for the tabs tray.
      */
     val showGridViewInTabsSettings = Config.channel.isNightlyOrDebug

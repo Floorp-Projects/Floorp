@@ -100,10 +100,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
-    var showTopFrecentSites by featureFlagPreference(
+    var showTopFrecentSites by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
-        default = true,
-        featureFlag = FeatureFlags.topFrecentSite
+        default = true
     )
 
     var numberOfAppLaunches by intPreference(

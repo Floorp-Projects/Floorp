@@ -46,12 +46,10 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
-        android:key="@string/pref_home_category"
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_home"
         app:allowDividerAbove="true"
-        app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false">
+        app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_enable_top_frecent_sites"
             android:title="@string/top_sites_toggle_top_frecent_sites" />
@@ -64,7 +62,8 @@
         app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_website_pull_to_refresh"
-            android:title="@string/preference_gestures_website_pull_to_refresh" />
+            android:title="@string/preference_gestures_website_pull_to_refresh"
+            app:isPreferenceVisible="false" />
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_dynamic_toolbar"
             android:title="@string/preference_gestures_dynamic_toolbar" />
@@ -74,6 +73,6 @@
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_swipe_toolbar_show_tabs"
             android:title="@string/preference_gestures_swipe_toolbar_show_tabs"
-            app:isPreferenceVisible="false"/>
+            app:isPreferenceVisible="false" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
