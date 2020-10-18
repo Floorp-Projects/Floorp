@@ -387,34 +387,19 @@ class WebConsoleUI {
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
-        this.netEventStackTraces.set(resource.resourceId, resource);
+        this.netEventStackTraces.set(resource.channelId, resource);
         continue;
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT) {
         // Add the stacktrace
-        if (this.netEventStackTraces.has(resource.resourceId)) {
-          const {
-            stacktraceAvailable,
-            lastFrame,
-            targetFront,
-          } = this.netEventStackTraces.get(resource.resourceId);
-
-          resource.cause.stacktraceAvailable = stacktraceAvailable;
+        if (this.netEventStackTraces.has(resource.channelId)) {
+          const { stacktrace, lastFrame } = this.netEventStackTraces.get(
+            resource.channelId
+          );
+          resource.cause.stacktraceAvailable = stacktrace;
           resource.cause.lastFrame = lastFrame;
-          this.netEventStackTraces.delete(resource.resourceId);
-
-          if (
-            this.wrapper?.networkDataProvider?.stackTraceRequestInfoByActorID
-          ) {
-            this.wrapper.networkDataProvider.stackTraceRequestInfoByActorID.set(
-              resource.actor,
-              {
-                targetFront,
-                resourceId: resource.resourceId,
-              }
-            );
-          }
+          this.netEventStackTraces.delete(resource.channelId);
         }
       }
 

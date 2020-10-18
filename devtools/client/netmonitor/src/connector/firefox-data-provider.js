@@ -27,21 +27,17 @@ class FirefoxDataProvider {
    * Constructor for data provider
    *
    * @param {Object} webConsoleFront represents the client object for Console actor.
-   * @param {Object} actions set of actions fired during data fetching process.
-   * @param {Object} owner all events are fired on this object.
-   * @param {Object} resourceWatcher enables checking for watcher support
+   * @param {Object} actions set of actions fired during data fetching process
+   * @params {Object} owner all events are fired on this object
    */
-  constructor({ webConsoleFront, actions, owner, resourceWatcher }) {
+  constructor({ webConsoleFront, actions, owner }) {
     // Options
     this.webConsoleFront = webConsoleFront;
     this.actions = actions || {};
     this.actionsEnabled = true;
     this.owner = owner;
-    this.resourceWatcher = resourceWatcher;
-    // Map of all stacktrace resources keyed by network event's resourceId
+    // Map of all stacktrace resources keyed by network event's channelId
     this.stackTraces = new Map();
-    // Map of the stacktrace information keyed by the actor id's
-    this.stackTraceRequestInfoByActorID = new Map();
 
     // Internal properties
     this.payloadQueue = new Map();
@@ -326,31 +322,8 @@ class FirefoxDataProvider {
     });
   }
 
-  /**
-   * Retrieve the stack-trace information for the given StackTracesActor.
-   *
-   * @param object actor
-   *        - {Object} targetFront: the target front.
-   *
-   *        - {String} resourceId: the resource id for the network request".
-   * @return {object}
-   */
-  async _getStackTraceFromWatcher(actor) {
-    const stacktracesFront = await actor.targetFront.getFront("stacktraces");
-    const stacktrace = await stacktracesFront.getStackTrace(
-      actor.stacktraceResourceId
-    );
-    return { stacktrace };
-  }
-
-  /**
-   * The handler for when the network event stacktrace resource is available.
-   * The resource contains basic info, the actual stacktrace is fetched lazily
-   * using requestData.
-   * @param {object} resource The network event stacktrace resource
-   */
   onStackTraceAvailable(resource) {
-    this.stackTraces.set(resource.resourceId, resource);
+    this.stackTraces.set(resource.channelId, resource);
   }
 
   /**
@@ -372,31 +345,15 @@ class FirefoxDataProvider {
       referrerPolicy,
       blockedReason,
       blockingExtension,
-      resourceId,
-      stacktraceResourceId,
+      channelId,
     } = resource;
 
-    // Check if a stacktrace resource exists for this network resource.
-    // The stacktrace event is expected to happen before the network
-    // event so any neccesary stacktrace info should be available.
-    if (this.stackTraces.has(stacktraceResourceId)) {
-      const {
-        stacktraceAvailable,
-        lastFrame,
-        targetFront,
-      } = this.stackTraces.get(stacktraceResourceId);
-      cause.stacktraceAvailable = stacktraceAvailable;
+    // Check if a stacktrace resource exists for this network event
+    if (this.stackTraces.has(channelId)) {
+      const { stacktrace, lastFrame } = this.stackTraces.get(channelId);
+      cause.stacktraceAvailable = stacktrace;
       cause.lastFrame = lastFrame;
-      this.stackTraces.delete(stacktraceResourceId);
-      // We retrieve preliminary information about the stacktrace from the
-      // NETWORK_EVENT_STACKTRACE resource via `this.stackTraces` Map,
-      // The actual stacktrace is fetched lazily based on the actor id, using
-      // the targetFront and the stacktrace resource id therefore we
-      // map these for easy access.
-      this.stackTraceRequestInfoByActorID.set(actor, {
-        targetFront,
-        stacktraceResourceId,
-      });
+      this.stackTraces.delete(channelId);
     }
 
     // For resources from the resource watcher cache no updates are going to be fired
@@ -431,7 +388,7 @@ class FirefoxDataProvider {
       referrerPolicy,
       blockedReason,
       blockingExtension,
-      resourceId,
+      channelId,
       mimeType: resource?.content?.mimeType,
       contentSize: bodySize,
       ...responseProps,
@@ -681,15 +638,7 @@ class FirefoxDataProvider {
 
     let response = await new Promise((resolve, reject) => {
       // Do a RDP request to fetch data from the actor.
-      if (
-        clientMethodName == "getStackTrace" &&
-        this.resourceWatcher.hasWatcherSupport(
-          this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
-        )
-      ) {
-        const requestInfo = this.stackTraceRequestInfoByActorID.get(actor);
-        resolve(this._getStackTraceFromWatcher(requestInfo));
-      } else if (typeof this.webConsoleFront[clientMethodName] === "function") {
+      if (typeof this.webConsoleFront[clientMethodName] === "function") {
         // Make sure we fetch the real actor data instead of cloned actor
         // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
         this.webConsoleFront[clientMethodName](

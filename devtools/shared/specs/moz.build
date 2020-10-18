@@ -45,7 +45,6 @@ DevToolsModules(
     'root.js',
     'screenshot.js',
     'source.js',
-    'stacktraces.js',
     'storage.js',
     'string.js',
     'styles.js',
