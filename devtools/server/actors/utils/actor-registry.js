@@ -275,14 +275,6 @@ const ActorRegistry = {
       constructor: "ManifestActor",
       type: { target: true },
     });
-    this.registerModule(
-      "devtools/server/actors/network-monitor/stack-traces-actor",
-      {
-        prefix: "stacktraces",
-        constructor: "StackTracesActor",
-        type: { target: true },
-      }
-    );
   },
 
   /**

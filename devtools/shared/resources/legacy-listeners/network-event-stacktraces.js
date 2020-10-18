@@ -19,8 +19,8 @@ module.exports = async function({
     onAvailable([
       {
         resourceType: ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-        resourceId: actor.channelId,
-        stacktraceAvailable: actor.cause.stacktraceAvailable,
+        channelId: actor.channelId,
+        stacktrace: actor.cause.stacktraceAvailable,
         lastFrame: actor.cause.lastFrame,
       },
     ]);

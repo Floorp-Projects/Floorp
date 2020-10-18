@@ -837,7 +837,6 @@ NetworkObserver.prototype = {
       }
       if (wsChannel) {
         event.url = wsChannel.URI.spec;
-        event.serial = wsChannel.serial;
       }
     }
 

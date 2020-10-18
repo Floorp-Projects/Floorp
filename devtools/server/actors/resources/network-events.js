@@ -30,12 +30,15 @@ class NetworkEventWatcher {
    *          This will be called for each resource.
    *        - onUpdated: optional function
    *          This would be called multiple times for each resource.
+   *        - onDestroyed: optional function
+   *          This would be called multiple times for each resource.
    */
-  async watch(watcherActor, { onAvailable, onUpdated }) {
+  async watch(watcherActor, { onAvailable, onUpdated, onDestroyed }) {
     this.networkEvents = new Map();
     this.watcherActor = watcherActor;
     this.onNetworkEventAvailable = onAvailable;
     this.onNetworkEventUpdated = onUpdated;
+    this.onNeworkEventDestroyed = onDestroyed;
 
     this.listener = new NetworkObserver(
       { browserId: watcherActor.browserId },
@@ -55,7 +58,7 @@ class NetworkEventWatcher {
       this,
       {
         onNetworkEventUpdate: this.onNetworkEventUpdate.bind(this),
-        onNetworkEventDestroy: this.onNetworkEventDestroy.bind(this),
+        onNetworkEventDestroy: this.onNeworkEventDestroyed,
       },
       event
     );
@@ -136,12 +139,6 @@ class NetworkEventWatcher {
         updateType: updateResource.updateType,
       },
     ]);
-  }
-
-  onNetworkEventDestroy(channelId) {
-    if (this.networkEvents.has(channelId)) {
-      this.networkEvents.delete(channelId);
-    }
   }
 
   /**

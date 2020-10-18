@@ -39,7 +39,9 @@ module.exports = async function({
     const resource = {
       resourceId: actor.channelId,
       resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+      _type: "NetworkEvent",
       timeStamp: actor.timeStamp,
+      node: null,
       actor: actor.actor,
       discardRequestBody: true,
       discardResponseBody: true,
@@ -59,10 +61,7 @@ module.exports = async function({
       referrerPolicy: actor.referrerPolicy,
       blockedReason: actor.blockedReason,
       blockingExtension: actor.blockingExtension,
-      stacktraceResourceId:
-        actor.cause.type == "websocket"
-          ? actor.url.replace(/^http/, "ws")
-          : actor.channelId,
+      channelId: actor.channelId,
       updates: [],
     };
 
