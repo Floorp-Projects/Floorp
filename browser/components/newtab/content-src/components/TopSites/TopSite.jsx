@@ -261,20 +261,20 @@ export class TopSiteLink extends React.PureComponent {
                 />
               )}
             </div>
-            <div
-              className={`title${
-                link.isPinned || link.sponsored_position ? " has-icon" : ""
-              }${link.isPinned ? " pinned" : ""}`}
-            >
+            <div className={`title${link.isPinned ? " has-icon pinned" : ""}`}>
               {link.isPinned && <div className="icon icon-pin-small" />}
-              {link.sponsored_position && (
-                <div className="icon icon-sponsored-small" />
+              <span dir="auto">{title || <br />}</span>
+              {link.type === SPOC_TYPE || link.sponsored_position ? (
+                <span
+                  className="sponsored-label"
+                  data-l10n-id="newtab-topsite-sponsored"
+                />
+              ) : (
+                <span className="sponsored-label">
+                  <br />
+                </span>
               )}
-              <span dir="auto">{title}</span>
             </div>
-            {link.type === SPOC_TYPE ? (
-              <span className="top-site-spoc-label">Sponsored</span>
-            ) : null}
           </a>
           {children}
           {link.type === SPOC_TYPE ? (

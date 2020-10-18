@@ -220,11 +220,6 @@ body {
     width: 12px; }
     .icon.icon-pin-small:dir(rtl) {
       transform: scaleX(-1); }
-  .icon.icon-sponsored-small {
-    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg");
-    background-size: 12px;
-    height: 12px;
-    width: 12px; }
   .icon.icon-check {
     background-image: url("chrome://global/skin/icons/check.svg"); }
   .icon.icon-download {
@@ -475,9 +470,6 @@ main {
     color: var(--newtab-text-conditional-color);
     text-decoration: underline; }
 
-.top-sites {
-  margin-bottom: 2px; }
-
 .top-sites-list {
   list-style: none;
   margin: 0 -16px;
@@ -665,8 +657,7 @@ main {
   .top-site-outer .title {
     color: var(--newtab-topsites-label-color);
     font: message-box;
-    height: 30px;
-    line-height: 30px;
+    padding-top: 4px;
     text-align: center;
     width: 96px;
     position: relative; }
@@ -674,15 +665,17 @@ main {
       fill: var(--newtab-icon-tertiary-color);
       inset-inline-start: 0;
       position: absolute;
-      top: 10px; }
+      top: 0.5em; }
     .top-site-outer .title span {
-      height: 30px;
       display: block;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap; }
     .top-site-outer .title.has-icon span {
       padding: 0 13px; }
+    .top-site-outer .title .sponsored-label {
+      color: #737373;
+      font-size: 0.9em; }
   .top-site-outer .edit-button {
     background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .top-site-outer.placeholder .tile {
@@ -2715,22 +2708,6 @@ main {
   .ds-column-3 .ds-top-sites .top-site-inner .title,
   .ds-column-4 .ds-top-sites .top-site-inner .title {
     width: var(--rightPanelIconWidth); }
-
-.top-sites-spoc .top-sites-list {
-  display: flex;
-  flex-wrap: wrap; }
-  .top-sites-spoc .top-sites-list .top-site-outer {
-    margin: 0 0 20px; }
-    .top-sites-spoc .top-sites-list .top-site-outer .top-site-spoc-label {
-      color: #737373;
-      font-size: 11px;
-      display: flex;
-      justify-content: center;
-      margin-top: -4px; }
-      [lwt-newtab-brighttext] .top-sites-spoc .top-sites-list .top-site-outer .top-site-spoc-label {
-        color: #B1B1B3; }
-    .top-sites-spoc .top-sites-list .top-site-outer.dragged .top-site-spoc-label {
-      visibility: hidden; }
 
 .ds-hero-item .context-menu-button,
 .ds-list-item .context-menu-button,
