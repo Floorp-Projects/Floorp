@@ -20,9 +20,7 @@ const {
 const rawPackets = new Map();
 rawPackets.set(`GET request`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent4",
   "discardRequestBody": true,
   "discardResponseBody": false,
@@ -80,9 +78,7 @@ rawPackets.set(`GET request`, {
 
 rawPackets.set(`GET request update`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent5",
   "discardRequestBody": true,
   "discardResponseBody": false,
@@ -140,9 +136,7 @@ rawPackets.set(`GET request update`, {
 
 rawPackets.set(`XHR GET request`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent21",
   "discardRequestBody": true,
   "discardResponseBody": false,
@@ -200,9 +194,7 @@ rawPackets.set(`XHR GET request`, {
 
 rawPackets.set(`XHR GET request update`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent20",
   "discardRequestBody": true,
   "discardResponseBody": false,
@@ -258,9 +250,7 @@ rawPackets.set(`XHR GET request update`, {
 
 rawPackets.set(`XHR POST request`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent36",
   "discardRequestBody": true,
   "discardResponseBody": false,
@@ -318,9 +308,7 @@ rawPackets.set(`XHR POST request`, {
 
 rawPackets.set(`XHR POST request update`, {
   "resourceType": "network-event",
-  "_type": "NetworkEvent",
   "timeStamp": 1572867483805,
-  "node": null,
   "actor": "server0.conn0.netEvent36",
   "discardRequestBody": true,
   "discardResponseBody": false,

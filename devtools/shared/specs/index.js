@@ -327,6 +327,11 @@ const Types = (exports.__TypesForTests = [
     spec: "devtools/shared/specs/worker/service-worker-registration",
     front: "devtools/client/fronts/worker/service-worker-registration",
   },
+  {
+    types: ["stacktraces"],
+    spec: "devtools/shared/specs/stacktraces",
+    front: "devtools/client/fronts/stacktraces",
+  },
 ]);
 
 const lazySpecs = new Map();
