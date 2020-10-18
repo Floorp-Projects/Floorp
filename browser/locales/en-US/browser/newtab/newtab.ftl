@@ -53,6 +53,10 @@ newtab-confirm-delete-history-p1 = Are you sure you want to delete every instanc
 # "This action" refers to deleting a page from history.
 newtab-confirm-delete-history-p2 = This action cannot be undone.
 
+## Top Sites - Sponsored label
+
+newtab-topsite-sponsored = Sponsored
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
