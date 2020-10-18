@@ -408,8 +408,7 @@ nsDependentCSubstring IMContextWrapper::GetIMName() const {
   // If the context is XIM, actual engine must be specified with
   // |XMODIFIERS=@im=foo|.
   const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
-  if (!xmodifiersChar ||
-      (!im.EqualsLiteral("xim") && !im.EqualsLiteral("wayland"))) {
+  if (!xmodifiersChar || !im.EqualsLiteral("xim")) {
     return im;
   }
 
@@ -504,6 +503,10 @@ void IMContextWrapper::Init() {
     mIMContextID = IMContextID::eIIIMF;
     mIsIMInAsyncKeyHandlingMode = false;
     mIsKeySnooped = false;
+  } else if (im.EqualsLiteral("wayland")) {
+    mIMContextID = IMContextID::eWayland;
+    mIsIMInAsyncKeyHandlingMode = false;
+    mIsKeySnooped = true;
   } else {
     mIMContextID = IMContextID::eUnknown;
     mIsIMInAsyncKeyHandlingMode = false;
@@ -2015,8 +2018,9 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
     }
   } else {
     MOZ_ASSERT(mIsKeySnooped);
-    // Currently, we support key snooper mode of uim only.
-    MOZ_ASSERT(mIMContextID == IMContextID::eUim);
+    // Currently, we support key snooper mode of uim and wayland only.
+    MOZ_ASSERT(mIMContextID == IMContextID::eUim ||
+               mIMContextID == IMContextID::eWayland);
     // uim sends "preedit_start" signal and "preedit_changed" separately
     // at starting composition, "commit" and "preedit_end" separately at
     // committing composition.

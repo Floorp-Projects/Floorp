@@ -124,6 +124,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
     eIIIMF,
     eScim,
     eUim,
+    eWayland,
     eUnknown,
   };
 
@@ -139,6 +140,8 @@ class IMContextWrapper final : public TextEventDispatcherListener {
         return "eScim";
       case IMContextID::eUim:
         return "eUim";
+      case IMContextID::eWayland:
+        return "eWayland";
       default:
         return "eUnknown";
     }
