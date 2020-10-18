@@ -58,9 +58,16 @@
       testTextAtOffset("li1", BOUNDARY_PARAGRAPH,
       [[0, 3, "• a", 0, 3]]);
 
+      // Test line breaks in a textarea.
+      testTextAtOffset("textarea", BOUNDARY_PARAGRAPH,
+      [[0, 1, "a\n", 0, 2],
+        [2, 3, "b\n", 2, 4],
+        [4, 4, "\n", 4, 5],
+        [5, 6, "c", 5, 6]]);
+
       // Test that a textarea has a blank paragraph at the end if it contains
       // a line break as its last character.
-      testTextAtOffset("textarea_with_br", BOUNDARY_PARAGRAPH,
+      testTextAtOffset("textarea_with_trailing_br", BOUNDARY_PARAGRAPH,
       [[0, 15, "This is a test.\n", 0, 16],
        [16, 16, "", 16, 16]]);
 
@@ -113,7 +120,11 @@
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
   <p id="pWithLinkWithBr">a<a href="#">b<br>c</a>d</p>
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
-  <textarea id="textarea_with_br">This is a test.
+  <textarea id="textarea">a
+b
+
+c</textarea> <!-- This must be outdented for a correct test case -->
+  <textarea id="textarea_with_trailing_br">This is a test.
 </textarea> <!-- This must be outdented for a correct test case -->
 <p id="presentational_br" style="white-space: pre-wrap;">a<span> <br role="presentation"></span>b</p>
 <div id="two_paragraphs"><p>a</p><p>b</p></div>

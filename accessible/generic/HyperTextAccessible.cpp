@@ -57,41 +57,78 @@ using namespace mozilla::a11y;
  */
 class ParagraphBoundaryRule : public PivotRule {
  public:
-  explicit ParagraphBoundaryRule(AccessibleOrProxy& aSkipSubtreeFor)
-      : mSkipSubtreeFor(aSkipSubtreeFor) {}
-
-  ParagraphBoundaryRule() : mSkipSubtreeFor(nullptr) {}
+  explicit ParagraphBoundaryRule(Accessible* aAnchor,
+                                 uint32_t aAnchorTextoffset,
+                                 nsDirection aDirection,
+                                 bool aSkipAnchorSubtree = false)
+      : mAnchor(aAnchor),
+        mAnchorTextOffset(aAnchorTextoffset),
+        mDirection(aDirection),
+        mSkipAnchorSubtree(aSkipAnchorSubtree),
+        mLastMatchTextOffset(0) {}
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override {
     MOZ_ASSERT(aAccOrProxy.IsAccessible());
+    Accessible* acc = aAccOrProxy.AsAccessible();
     uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
-    // If there is a child passed to the rule class, this means a special
-    // case where the caller doesn't want to go into the sub tree for the end
-    // offset, for example, line breaks inside embedded objects.
-    if (aAccOrProxy == mSkipSubtreeFor) {
+    if (mSkipAnchorSubtree && acc == mAnchor) {
       result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }
 
     // First, deal with the case that we encountered a line break, for example,
     // a br in a paragraph.
-    if (aAccOrProxy.Role() == roles::WHITESPACE) {
+    if (acc->Role() == roles::WHITESPACE) {
       result |= nsIAccessibleTraversalRule::FILTER_MATCH;
       return result;
     }
 
     // Now, deal with the case that we encounter a new block level accessible.
     // This also means a new paragraph boundary start.
-    nsIFrame* frame = aAccOrProxy.AsAccessible()->GetFrame();
+    nsIFrame* frame = acc->GetFrame();
     if (frame && frame->IsBlockFrame()) {
       result |= nsIAccessibleTraversalRule::FILTER_MATCH;
+      return result;
+    }
+
+    // A text leaf can contain a line break if it's pre-formatted text.
+    if (acc->IsTextLeaf()) {
+      nsAutoString name;
+      acc->Name(name);
+      int32_t offset;
+      if (mDirection == eDirPrevious) {
+        if (acc == mAnchor && mAnchorTextOffset == 0) {
+          // We're already at the start of this node, so there can be no line
+          // break before.
+          return result;
+        }
+        // If we began on a line break, we don't want to match it, so search
+        // from 1 before our anchor offset.
+        offset =
+            name.RFindChar('\n', acc == mAnchor ? mAnchorTextOffset - 1 : -1);
+      } else {
+        offset = name.FindChar('\n', acc == mAnchor ? mAnchorTextOffset : 0);
+      }
+      if (offset != -1) {
+        // Line ebreak!
+        mLastMatchTextOffset = offset;
+        result |= nsIAccessibleTraversalRule::FILTER_MATCH;
+      }
     }
 
     return result;
   }
 
+  // This is only valid if the last match was a text leaf. It returns the
+  // offset of the line break character in that text leaf.
+  uint32_t GetLastMatchTextOffset() { return mLastMatchTextOffset; }
+
  private:
-  AccessibleOrProxy mSkipSubtreeFor;
+  Accessible* mAnchor;
+  uint32_t mAnchorTextOffset;
+  nsDirection mDirection;
+  bool mSkipAnchorSubtree;
+  uint32_t mLastMatchTextOffset;
 };
 
 /**
@@ -739,7 +776,9 @@ int32_t HyperTextAccessible::FindParagraphStartOffset(uint32_t aOffset) {
 
   // Use the pivot class to search for the start  offset.
   Pivot p = Pivot(this);
-  ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule();
+  ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule(
+      child, child->IsTextLeaf() ? aOffset - GetChildOffset(child) : 0,
+      eDirPrevious);
   AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
   AccessibleOrProxy match = p.Prev(wrappedChild, boundaryRule, true);
   if (match.IsNull() || match.AsAccessible() == this) {
@@ -758,11 +797,18 @@ int32_t HyperTextAccessible::FindParagraphStartOffset(uint32_t aOffset) {
         // Same as before, we landed on the root, so offset is definitely 0.
         return 0;
       }
-    } else {
+    } else if (!match.AsAccessible()->IsTextLeaf()) {
       // The match is a block element, which is always a starting point, so
       // just return its offset.
       return TransformOffset(match.AsAccessible(), 0, false);
     }
+  }
+
+  if (match.AsAccessible()->IsTextLeaf()) {
+    // ParagraphBoundaryRule only returns a text leaf if it contains a line
+    // break. We want to stop after that.
+    return TransformOffset(match.AsAccessible(),
+                           boundaryRule.GetLastMatchTextOffset() + 1, false);
   }
 
   // This is a previous boundary, we don't want to include it itself.
@@ -790,16 +836,27 @@ int32_t HyperTextAccessible::FindParagraphEndOffset(uint32_t aOffset) {
   // Use the pivot class to search for the end offset.
   Pivot p = Pivot(this);
   AccessibleOrProxy wrappedChild = AccessibleOrProxy(child);
-  // In order to encompass all paragraphs inside embedded objects, not just
-  // the first, pass the child to the rule constructor to skip its subtree.
-  ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule(wrappedChild);
+  ParagraphBoundaryRule boundaryRule = ParagraphBoundaryRule(
+      child, child->IsTextLeaf() ? aOffset - GetChildOffset(child) : 0,
+      eDirNext,
+      // In order to encompass all paragraphs inside embedded objects, not just
+      // the first, we want to skip the anchor's subtree.
+      /* aSkipAnchorSubtree */ true);
   // Search forward for the end offset, including wrappedChild. We don't want
   // to go beyond this point if this offset indicates a paragraph boundary.
   AccessibleOrProxy match = p.Next(wrappedChild, boundaryRule, true);
   if (!match.IsNull()) {
     // Found something of relevance, adjust end offset.
     Accessible* matchAcc = match.AsAccessible();
-    return TransformOffset(matchAcc, nsAccUtils::TextLength(matchAcc), true);
+    uint32_t matchOffset;
+    if (matchAcc->IsTextLeaf()) {
+      // ParagraphBoundaryRule only returns a text leaf if it contains a line
+      // break.
+      matchOffset = boundaryRule.GetLastMatchTextOffset() + 1;
+    } else {
+      matchOffset = nsAccUtils::TextLength(matchAcc);
+    }
+    return TransformOffset(matchAcc, matchOffset, true);
   }
 
   // Didn't find anything, end offset is character count.
