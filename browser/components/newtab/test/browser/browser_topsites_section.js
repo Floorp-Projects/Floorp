@@ -186,7 +186,7 @@ test_newtab({
 
     searchTopSites[0].click();
 
-    return searchTopSites[0].innerText;
+    return searchTopSites[0].innerText.trim();
   },
   after(searchTopSiteTag) {
     ok(
