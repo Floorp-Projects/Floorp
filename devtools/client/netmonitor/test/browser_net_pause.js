@@ -82,11 +82,9 @@ async function performRequestAndWait(tab, monitor) {
  * Execute simple GET request
  */
 async function performPausedRequest(connector, tab, monitor) {
-  const wait = connector.connector.webConsoleFront.once("serverNetworkEvent");
   await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_SJS], async function(
     url
   ) {
     await content.wrappedJSObject.performRequests(url);
   });
-  await wait;
 }

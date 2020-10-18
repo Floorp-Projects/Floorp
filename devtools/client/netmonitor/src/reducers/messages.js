@@ -67,7 +67,7 @@ function Messages(initialState = {}) {
   const { EVENT_STREAM, WEB_SOCKET } = CHANNEL_TYPE;
 
   return {
-    // Map with all requests (key = channelId, value = array of message objects)
+    // Map with all requests (key = resourceId, value = array of message objects)
     messages: new Map(),
     messageFilterText: "",
     // Default filter type is "all",
@@ -88,14 +88,14 @@ function Messages(initialState = {}) {
 
 /**
  * When a network request is selected,
- * set the current channelId affiliated with the connection.
+ * set the current resourceId affiliated with the connection.
  */
 function setCurrentChannel(state, action) {
   if (!action.request) {
     return state;
   }
 
-  const { id, cause, channelId, isEventStream } = action.request;
+  const { id, cause, resourceId, isEventStream } = action.request;
   const { EVENT_STREAM, WEB_SOCKET } = CHANNEL_TYPE;
   let currentChannelType = null;
   let columnsKey = "columns";
@@ -113,7 +113,7 @@ function setCurrentChannel(state, action) {
       currentChannelType === state.currentChannelType
         ? { ...state.columns }
         : { ...state[columnsKey] },
-    currentChannelId: channelId,
+    currentChannelId: resourceId,
     currentChannelType,
     currentRequestId: id,
     // Default filter text is empty string for a new connection
