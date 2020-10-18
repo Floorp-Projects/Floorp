@@ -1151,7 +1151,8 @@ static MOZ_MUST_USE bool PerformAbortAlgorithm(JSContext* cx,
   cx->check(promise);
   cx->check(signal);
 
-  Rooted<PipeToState*> state(cx, NewBuiltinClassInstance<PipeToState>(cx));
+  Rooted<PipeToState*> state(cx,
+                             NewTenuredBuiltinClassInstance<PipeToState>(cx));
   if (!state) {
     return nullptr;
   }
