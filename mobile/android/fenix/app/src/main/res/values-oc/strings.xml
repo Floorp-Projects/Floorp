@@ -212,6 +212,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Ne saber mai</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Dobrir dins un onglet Firefox novèl</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Recercar</string>
     <!-- Text preview for larger sized widgets -->
@@ -342,12 +344,18 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificacions</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Colleccion de moduls personalizada</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">D’acòrdi</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Anullar</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Nom de la collecion</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Proprietari de la colleccion (ID utilizaire)</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -621,6 +629,8 @@
     <string name="collection_rename">Renomenar la colleccion</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Onglets dobèrts</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nom de la collecion</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Suprimir</string>
 
@@ -1550,6 +1560,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ne fasètz mai amb %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Clicatz per aver de detalhs</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Amassatz çò que compta per vos</string>

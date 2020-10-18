@@ -806,6 +806,8 @@
     <string name="preference_phone_feature_location">מיקום</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">התרעה</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">אחסון קבוע</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">לבקש לאפשר</string>
     <!-- Label that indicates that a permission must be blocked -->

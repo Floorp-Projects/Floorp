@@ -214,6 +214,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Saznaj više</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Otvori novu karticu u Firefoxu</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Traži</string>
     <!-- Text preview for larger sized widgets -->
@@ -629,6 +631,8 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Otvori kartice</string>
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Naziv zbirke</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Ukloni</string>
 
@@ -1631,6 +1635,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Iskoristi sve prednosti aplikacije %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Klikni za više informacija</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Skupi stvari koje su ti bitne</string>

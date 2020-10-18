@@ -218,6 +218,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Więcej informacji</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Otwórz nową kartę w Firefoksie</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Szukaj</string>
     <!-- Text preview for larger sized widgets -->
@@ -633,6 +635,8 @@
     <string name="collection_open_tabs">Otwórz karty</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nazwa kolekcji</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Usuń</string>
 
@@ -1627,6 +1631,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Zacznij synchronizować zakładki, hasła i nie tylko za pomocą konta Firefoksa.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Kliknij, aby wyświetlić więcej informacji</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Zbierz rzeczy, które są dla Ciebie ważne</string>
