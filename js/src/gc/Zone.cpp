@@ -150,6 +150,7 @@ JS::Zone::Zone(JSRuntime* rt)
       data(this, nullptr),
       tenuredStrings(this, 0),
       tenuredBigInts(this, 0),
+      nurseryAllocatedStrings(this, 0),
       allocNurseryStrings(this, true),
       allocNurseryBigInts(this, true),
       suppressAllocationMetadataBuilder(this, false),

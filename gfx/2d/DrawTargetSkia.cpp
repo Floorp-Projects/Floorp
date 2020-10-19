@@ -1237,16 +1237,9 @@ bool DrawTargetSkia::FillGlyphsWithCG(ScaledFont* aFont,
                                   macFont->FontSmoothingBackgroundColor());
   SetFontColor(cgContext, mColorSpace, aPattern);
 
-  if (ScaledFontMac::CTFontDrawGlyphsPtr != nullptr) {
-    ScaledFontMac::CTFontDrawGlyphsPtr(macFont->mCTFont, glyphs.begin(),
-                                       positions.begin(), aBuffer.mNumGlyphs,
-                                       cgContext);
-  } else {
-    CGContextSetFont(cgContext, macFont->mFont);
-    CGContextSetFontSize(cgContext, macFont->mSize);
-    CGContextShowGlyphsAtPositions(cgContext, glyphs.begin(), positions.begin(),
-                                   aBuffer.mNumGlyphs);
-  }
+  CTFontDrawGlyphs(macFont->mCTFont, glyphs.begin(),
+                   positions.begin(), aBuffer.mNumGlyphs,
+                   cgContext);
 
   // Calculate the area of the text we just drew
   auto* bboxes = new CGRect[aBuffer.mNumGlyphs];

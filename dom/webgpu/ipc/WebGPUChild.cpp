@@ -49,11 +49,8 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [](const RawId& aId) {
-            if (aId == 0) {
-              return RawIdPromise::CreateAndReject(Nothing(), __func__);
-            } else {
-              return RawIdPromise::CreateAndResolve(aId, __func__);
-            }
+            return aId == 0 ? RawIdPromise::CreateAndReject(Nothing(), __func__)
+                            : RawIdPromise::CreateAndResolve(aId, __func__);
           },
           [](const ipc::ResponseRejectReason& aReason) {
             return RawIdPromise::CreateAndReject(Some(aReason), __func__);
@@ -65,10 +62,9 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
   RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
   if (SendAdapterRequestDevice(aSelfId, aDesc, id)) {
     return Some(id);
-  } else {
-    ffi::wgpu_client_kill_device_id(mClient, id);
-    return Nothing();
   }
+  ffi::wgpu_client_kill_device_id(mClient, id);
+  return Nothing();
 }
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
@@ -76,6 +72,7 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
   ffi::WGPUBufferDescriptor desc = {};
   desc.size = aDesc.mSize;
   desc.usage = aDesc.mUsage;
+  desc.mapped_at_creation = aDesc.mMappedAtCreation;
 
   RawId id = ffi::wgpu_client_make_buffer_id(mClient, aSelfId);
   if (!SendDeviceCreateBuffer(aSelfId, desc, nsCString(), id)) {
@@ -177,23 +174,21 @@ RawId WebGPUChild::TextureCreateView(
 
 RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
                                        const dom::GPUSamplerDescriptor& aDesc) {
-  ffi::WGPUSamplerDescriptor desc = {};
-  desc.address_mode_u = ffi::WGPUAddressMode(aDesc.mAddressModeU);
-  desc.address_mode_v = ffi::WGPUAddressMode(aDesc.mAddressModeV);
-  desc.address_mode_w = ffi::WGPUAddressMode(aDesc.mAddressModeW);
-  desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
-  desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
-  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
-  desc.lod_min_clamp = aDesc.mLodMinClamp;
-  desc.lod_max_clamp = aDesc.mLodMaxClamp;
-  ffi::WGPUCompareFunction compare;
+  SerialSamplerDescriptor desc = {};
+  desc.mAddressU = ffi::WGPUAddressMode(aDesc.mAddressModeU);
+  desc.mAddressV = ffi::WGPUAddressMode(aDesc.mAddressModeV);
+  desc.mAddressW = ffi::WGPUAddressMode(aDesc.mAddressModeW);
+  desc.mMagFilter = ffi::WGPUFilterMode(aDesc.mMagFilter);
+  desc.mMinFilter = ffi::WGPUFilterMode(aDesc.mMinFilter);
+  desc.mMipmapFilter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
+  desc.mLodMinClamp = aDesc.mLodMinClamp;
+  desc.mLodMaxClamp = aDesc.mLodMaxClamp;
   if (aDesc.mCompare.WasPassed()) {
-    compare = ConvertCompareFunction(aDesc.mCompare.Value());
-    desc.compare = compare;
+    desc.mCompare = Some(ConvertCompareFunction(aDesc.mCompare.Value()));
   }
 
   RawId id = ffi::wgpu_client_make_sampler_id(mClient, aSelfId);
-  if (!SendDeviceCreateSampler(aSelfId, desc, nsCString(), id)) {
+  if (!SendDeviceCreateSampler(aSelfId, desc, id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -228,7 +223,7 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
     ffi::WGPUBindGroupLayoutEntry e = {};
     e.binding = entry.mBinding;
     e.visibility = entry.mVisibility;
-    e.ty = ffi::WGPUBindingType(entry.mType);
+    e.ty = ffi::WGPURawBindingType(entry.mType);
     e.multisampled = entry.mMultisampled;
     e.has_dynamic_offset = entry.mHasDynamicOffset;
     e.view_dimension = ffi::WGPUTextureViewDimension(entry.mViewDimension);
@@ -295,12 +290,18 @@ RawId WebGPUChild::DeviceCreateBindGroup(
 RawId WebGPUChild::DeviceCreateShaderModule(
     RawId aSelfId, const dom::GPUShaderModuleDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_shader_module_id(mClient, aSelfId);
-  MOZ_ASSERT(aDesc.mCode.IsUint32Array());
-  const auto& code = aDesc.mCode.GetAsUint32Array();
-  code.ComputeState();
-  nsTArray<uint32_t> data(code.Length());
-  data.AppendElements(code.Data(), code.Length());
-  if (!SendDeviceCreateShaderModule(aSelfId, data, id)) {
+
+  nsTArray<uint32_t> spirv;
+  nsCString wgsl;
+  if (aDesc.mCode.IsString()) {
+    CopyUTF16toUTF8(aDesc.mCode.GetAsString(), wgsl);
+  } else {
+    const auto& code = aDesc.mCode.GetAsUint32Array();
+    code.ComputeState();
+    spirv.AppendElements(code.Data(), code.Length());
+  }
+
+  if (!SendDeviceCreateShaderModule(aSelfId, spirv, wgsl, id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;

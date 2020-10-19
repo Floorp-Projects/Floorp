@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,6 +49,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -1541,6 +1543,44 @@ public class GeckoSession {
             return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
         }
 
+        @Override
+        public int hashCode() {
+            // Move to Objects.hashCode once our MIN_SDK >= 19
+            return Arrays.hashCode(new Object[]{
+                mUri,
+                mReferrerSession,
+                mReferrerUri,
+                mHeaders,
+                mLoadFlags,
+                mIsDataUri,
+                mHeaderFilter
+            });
+        }
+
+        private static boolean equals(final Object a, final Object b) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return Objects.equals(a, b);
+            }
+
+            return (a == b) || (a != null && a.equals(b));
+        }
+
+        @Override
+        public boolean equals(final @Nullable Object obj) {
+            if (!(obj instanceof Loader)) {
+                return false;
+            }
+
+            final Loader other = (Loader) obj;
+            return equals(mUri, other.mUri)
+                    && equals(mReferrerSession, other.mReferrerSession)
+                    && equals(mReferrerUri, other.mReferrerUri)
+                    && equals(mHeaders, other.mHeaders)
+                    && equals(mLoadFlags, other.mLoadFlags)
+                    && equals(mIsDataUri, other.mIsDataUri)
+                    && equals(mHeaderFilter, other.mHeaderFilter);
+        }
+
         /**
          * Set the URI of the resource to load.
          * @param uri a String containg the URI
@@ -1765,10 +1805,15 @@ public class GeckoSession {
     @AnyThread
     @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable Map<String, String> additionalHeaders) {
-        load(new Loader()
+        final Loader loader = new Loader()
                 .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .additionalHeaders(additionalHeaders));
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE);
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders);
+        }
+
+        load(loader);
     }
 
     /**
@@ -1819,12 +1864,17 @@ public class GeckoSession {
     @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable String referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        load(new Loader()
+        final Loader loader = new Loader()
                 .uri(uri)
                 .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
-                .flags(flags)
-                .additionalHeaders(additionalHeaders));
+                .flags(flags);
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders);
+        }
+
+        load(loader);
     }
 
     /**
@@ -1863,12 +1913,17 @@ public class GeckoSession {
     @Deprecated
     public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        load(new Loader()
+        final Loader loader = new Loader()
                 .uri(uri)
                 .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
-                .additionalHeaders(additionalHeaders)
-                .flags(flags));
+                .flags(flags);
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders);
+        }
+
+        load(loader);
     }
 
     private GeckoResult<AllowOrDeny> shouldLoadUri(final NavigationDelegate.LoadRequest request) {
@@ -1918,10 +1973,15 @@ public class GeckoSession {
     @AnyThread
     @Deprecated
     public void loadUri(final @NonNull Uri uri, final @Nullable Map<String, String> additionalHeaders) {
-        load(new Loader()
+        final Loader loader = new Loader()
                 .uri(uri)
-                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                .additionalHeaders(additionalHeaders));
+                .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE);
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders);
+        }
+
+        load(loader);
     }
 
     /**
@@ -1969,12 +2029,17 @@ public class GeckoSession {
     @Deprecated
     public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
-        load(new Loader()
+        final Loader loader = new Loader()
                 .uri(uri)
                 .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                 .referrer(referrer)
-                .flags(flags)
-                .additionalHeaders(additionalHeaders));
+                .flags(flags);
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders);
+        }
+
+        load(loader);
     }
 
     /**

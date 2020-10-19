@@ -7195,7 +7195,7 @@ nsresult nsDocShell::RestorePresentation(nsISHEntry* aSHEntry,
   // to the event loop.  This mimics the way it is called by nsIChannel
   // implementations.
 
-  // Revoke any pending restore (just in case)
+  // Revoke any pending restore (just in case).
   NS_ASSERTION(!mRestorePresentationEvent.IsPending(),
                "should only have one RestorePresentationEvent");
   mRestorePresentationEvent.Revoke();
