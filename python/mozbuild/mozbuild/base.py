@@ -671,7 +671,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         self._ensure_objdir_exists()
 
-        args = self._make_path()
+        args = [self._make_path()]
 
         if directory:
             args.extend(['-C', directory.replace(os.sep, '/')])
@@ -795,7 +795,7 @@ class MozbuildObject(ProcessExecutionMixin):
                     continue
             result, xcode_lisense_error_tmp = validate_make(make)
             if result:
-                return [make]
+                return make
             if xcode_lisense_error_tmp:
                 xcode_lisense_error = True
 
