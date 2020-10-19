@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
     // frame is the page's root scroll frame.
     // --------------------------------------------------------------------
 
-    function testBug1151663() {
+    function test() {
       // Get the compositor-side test data from nsIDOMWindowUtils.
       var compositorTestData = utils.getCompositorAPZTestData();
 
@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       ok(rcd != null, "found the RCD node");
       is(rcd.children.length, 0, "expected no children on the RCD");
     }
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663).finally(subtestDone);
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(test).finally(subtestDone);
   </script>
 </head>
 <body>
