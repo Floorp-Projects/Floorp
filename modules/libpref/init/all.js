@@ -2585,7 +2585,7 @@ pref("browser.tabs.remote.autostart", false);
 // any session can contain a mix of Fission and non-Fission windows. Instead,
 // callers should check whether the relevant nsILoadContext has the
 // `useRemoteSubframes` flag set.
-#if defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_ANDROID)
+#if defined(RELEASE_OR_BETA)
   pref("fission.autostart", false, locked);
 #else
   pref("fission.autostart", false);
