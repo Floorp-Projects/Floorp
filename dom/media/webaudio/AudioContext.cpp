@@ -176,6 +176,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
   const bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
   mDestination = new AudioDestinationNode(this, aIsOffline, allowedToStart,
                                           aNumberOfChannels, aLength);
+  mDestination->Init();
   // If an AudioContext is not allowed to start, we would postpone its state
   // transition from `suspended` to `running` until sites explicitly call
   // AudioContext.resume() or AudioScheduledSourceNode.start().

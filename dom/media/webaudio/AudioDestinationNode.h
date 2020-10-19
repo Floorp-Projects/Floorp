@@ -42,6 +42,8 @@ class AudioDestinationNode final : public AudioNode,
   uint32_t MaxChannelCount() const;
   void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override;
 
+  void Init();
+
   // Returns the track or null after unlink.
   AudioNodeTrack* Track();
 
