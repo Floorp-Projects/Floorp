@@ -14,6 +14,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsCOMPtr.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsRect.h"
 
 class nsDeviceContext;

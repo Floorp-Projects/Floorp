@@ -9,6 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
+#include "nsThreadUtils.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "mozilla/RefPtr.h"

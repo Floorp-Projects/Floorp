@@ -10,6 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/ErrorResult.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsIDOMProcessChild.h"

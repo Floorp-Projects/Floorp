@@ -13,6 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ResizeObserverBinding.h"
 #include "nsCoord.h"
