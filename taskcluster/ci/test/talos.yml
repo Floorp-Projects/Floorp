@@ -57,7 +57,7 @@ talos-bcv:
     treeherder-symbol: T(bcv)
     variants:
         by-test-platform:
-            linux64.*-qr.*: ['fission', 'webrender-sw']
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     run-on-projects:
         by-test-platform:
@@ -97,6 +97,10 @@ talos-chrome:
     description: "Talos chrome"
     try-name: chromez
     treeherder-symbol: T(c)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -118,6 +122,10 @@ talos-damp:
     try-name: damp
     treeherder-symbol: T(damp)
     max-run-time: 5400
+    variants:
+        by-test-platform:
+            (windows|macos).*-qr.*: ['fission', 'webrender-sw']  # Bug 1671946 - linux64 disabled due to crash
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             windows7-32-shippable/.*: []
@@ -205,7 +213,7 @@ talos-g1:
     treeherder-symbol: T(g1)
     variants:
         by-test-platform:
-            linux64.*-qr.*: ['fission', 'webrender-sw']
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     max-run-time:
         by-test-platform:
@@ -233,6 +241,10 @@ talos-g3:
     description: "Talos g3"
     try-name: g3
     treeherder-symbol: T(g3)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -255,7 +267,7 @@ talos-g4:
     treeherder-symbol: T(g4)
     variants:
         by-test-platform:
-            linux64.*-qr.*: ['fission', 'webrender-sw']
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     run-on-projects:
         by-test-platform:
@@ -292,6 +304,10 @@ talos-g5:
     mozharness:
         extra-options:
             - --suite=g5
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time:
         by-test-platform:
             linux64.*: 1200
@@ -375,7 +391,7 @@ talos-other:
     treeherder-symbol: T(o)
     variants:
         by-test-platform:
-            linux64.*-qr.*: ['fission', 'webrender-sw']
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     max-run-time: 1500
     mozharness:
@@ -397,6 +413,10 @@ talos-sessionrestore-many-windows:
     description: "Talos sessionrestore-many-windows"
     try-name: sessionrestore-many-windows
     treeherder-symbol: T(smw)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             (linux|windows|macos)(?!.*shippable).*: []
@@ -421,6 +441,10 @@ talos-perf-reftest:
     description: "Talos perf-reftest"
     try-name: perf-reftest
     treeherder-symbol: T(p)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -463,7 +487,7 @@ talos-svgr:
     treeherder-symbol: T(s)
     variants:
         by-test-platform:
-            linux64.*-qr.*: ['fission', 'webrender-sw']
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     max-run-time: 1800
     mozharness:
@@ -485,6 +509,10 @@ talos-tp5o:
     description: "Talos tp5o"
     try-name: tp5o
     treeherder-symbol: T(tp)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -505,6 +533,10 @@ talos-tabswitch:
     description: "Talos page scroll (tabswitch)"
     try-name: tabswitch
     treeherder-symbol: T(tabswitch)
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -528,6 +560,7 @@ talos-webgl:
     variants:
         by-test-platform:
             android.*: []
+            (linux64|windows).*-qr.*: ['webgl-ipc', 'webrender-sw']  # Bug 1671948 - macos disabled due to crash
             default: ['webgl-ipc']
     run-on-projects:
         by-test-platform:
@@ -566,6 +599,10 @@ talos-xperf:
         by-test-platform:
             windows7-32.*: false
             windows10-64.*: true
+    variants:
+        by-test-platform:
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             windows7-32-shippable(?:-qr)?/.*: ['mozilla-beta', 'trunk']
