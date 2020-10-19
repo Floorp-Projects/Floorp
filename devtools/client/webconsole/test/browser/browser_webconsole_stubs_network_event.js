@@ -75,8 +75,10 @@ async function generateNetworkEventStubs() {
     for (const resource of resources) {
       if (resource.resourceType == resourceWatcher.TYPES.NETWORK_EVENT) {
         if (stacktraces.has(resource.channelId)) {
-          const { stacktrace, lastFrame } = stacktraces.get(resource.channelId);
-          resource.cause.stacktraceAvailable = stacktrace;
+          const { stacktraceAvailable, lastFrame } = stacktraces.get(
+            resource.channelId
+          );
+          resource.cause.stacktraceAvailable = stacktraceAvailable;
           resource.cause.lastFrame = lastFrame;
           stacktraces.delete(resource.channelId);
         }
@@ -121,6 +123,8 @@ async function generateNetworkEventStubs() {
         const updateKey = `${key} update`;
         // make sure all the updates have been happened
         if (updateCount >= noExpectedUpdates) {
+          // make sure the network event stub contains all the updates
+          stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
           stubs.set(
             updateKey,
             // We cannot ensure the form of the resource, some properties

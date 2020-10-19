@@ -345,7 +345,7 @@ raptor-unity-webgl-firefox:
     run-on-projects:
         by-test-platform:
             (linux|windows|macos)(?!.*shippable).*: []
-            default: ["mozilla-central"]
+            default: ["autoland"]
     tier: 3
     mozharness:
         extra-options:

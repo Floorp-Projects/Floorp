@@ -150,11 +150,7 @@ nsAuthSSPI::~nsAuthSSPI() {
   Reset();
 
   if (mCred.dwLower || mCred.dwUpper) {
-#ifdef __MINGW32__
     (sspi->FreeCredentialsHandle)(&mCred);
-#else
-    (sspi->FreeCredentialHandle)(&mCred);
-#endif
     memset(&mCred, 0, sizeof(mCred));
   }
 }

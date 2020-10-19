@@ -117,30 +117,34 @@ pub(crate) enum CommandSignature {
 pub(crate) fn compile_shader(
     stage: pso::Stage,
     shader_model: hlsl::ShaderModel,
+    features: &hal::Features,
     entry: &str,
     code: &[u8],
 ) -> Result<native::Blob, d::ShaderError> {
-    let stage_to_str = |stage, shader_model| {
-        let stage = match stage {
-            pso::Stage::Vertex => "vs",
-            pso::Stage::Fragment => "ps",
-            pso::Stage::Compute => "cs",
-            _ => unimplemented!(),
-        };
-
-        let model = match shader_model {
-            hlsl::ShaderModel::V5_0 => "5_0",
-            hlsl::ShaderModel::V5_1 => "5_1",
-            hlsl::ShaderModel::V6_0 => "6_0",
-            _ => unimplemented!(),
-        };
-
-        format!("{}_{}\0", stage, model)
+    let stage_str = match stage {
+        pso::Stage::Vertex => "vs",
+        pso::Stage::Fragment => "ps",
+        pso::Stage::Compute => "cs",
+        _ => unimplemented!(),
     };
+    let model_str = match shader_model {
+        hlsl::ShaderModel::V5_0 => "5_0",
+        hlsl::ShaderModel::V5_1 => "5_1",
+        hlsl::ShaderModel::V6_0 => "6_0",
+        _ => unimplemented!(),
+    };
+    let full_stage = format!("{}_{}\0", stage_str, model_str);
 
     let mut shader_data = native::Blob::null();
     let mut error = native::Blob::null();
     let entry = ffi::CString::new(entry).unwrap();
+    let mut compile_flags = d3dcompiler::D3DCOMPILE_ENABLE_STRICTNESS;
+    if cfg!(debug_assertions) {
+        compile_flags |= d3dcompiler::D3DCOMPILE_DEBUG;
+    }
+    if features.contains(hal::Features::UNSIZED_DESCRIPTOR_ARRAY) {
+        compile_flags |= d3dcompiler::D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
+    }
     let hr = unsafe {
         d3dcompiler::D3DCompile(
             code.as_ptr() as *const _,
@@ -149,8 +153,8 @@ pub(crate) fn compile_shader(
             ptr::null(),
             ptr::null_mut(),
             entry.as_ptr() as *const _,
-            stage_to_str(stage, shader_model).as_ptr() as *const i8,
-            1,
+            full_stage.as_ptr() as *const i8,
+            compile_flags,
             0,
             shader_data.mut_void() as *mut *mut _,
             error.mut_void() as *mut *mut _,
@@ -491,6 +495,7 @@ impl Device {
                         let shader = compile_shader(
                             stage,
                             shader_model,
+                            features,
                             &entry_point.name,
                             shader_code.as_bytes(),
                         )?;
@@ -509,7 +514,7 @@ impl Device {
         code: &[u8],
     ) -> Result<r::ShaderModule, d::ShaderError> {
         let mut shader_map = BTreeMap::new();
-        let blob = compile_shader(stage, hlsl::ShaderModel::V5_1, hlsl_entry, code)?;
+        let blob = compile_shader(stage, hlsl::ShaderModel::V5_1, &self.features, hlsl_entry, code)?;
         shader_map.insert(entry_point.into(), blob);
         Ok(r::ShaderModule::Compiled(shader_map))
     }
@@ -574,7 +579,7 @@ impl Device {
     pub(crate) fn view_image_as_render_target_impl(
         device: native::Device,
         handle: d3d12::D3D12_CPU_DESCRIPTOR_HANDLE,
-        info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<(), image::ViewCreationError> {
         #![allow(non_snake_case)]
 
@@ -593,7 +598,7 @@ impl Device {
         }
         if info.range.layers.end > info.kind.num_layers() {
             return Err(image::ViewCreationError::Layer(
-                image::LayerError::OutOfBounds(info.range.layers),
+                image::LayerError::OutOfBounds(info.range.layers.clone()),
             ));
         }
 
@@ -672,7 +677,7 @@ impl Device {
 
     fn view_image_as_render_target(
         &self,
-        info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         let handle = self.rtv_pool.lock().unwrap().alloc_handle();
         Self::view_image_as_render_target_impl(self.raw, handle, info).map(|_| handle)
@@ -681,7 +686,7 @@ impl Device {
     pub(crate) fn view_image_as_depth_stencil_impl(
         device: native::Device,
         handle: d3d12::D3D12_CPU_DESCRIPTOR_HANDLE,
-        info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<(), image::ViewCreationError> {
         #![allow(non_snake_case)]
 
@@ -701,7 +706,7 @@ impl Device {
         }
         if info.range.layers.end > info.kind.num_layers() {
             return Err(image::ViewCreationError::Layer(
-                image::LayerError::OutOfBounds(info.range.layers),
+                image::LayerError::OutOfBounds(info.range.layers.clone()),
             ));
         }
 
@@ -760,7 +765,7 @@ impl Device {
 
     fn view_image_as_depth_stencil(
         &self,
-        info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         let handle = self.dsv_pool.lock().unwrap().alloc_handle();
         Self::view_image_as_depth_stencil_impl(self.raw, handle, info).map(|_| handle)
@@ -888,17 +893,8 @@ impl Device {
 
     fn view_image_as_shader_resource(
         &self,
-        mut info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
-        #![allow(non_snake_case)]
-
-        // Depth-stencil formats can't be used for SRVs.
-        info.format = match info.format {
-            dxgiformat::DXGI_FORMAT_D16_UNORM => dxgiformat::DXGI_FORMAT_R16_UNORM,
-            dxgiformat::DXGI_FORMAT_D32_FLOAT => dxgiformat::DXGI_FORMAT_R32_FLOAT,
-            format => format,
-        };
-
         let desc = Self::build_image_as_shader_resource_desc(&info)?;
         let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
         unsafe {
@@ -911,7 +907,7 @@ impl Device {
 
     fn view_image_as_storage(
         &self,
-        info: ViewInfo,
+        info: &ViewInfo,
     ) -> Result<d3d12::D3D12_CPU_DESCRIPTOR_HANDLE, image::ViewCreationError> {
         #![allow(non_snake_case)]
         assert_eq!(info.range.levels.start + 1, info.range.levels.end);
@@ -928,7 +924,7 @@ impl Device {
 
         if info.range.layers.end > info.kind.num_layers() {
             return Err(image::ViewCreationError::Layer(
-                image::LayerError::OutOfBounds(info.range.layers),
+                image::LayerError::OutOfBounds(info.range.layers.clone()),
             ));
         }
         if info.kind.num_samples() > 1 {
@@ -2050,6 +2046,7 @@ impl d::Device<B> for Device {
                 baked_states,
             })
         } else {
+            error!("Failed to build shader: {:x}", hr);
             Err(pso::CreationError::Other)
         }
     }
@@ -2552,7 +2549,7 @@ impl d::Device<B> for Device {
                 let format = image_unbound.view_format.unwrap();
                 (0 .. num_layers)
                     .map(|layer| {
-                        self.view_image_as_render_target(ViewInfo {
+                        self.view_image_as_render_target(&ViewInfo {
                             format,
                             range: image::SubresourceRange {
                                 aspects: Aspects::COLOR,
@@ -2571,7 +2568,7 @@ impl d::Device<B> for Device {
                 let format = image_unbound.dsv_format.unwrap();
                 (0 .. num_layers)
                     .map(|layer| {
-                        self.view_image_as_depth_stencil(ViewInfo {
+                        self.view_image_as_depth_stencil(&ViewInfo {
                             format,
                             range: image::SubresourceRange {
                                 aspects: Aspects::DEPTH,
@@ -2590,7 +2587,7 @@ impl d::Device<B> for Device {
                 let format = image_unbound.dsv_format.unwrap();
                 (0 .. num_layers)
                     .map(|layer| {
-                        self.view_image_as_depth_stencil(ViewInfo {
+                        self.view_image_as_depth_stencil(&ViewInfo {
                             format,
                             range: image::SubresourceRange {
                                 aspects: Aspects::STENCIL,
@@ -2623,6 +2620,7 @@ impl d::Device<B> for Device {
         let is_array = image.kind.num_layers() > 1;
         let mip_levels = (range.levels.start, range.levels.end);
         let layers = (range.layers.start, range.layers.end);
+        let surface_format = format.base_format().0;
 
         let info = ViewInfo {
             resource: image.resource,
@@ -2650,24 +2648,47 @@ impl d::Device<B> for Device {
                 .usage
                 .intersects(image::Usage::SAMPLED | image::Usage::INPUT_ATTACHMENT)
             {
-                self.view_image_as_shader_resource(info.clone()).ok()
+                let info = if info.range.aspects.contains(format::Aspects::DEPTH) {
+                    conv::map_format_shader_depth(surface_format)
+                        .map(|format| ViewInfo {
+                            format,
+                            .. info.clone()
+                        })
+                } else if info.range.aspects.contains(format::Aspects::STENCIL) {
+                    // Vulkan/gfx expects stencil to be read from the R channel,
+                    // while DX12 exposes it in "G" always.
+                    let new_swizzle = conv::swizzle_rg(swizzle);
+                    conv::map_format_shader_stencil(surface_format)
+                        .map(|format| ViewInfo {
+                            format,
+                            component_mapping: conv::map_swizzle(new_swizzle),
+                            .. info.clone()
+                        })
+                } else {
+                    Some(info.clone())
+                };
+                if let Some(ref info) = info {
+                    self.view_image_as_shader_resource(&info).ok()
+                } else {
+                    None
+                }
             } else {
                 None
             },
             handle_rtv: if image.usage.contains(image::Usage::COLOR_ATTACHMENT) {
-                self.view_image_as_render_target(info.clone()).ok()
+                self.view_image_as_render_target(&info).ok()
             } else {
                 None
             },
             handle_uav: if image.usage.contains(image::Usage::STORAGE) {
-                self.view_image_as_storage(info.clone()).ok()
+                self.view_image_as_storage(&info).ok()
             } else {
                 None
             },
             handle_dsv: if image.usage.contains(image::Usage::DEPTH_STENCIL_ATTACHMENT) {
-                match conv::map_format_dsv(format.base_format().0) {
+                match conv::map_format_dsv(surface_format) {
                     Some(dsv_format) => self
-                        .view_image_as_depth_stencil(ViewInfo {
+                        .view_image_as_depth_stencil(&ViewInfo {
                             format: dsv_format,
                             ..info
                         })
@@ -3432,9 +3453,23 @@ impl d::Device<B> for Device {
         // Just drop
     }
 
-    unsafe fn destroy_descriptor_pool(&self, _pool: r::DescriptorPool) {
-        // Just drop
-        // Allocated descriptor sets don't need to be freed beforehand.
+    unsafe fn destroy_descriptor_pool(&self, pool: r::DescriptorPool) {
+        let view_range = pool.heap_srv_cbv_uav.range_allocator.initial_range();
+        if view_range.start < view_range.end {
+            self.heap_srv_cbv_uav
+                .lock()
+                .unwrap()
+                .range_allocator
+                .free_range(view_range.clone());
+        }
+        let sampler_range = pool.heap_sampler.range_allocator.initial_range();
+        if sampler_range.start < sampler_range.end {
+            self.heap_sampler
+                .lock()
+                .unwrap()
+                .range_allocator
+                .free_range(sampler_range.clone());
+        }
     }
 
     unsafe fn destroy_descriptor_set_layout(&self, _layout: r::DescriptorSetLayout) {

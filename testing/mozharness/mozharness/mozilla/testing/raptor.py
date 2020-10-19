@@ -534,7 +534,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
         if self.app == 'chrome':
             self.info("Chrome should be preinstalled.")
             if win in self.platform_name():
-                self.chromium_dist_path = "C:\\Progra~2\\Google\\Chrome\\Application\\chrome.exe"
+                base_path = "C:\\%s\\Google\\Chrome\\Application\\chrome.exe"
+                self.chromium_dist_path = base_path % "Progra~1"
+                if not os.path.exists(self.chromium_dist_path):
+                    self.chromium_dist_path = base_path % "Progra~2"
             elif linux in self.platform_name():
                 self.chromium_dist_path = "/usr/bin/google-chrome"
             elif mac in self.platform_name():

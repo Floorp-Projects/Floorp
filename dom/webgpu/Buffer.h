@@ -8,6 +8,7 @@
 
 #include "js/RootingAPI.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "ObjectModel.h"
 
@@ -19,21 +20,25 @@ namespace webgpu {
 
 class Device;
 
+struct MappedInfo {
+  ipc::Shmem mShmem;
+  // True if mapping is requested for writing.
+  bool mWritable = false;
+  // Populated by `GetMappedRange`.
+  nsTArray<JS::Heap<JSObject*>> mArrayBuffers;
+
+  MappedInfo() = default;
+  MappedInfo(const MappedInfo&) = delete;
+  bool IsReady() const { return mShmem.IsReadable(); }
+};
+
 class Buffer final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(Buffer)
   GPU_DECL_JS_WRAP(Buffer)
 
-  struct Mapping final {
-    UniquePtr<ipc::Shmem> mShmem;
-    JS::Heap<JSObject*> mArrayBuffer;
-    const bool mWrite;
-
-    Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer, bool aWrite);
-  };
-
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize);
-  void InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer, bool aWrite);
+  void SetMapped(ipc::Shmem&& aShmem, bool aWritable);
 
   const RawId mId;
 
@@ -46,10 +51,16 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   // are mapped.
   const BufferAddress mSize;
   nsString mLabel;
-  Maybe<Mapping> mMapping;
+  // Information about the currently active mapping.
+  Maybe<MappedInfo> mMapped;
 
  public:
-  already_AddRefed<dom::Promise> MapReadAsync(ErrorResult& aRv);
+  already_AddRefed<dom::Promise> MapAsync(uint32_t aMode, uint64_t aOffset,
+                                          const dom::Optional<uint64_t>& aSize,
+                                          ErrorResult& aRv);
+  void GetMappedRange(JSContext* aCx, uint64_t aOffset,
+                      const dom::Optional<uint64_t>& aSize,
+                      JS::Rooted<JSObject*>* aObject, ErrorResult& aRv);
   void Unmap(JSContext* aCx, ErrorResult& aRv);
   void Destroy();
 };

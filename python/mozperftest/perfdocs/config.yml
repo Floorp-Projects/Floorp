@@ -16,6 +16,10 @@ suites:
             g-image: ""
             lq-fetch: ""
             youtube-noscroll: ""
+    netwerk/test/unit:
+        description: "Performance tests from the 'netwerk/test/unit' folder."
+        tests:
+            http3 raw: ""
     testing/performance:
         description: "Performance tests from the 'testing/performance' folder."
         tests:

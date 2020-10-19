@@ -643,13 +643,15 @@ impl DescriptorHeapSlice {
             })
     }
 
-    /// Free handles previously given out by this `DescriptorHeapSlice`.  Do not use this with handles not given out by this `DescriptorHeapSlice`.
+    /// Free handles previously given out by this `DescriptorHeapSlice`.
+    /// Do not use this with handles not given out by this `DescriptorHeapSlice`.
     pub(crate) fn free_handles(&mut self, handle: DualHandle) {
         let start = (handle.gpu.ptr - self.start.gpu.ptr) / self.handle_size;
         let handle_range = start .. start + handle.size as u64;
         self.range_allocator.free_range(handle_range);
     }
 
+    /// Clear the allocator.
     pub(crate) fn clear(&mut self) {
         self.range_allocator.reset();
     }

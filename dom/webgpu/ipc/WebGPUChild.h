@@ -22,7 +22,6 @@ struct WGPUClient;
 struct WGPUTextureViewDescriptor;
 }  // namespace ffi
 
-struct TextureInfo;
 typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
 class WebGPUChild final : public PWebGPUChild {

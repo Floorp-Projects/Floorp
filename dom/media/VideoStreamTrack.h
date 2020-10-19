@@ -35,6 +35,11 @@ class VideoStreamTrack : public MediaStreamTrack {
   void RemoveVideoOutput(VideoFrameContainer* aSink);
   void RemoveVideoOutput(VideoOutput* aOutput);
 
+  /**
+   * Whether this VideoStreamTrack's video frames will have an alpha channel.
+   */
+  bool HasAlpha() const { return GetSource().HasAlpha(); }
+
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
 

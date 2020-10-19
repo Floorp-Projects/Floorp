@@ -2868,7 +2868,7 @@ Toolbox.prototype = {
    * Tells the target tab to reload.
    */
   reloadTarget: function(force) {
-    this.target.reload({ force: force });
+    this.target.reload({ options: { force } });
   },
 
   /**

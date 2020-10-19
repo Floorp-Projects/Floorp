@@ -1077,6 +1077,10 @@ PlacesToolbar.prototype = {
     }
 
     button._placesNode = aChild;
+    let { icon } = button._placesNode;
+    if (icon) {
+      button.setAttribute("image", icon);
+    }
     if (!this._domNodes.has(aChild)) {
       this._domNodes.set(aChild, button);
     }

@@ -210,6 +210,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/source",
   },
   {
+    types: ["stacktraces"],
+    spec: "devtools/shared/specs/stacktraces",
+    front: "devtools/client/fronts/stacktraces",
+  },
+  {
     types: [
       "cookies",
       "localStorage",

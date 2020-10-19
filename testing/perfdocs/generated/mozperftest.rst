@@ -96,6 +96,29 @@ perftest_http3_youtube_watch_scroll.js
 
 
 
+netwerk/test/unit
+-----------------
+Performance tests from the 'netwerk/test/unit' folder.
+
+test_http3_perf.js
+==================
+
+:owner: Network Team
+:name: http3 raw
+:tags: network,http3,quic
+
+**XPCShell tests that verifies the lib integration against a local server**
+Default options:
+
+ --perfherder
+ --perfherder-metrics name:speed,unit:bps
+ --xpcshell-cycles 13
+ --verbose
+ --try-platform linux, mac
+
+
+
+
 testing/performance
 -------------------
 Performance tests from the 'testing/performance' folder.
