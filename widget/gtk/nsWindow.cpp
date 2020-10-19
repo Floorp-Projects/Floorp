@@ -3067,6 +3067,12 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
     // loop when nsXULPopupManager::PopupMoved moves the window to the new
     // position and nsMenuPopupFrame::SetPopupPosition adds
     // offsetForContextMenu on each iteration.
+
+    // Our back buffer might have been invalidated while we drew the last
+    // frame, and its contents might be incorrect. See bug 1280653 comment 7
+    // and comment 10. Specifically we must ensure we recomposite the frame
+    // as soon as possible to avoid the corrupted frame being displayed.
+    GetLayerManager()->ForceComposite();
     return FALSE;
   }
 

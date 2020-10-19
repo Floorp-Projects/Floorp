@@ -71,6 +71,8 @@ parent:
   async InvalidateRenderedFrame();
   // Schedule a composite if one isn't already scheduled.
   async ScheduleComposite();
+  // Force a composite immediately.
+  async ForceComposite();
   // Save the frame capture to disk
   async Capture();
   // Start capturing each frame and save to disk, and if already started, stop.
