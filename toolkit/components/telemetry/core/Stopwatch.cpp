@@ -179,7 +179,9 @@ class Timers final : public BackgroundHangAnnotator {
 
   bool StartUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
                             const nsACString& aValue, JS::HandleObject aObj);
-  bool UpdateUserInteraction(JSContext* aCx, const nsAString& id,
+  bool RunningUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
+                              JS::HandleObject aObj);
+  bool UpdateUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
                              const nsACString& aValue, JS::HandleObject aObj);
   bool FinishUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
                              JS::HandleObject aObj,
@@ -435,6 +437,16 @@ bool Timers::StartUserInteraction(JSContext* aCx,
   return false;
 }
 
+bool Timers::RunningUserInteraction(JSContext* aCx,
+                                    const nsAString& aUserInteraction,
+                                    JS::HandleObject aObj) {
+  if (RefPtr<Timer> timer =
+          Get(aCx, aUserInteraction, aObj, VoidString(), false /* aCreate */)) {
+    return timer->Started();
+  }
+  return false;
+}
+
 bool Timers::UpdateUserInteraction(JSContext* aCx,
                                    const nsAString& aUserInteraction,
                                    const nsACString& aValue,
@@ -617,6 +629,17 @@ bool UserInteractionStopwatch::Start(const dom::GlobalObject& aGlobal,
   }
   return Timers::Singleton().StartUserInteraction(
       aGlobal.Context(), aUserInteraction, aValue, aObj);
+}
+
+/* static */
+bool UserInteractionStopwatch::Running(const dom::GlobalObject& aGlobal,
+                                       const nsAString& aUserInteraction,
+                                       JS::Handle<JSObject*> aObj) {
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+  return Timers::Singleton().RunningUserInteraction(aGlobal.Context(),
+                                                    aUserInteraction, aObj);
 }
 
 /* static */
