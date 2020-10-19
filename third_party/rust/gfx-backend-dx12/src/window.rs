@@ -159,10 +159,7 @@ impl w::PresentationSurface<Backend> for Surface {
     }
 
     unsafe fn unconfigure_swapchain(&mut self, device: &Device) {
-        if let Some(mut present) = self.presentation.take() {
-            let _ = present.swapchain.wait(winbase::INFINITE);
-            let _ = device.wait_idle(); //TODO: this shouldn't be needed,
-            // but it complains that the queue is still used otherwise
+        if let Some(present) = self.presentation.take() {
             device.destroy_swapchain(present.swapchain);
         }
     }
@@ -174,7 +171,16 @@ impl w::PresentationSurface<Backend> for Surface {
         let present = self.presentation.as_mut().unwrap();
         let sc = &mut present.swapchain;
  
-        sc.wait((timeout_ns / 1_000_000) as u32)?;
+        match synchapi::WaitForSingleObject(
+            sc.waitable,
+            (timeout_ns / 1_000_000) as u32,
+        ) {
+            winbase::WAIT_ABANDONED |
+            winbase::WAIT_FAILED => return Err(w::AcquireError::DeviceLost(hal::device::DeviceLost)),
+            winbase::WAIT_OBJECT_0 => (),
+            winerror::WAIT_TIMEOUT => return Err(w::AcquireError::Timeout),
+            hr => panic!("Unexpected wait status 0x{:X}", hr),
+        }
 
         let index = sc.inner.GetCurrentBackBufferIndex();
         let view = r::ImageView {
@@ -213,18 +219,6 @@ impl Swapchain {
         }
         self.rtv_heap.destroy();
         self.inner
-    }
-
-    pub(crate) fn wait(&mut self, timeout_ms: u32) -> Result<(), w::AcquireError> {
-        match unsafe {
-            synchapi::WaitForSingleObject(self.waitable, timeout_ms)
-        } {
-            winbase::WAIT_ABANDONED |
-            winbase::WAIT_FAILED => Err(w::AcquireError::DeviceLost(hal::device::DeviceLost)),
-            winbase::WAIT_OBJECT_0 => Ok(()),
-            winerror::WAIT_TIMEOUT => Err(w::AcquireError::Timeout),
-            hr => panic!("Unexpected wait status 0x{:X}", hr),
-        }
     }
 }
 

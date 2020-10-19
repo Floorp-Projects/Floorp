@@ -78,13 +78,11 @@ class Device final : public DOMEventTargetHelper {
   explicit Device(Adapter* const aParent, RawId aId);
 
   RefPtr<WebGPUChild> GetBridge();
-  static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
-                                             size_t aSize,
-                                             const ipc::Shmem& aShmem);
-  RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
-                                        size_t aOffset, size_t aSize,
-                                        ErrorResult& aRv);
-  void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush);
+  static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
+                                             ipc::Shmem& aShmem);
+  RefPtr<MappingPromise> MapBufferForReadAsync(RawId aId, size_t aSize,
+                                               ErrorResult& aRv);
+  void UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem, bool aFlush);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUSwapChainDescriptor& aDesc,
       const dom::GPUExtent3DDict& aExtent3D,
@@ -106,8 +104,9 @@ class Device final : public DOMEventTargetHelper {
 
   Queue* DefaultQueue() const;
 
-  already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc,
-                                        ErrorResult& aRv);
+  already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc);
+  void CreateBufferMapped(JSContext* aCx, const dom::GPUBufferDescriptor& aDesc,
+                          nsTArray<JS::Value>& aSequence, ErrorResult& aRv);
 
   already_AddRefed<Texture> CreateTexture(
       const dom::GPUTextureDescriptor& aDesc);

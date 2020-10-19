@@ -125,8 +125,10 @@ interface GPUDevice {
 
     [SameObject] readonly attribute GPUQueue defaultQueue;
 
-    [NewObject, Throws]
+    [NewObject]
     GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
+    [NewObject, Throws]
+    GPUMappedBuffer createBufferMapped(GPUBufferDescriptor descriptor);
     [NewObject]
     GPUTexture createTexture(GPUTextureDescriptor descriptor);
     [NewObject]
@@ -217,26 +219,14 @@ interface GPUBufferUsage {
 dictionary GPUBufferDescriptor {
     required GPUSize64 size;
     required GPUBufferUsageFlags usage;
-    boolean mappedAtCreation = false;
-};
-
-typedef unsigned long GPUMapModeFlags;
-
-[Pref="dom.webgpu.enabled",
- Exposed=Window]
-interface GPUMapMode
- {
-    const GPUMapModeFlags READ  = 0x0001;
-    const GPUMapModeFlags WRITE = 0x0002;
 };
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBuffer {
     [NewObject]
-    Promise<void> mapAsync(GPUMapModeFlags mode, optional GPUSize64 offset = 0, optional GPUSize64 size);
-    [NewObject, Throws]
-    ArrayBuffer getMappedRange(optional GPUSize64 offset = 0, optional GPUSize64 size);
+    Promise<ArrayBuffer> mapReadAsync();
+    //Promise<ArrayBuffer> mapWriteAsync();
     [Throws]
     void unmap();
 
