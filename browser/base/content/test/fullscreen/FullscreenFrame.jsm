@@ -24,6 +24,20 @@ class FullscreenFrameChild extends JSWindowActorChild {
     });
   }
 
+  requestFullscreen() {
+    let doc = this.contentWindow.document;
+    let button = doc.createElement("button");
+    doc.body.appendChild(button);
+
+    return new Promise(resolve => {
+      button.onclick = () => {
+        doc.body.requestFullscreen().then(resolve);
+        doc.body.removeChild(button);
+      };
+      button.click();
+    });
+  }
+
   receiveMessage(msg) {
     switch (msg.name) {
       case "WaitForChange":
@@ -31,10 +45,8 @@ class FullscreenFrameChild extends JSWindowActorChild {
       case "ExitFullscreen":
         return this.contentWindow.document.exitFullscreen();
       case "RequestFullscreen":
-        let finished_fullscreen = this.changed();
         this.docShell.isActive = true;
-        this.contentWindow.document.getElementById("request").click();
-        return finished_fullscreen;
+        return Promise.all([this.changed(), this.requestFullscreen()]);
       case "CreateChild":
         let child = msg.data;
         let iframe = this.contentWindow.document.createElement("iframe");
