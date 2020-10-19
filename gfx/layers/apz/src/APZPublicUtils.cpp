@@ -22,8 +22,8 @@ namespace apz {
 
 /*static*/ const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity) {
-  return AsyncPanZoomController::CalculatePendingDisplayPort(aFrameMetrics,
-                                                             aVelocity);
+  return AsyncPanZoomController::CalculatePendingDisplayPort(
+      aFrameMetrics, aVelocity, AsyncPanZoomController::ZoomInProgress::No);
 }
 
 /*static*/ gfx::IntSize GetDisplayportAlignmentMultiplier(
