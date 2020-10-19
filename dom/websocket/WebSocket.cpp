@@ -224,6 +224,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   bool mWorkerShuttingDown;
 
   RefPtr<WebSocketEventService> mService;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 
   // For dispatching runnables to main thread.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
@@ -2689,62 +2690,47 @@ nsresult WebSocketImpl::GetLoadingPrincipal(nsIPrincipal** aPrincipal) {
     principal = globalObject->PrincipalOrNull();
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow;
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow = do_QueryInterface(globalObject);
+  if (!innerWindow) {
+    // If we are in a XPConnect sandbox or in a JS component,
+    // innerWindow will be null. There is nothing on top of this to be
+    // considered.
+    principal.forget(aPrincipal);
+    return NS_OK;
+  }
+
+  RefPtr<WindowContext> windowContext = innerWindow->GetWindowContext();
 
   while (true) {
     if (principal && !principal->GetIsNullPrincipal()) {
       break;
     }
 
-    if (!innerWindow) {
-      innerWindow = do_QueryInterface(globalObject);
-      if (!innerWindow) {
-        // If we are in a XPConnect sandbox or in a JS component,
-        // innerWindow will be null. There is nothing on top of this to be
-        // considered.
-        break;
-      }
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> parentWindow =
-        innerWindow->GetInProcessScriptableParent();
-    if (NS_WARN_IF(!parentWindow)) {
+    if (NS_WARN_IF(!windowContext)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsCOMPtr<nsPIDOMWindowInner> currentInnerWindow =
-        parentWindow->GetCurrentInnerWindow();
-    if (NS_WARN_IF(!currentInnerWindow)) {
+    if (windowContext->IsTop()) {
+      if (!windowContext->GetBrowsingContext()->HadOriginalOpener()) {
+        break;
+      }
+      // We are at the top. Let's see if we have an opener window.
+      RefPtr<BrowsingContext> opener =
+          windowContext->GetBrowsingContext()->GetOpener();
+      if (!opener) {
+        break;
+      }
+      windowContext = opener->GetCurrentWindowContext();
+    } else {
+      // If we're not a top window get the parent window context instead.
+      windowContext = windowContext->GetParentWindowContext();
+    }
+
+    if (NS_WARN_IF(!windowContext)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    // We are at the top. Let's see if we have an opener window.
-    if (innerWindow == currentInnerWindow) {
-      parentWindow = nsGlobalWindowOuter::Cast(innerWindow->GetOuterWindow())
-                         ->GetSameProcessOpener();
-      if (!parentWindow) {
-        break;
-      }
-
-      if (parentWindow->GetInProcessScriptableTop() ==
-          innerWindow->GetInProcessScriptableTop()) {
-        break;
-      }
-
-      currentInnerWindow = parentWindow->GetCurrentInnerWindow();
-      if (NS_WARN_IF(!currentInnerWindow)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-
-      if (currentInnerWindow == innerWindow) {
-        // The opener may be the same outer window as the parent.
-        break;
-      }
-    }
-
-    innerWindow = currentInnerWindow;
-
-    nsCOMPtr<Document> document = innerWindow->GetExtantDoc();
+    nsCOMPtr<Document> document = windowContext->GetExtantDoc();
     if (NS_WARN_IF(!document)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
