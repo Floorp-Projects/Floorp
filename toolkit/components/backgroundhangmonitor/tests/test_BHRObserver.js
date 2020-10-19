@@ -118,9 +118,12 @@ add_task(async function test_BHRObserver() {
     });
 
     // hang.annotations
-    equal(typeof hang.annotations, "object");
-    Object.keys(hang.annotations).forEach(key => {
-      equal(typeof hang.annotations[key], "string");
+    ok(Array.isArray(hang.annotations));
+    hang.annotations.forEach(annotation => {
+      ok(Array.isArray(annotation));
+      equal(annotation.length, 2);
+      equal(typeof annotation[0], "string");
+      equal(typeof annotation[1], "string");
     });
   });
 
