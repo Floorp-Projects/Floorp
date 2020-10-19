@@ -19,7 +19,7 @@ use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, 
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve};
-use crate::profiler::{self, TransactionProfile};
+use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp, FrameId, ScratchBuffer};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetContext, RenderTargetKind};
@@ -176,6 +176,7 @@ pub struct FrameBuildingContext<'a> {
 
 pub struct FrameBuildingState<'a> {
     pub render_tasks: &'a mut RenderTaskGraph,
+    pub profile_counters: &'a mut FrameProfileCounters,
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
@@ -184,7 +185,6 @@ pub struct FrameBuildingState<'a> {
     pub surfaces: &'a mut Vec<SurfaceInfo>,
     pub dirty_region_stack: Vec<DirtyRegion>,
     pub composite_state: &'a mut CompositeState,
-    pub num_visible_primitives: u32,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -248,16 +248,17 @@ impl FrameBuilder {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
+        profile_counters: &mut FrameProfileCounters,
         global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
         debug_flags: DebugFlags,
+        texture_cache_profile: &mut TextureCacheProfileCounters,
         composite_state: &mut CompositeState,
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
-        profile: &mut TransactionProfile,
     ) -> Option<RenderTaskId> {
         profile_scope!("build_layer_screen_rects_and_cull_layers");
 
@@ -334,7 +335,6 @@ impl FrameBuilder {
         {
             profile_scope!("UpdateVisibility");
             profile_marker!("UpdateVisibility");
-            profile.start_time(profiler::FRAME_VISIBILITY_TIME);
 
             let visibility_context = FrameVisibilityContext {
                 global_device_pixel_scale,
@@ -371,14 +371,11 @@ impl FrameBuilder {
 
             visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
             visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
-
-            profile.end_time(profiler::FRAME_VISIBILITY_TIME);
         }
-
-        profile.start_time(profiler::FRAME_PREPARE_TIME);
 
         let mut frame_state = FrameBuildingState {
             render_tasks,
+            profile_counters,
             clip_store: &mut scene.clip_store,
             resource_cache,
             gpu_cache,
@@ -387,7 +384,6 @@ impl FrameBuilder {
             surfaces: &mut surfaces,
             dirty_region_stack: scratch.frame.dirty_region_stack.take(),
             composite_state,
-            num_visible_primitives: 0,
         };
 
         frame_state
@@ -457,8 +453,6 @@ impl FrameBuilder {
         );
 
         frame_state.pop_dirty_region();
-        profile.end_time(profiler::FRAME_PREPARE_TIME);
-        profile.set(profiler::VISIBLE_PRIMITIVES, frame_state.num_visible_primitives);
 
         scratch.frame.dirty_region_stack = frame_state.dirty_region_stack.take();
         scratch.frame.surfaces = surfaces.take();
@@ -466,11 +460,9 @@ impl FrameBuilder {
         {
             profile_marker!("BlockOnResources");
 
-            resource_cache.block_until_all_resources_added(
-                gpu_cache,
-                render_tasks,
-                profile,
-            );
+            resource_cache.block_until_all_resources_added(gpu_cache,
+                                                           render_tasks,
+                                                           texture_cache_profile);
         }
 
         Some(root_render_task_id)
@@ -486,6 +478,7 @@ impl FrameBuilder {
         layer: DocumentLayer,
         device_origin: DeviceIntPoint,
         pan: WorldPoint,
+        resource_profile: &mut ResourceProfileCounters,
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
@@ -494,13 +487,15 @@ impl FrameBuilder {
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         dirty_rects_are_valid: bool,
-        profile: &mut TransactionProfile,
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
 
-        profile.set(profiler::PRIMITIVES, scene.prim_store.prim_count());
-        profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
+        let mut profile_counters = FrameProfileCounters::new();
+        profile_counters
+            .total_primitives
+            .set(scene.prim_store.prim_count());
+        resource_profile.picture_cache_slices.set(scene.tile_cache_config.picture_cache_slice_count);
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp);
 
@@ -537,19 +532,18 @@ impl FrameBuilder {
             resource_cache,
             gpu_cache,
             &mut render_tasks,
+            &mut profile_counters,
             global_device_pixel_scale,
             scene_properties,
             &mut transform_palette,
             data_stores,
             scratch,
             debug_flags,
+            &mut resource_profile.texture_cache,
             &mut composite_state,
             tile_cache_logger,
             tile_caches,
-            profile,
         );
-
-        profile.start_time(profiler::FRAME_BATCHING_TIME);
 
         let mut passes;
         let mut deferred_resolves = vec![];
@@ -617,13 +611,11 @@ impl FrameBuilder {
             }
         }
 
-        profile.end_time(profiler::FRAME_BATCHING_TIME);
-
-        let gpu_cache_frame_id = gpu_cache.end_frame(profile).frame_id();
+        let gpu_cache_frame_id = gpu_cache.end_frame(&mut resource_profile.gpu_cache).frame_id();
 
         render_tasks.write_task_data();
         *render_task_counters = render_tasks.counters();
-        resource_cache.end_frame(profile);
+        resource_cache.end_frame(&mut resource_profile.texture_cache);
 
         self.prim_headers_prealloc.record_vec(&mut prim_headers.headers_int);
         self.composite_state_prealloc.record(&composite_state);
@@ -635,6 +627,7 @@ impl FrameBuilder {
                 scene.output_rect.size,
             ),
             layer,
+            profile_counters,
             passes,
             transform_palette: transform_palette.finish(),
             render_tasks,
@@ -995,6 +988,8 @@ pub struct Frame {
     pub device_rect: DeviceIntRect,
     pub layer: DocumentLayer,
     pub passes: Vec<RenderPass>,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
+    pub profile_counters: FrameProfileCounters,
 
     pub transform_palette: Vec<TransformData>,
     pub render_tasks: RenderTaskGraph,

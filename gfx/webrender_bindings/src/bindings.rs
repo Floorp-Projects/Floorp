@@ -744,14 +744,6 @@ pub unsafe extern "C" fn wr_renderer_readback(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_set_profiler_ui(renderer: &mut Renderer, ui_str: *const u8, ui_str_len: usize) {
-    let slice = std::slice::from_raw_parts(ui_str, ui_str_len);
-    if let Ok(ui_str) = std::str::from_utf8(slice) {
-        renderer.set_profiler_ui(ui_str);
-    }
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
     let renderer = Box::from_raw(renderer);
     renderer.deinit();

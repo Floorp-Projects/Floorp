@@ -61,7 +61,7 @@ use crate::device::{DrawTarget, ExternalTexture, ReadTarget, TextureSlot};
 use crate::device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use crate::device::ProgramCache;
-use crate::device::query::{GpuSampler, GpuTimer};
+use crate::device::query::GpuTimer;
 #[cfg(feature = "capture")]
 use crate::device::FBOId;
 use euclid::{rect, Transform3D, Scale, default};
@@ -80,8 +80,10 @@ use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
 use malloc_size_of::MallocSizeOfOps;
 use crate::picture::{self, RecordedDirtyRegion, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
-use crate::profiler::{self, GpuProfileTag, TransactionProfile};
-use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
+use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
+               GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
+use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle, add_event_marker,
+                add_text_marker, thread_is_being_profiled};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::render_backend::{FrameId, RenderBackend};
@@ -240,15 +242,15 @@ const GPU_TAG_SCALE: GpuProfileTag = GpuProfileTag {
     color: debug_colors::GHOSTWHITE,
 };
 const GPU_SAMPLER_TAG_ALPHA: GpuProfileTag = GpuProfileTag {
-    label: "Alpha targets",
+    label: "Alpha Targets",
     color: debug_colors::BLACK,
 };
 const GPU_SAMPLER_TAG_OPAQUE: GpuProfileTag = GpuProfileTag {
-    label: "Opaque pass",
+    label: "Opaque Pass",
     color: debug_colors::BLACK,
 };
 const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
-    label: "Transparent pass",
+    label: "Transparent Pass",
     color: debug_colors::BLACK,
 };
 const GPU_TAG_SVG_FILTER: GpuProfileTag = GpuProfileTag {
@@ -2254,11 +2256,15 @@ pub struct Renderer {
 
     debug: LazyInitializedDebugRenderer,
     debug_flags: DebugFlags,
-    profile: TransactionProfile,
-    frame_counter: u64,
-    resource_upload_time: f64,
-    gpu_cache_upload_time: f64,
+    backend_profile_counters: BackendProfileCounters,
+    profile_counters: RendererProfileCounters,
+    resource_upload_time: u64,
+    gpu_cache_upload_time: u64,
     profiler: Profiler,
+    new_frame_indicator: ChangeIndicator,
+    new_scene_indicator: ChangeIndicator,
+    slow_frame_indicator: ChangeIndicator,
+    slow_txn_indicator: ChangeIndicator,
 
     last_time: u64,
 
@@ -2479,6 +2485,8 @@ impl Renderer {
             Some(shaders) => Rc::clone(&shaders.shaders),
             None => Rc::new(RefCell::new(Shaders::new(&mut device, gl_type, &options)?)),
         };
+
+        let backend_profile_counters = BackendProfileCounters::new();
 
         let dither_matrix_texture = if options.enable_dithering {
             let dither_matrix: [u8; 64] = [
@@ -2820,7 +2828,7 @@ impl Renderer {
                 debug_flags,
                 namespace_alloc_by_client,
             );
-            backend.run();
+            backend.run(backend_profile_counters);
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
                 thread_listener.thread_stopped(&rb_thread_name);
             }
@@ -2858,11 +2866,15 @@ impl Renderer {
             shaders,
             debug: LazyInitializedDebugRenderer::new(),
             debug_flags: DebugFlags::empty(),
-            profile: TransactionProfile::new(),
-            frame_counter: 0,
-            resource_upload_time: 0.0,
-            gpu_cache_upload_time: 0.0,
+            backend_profile_counters: BackendProfileCounters::new(),
+            profile_counters: RendererProfileCounters::new(),
+            resource_upload_time: 0,
+            gpu_cache_upload_time: 0,
             profiler: Profiler::new(),
+            new_frame_indicator: ChangeIndicator::new(),
+            new_scene_indicator: ChangeIndicator::new(),
+            slow_frame_indicator: ChangeIndicator::new(),
+            slow_txn_indicator: ChangeIndicator::new(),
             max_recorded_profiles: options.max_recorded_profiles,
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
@@ -2997,9 +3009,13 @@ impl Renderer {
                 }
                 ResultMsg::PublishDocument(
                     document_id,
-                    mut doc,
+                    doc,
                     resource_update_list,
+                    profile_counters,
                 ) => {
+                    if doc.is_new_scene {
+                        self.new_scene_indicator.changed();
+                    }
 
                     // Add a new document to the active set, expressed as a `Vec` in order
                     // to re-order based on `DocumentLayer` during rendering.
@@ -3015,7 +3031,6 @@ impl Renderer {
                                 self.render_impl(None).ok();
                             }
 
-                            doc.profile.merge(&mut self.active_documents[pos].1.profile);
                             self.active_documents[pos].1 = doc;
                         }
                         None => self.active_documents.push((document_id, doc)),
@@ -3035,6 +3050,7 @@ impl Renderer {
                     self.pending_texture_cache_updates |= !resource_update_list.texture_updates.updates.is_empty();
                     self.pending_texture_updates.push(resource_update_list.texture_updates);
                     self.pending_native_surface_updates.extend(resource_update_list.native_surface_updates);
+                    self.backend_profile_counters = profile_counters;
                     self.documents_seen.insert(document_id);
                 }
                 ResultMsg::UpdateGpuCache(mut list) => {
@@ -3470,7 +3486,10 @@ impl Renderer {
             DebugFlags::RENDER_TARGET_DBG |
             DebugFlags::TEXTURE_CACHE_DBG |
             DebugFlags::EPOCHS |
+            DebugFlags::NEW_FRAME_INDICATOR |
+            DebugFlags::NEW_SCENE_INDICATOR |
             DebugFlags::GPU_CACHE_DBG |
+            DebugFlags::SLOW_FRAME_INDICATOR |
             DebugFlags::PICTURE_CACHING_DBG |
             DebugFlags::PRIMITIVE_DBG |
             DebugFlags::ZOOM_DBG
@@ -3581,8 +3600,6 @@ impl Renderer {
             return Ok(results);
         }
 
-        self.profile.start_time(profiler::RENDERER_TIME);
-
         let compositor_kind = self.active_documents[0].1.frame.composite_state.compositor_kind;
         // CompositorKind is updated
         if self.current_compositor_kind != compositor_kind {
@@ -3612,6 +3629,9 @@ impl Renderer {
             self.current_compositor_kind = compositor_kind;
         }
 
+        let mut frame_profiles = Vec::new();
+        let mut profile_timers = RendererProfileTimers::new();
+
         // The texture resolver scope should be outside of any rendering, including
         // debug rendering. This ensures that when we return render targets to the
         // pool via glInvalidateFramebuffer, we don't do any debug rendering after
@@ -3620,11 +3640,25 @@ impl Renderer {
         // resolve step when the debug overlay is enabled.
         self.texture_resolver.begin_frame();
 
-        if let Some(device_size) = device_size {
-            self.update_gpu_profile(device_size);
-        }
+        let profile_samplers = {
+            let _gm = self.gpu_profiler.start_marker("build samples");
+            // Block CPU waiting for last frame's GPU profiles to arrive.
+            // In general this shouldn't block unless heavily GPU limited.
+            let (gpu_frame_id, timers, samplers) = self.gpu_profiler.build_samples();
 
-        let cpu_frame_id = {
+            if self.max_recorded_profiles > 0 {
+                while self.gpu_profiles.len() >= self.max_recorded_profiles {
+                    self.gpu_profiles.pop_front();
+                }
+                self.gpu_profiles
+                    .push_back(GpuProfile::new(gpu_frame_id, &timers));
+            }
+            profile_timers.gpu_samples = timers;
+            samplers
+        };
+
+
+        let cpu_frame_id = profile_timers.cpu_time.profile(|| {
             let _gm = self.gpu_profiler.start_marker("begin frame");
             let frame_id = self.device.begin_frame();
             self.gpu_profiler.begin_frame(frame_id);
@@ -3638,7 +3672,7 @@ impl Renderer {
             self.update_native_surfaces();
 
             frame_id
-        };
+        });
 
         // Inform the client that we are starting a composition transaction if native
         // compositing is enabled. This needs to be done early in the frame, so that
@@ -3654,78 +3688,80 @@ impl Renderer {
             self.update_debug_overlay(device_size);
         }
 
-        //Note: another borrowck dance
-        let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
-        // sort by the document layer id
-        active_documents.sort_by_key(|&(_, ref render_doc)| render_doc.frame.layer);
+        profile_timers.cpu_time.profile(|| {
+            //Note: another borrowck dance
+            let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
+            // sort by the document layer id
+            active_documents.sort_by_key(|&(_, ref render_doc)| render_doc.frame.layer);
 
-        #[cfg(feature = "replay")]
-        self.texture_resolver.external_images.extend(
-            self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
-        );
-
-        let last_document_index = active_documents.len() - 1;
-        for (doc_index, (document_id, RenderedDocument { ref mut frame, ref mut profile, .. })) in active_documents.iter_mut().enumerate() {
-            assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
-
-            if self.shared_texture_cache_cleared {
-                assert!(self.documents_seen.contains(&document_id),
-                        "Cleared texture cache without sending new document frame.");
-            }
-
-            if let Err(e) = self.prepare_gpu_cache(frame) {
-                self.renderer_errors.push(e);
-                continue;
-            }
-            assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
-                "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
-                frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
-
-            {
-                profile_scope!("gl.flush");
-                self.device.gl().flush();  // early start on gpu cache updates
-            }
-
-            self.draw_frame(
-                frame,
-                device_size,
-                &mut results,
-                doc_index == 0,
+            #[cfg(feature = "replay")]
+            self.texture_resolver.external_images.extend(
+                self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
             );
 
-            // TODO(nical): do this automatically by selecting counters in the wr profiler 
-            // Profile marker for the number of invalidated picture cache
-            if thread_is_being_profiled() {
-                let duration = Duration::new(0,0);
-                if let Some(n) = self.profiler.get(profiler::RENDERED_PICTURE_TILES) {
-                    let message = (n as usize).to_string();
+            let last_document_index = active_documents.len() - 1;
+            for (doc_index, (document_id, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
+                assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
+
+                if self.shared_texture_cache_cleared {
+                    assert!(self.documents_seen.contains(&document_id),
+                            "Cleared texture cache without sending new document frame.");
+                }
+
+                frame.profile_counters.reset_targets();
+                if let Err(e) = self.prepare_gpu_cache(frame) {
+                    self.renderer_errors.push(e);
+                    continue;
+                }
+                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
+                    "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
+                    frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
+
+                {
+                    profile_scope!("gl.flush");
+                    self.device.gl().flush();  // early start on gpu cache updates
+                }
+
+                self.draw_frame(
+                    frame,
+                    device_size,
+                    &mut results,
+                    doc_index == 0,
+                );
+
+                // Profile marker for the number of invalidated picture cache
+                if thread_is_being_profiled() {
+                    let duration = Duration::new(0,0);
+                    let message = self.profile_counters.rendered_picture_cache_tiles.get_accum().to_string();
                     add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
+                }
+
+                if device_size.is_some() {
+                    self.draw_frame_debug_items(&frame.debug_items);
+                }
+                if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
+                    frame_profiles.push(frame.profile_counters.clone());
+                }
+
+                let dirty_regions =
+                    mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
+                results.recorded_dirty_regions.extend(dirty_regions);
+
+                // If we're the last document, don't call end_pass here, because we'll
+                // be moving on to drawing the debug overlays. See the comment above
+                // the end_pass call in draw_frame about debug draw overlays
+                // for a bit more context.
+                if doc_index != last_document_index {
+                    self.texture_resolver.end_pass(&mut self.device, None, None);
                 }
             }
 
-            if device_size.is_some() {
-                self.draw_frame_debug_items(&frame.debug_items);
-            }
-            let dirty_regions =
-                mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
-            results.recorded_dirty_regions.extend(dirty_regions);
+            self.unlock_external_images();
+            self.active_documents = active_documents;
 
-            // If we're the last document, don't call end_pass here, because we'll
-            // be moving on to drawing the debug overlays. See the comment above
-            // the end_pass call in draw_frame about debug draw overlays
-            // for a bit more context.
-            if doc_index != last_document_index {
-                self.texture_resolver.end_pass(&mut self.device, None, None);
-            }
-
-            self.profile.merge(profile);
-        }
-
-        self.unlock_external_images();
-        self.active_documents = active_documents;
-
-        let _gm = self.gpu_profiler.start_marker("end frame");
-        self.gpu_profiler.end_frame();
+            let _gm = self.gpu_profiler.start_marker("end frame");
+            self.gpu_profiler.end_frame();
+        });
 
         if let Some(device_size) = device_size {
             // Bind a surface to draw the debug / profiler information to.
@@ -3738,13 +3774,27 @@ impl Renderer {
             self.draw_epoch_debug();
         }
 
-        self.profile.end_time(profiler::RENDERER_TIME);
-        self.profile.end_time_if_started(profiler::TOTAL_FRAME_CPU_TIME);
-
         let current_time = precise_time_ns();
         if device_size.is_some() {
-            let time = profiler::ns_to_ms(current_time - self.last_time);
-            self.profile.set(profiler::FRAME_TIME, time);
+            let ns = current_time - self.last_time;
+            self.profile_counters.frame_time.set(ns);
+        }
+
+        let frame_cpu_time_ns = self.backend_profile_counters.total_time.get()
+            + profile_timers.cpu_time.get();
+        let frame_cpu_time_ms = frame_cpu_time_ns as f64 / 1000000.0;
+        if frame_cpu_time_ms > 16.0 {
+            self.slow_frame_indicator.changed();
+        }
+
+        if self.backend_profile_counters.scene_changed {
+            let txn_time_ns = self.backend_profile_counters.txn.total_send_time.get()
+                + self.backend_profile_counters.txn.display_list_build_time.get()
+                + self.backend_profile_counters.txn.scene_build_time.get();
+            let txn_time_ms = txn_time_ns as f64 / 1000000.0;
+            if txn_time_ms > 100.0 {
+                self.slow_txn_indicator.changed();
+            }
         }
 
         if self.max_recorded_profiles > 0 {
@@ -3753,28 +3803,80 @@ impl Renderer {
             }
             let cpu_profile = CpuProfile::new(
                 cpu_frame_id,
-                (self.profile.get_or(profiler::FRAME_BUILDING_TIME, 0.0) * 1000000.0) as u64,
-                (self.profile.get_or(profiler::RENDERER_TIME, 0.0) * 1000000.0) as u64,
-                self.profile.get_or(profiler::DRAW_CALLS, 0.0) as usize,
+                self.backend_profile_counters.total_time.get(),
+                profile_timers.cpu_time.get(),
+                self.profile_counters.draw_calls.get(),
             );
             self.cpu_profiles.push_back(cpu_profile);
         }
-
-        self.profiler.set_counters(&mut self.profile);
-
-        // Note: profile counters must be set before this or they will count for next frame.
-        self.profiler.update();
 
         if self.debug_flags.intersects(DebugFlags::PROFILER_DBG | DebugFlags::PROFILER_CAPTURE) {
             if let Some(device_size) = device_size {
                 //TODO: take device/pixel ratio into equation?
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    let style = if !self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
+                        // Don't draw the profiler, but collect samples for captures
+                        assert!(self.debug_flags.contains(DebugFlags::PROFILER_CAPTURE));
+                        ProfileStyle::NoDraw
+                    } else if self.debug_flags.contains(DebugFlags::SMART_PROFILER) {
+                        ProfileStyle::Smart
+                    } else if self.debug_flags.contains(DebugFlags::COMPACT_PROFILER) {
+                        ProfileStyle::Compact
+                    } else {
+                        ProfileStyle::Full
+                    };
+
+                    let screen_fraction = 1.0 / device_size.to_f32().area();
                     self.profiler.draw_profile(
-                        self.frame_counter,
+                        &frame_profiles,
+                        &self.backend_profile_counters,
+                        &self.profile_counters,
+                        &mut profile_timers,
+                        &profile_samplers,
+                        screen_fraction,
                         debug_renderer,
-                        device_size,
+                        style,
                     );
                 }
+            }
+        }
+
+        let mut x = 0.0;
+        if self.debug_flags.contains(DebugFlags::NEW_FRAME_INDICATOR) {
+            if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                self.new_frame_indicator.changed();
+                self.new_frame_indicator.draw(
+                    x, 0.0,
+                    ColorU::new(0, 110, 220, 255),
+                    debug_renderer,
+                );
+                x += ChangeIndicator::width();
+            }
+        }
+
+        if self.debug_flags.contains(DebugFlags::NEW_SCENE_INDICATOR) {
+            if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                self.new_scene_indicator.draw(
+                    x, 0.0,
+                    ColorU::new(0, 220, 110, 255),
+                    debug_renderer,
+                );
+                x += ChangeIndicator::width();
+            }
+        }
+
+        if self.debug_flags.contains(DebugFlags::SLOW_FRAME_INDICATOR) {
+            if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                self.slow_txn_indicator.draw(
+                    x, 0.0,
+                    ColorU::new(250, 80, 80, 255),
+                    debug_renderer,
+                );
+                self.slow_frame_indicator.draw(
+                    x, 10.0,
+                    ColorU::new(220, 30, 10, 255),
+                    debug_renderer,
+                );
             }
         }
 
@@ -3784,40 +3886,44 @@ impl Renderer {
 
         if thread_is_being_profiled() {
             let duration = Duration::new(0,0);
-            let message = (self.profiler.get(profiler::DRAW_CALLS).unwrap_or(0.0) as usize).to_string();
+            let message = self.profile_counters.get_draw_calls().to_string();
             add_text_marker(cstr!("NumDrawCalls"), &message, duration);
         }
 
-        results.stats.texture_upload_kb = self.profile.get(profiler::TEXTURE_UPLOADS_MEM).unwrap_or(0.0) as usize;
-        self.frame_counter += 1;
+        results.stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
+        self.backend_profile_counters.reset();
+        self.profile_counters.reset();
+        self.profile_counters.frame_counter.inc();
         results.stats.resource_upload_time = self.resource_upload_time;
-        self.resource_upload_time = 0.0;
+        self.resource_upload_time = 0;
         results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
-        self.gpu_cache_upload_time = 0.0;
+        self.gpu_cache_upload_time = 0;
 
-        if let Some(debug_renderer) = self.debug.try_get_mut() {
-            let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
-            let scale = if small_screen { 1.6 } else { 1.0 };
-            // TODO(gw): Tidy this up so that compositor config integrates better
-            //           with the (non-compositor) surface y-flip options.
-            let surface_origin_is_top_left = match self.current_compositor_kind {
-                CompositorKind::Native { .. } => true,
-                CompositorKind::Draw { .. } => self.device.surface_origin_is_top_left(),
-            };
-            debug_renderer.render(
-                &mut self.device,
-                device_size,
-                scale,
-                surface_origin_is_top_left,
-            );
-        }
-        // See comment for texture_resolver.begin_frame() for explanation
-        // of why this must be done after all rendering, including debug
-        // overlays. The end_frame() call implicitly calls end_pass(), which
-        // should ensure any left over render targets get invalidated and
-        // returned to the pool correctly.
-        self.texture_resolver.end_frame(&mut self.device, cpu_frame_id);
-        self.device.end_frame();
+        profile_timers.cpu_time.profile(|| {
+            if let Some(debug_renderer) = self.debug.try_get_mut() {
+                let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
+                let scale = if small_screen { 1.6 } else { 1.0 };
+                // TODO(gw): Tidy this up so that compositor config integrates better
+                //           with the (non-compositor) surface y-flip options.
+                let surface_origin_is_top_left = match self.current_compositor_kind {
+                    CompositorKind::Native { .. } => true,
+                    CompositorKind::Draw { .. } => self.device.surface_origin_is_top_left(),
+                };
+                debug_renderer.render(
+                    &mut self.device,
+                    device_size,
+                    scale,
+                    surface_origin_is_top_left,
+                );
+            }
+            // See comment for texture_resolver.begin_frame() for explanation
+            // of why this must be done after all rendering, including debug
+            // overlays. The end_frame() call implicitly calls end_pass(), which
+            // should ensure any left over render targets get invalidated and
+            // returned to the pool correctly.
+            self.texture_resolver.end_frame(&mut self.device, cpu_frame_id);
+            self.device.end_frame();
+        });
 
         if device_size.is_some() {
             self.last_time = current_time;
@@ -3843,48 +3949,6 @@ impl Renderer {
             Ok(results)
         } else {
             Err(mem::replace(&mut self.renderer_errors, Vec::new()))
-        }
-    }
-
-    fn update_gpu_profile(&mut self, device_size: DeviceIntSize) {
-        let _gm = self.gpu_profiler.start_marker("build samples");
-        // Block CPU waiting for last frame's GPU profiles to arrive.
-        // In general this shouldn't block unless heavily GPU limited.
-        let (gpu_frame_id, timers, samplers) = self.gpu_profiler.build_samples();
-
-        if self.max_recorded_profiles > 0 {
-            while self.gpu_profiles.len() >= self.max_recorded_profiles {
-                self.gpu_profiles.pop_front();
-            }
-
-            self.gpu_profiles.push_back(GpuProfile::new(gpu_frame_id, &timers));
-        }
-
-        self.profiler.set_gpu_time_queries(timers);
-
-        if !samplers.is_empty() {
-            let screen_fraction = 1.0 / device_size.to_f32().area();
-
-            fn accumulate_sampler_value(description: &str, samplers: &[GpuSampler]) -> f32 {
-                let mut accum = 0.0;
-                for sampler in samplers {
-                    if sampler.tag.label != description {
-                        continue;
-                    }
-
-                    accum += sampler.count as f32;
-                }
-
-                accum
-            }
-
-            let alpha_targets = accumulate_sampler_value(&"Alpha targets", &samplers) * screen_fraction;
-            let transparent_pass = accumulate_sampler_value(&"Transparent pass", &samplers) * screen_fraction;
-            let opaque_pass = accumulate_sampler_value(&"Opaque pass", &samplers) * screen_fraction;
-            self.profile.set(profiler::ALPHA_TARGETS_SAMPLERS, alpha_targets);
-            self.profile.set(profiler::TRANSPARENT_PASS_SAMPLERS, transparent_pass);
-            self.profile.set(profiler::OPAQUE_PASS_SAMPLERS, opaque_pass);
-            self.profile.set(profiler::TOTAL_SAMPLERS, alpha_targets + transparent_pass + opaque_pass);
         }
     }
 
@@ -3935,12 +3999,15 @@ impl Renderer {
                 .update(&mut self.device, &update_list);
         }
 
-        self.profile.start_time(profiler::GPU_CACHE_UPLOAD_TIME);
-        let updated_rows = self.gpu_cache_texture.flush(&mut self.device);
-        self.gpu_cache_upload_time += self.profile.end_time(profiler::GPU_CACHE_UPLOAD_TIME);
+        let mut upload_time = TimeProfileCounter::new("GPU cache upload time", false, Some(0.0..2.0));
+        let updated_rows = upload_time.profile(|| {
+            self.gpu_cache_texture.flush(&mut self.device)
+        });
+        self.gpu_cache_upload_time += upload_time.get();
 
-        self.profile.set(profiler::GPU_CACHE_ROWS_UPDATED, updated_rows);
-        self.profile.set(profiler::GPU_CACHE_BLOCKS_UPDATED, updated_blocks);
+        let counters = &mut self.backend_profile_counters.resources.gpu_cache;
+        counters.updated_rows.set(updated_rows);
+        counters.updated_blocks.set(updated_blocks);
     }
 
     fn prepare_gpu_cache(&mut self, frame: &Frame) -> Result<(), RendererError> {
@@ -3976,192 +4043,191 @@ impl Renderer {
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
         self.pending_texture_cache_updates = false;
 
-        self.profile.start_time(profiler::TEXTURE_CACHE_UPLOAD_TIME);
-
-        for update_list in pending_texture_updates.drain(..) {
-            for allocation in update_list.allocations {
-                match allocation.kind {
-                    TextureCacheAllocationKind::Alloc(_) => add_event_marker(c_str!("TextureCacheAlloc")),
-                    TextureCacheAllocationKind::Realloc(_) => add_event_marker(c_str!("TextureCacheRealloc")),
-                    TextureCacheAllocationKind::Reset(_) => add_event_marker(c_str!("TextureCacheReset")),
-                    TextureCacheAllocationKind::Free => add_event_marker(c_str!("TextureCacheFree")),
-                };
-                let old = match allocation.kind {
-                    TextureCacheAllocationKind::Alloc(ref info) |
-                    TextureCacheAllocationKind::Realloc(ref info) |
-                    TextureCacheAllocationKind::Reset(ref info) => {
-                        // Create a new native texture, as requested by the texture cache.
-                        //
-                        // Ensure no PBO is bound when creating the texture storage,
-                        // or GL will attempt to read data from there.
-                        let mut texture = self.device.create_texture(
-                            TextureTarget::Array,
-                            info.format,
-                            info.width,
-                            info.height,
-                            info.filter,
-                            // This needs to be a render target because some render
-                            // tasks get rendered into the texture cache.
-                            Some(RenderTargetInfo { has_depth: info.has_depth }),
-                            info.layer_count,
-                        );
-
-                        if info.is_shared_cache {
-                            texture.flags_mut()
-                                .insert(TextureFlags::IS_SHARED_TEXTURE_CACHE);
-
-                            // Textures in the cache generally don't need to be cleared,
-                            // but we do so if the debug display is active to make it
-                            // easier to identify unallocated regions.
-                            if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
-                                self.clear_texture(&texture, TEXTURE_CACHE_DBG_CLEAR_COLOR);
-                            }
-                        }
-
-                        self.texture_resolver.texture_cache_map.insert(allocation.id, texture)
-                    }
-                    TextureCacheAllocationKind::Free => {
-                        self.texture_resolver.texture_cache_map.remove(&allocation.id)
-                    }
-                };
-
-                match allocation.kind {
-                    TextureCacheAllocationKind::Alloc(_) => {
-                        assert!(old.is_none(), "Renderer and backend disagree!");
-                    }
-                    TextureCacheAllocationKind::Realloc(_) => {
-                        self.device.blit_renderable_texture(
-                            self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
-                            old.as_ref().unwrap(),
-                        );
-                    }
-                    TextureCacheAllocationKind::Reset(_) |
-                    TextureCacheAllocationKind::Free => {
-                        assert!(old.is_some(), "Renderer and backend disagree!");
-                    }
-                }
-
-                if let Some(old) = old {
-                    self.device.delete_texture(old);
-                }
-            }
-
-            for (texture_id, updates) in update_list.updates {
-                let texture = &self.texture_resolver.texture_cache_map[&texture_id];
-                let device = &mut self.device;
-
-                // Calculate the total size of buffer required to upload all updates.
-                let required_size = updates.iter().map(|update| {
-                    // Perform any debug clears now. As this requires a mutable borrow of device,
-                    // it must be done before all the updates which require a TextureUploader.
-                    if let TextureUpdateSource::DebugClear = update.source  {
-                        let draw_target = DrawTarget::from_texture(
-                            texture,
-                            update.layer_index as usize,
-                            false,
-                        );
-                        device.bind_draw_target(draw_target);
-                        device.clear_target(
-                            Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
-                            None,
-                            Some(draw_target.to_framebuffer_rect(update.rect.to_i32()))
-                        );
-
-                        0
-                    } else {
-                        let (upload_size, _) = device.required_upload_size_and_stride(
-                            update.rect.size,
-                            texture.get_format(),
-                        );
-                        upload_size
-                    }
-                }).sum();
-
-                if required_size == 0 {
-                    continue;
-                }
-
-                // For best performance we use a single TextureUploader for all uploads.
-                // Using individual TextureUploaders was causing performance issues on some drivers
-                // due to allocating too many PBOs.
-                let mut uploader = device.upload_texture(
-                    texture,
-                    &self.texture_cache_upload_pbo,
-                    required_size
-                );
-
-                for update in updates {
-                    let TextureCacheUpdate { rect, stride, offset, layer_index, format_override, source } = update;
-
-                    let bytes_uploaded = match source {
-                        TextureUpdateSource::Bytes { data } => {
-                            let data = &data[offset as usize ..];
-                            uploader.upload(
-                                rect,
-                                layer_index,
-                                stride,
-                                format_override,
-                                data.as_ptr(),
-                                data.len(),
-                            )
-                        }
-                        TextureUpdateSource::External { id, channel_index } => {
-                            let handler = self.external_image_handler
-                                .as_mut()
-                                .expect("Found external image, but no handler set!");
-                            // The filter is only relevant for NativeTexture external images.
-                            let dummy_data;
-                            let data = match handler.lock(id, channel_index, ImageRendering::Auto).source {
-                                ExternalImageSource::RawData(data) => {
-                                    &data[offset as usize ..]
-                                }
-                                ExternalImageSource::Invalid => {
-                                    // Create a local buffer to fill the pbo.
-                                    let bpp = texture.get_format().bytes_per_pixel();
-                                    let width = stride.unwrap_or(rect.size.width * bpp);
-                                    let total_size = width * rect.size.height;
-                                    // WR haven't support RGBAF32 format in texture_cache, so
-                                    // we use u8 type here.
-                                    dummy_data = vec![0xFFu8; total_size as usize];
-                                    &dummy_data
-                                }
-                                ExternalImageSource::NativeTexture(eid) => {
-                                    panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
-                                }
-                            };
-                            let size = uploader.upload(
-                                rect,
-                                layer_index,
-                                stride,
-                                format_override,
-                                data.as_ptr(),
-                                data.len()
+        let mut upload_time = TimeProfileCounter::new("Resource upload time", false, Some(0.0..2.0));
+        upload_time.profile(|| {
+            for update_list in pending_texture_updates.drain(..) {
+                for allocation in update_list.allocations {
+                    match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(_) => add_event_marker(c_str!("TextureCacheAlloc")),
+                        TextureCacheAllocationKind::Realloc(_) => add_event_marker(c_str!("TextureCacheRealloc")),
+                        TextureCacheAllocationKind::Reset(_) => add_event_marker(c_str!("TextureCacheReset")),
+                        TextureCacheAllocationKind::Free => add_event_marker(c_str!("TextureCacheFree")),
+                    };
+                    let old = match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(ref info) |
+                        TextureCacheAllocationKind::Realloc(ref info) |
+                        TextureCacheAllocationKind::Reset(ref info) => {
+                            // Create a new native texture, as requested by the texture cache.
+                            //
+                            // Ensure no PBO is bound when creating the texture storage,
+                            // or GL will attempt to read data from there.
+                            let mut texture = self.device.create_texture(
+                                TextureTarget::Array,
+                                info.format,
+                                info.width,
+                                info.height,
+                                info.filter,
+                                // This needs to be a render target because some render
+                                // tasks get rendered into the texture cache.
+                                Some(RenderTargetInfo { has_depth: info.has_depth }),
+                                info.layer_count,
                             );
-                            handler.unlock(id, channel_index);
-                            size
+
+                            if info.is_shared_cache {
+                                texture.flags_mut()
+                                    .insert(TextureFlags::IS_SHARED_TEXTURE_CACHE);
+
+                                // Textures in the cache generally don't need to be cleared,
+                                // but we do so if the debug display is active to make it
+                                // easier to identify unallocated regions.
+                                if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
+                                    self.clear_texture(&texture, TEXTURE_CACHE_DBG_CLEAR_COLOR);
+                                }
+                            }
+
+                            self.texture_resolver.texture_cache_map.insert(allocation.id, texture)
                         }
-                        TextureUpdateSource::DebugClear => {
-                            // DebugClear updates are handled separately.
-                            0
+                        TextureCacheAllocationKind::Free => {
+                            self.texture_resolver.texture_cache_map.remove(&allocation.id)
                         }
                     };
-                    self.profile.add(profiler::TEXTURE_UPLOADS, bytes_uploaded as f64 * 1.0e-6);
+
+                    match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(_) => {
+                            assert!(old.is_none(), "Renderer and backend disagree!");
+                        }
+                        TextureCacheAllocationKind::Realloc(_) => {
+                            self.device.blit_renderable_texture(
+                                self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
+                                old.as_ref().unwrap(),
+                            );
+                        }
+                        TextureCacheAllocationKind::Reset(_) |
+                        TextureCacheAllocationKind::Free => {
+                            assert!(old.is_some(), "Renderer and backend disagree!");
+                        }
+                    }
+
+                    if let Some(old) = old {
+                        self.device.delete_texture(old);
+                    }
+                }
+
+                for (texture_id, updates) in update_list.updates {
+                    let texture = &self.texture_resolver.texture_cache_map[&texture_id];
+                    let device = &mut self.device;
+
+                    // Calculate the total size of buffer required to upload all updates.
+                    let required_size = updates.iter().map(|update| {
+                        // Perform any debug clears now. As this requires a mutable borrow of device,
+                        // it must be done before all the updates which require a TextureUploader.
+                        if let TextureUpdateSource::DebugClear = update.source  {
+                            let draw_target = DrawTarget::from_texture(
+                                texture,
+                                update.layer_index as usize,
+                                false,
+                            );
+                            device.bind_draw_target(draw_target);
+                            device.clear_target(
+                                Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
+                                None,
+                                Some(draw_target.to_framebuffer_rect(update.rect.to_i32()))
+                            );
+
+                            0
+                        } else {
+                            let (upload_size, _) = device.required_upload_size_and_stride(
+                                update.rect.size,
+                                texture.get_format(),
+                            );
+                            upload_size
+                        }
+                    }).sum();
+
+                    if required_size == 0 {
+                        continue;
+                    }
+
+                    // For best performance we use a single TextureUploader for all uploads.
+                    // Using individual TextureUploaders was causing performance issues on some drivers
+                    // due to allocating too many PBOs.
+                    let mut uploader = device.upload_texture(
+                        texture,
+                        &self.texture_cache_upload_pbo,
+                        required_size
+                    );
+
+                    for update in updates {
+                        let TextureCacheUpdate { rect, stride, offset, layer_index, format_override, source } = update;
+
+                        let bytes_uploaded = match source {
+                            TextureUpdateSource::Bytes { data } => {
+                                let data = &data[offset as usize ..];
+                                uploader.upload(
+                                    rect,
+                                    layer_index,
+                                    stride,
+                                    format_override,
+                                    data.as_ptr(),
+                                    data.len(),
+                                )
+                            }
+                            TextureUpdateSource::External { id, channel_index } => {
+                                let handler = self.external_image_handler
+                                    .as_mut()
+                                    .expect("Found external image, but no handler set!");
+                                // The filter is only relevant for NativeTexture external images.
+                                let dummy_data;
+                                let data = match handler.lock(id, channel_index, ImageRendering::Auto).source {
+                                    ExternalImageSource::RawData(data) => {
+                                        &data[offset as usize ..]
+                                    }
+                                    ExternalImageSource::Invalid => {
+                                        // Create a local buffer to fill the pbo.
+                                        let bpp = texture.get_format().bytes_per_pixel();
+                                        let width = stride.unwrap_or(rect.size.width * bpp);
+                                        let total_size = width * rect.size.height;
+                                        // WR haven't support RGBAF32 format in texture_cache, so
+                                        // we use u8 type here.
+                                        dummy_data = vec![0xFFu8; total_size as usize];
+                                        &dummy_data
+                                    }
+                                    ExternalImageSource::NativeTexture(eid) => {
+                                        panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
+                                    }
+                                };
+                                let size = uploader.upload(
+                                    rect,
+                                    layer_index,
+                                    stride,
+                                    format_override,
+                                    data.as_ptr(),
+                                    data.len()
+                                );
+                                handler.unlock(id, channel_index);
+                                size
+                            }
+                            TextureUpdateSource::DebugClear => {
+                                // DebugClear updates are handled separately.
+                                0
+                            }
+                        };
+                        self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
+                    }
+                }
+
+                if update_list.clears_shared_cache {
+                    self.shared_texture_cache_cleared = true;
                 }
             }
 
-            if update_list.clears_shared_cache {
-                self.shared_texture_cache_cleared = true;
-            }
-        }
-
-        drain_filter(
-            &mut self.notifications,
-            |n| { n.when() == Checkpoint::FrameTexturesUpdated },
-            |n| { n.notify(); },
-        );
-
-        let t = self.profile.end_time(profiler::TEXTURE_CACHE_UPLOAD_TIME);
-        self.resource_upload_time += t;
+            drain_filter(
+                &mut self.notifications,
+                |n| { n.when() == Checkpoint::FrameTexturesUpdated },
+                |n| { n.notify(); },
+            );
+        });
+        self.resource_upload_time += upload_time.get();
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
@@ -4219,11 +4285,11 @@ impl Renderer {
                 .update_vao_instances(vao, chunk, ONE_TIME_USAGE_HINT);
             self.device
                 .draw_indexed_triangles_instanced_u16(6, chunk.len() as i32);
-            self.profile.inc(profiler::DRAW_CALLS);
+            self.profile_counters.draw_calls.inc();
             stats.total_draw_calls += 1;
         }
 
-        self.profile.add(profiler::VERTICES, 6 * data.len());
+        self.profile_counters.vertices.add(6 * data.len());
     }
 
     fn handle_readback_composite(
@@ -4443,7 +4509,7 @@ impl Renderer {
     ) {
         profile_scope!("draw_picture_cache_target");
 
-        self.profile.inc(profiler::RENDERED_PICTURE_TILES);
+        self.profile_counters.rendered_picture_cache_tiles.inc();
         let _gm = self.gpu_profiler.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
 
@@ -5245,7 +5311,7 @@ impl Renderer {
         // count clear tiles here.
         let num_tiles = composite_state.opaque_tiles.len()
             + composite_state.alpha_tiles.len();
-        self.profile.set(profiler::PICTURE_TILES, num_tiles);
+        self.profile_counters.total_picture_cache_tiles.set(num_tiles);
 
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.
@@ -5308,7 +5374,7 @@ impl Renderer {
     ) {
         profile_scope!("draw_color_target");
 
-        self.profile.inc(profiler::COLOR_PASSES);
+        self.profile_counters.color_passes.inc();
         let _gm = self.gpu_profiler.start_marker("color target");
 
         // sanity check for the depth buffer
@@ -5532,7 +5598,7 @@ impl Renderer {
     ) {
         profile_scope!("draw_alpha_target");
 
-        self.profile.inc(profiler::ALPHA_PASSES);
+        self.profile_counters.alpha_passes.inc();
         let _gm = self.gpu_profiler.start_marker("alpha target");
         let alpha_sampler = self.gpu_profiler.start_sampler(GPU_SAMPLER_TAG_ALPHA);
 
@@ -5932,7 +5998,7 @@ impl Renderer {
 
     /// Allocates a texture to be used as the output for a rendering pass.
     ///
-    /// We make an effort to reuse render target textures across passes and
+    /// We make an effort to reuse render targe textures across passes and
     /// across frames when the format and dimensions match. Because we use
     /// immutable storage, we can't resize textures.
     ///
@@ -5946,6 +6012,7 @@ impl Renderer {
     fn allocate_target_texture<T: RenderTarget>(
         &mut self,
         list: &mut RenderTargetList<T>,
+        counters: &mut FrameProfileCounters,
     ) -> Option<ActiveTexture> {
         if list.targets.is_empty() {
             return None
@@ -5965,7 +6032,7 @@ impl Renderer {
             (bounding_rect.size.height + 255) & !255,
         );
 
-        self.profile.inc(profiler::USED_TARGETS);
+        counters.targets_used.inc();
 
         // Try finding a match in the existing pool. If there's no match, we'll
         // create a new texture.
@@ -5990,7 +6057,7 @@ impl Renderer {
             self.device.reuse_render_target::<u8>(&mut t, rt_info);
             t
         } else {
-            self.profile.inc(profiler::CREATED_TARGETS);
+            counters.targets_created.inc();
             self.device.create_texture(
                 TextureTarget::Array,
                 list.format,
@@ -6227,8 +6294,8 @@ impl Renderer {
                 } => {
                     profile_scope!("offscreen target");
 
-                    let alpha_tex = self.allocate_target_texture(alpha);
-                    let color_tex = self.allocate_target_texture(color);
+                    let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters);
+                    let color_tex = self.allocate_target_texture(color, &mut frame.profile_counters);
 
                     // If this frame has already been drawn, then any texture
                     // cache targets have already been updated and can be
@@ -6245,7 +6312,7 @@ impl Renderer {
                         }
 
                         if !picture_cache.is_empty() {
-                            self.profile.inc(profiler::COLOR_PASSES);
+                            self.profile_counters.color_passes.inc();
                         }
 
                         // Draw picture caching tiles for this pass.
@@ -6500,10 +6567,6 @@ impl Renderer {
         }
 
         self.debug_flags = flags;
-    }
-
-    pub fn set_profiler_ui(&mut self, ui_str: &str) {
-        self.profiler.set_ui(ui_str);
     }
 
     fn draw_frame_debug_items(&mut self, items: &[DebugItem]) {
@@ -7303,8 +7366,8 @@ pub struct RendererStats {
     pub alpha_target_count: usize,
     pub color_target_count: usize,
     pub texture_upload_kb: usize,
-    pub resource_upload_time: f64,
-    pub gpu_cache_upload_time: f64,
+    pub resource_upload_time: u64,
+    pub gpu_cache_upload_time: u64,
 }
 
 /// Return type from render(), which contains some repr(C) statistics as well as

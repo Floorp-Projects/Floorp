@@ -542,10 +542,6 @@ void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {
   RenderThread::Get()->SetClearColor(mId, ToColorF(aColor));
 }
 
-void WebRenderAPI::SetProfilerUI(const nsCString& aUIString) {
-  RenderThread::Get()->SetProfilerUI(mId, aUIString);
-}
-
 void WebRenderAPI::Pause() {
   class PauseEvent : public RendererEvent {
    public:
