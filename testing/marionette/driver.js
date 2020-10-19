@@ -1958,7 +1958,7 @@ GeckoDriver.prototype.performActions = async function(cmd) {
  */
 GeckoDriver.prototype.releaseActions = async function() {
   assert.content(this.context);
-  assert.open(this.getBrowsingContext({ top: true }));
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   if (MarionettePrefs.useActors) {
