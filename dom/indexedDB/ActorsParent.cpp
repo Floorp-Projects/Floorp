@@ -15455,41 +15455,29 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
-  DatabaseConnection::CachedStatement updateStmt;
-  nsresult rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "UPDATE object_data SET index_data_values = :"_ns +
           kStmtParamNameIndexDataValues + " WHERE object_store_id = :"_ns +
           kStmtParamNameObjectStoreId + " AND key = :"_ns + kStmtParamNameKey +
           ";"_ns,
       [&indexDataValues = indexDataValues,
        indexDataValuesLength = indexDataValuesLength, aObjectStoreId,
-       &aObjectStoreKey](mozIStorageStatement& updateStmt) {
-        nsresult rv =
-            indexDataValues
-                ? updateStmt.BindAdoptedBlobByName(
-                      kStmtParamNameIndexDataValues, indexDataValues.release(),
-                      indexDataValuesLength)
-                : updateStmt.BindNullByName(kStmtParamNameIndexDataValues);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+       &aObjectStoreKey](
+          mozIStorageStatement& updateStmt) -> Result<Ok, nsresult> {
+        IDB_TRY(indexDataValues
+                    ? updateStmt.BindAdoptedBlobByName(
+                          kStmtParamNameIndexDataValues,
+                          indexDataValues.release(), indexDataValuesLength)
+                    : updateStmt.BindNullByName(kStmtParamNameIndexDataValues));
 
-        rv = updateStmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                        aObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(updateStmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                           aObjectStoreId));
 
-        rv = aObjectStoreKey.BindToStatement(&updateStmt, kStmtParamNameKey);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(
+            aObjectStoreKey.BindToStatement(&updateStmt, kStmtParamNameKey));
 
-        return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   return NS_OK;
 }
