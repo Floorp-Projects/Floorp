@@ -89,16 +89,10 @@ TransceiverImpl::TransceiverImpl(
 
   mTransmitPipeline->SetTrack(mSendTrack);
 
-  auto self = nsMainThreadPtrHandle<TransceiverImpl>(
-      new nsMainThreadPtrHolder<TransceiverImpl>(
-          "TransceiverImpl::TransceiverImpl::self", this, false));
-  mStsThread->Dispatch(
-      NS_NewRunnableFunction("TransceiverImpl::TransceiverImpl", [self] {
-        self->mTransportHandler->SignalStateChange.connect(
-            self.get(), &TransceiverImpl::UpdateDtlsTransportState);
-        self->mTransportHandler->SignalRtcpStateChange.connect(
-            self.get(), &TransceiverImpl::UpdateDtlsTransportState);
-      }));
+  mTransportHandler->SignalStateChange.connect(
+      this, &TransceiverImpl::UpdateDtlsTransportState);
+  mTransportHandler->SignalRtcpStateChange.connect(
+      this, &TransceiverImpl::UpdateDtlsTransportState);
 }
 
 TransceiverImpl::~TransceiverImpl() = default;
@@ -174,13 +168,7 @@ void TransceiverImpl::Shutdown_m() {
   }
   Stop();
   mTransmitPipeline = nullptr;
-  auto self = nsMainThreadPtrHandle<TransceiverImpl>(
-      new nsMainThreadPtrHolder<TransceiverImpl>(
-          "TransceiverImpl::Shutdown_m::self", this, false));
-  mStsThread->Dispatch(NS_NewRunnableFunction(__func__, [self] {
-    self->disconnect_all();
-    self->mTransportHandler = nullptr;
-  }));
+  mTransportHandler = nullptr;
 }
 
 nsresult TransceiverImpl::UpdateSendTrack(dom::MediaStreamTrack* aSendTrack) {
