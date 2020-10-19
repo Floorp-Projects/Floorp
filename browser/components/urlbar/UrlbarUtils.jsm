@@ -189,14 +189,13 @@ var UrlbarUtils = {
   // TODO (Bug 1658661): Don't hardcode this list; store search engine category
   // information someplace better.
   WEB_ENGINE_NAMES: new Set([
-    "百度", // Baidu
+    "Baidu",
     "Bing",
     "DuckDuckGo",
     "Ecosia",
     "Google",
     "Qwant",
     "Yandex",
-    "Яндекс", // Yandex, non-EN
   ]),
 
   // Valid entry points for search mode. If adding a value here, please update
