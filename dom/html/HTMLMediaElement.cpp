@@ -1081,12 +1081,13 @@ class HTMLMediaElement::MediaElementTrackSource
   /* MediaDecoder track source */
   MediaElementTrackSource(nsISerialEventTarget* aMainThreadEventTarget,
                           ProcessedMediaTrack* aTrack, nsIPrincipal* aPrincipal,
-                          OutputMuteState aMuteState)
+                          OutputMuteState aMuteState, bool aHasAlpha)
       : MediaStreamTrackSource(aPrincipal, nsString()),
         mMainThreadEventTarget(aMainThreadEventTarget),
         mTrack(aTrack),
         mIntendedElementMuteState(aMuteState),
-        mElementMuteState(aMuteState) {
+        mElementMuteState(aMuteState),
+        mMediaDecoderHasAlpha(Some(aHasAlpha)) {
     MOZ_ASSERT(mTrack);
   }
 
@@ -1211,6 +1212,15 @@ class HTMLMediaElement::MediaElementTrackSource
             (mCapturedTrack->Muted() || !mCapturedTrack->Enabled()));
   }
 
+  bool HasAlpha() const override {
+    if (mCapturedTrack) {
+      return mCapturedTrack->AsVideoStreamTrack()
+                 ? mCapturedTrack->AsVideoStreamTrack()->HasAlpha()
+                 : false;
+    }
+    return mMediaDecoderHasAlpha.valueOr(false);
+  }
+
   ProcessedMediaTrack* Track() const { return mTrack; }
 
  private:
@@ -1226,6 +1236,8 @@ class HTMLMediaElement::MediaElementTrackSource
   // The mute state as applied to this track source. It is applied async, so
   // needs to be tracked separately from the intended state.
   OutputMuteState mElementMuteState;
+  // Some<bool> if this is a MediaDecoder track source.
+  const Maybe<bool> mMediaDecoderHasAlpha;
 };
 
 HTMLMediaElement::OutputMediaStream::OutputMediaStream(
@@ -3680,7 +3692,10 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
         principal = NodePrincipal();
       }
       source = MakeAndAddRef<MediaElementTrackSource>(
-          mMainThreadEventTarget, track, principal, OutputTracksMuted());
+          mMainThreadEventTarget, track, principal, OutputTracksMuted(),
+          type == MediaSegment::VIDEO
+              ? HTMLVideoElement::FromNode(this)->HasAlpha()
+              : false);
       mDecoder->AddOutputTrack(track);
     } else if (mSrcStream) {
       MediaStreamTrack* inputTrack;
