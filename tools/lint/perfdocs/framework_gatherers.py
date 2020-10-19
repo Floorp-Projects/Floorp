@@ -8,9 +8,9 @@ import os
 import pathlib
 import re
 
-from perfdocs.utils import read_yaml
 from manifestparser import TestManifest
 from mozperftest.script import ScriptInfo
+from perfdocs.utils import read_yaml
 
 """
 This file is for framework specific gatherers since manifests
@@ -208,7 +208,7 @@ class MozperftestGatherer(FrameworkGatherer):
 
     def get_test_list(self):
         """
-        Returns a dictionary containing the tests that start with perftest_*.
+        Returns a dictionary containing the tests that are in perftest.ini manifest.
 
         :return dict: A dictionary with the following structure: {
                 "suite_name": {
@@ -217,15 +217,16 @@ class MozperftestGatherer(FrameworkGatherer):
                 },
             }
         """
-        exclude_dir = [".hg", "mozperftest/tests/data"]
-        for path in pathlib.Path(self.workspace_dir).rglob("perftest_*"):
-            if any(re.search(d, str(path)) for d in exclude_dir):
-                continue
-
+        for path in pathlib.Path(self.workspace_dir).rglob("perftest.ini"):
             suite_name = re.sub(self.workspace_dir, "", os.path.dirname(path))
-            si = ScriptInfo(path)
-            self.script_infos[si["name"]] = si
-            self._test_list.setdefault(suite_name, {}).update({si["name"]: ""})
+
+            # Get the tests from perftest.ini
+            test_manifest = TestManifest([str(path)], strict=False)
+            test_list = test_manifest.active_tests(exists=False, disabled=False)
+            for test in test_list:
+                si = ScriptInfo(test["path"])
+                self.script_infos[si["name"]] = si
+                self._test_list.setdefault(suite_name, {}).update({si["name"]: ""})
 
         return self._test_list
 
