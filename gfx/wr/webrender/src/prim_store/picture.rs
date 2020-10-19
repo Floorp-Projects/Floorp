@@ -277,6 +277,7 @@ impl Internable for Picture {
     type Key = PictureKey;
     type StoreData = PictureTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_PICTURES;
 }
 
 impl InternablePrimitive for Picture {

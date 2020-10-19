@@ -162,6 +162,7 @@ impl intern::Internable for FilterDataIntern {
     type Key = SFilterDataKey;
     type StoreData = SFilterDataTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_FILTER_DATA;
 }
 
 fn push_component_transfer_data(

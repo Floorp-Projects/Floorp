@@ -126,6 +126,7 @@ impl intern::Internable for LineDecoration {
     type Key = LineDecorationKey;
     type StoreData = LineDecorationTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_LINE_DECORATIONS;
 }
 
 impl InternablePrimitive for LineDecoration {
