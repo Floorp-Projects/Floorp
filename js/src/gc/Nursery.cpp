@@ -475,6 +475,14 @@ Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
   return cell;
 }
 
+Cell* js::Nursery::allocateString(JS::Zone* zone, size_t size) {
+  Cell* cell = allocateCell(zone, size, JS::TraceKind::String);
+  if (cell) {
+    zone->nurseryAllocatedStrings++;
+  }
+  return cell;
+}
+
 inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(isEnabled());
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
@@ -1274,8 +1282,18 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   uint32_t numBigIntsTenured = 0;
   uint32_t numNurseryBigIntRealmsDisabled = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
-    bool disableNurseryStrings = pretenureStr && zone->allocNurseryStrings &&
-                                 zone->tenuredStrings >= 30 * 1000;
+    // For some tests in JetStream2 and Kranken, the tenuredRate is high but the
+    // number of allocated strings is low. So we calculate the tenuredRate only
+    // if the number of string allocations is enough.
+    bool allocThreshold = zone->nurseryAllocatedStrings > 30000;
+    double tenuredRate = allocThreshold
+                             ? double(zone->tenuredStrings) /
+                                   double(zone->nurseryAllocatedStrings)
+                             : 0.0;
+
+    bool disableNurseryStrings =
+        pretenureStr && zone->allocNurseryStrings &&
+        tenuredRate > tunables().pretenureStringThreshold();
     bool disableNurseryBigInts = pretenureBigInt && zone->allocNurseryBigInts &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
@@ -1310,6 +1328,7 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     zone->tenuredStrings = 0;
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
+    zone->nurseryAllocatedStrings = 0;
   }
   session.reset();  // End the minor GC session, if running one.
   stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED,

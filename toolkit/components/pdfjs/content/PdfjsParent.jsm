@@ -273,14 +273,27 @@ class PdfjsParent extends JSWindowActorParent {
     // eventCallback will be called.
     let messageSent = false;
     let sendMessage = download => {
-      this.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
+      // Don't send a response again if we already responded when the button was
+      // clicked.
+      if (messageSent) {
+        return;
+      }
+      try {
+        this.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
+        messageSent = true;
+      } catch (ex) {
+        // Ignore any exception if it is related to the child
+        // getting destroyed before the message can be sent.
+        if (!/JSWindowActorParent cannot send at the moment/.test(ex.message)) {
+          throw ex;
+        }
+      }
     };
     let buttons = [
       {
         label: data.label,
         accessKey: data.accessKey,
         callback() {
-          messageSent = true;
           sendMessage(true);
         },
       },
@@ -295,11 +308,6 @@ class PdfjsParent extends JSWindowActorParent {
         // Currently there is only one event "removed" but if there are any other
         // added in the future we still only care about removed at the moment.
         if (eventType !== "removed") {
-          return;
-        }
-        // Don't send a response again if we already responded when the button was
-        // clicked.
-        if (messageSent) {
           return;
         }
         sendMessage(false);

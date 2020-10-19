@@ -15,6 +15,7 @@ const TYPES = {
   PLATFORM_MESSAGE: "platform-message",
   NETWORK_EVENT: "network-event",
   STYLESHEET: "stylesheet",
+  NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
 };
 exports.TYPES = TYPES;
 
@@ -48,6 +49,9 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.STYLESHEET]: {
     path: "devtools/server/actors/resources/stylesheets",
+  },
+  [TYPES.NETWORK_EVENT_STACKTRACE]: {
+    path: "devtools/server/actors/resources/network-events-stacktraces",
   },
 });
 const ParentProcessResources = augmentResourceDictionary({

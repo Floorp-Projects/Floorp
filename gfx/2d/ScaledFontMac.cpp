@@ -62,10 +62,6 @@ class AutoRelease final {
   T mObject;
 };
 
-ScaledFontMac::CTFontDrawGlyphsFuncT* ScaledFontMac::CTFontDrawGlyphsPtr =
-    nullptr;
-bool ScaledFontMac::sSymbolLookupDone = false;
-
 // Helper to create a CTFont from a CGFont, copying any variations that were
 // set on the original CGFont.
 static CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
@@ -132,47 +128,24 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
       mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor),
       mUseFontSmoothing(aUseFontSmoothing),
       mApplySyntheticBold(aApplySyntheticBold) {
-  if (!sSymbolLookupDone) {
-    CTFontDrawGlyphsPtr =
-        (CTFontDrawGlyphsFuncT*)dlsym(RTLD_DEFAULT, "CTFontDrawGlyphs");
-    sSymbolLookupDone = true;
-  }
-
   if (!aOwnsFont) {
     // XXX: should we be taking a reference
     CGFontRetain(aFont);
   }
 
-  if (CTFontDrawGlyphsPtr != nullptr) {
-    // only create mCTFont if we're going to be using the CTFontDrawGlyphs API
-    auto unscaledMac = static_cast<UnscaledFontMac*>(aUnscaledFont.get());
-    bool dataFont = unscaledMac->IsDataFont();
-    mCTFont = CreateCTFontFromCGFontWithVariations(aFont, aSize, !dataFont);
-  } else {
-    mCTFont = nullptr;
-  }
+  auto unscaledMac = static_cast<UnscaledFontMac*>(aUnscaledFont.get());
+  bool dataFont = unscaledMac->IsDataFont();
+  mCTFont = CreateCTFontFromCGFontWithVariations(aFont, aSize, !dataFont);
 }
 
 ScaledFontMac::~ScaledFontMac() {
-  if (mCTFont) {
-    CFRelease(mCTFont);
-  }
+  CFRelease(mCTFont);
   CGFontRelease(mFont);
 }
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontMac::CreateSkTypeface() {
-  if (mCTFont) {
-    return SkCreateTypefaceFromCTFont(mCTFont);
-  } else {
-    auto unscaledMac = static_cast<UnscaledFontMac*>(GetUnscaledFont().get());
-    bool dataFont = unscaledMac->IsDataFont();
-    CTFontRef fontFace =
-        CreateCTFontFromCGFontWithVariations(mFont, mSize, !dataFont);
-    SkTypeface* typeface = SkCreateTypefaceFromCTFont(fontFace);
-    CFRelease(fontFace);
-    return typeface;
-  }
+  return SkCreateTypefaceFromCTFont(mCTFont);
 }
 
 void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {

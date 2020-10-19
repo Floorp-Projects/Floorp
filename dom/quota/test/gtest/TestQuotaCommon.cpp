@@ -29,6 +29,7 @@ TEST(QuotaCommon_Try, Success)
   EXPECT_EQ(rv, NS_OK);
 }
 
+#ifdef DEBUG
 TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
 {
   bool tryDidNotReturn = false;
@@ -57,6 +58,47 @@ TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
 
   EXPECT_TRUE(tryDidNotReturn);
 }
+#else
+#  if defined(QM_ASSERT_UNREACHABLE) || defined(QM_ASSERT_UNREACHABLE_VOID)
+#error QM_ASSERT_UNREACHABLE and QM_ASSERT_UNREACHABLE_VOID should not be defined.
+#  endif
+#endif
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
+{
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&tryDidNotReturn]() -> nsresult {
+    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE);
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
+{
+  bool tryDidNotReturn = false;
+
+  [&tryDidNotReturn]() -> void {
+    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID);
+
+    tryDidNotReturn = true;
+  }();
+
+  EXPECT_TRUE(tryDidNotReturn);
+}
+#else
+#  if defined(QM_DIAGNOSTIC_ASSERT_UNREACHABLE) || \
+      defined(QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID)
+#error QM_DIAGNOSTIC_ASSERT_UNREACHABLE and QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID should not be defined.
+#  endif
+#endif
 
 TEST(QuotaCommon_Try, Success_WithCleanup)
 {
@@ -339,6 +381,7 @@ TEST(QuotaCommon_TryInspect, Success)
   EXPECT_EQ(rv, NS_OK);
 }
 
+#ifdef DEBUG
 TEST(QuotaCommon_TryInspect, Success_CustomErr_AssertUnreachable)
 {
   bool tryInspectDidNotReturn = false;
@@ -371,6 +414,7 @@ TEST(QuotaCommon_TryInspect, Success_NoErr_AssertUnreachable)
 
   EXPECT_TRUE(tryInspectDidNotReturn);
 }
+#endif
 
 TEST(QuotaCommon_TryInspect, Success_WithCleanup)
 {
@@ -742,6 +786,7 @@ TEST(QuotaCommon_TryReturn, Success)
   EXPECT_EQ(res.unwrap(), 42);
 }
 
+#ifdef DEBUG
 TEST(QuotaCommon_TryReturn, Success_CustomErr_AssertUnreachable)
 {
   bool tryReturnDidNotReturn = false;
@@ -756,6 +801,7 @@ TEST(QuotaCommon_TryReturn, Success_CustomErr_AssertUnreachable)
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), 42);
 }
+#endif
 
 TEST(QuotaCommon_TryReturn, Success_WithCleanup)
 {

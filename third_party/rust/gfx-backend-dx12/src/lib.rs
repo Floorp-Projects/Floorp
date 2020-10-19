@@ -37,6 +37,7 @@ use std::{
     fmt,
     mem,
     os::windows::ffi::OsStringExt,
+    //TODO: use parking_lot
     sync::{Arc, Mutex},
 };
 
@@ -869,12 +870,24 @@ impl hal::Instance<Backend> for Instance {
                 name.to_string_lossy().into_owned()
             };
 
+            let mut features_architecture: d3d12::D3D12_FEATURE_DATA_ARCHITECTURE =
+                unsafe { mem::zeroed() };
+            assert_eq!(winerror::S_OK, unsafe {
+                device.CheckFeatureSupport(
+                    d3d12::D3D12_FEATURE_ARCHITECTURE,
+                    &mut features_architecture as *mut _ as *mut _,
+                    mem::size_of::<d3d12::D3D12_FEATURE_DATA_ARCHITECTURE>() as _,
+                )
+            });
+
             let info = adapter::AdapterInfo {
                 name: device_name,
                 vendor: desc.VendorId as usize,
                 device: desc.DeviceId as usize,
                 device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
                     adapter::DeviceType::VirtualGpu
+                } else if features_architecture.CacheCoherentUMA == TRUE {
+                    adapter::DeviceType::IntegratedGpu
                 } else {
                     adapter::DeviceType::DiscreteGpu
                 },
@@ -886,16 +899,6 @@ impl hal::Instance<Backend> for Instance {
                     d3d12::D3D12_FEATURE_D3D12_OPTIONS,
                     &mut features as *mut _ as *mut _,
                     mem::size_of::<d3d12::D3D12_FEATURE_DATA_D3D12_OPTIONS>() as _,
-                )
-            });
-
-            let mut features_architecture: d3d12::D3D12_FEATURE_DATA_ARCHITECTURE =
-                unsafe { mem::zeroed() };
-            assert_eq!(winerror::S_OK, unsafe {
-                device.CheckFeatureSupport(
-                    d3d12::D3D12_FEATURE_ARCHITECTURE,
-                    &mut features_architecture as *mut _ as *mut _,
-                    mem::size_of::<d3d12::D3D12_FEATURE_DATA_ARCHITECTURE>() as _,
                 )
             });
 
@@ -1088,8 +1091,13 @@ impl hal::Instance<Backend> for Instance {
                     Features::INSTANCE_RATE |
                     Features::SAMPLER_MIP_LOD_BIAS |
                     Features::SAMPLER_ANISOTROPY |
+                    Features::TEXTURE_DESCRIPTOR_ARRAY |
                     Features::SAMPLER_MIRROR_CLAMP_EDGE |
-                    Features::NDC_Y_UP,
+                    Features::NDC_Y_UP |
+                    Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING |
+                    Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING |
+                    Features::UNSIZED_DESCRIPTOR_ARRAY |
+                    Features::DRAW_INDIRECT_COUNT,
                 hints:
                     Hints::BASE_VERTEX_INSTANCE_DRAWING,
                 limits: Limits { // TODO

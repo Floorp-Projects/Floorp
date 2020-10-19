@@ -218,6 +218,7 @@ windows7-32-qr/opt:
     test-sets:
         - awsy
         - windows-qr-tests
+        - windows-talos
         - web-platform-tests
 
 # win64

@@ -651,6 +651,14 @@ class CanvasCaptureTrackSource : public MediaStreamTrackSource {
     return MediaSourceEnum::Other;
   }
 
+  bool HasAlpha() const override {
+    if (!mCaptureStream || !mCaptureStream->Canvas()) {
+      // In cycle-collection
+      return false;
+    }
+    return !mCaptureStream->Canvas()->GetIsOpaque();
+  }
+
   void Stop() override {
     if (!mCaptureStream) {
       NS_ERROR("No stream");
