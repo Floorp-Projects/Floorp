@@ -1316,12 +1316,9 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   if (mCanvasElement) {
     mCanvasElement->InvalidateCanvas();
   }
-  // EnsureTarget hasn't drawn anything. Preserve mIsCapturedFrameInvalid.
-  bool capturedFrameInvalid = mIsCapturedFrameInvalid;
   // Calling Redraw() tells our invalidation machinery that the entire
   // canvas is already invalid, which can speed up future drawing.
   Redraw();
-  mIsCapturedFrameInvalid = capturedFrameInvalid;
 
   return true;
 }
