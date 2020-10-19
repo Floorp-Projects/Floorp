@@ -426,13 +426,19 @@ bool Timers::StartUserInteraction(JSContext* aCx,
                      NS_ConvertUTF16toUTF8(aUserInteraction).get()));
       }
       Delete(aCx, aUserInteraction, aObj, VoidString());
+      timer = Get(aCx, aUserInteraction, aObj, VoidString());
+
+      nsAutoString clobberText(aUserInteraction);
+      clobberText.AppendLiteral(u" (clobbered)");
+      timer->SetBHRAnnotation(clobberText, aValue);
     } else {
       timer->SetBHRAnnotation(aUserInteraction, aValue);
-      mBHRAnnotationTimers.insertBack(timer);
-
-      timer->Start(false);
-      return true;
     }
+
+    mBHRAnnotationTimers.insertBack(timer);
+
+    timer->Start(false);
+    return true;
   }
   return false;
 }
