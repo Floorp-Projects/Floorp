@@ -21,11 +21,15 @@ use hal::{
 
 use native::ShaderVisibility;
 
+fn is_little_endinan() -> bool {
+    unsafe { 1 == *(&1u32 as *const _ as *const u8) }
+}
+
 pub fn map_format(format: Format) -> Option<DXGI_FORMAT> {
     use hal::format::Format::*;
 
     // Handling packed formats according to the platform endianness.
-    let reverse = unsafe { 1 == *(&1u32 as *const _ as *const u8) };
+    let reverse = is_little_endinan();
     let format = match format {
         Bgra4Unorm if !reverse => DXGI_FORMAT_B4G4R4A4_UNORM,
         R5g6b5Unorm if reverse => DXGI_FORMAT_B5G6R5_UNORM,
@@ -109,6 +113,34 @@ pub fn map_format(format: Format) -> Option<DXGI_FORMAT> {
     Some(format)
 }
 
+pub fn map_format_shader_depth(surface: SurfaceType) -> Option<DXGI_FORMAT> {
+    match surface {
+        SurfaceType::D16 => Some(DXGI_FORMAT_R16_UNORM),
+        SurfaceType::X8D24 | SurfaceType::D24_S8 => Some(DXGI_FORMAT_R24_UNORM_X8_TYPELESS),
+        SurfaceType::D32 => Some(DXGI_FORMAT_R32_FLOAT),
+        SurfaceType::D32_S8 => Some(DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS),
+        _ => return None,
+    }
+}
+
+pub fn map_format_shader_stencil(surface: SurfaceType) -> Option<DXGI_FORMAT> {
+    match surface {
+        SurfaceType::D24_S8 => Some(DXGI_FORMAT_X24_TYPELESS_G8_UINT),
+        SurfaceType::D32_S8 => Some(DXGI_FORMAT_X32_TYPELESS_G8X24_UINT),
+        _ => None,
+    }
+}
+
+pub fn map_format_dsv(surface: SurfaceType) -> Option<DXGI_FORMAT> {
+    match surface {
+        SurfaceType::D16 => Some(DXGI_FORMAT_D16_UNORM),
+        SurfaceType::X8D24 | SurfaceType::D24_S8 => Some(DXGI_FORMAT_D24_UNORM_S8_UINT),
+        SurfaceType::D32 => Some(DXGI_FORMAT_D32_FLOAT),
+        SurfaceType::D32_S8 => Some(DXGI_FORMAT_D32_FLOAT_S8X24_UINT),
+        _ => None,
+    }
+}
+
 pub fn map_format_nosrgb(format: Format) -> Option<DXGI_FORMAT> {
     // NOTE: DXGI doesn't allow sRGB format on the swapchain, but
     //       creating RTV of swapchain buffers with sRGB works
@@ -141,6 +173,23 @@ pub fn map_swizzle(swizzle: Swizzle) -> UINT {
         )
 }
 
+pub fn swizzle_rg(swizzle: Swizzle) -> Swizzle {
+    use hal::format::Component as C;
+    fn map_component(c: C) -> C {
+        match c {
+            C::R => C::G,
+            C::G => C::R,
+            x => x,
+        }
+    } 
+    Swizzle(
+        map_component(swizzle.0),
+        map_component(swizzle.1),
+        map_component(swizzle.2),
+        map_component(swizzle.3),
+    )
+}
+
 pub fn map_surface_type(st: SurfaceType) -> Option<DXGI_FORMAT> {
     use hal::format::SurfaceType::*;
 
@@ -164,20 +213,10 @@ pub fn map_surface_type(st: SurfaceType) -> Option<DXGI_FORMAT> {
         B10_G11_R11 => DXGI_FORMAT_R11G11B10_FLOAT,
         E5_B9_G9_R9 => DXGI_FORMAT_R9G9B9E5_SHAREDEXP,
         D16 => DXGI_FORMAT_R16_TYPELESS,
-        X8D24 => DXGI_FORMAT_D24_UNORM_S8_UINT,
+        X8D24 => DXGI_FORMAT_R24G8_TYPELESS,
         D32 => DXGI_FORMAT_R32_TYPELESS,
-        D24_S8 => DXGI_FORMAT_D24_UNORM_S8_UINT,
-        D32_S8 => DXGI_FORMAT_D32_FLOAT_S8X24_UINT,
-        _ => return None,
-    })
-}
-
-pub fn map_format_dsv(surface: SurfaceType) -> Option<DXGI_FORMAT> {
-    Some(match surface {
-        SurfaceType::D16 => DXGI_FORMAT_D16_UNORM,
-        SurfaceType::X8D24 | SurfaceType::D24_S8 => DXGI_FORMAT_D24_UNORM_S8_UINT,
-        SurfaceType::D32 => DXGI_FORMAT_D32_FLOAT,
-        SurfaceType::D32_S8 => DXGI_FORMAT_D32_FLOAT_S8X24_UINT,
+        D24_S8 => DXGI_FORMAT_R24G8_TYPELESS,
+        D32_S8 => DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,
         _ => return None,
     })
 }

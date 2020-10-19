@@ -33,10 +33,11 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDeviceCreateBuffer(RawId aSelfId,
                                         const ffi::WGPUBufferDescriptor& aDesc,
                                         const nsCString& aLabel, RawId aNewId);
-  ipc::IPCResult RecvDeviceUnmapBuffer(RawId aSelfId, RawId aBufferId,
-                                       Shmem&& aShmem, bool aFlush);
-  ipc::IPCResult RecvBufferMapRead(RawId aSelfId, Shmem&& aShmem,
-                                   BufferMapReadResolver&& aResolver);
+  ipc::IPCResult RecvBufferReturnShmem(RawId aSelfId, Shmem&& aShmem);
+  ipc::IPCResult RecvBufferMap(RawId aSelfId, ffi::WGPUHostMap aHostMap,
+                               uint64_t aOffset, uint64_t size,
+                               BufferMapResolver&& aResolver);
+  ipc::IPCResult RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem, bool aFlush);
   ipc::IPCResult RecvBufferDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateTexture(
       RawId aSelfId, const ffi::WGPUTextureDescriptor& aDesc,
@@ -46,9 +47,9 @@ class WebGPUParent final : public PWebGPUParent {
       const nsCString& aLabel, RawId aNewId);
   ipc::IPCResult RecvTextureDestroy(RawId aSelfId);
   ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
-  ipc::IPCResult RecvDeviceCreateSampler(
-      RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc,
-      const nsCString& aLabel, RawId aNewId);
+  ipc::IPCResult RecvDeviceCreateSampler(RawId aSelfId,
+                                         const SerialSamplerDescriptor& aDesc,
+                                         RawId aNewId);
   ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
@@ -92,7 +93,8 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aSelfId, const SerialBindGroupDescriptor& aDesc, RawId aNewId);
   ipc::IPCResult RecvBindGroupDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateShaderModule(RawId aSelfId,
-                                              const nsTArray<uint32_t>& aData,
+                                              const nsTArray<uint32_t>& aSpirv,
+                                              const nsCString& aWgsl,
                                               RawId aNewId);
   ipc::IPCResult RecvShaderModuleDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateComputePipeline(
@@ -116,8 +118,13 @@ class WebGPUParent final : public PWebGPUParent {
   virtual ~WebGPUParent();
   void MaintainDevices();
 
-  const ffi::WGPUGlobal_IdentityRecyclerFactory* const mContext;
+  const ffi::WGPUGlobal* const mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
+  /// Shmem associated with a mappable buffer has to be owned by one of the
+  /// processes. We keep it here for every mappable buffer while the buffer is
+  /// used by GPU.
+  std::unordered_map<uint64_t, Shmem> mSharedMemoryMap;
+  /// Associated presentation data for each swapchain.
   std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
 };
 

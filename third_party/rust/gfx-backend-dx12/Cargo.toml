@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-dx12"
-version = "0.5.3"
+version = "0.5.9"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-12 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -36,7 +36,7 @@ package = "gfx-auxil"
 version = "1"
 
 [dependencies.hal]
-version = "0.5"
+version = "0.5.3"
 package = "gfx-hal"
 
 [dependencies.log]
@@ -48,7 +48,7 @@ features = ["libloading"]
 package = "d3d12"
 
 [dependencies.range-alloc]
-version = "0.1"
+version = "0.1.1"
 
 [dependencies.raw-window-handle]
 version = "0.3"
