@@ -35,5 +35,5 @@ fun List<TabCollection>.getDefaultCollectionNumber(): Int {
         .map { it.title }
         .filter { it.matches(Regex("Collection\\s\\d+")) }
         .map { Integer.valueOf(it.split(" ")[DefaultCollectionCreationController.DEFAULT_COLLECTION_NUMBER_POSITION]) }
-        .max() ?: 0) + DefaultCollectionCreationController.DEFAULT_INCREMENT_VALUE
+        .maxOrNull() ?: 0) + DefaultCollectionCreationController.DEFAULT_INCREMENT_VALUE
 }

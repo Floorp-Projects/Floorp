@@ -229,9 +229,6 @@
         <activity android:name=".settings.account.AuthIntentReceiverActivity"
             android:exported="false" />
 
-        <activity android:name=".settings.about.AboutLibrariesActivity"
-            android:exported="false" />
-
         <service android:name=".media.MediaService"
             android:exported="false" />
 

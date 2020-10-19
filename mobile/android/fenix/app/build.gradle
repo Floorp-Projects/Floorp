@@ -315,7 +315,31 @@ ext.gleanGenerateMarkdownDocs = true
 ext.gleanDocsDirectory = "$rootDir/docs"
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
 
+configurations {
+    // There's an interaction between Gradle's resolution of dependencies with different types
+    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
+    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
+    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
+    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
+    // what's happening is that @aar type in `implementation` resolves to the @jar type in
+    // `testImplementation`, and that it wins the dependency resolution battle.
+    //
+    // A workaround is to add a new configuration which depends on the @jar type and to reference
+    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
+    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
+    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
+    // Success!
+    jnaForTest
+    // Robolectric, through `com.google.android.apps.common.testing.accessibility.framework`
+    // depends on an old version of protobuf that conflict with the Application Services one.
+    // See: https://github.com/mozilla/application-services/issues/2952
+    all*.exclude group: 'com.google.protobuf', module: 'protobuf-java'
+}
+
 dependencies {
+    jnaForTest Deps.jna
+    testImplementation files(configurations.jnaForTest.copyRecursive().files)
+
     debugImplementation Deps.mozilla_browser_engine_gecko_nightly
 
     nightlyImplementation Deps.mozilla_browser_engine_gecko_nightly
@@ -538,13 +562,13 @@ if (project.hasProperty("coverage")) {
 // -------------------------------------------------------------------------------------------------
 tasks.register('printVariants') {
     doLast {
-        def variants = android.applicationVariants.collect {[
-                apks: it.variantData.outputScope.apkDatas.collect {[
-                        abi: it.filters.find { it.filterType == 'ABI' }.identifier,
-                        fileName: it.outputFileName,
-                ]},
-                build_type: it.buildType.name,
-                name: it.name,
+        def variants = android.applicationVariants.collect { variant -> [
+            apks: variant.outputs.collect { output -> [
+                abi: output.getFilter(com.android.build.VariantOutput.FilterType.ABI),
+                fileName: output.outputFile.name
+            ]},
+            build_type: variant.buildType.name,
+            name: variant.name,
         ]}
         // AndroidTest is a special case not included above
         variants.add([

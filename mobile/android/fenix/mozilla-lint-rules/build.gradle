@@ -9,10 +9,16 @@ targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}"
+    compileOnly Deps.kotlin_stdlib
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
+    compileOnly Deps.kotlin_reflect
+
     compileOnly "com.android.tools.lint:lint-api:${Versions.android_lint_api}"
     compileOnly "com.android.tools.lint:lint-checks:${Versions.android_lint_api}"
 
+    testImplementation Deps.kotlin_stdlib
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
+    testImplementation Deps.kotlin_reflect
     testImplementation "com.android.tools.lint:lint:${Versions.android_lint_api}"
     testImplementation "com.android.tools.lint:lint-tests:${Versions.android_lint_api}"
 }

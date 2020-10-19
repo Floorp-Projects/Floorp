@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
+import mozilla.components.feature.logins.exceptions.LoginException
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -61,7 +62,7 @@ class LoginExceptionsFragment : Fragment() {
 
     private fun subscribeToLoginExceptions() {
         requireComponents.core.loginExceptionStorage.getLoginExceptions().asLiveData()
-            .observe(viewLifecycleOwner) { exceptions ->
+            .observe<List<LoginException>>(viewLifecycleOwner) { exceptions ->
                 exceptionsStore.dispatch(ExceptionsFragmentAction.Change(exceptions))
             }
     }

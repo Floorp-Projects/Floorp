@@ -3,19 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val kotlin = "1.3.72"
-    const val coroutines = "1.3.3"
+    const val kotlin = "1.4.10"
+    const val coroutines = "1.3.9"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3
-    const val android_gradle_plugin = "3.6.4"
-    const val android_lint_api = "26.6.4"
+    const val android_gradle_plugin = "4.0.1"
+    const val android_lint_api = "27.0.1"
 
     const val sentry = "1.7.10"
     const val leakcanary = "2.4"
     const val leanplum = "5.4.0"
     const val osslicenses_plugin = "0.9.5"
     const val detekt = "1.9.1"
+    const val jna = "5.6.0"
 
     const val androidx_appcompat = "1.2.0-rc01"
     const val androidx_biometric = "1.1.0-beta01"
@@ -55,6 +56,7 @@ object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+    const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
     const val kotlin_coroutines_test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
     const val kotlin_coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
@@ -184,6 +186,8 @@ object Deps {
 
     const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"
+
+    const val jna = "net.java.dev.jna:jna:${Versions.jna}@jar"
 
     const val junit = "junit:junit:${Versions.junit}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
