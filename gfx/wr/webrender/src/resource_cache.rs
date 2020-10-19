@@ -26,7 +26,7 @@ use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKe
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
-use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
+use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey};
@@ -461,6 +461,9 @@ pub struct ResourceCache {
 
     /// A list of queued compositor surface updates to apply next frame.
     pending_native_surface_updates: Vec<NativeSurfaceOperation>,
+
+    image_templates_memory: usize,
+    font_templates_memory: usize,
 }
 
 impl ResourceCache {
@@ -492,6 +495,8 @@ impl ResourceCache {
             pending_native_surface_updates: Vec::new(),
             #[cfg(feature = "capture")]
             capture_dirty: true,
+            image_templates_memory: 0,
+            font_templates_memory: 0,
         }
     }
 
@@ -546,7 +551,7 @@ impl ResourceCache {
     pub fn post_scene_building_update(
         &mut self,
         updates: Vec<ResourceUpdate>,
-        profile_counters: &mut ResourceProfileCounters,
+        profile: &mut TransactionProfile,
     ) {
         // TODO, there is potential for optimization here, by processing updates in
         // bulk rather than one by one (for example by sorting allocations by size or
@@ -561,7 +566,8 @@ impl ResourceCache {
             match update {
                 ResourceUpdate::AddImage(img) => {
                     if let ImageData::Raw(ref bytes) = img.data {
-                        profile_counters.image_templates.inc(bytes.len());
+                        self.image_templates_memory += bytes.len();
+                        profile.set(profiler::IMAGE_TEMPLATES_MEM, bytes_to_mb(self.image_templates_memory));
                     }
                     self.add_image_template(
                         img.key,
@@ -570,6 +576,7 @@ impl ResourceCache {
                         &img.descriptor.size.into(),
                         img.tiling,
                     );
+                    profile.set(profiler::IMAGE_TEMPLATES, self.resources.image_templates.images.len());
                 }
                 ResourceUpdate::UpdateImage(img) => {
                     self.update_image_template(img.key, img.descriptor, img.data.into(), &img.dirty_rect);
@@ -597,12 +604,16 @@ impl ResourceCache {
                 }
                 ResourceUpdate::DeleteImage(img) => {
                     self.delete_image_template(img);
+                    profile.set(profiler::IMAGE_TEMPLATES, self.resources.image_templates.images.len());
+                    profile.set(profiler::IMAGE_TEMPLATES_MEM, bytes_to_mb(self.image_templates_memory));
                 }
                 ResourceUpdate::DeleteBlobImage(img) => {
                     self.delete_image_template(img.as_image());
                 }
                 ResourceUpdate::DeleteFont(font) => {
                     self.delete_font_template(font);
+                    profile.set(profiler::FONT_TEMPLATES, self.resources.font_templates.len());
+                    profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
                 }
                 ResourceUpdate::DeleteFontInstance(font) => {
                     self.delete_font_instance(font);
@@ -614,13 +625,15 @@ impl ResourceCache {
                 ResourceUpdate::AddFont(font) => {
                     match font {
                         AddFont::Raw(id, bytes, index) => {
-                            profile_counters.font_templates.inc(bytes.len());
+                            self.font_templates_memory += bytes.len();
+                            profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
                             self.add_font_template(id, FontTemplate::Raw(bytes, index));
                         }
                         AddFont::Native(id, native_font_handle) => {
                             self.add_font_template(id, FontTemplate::Native(native_font_handle));
                         }
                     }
+                    profile.set(profiler::FONT_TEMPLATES, self.resources.font_templates.len());
                 }
                 ResourceUpdate::AddFontInstance(..) => {
                     // Already added in ApiResources.
@@ -632,7 +645,7 @@ impl ResourceCache {
     pub fn add_rasterized_blob_images(
         &mut self,
         images: Vec<(BlobImageRequest, BlobImageResult)>,
-        texture_cache_profile: &mut TextureCacheProfileCounters,
+        profile: &mut TransactionProfile,
     ) {
         for (request, result) in images {
             let data = match result {
@@ -643,7 +656,7 @@ impl ResourceCache {
                 }
             };
 
-            texture_cache_profile.rasterized_blob_pixels.inc(data.rasterized_rect.area() as usize);
+            profile.add(profiler::RASTERIZED_BLOBS_PX, data.rasterized_rect.area());
 
             // First make sure we have an entry for this key (using a placeholder
             // if need be).
@@ -680,7 +693,9 @@ impl ResourceCache {
 
     pub fn delete_font_template(&mut self, font_key: FontKey) {
         self.glyph_rasterizer.delete_font(font_key);
-        self.resources.font_templates.remove(&font_key);
+        if let Some(FontTemplate::Raw(data, _)) = self.resources.font_templates.remove(&font_key) {
+            self.font_templates_memory -= data.len();
+        }
         self.cached_glyphs
             .clear_fonts(|font| font.font_key == font_key);
     }
@@ -800,6 +815,10 @@ impl ResourceCache {
 
         match value {
             Some(image) => if image.data.is_blob() {
+                if let CachedImageData::Raw(data) = image.data {
+                    self.image_templates_memory -= data.len();
+                }
+
                 let blob_key = BlobImageKey(image_key);
                 self.deleted_blob_keys.back_mut().unwrap().push(blob_key);
                 self.rasterized_blob_images.remove(&blob_key);
@@ -1150,7 +1169,7 @@ impl ResourceCache {
         &mut self,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
-        texture_cache_profile: &mut TextureCacheProfileCounters,
+        profile: &mut TransactionProfile,
     ) {
         profile_scope!("block_until_all_resources_added");
 
@@ -1163,7 +1182,7 @@ impl ResourceCache {
             gpu_cache,
             &mut self.cached_render_tasks,
             render_tasks,
-            texture_cache_profile,
+            profile,
         );
 
         // Apply any updates of new / updated images (incl. blobs) to the texture cache.
@@ -1384,11 +1403,11 @@ impl ResourceCache {
     }
 
 
-    pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
+    pub fn end_frame(&mut self, profile: &mut TransactionProfile) {
         debug_assert_eq!(self.state, State::QueryResources);
         profile_scope!("end_frame");
         self.state = State::Idle;
-        self.texture_cache.end_frame(texture_cache_profile);
+        self.texture_cache.end_frame(profile);
     }
 
     pub fn set_debug_flags(&mut self, flags: DebugFlags) {

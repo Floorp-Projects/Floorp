@@ -666,6 +666,11 @@ fn main() {
         dump_shader_source,
         notifier,
     );
+
+    if let Some(ui_str) = args.value_of("profiler_ui") {
+        wrench.renderer.set_profiler_ui(&ui_str);
+    }
+
     window.update(&mut wrench);
 
     if let Some(window_title) = wrench.take_title() {
@@ -802,7 +807,7 @@ fn render<'a>(
 
     // Default the profile overlay on for android.
     if cfg!(target_os = "android") {
-        debug_flags.toggle(DebugFlags::PROFILER_DBG | DebugFlags::COMPACT_PROFILER);
+        debug_flags.toggle(DebugFlags::PROFILER_DBG);
         wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
     }
 
@@ -861,11 +866,6 @@ fn render<'a>(
                         }
                         VirtualKeyCode::I => {
                             debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG);
-                            wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
-                        }
-                        VirtualKeyCode::S => {
-                            debug_flags.toggle(DebugFlags::COMPACT_PROFILER);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                             do_render = true;
                         }

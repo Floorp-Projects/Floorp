@@ -1400,6 +1400,7 @@ impl intern::Internable for ClipIntern {
     type Key = ClipItemKey;
     type StoreData = ClipNode;
     type InternData = ClipInternData;
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_CLIPS;
 }
 
 #[derive(Debug, MallocSizeOf)]
