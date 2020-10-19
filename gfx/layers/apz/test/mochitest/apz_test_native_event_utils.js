@@ -1002,11 +1002,10 @@ async function synthesizeNativeTouchAndWaitForTransformEnd(
   await transformEndPromise;
 }
 
-// This generates a touch-based pinch zoom-out gesture that is expected
-// to succeed. It returns after APZ has completed the zoom and reaches the end
-// of the transform. The touch inputs are directed to the center of the
-// current visual viewport.
-async function pinchZoomOutWithTouchAtCenter() {
+// Returns a touch sequence for a pinch-zoom-out operation in the center
+// of the visual viewport. The touch sequence returned is in CSS coordinates
+// relative to the document body.
+function pinchZoomOutTouchSequenceAtCenter() {
   // Divide the half of visual viewport size by 8, then cause touch events
   // starting from the 7th furthest away from the center towards the center.
   const deltaX = window.visualViewport.width / 16;
@@ -1030,7 +1029,15 @@ async function pinchZoomOutWithTouchAtCenter() {
       [ { x: centerX - (deltaX * 1), y: centerY - (deltaY * 1) },
         { x: centerX + (deltaX * 1), y: centerY + (deltaY * 1) } ],
   ];
+  return zoom_out;
+}
 
+// This generates a touch-based pinch zoom-out gesture that is expected
+// to succeed. It returns after APZ has completed the zoom and reaches the end
+// of the transform. The touch inputs are directed to the center of the
+// current visual viewport.
+async function pinchZoomOutWithTouchAtCenter() {
+  var zoom_out = pinchZoomOutTouchSequenceAtCenter();
   var touchIds = [0, 1];
   await synthesizeNativeTouchAndWaitForTransformEnd(zoom_out, touchIds);
 }
