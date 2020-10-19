@@ -3455,19 +3455,10 @@ void MediaManager::OnNavigation(uint64_t aWindowID) {
   // be added to from the main-thread
   auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
   if (window) {
-    // We have cleanup to do when we're the current window. OnNavigation is also
-    // called by nsGlobalWindowInner::FreeInnerObjects, which MAY happen later
-    // when window is not current. In that case, cleanup has already happened.
-    if (!window->IsCurrentInnerWindow()) {
-      return;
+    if (RefPtr<GetUserMediaWindowListener> listener =
+            GetWindowListener(aWindowID)) {
+      listener->RemoveAll();
     }
-    IterateWindowListeners(
-        window, [self = RefPtr<MediaManager>(this),
-                 windowID = DebugOnly<decltype(aWindowID)>(aWindowID)](
-                    const RefPtr<GetUserMediaWindowListener>& aListener) {
-          aListener->RemoveAll();
-          MOZ_ASSERT(!self->GetWindowListener(windowID));
-        });
   } else {
     RemoveWindowID(aWindowID);
   }
@@ -4060,17 +4051,12 @@ MediaManager::SanitizeDeviceIds(int64_t aSinceWhen) {
 }
 
 void MediaManager::StopScreensharing(uint64_t aWindowID) {
-  // We need to stop window/screensharing for all streams in this innerwindow
-  // and all its sub frames.
+  // We need to stop window/screensharing for all streams in this innerwindow.
 
-  auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
-  if (!window || !window->IsCurrentInnerWindow()) {
-    return;
+  if (RefPtr<GetUserMediaWindowListener> listener =
+          GetWindowListener(aWindowID)) {
+    listener->StopSharing();
   }
-  IterateWindowListeners(
-      window, [](const RefPtr<GetUserMediaWindowListener>& aListener) {
-        aListener->StopSharing();
-      });
 }
 
 template <typename FunctionType>
