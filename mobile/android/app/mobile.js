@@ -375,11 +375,6 @@ pref("app.update.url.android", "https://aus5.mozilla.org/update/4/%PRODUCT%/%VER
   pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 #endif
 
-// threshold where a tap becomes a drag, in 1/240" reference pixels
-// The names of the preferences are to be in sync with EventStateManager.cpp
-pref("ui.dragThresholdX", 25);
-pref("ui.dragThresholdY", 25);
-
 pref("layers.async-video.enabled", true);
 
 // APZ physics settings (fling acceleration, fling curving and axis lock) have
