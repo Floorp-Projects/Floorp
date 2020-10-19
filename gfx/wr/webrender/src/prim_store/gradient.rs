@@ -321,7 +321,6 @@ impl Internable for LinearGradient {
     type Key = LinearGradientKey;
     type StoreData = LinearGradientTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_LINEAR_GRADIENTS;
 }
 
 impl InternablePrimitive for LinearGradient {
@@ -551,7 +550,6 @@ impl Internable for RadialGradient {
     type Key = RadialGradientKey;
     type StoreData = RadialGradientTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_RADIAL_GRADIENTS;
 }
 
 impl InternablePrimitive for RadialGradient {
@@ -771,7 +769,6 @@ impl Internable for ConicGradient {
     type Key = ConicGradientKey;
     type StoreData = ConicGradientTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_CONIC_GRADIENTS;
 }
 
 impl InternablePrimitive for ConicGradient {

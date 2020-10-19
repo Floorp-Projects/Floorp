@@ -513,48 +513,57 @@ bitflags! {
         const DISABLE_BATCHING      = 1 << 5;
         /// Display the pipeline epochs.
         const EPOCHS                = 1 << 6;
+        /// Reduce the amount of information displayed by the profiler so that
+        /// it occupies less screen real-estate.
+        const COMPACT_PROFILER      = 1 << 7;
         /// Print driver messages to stdout.
-        const ECHO_DRIVER_MESSAGES  = 1 << 7;
+        const ECHO_DRIVER_MESSAGES  = 1 << 8;
+        /// Show an indicator that moves every time a frame is rendered.
+        const NEW_FRAME_INDICATOR   = 1 << 9;
+        /// Show an indicator that moves every time a scene is built.
+        const NEW_SCENE_INDICATOR   = 1 << 10;
         /// Show an overlay displaying overdraw amount.
-        const SHOW_OVERDRAW         = 1 << 8;
+        const SHOW_OVERDRAW         = 1 << 11;
         /// Display the contents of GPU cache.
-        const GPU_CACHE_DBG         = 1 << 9;
+        const GPU_CACHE_DBG         = 1 << 12;
+        /// Show a red bar that moves each time a slow frame is detected.
+        const SLOW_FRAME_INDICATOR  = 1 << 13;
         /// Clear evicted parts of the texture cache for debugging purposes.
-        const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 10;
+        const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
         /// Show picture caching debug overlay
-        const PICTURE_CACHING_DBG   = 1 << 11;
+        const PICTURE_CACHING_DBG   = 1 << 15;
         /// Highlight all primitives with colors based on kind.
-        const PRIMITIVE_DBG = 1 << 12;
+        const PRIMITIVE_DBG = 1 << 16;
         /// Draw a zoom widget showing part of the framebuffer zoomed in.
-        const ZOOM_DBG = 1 << 13;
+        const ZOOM_DBG = 1 << 17;
         /// Scale the debug renderer down for a smaller screen. This will disrupt
         /// any mapping between debug display items and page content, so shouldn't
         /// be used with overlays like the picture caching or primitive display.
-        const SMALL_SCREEN = 1 << 14;
+        const SMALL_SCREEN = 1 << 18;
         /// Disable various bits of the WebRender pipeline, to help narrow
         /// down where slowness might be coming from.
-        const DISABLE_OPAQUE_PASS = 1 << 15;
+        const DISABLE_OPAQUE_PASS = 1 << 19;
         ///
-        const DISABLE_ALPHA_PASS = 1 << 16;
+        const DISABLE_ALPHA_PASS = 1 << 20;
         ///
-        const DISABLE_CLIP_MASKS = 1 << 17;
+        const DISABLE_CLIP_MASKS = 1 << 21;
         ///
-        const DISABLE_TEXT_PRIMS = 1 << 18;
+        const DISABLE_TEXT_PRIMS = 1 << 22;
         ///
-        const DISABLE_GRADIENT_PRIMS = 1 << 19;
+        const DISABLE_GRADIENT_PRIMS = 1 << 23;
         ///
-        const OBSCURE_IMAGES = 1 << 20;
+        const OBSCURE_IMAGES = 1 << 24;
         /// Taint the transparent area of the glyphs with a random opacity to easily
         /// see when glyphs are re-rasterized.
-        const GLYPH_FLASHING = 1 << 21;
+        const GLYPH_FLASHING = 1 << 25;
         /// The profiler only displays information that is out of the ordinary.
-        const SMART_PROFILER        = 1 << 22;
+        const SMART_PROFILER        = 1 << 26;
         /// If set, dump picture cache invalidation debug to console.
-        const INVALIDATION_DBG = 1 << 23;
+        const INVALIDATION_DBG = 1 << 27;
         /// Log tile cache to memory for later saving as part of wr-capture
-        const TILE_CACHE_LOGGING_DBG   = 1 << 24;
+        const TILE_CACHE_LOGGING_DBG   = 1 << 28;
         /// Collect and dump profiler statistics to captures.
-        const PROFILER_CAPTURE = (1 as u32) << 25; // need "as u32" until we have cbindgen#556
+        const PROFILER_CAPTURE = (1 as u32) << 31; // need "as u32" until we have cbindgen#556
     }
 }
 

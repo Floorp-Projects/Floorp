@@ -74,7 +74,6 @@ impl Internable for Backdrop {
     type Key = BackdropKey;
     type StoreData = BackdropTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_BACKDROPS;
 }
 
 impl InternablePrimitive for Backdrop {

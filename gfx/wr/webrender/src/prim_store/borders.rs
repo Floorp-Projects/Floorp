@@ -145,7 +145,6 @@ impl intern::Internable for NormalBorderPrim {
     type Key = NormalBorderKey;
     type StoreData = NormalBorderTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_NORMAL_BORDERS;
 }
 
 impl InternablePrimitive for NormalBorderPrim {
@@ -319,7 +318,6 @@ impl intern::Internable for ImageBorder {
     type Key = ImageBorderKey;
     type StoreData = ImageBorderTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_IMAGE_BORDERS;
 }
 
 impl InternablePrimitive for ImageBorder {

@@ -436,10 +436,5 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
   aReport->swap_chain += swapChainSize;
 }
 
-void RendererOGL::SetProfilerUI(const nsCString& aUI) {
-  wr_renderer_set_profiler_ui(GetRenderer(), (const uint8_t*)aUI.get(),
-                              aUI.Length());
-}
-
 }  // namespace wr
 }  // namespace mozilla

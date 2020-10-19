@@ -80,10 +80,6 @@ args:
   - no_block:
       long: no-block
       help: Don't block on UI events - run event loop as fast as possible.
-  - profiler_ui:
-      long: profiler-ui
-      takes_value: true
-      help: A string describing what to show on in the profiler HUD (See https://github.com/servo/webrender/wiki/Debugging-WebRender#anchor_6).
 
 subcommands:
     - png:

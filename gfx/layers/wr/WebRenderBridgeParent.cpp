@@ -362,9 +362,9 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
+
   UpdateDebugFlags();
   UpdateQualitySettings();
-  UpdateProfilerUI();
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
@@ -1498,11 +1498,6 @@ void WebRenderBridgeParent::UpdateQualitySettings() {
 
 void WebRenderBridgeParent::UpdateDebugFlags() {
   mApi->UpdateDebugFlags(gfxVars::WebRenderDebugFlags());
-}
-
-void WebRenderBridgeParent::UpdateProfilerUI() {
-  nsCString uiString = gfxVars::GetWebRenderProfilerUIOrDefault();
-  mApi->SetProfilerUI(uiString);
 }
 
 void WebRenderBridgeParent::UpdateMultithreading() {

@@ -27,7 +27,6 @@ use crate::api::units::*;
 use crate::api_resources::ApiResources;
 use crate::scene_builder_thread::{SceneBuilderRequest, SceneBuilderResult};
 use crate::intern::InterningMemoryReport;
-use crate::profiler::{self, TransactionProfile};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -389,7 +388,6 @@ impl Transaction {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-            profile: TransactionProfile::new(),
         })
     }
 
@@ -573,8 +571,6 @@ pub struct TransactionMsg {
     pub blob_requests: Vec<BlobImageParams>,
     ///
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    /// Collect various data along the rendering pipeline to display it in the embedded profiler.
-    pub profile: TransactionProfile,
 }
 
 impl fmt::Debug for TransactionMsg {
@@ -1236,7 +1232,6 @@ impl RenderApi {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-            profile: TransactionProfile::new(),
         })
     }
 
@@ -1255,7 +1250,6 @@ impl RenderApi {
             blob_rasterizer: None,
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
-            profile: TransactionProfile::new(),
         })
     }
 
@@ -1286,10 +1280,6 @@ impl RenderApi {
         self.resources.update(&mut transaction);
 
         transaction.use_scene_builder_thread |= !transaction.scene_ops.is_empty();
-        if transaction.generate_frame {
-            transaction.profile.start_time(profiler::API_SEND_TIME);
-            transaction.profile.start_time(profiler::TOTAL_FRAME_CPU_TIME);
-        }
 
         if transaction.use_scene_builder_thread {
             let sender = if transaction.low_priority {
@@ -1311,10 +1301,6 @@ impl RenderApi {
             .map(|(txn, id)| {
                 let mut txn = txn.finalize(id);
                 self.resources.update(&mut txn);
-                if txn.generate_frame {
-                    txn.profile.start_time(profiler::API_SEND_TIME);
-                    txn.profile.start_time(profiler::TOTAL_FRAME_CPU_TIME);
-                }
 
                 txn
             })

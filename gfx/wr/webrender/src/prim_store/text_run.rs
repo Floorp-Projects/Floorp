@@ -151,7 +151,6 @@ impl intern::Internable for TextRun {
     type Key = TextRunKey;
     type StoreData = TextRunTemplate;
     type InternData = ();
-    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_TEXT_RUNS;
 }
 
 impl InternablePrimitive for TextRun {

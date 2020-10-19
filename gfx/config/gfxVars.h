@@ -53,7 +53,6 @@ class gfxVarReceiver;
   _(UseWebRenderOptimizedShaders, bool, false)                     \
   _(UseWebRenderMultithreading, bool, false)                       \
   _(UseWebRenderScissoredCacheClears, bool, true)                  \
-  _(WebRenderProfilerUI, nsCString, nsCString())                   \
   _(WebglAllowCoreProfile, bool, true)                             \
   _(WebglAllowWindowsNativeGl, bool, false)                        \
   _(WebRenderMaxPartialPresentRects, int32_t, 0)                   \
