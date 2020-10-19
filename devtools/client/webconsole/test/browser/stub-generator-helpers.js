@@ -288,6 +288,10 @@ function getCleanedPacket(key, packet) {
     res.totalTime = existingPacket.totalTime;
   }
 
+  if (res.securityState && existingPacket.securityState) {
+    res.securityState = existingPacket.securityState;
+  }
+
   if (res.actor && existingPacket.actor) {
     res.actor = existingPacket.actor;
   }
