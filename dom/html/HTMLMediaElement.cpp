@@ -2660,6 +2660,9 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
       if (mSecondaryMediaStreamRenderer) {
         mSecondaryMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
       }
+      if (mMediaInfo.HasVideo()) {
+        mMediaInfo.mVideo.SetAlpha(mSelectedVideoStreamTrack->HasAlpha());
+      }
       nsContentUtils::CombineResourcePrincipals(
           &mSrcStreamVideoPrincipal, mSelectedVideoStreamTrack->GetPrincipal());
     }
@@ -5825,6 +5828,9 @@ void HTMLMediaElement::UpdateReadyStateInternal() {
     }
     if (hasVideoTracks) {
       mediaInfo.EnableVideo();
+      if (mSelectedVideoStreamTrack) {
+        mediaInfo.mVideo.SetAlpha(mSelectedVideoStreamTrack->HasAlpha());
+      }
     }
     MetadataLoaded(&mediaInfo, nullptr);
   }
