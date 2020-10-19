@@ -7,6 +7,10 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 
+const { PlacesUIUtils } = ChromeUtils.import(
+  "resource:///modules/PlacesUIUtils.jsm"
+);
+
 let rootDir = do_get_file("chromefiles/", true);
 
 add_task(async function setup_fakePaths() {
@@ -19,6 +23,23 @@ add_task(async function setup_fakePaths() {
     pathId = "Home";
   }
   registerFakePath(pathId, rootDir);
+});
+
+add_task(async function setup_initialBookmarks() {
+  let bookmarks = [];
+  for (let i = 0; i < PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE + 1; i++) {
+    bookmarks.push({ url: "https://example.com/" + i, title: "" + i });
+  }
+
+  // Ensure we have enough items in both the menu and toolbar to trip creating a "from" folder.
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: bookmarks,
+  });
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: bookmarks,
+  });
 });
 
 async function testBookmarks(migratorKey, subDirs, folderName) {
