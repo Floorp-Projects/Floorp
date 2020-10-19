@@ -321,6 +321,18 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   }
 }
 
+void AudioDestinationNode::Init() {
+  if (!mIsOffline) {
+    CreateAudioChannelAgent();
+    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(
+        AudioChannelService::AudibleState::eNotAudible);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    mAudioChannelAgent->PullInitialUpdate();
+  }
+}
+
 AudioDestinationNode::~AudioDestinationNode() {
   ReleaseAudioWakeLockIfExists();
 }
