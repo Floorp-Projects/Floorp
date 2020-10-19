@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/Shmem.h"
+#include "js/RootingAPI.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
 #include "Device.h"
@@ -30,16 +31,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Buffer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  if (tmp->mMapping) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mMapping->mArrayBuffer)
+  if (tmp->mMapped) {
+    for (uint32_t i = 0; i < tmp->mMapped->mArrayBuffers.Length(); ++i) {
+      NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(
+          mMapped->mArrayBuffers[i])
+    }
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-Buffer::Mapping::Mapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer,
-                         bool aWrite)
-    : mShmem(MakeUnique<ipc::Shmem>(std::move(aShmem))),
-      mArrayBuffer(aArrayBuffer),
-      mWrite(aWrite) {}
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize)
     : ChildOf(aParent), mId(aId), mSize(aSize) {
@@ -52,30 +50,42 @@ Buffer::~Buffer() {
 }
 
 void Buffer::Cleanup() {
-  if (mParent) {
+  if (mValid && mParent) {
+    mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       bridge->SendBufferDestroy(mId);
     }
+    if (bridge && mMapped) {
+      bridge->DeallocShmem(mMapped->mShmem);
+    }
   }
-  mMapping.reset();
 }
 
-void Buffer::InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer,
-                         bool aWrite) {
-  mMapping.emplace(std::move(aShmem), aArrayBuffer, aWrite);
+void Buffer::SetMapped(ipc::Shmem&& aShmem, bool aWritable) {
+  MOZ_ASSERT(!mMapped);
+  mMapped.emplace();
+  mMapped->mShmem = std::move(aShmem);
+  mMapped->mWritable = aWritable;
 }
 
-already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
+already_AddRefed<dom::Promise> Buffer::MapAsync(
+    uint32_t aMode, uint64_t aOffset, const dom::Optional<uint64_t>& aSize,
+    ErrorResult& aRv) {
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  if (mMapping) {
+  if (mMapped) {
     aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
     return nullptr;
   }
-  const auto checked = CheckedInt<size_t>(mSize);
+  // Initialize with a dummy shmem, it will become real after the promise is
+  // resolved.
+  SetMapped(ipc::Shmem(), aMode == dom::GPUMapMode_Binding::WRITE);
+
+  const auto checked = aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value())
+                                         : CheckedInt<size_t>(mSize) - aOffset;
   if (!checked.isValid()) {
     aRv.ThrowRangeError("Mapped size is too large");
     return nullptr;
@@ -84,32 +94,16 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
   const auto& size = checked.value();
   RefPtr<Buffer> self(this);
 
-  auto mappingPromise = mParent->MapBufferForReadAsync(mId, size, aRv);
+  auto mappingPromise = mParent->MapBufferAsync(mId, aMode, aOffset, size, aRv);
   if (!mappingPromise) {
     return nullptr;
   }
 
   mappingPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [promise, size, self](ipc::Shmem&& aShmem) {
-        MOZ_ASSERT(aShmem.Size<uint8_t>() == size);
-        dom::AutoJSAPI jsapi;
-        if (!jsapi.Init(self->GetParentObject())) {
-          promise->MaybeRejectWithAbortError("Owning page was unloaded!");
-          return;
-        }
-        JS::Rooted<JSObject*> arrayBuffer(
-            jsapi.cx(),
-            Device::CreateExternalArrayBuffer(jsapi.cx(), size, aShmem));
-        if (!arrayBuffer) {
-          ErrorResult rv;
-          rv.StealExceptionFromJSContext(jsapi.cx());
-          promise->MaybeReject(std::move(rv));
-          return;
-        }
-        JS::Rooted<JS::Value> val(jsapi.cx(), JS::ObjectValue(*arrayBuffer));
-        self->mMapping.emplace(std::move(aShmem), arrayBuffer, false);
-        promise->MaybeResolve(val);
+      [promise, self](ipc::Shmem&& aShmem) {
+        self->mMapped->mShmem = std::move(aShmem);
+        promise->MaybeResolve(0);
       },
       [promise](const ipc::ResponseRejectReason&) {
         promise->MaybeRejectWithAbortError("Internal communication error!");
@@ -118,18 +112,49 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
   return promise.forget();
 }
 
-void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
-  if (!mMapping) {
+void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
+                            const dom::Optional<uint64_t>& aSize,
+                            JS::Rooted<JSObject*>* aObject, ErrorResult& aRv) {
+  const auto checkedOffset = CheckedInt<size_t>(aOffset);
+  const auto checkedSize = aSize.WasPassed()
+                               ? CheckedInt<size_t>(aSize.Value())
+                               : CheckedInt<size_t>(mSize) - aOffset;
+  if (!checkedOffset.isValid() || !checkedSize.isValid()) {
+    aRv.ThrowRangeError("Invalid mapped range");
     return;
   }
-  JS::Rooted<JSObject*> rooted(aCx, mMapping->mArrayBuffer);
-  bool ok = JS::DetachArrayBuffer(aCx, rooted);
-  if (!ok) {
+  if (!mMapped || !mMapped->IsReady()) {
+    aRv.ThrowInvalidStateError("Buffer is not mapped");
+    return;
+  }
+
+  auto* const arrayBuffer = mParent->CreateExternalArrayBuffer(
+      aCx, checkedOffset.value(), checkedSize.value(), mMapped->mShmem);
+  if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);
     return;
   }
-  mParent->UnmapBuffer(mId, std::move(mMapping->mShmem), mMapping->mWrite);
-  mMapping.reset();
+
+  aObject->set(arrayBuffer);
+  mMapped->mArrayBuffers.AppendElement(*aObject);
+}
+
+void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
+  if (!mMapped) {
+    return;
+  }
+
+  for (const auto& arrayBuffer : mMapped->mArrayBuffers) {
+    JS::Rooted<JSObject*> rooted(aCx, arrayBuffer);
+    bool ok = JS::DetachArrayBuffer(aCx, rooted);
+    if (!ok) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+  };
+
+  mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable);
+  mMapped.reset();
 }
 
 void Buffer::Destroy() {
