@@ -101,8 +101,7 @@ const GeckoViewRecordingMedia = {
           screen,
           window,
           browser,
-          mediaDevices,
-          true
+          mediaDevices
         );
         var cameraStatus = getStatusString(hasCamera.value);
         var microphoneStatus = getStatusString(hasMicrophone.value);
