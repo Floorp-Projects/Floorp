@@ -51,9 +51,7 @@ GLTextureSource* MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(
       mProvider, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
       gfx::IntSize(mSurface->GetDevicePixelWidth(aPlane),
                    mSurface->GetDevicePixelHeight(aPlane)),
-      // XXX: This isn't really correct (but isn't used), we should be using the
-      // format of the individual plane, not of the whole buffer.
-      mSurface->GetFormat());
+      readFormat);
 }
 
 bool MacIOSurfaceTextureHostOGL::Lock() {
@@ -171,13 +169,13 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect);
 
   switch (GetFormat()) {
-    case gfx::SurfaceFormat::R8G8B8X8:
-    case gfx::SurfaceFormat::R8G8B8A8: {
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       // The internal pixel format of MacIOSurface is always BGRX or BGRA
       // format.
-      auto format = GetFormat() == gfx::SurfaceFormat::R8G8B8A8
+      auto format = GetFormat() == gfx::SurfaceFormat::B8G8R8A8
                         ? gfx::SurfaceFormat::B8G8R8A8
                         : gfx::SurfaceFormat::B8G8R8X8;
       wr::ImageDescriptor descriptor(GetSize(), format);
@@ -223,8 +221,6 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
   bool preferCompositorSurface =
       aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
   switch (GetFormat()) {
-    case gfx::SurfaceFormat::R8G8B8X8:
-    case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
