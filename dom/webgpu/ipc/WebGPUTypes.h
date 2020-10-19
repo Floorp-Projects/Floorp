@@ -34,66 +34,52 @@ enum class SerialBindGroupEntryType : uint8_t {
 };
 
 struct SerialBindGroupEntry {
-  uint32_t mBinding = 0;
-  SerialBindGroupEntryType mType = SerialBindGroupEntryType::EndGuard_;
-  RawId mValue = 0;
-  BufferAddress mBufferOffset = 0;
-  BufferAddress mBufferSize = 0;
+  uint32_t mBinding;
+  SerialBindGroupEntryType mType;
+  RawId mValue;
+  BufferAddress mBufferOffset;
+  BufferAddress mBufferSize;
 };
 
 struct SerialBindGroupDescriptor {
   nsCString mLabel;
-  RawId mLayout = 0;
+  RawId mLayout;
   nsTArray<SerialBindGroupEntry> mEntries;
 };
 
 struct SerialProgrammableStageDescriptor {
-  RawId mModule = 0;
+  RawId mModule;
   nsString mEntryPoint;
 };
 
 struct SerialComputePipelineDescriptor {
-  RawId mLayout = 0;
+  RawId mLayout;
   SerialProgrammableStageDescriptor mComputeStage;
 };
 
 struct SerialVertexBufferLayoutDescriptor {
-  ffi::WGPUBufferAddress mArrayStride = 0;
-  ffi::WGPUInputStepMode mStepMode = ffi::WGPUInputStepMode_Sentinel;
+  ffi::WGPUBufferAddress mArrayStride;
+  ffi::WGPUInputStepMode mStepMode;
   nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributes;
 };
 
 struct SerialVertexStateDescriptor {
-  ffi::WGPUIndexFormat mIndexFormat = ffi::WGPUIndexFormat_Sentinel;
+  ffi::WGPUIndexFormat mIndexFormat;
   nsTArray<SerialVertexBufferLayoutDescriptor> mVertexBuffers;
 };
 
 struct SerialRenderPipelineDescriptor {
-  RawId mLayout = 0;
+  RawId mLayout;
   SerialProgrammableStageDescriptor mVertexStage;
   SerialProgrammableStageDescriptor mFragmentStage;
-  ffi::WGPUPrimitiveTopology mPrimitiveTopology =
-      ffi::WGPUPrimitiveTopology_Sentinel;
+  ffi::WGPUPrimitiveTopology mPrimitiveTopology;
   Maybe<ffi::WGPURasterizationStateDescriptor> mRasterizationState;
   nsTArray<ffi::WGPUColorStateDescriptor> mColorStates;
   Maybe<ffi::WGPUDepthStencilStateDescriptor> mDepthStencilState;
   SerialVertexStateDescriptor mVertexState;
-  uint32_t mSampleCount = 0;
-  uint32_t mSampleMask = 0;
-  bool mAlphaToCoverageEnabled = false;
-};
-
-struct SerialSamplerDescriptor {
-  nsCString mLabel;
-  ffi::WGPUAddressMode mAddressU = ffi::WGPUAddressMode_Sentinel,
-                       mAddressV = ffi::WGPUAddressMode_Sentinel,
-                       mAddressW = ffi::WGPUAddressMode_Sentinel;
-  ffi::WGPUFilterMode mMagFilter = ffi::WGPUFilterMode_Sentinel,
-                      mMinFilter = ffi::WGPUFilterMode_Sentinel,
-                      mMipmapFilter = ffi::WGPUFilterMode_Sentinel;
-  float mLodMinClamp = 0.0, mLodMaxClamp = 0.0;
-  Maybe<ffi::WGPUCompareFunction> mCompare;
-  uint8_t mAnisotropyClamp = 0;
+  uint32_t mSampleCount;
+  uint32_t mSampleMask;
+  bool mAlphaToCoverageEnabled;
 };
 
 }  // namespace webgpu

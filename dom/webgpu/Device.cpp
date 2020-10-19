@@ -37,11 +37,10 @@ static void mapFreeCallback(void* aContents, void* aUserData) {
 
 RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
 
-JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
-                                            size_t aSize,
-                                            const ipc::Shmem& aShmem) {
-  MOZ_ASSERT(aOffset + aSize <= aShmem.Size<uint8_t>());
-  return JS::NewExternalArrayBuffer(aCx, aSize, aShmem.get<uint8_t>() + aOffset,
+JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
+                                            ipc::Shmem& aShmem) {
+  MOZ_ASSERT(aShmem.Size<uint8_t>() == aSize);
+  return JS::NewExternalArrayBuffer(aCx, aSize, aShmem.get<uint8_t>(),
                                     &mapFreeCallback, nullptr);
 }
 
@@ -66,79 +65,74 @@ void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 Queue* Device::DefaultQueue() const { return mQueue; }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
-    const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
-  ipc::Shmem shmem;
-  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                                     dom::GPUBufferUsage_Binding::MAP_READ);
-  if (hasMapFlags || aDesc.mMappedAtCreation) {
-    const auto checked = CheckedInt<size_t>(aDesc.mSize);
-    if (!checked.isValid()) {
-      aRv.ThrowRangeError("Mappable size is too large");
-      return nullptr;
-    }
-    const auto& size = checked.value();
-
-    // TODO: use `ShmemPool`?
-    if (!mBridge->AllocShmem(size, ipc::Shmem::SharedMemory::TYPE_BASIC,
-                             &shmem)) {
-      aRv.ThrowAbortError(
-          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
-      return nullptr;
-    }
-
-    // zero out memory
-    memset(shmem.get<uint8_t>(), 0, size);
-  }
-
-  // If the buffer is not mapped at creation, and it has Shmem, we send it
-  // to the GPU process. Otherwise, we keep it.
+    const dom::GPUBufferDescriptor& aDesc) {
   RawId id = mBridge->DeviceCreateBuffer(mId, aDesc);
-  if (hasMapFlags && !aDesc.mMappedAtCreation) {
-    mBridge->SendBufferReturnShmem(id, std::move(shmem));
-  }
   RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize);
-
-  if (aDesc.mMappedAtCreation) {
-    buffer->SetMapped(std::move(shmem),
-                      !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
-  }
-
   return buffer.forget();
 }
 
-RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
-                                              size_t aOffset, size_t aSize,
-                                              ErrorResult& aRv) {
-  ffi::WGPUHostMap mode;
-  switch (aMode) {
-    case dom::GPUMapMode_Binding::READ:
-      mode = ffi::WGPUHostMap_Read;
-      break;
-    case dom::GPUMapMode_Binding::WRITE:
-      mode = ffi::WGPUHostMap_Write;
-      break;
-    default:
-      aRv.ThrowInvalidAccessError(
-          nsPrintfCString("Invalid map flag %u", aMode));
-      return nullptr;
-  }
-
-  const CheckedInt<uint64_t> offset(aOffset);
-  if (!offset.isValid()) {
-    aRv.ThrowRangeError("Mapped offset is too large");
-    return nullptr;
-  }
-  const CheckedInt<uint64_t> size(aSize);
-  if (!size.isValid()) {
+void Device::CreateBufferMapped(JSContext* aCx,
+                                const dom::GPUBufferDescriptor& aDesc,
+                                nsTArray<JS::Value>& aSequence,
+                                ErrorResult& aRv) {
+  const auto checked = CheckedInt<size_t>(aDesc.mSize);
+  if (!checked.isValid()) {
     aRv.ThrowRangeError("Mapped size is too large");
-    return nullptr;
+    return;
+  }
+  const auto& size = checked.value();
+
+  // TODO: use `ShmemPool`
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(size, ipc::Shmem::SharedMemory::TYPE_BASIC,
+                           &shmem)) {
+    aRv.ThrowAbortError(
+        nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+    return;
   }
 
-  return mBridge->SendBufferMap(aId, mode, offset.value(), size.value());
+  // zero out memory
+  memset(shmem.get<uint8_t>(), 0, size);
+
+  JS::Rooted<JSObject*> arrayBuffer(
+      aCx, CreateExternalArrayBuffer(aCx, size, shmem));
+  if (!arrayBuffer) {
+    aRv.NoteJSContextException(aCx);
+    return;
+  }
+
+  dom::GPUBufferDescriptor modifiedDesc(aDesc);
+  modifiedDesc.mUsage |= dom::GPUBufferUsage_Binding::MAP_WRITE;
+  RawId id = mBridge->DeviceCreateBuffer(mId, modifiedDesc);
+  RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize);
+
+  JS::Rooted<JS::Value> bufferValue(aCx);
+  if (!dom::ToJSValue(aCx, buffer, &bufferValue)) {
+    aRv.NoteJSContextException(aCx);
+    return;
+  }
+
+  aSequence.AppendElement(bufferValue);
+  aSequence.AppendElement(JS::ObjectValue(*arrayBuffer));
+
+  buffer->InitMapping(std::move(shmem), arrayBuffer, true);
 }
 
-void Device::UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush) {
-  mBridge->SendBufferUnmap(aId, std::move(aShmem), aFlush);
+RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
+                                                     ErrorResult& aRv) {
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(aSize, ipc::Shmem::SharedMemory::TYPE_BASIC,
+                           &shmem)) {
+    aRv.ThrowAbortError(
+        nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, aSize));
+    return nullptr;
+  }
+
+  return mBridge->SendBufferMapRead(aId, std::move(shmem));
+}
+
+void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem, bool aFlush) {
+  mBridge->SendDeviceUnmapBuffer(mId, aId, std::move(*aShmem), aFlush);
 }
 
 already_AddRefed<Texture> Device::CreateTexture(
@@ -183,10 +177,6 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
 
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
     const dom::GPUShaderModuleDescriptor& aDesc) {
-  if (aDesc.mCode.IsString()) {
-    // we don't yet support WGSL
-    return nullptr;
-  }
   RawId id = mBridge->DeviceCreateShaderModule(mId, aDesc);
   RefPtr<ShaderModule> object = new ShaderModule(this, id);
   return object.forget();
