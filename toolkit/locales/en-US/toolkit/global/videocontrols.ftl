@@ -10,3 +10,5 @@ videocontrols-scrubber =
 videocontrols-buffer-bar-label = Loading:
 videocontrols-volume-control =
     .aria-label = Volume
+videocontrols-closed-caption-button =
+    .aria-label = Closed Captions
