@@ -1883,6 +1883,16 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       margins: "custom",
       customMargins: newMargins,
     });
+    this._marginError.hidden = true;
+  }
+
+  updateMaxValues() {
+    this._customTopMargin.max =
+      this._maxHeight - this._customBottomMargin.value;
+    this._customBottomMargin.max =
+      this._maxHeight - this._customTopMargin.value;
+    this._customLeftMargin.max = this._maxWidth - this._customRightMargin.value;
+    this._customRightMargin.max = this._maxWidth - this._customLeftMargin.value;
   }
 
   formatMargin(target) {
@@ -1958,12 +1968,7 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       this._marginPicker.value = settings.margins;
     }
 
-    this._customTopMargin.max =
-      this._maxHeight - this._customBottomMargin.value;
-    this._customBottomMargin.max =
-      this._maxHeight - this._customTopMargin.value;
-    this._customLeftMargin.max = this._maxWidth - this._customRightMargin.value;
-    this._customRightMargin.max = this._maxWidth - this._customLeftMargin.value;
+    this.updateMaxValues();
   }
 
   handleEvent(e) {
@@ -2006,6 +2011,14 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       e.target == this._customRightMargin
     ) {
       if (e.target.checkValidity()) {
+        this.updateMaxValues();
+      }
+      if (
+        this._customTopMargin.validity.valid &&
+        this._customBottomMargin.validity.valid &&
+        this._customLeftMargin.validity.valid &&
+        this._customRightMargin.validity.valid
+      ) {
         this.formatMargin(e.target);
         this._updateCustomMarginsTask.arm();
       } else if (e.target.validity.stepMismatch) {
