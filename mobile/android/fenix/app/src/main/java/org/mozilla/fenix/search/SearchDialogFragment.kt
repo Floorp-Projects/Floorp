@@ -481,8 +481,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
         val shouldShowView = searchState.showClipboardSuggestions &&
                 searchState.query.isEmpty() &&
-                !clipboardUrl.isNullOrEmpty() &&
-                !searchState.showSearchShortcuts
+                !clipboardUrl.isNullOrEmpty()
 
         fill_link_from_clipboard.visibility = if (shouldShowView) View.VISIBLE else View.GONE
         clipboard_url.text = clipboardUrl
