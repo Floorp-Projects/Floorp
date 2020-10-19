@@ -25,13 +25,6 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 
-  // The test starts on about:blank and opens an about:blank
-  // tab which triggers opening the toolbar since
-  // ensureNoPreloadedBrowser sets AboutNewTab.newTabURL to about:blank.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.toolbars.bookmarks.visibility", "never"]],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await TestUtils.waitForCondition(() => tab._fullyOpen);
 

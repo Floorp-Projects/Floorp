@@ -54,8 +54,6 @@ add_task(async function() {
 
   await disableFxaBadge();
 
-  let bookmarksToolbarRect = await getBookmarksToolbarRect();
-
   let alreadyFocused = false;
   let inRange = (val, min, max) => min <= val && val <= max;
   let expectations = {
@@ -99,14 +97,6 @@ add_task(async function() {
               r.y2 <= inputFieldRect.bottom
             );
           },
-        },
-        {
-          name: "bug 1667237 - the bookmarks toolbar shouldn't flicker",
-          condition: r =>
-            r.y1 >= bookmarksToolbarRect.top &&
-            r.y2 <= bookmarksToolbarRect.bottom &&
-            r.x1 >= bookmarksToolbarRect.left &&
-            r.x2 <= bookmarksToolbarRect.right,
         },
       ],
     },
