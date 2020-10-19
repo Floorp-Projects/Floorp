@@ -56,28 +56,6 @@ class Stopwatch {
   static void SetTestModeEnabled(const GlobalObject& global, bool testing);
 };
 
-class UserInteractionStopwatch {
-  using GlobalObject = mozilla::dom::GlobalObject;
-
- public:
-  static bool Start(const GlobalObject& aGlobal,
-                    const nsAString& aUserInteraction, const nsACString& aValue,
-                    JS::Handle<JSObject*> aObj);
-  static bool Running(const GlobalObject& aGlobal,
-                      const nsAString& aUserInteraction,
-                      JS::Handle<JSObject*> aObj);
-  static bool Update(const GlobalObject& aGlobal,
-                     const nsAString& aUserInteraction,
-                     const nsACString& aValue, JS::Handle<JSObject*> aObj);
-  static bool Cancel(const GlobalObject& aGlobal,
-                     const nsAString& aUserInteraction,
-                     JS::Handle<JSObject*> aObj);
-  static bool Finish(const GlobalObject& aGlobal,
-                     const nsAString& aUserInteraction,
-                     JS::Handle<JSObject*> aObj,
-                     const dom::Optional<nsACString>& aAdditionalText);
-};
-
 }  // namespace telemetry
 }  // namespace mozilla
 
