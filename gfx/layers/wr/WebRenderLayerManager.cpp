@@ -709,6 +709,10 @@ void WebRenderLayerManager::ScheduleComposite() {
   WrBridge()->SendScheduleComposite();
 }
 
+void WebRenderLayerManager::ForceComposite() {
+  WrBridge()->SendForceComposite();
+}
+
 void WebRenderLayerManager::SetRoot(Layer* aLayer) {
   // This should never get called
   MOZ_ASSERT(false);

@@ -1809,6 +1809,23 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvForceComposite() {
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
+  TimeStamp start = TimeStamp::Now();
+  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), VsyncId(),
+                                                start);
+
+  wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
+  fastTxn.InvalidateRenderedFrame();
+  fastTxn.GenerateFrame();
+  mApi->SendTransaction(fastTxn);
+  return IPC_OK();
+}
+
 void WebRenderBridgeParent::InvalidateRenderedFrame() {
   if (mDestroyed) {
     return;
