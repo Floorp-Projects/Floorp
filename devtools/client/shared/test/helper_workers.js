@@ -14,7 +14,6 @@ Services.scriptloader.loadSubScript(
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
 var { Toolbox } = require("devtools/client/framework/toolbox");
-loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
@@ -207,48 +206,45 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 // an extra window parameter and add a frame script
 this.addTab = function addTab(url, win) {
   info("Adding tab: " + url);
+  return new Promise(resolve => {
+    const targetWindow = win || window;
+    const targetBrowser = targetWindow.gBrowser;
 
-  const deferred = defer();
-  const targetWindow = win || window;
-  const targetBrowser = targetWindow.gBrowser;
+    targetWindow.focus();
+    const tab = (targetBrowser.selectedTab = BrowserTestUtils.addTab(
+      targetBrowser,
+      url
+    ));
+    const linkedBrowser = tab.linkedBrowser;
 
-  targetWindow.focus();
-  const tab = (targetBrowser.selectedTab = BrowserTestUtils.addTab(
-    targetBrowser,
-    url
-  ));
-  const linkedBrowser = tab.linkedBrowser;
+    info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");
+    linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
-  info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");
-  linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-
-  BrowserTestUtils.browserLoaded(linkedBrowser).then(function() {
-    info("Tab added and finished loading: " + url);
-    deferred.resolve(tab);
+    BrowserTestUtils.browserLoaded(linkedBrowser).then(function() {
+      info("Tab added and finished loading: " + url);
+      resolve(tab);
+    });
   });
-
-  return deferred.promise;
 };
 
 this.removeTab = function removeTab(tab, win) {
   info("Removing tab.");
+  return new Promise(resolve => {
+    const targetWindow = win || window;
+    const targetBrowser = targetWindow.gBrowser;
+    const tabContainer = targetBrowser.tabContainer;
 
-  const deferred = defer();
-  const targetWindow = win || window;
-  const targetBrowser = targetWindow.gBrowser;
-  const tabContainer = targetBrowser.tabContainer;
+    tabContainer.addEventListener(
+      "TabClose",
+      function() {
+        info("Tab removed and finished closing.");
+        resolve();
+      },
+      { once: true }
+    );
 
-  tabContainer.addEventListener(
-    "TabClose",
-    function() {
-      info("Tab removed and finished closing.");
-      deferred.resolve();
-    },
-    { once: true }
-  );
-
-  targetBrowser.removeTab(tab);
-  return deferred.promise;
+    targetBrowser.removeTab(tab);
+  });
 };
 
 async function attachThreadActorForTab(tab) {
@@ -260,13 +256,13 @@ async function attachThreadActorForTab(tab) {
 }
 
 function pushPrefs(...aPrefs) {
-  const deferred = defer();
-  SpecialPowers.pushPrefEnv({ set: aPrefs }, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({ set: aPrefs }, resolve);
+  });
 }
 
 function popPrefs() {
-  const deferred = defer();
-  SpecialPowers.popPrefEnv(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
 }
