@@ -26,6 +26,11 @@
 # Precise documentation for UserInteractions can be found at
 # https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/user-interactions.html
 
+browser.tabs:
+  opening:
+    description: A new tab is being opened.
+    bug_numbers: [1662160]
+
 testing:
   interaction:
     description: A user interaction just for testing.
