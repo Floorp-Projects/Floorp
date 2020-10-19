@@ -1434,7 +1434,6 @@ class DatabaseConnection::CachedStatement final {
 
 class DatabaseConnection::UpdateRefcountFunction final
     : public mozIStorageFunction {
-  class DatabaseUpdateFunction;
   class FileInfoEntry;
 
   enum class UpdateType { Increment, Decrement };
@@ -1480,35 +1479,6 @@ class DatabaseConnection::UpdateRefcountFunction final
   nsresult CreateJournals();
 
   nsresult RemoveJournals(const nsTArray<int64_t>& aJournals);
-};
-
-class DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction final {
-  CachedStatement mUpdateStatement;
-  CachedStatement mSelectStatement;
-  CachedStatement mInsertStatement;
-
-  UpdateRefcountFunction* const mFunction;
-
-  nsresult mErrorCode;
-
- public:
-  explicit DatabaseUpdateFunction(UpdateRefcountFunction* aFunction)
-      : mFunction(aFunction), mErrorCode(NS_OK) {
-    MOZ_COUNT_CTOR(
-        DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction);
-  }
-
-  ~DatabaseUpdateFunction() {
-    MOZ_COUNT_DTOR(
-        DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction);
-  }
-
-  bool Update(int64_t aId, int32_t aDelta);
-
-  nsresult ErrorCode() const { return mErrorCode; }
-
- private:
-  nsresult UpdateInternal(int64_t aId, int32_t aDelta);
 };
 
 class DatabaseConnection::UpdateRefcountFunction::FileInfoEntry final {
@@ -7806,27 +7776,98 @@ DatabaseConnection::UpdateRefcountFunction::UpdateRefcountFunction(
 nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
   MOZ_ASSERT(mConnection);
   mConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection->HasStorageConnection());
 
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::WillCommit",
                       DOM);
 
-  DatabaseUpdateFunction function(this);
-  for (const auto& entry : mFileInfoEntries) {
-    const auto delta = entry.GetData()->Delta();
-    if (delta && !function.Update(entry.GetKey(), delta)) {
-      break;
+  auto update =
+      [updateStatement = CachedStatement{}, selectStatement = CachedStatement{},
+       insertStatement = CachedStatement{},
+       this](int64_t aId, int32_t aDelta) mutable -> Result<Ok, nsresult> {
+    AUTO_PROFILER_LABEL(
+        "DatabaseConnection::UpdateRefcountFunction::WillCommit::Update", DOM);
+
+    if (!updateStatement) {
+      // The parameter names are not used, parameters are bound by index
+      // only locally in the same function.
+      IDB_TRY_UNWRAP(updateStatement, mConnection->GetCachedStatement(
+                                          "UPDATE file "
+                                          "SET refcount = refcount + :delta "
+                                          "WHERE id = :id"_ns));
     }
-  }
 
-  nsresult rv = function.ErrorCode();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    {
+      const auto borrowedUpdateStatement = updateStatement.Borrow();
 
-  rv = CreateJournals();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      IDB_TRY(borrowedUpdateStatement->BindInt32ByIndex(0, aDelta));
+      IDB_TRY(borrowedUpdateStatement->BindInt64ByIndex(1, aId));
+      IDB_TRY(borrowedUpdateStatement->Execute());
+    }
+
+    IDB_TRY_INSPECT(
+        const int32_t& rows,
+        MOZ_TO_RESULT_INVOKE(mConnection->MutableStorageConnection(),
+                             GetAffectedRows));
+
+    if (rows > 0) {
+      if (!selectStatement) {
+        // The parameter names are not used, parameters are bound by index
+        // only locally in the same function.
+        IDB_TRY_UNWRAP(selectStatement,
+                       mConnection->GetCachedStatement("SELECT id "
+                                                       "FROM file "
+                                                       "WHERE id = :id"_ns));
+      }
+
+      const auto borrowedSelectStatement = selectStatement.Borrow();
+
+      IDB_TRY(borrowedSelectStatement->BindInt64ByIndex(0, aId));
+
+      IDB_TRY_INSPECT(
+          const bool& hasResult,
+          MOZ_TO_RESULT_INVOKE(&*borrowedSelectStatement, ExecuteStep));
+
+      if (!hasResult) {
+        // Don't have to create the journal here, we can create all at once,
+        // just before commit
+        mJournalsToCreateBeforeCommit.AppendElement(aId);
+      }
+
+      return Ok{};
+    }
+
+    if (!insertStatement) {
+      // The parameter names are not used, parameters are bound by index
+      // only locally in the same function.
+      IDB_TRY_UNWRAP(
+          insertStatement,
+          mConnection->GetCachedStatement(
+              "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
+    }
+
+    const auto borrowedInsertStatement = insertStatement.Borrow();
+
+    IDB_TRY(borrowedInsertStatement->BindInt64ByIndex(0, aId));
+    IDB_TRY(borrowedInsertStatement->BindInt32ByIndex(1, aDelta));
+    IDB_TRY(borrowedInsertStatement->Execute());
+
+    mJournalsToRemoveAfterCommit.AppendElement(aId);
+
+    return Ok{};
+  };
+
+  IDB_TRY(CollectEachInRange(
+      mFileInfoEntries, [&update](const auto& entry) -> Result<Ok, nsresult> {
+        const auto delta = entry.GetData()->Delta();
+        if (delta) {
+          IDB_TRY(update(entry.GetKey(), delta));
+        }
+
+        return Ok{};
+      }));
+
+  IDB_TRY(CreateJournals());
 
   return NS_OK;
 }
@@ -8072,127 +8113,6 @@ DatabaseConnection::UpdateRefcountFunction::OnFunctionCall(
     return rv;
   }
 
-  return NS_OK;
-}
-
-bool DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::Update(
-    int64_t aId, int32_t aDelta) {
-  nsresult rv = UpdateInternal(aId, aDelta);
-  if (NS_FAILED(rv)) {
-    mErrorCode = rv;
-    return false;
-  }
-
-  return true;
-}
-
-nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
-    UpdateInternal(int64_t aId, int32_t aDelta) {
-  MOZ_ASSERT(mFunction);
-
-  AUTO_PROFILER_LABEL(
-      "DatabaseConnection::UpdateRefcountFunction::"
-      "DatabaseUpdateFunction::UpdateInternal",
-      DOM);
-
-  DatabaseConnection* connection = mFunction->mConnection;
-  MOZ_ASSERT(connection);
-  connection->AssertIsOnConnectionThread();
-
-  MOZ_ASSERT(connection->HasStorageConnection());
-
-  nsresult rv;
-  if (!mUpdateStatement) {
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    IDB_TRY_UNWRAP(mUpdateStatement, connection->GetCachedStatement(
-                                         "UPDATE file "
-                                         "SET refcount = refcount + :delta "
-                                         "WHERE id = :id"_ns));
-  }
-
-  {
-    const auto borrowedUpdateStatement = mUpdateStatement.Borrow();
-
-    rv = borrowedUpdateStatement->BindInt32ByIndex(0, aDelta);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = borrowedUpdateStatement->BindInt64ByIndex(1, aId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = borrowedUpdateStatement->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  int32_t rows;
-  rv = connection->MutableStorageConnection().GetAffectedRows(&rows);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (rows > 0) {
-    if (!mSelectStatement) {
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
-      IDB_TRY_UNWRAP(mSelectStatement,
-                     connection->GetCachedStatement("SELECT id "
-                                                    "FROM file "
-                                                    "WHERE id = :id"_ns));
-    }
-
-    const auto borrowedSelectStatement = mSelectStatement.Borrow();
-
-    rv = borrowedSelectStatement->BindInt64ByIndex(0, aId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    IDB_TRY_INSPECT(
-        const bool& hasResult,
-        MOZ_TO_RESULT_INVOKE(&*borrowedSelectStatement, ExecuteStep));
-
-    if (!hasResult) {
-      // Don't have to create the journal here, we can create all at once,
-      // just before commit
-      mFunction->mJournalsToCreateBeforeCommit.AppendElement(aId);
-    }
-
-    return NS_OK;
-  }
-
-  if (!mInsertStatement) {
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    IDB_TRY_UNWRAP(
-        mInsertStatement,
-        connection->GetCachedStatement(
-            "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
-  }
-
-  const auto borrowedInsertStatement = mInsertStatement.Borrow();
-
-  rv = borrowedInsertStatement->BindInt64ByIndex(0, aId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = borrowedInsertStatement->BindInt32ByIndex(1, aDelta);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = borrowedInsertStatement->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mFunction->mJournalsToRemoveAfterCommit.AppendElement(aId);
   return NS_OK;
 }
 
