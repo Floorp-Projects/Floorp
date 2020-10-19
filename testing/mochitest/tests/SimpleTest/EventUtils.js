@@ -2823,6 +2823,7 @@ function _computeSrcElementFromSrcSelection(aSrcSelection) {
  *          stepY:        The y-axis step for mousemove inside srcElement
  *          finalX:       The final x coordinate inside srcElement
  *          finalY:       The final x coordinate inside srcElement
+ *          id:           The pointer event id
  *          srcWindow:    The window for dispatching event on srcElement,
  *                        defaults to the current window object
  *          destWindow:   The window for dispatching event on destElement,
@@ -2845,6 +2846,7 @@ async function synthesizePlainDragAndDrop(aParams) {
     stepY = 9,
     finalX = srcX + stepX * 2,
     finalY = srcY + stepY * 2,
+    id = _getDOMWindowUtils(window).DEFAULT_MOUSE_POINTER_ID,
     srcWindow = window,
     destWindow = window,
     expectCancelDragStart = false,
@@ -2916,7 +2918,13 @@ async function synthesizePlainDragAndDrop(aParams) {
 
     await new Promise(r => setTimeout(r, 0));
 
-    synthesizeMouse(srcElement, srcX, srcY, { type: "mousedown" }, srcWindow);
+    synthesizeMouse(
+      srcElement,
+      srcX,
+      srcY,
+      { type: "mousedown", id },
+      srcWindow
+    );
     if (logFunc) {
       logFunc(`mousedown at ${srcX}, ${srcY}`);
     }
@@ -2956,7 +2964,13 @@ async function synthesizePlainDragAndDrop(aParams) {
 
       srcX += stepX;
       srcY += stepY;
-      synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
+      synthesizeMouse(
+        srcElement,
+        srcX,
+        srcY,
+        { type: "mousemove", id },
+        srcWindow
+      );
       if (logFunc) {
         logFunc(`first mousemove at ${srcX}, ${srcY}`);
       }
@@ -2965,7 +2979,13 @@ async function synthesizePlainDragAndDrop(aParams) {
 
       srcX += stepX;
       srcY += stepY;
-      synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
+      synthesizeMouse(
+        srcElement,
+        srcX,
+        srcY,
+        { type: "mousemove", id },
+        srcWindow
+      );
       if (logFunc) {
         logFunc(`second mousemove at ${srcX}, ${srcY}`);
       }
@@ -2991,7 +3011,7 @@ async function synthesizePlainDragAndDrop(aParams) {
           srcElement,
           finalX,
           finalY,
-          { type: "mouseup" },
+          { type: "mouseup", id },
           srcWindow
         );
         return;

@@ -221,6 +221,18 @@ function sendTouchEvent(int_win, elemId, touchEventType, params) {
   }
 }
 
+// Helper function to trigger drag and drop.
+async function doDragAndDrop(int_win, srcElemId, destElemId, params = {}) {
+  params.srcElement = int_win.document.getElementById(srcElemId);
+  params.destElement = int_win.document.getElementById(destElemId);
+  params.srcWindow = int_win;
+  params.destWindow = int_win;
+  params.id = MouseEventHelper.MOUSE_ID;
+  // This is basically for android which has a larger drag threshold.
+  params.stepY = params.stepY || 25;
+  await synthesizePlainDragAndDrop(params);
+}
+
 // Helper function to run Point Event test in a new tab.
 function runTestInNewWindow(aFile) {
   var testURL =
@@ -236,7 +248,10 @@ function runTestInNewWindow(aFile) {
     function() {
       var e = testWindow.document.createElement("script");
       e.type = "text/javascript";
-      e.src = "mochitest_support_internal.js";
+      e.src =
+        aFile.lastIndexOf("/") < 0
+          ? "mochitest_support_internal.js"
+          : "../mochitest_support_internal.js";
       testWindow.document.getElementsByTagName("head")[0].appendChild(e);
     },
     { once: true }
