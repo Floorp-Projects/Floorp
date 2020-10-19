@@ -2774,12 +2774,12 @@ class StaticAnalysis(MachCommandBase):
             return e.returncode
 
     def _is_ignored_path(self, ignored_dir_re, f):
-        # Remove upto topsrcdir in pathname and match
-        if f.startswith(self.topsrcdir + "/"):
-            match_f = f[len(self.topsrcdir + "/") :]
-        else:
-            match_f = f
-        return re.match(ignored_dir_re, match_f)
+        # path needs to be relative to the src root
+        root_dir = self.topsrcdir + os.sep
+        if f.startswith(root_dir):
+            f = f[len(root_dir) :]
+        # the ignored_dir_re regex uses / on all platforms
+        return re.match(ignored_dir_re, f.replace(os.sep, "/"))
 
     def _generate_path_list(self, paths, verbose=True):
         path_to_third_party = os.path.join(self.topsrcdir, self._format_ignore_file)
