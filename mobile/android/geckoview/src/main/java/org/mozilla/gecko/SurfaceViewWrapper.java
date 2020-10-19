@@ -1,6 +1,8 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 import android.view.Surface;
@@ -23,7 +25,13 @@ public class SurfaceViewWrapper {
     public SurfaceViewWrapper(final Context context) {
         // By default, use SurfaceView
         mListenerWrapper = new ListenerWrapper();
+        initSurfaceView(context);
+    }
+
+    private void initSurfaceView(final Context context) {
         mSurfaceView = new SurfaceView(context);
+        mSurfaceView.setBackgroundColor(Color.TRANSPARENT);
+        mSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
         mView = mSurfaceView;
     }
 
@@ -34,9 +42,7 @@ public class SurfaceViewWrapper {
             mTextureView = null;
         }
         mListenerWrapper.reset();
-        mSurfaceView = new SurfaceView(context);
-        mSurfaceView.getHolder().addCallback(mListenerWrapper);
-        mView = mSurfaceView;
+        initSurfaceView(context);
     }
 
     public void useTextureView(final Context context) {
