@@ -177,7 +177,7 @@ class PrintHelper {
       supportsColor: Promise.resolve(true),
       supportsMonochrome: Promise.resolve(true),
       paperList: Promise.resolve([]),
-      createDefaultSettings: name => {
+      createDefaultSettings: () => {
         let settings = PSSVC.newPrintSettings;
         for (let [key, value] of Object.entries(defaultSettings)) {
           settings[key] = value;
