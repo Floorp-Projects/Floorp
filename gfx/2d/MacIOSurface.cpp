@@ -75,6 +75,9 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   aHeight *= intScaleFactor;
   SetSizeProperties(props, aWidth, aHeight, bytesPerElem);
 
+  AddDictionaryInt(props, kIOSurfacePixelFormat,
+                   (uint32_t)kCVPixelFormatType_32BGRA);
+
   CFTypeRefPtr<IOSurfaceRef> surfaceRef =
       CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
           ::IOSurfaceCreate(props.get()));
@@ -404,7 +407,8 @@ SurfaceFormat MacIOSurface::GetFormat() const {
     case kCVPixelFormatType_32BGRA:
       return HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     default:
-      return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
+      MOZ_ASSERT_UNREACHABLE("Unknown format");
+      return SurfaceFormat::B8G8R8A8;
   }
 }
 
