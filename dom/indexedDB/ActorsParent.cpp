@@ -15350,7 +15350,6 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   const bool singleRowOnly = aKeyRange.isSome() && aKeyRange.ref().isOnly();
 
-  nsresult rv;
   Key objectStoreKey;
   IDB_TRY_INSPECT(
       const auto& selectStmt,
@@ -15390,10 +15389,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         return selectStmt;
       }()));
 
-  rv = selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId));
 
   DebugOnly<uint32_t> resultCountDEBUG = 0;
 
