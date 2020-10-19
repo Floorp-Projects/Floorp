@@ -14,7 +14,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
-import org.mozilla.geckoview.GeckoSession.*
+import org.mozilla.geckoview.GeckoSession.Loader
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
@@ -1404,57 +1404,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         assertThat("Headers should match", expected as Map<String?, String?>,
                 equalTo(actualHeaders))
-    }
-
-    private fun testLoaderEquals(a: Loader, b: Loader, shouldBeEqual: Boolean) {
-        assertThat("Equal test", a == b, equalTo(shouldBeEqual))
-        assertThat("HashCode test", a.hashCode() == b.hashCode(),
-                equalTo(shouldBeEqual))
-    }
-
-    @Test fun loaderEquals() {
-        testLoaderEquals(
-                Loader().uri("http://test-uri-equals.com"),
-                Loader().uri("http://test-uri-equals.com"),
-                true)
-        testLoaderEquals(
-                Loader().uri("http://test-uri-equals.com"),
-                Loader().uri("http://test-uri-equalsx.com"),
-                false)
-
-        testLoaderEquals(
-                Loader().uri("http://test-uri-equals.com")
-                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                        .referrer("test-referrer"),
-                Loader().uri("http://test-uri-equals.com")
-                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                        .referrer("test-referrer"),
-                true)
-        testLoaderEquals(
-                Loader().uri("http://test-uri-equals.com")
-                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                        .referrer(sessionRule.session),
-                Loader().uri("http://test-uri-equals.com")
-                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                        .referrer("test-referrer"),
-                false)
-
-        testLoaderEquals(
-                Loader().referrer(sessionRule.session)
-                        .data("testtest", "text/plain"),
-                Loader().referrer(sessionRule.session)
-                        .data("testtest", "text/plain"),
-                true)
-        testLoaderEquals(
-                Loader().referrer(sessionRule.session)
-                        .data("testtest", "text/plain"),
-                Loader().referrer("test-referrer")
-                        .data("testtest", "text/plain"),
-                false)
     }
 
     @Test fun loadUriHeader() {
