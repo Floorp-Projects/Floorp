@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PostMessageEvent_h
 #define mozilla_dom_PostMessageEvent_h
 
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/StructuredCloneHolder.h"

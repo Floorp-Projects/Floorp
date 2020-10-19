@@ -17,9 +17,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsDeque.h"
+#include "nsICookieJarSettings.h"
 
 class nsIGlobalObject;
-class nsICookieJarSettings;
 
 namespace mozilla {
 
