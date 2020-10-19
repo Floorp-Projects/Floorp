@@ -643,3 +643,48 @@ add_task(async function onboard_oneInteraction_false() {
   await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
   await SpecialPowers.popPrefEnv();
 });
+
+// Tests that engines with names containing extended Unicode characters can be
+// recognized as general-web engines and that their tab-to-search results
+// display the correct string.
+add_task(async function extended_unicode_in_engine() {
+  // Baidu's localized name. We expect this tab-to-search result shows the
+  // general-web engine string because Baidu is included in WEB_ENGINE_NAMES.
+  let engineName = "百度";
+  let engineDomain = "example-2.com";
+  let testEngine = await Services.search.addEngineWithDetails(engineName, {
+    template: `http://${engineDomain}/?search={searchTerms}`,
+  });
+  for (let i = 0; i < 3; i++) {
+    await PlacesTestUtils.addVisits([`https://${engineDomain}/`]);
+  }
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: engineDomain.slice(0, 4),
+  });
+  let tabToSearchDetails = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    1
+  );
+  Assert.equal(
+    tabToSearchDetails.searchParams.engine,
+    engineName,
+    "The tab-to-search engine name contains extended Unicode characters."
+  );
+  let [actionTabToSearch] = await document.l10n.formatValues([
+    {
+      id: "urlbar-result-action-tabtosearch-web",
+      args: { engine: tabToSearchDetails.searchParams.engine },
+    },
+  ]);
+  Assert.equal(
+    tabToSearchDetails.displayed.action,
+    actionTabToSearch,
+    "The correct action text is displayed in the tab-to-search result."
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  await PlacesUtils.history.clear();
+  await Services.search.removeEngine(testEngine);
+});
