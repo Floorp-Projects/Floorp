@@ -7,6 +7,7 @@
 #ifndef nsFrameLoaderOwner_h_
 #define nsFrameLoaderOwner_h_
 
+#include <functional>
 #include "nsISupports.h"
 
 class nsFrameLoader;
@@ -14,7 +15,9 @@ namespace mozilla {
 class ErrorResult;
 namespace dom {
 class BrowsingContext;
+class BrowsingContextGroup;
 class BrowserBridgeChild;
+class ContentParent;
 struct RemotenessOptions;
 }  // namespace dom
 }  // namespace mozilla

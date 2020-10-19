@@ -47,7 +47,9 @@ class LabellingEventTarget final : public nsISerialEventTarget,
 
   explicit LabellingEventTarget(mozilla::dom::DocGroup* aDocGroup)
       : mDocGroup(aDocGroup),
-        mMainThread(static_cast<nsThread*>(GetMainThreadSerialEventTarget())) {}
+        mMainThread(
+            static_cast<nsThread*>(mozilla::GetMainThreadSerialEventTarget())) {
+  }
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
