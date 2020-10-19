@@ -48,19 +48,19 @@ DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUPowerPreference);
 DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::webgpu::SerialBindGroupEntryType);
 
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUAddressMode);
-DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBindingType);
+DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPURawBindingType);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBlendFactor);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUBlendOperation);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUCompareFunction);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUCullMode);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUFilterMode);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUFrontFace);
+DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUHostMap);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUIndexFormat);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUInputStepMode);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUPrimitiveTopology);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUStencilOperation);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUTextureAspect);
-DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUTextureComponentType);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUTextureDimension);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUTextureFormat);
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUTextureViewDimension);
@@ -77,15 +77,10 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPULimits, mMaxBindGroups);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUDeviceDescriptor,
                                   mExtensions, mLimits);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUBufferDescriptor,
-                                  label, size, usage);
+                                  label, size, usage, mapped_at_creation);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureDescriptor,
                                   label, size, mip_level_count, sample_count,
                                   dimension, format, usage);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUSamplerDescriptor,
-                                  label, address_mode_u, address_mode_v,
-                                  address_mode_w, mag_filter, min_filter,
-                                  mipmap_filter, lod_min_clamp, lod_max_clamp,
-                                  compare, anisotropy_clamp);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
                                   height, depth);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUOrigin3d, x, y, z);
@@ -146,6 +141,11 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mFragmentStage, mPrimitiveTopology, mRasterizationState, mColorStates,
     mDepthStencilState, mVertexState, mSampleCount, mSampleMask,
     mAlphaToCoverageEnabled);
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::SerialSamplerDescriptor,
+                                  mLabel, mAddressU, mAddressV, mAddressW,
+                                  mMagFilter, mMinFilter, mMipmapFilter,
+                                  mLodMinClamp, mLodMaxClamp, mCompare,
+                                  mAnisotropyClamp);
 
 #undef DEFINE_IPC_SERIALIZER_FFI_ENUM
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
