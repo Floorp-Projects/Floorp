@@ -11,6 +11,14 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* All components
+ * Updated to Kotlin 1.4.10 and Coroutines 1.3.9.
+ * Updated to Android Gradle plugin 4.0.1 (downstream projects need to update too).
+
+* **service-glean**
+  * Glean was upgraded to v33.0.0
+    * ⚠️ **This is a breaking change**: Updated to the Android Gradle Plugin v4.0.1 and Gradle 6.5.1. Projects using older versions of these components will need to update in order to use newer versions of the Glean SDK.
+
 * **browser-toolbar**
   * Clear tint of tracking protection icon when animatable
 
@@ -50,10 +58,9 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8585) fixed regression files not been added to the downloads database system.
   * 🌟 Added new use cases for removing individual downloads (`removeDownload`) and all downloads (`removeAllDownloads`).
   * 🌟 Added support for new download [GeckoView API](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-).
-
+  
 * **service-glean**
-  * Glean was upgraded to v33.0.0
-    * ⚠️ **This is a breaking change**: Updated to the Android Gradle Plugin v4.0.1 and Gradle 6.5.1. Projects using older versions of these components will need to update in order to use newer versions of the Glean SDK.
+  * Glean was upgraded to v32.4.1
     * Update `glean_parser` to 1.28.6
       * BUGFIX: Ensure Kotlin arguments are deterministically ordered
     * BUGFIX: Transform ping directory size from bytes to kilobytes before accumulating to `glean.upload.pending_pings_directory_size`
