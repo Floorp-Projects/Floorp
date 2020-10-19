@@ -272,7 +272,7 @@
          oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
     <key id="viewBookmarksToolbarKb"
          data-l10n-id="bookmark-show-toolbar-shortcut"
-         oncommand="toggleBookmarksToolbarViaKeyboardShortcut()"
+         oncommand="toggleBookmarksToolbar()"
          modifiers="accel,shift"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>

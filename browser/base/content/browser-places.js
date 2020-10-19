@@ -13,12 +13,6 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
 });
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "NEWTAB_ENABLED",
-  "browser.newtabpage.enabled",
-  false
-);
 ChromeUtils.defineModuleGetter(
   this,
   "PanelMultiView",
@@ -1525,89 +1519,15 @@ var BookmarkingUI = {
   },
 
   toggleBookmarksToolbar(reason) {
-    let toolbar = document.getElementById("PersonalToolbar");
-    let newState = toolbar.collapsed ? "always" : "never";
-    Services.prefs.setCharPref(
-      "browser.toolbars.bookmarks.visibility",
-      // See firefox.js for possible values
-      newState
+    CustomizableUI.setToolbarVisibility(
+      "PersonalToolbar",
+      document.getElementById("PersonalToolbar").collapsed
     );
-
-    CustomizableUI.setToolbarVisibility("PersonalToolbar", newState, false);
     BrowserUsageTelemetry.recordToolbarVisibility(
       "PersonalToolbar",
-      newState,
+      document.getElementById("PersonalToolbar").collapsed,
       reason
     );
-  },
-
-  isOnNewTabPage({ currentURI, isNullPrincipal }) {
-    if (!NEWTAB_ENABLED && currentURI.spec == "about:blank") {
-      return isNullPrincipal;
-    }
-    // Prevent loading AboutNewTab.jsm during startup path if it
-    // is only the newTabURL getter we are interested in.
-    let newTabURL = Cu.isModuleLoaded("resource:///modules/AboutNewTab.jsm")
-      ? AboutNewTab.newTabURL
-      : "about:newtab";
-    let newTabURLs = [newTabURL, "about:home"];
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      newTabURLs.push("about:privatebrowsing");
-    }
-    return newTabURLs.some(uri => currentURI.spec.startsWith(uri));
-  },
-
-  buildBookmarksToolbarSubmenu(toolbar) {
-    let alwaysShowMenuItem = document.createXULElement("menuitem");
-    let alwaysHideMenuItem = document.createXULElement("menuitem");
-    let showOnNewTabMenuItem = document.createXULElement("menuitem");
-    let menuPopup = document.createXULElement("menupopup");
-    menuPopup.append(
-      alwaysShowMenuItem,
-      alwaysHideMenuItem,
-      showOnNewTabMenuItem
-    );
-    let menu = document.createXULElement("menu");
-    menu.appendChild(menuPopup);
-
-    menu.setAttribute("label", toolbar.getAttribute("toolbarname"));
-    menu.setAttribute("id", "toggle_" + toolbar.id);
-    menu.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
-    menu.setAttribute("toolbarId", toolbar.id);
-    let menuItems = [
-      [
-        showOnNewTabMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-on-new-tab",
-        "newtab",
-      ],
-      [
-        alwaysShowMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-always-show",
-        "always",
-      ],
-      [
-        alwaysHideMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-never-show",
-        "never",
-      ],
-    ];
-    menuItems.map(([menuItem, l10nId, visibilityEnum]) => {
-      document.l10n.setAttributes(menuItem, l10nId);
-      menuItem.setAttribute("type", "checkbox");
-      // The persisted state of the PersonalToolbar is stored in
-      // "browser.toolbars.bookmarks.visibility".
-      menuItem.setAttribute(
-        "checked",
-        gBookmarksToolbarVisibility == visibilityEnum
-      );
-      // Identify these items for "onViewToolbarCommand" so
-      // we know to check the visibilityEnum value.
-      menuItem.dataset.bookmarksToolbarVisibility = true;
-      menuItem.dataset.visibilityEnum = visibilityEnum;
-      menuItem.addEventListener("command", onViewToolbarCommand);
-    });
-
-    return menu;
   },
 
   attachPlacesView(event, node) {

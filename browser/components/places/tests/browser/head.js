@@ -129,14 +129,32 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  * @rejects Never.
  */
 function promiseSetToolbarVisibility(aToolbar, aVisible, aCallback) {
-  if (isToolbarVisible(aToolbar) != aVisible) {
-    let visibilityChanged = TestUtils.waitForCondition(
-      () => aToolbar.collapsed != aVisible
-    );
-    setToolbarVisibility(aToolbar, aVisible, undefined, false);
-    return visibilityChanged;
-  }
-  return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    function listener(event) {
+      if (event.propertyName == "max-height") {
+        aToolbar.removeEventListener("transitionend", listener);
+        resolve();
+      }
+    }
+
+    let transitionProperties = window
+      .getComputedStyle(aToolbar)
+      .transitionProperty.split(", ");
+    if (
+      isToolbarVisible(aToolbar) != aVisible &&
+      transitionProperties.some(prop => prop == "max-height" || prop == "all")
+    ) {
+      // Just because max-height is a transitionable property doesn't mean
+      // a transition will be triggered, but it's more likely.
+      aToolbar.addEventListener("transitionend", listener);
+      setToolbarVisibility(aToolbar, aVisible);
+      return;
+    }
+
+    // No animation to wait for
+    setToolbarVisibility(aToolbar, aVisible);
+    resolve();
+  });
 }
 
 /**

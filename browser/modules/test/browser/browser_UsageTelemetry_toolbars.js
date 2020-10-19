@@ -234,221 +234,169 @@ add_task(async function widgetPositions() {
 });
 
 add_task(async function customizeMode() {
-  for (let bookmarksFeatureEnabled of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.toolbars.bookmarks.2h2020", bookmarksFeatureEnabled]],
-    });
+  // Create a default state.
+  organizeToolbars({
+    PersonalToolbar: ["personal-bookmarks"],
 
-    // Create a default state.
-    organizeToolbars({
-      PersonalToolbar: ["personal-bookmarks"],
+    TabsToolbar: ["tabbrowser-tabs", "new-tab-button"],
 
-      TabsToolbar: ["tabbrowser-tabs", "new-tab-button"],
+    "nav-bar": [
+      "back-button",
+      "forward-button",
+      "stop-reload-button",
+      "urlbar-container",
+      "home-button",
+      "library-button",
+    ],
+  });
 
-      "nav-bar": [
-        "back-button",
-        "forward-button",
-        "stop-reload-button",
-        "urlbar-container",
-        "home-button",
-        "library-button",
-      ],
-    });
+  BrowserUsageTelemetry._recordUITelemetry();
 
-    BrowserUsageTelemetry._recordUITelemetry();
+  assertVisibilityScalars([
+    "drag-space_pinned_off",
+    "menu-toolbar_pinned_off",
+    "titlebar_pinned_off",
+    "bookmarks-bar_pinned_off",
 
-    assertVisibilityScalars([
-      "drag-space_pinned_off",
-      "menu-toolbar_pinned_off",
-      "titlebar_pinned_off",
-      "bookmarks-bar_pinned_off",
+    "tabbrowser-tabs_pinned_tabs-bar",
+    "new-tab-button_pinned_tabs-bar",
+    "alltabs-button_pinned_tabs-bar",
 
-      "tabbrowser-tabs_pinned_tabs-bar",
-      "new-tab-button_pinned_tabs-bar",
-      "alltabs-button_pinned_tabs-bar",
+    "back-button_pinned_nav-bar-start",
+    "forward-button_pinned_nav-bar-start",
+    "stop-reload-button_pinned_nav-bar-start",
+    "home-button_pinned_nav-bar-end",
+    "library-button_pinned_nav-bar-end",
 
-      "back-button_pinned_nav-bar-start",
-      "forward-button_pinned_nav-bar-start",
-      "stop-reload-button_pinned_nav-bar-start",
-      "home-button_pinned_nav-bar-end",
-      "library-button_pinned_nav-bar-end",
+    "personal-bookmarks_pinned_bookmarks-bar",
+  ]);
 
-      "personal-bookmarks_pinned_bookmarks-bar",
-    ]);
+  let win = await BrowserTestUtils.openNewBrowserWindow();
 
-    let win = await BrowserTestUtils.openNewBrowserWindow();
+  await enterCustomizationMode(win);
 
-    await enterCustomizationMode(win);
+  let toolbarButton = win.document.getElementById(
+    "customization-toolbar-visibility-button"
+  );
+  let toolbarPopup = win.document.getElementById("customization-toolbar-menu");
+  let popupShown = BrowserTestUtils.waitForEvent(toolbarPopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(toolbarButton, {}, win);
+  await popupShown;
 
-    let toolbarButton = win.document.getElementById(
-      "customization-toolbar-visibility-button"
-    );
-    let toolbarPopup = win.document.getElementById(
-      "customization-toolbar-menu"
-    );
-    let popupShown = BrowserTestUtils.waitForEvent(toolbarPopup, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(toolbarButton, {}, win);
-    await popupShown;
+  let popupHidden = BrowserTestUtils.waitForEvent(toolbarPopup, "popuphidden");
+  let barButton = win.document.getElementById("toggle_PersonalToolbar");
+  EventUtils.synthesizeMouseAtCenter(barButton, {}, win);
+  await popupHidden;
 
-    let barMenu = win.document.getElementById("toggle_PersonalToolbar");
-    let popupHidden = BrowserTestUtils.waitForEvent(
-      toolbarPopup,
-      "popuphidden"
-    );
-    if (bookmarksFeatureEnabled) {
-      let subMenu = barMenu.querySelector("menupopup");
-      popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(barMenu, {}, win);
-      await popupShown;
-      let alwaysButton = barMenu.querySelector(
-        '*[data-visibility-enum="always"]'
-      );
-      EventUtils.synthesizeMouseAtCenter(alwaysButton, {}, win);
-    } else {
-      EventUtils.synthesizeMouseAtCenter(barMenu, {}, win);
-    }
-    await popupHidden;
+  let navbar = CustomizableUI.getCustomizationTarget(
+    win.document.getElementById("nav-bar")
+  );
+  let bookmarksBar = CustomizableUI.getCustomizationTarget(
+    win.document.getElementById("PersonalToolbar")
+  );
+  let tabBar = CustomizableUI.getCustomizationTarget(
+    win.document.getElementById("TabsToolbar")
+  );
 
-    let navbar = CustomizableUI.getCustomizationTarget(
-      win.document.getElementById("nav-bar")
-    );
-    let bookmarksBar = CustomizableUI.getCustomizationTarget(
-      win.document.getElementById("PersonalToolbar")
-    );
-    let tabBar = CustomizableUI.getCustomizationTarget(
-      win.document.getElementById("TabsToolbar")
-    );
+  simulateItemDrag(win.document.getElementById("home-button"), navbar, "start");
+  simulateItemDrag(win.document.getElementById("library-button"), bookmarksBar);
+  simulateItemDrag(win.document.getElementById("stop-reload-button"), tabBar);
+  simulateItemDrag(
+    win.document.getElementById("stop-reload-button"),
+    navbar,
+    "start"
+  );
+  simulateItemDrag(win.document.getElementById("stop-reload-button"), tabBar);
 
-    simulateItemDrag(
-      win.document.getElementById("home-button"),
-      navbar,
-      "start"
-    );
-    simulateItemDrag(
-      win.document.getElementById("library-button"),
-      bookmarksBar
-    );
-    simulateItemDrag(win.document.getElementById("stop-reload-button"), tabBar);
-    simulateItemDrag(
-      win.document.getElementById("stop-reload-button"),
-      navbar,
-      "start"
-    );
-    simulateItemDrag(win.document.getElementById("stop-reload-button"), tabBar);
+  await leaveCustomizationMode(win);
 
-    await leaveCustomizationMode(win);
+  await BrowserTestUtils.closeWindow(win);
 
-    await BrowserTestUtils.closeWindow(win);
+  assertCustomizeScalars({
+    "home-button_move_nav-bar-end_nav-bar-start_drag": 1,
+    "library-button_move_nav-bar-end_bookmarks-bar_drag": 1,
+    "stop-reload-button_move_nav-bar-start_tabs-bar_drag": 2,
+    "stop-reload-button_move_tabs-bar_nav-bar-start_drag": 1,
+    "bookmarks-bar_move_off_on_customization-toolbar-menu": 1,
+  });
 
-    let bookmarksBarTelemetryScalar = bookmarksFeatureEnabled
-      ? "bookmarks-bar_move_off_always_customization-toolbar-menu"
-      : "bookmarks-bar_move_off_on_customization-toolbar-menu";
-    assertCustomizeScalars({
-      "home-button_move_nav-bar-end_nav-bar-start_drag": 1,
-      "library-button_move_nav-bar-end_bookmarks-bar_drag": 1,
-      "stop-reload-button_move_nav-bar-start_tabs-bar_drag": 2,
-      "stop-reload-button_move_tabs-bar_nav-bar-start_drag": 1,
-      [bookmarksBarTelemetryScalar]: 1,
-    });
-
-    CustomizableUI.reset();
-  }
+  CustomizableUI.reset();
 });
 
 add_task(async function contextMenus() {
-  for (let bookmarksFeatureEnabled of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.toolbars.bookmarks.2h2020", bookmarksFeatureEnabled]],
-    });
+  // Create a default state.
+  organizeToolbars({
+    PersonalToolbar: ["personal-bookmarks"],
 
-    // Create a default state.
-    organizeToolbars({
-      PersonalToolbar: ["personal-bookmarks"],
+    TabsToolbar: ["tabbrowser-tabs", "new-tab-button"],
 
-      TabsToolbar: ["tabbrowser-tabs", "new-tab-button"],
+    "nav-bar": [
+      "back-button",
+      "forward-button",
+      "stop-reload-button",
+      "urlbar-container",
+      "home-button",
+      "library-button",
+    ],
+  });
 
-      "nav-bar": [
-        "back-button",
-        "forward-button",
-        "stop-reload-button",
-        "urlbar-container",
-        "home-button",
-        "library-button",
-      ],
-    });
+  BrowserUsageTelemetry._recordUITelemetry();
 
-    BrowserUsageTelemetry._recordUITelemetry();
+  assertVisibilityScalars([
+    "drag-space_pinned_off",
+    "menu-toolbar_pinned_off",
+    "titlebar_pinned_off",
+    "bookmarks-bar_pinned_off",
 
-    assertVisibilityScalars([
-      "drag-space_pinned_off",
-      "menu-toolbar_pinned_off",
-      "titlebar_pinned_off",
-      "bookmarks-bar_pinned_off",
+    "tabbrowser-tabs_pinned_tabs-bar",
+    "new-tab-button_pinned_tabs-bar",
+    "alltabs-button_pinned_tabs-bar",
 
-      "tabbrowser-tabs_pinned_tabs-bar",
-      "new-tab-button_pinned_tabs-bar",
-      "alltabs-button_pinned_tabs-bar",
+    "back-button_pinned_nav-bar-start",
+    "forward-button_pinned_nav-bar-start",
+    "stop-reload-button_pinned_nav-bar-start",
+    "home-button_pinned_nav-bar-end",
+    "library-button_pinned_nav-bar-end",
 
-      "back-button_pinned_nav-bar-start",
-      "forward-button_pinned_nav-bar-start",
-      "stop-reload-button_pinned_nav-bar-start",
-      "home-button_pinned_nav-bar-end",
-      "library-button_pinned_nav-bar-end",
+    "personal-bookmarks_pinned_bookmarks-bar",
+  ]);
 
-      "personal-bookmarks_pinned_bookmarks-bar",
-    ]);
+  let menu = document.getElementById("toolbar-context-menu");
+  let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  let button = document.getElementById("stop-reload-button");
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "contextmenu", button: 2 },
+    window
+  );
+  await popupShown;
 
-    let menu = document.getElementById("toolbar-context-menu");
-    let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    let button = document.getElementById("stop-reload-button");
-    EventUtils.synthesizeMouseAtCenter(
-      button,
-      { type: "contextmenu", button: 2 },
-      window
-    );
-    await popupShown;
+  let popupHidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
+  let barButton = document.getElementById("toggle_PersonalToolbar");
+  EventUtils.synthesizeMouseAtCenter(barButton, {}, window);
+  await popupHidden;
 
-    let barMenu = document.getElementById("toggle_PersonalToolbar");
-    let popupHidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
-    if (bookmarksFeatureEnabled) {
-      let subMenu = barMenu.querySelector("menupopup");
-      popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(barMenu, {});
-      await popupShown;
-      let alwaysButton = barMenu.querySelector(
-        '*[data-visibility-enum="always"]'
-      );
-      EventUtils.synthesizeMouseAtCenter(alwaysButton, {});
-    } else {
-      EventUtils.synthesizeMouseAtCenter(barMenu, {});
-    }
-    await popupHidden;
+  popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "contextmenu", button: 2 },
+    window
+  );
+  await popupShown;
 
-    popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(
-      button,
-      { type: "contextmenu", button: 2 },
-      window
-    );
-    await popupShown;
+  popupHidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
+  let removeButton = document.querySelector(
+    "#toolbar-context-menu .customize-context-removeFromToolbar"
+  );
+  EventUtils.synthesizeMouseAtCenter(removeButton, {}, window);
+  await popupHidden;
 
-    popupHidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
-    let removeButton = document.querySelector(
-      "#toolbar-context-menu .customize-context-removeFromToolbar"
-    );
-    EventUtils.synthesizeMouseAtCenter(removeButton, {}, window);
-    await popupHidden;
+  assertCustomizeScalars({
+    "bookmarks-bar_move_off_on_toolbar-context-menu": 1,
+    "stop-reload-button_remove_nav-bar-start_na_toolbar-context-menu": 1,
+  });
 
-    let bookmarksBarTelemetryScalar = bookmarksFeatureEnabled
-      ? "bookmarks-bar_move_off_always_toolbar-context-menu"
-      : "bookmarks-bar_move_off_on_toolbar-context-menu";
-    assertCustomizeScalars({
-      [bookmarksBarTelemetryScalar]: 1,
-      "stop-reload-button_remove_nav-bar-start_na_toolbar-context-menu": 1,
-    });
-
-    CustomizableUI.reset();
-  }
+  CustomizableUI.reset();
 });
 
 add_task(async function pageActions() {
