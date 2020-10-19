@@ -8,6 +8,7 @@
 
 #include "AsyncPanZoomController.h"
 
+#include "GestureEventListener.h"
 #include "InputBlockState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/ToString.h"
@@ -15,6 +16,7 @@
 #include "QueuedInput.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_ui.h"
 
 static mozilla::LazyLogModule sApzInpLog("apz.inputqueue");
 #define INPQ_LOG(...) MOZ_LOG(sApzInpLog, LogLevel::Debug, (__VA_ARGS__))
