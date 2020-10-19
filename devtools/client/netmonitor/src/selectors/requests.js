@@ -159,7 +159,7 @@ function getRequestById(state, id) {
 
 function getRequestByChannelId(state, channelId) {
   return [...state.requests.requests.values()].find(
-    r => r.channelId == channelId
+    r => r.resourceId == channelId
   );
 }
 
