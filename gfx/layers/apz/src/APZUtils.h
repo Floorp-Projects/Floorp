@@ -181,6 +181,21 @@ ScreenPoint ComputeFixedMarginsOffset(
     const ScreenMargin& aCompositorFixedLayerMargins, SideBits aFixedSides,
     const ScreenMargin& aGeckoFixedLayerMargins);
 
+/**
+ * Takes the visible rect from the compositor metrics, adds a pref-based
+ * margin around it, and checks to see if it is contained inside the painted
+ * rect from the painted metrics. Returns true if it is contained, or false
+ * if not. Returning false means that a (relatively) small amount of async
+ * scrolling/zooming can result in the visible area going outside the painted
+ * area and resulting in visual checkerboarding.
+ * Note that this may return false positives for cases where the scrollframe
+ * in question is nested inside other scrollframes, as the composition bounds
+ * used to determine the visible rect may in fact be clipped by enclosing
+ * scrollframes, but that is not accounted for in this function.
+ */
+bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
+                         const FrameMetrics& aCompositorMetrics);
+
 }  // namespace apz
 
 }  // namespace layers
