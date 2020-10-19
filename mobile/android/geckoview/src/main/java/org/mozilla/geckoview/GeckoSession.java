@@ -1031,7 +1031,7 @@ public class GeckoSession {
                                        Compositor compositor, EventDispatcher dispatcher,
                                        SessionAccessibility.NativeProvider sessionAccessibility,
                                        GeckoBundle initData, String id, String chromeUri,
-                                       int screenId, boolean privateMode, boolean isRemote);
+                                       int screenId, boolean privateMode);
 
         @Override // JNIObject
         public void disposeNative() {
@@ -1301,7 +1301,6 @@ public class GeckoSession {
         final String chromeUri = mSettings.getChromeUri();
         final int screenId = mSettings.getScreenId();
         final boolean isPrivate = mSettings.getUsePrivateMode();
-        final boolean isRemote = runtime.getSettings().getUseMultiprocess();
 
         mWindow = new Window(runtime, this, mNativeQueue);
         mWebExtensionController.setRuntime(runtime);
@@ -1311,7 +1310,7 @@ public class GeckoSession {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mNativeQueue, mCompositor, mEventDispatcher,
                         mAccessibility != null ? mAccessibility.nativeProvider : null,
-                        createInitData(), mId, chromeUri, screenId, isPrivate, isRemote);
+                        createInitData(), mId, chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -1325,7 +1324,7 @@ public class GeckoSession {
                 GeckoBundle.class, createInitData(),
                 String.class, mId,
                 String.class, chromeUri,
-                screenId, isPrivate, isRemote);
+                screenId, isPrivate);
         }
 
         onWindowChanged(WINDOW_OPEN, /* inProgress */ false);
