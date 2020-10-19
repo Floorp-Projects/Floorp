@@ -88,21 +88,6 @@ class WMFVideoMFTManager : public MFTManager {
 
   StreamType mStreamType;
 
-  // Get a string representation of the stream type. Useful for logging.
-  inline const char* StreamTypeString() const {
-    switch (mStreamType) {
-      case StreamType::H264:
-        return "H264";
-      case StreamType::VP8:
-        return "VP8";
-      case StreamType::VP9:
-        return "VP9";
-      default:
-        MOZ_ASSERT(mStreamType == StreamType::Unknown);
-        return "Unknown";
-    }
-  }
-
   const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
 
