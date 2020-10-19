@@ -1621,6 +1621,33 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
                 delay);
           }
         }
+      } else if (apz::AboutToCheckerboard(mLastContentPaintMetrics,
+                                          Metrics())) {
+        // If we already scheduled a throttled repaint request but are also
+        // in danger of checkerboarding soon, trigger the repaint request to
+        // go out immediately. This should reduce the amount of time we spend
+        // checkerboarding.
+        //
+        // Note that if we remain in this "about to
+        // checkerboard" state over a period of time with multiple pinch input
+        // events (which is quite likely), then we will flip-flop between taking
+        // the above branch (!mPinchPaintTimerSet) and this branch (which will
+        // flush the repaint request and reset mPinchPaintTimerSet to false).
+        // This is sort of desirable because it halves the number of repaint
+        // requests we send, and therefore reduces IPC traffic.
+        // Keep in mind that many of these repaint requests will be ignored on
+        // the main-thread anyway due to the resolution mismatch - the first
+        // repaint request will be honored because APZ's notion of the painted
+        // resolution matches the actual main thread resolution, but that first
+        // repaint request will change the resolution on the main thread.
+        // Subsequent repaint requests will be ignored in APZCCallbackHelper, at
+        // https://searchfox.org/mozilla-central/rev/e0eb861a187f0bb6d994228f2e0e49b2c9ee455e/gfx/layers/apz/util/APZCCallbackHelper.cpp#331-338,
+        // until we receive a NotifyLayersUpdated call that re-syncs APZ's
+        // notion of the painted resolution to the main thread. These ignored
+        // repaint requests are contributing to IPC traffic needlessly, and so
+        // halving the number of repaint requests (as mentioned above) seems
+        // desirable.
+        DoDelayedRequestContentRepaint();
       }
 
       UpdateSharedCompositorFrameMetrics();
