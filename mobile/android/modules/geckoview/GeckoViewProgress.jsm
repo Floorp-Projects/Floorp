@@ -321,7 +321,7 @@ class ProgressTracker {
 
     const data = this._data;
 
-    if (!data.uri || data.uri !== aEvent.uri) {
+    if (!data.uri || data.uri !== aEvent.data?.uri) {
       return;
     }
 
