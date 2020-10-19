@@ -40,9 +40,6 @@ import six
 def main(argv):
     config = {}
 
-    if 'OLD_CONFIGURE' not in os.environ:
-        os.environ['OLD_CONFIGURE'] = os.path.join(base_dir, 'old-configure')
-
     sandbox = ConfigureSandbox(config, os.environ, argv)
 
     clobber_file = 'CLOBBER'
