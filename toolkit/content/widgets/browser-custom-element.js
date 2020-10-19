@@ -1928,6 +1928,17 @@
       /* no-op unless replaced */
     }
 
+    // This method is replaced by frontend code in order to handle restoring
+    // remote session history
+    //
+    // Called immediately after changing remoteness.  If this method returns
+    // `true`, Gecko will assume frontend handled resuming the load, and will
+    // not attempt to resume the load itself.
+    afterChangeRemoteness(browser, redirectLoadSwitchId) {
+      /* no-op unless replaced */
+      return false;
+    }
+
     // Called by Gecko before the remoteness change happens, allowing for
     // listeners, etc. to be stashed before the process switch.
     beforeChangeRemoteness() {
@@ -1952,18 +1963,9 @@
       event.initEvent("DidChangeBrowserRemoteness", true, false);
       this.dispatchEvent(event);
 
-      // If we have a tabbrowser, we need to let it handle restoring session
-      // history, and performing the `resumeRedirectedLoad`, in order to get
-      // sesssion state set up correctly.
-      // FIXME: This probably needs to be hookable by GeckoView.
-      if (!Services.appinfo.sessionHistoryInParent) {
-        let tabbrowser = this.getTabBrowser();
-        if (tabbrowser) {
-          tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
-          return true;
-        }
-      }
-      return false;
+      // Call into frontend code which may want to handle the load (e.g. to
+      // while restoring session state).
+      return this.afterChangeRemoteness(redirectLoadSwitchId);
     }
   }
 

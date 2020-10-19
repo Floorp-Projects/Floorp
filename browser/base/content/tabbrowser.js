@@ -1981,6 +1981,11 @@
       if (!Services.appinfo.sessionHistoryInParent) {
         b.prepareToChangeRemoteness = () =>
           SessionStore.prepareToChangeRemoteness(b);
+        b.afterChangeRemoteness = switchId => {
+          let tab = this.getTabForBrowser(b);
+          SessionStore.finishTabRemotenessChange(tab, switchId);
+          return true;
+        };
       }
 
       const defaultBrowserAttributes = {
@@ -5766,11 +5771,6 @@
           this.setSuccessor(predecessor, aOtherTab);
         }
       }
-    },
-
-    finishBrowserRemotenessChange(aBrowser, aSwitchId) {
-      let tab = this.getTabForBrowser(aBrowser);
-      SessionStore.finishTabRemotenessChange(tab, aSwitchId);
     },
   };
 
