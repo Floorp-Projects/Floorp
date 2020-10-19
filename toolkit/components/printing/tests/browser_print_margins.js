@@ -40,6 +40,34 @@ function assertNoPendingMarginsUpdate(helper) {
   );
 }
 
+async function setupLetterPaper() {
+  const INCHES_PER_POINT = 1 / 72;
+  const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+    Ci.nsIPrinterList
+  );
+  let fallbackPaperList = await printerList.fallbackPaperList;
+  let paper = fallbackPaperList.find(
+    paper =>
+      paper.width * INCHES_PER_POINT == 8.5 &&
+      paper.height * INCHES_PER_POINT == 11
+  );
+  ok(paper, "Found a paper");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["print.printer_Mozilla_Save_to_PDF.print_paper_id", paper.id.toString()],
+      ["print.printer_Mozilla_Save_to_PDF.print_paper_size_unit", 0],
+      [
+        "print.printer_Mozilla_Save_to_PDF.print_paper_width",
+        (paper.width * INCHES_PER_POINT).toString(),
+      ],
+      [
+        "print.printer_Mozilla_Save_to_PDF.print_paper_height",
+        (paper.height * INCHES_PER_POINT).toString(),
+      ],
+    ],
+  });
+}
+
 add_task(async function testPresetMargins() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
@@ -210,6 +238,106 @@ add_task(async function testInvalidMarginsReset() {
       "Wait for margin error to be hidden"
     );
     await helper.closeDialog();
+  });
+});
+
+add_task(async function testChangeInvalidToValidUpdate() {
+  await PrintHelper.withTestPage(async helper => {
+    await setupLetterPaper();
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    this.changeDefaultToCustom(helper);
+    await helper.awaitAnimationFrame();
+    let marginError = helper.get("error-invalid-margin");
+
+    await helper.text(helper.get("custom-margin-bottom"), "11");
+    assertNoPendingMarginsUpdate(helper);
+    await BrowserTestUtils.waitForAttributeRemoval("hidden", marginError);
+    ok(!marginError.hidden, "Margin error is showing");
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+      paperId: "na_letter",
+    });
+
+    await helper.text(helper.get("custom-margin-top"), "1");
+    assertNoPendingMarginsUpdate(helper);
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+    });
+    ok(!marginError.hidden, "Margin error is showing");
+
+    await helper.assertSettingsChanged(
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      { marginTop: 1, marginRight: 0.5, marginBottom: 1, marginLeft: 0.5 },
+      async () => {
+        await helper.text(helper.get("custom-margin-bottom"), "1");
+
+        assertPendingMarginsUpdate(helper);
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+        ok(marginError.hidden, "Margin error is hidden");
+      }
+    );
+  });
+});
+
+add_task(async function testChangeInvalidCanRevalidate() {
+  await PrintHelper.withTestPage(async helper => {
+    await setupLetterPaper();
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    this.changeDefaultToCustom(helper);
+    await helper.awaitAnimationFrame();
+    let marginError = helper.get("error-invalid-margin");
+
+    await helper.assertSettingsChanged(
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      { marginTop: 5, marginRight: 0.5, marginBottom: 3, marginLeft: 0.5 },
+      async () => {
+        await helper.text(helper.get("custom-margin-top"), "5");
+        await helper.text(helper.get("custom-margin-bottom"), "3");
+        assertPendingMarginsUpdate(helper);
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+        ok(marginError.hidden, "Margin error is hidden");
+      }
+    );
+
+    await helper.text(helper.get("custom-margin-top"), "9");
+    assertNoPendingMarginsUpdate(helper);
+    await BrowserTestUtils.waitForAttributeRemoval("hidden", marginError);
+    ok(!marginError.hidden, "Margin error is showing");
+    helper.assertSettingsMatch({
+      marginTop: 5,
+      marginRight: 0.5,
+      marginBottom: 3,
+      marginLeft: 0.5,
+      paperId: "na_letter",
+    });
+
+    await helper.assertSettingsChanged(
+      { marginTop: 5, marginRight: 0.5, marginBottom: 3, marginLeft: 0.5 },
+      { marginTop: 9, marginRight: 0.5, marginBottom: 2, marginLeft: 0.5 },
+      async () => {
+        await helper.text(helper.get("custom-margin-bottom"), "2");
+        assertPendingMarginsUpdate(helper);
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+        ok(marginError.hidden, "Margin error is hidden");
+      }
+    );
   });
 });
 
@@ -414,40 +542,17 @@ add_task(async function testInvalidPrefValueWidth() {
 });
 
 add_task(async function testInvalidMarginStartup() {
-  const INCHES_PER_POINT = 1 / 72;
-  const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
-    Ci.nsIPrinterList
-  );
-  let fallbackPaperList = await printerList.fallbackPaperList;
-  let paper = fallbackPaperList.find(
-    paper =>
-      paper.width * INCHES_PER_POINT == 8.5 &&
-      paper.height * INCHES_PER_POINT == 11
-  );
-  ok(paper, "Found a paper");
   await PrintHelper.withTestPage(async helper => {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["print.printer_Mozilla_Save_to_PDF.print_margin_right", "4"],
         ["print.printer_Mozilla_Save_to_PDF.print_margin_left", "5"],
-        [
-          "print.printer_Mozilla_Save_to_PDF.print_paper_id",
-          paper.id.toString(),
-        ],
-        ["print.printer_Mozilla_Save_to_PDF.print_paper_size_unit", 0],
-        [
-          "print.printer_Mozilla_Save_to_PDF.print_paper_width",
-          (paper.width * INCHES_PER_POINT).toString(),
-        ],
-        [
-          "print.printer_Mozilla_Save_to_PDF.print_paper_height",
-          (paper.height * INCHES_PER_POINT).toString(),
-        ],
       ],
     });
+    await setupLetterPaper();
     await helper.startPrint();
     helper.assertSettingsMatch({
-      paperId: paper.id,
+      paperId: "na_letter",
       marginLeft: 0.5,
       marginRight: 0.5,
     });
