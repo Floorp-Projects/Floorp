@@ -35,7 +35,7 @@ Structure:
                                       // Runnable names are only collected for the XPCOM main thread.
             "process": <string>, // Type of process that hung, see below for a list of types.
             "remoteType": <string>, // Remote type of process which hung, see below.
-            "annotations": [ ... ], // A list of annotations on the hang, see below.
+            "annotations": { ... }, // A set of annotations on the hang, see below.
             "pseudoStack": [ ... ], // List of label stack frames and js frames.
             "stack": [ ... ], // interleaved hang stack, see below.
           },
@@ -126,18 +126,15 @@ Native stack frames are as such:
 Annotations
 -----------
 
-The annotations field is an array of key-value pairs, for example if the user
+The annotations field is a map from key to string value, for example if the user
 was interacting during a hang the annotations field would look something like
 this:
 
 .. code-block:: js
 
-    [
-        [
-            "UserInteracting",
-            "true"
-        ]
-    ]
+    {
+        "UserInteracting": "true"
+    }
 
 The following annotations are currently present in tree:
 
@@ -158,5 +155,3 @@ The following annotations are currently present in tree:
 +-----------------+-------------------------------------------------+
 | Unrecovered     | "true" if the hang persisted until process exit |
 +-----------------+-------------------------------------------------+
-
-Additional annotations can be added at run-time via :doc:`../collection/user-interactions`.
