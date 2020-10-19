@@ -250,13 +250,6 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
   // seriously screwed up.
   passes = 0;
   do {
-#ifdef DEBUG_REFLOW
-    if (passes > 0) {
-      AddIndents();
-      printf("ChildResized doing pass: %d\n", passes);
-    }
-#endif
-
     // Always assume that we're done.  This will change if, for example,
     // children don't stay the same size after being flowed.
     finished = true;
