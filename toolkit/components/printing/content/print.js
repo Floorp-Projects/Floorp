@@ -981,7 +981,7 @@ var PrintSettingsViewProxy = {
           printerInfo.printer.supportsMonochrome,
           printerInfo.printer.paperList,
           // get a set of default settings for this printer
-          printerInfo.printer.createDefaultSettings(printerName),
+          printerInfo.printer.createDefaultSettings(),
         ]);
       } catch (e) {
         this.reportPrintingError("PRINTER_SETTINGS");
