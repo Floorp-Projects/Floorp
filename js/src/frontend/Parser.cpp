@@ -2386,14 +2386,18 @@ const ParserAtom* ParserBase::prefixAccessorName(PropertyType propType,
 }
 
 template <class ParseHandler, typename Unit>
+void GeneralParser<ParseHandler, Unit>::setFunctionStartAtPosition(
+    FunctionBox* funbox, TokenPos pos) const {
+  uint32_t startLine, startColumn;
+  tokenStream.computeLineAndColumn(pos.begin, &startLine, &startColumn);
+
+  funbox->setStart(pos.begin, startLine, startColumn);
+}
+
+template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::setFunctionStartAtCurrentToken(
     FunctionBox* funbox) const {
-  uint32_t bufStart = anyChars.currentToken().pos.begin;
-
-  uint32_t startLine, startColumn;
-  tokenStream.computeLineAndColumn(bufStart, &startLine, &startColumn);
-
-  funbox->setStart(bufStart, startLine, startColumn);
+  setFunctionStartAtPosition(funbox, anyChars.currentToken().pos);
 }
 
 template <class ParseHandler, typename Unit>
@@ -7417,8 +7421,9 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
 
     // synthesizeConstructor assigns to classStmt.constructorBox
+    TokenPos synthesizedBodyPos(classStartOffset, classEndOffset);
     FunctionNodeType synthesizedCtor =
-        synthesizeConstructor(className, classStartOffset, hasHeritage);
+        synthesizeConstructor(className, synthesizedBodyPos, hasHeritage);
     if (!synthesizedCtor) {
       return false;
     }
@@ -7671,7 +7676,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
-    const ParserAtom* className, uint32_t classNameOffset,
+    const ParserAtom* className, TokenPos synthesizedBodyPos,
     HasHeritage hasHeritage) {
   FunctionSyntaxKind functionSyntaxKind =
       hasHeritage == HasHeritage::Yes
@@ -7684,7 +7689,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
                            FunctionAsyncKind::SyncFunction, isSelfHosting);
 
   // Create the top-level field initializer node.
-  FunctionNodeType funNode = handler_.newFunction(functionSyntaxKind, pos());
+  FunctionNodeType funNode =
+      handler_.newFunction(functionSyntaxKind, synthesizedBodyPos);
   if (!funNode) {
     return null();
   }
@@ -7692,8 +7698,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
   FunctionBox* funbox =
-      newFunctionBox(funNode, className, flags, classNameOffset, directives,
-                     GeneratorKind::NotGenerator,
+      newFunctionBox(funNode, className, flags, synthesizedBodyPos.begin,
+                     directives, GeneratorKind::NotGenerator,
                      FunctionAsyncKind::SyncFunction, TopLevelFunction::No);
   if (!funbox) {
     return null();
@@ -7707,7 +7713,6 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
 
-  TokenPos synthesizedBodyPos = TokenPos(classNameOffset, classNameOffset + 1);
   // Create a ListNode for the parameters + body (there are no parameters).
   ListNodeType argsbody =
       handler_.newList(ParseNodeKind::ParamsBody, synthesizedBodyPos);
@@ -7715,7 +7720,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
-  setFunctionStartAtCurrentToken(funbox);
+  setFunctionStartAtPosition(funbox, synthesizedBodyPos);
 
   if (hasHeritage == HasHeritage::Yes) {
     // Synthesize the equivalent to `function f(...args)`
