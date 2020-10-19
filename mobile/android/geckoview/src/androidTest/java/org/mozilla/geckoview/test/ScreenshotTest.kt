@@ -156,7 +156,7 @@ class ScreenshotTest : BaseSessionTest() {
 
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
-    fun capturePixelsSessionDeactivatedActivated() {
+    fun capturePixelsWhileSessionDeactivated() {
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)
@@ -167,18 +167,13 @@ class ScreenshotTest : BaseSessionTest() {
         })
 
         sessionRule.session.setActive(false)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @AssertCalled(count = 1)
-            override fun onPaintStatusReset(session: GeckoSession) {
-            }
-        })
 
-         sessionRule.session.setActive(true)
-         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-             @AssertCalled(count = 1)
-             override fun onFirstContentfulPaint(session: GeckoSession) {
-             }
-         })
+        // Deactivating the session should trigger a flush state change
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession,
+                                              sessionState: GeckoSession.SessionState) {}
+        })
 
         sessionRule.display?.let {
             assertScreenshotResult(it.capturePixels(), screenshotFile)
