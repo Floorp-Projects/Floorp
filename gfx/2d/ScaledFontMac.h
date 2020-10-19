@@ -78,17 +78,6 @@ class ScaledFontMac : public ScaledFontBase {
     bool mUseFontSmoothing;
     bool mApplySyntheticBold;
   };
-
-  typedef void(CTFontDrawGlyphsFuncT)(CTFontRef, const CGGlyph[], const CGPoint[], size_t,
-                                      CGContextRef);
-
-  static bool sSymbolLookupDone;
-
- public:
-  // function pointer for CTFontDrawGlyphs, if available;
-  // initialized the first time a ScaledFontMac is created,
-  // so it will be valid by the time DrawTargetCG wants to use it
-  static CTFontDrawGlyphsFuncT* CTFontDrawGlyphsPtr;
 };
 
 }  // namespace gfx
