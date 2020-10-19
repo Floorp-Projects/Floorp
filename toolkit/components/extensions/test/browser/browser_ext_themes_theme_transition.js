@@ -34,7 +34,7 @@ add_task(async function test_theme_transition_effects() {
   );
 
   let bookmarksBar = document.querySelector("#PersonalToolbar");
-  bookmarksBar.setAttribute("collapsed", "false");
+  setToolbarVisibility(bookmarksBar, true, false, true);
   let bookmarksBarCS = window.getComputedStyle(bookmarksBar);
 
   Assert.ok(

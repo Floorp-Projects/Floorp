@@ -78,14 +78,15 @@ add_task(async function toolbarButtons() {
     let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     let tabClose = BrowserTestUtils.waitForTabClosing(newTab);
 
-    let transition = BrowserTestUtils.waitForTransition(
-      elem("PersonalToolbar")
-    );
+    let bookmarksToolbarVisible = TestUtils.waitForCondition(() => {
+      let toolbar = gNavToolbox.querySelector("#PersonalToolbar");
+      return toolbar.getAttribute("collapsed") != "true";
+    }, "waiting for toolbar to become visible");
     CustomizableUI.setToolbarVisibility("PersonalToolbar", true);
     registerCleanupFunction(() => {
       CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
     });
-    await transition;
+    await bookmarksToolbarVisible;
 
     let tabs = elem("tabbrowser-tabs");
     if (!tabs.hasAttribute("overflow")) {

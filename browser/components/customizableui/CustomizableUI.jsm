@@ -37,6 +37,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIEventListenerService"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gBookmarksToolbar2h2020",
+  "browser.toolbars.bookmarks.2h2020",
+  false
+);
+
 const kDefaultThemeID = "default-theme@mozilla.org";
 
 const kSpecialWidgetPfx = "customizableui-special-";
@@ -277,7 +284,7 @@ var CustomizableUIInternal = {
       {
         type: CustomizableUI.TYPE_TOOLBAR,
         defaultPlacements: ["personal-bookmarks"],
-        defaultCollapsed: true,
+        defaultCollapsed: gBookmarksToolbar2h2020 ? "newtab" : true,
       },
       true
     );
@@ -3040,7 +3047,9 @@ var CustomizableUIInternal = {
           if (defaultCollapsed !== null) {
             win.setToolbarVisibility(
               areaNode,
-              !defaultCollapsed,
+              typeof defaultCollapsed == "string"
+                ? defaultCollapsed
+                : !defaultCollapsed,
               isFirstChangedToolbar
             );
           }
@@ -3272,13 +3281,28 @@ var CustomizableUIInternal = {
         }
 
         if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-          let attribute =
-            container.getAttribute("type") == "menubar"
-              ? "autohide"
-              : "collapsed";
-          let collapsed = container.getAttribute(attribute) == "true";
+          let collapsed = null;
           let defaultCollapsed = props.get("defaultCollapsed");
-          if (defaultCollapsed !== null && collapsed != defaultCollapsed) {
+          let nondefaultState = false;
+          if (
+            areaId == CustomizableUI.AREA_BOOKMARKS &&
+            gBookmarksToolbar2h2020
+          ) {
+            collapsed = Services.prefs.getCharPref(
+              "browser.toolbars.bookmarks.visibility"
+            );
+            nondefaultState = Services.prefs.prefHasUserValue(
+              "browser.toolbars.bookmarks.visibility"
+            );
+          } else {
+            let attribute =
+              container.getAttribute("type") == "menubar"
+                ? "autohide"
+                : "collapsed";
+            collapsed = container.getAttribute(attribute) == "true";
+            nondefaultState = collapsed != defaultCollapsed;
+          }
+          if (defaultCollapsed !== null && nondefaultState) {
             log.debug(
               "Found " +
                 areaId +

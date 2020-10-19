@@ -35,7 +35,7 @@ add_task(async function testEnabledBookmarksShortcutPref() {
   await BrowserTestUtils.waitForAttribute("collapsed", toolbar, "false");
   ok(true, "bookmarks toolbar is visible");
 
-  await testIsBookmarksMenuItemStateChecked("true");
+  await testIsBookmarksMenuItemStateChecked("always");
 
   info("Toggle toolbar visibility off");
   EventUtils.synthesizeKey("b", { shiftKey: true, accelKey: true });
@@ -43,7 +43,7 @@ add_task(async function testEnabledBookmarksShortcutPref() {
   await BrowserTestUtils.waitForAttribute("collapsed", toolbar, "true");
   ok(true, "bookmarks toolbar is not visible");
 
-  await testIsBookmarksMenuItemStateChecked("false");
+  await testIsBookmarksMenuItemStateChecked("never");
 
   await BrowserTestUtils.removeTab(blankTab);
 });
@@ -119,11 +119,16 @@ async function testIsBookmarksMenuItemStateChecked(expected) {
 
   await openContextMenu(contextMenu, target);
 
-  let menuitem = document.getElementById("toggle_PersonalToolbar");
+  let menuitems = ["always", "never", "newtab"].map(e =>
+    document.querySelector(`menuitem[data-visibility-enum="${e}"]`)
+  );
+
+  let checkedItem = menuitems.filter(m => m.getAttribute("checked") == "true");
+  is(checkedItem.length, 1, "should have only one menuitem checked");
   is(
-    menuitem.getAttribute("checked"),
+    checkedItem[0].dataset.visibilityEnum,
     expected,
-    `checked state for menuitem should be ${expected}.`
+    `checked menuitem should be ${expected}`
   );
 
   await closeContextMenu(contextMenu);
@@ -153,6 +158,10 @@ async function openContextMenu(contextMenu, target) {
     type: "contextmenu",
   });
   await BrowserTestUtils.waitForPopupEvent(contextMenu, "shown");
+  let bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
+  let subMenu = bookmarksToolbarMenu.querySelector("menupopup");
+  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  await BrowserTestUtils.waitForPopupEvent(subMenu, "shown");
 }
 
 /**

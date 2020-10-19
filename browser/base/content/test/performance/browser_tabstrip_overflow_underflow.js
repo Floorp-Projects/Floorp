@@ -34,6 +34,13 @@ add_task(async function() {
 
   await ensureNoPreloadedBrowser();
 
+  // The test starts on about:blank and opens an about:blank
+  // tab which triggers opening the toolbar since
+  // ensureNoPreloadedBrowser sets AboutNewTab.newTabURL to about:blank.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.visibility", "never"]],
+  });
+
   const TAB_COUNT_FOR_OVERFLOW = computeMaxTabCount();
 
   await createTabs(TAB_COUNT_FOR_OVERFLOW);

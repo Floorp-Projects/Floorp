@@ -436,14 +436,12 @@ function openBrowserActionPanel(extension, win = window, awaitLoad = false) {
 
 async function toggleBookmarksToolbar(visible = true) {
   let bookmarksToolbar = document.getElementById("PersonalToolbar");
-  let transitionPromise = BrowserTestUtils.waitForEvent(
-    bookmarksToolbar,
-    "transitionend",
-    e => e.propertyName == "max-height"
-  );
+  let visibilityToggledPromise = TestUtils.waitForCondition(() => {
+    return visible ? !bookmarksToolbar.collapsed : bookmarksToolbar.collapsed;
+  }, "waiting for toolbar to become " + (visible ? "visible" : "hidden"));
 
   setToolbarVisibility(bookmarksToolbar, visible);
-  await transitionPromise;
+  await visibilityToggledPromise;
 }
 
 async function openContextMenuInPopup(extension, selector = "body") {

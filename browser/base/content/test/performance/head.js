@@ -269,6 +269,28 @@ function disableFxaBadge() {
   });
 }
 
+async function getBookmarksToolbarRect() {
+  // Temporarily open the bookmarks toolbar to measure its rect
+  let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");
+  let wasVisible = !bookmarksToolbar.collapsed;
+  if (!wasVisible) {
+    setToolbarVisibility(bookmarksToolbar, true, false, false);
+    await TestUtils.waitForCondition(
+      () => bookmarksToolbar.getBoundingClientRect().height > 0,
+      "wait for non-zero bookmarks toolbar height"
+    );
+  }
+  let bookmarksToolbarRect = bookmarksToolbar.getBoundingClientRect();
+  if (!wasVisible) {
+    setToolbarVisibility(bookmarksToolbar, false, false, false);
+    await TestUtils.waitForCondition(
+      () => bookmarksToolbar.getBoundingClientRect().height == 0,
+      "wait for zero bookmarks toolbar height"
+    );
+  }
+  return bookmarksToolbarRect;
+}
+
 async function prepareSettledWindow() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await ensureNoPreloadedBrowser(win);

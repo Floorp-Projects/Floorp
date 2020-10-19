@@ -68,7 +68,7 @@
   padding-inline: 2px;
 }
 
-:root[sessionrestored] #PersonalToolbar {
+:root[sessionrestored] #PersonalToolbar:not(.instant) {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
 }
 
@@ -77,8 +77,12 @@
   max-height: 0;
 }
 
-:root[sessionrestored] #PersonalToolbar[collapsed=true] {
+:root[sessionrestored] #PersonalToolbar:not(.instant)[collapsed=true] {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
+}
+
+#PersonalToolbar[collapsed=true].instant {
+  visibility: collapse;
 }
 
 #PersonalToolbar[customizing] {
