@@ -54,10 +54,6 @@ class JsWindowActorTransport {
   startBulkSend() {
     throw new Error("startBulkSend not implemented for JsWindowActorTransport");
   }
-
-  swapBrowser(jsWindowActor) {
-    throw new Error("swapBrowser not implemented for JsWindowActorTransport");
-  }
 }
 
 exports.JsWindowActorTransport = JsWindowActorTransport;
