@@ -67,7 +67,7 @@ static unsigned NumDigits(T n) {
     return 1;
   }
 
-  double l = log10(n);
+  double l = log10(static_cast<double>(n));
   double cl = ceil(l);
   return l == cl ? unsigned(cl) + 1 : unsigned(cl);
 }
