@@ -2346,9 +2346,11 @@ UpdateService.prototype = {
         "UpdateService:_postUpdateProcessing - unable to apply " +
           "updates... returning early"
       );
-      // If the update is present in the update directory somehow,
-      // it would prevent us from notifying the user of further updates.
-      cleanupUpdate();
+      if (!this.isOtherInstanceHandlingUpdates) {
+        // If the update is present in the update directory somehow,
+        // it would prevent us from notifying the user of further updates.
+        cleanupUpdate();
+      }
       return;
     }
 
