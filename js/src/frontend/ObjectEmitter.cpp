@@ -630,6 +630,12 @@ bool ClassEmitter::emitInitDefaultConstructor(uint32_t classStart,
     return false;
   }
 
+  // The default constructor opcodes below will synthesize new scripts with
+  // line/column at start of class definition.
+  if (!bce_->updateSourceCoordNotes(classStart)) {
+    return false;
+  }
+
   // In the case of default class constructors, emit the start and end
   // offsets in the source buffer as source notes so that when we
   // actually make the constructor during execution, we can give it the

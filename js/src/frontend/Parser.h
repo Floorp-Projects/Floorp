@@ -1002,6 +1002,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                     uint32_t toStringStart,
                                     FunctionSyntaxKind kind, bool tryAnnexB);
 
+  void setFunctionStartAtPosition(FunctionBox* funbox, TokenPos pos) const;
   void setFunctionStartAtCurrentToken(FunctionBox* funbox) const;
 
  public:
@@ -1283,7 +1284,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       ClassInitializedMembers& classInitializedMembers, bool isStatic,
       HasHeritage hasHeritage);
   FunctionNodeType synthesizeConstructor(const ParserAtom* className,
-                                         uint32_t classNameOffset,
+                                         TokenPos synthesizedBodyPos,
                                          HasHeritage hasHeritage);
 
   bool checkBindingIdentifier(const ParserName* ident, uint32_t offset,
