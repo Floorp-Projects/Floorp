@@ -567,6 +567,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
      */
     bytecodeSection().setCurrentLine(line, offset);
     if (delta >= SrcNote::SetLine::lengthFor(line)) {
+      MOZ_ASSERT(line >= sc->extent().lineno);
       if (!newSrcNote2(SrcNoteType::SetLine,
                        SrcNote::SetLine::toOperand(line))) {
         return false;
