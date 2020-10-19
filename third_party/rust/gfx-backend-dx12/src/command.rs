@@ -342,7 +342,6 @@ pub struct CommandBuffer {
     raw: native::GraphicsCommandList,
     allocator: native::CommandAllocator,
     shared: Arc<Shared>,
-    is_active: bool,
 
     // Cache renderpasses for graphics operations
     pass_cache: Option<RenderPassCache>,
@@ -432,7 +431,6 @@ impl CommandBuffer {
             raw,
             allocator,
             shared,
-            is_active: false,
             pass_cache: None,
             cur_subpass: !0,
             gr_pipeline: PipelineCache::new(),
@@ -472,22 +470,8 @@ impl CommandBuffer {
     }
 
     fn reset(&mut self) {
-        if self
-            .pool_create_flags
-            .contains(pool::CommandPoolCreateFlags::RESET_INDIVIDUAL)
-        {
-            // Command buffer has reset semantics now and doesn't require to be in `Initial` state.
-            if self.is_active {
-                self.raw.close();
-            }
-            unsafe {
-                self.allocator.Reset()
-            };
-        }
         self.raw
             .reset(self.allocator, native::PipelineState::null());
-        self.is_active = true;
-
         self.pass_cache = None;
         self.cur_subpass = !0;
         self.gr_pipeline = PipelineCache::new();
@@ -1178,15 +1162,29 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _info: com::CommandBufferInheritanceInfo<Backend>,
     ) {
         // TODO: Implement flags and secondary command buffers (bundles).
+        if self
+            .pool_create_flags
+            .contains(pool::CommandPoolCreateFlags::RESET_INDIVIDUAL)
+        {
+            // Command buffer has reset semantics now and doesn't require to be in `Initial` state.
+            self.allocator.Reset();
+        }
         self.reset();
     }
 
     unsafe fn finish(&mut self) {
-        self.raw.close();
-        self.is_active = false;
+        self.raw.Close();
     }
 
     unsafe fn reset(&mut self, _release_resources: bool) {
+        // Ensure that we have a bijective relation between list and allocator.
+        // This allows to modify the allocator here. Using `reset` requires this by specification.
+        assert!(self
+            .pool_create_flags
+            .contains(pool::CommandPoolCreateFlags::RESET_INDIVIDUAL));
+
+        // TODO: `release_resources` should recreate the allocator to give back all memory.
+        self.allocator.Reset();
         self.reset();
     }
 
@@ -1512,7 +1510,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                             },
                         };
                         let rtv = rtv_pool.alloc_handle();
-                        Device::view_image_as_render_target_impl(device, rtv, &view_info).unwrap();
+                        Device::view_image_as_render_target_impl(device, rtv, view_info).unwrap();
                         self.clear_render_target_view(rtv, value.into(), &rect);
                     }
 
@@ -1557,7 +1555,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                             },
                         };
                         let dsv = dsv_pool.alloc_handle();
-                        Device::view_image_as_depth_stencil_impl(device, dsv, &view_info).unwrap();
+                        Device::view_image_as_depth_stencil_impl(device, dsv, view_info).unwrap();
                         self.clear_depth_stencil_view(dsv, depth, stencil, &rect);
                     }
 
@@ -2479,9 +2477,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         draw_count: DrawCount,
         stride: u32,
     ) {
-        if stride != 0 {
-            assert_eq!(stride, 16);
-        }
+        assert_eq!(stride, 16);
         let buffer = buffer.expect_bound();
         self.set_graphics_bind_point();
         self.raw.ExecuteIndirect(
@@ -2501,9 +2497,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         draw_count: DrawCount,
         stride: u32,
     ) {
-        if stride != 0 {
-            assert_eq!(stride, 20);
-        }
+        assert_eq!(stride, 20);
         let buffer = buffer.expect_bound();
         self.set_graphics_bind_point();
         self.raw.ExecuteIndirect(
@@ -2513,56 +2507,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             offset,
             ptr::null_mut(),
             0,
-        );
-    }
-
-    unsafe fn draw_indirect_count(
-        &mut self,
-        buffer: &r::Buffer,
-        offset: buffer::Offset,
-        count_buffer: &r::Buffer,
-        count_buffer_offset: buffer::Offset,
-        max_draw_count: DrawCount,
-        stride: u32
-    ) {
-        if stride != 0 {
-            assert_eq!(stride, 16);
-        }
-        let buffer = buffer.expect_bound();
-        let count_buffer = count_buffer.expect_bound();
-        self.set_graphics_bind_point();
-        self.raw.ExecuteIndirect(
-            self.shared.signatures.draw.as_mut_ptr(),
-            max_draw_count,
-            buffer.resource.as_mut_ptr(),
-            offset,
-            count_buffer.resource.as_mut_ptr(),
-            count_buffer_offset,
-        );
-    }
-
-    unsafe fn draw_indexed_indirect_count(
-        &mut self,
-        buffer: &r::Buffer,
-        offset: buffer::Offset,
-        count_buffer: &r::Buffer,
-        count_buffer_offset: buffer::Offset,
-        max_draw_count: DrawCount,
-        stride: u32
-    ) {
-        if stride != 0 {
-            assert_eq!(stride, 20);
-        }
-        let buffer = buffer.expect_bound();
-        let count_buffer = count_buffer.expect_bound();
-        self.set_graphics_bind_point();
-        self.raw.ExecuteIndirect(
-            self.shared.signatures.draw_indexed.as_mut_ptr(),
-            max_draw_count,
-            buffer.resource.as_mut_ptr(),
-            offset,
-            count_buffer.resource.as_mut_ptr(),
-            count_buffer_offset,
         );
     }
 

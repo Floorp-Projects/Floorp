@@ -202,94 +202,53 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
     desc.label = aLabel.Data();
   }
   ffi::wgpu_server_device_create_buffer(mContext, aSelfId, &desc, aNewId);
+  return IPC_OK();
+}
 
-  if (desc.usage & (WGPUBufferUsage_MAP_READ | WGPUBufferUsage_MAP_WRITE)) {
-    mSharedMemoryMap.insert({aNewId, Shmem()});
+ipc::IPCResult WebGPUParent::RecvDeviceUnmapBuffer(RawId aSelfId,
+                                                   RawId aBufferId,
+                                                   Shmem&& aShmem,
+                                                   bool aFlush) {
+  if (aFlush) {
+    ffi::wgpu_server_device_set_buffer_sub_data(mContext, aSelfId, aBufferId, 0,
+                                                aShmem.get<uint8_t>(),
+                                                aShmem.Size<uint8_t>());
+  } else {
+    ffi::wgpu_server_buffer_unmap(mContext, aBufferId);
   }
+  DeallocShmem(aShmem);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aSelfId,
-                                                   Shmem&& aShmem) {
-  mSharedMemoryMap[aSelfId] = aShmem;
-  return IPC_OK();
-}
-
-struct MapRequest {
-  const ffi::WGPUGlobal* const mContext;
-  ffi::WGPUBufferId mBufferId;
-  ffi::WGPUHostMap mHostMap;
-  uint64_t mOffset;
+struct MapReadRequest {
   ipc::Shmem mShmem;
-  WebGPUParent::BufferMapResolver mResolver;
-  MapRequest(const ffi::WGPUGlobal* context, ffi::WGPUBufferId bufferId,
-             ffi::WGPUHostMap hostMap, uint64_t offset, ipc::Shmem&& shmem,
-             WebGPUParent::BufferMapResolver&& resolver)
-      : mContext(context),
-        mBufferId(bufferId),
-        mHostMap(hostMap),
-        mOffset(offset),
-        mShmem(shmem),
-        mResolver(resolver) {}
+  WebGPUParent::BufferMapReadResolver mResolver;
+  MapReadRequest(ipc::Shmem&& shmem,
+                 WebGPUParent::BufferMapReadResolver&& resolver)
+      : mShmem(shmem), mResolver(resolver) {}
 };
 
-static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
-                        uint8_t* userdata) {
-  auto* req = reinterpret_cast<MapRequest*>(userdata);
+static void MapReadCallback(ffi::WGPUBufferMapAsyncStatus status,
+                            const uint8_t* ptr, uint8_t* userdata) {
+  auto req = reinterpret_cast<MapReadRequest*>(userdata);
   // TODO: better handle errors
   MOZ_ASSERT(status == ffi::WGPUBufferMapAsyncStatus_Success);
-  if (req->mHostMap == ffi::WGPUHostMap_Read) {
-    const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        req->mContext, req->mBufferId, req->mOffset,
-        req->mShmem.Size<uint8_t>());
-    memcpy(req->mShmem.get<uint8_t>(), ptr, req->mShmem.Size<uint8_t>());
-  }
+  memcpy(req->mShmem.get<uint8_t>(), ptr, req->mShmem.Size<uint8_t>());
   req->mResolver(std::move(req->mShmem));
   delete req;
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
-                                           ffi::WGPUHostMap aHostMap,
-                                           uint64_t aOffset, uint64_t aSize,
-                                           BufferMapResolver&& aResolver) {
-  auto* request = new MapRequest(mContext, aSelfId, aHostMap, aOffset,
-                                 std::move(mSharedMemoryMap[aSelfId]),
-                                 std::move(aResolver));
-  ffi::WGPUBufferMapOperation mapOperation = {
-      aHostMap, &MapCallback, reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext, aSelfId, aOffset, aSize, mapOperation);
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem,
-                                             bool aFlush) {
-  if (aFlush) {
-    // TODO: flush exact modified sub-range
-    uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        mContext, aSelfId, 0, aShmem.Size<uint8_t>());
-    MOZ_ASSERT(ptr != nullptr);
-    memcpy(ptr, aShmem.get<uint8_t>(), aShmem.Size<uint8_t>());
-  }
-
-  ffi::wgpu_server_buffer_unmap(mContext, aSelfId);
-
-  const auto iter = mSharedMemoryMap.find(aSelfId);
-  if (iter == mSharedMemoryMap.end()) {
-    DeallocShmem(aShmem);
-  } else {
-    iter->second = aShmem;
-  }
+ipc::IPCResult WebGPUParent::RecvBufferMapRead(
+    RawId aSelfId, Shmem&& aShmem, BufferMapReadResolver&& aResolver) {
+  auto size = aShmem.Size<uint8_t>();
+  auto request = new MapReadRequest(std::move(aShmem), std::move(aResolver));
+  ffi::wgpu_server_buffer_map_read(mContext, aSelfId, 0, size, &MapReadCallback,
+                                   reinterpret_cast<uint8_t*>(request));
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
   ffi::wgpu_server_buffer_destroy(mContext, aSelfId);
-
-  const auto iter = mSharedMemoryMap.find(aSelfId);
-  if (iter != mSharedMemoryMap.end()) {
-    DeallocShmem(iter->second);
-    mSharedMemoryMap.erase(iter);
-  }
   return IPC_OK();
 }
 
@@ -326,21 +285,11 @@ ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSampler(
-    RawId aSelfId, const SerialSamplerDescriptor& aDesc, RawId aNewId) {
-  ffi::WGPUSamplerDescriptor desc = {};
-  desc.address_modes[0] = aDesc.mAddressU;
-  desc.address_modes[1] = aDesc.mAddressV;
-  desc.address_modes[2] = aDesc.mAddressW;
-  desc.mag_filter = aDesc.mMagFilter;
-  desc.min_filter = aDesc.mMinFilter;
-  desc.mipmap_filter = aDesc.mMipmapFilter;
-  desc.lod_min_clamp = aDesc.mLodMinClamp;
-  desc.lod_max_clamp = aDesc.mLodMaxClamp;
-  if (aDesc.mCompare) {
-    desc.compare = aDesc.mCompare.ptr();
-  }
-  if (!aDesc.mLabel.IsEmpty()) {
-    desc.label = aDesc.mLabel.Data();
+    RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc,
+    const nsCString& aLabel, RawId aNewId) {
+  ffi::WGPUSamplerDescriptor desc = aDesc;
+  if (!aLabel.IsEmpty()) {
+    desc.label = aLabel.Data();
   }
   ffi::wgpu_server_device_create_sampler(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
@@ -491,24 +440,27 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBindGroup(
     RawId aSelfId, const SerialBindGroupDescriptor& aDesc, RawId aNewId) {
   nsTArray<ffi::WGPUBindGroupEntry> ffiEntries(aDesc.mEntries.Length());
   for (const auto& entry : aDesc.mEntries) {
-    ffi::WGPUBindGroupEntry bge = {};
-    bge.binding = entry.mBinding;
+    ffi::WGPUBindGroupEntry bgb = {};
+    bgb.binding = entry.mBinding;
     switch (entry.mType) {
       case SerialBindGroupEntryType::Buffer:
-        bge.buffer = entry.mValue;
-        bge.offset = entry.mBufferOffset;
-        bge.size = ffi::make_buffer_size(entry.mBufferSize);
+        bgb.resource.tag = ffi::WGPUBindingResource_Buffer;
+        bgb.resource.buffer._0.buffer = entry.mValue;
+        bgb.resource.buffer._0.offset = entry.mBufferOffset;
+        bgb.resource.buffer._0.size = ffi::make_buffer_size(entry.mBufferSize);
         break;
       case SerialBindGroupEntryType::Texture:
-        bge.texture_view = entry.mValue;
+        bgb.resource.tag = ffi::WGPUBindingResource_TextureView;
+        bgb.resource.texture_view._0 = entry.mValue;
         break;
       case SerialBindGroupEntryType::Sampler:
-        bge.sampler = entry.mValue;
+        bgb.resource.tag = ffi::WGPUBindingResource_Sampler;
+        bgb.resource.sampler._0 = entry.mValue;
         break;
       default:
         MOZ_CRASH("unreachable");
     }
-    ffiEntries.AppendElement(bge);
+    ffiEntries.AppendElement(bgb);
   }
   ffi::WGPUBindGroupDescriptor desc = {};
   desc.layout = aDesc.mLayout;
@@ -524,11 +476,10 @@ ipc::IPCResult WebGPUParent::RecvBindGroupDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
-    RawId aSelfId, const nsTArray<uint32_t>& aSpirv, const nsCString& aWgsl,
-    RawId aNewId) {
+    RawId aSelfId, const nsTArray<uint32_t>& aData, RawId aNewId) {
   ffi::WGPUShaderModuleDescriptor desc = {};
-  desc.code.bytes = aSpirv.Elements();
-  desc.code.length = aSpirv.Length();
+  desc.code.bytes = aData.Elements();
+  desc.code.length = aData.Length();
   ffi::wgpu_server_device_create_shader_module(mContext, aSelfId, &desc,
                                                aNewId);
   return IPC_OK();
@@ -627,12 +578,12 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     NS_ERROR("Invalid total buffer size!");
     return IPC_OK();
   }
-  auto* textureHostData = new (fallible) uint8_t[wholeBufferSize.value()];
+  auto textureHostData = new (fallible) uint8_t[wholeBufferSize.value()];
   if (!textureHostData) {
     NS_ERROR("Unable to allocate host data!");
     return IPC_OK();
   }
-  RefPtr<layers::MemoryTextureHost> textureHost = new layers::MemoryTextureHost(
+  auto textureHost = new layers::MemoryTextureHost(
       textureHostData, aDesc, layers::TextureFlags::NO_FLAGS);
   textureHost->CreateRenderTexture(aExternalId);
   nsTArray<RawId> bufferIds(aBufferIds.Clone());
@@ -652,39 +603,28 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   return IPC_OK();
 }
 
-struct PresentRequest {
-  const ffi::WGPUGlobal* mContext;
-  RefPtr<PresentationData> mData;
-};
-
 static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
-                            uint8_t* userdata) {
-  auto* req = reinterpret_cast<PresentRequest*>(userdata);
-  PresentationData* data = req->mData.get();
-  // get the buffer ID
-  data->mBuffersLock.Lock();
-  RawId bufferId = data->mQueuedBufferIds.back();
-  data->mQueuedBufferIds.pop_back();
-  data->mAvailableBufferIds.push_back(bufferId);
-  data->mBuffersLock.Unlock();
-  // copy the data
+                            const uint8_t* ptr, uint8_t* userdata) {
+  auto data = reinterpret_cast<PresentationData*>(userdata);
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
-    const auto bufferSize = data->mRowCount * data->mSourcePitch;
-    const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        req->mContext, bufferId, 0, bufferSize);
     uint8_t* dst = data->mTextureHost->GetBuffer();
     for (uint32_t row = 0; row < data->mRowCount; ++row) {
       memcpy(dst, ptr, data->mTargetPitch);
       dst += data->mTargetPitch;
       ptr += data->mSourcePitch;
     }
-    wgpu_server_buffer_unmap(req->mContext, bufferId);
   } else {
     // TODO: better handle errors
     NS_WARNING("WebGPU frame mapping failed!");
   }
-  // free yourself
-  delete req;
+  data->mBuffersLock.Lock();
+  RawId bufferId = data->mQueuedBufferIds.back();
+  data->mQueuedBufferIds.pop_back();
+  data->mAvailableBufferIds.push_back(bufferId);
+  data->mBuffersLock.Unlock();
+  // We artificially did `AddRef` before calling `wgpu_server_buffer_map_read`.
+  // Now we can let it go again.
+  data->Release();
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
@@ -705,6 +645,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   data->mBuffersLock.Lock();
   if (!data->mAvailableBufferIds.empty()) {
     bufferId = data->mAvailableBufferIds.back();
+    wgpu_server_buffer_unmap(mContext, bufferId);
     data->mAvailableBufferIds.pop_back();
   } else if (!data->mUnassignedBufferIds.empty()) {
     bufferId = data->mUnassignedBufferIds.back();
@@ -762,15 +703,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   // texture,
   // we can just give it the contents of the last mapped buffer instead of the
   // copy.
-  auto* const presentRequest = new PresentRequest{
-      mContext,
-      data,
-  };
-
-  ffi::WGPUBufferMapOperation mapOperation = {
-      ffi::WGPUHostMap_Read, &PresentCallback,
-      reinterpret_cast<uint8_t*>(presentRequest)};
-  ffi::wgpu_server_buffer_map(mContext, bufferId, 0, bufferSize, mapOperation);
+  // This `AddRef` is needed for passing `data` as a raw pointer to
+  // `wgpu_server_buffer_map_read` to serve as `userdata`. It's released at
+  // the end of `PresentCallback` body.
+  const auto userData = do_AddRef(data).take();
+  ffi::wgpu_server_buffer_map_read(mContext, bufferId, 0, bufferSize,
+                                   &PresentCallback,
+                                   reinterpret_cast<uint8_t*>(userData));
 
   return IPC_OK();
 }
