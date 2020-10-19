@@ -2039,7 +2039,7 @@ pref("browser.toolbars.keyboard_navigation", true);
 // When true, this pref will always show the bookmarks bar on
 // the New Tab Page, allowing showing/hiding via keyboard shortcut,
 // and other functionality to improve the usage of the Bookmarks Toolbar.
-#ifdef EARLY_BETA_OR_EARLIER
+#ifdef NIGHTLY_BUILD
 pref("browser.toolbars.bookmarks.2h2020", true);
 #else
 pref("browser.toolbars.bookmarks.2h2020", false);
