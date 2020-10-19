@@ -931,7 +931,6 @@ class RunProgram(MachCommandBase):
             extras['env{}'.format(i)] = e
         if args:
             extras['args'] = " ".join(args)
-        extras['use_multiprocess'] = True  # Only GVE and TRA process this extra.
 
         if env or args:
             restart = True
