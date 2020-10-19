@@ -125,6 +125,11 @@ class VideoOutput : public DirectMediaTrackListener {
                                             &VideoFrameContainer::Invalidate));
   }
 
+  FrameID NewFrameID() {
+    mMutex.AssertCurrentThreadOwns();
+    return ++mFrameID;
+  }
+
  public:
   VideoOutput(VideoFrameContainer* aContainer, AbstractThread* aMainThread)
       : mMutex("VideoOutput::mMutex"),
@@ -142,8 +147,7 @@ class VideoOutput : public DirectMediaTrackListener {
         // future. If this happens, we clear the buffered frames and start over.
         mFrames.ClearAndRetainStorage();
       }
-      mFrames.AppendElement(
-          std::make_pair(mVideoFrameContainer->NewFrameID(), *i));
+      mFrames.AppendElement(std::make_pair(NewFrameID(), *i));
       mLastFrameTime = i->mTimeStamp;
     }
 
@@ -197,14 +201,13 @@ class VideoOutput : public DirectMediaTrackListener {
       // frames are real, or black, we assign new FrameIDs whenever we re-send
       // frames after an mEnabled change.
       for (auto& idChunkPair : mFrames) {
-        idChunkPair.first = mVideoFrameContainer->NewFrameID();
+        idChunkPair.first = NewFrameID();
       }
       if (mFrames.IsEmpty()) {
         VideoSegment v;
         v.AppendFrame(nullptr, gfx::IntSize(640, 480), PRINCIPAL_HANDLE_NONE,
                       true, TimeStamp::Now());
-        mFrames.AppendElement(std::make_pair(mVideoFrameContainer->NewFrameID(),
-                                             *v.GetLastChunk()));
+        mFrames.AppendElement(std::make_pair(NewFrameID(), *v.GetLastChunk()));
       }
       SendFramesEnsureLocked();
     }
@@ -219,6 +222,9 @@ class VideoOutput : public DirectMediaTrackListener {
   // This array is accessed from both the direct video thread, and the graph
   // thread. Protected by mMutex.
   nsTArray<std::pair<ImageContainer::FrameID, VideoChunk>> mFrames;
+  // Accessed from both the direct video thread, and the graph thread. Protected
+  // by mMutex.
+  FrameID mFrameID = 0;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const RefPtr<AbstractThread> mMainThread;
   const layers::ImageContainer::ProducerID mProducerID =
