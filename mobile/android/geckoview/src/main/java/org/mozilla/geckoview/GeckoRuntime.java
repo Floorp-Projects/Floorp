@@ -607,7 +607,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     @WrapForJNI
-    private boolean usesDarkTheme() {
+    /* package */ boolean usesDarkTheme() {
         switch (getSettings().getPreferredColorScheme()) {
             case GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM:
                 return GeckoSystemStateListener.getInstance().isNightMode();

@@ -62,6 +62,8 @@ public class GeckoView extends FrameLayout {
     private static final boolean DEBUG = false;
 
     protected final @NonNull Display mDisplay = new Display();
+
+    private Integer mLastCoverColor;
     protected @Nullable GeckoSession mSession;
     private boolean mStateSaved;
 
@@ -235,12 +237,23 @@ public class GeckoView extends FrameLayout {
 
     /**
      * Set a color to cover the display surface while a document is being shown. The color
-     * is automatically cleared once the new document starts painting. Set to
-     * Color.TRANSPARENT to undo the cover.
+     * is automatically cleared once the new document starts painting.
      *
      * @param color Cover color.
      */
     public void coverUntilFirstPaint(final int color) {
+        mLastCoverColor = color;
+        if (mSession != null) {
+            mSession.getCompositorController().setClearColor(color);
+        }
+        coverUntilFirstPaintInternal(color);
+    }
+
+    private void uncover() {
+        coverUntilFirstPaintInternal(Color.TRANSPARENT);
+    }
+
+    private void coverUntilFirstPaintInternal(final int color) {
         ThreadUtils.assertOnUiThread();
 
         if (mSurfaceWrapper != null) {
@@ -334,6 +347,25 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    // TODO: Bug 1670805 this should really be configurable
+    // Default dark color for about:blank, keep it in sync with PresShell.cpp
+    final static int DEFAULT_DARK_COLOR = 0xFF2A2A2E;
+
+    private int defaultColor() {
+        // If the app set a default color, just use that
+        if (mLastCoverColor != null) {
+            return mLastCoverColor;
+        }
+
+        if (mSession == null || !mSession.isOpen()) {
+            return Color.WHITE;
+        }
+
+        // ... otherwise use the prefers-color-scheme color
+        return mSession.getRuntime().usesDarkTheme() ?
+                DEFAULT_DARK_COLOR : Color.WHITE;
+    }
+
     /**
      * Unsets the current session from this instance and returns it, if any. You must call
      * this before {@link #setSession(GeckoSession)} if there is already an open session
@@ -351,9 +383,6 @@ public class GeckoView extends FrameLayout {
         if (mSession == null) {
             return null;
         }
-
-        // Cover the view while we are not drawing to the surface.
-        coverUntilFirstPaint(Color.WHITE);
 
         GeckoSession session = mSession;
         mSession.releaseDisplay(mDisplay.release());
@@ -403,6 +432,10 @@ public class GeckoView extends FrameLayout {
 
         mSession = session;
 
+        // Make sure the clear color is set to the default
+        mSession.getCompositorController()
+                .setClearColor(defaultColor());
+
         if (ViewCompat.isAttachedToWindow(this)) {
             mDisplay.acquire(session.acquireDisplay());
         }
@@ -429,12 +462,7 @@ public class GeckoView extends FrameLayout {
             session.getPanZoomController().setScrollFactor(0.075f * metrics.densityDpi);
         }
 
-        session.getCompositorController().setFirstPaintCallback(new Runnable() {
-            @Override
-            public void run() {
-                coverUntilFirstPaint(Color.TRANSPARENT);
-            }
-        });
+        session.getCompositorController().setFirstPaintCallback(this::uncover);
 
         if (session.getTextInput().getView() == null) {
             session.getTextInput().setView(this);
