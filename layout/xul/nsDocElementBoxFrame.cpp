@@ -20,8 +20,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 
-//#define DEBUG_REFLOW
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
