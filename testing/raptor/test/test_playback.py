@@ -14,7 +14,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 set_default_logger(StructuredLogger("test_playback"))
 
 from mozproxy import get_playback
-from mozproxy.backends.mitm import MitmproxyDesktop
+from mozproxy.backends.mitm.desktop import MitmproxyDesktop
 
 config = {}
 
@@ -35,19 +35,16 @@ def test_get_playback(get_binary):
     config["playback_pageset_manifest"] = os.path.join(
         os.path.dirname(os.path.abspath(os.path.dirname(__file__))),
         "raptor",
+        "tooltool-manifests",
         "playback",
         "mitm4-linux-firefox-amazon.manifest",
     )
-    config["playback_recordings"] = "amazon.mp"
     config["binary"] = get_binary("firefox")
     config["run_local"] = run_local
     config["app"] = "firefox"
     config["host"] = "127.0.0.1"
 
     playback = get_playback(config)
-    playback.config["playback_files"] = [
-        os.path.join(playback.mozproxy_dir, config["playback_recordings"])
-    ]
     assert isinstance(playback, MitmproxyDesktop)
     playback.start()
     time.sleep(1)
