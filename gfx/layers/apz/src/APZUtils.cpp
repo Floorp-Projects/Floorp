@@ -6,6 +6,8 @@
 
 #include "mozilla/layers/APZUtils.h"
 
+#include "mozilla/StaticPrefs_apz.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -63,6 +65,35 @@ ScreenPoint ComputeFixedMarginsOffset(
   }
 
   return translation;
+}
+
+bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
+                         const FrameMetrics& aCompositorMetrics) {
+  // The main-thread code to compute the painted area can introduce some
+  // rounding error due to multiple unit conversions, so we inflate the rect by
+  // one app unit to account for that.
+  CSSRect painted = (aPaintedMetrics.GetCriticalDisplayPort().IsEmpty()
+                         ? aPaintedMetrics.GetDisplayPort()
+                         : aPaintedMetrics.GetCriticalDisplayPort()) +
+                    aPaintedMetrics.GetLayoutScrollOffset();
+  painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
+
+  // Inflate the rect by the danger zone. See the description of the danger zone
+  // prefs in AsyncPanZoomController.cpp for an explanation of this.
+  CSSRect visible =
+      CSSRect(aCompositorMetrics.GetVisualScrollOffset(),
+              aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
+  visible.Inflate(LayerSize(StaticPrefs::apz_danger_zone_x(),
+                            StaticPrefs::apz_danger_zone_y()) /
+                  aCompositorMetrics.LayersPixelsPerCSSPixel());
+
+  // Clamp both rects to the scrollable rect, because having either of those
+  // exceed the scrollable rect doesn't make sense, and could lead to false
+  // positives.
+  painted = painted.Intersect(aPaintedMetrics.GetScrollableRect());
+  visible = visible.Intersect(aPaintedMetrics.GetScrollableRect());
+
+  return !painted.Contains(visible);
 }
 
 }  // namespace apz
