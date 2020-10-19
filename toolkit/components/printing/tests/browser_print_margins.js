@@ -24,6 +24,14 @@ function changeCustomToDefault(helper) {
   EventUtils.sendKey("return", helper.win);
 }
 
+function changeCustomToNone(helper) {
+  let marginSelect = helper.get("margins-picker");
+  marginSelect.focus();
+  EventUtils.sendKey("space", helper.win);
+  EventUtils.sendKey("up", helper.win);
+  EventUtils.sendKey("return", helper.win);
+}
+
 function assertPendingMarginsUpdate(helper) {
   let marginsPicker = helper.get("margins-select");
   ok(
@@ -557,5 +565,56 @@ add_task(async function testInvalidMarginStartup() {
       marginRight: 0.5,
     });
     helper.closeDialog();
+  });
+});
+
+add_task(async function testRevalidateSwitchToNone() {
+  await PrintHelper.withTestPage(async helper => {
+    await setupLetterPaper();
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    this.changeDefaultToCustom(helper);
+    await helper.awaitAnimationFrame();
+
+    await helper.text(helper.get("custom-margin-bottom"), "6");
+    await helper.text(helper.get("custom-margin-top"), "6");
+    assertNoPendingMarginsUpdate(helper);
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+      paperId: "na_letter",
+    });
+
+    await helper.assertSettingsChanged(
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      { marginTop: 6, marginRight: 0.5, marginBottom: 3, marginLeft: 0.5 },
+      async () => {
+        await helper.text(helper.get("custom-margin-bottom"), "3");
+        assertPendingMarginsUpdate(helper);
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+      }
+    );
+
+    await helper.assertSettingsChanged(
+      { marginTop: 6, marginRight: 0.5, marginBottom: 3, marginLeft: 0.5 },
+      { marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 },
+      async () => {
+        this.changeCustomToNone(helper);
+        is(
+          helper.get("margins-picker").value,
+          "none",
+          "No margins are now set"
+        );
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+      }
+    );
   });
 });
