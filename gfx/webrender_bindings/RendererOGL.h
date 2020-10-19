@@ -115,8 +115,6 @@ class RendererOGL {
 
   void AccumulateMemoryReport(MemoryReport* aReport);
 
-  void SetProfilerUI(const nsCString& aUI);
-
   wr::Renderer* GetRenderer() { return mRenderer; }
 
   gl::GLContext* gl() const;
