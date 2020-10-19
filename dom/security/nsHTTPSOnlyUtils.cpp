@@ -424,7 +424,8 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
   // to upgrade is already in progress or if the channel is an auth channel.
   // If it is in progress or Auth is in progress, then all good, if not
   // then let's cancel that channel so we can dispaly the exception page.
-  nsCOMPtr<nsIChannel> httpsOnlyChannel = mDocumentLoadListener->GetChannel();
+  nsCOMPtr<nsIChannel> docChannel = mDocumentLoadListener->GetChannel();
+  nsCOMPtr<nsIHttpChannel> httpsOnlyChannel = do_QueryInterface(docChannel);
   if (httpsOnlyChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = httpsOnlyChannel->LoadInfo();
     uint32_t topLevelLoadInProgress =
