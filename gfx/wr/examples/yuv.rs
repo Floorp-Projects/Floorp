@@ -218,7 +218,6 @@ fn main() {
     };
 
     let opts = webrender::RendererOptions {
-        debug_flags: webrender::DebugFlags::NEW_FRAME_INDICATOR | webrender::DebugFlags::NEW_SCENE_INDICATOR,
         ..Default::default()
     };
 

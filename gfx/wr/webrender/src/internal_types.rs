@@ -12,9 +12,9 @@ use crate::device::TextureFilter;
 use crate::renderer::PipelineInfo;
 use crate::gpu_cache::GpuCacheUpdateList;
 use crate::frame_builder::Frame;
+use crate::profiler::TransactionProfile;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
-use crate::profiler::BackendProfileCounters;
 use smallvec::SmallVec;
 use std::{usize, i32};
 use std::collections::{HashMap, HashSet};
@@ -539,6 +539,7 @@ impl ResourceUpdateList {
 pub struct RenderedDocument {
     pub frame: Frame,
     pub is_new_scene: bool,
+    pub profile: TransactionProfile,
 }
 
 pub enum DebugOutput {
@@ -565,7 +566,6 @@ pub enum ResultMsg {
         DocumentId,
         RenderedDocument,
         ResourceUpdateList,
-        BackendProfileCounters,
     ),
     AppendNotificationRequests(Vec<NotificationRequest>),
     ForceRedraw,
