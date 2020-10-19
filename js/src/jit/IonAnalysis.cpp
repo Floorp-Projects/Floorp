@@ -1709,6 +1709,13 @@ static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
     // See ShouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
     if (ShouldSpecializeOsrPhis() && in->isOsrValue()) {
+      // TODO(post-Warp): simplify float32 handling in this function or (better)
+      // make the float32 analysis a stand-alone optimization pass instead of
+      // complicating type analysis. See bug 1655773.
+      convertibleToFloat32 = false;
+      if (type == MIRType::Float32) {
+        type = MIRType::Double;
+      }
       continue;
     }
 
