@@ -370,11 +370,11 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  KeyPath keyPath(0);
-  if (NS_FAILED(KeyPath::Parse(aOptionalParameters.mKeyPath, &keyPath))) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
+  // XXX This didn't use to warn before in case of a error. Should we remove the
+  // warning again?
+  IDB_TRY_INSPECT(const auto& keyPath,
+                  KeyPath::Parse(aOptionalParameters.mKeyPath), nullptr,
+                  [&aRv](const auto&) { aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR); });
 
   auto& objectStores = mSpec->objectStores();
   const auto end = objectStores.cend();

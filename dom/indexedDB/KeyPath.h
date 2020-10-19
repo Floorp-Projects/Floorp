@@ -51,12 +51,12 @@ class KeyPath {
 
   MOZ_COUNTED_DTOR(KeyPath)
 
-  static nsresult Parse(const nsAString& aString, KeyPath* aKeyPath);
+  static Result<KeyPath, nsresult> Parse(const nsAString& aString);
 
-  static nsresult Parse(const Sequence<nsString>& aStrings, KeyPath* aKeyPath);
+  static Result<KeyPath, nsresult> Parse(const Sequence<nsString>& aStrings);
 
-  static nsresult Parse(const Nullable<OwningStringOrStringSequence>& aValue,
-                        KeyPath* aKeyPath);
+  static Result<KeyPath, nsresult> Parse(
+      const Nullable<OwningStringOrStringSequence>& aValue);
 
   nsresult ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey) const;
 
