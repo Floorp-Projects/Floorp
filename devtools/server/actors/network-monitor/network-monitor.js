@@ -164,18 +164,6 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     }
   },
 
-  /**
-   * onBrowserSwap is called by the server when a browser frame swap occurs (typically
-   * switching on/off RDM) and a new message manager should be used.
-   */
-  onBrowserSwap(mm) {
-    this.stopListening();
-    this.messageManager = mm;
-    this.stackTraces = new Set();
-    this.lastFrames.clear();
-    this.startListening();
-  },
-
   onStackTraceAvailable(msg) {
     const { channelId } = msg.data;
     if (!msg.data.stacktrace) {
