@@ -22,8 +22,6 @@ using namespace mozilla;
 
 // Interface IDs
 
-//#define DEBUG_REFLOW
-
 // static
 nsIPopupContainer* nsIPopupContainer::GetPopupContainer(PresShell* aPresShell) {
   if (!aPresShell) {
@@ -144,10 +142,6 @@ void nsRootBoxFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 }
 
-#ifdef DEBUG_REFLOW
-int32_t gReflows = 0;
-#endif
-
 void nsRootBoxFrame::Reflow(nsPresContext* aPresContext,
                             ReflowOutput& aDesiredSize,
                             const ReflowInput& aReflowInput,
@@ -155,10 +149,6 @@ void nsRootBoxFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame");
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-#ifdef DEBUG_REFLOW
-  gReflows++;
-  printf("----Reflow %d----\n", gReflows);
-#endif
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 }
 
