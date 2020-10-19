@@ -10,7 +10,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var body = document.body;
 
   var cancelledTouchMove = false;
@@ -46,26 +46,28 @@ function* test(testDriver) {
     }
   }, {passive: false});
 
-  // This listener is just to catch the end of the touch sequence so we can
-  // end the test at the right time.
-  body.addEventListener("touchend", function(e) {
-    dump(`Got touchend with ${e.touches.length} touches\n`);
-    if (e.touches.length == 0) {
-      setTimeout(testDriver, 0);
-    }
+  let touchEndPromise = new Promise(resolve => {
+    // This listener is just to catch the end of the touch sequence so we can
+    // end the test at the right time.
+    body.addEventListener("touchend", function(e) {
+      dump(`Got touchend with ${e.touches.length} touches\n`);
+      if (e.touches.length == 0) {
+        resolve();
+      }
+    });
   });
 
-  yield* pinchZoomOutTouchSequenceAtCenter();
-
-  dump("All touch events synthesized, waiting for final pointerup...\n");
-  yield true;
+  // We can't await this call, because this pinch action doesn't generate a
+  // APZ:TransformEnd. Instead we await the touchend.
+  pinchZoomOutWithTouchAtCenter();
+  await touchEndPromise;
 
   ok(cancelledTouchMove, "Checking that we definitely cancelled the touchmove");
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
-.then(subtestDone);
+.then(test)
+.finally(subtestDone);
 
   </script>
   <style>
