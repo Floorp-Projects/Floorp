@@ -48,7 +48,6 @@
 #include "nsGlobalWindow.h"
 #include "nsHashPropertyBag.h"
 #include "nsICryptoHMAC.h"
-#include "nsIDocShell.h"
 #include "nsIEventTarget.h"
 #include "nsIKeyModule.h"
 #include "nsIPermissionManager.h"
@@ -3972,7 +3971,7 @@ NS_IMETHODIMP
 MediaManager::MediaCaptureWindowState(
     nsIDOMWindow* aCapturedWindow, uint16_t* aCamera, uint16_t* aMicrophone,
     uint16_t* aScreen, uint16_t* aWindow, uint16_t* aBrowser,
-    nsTArray<RefPtr<nsIMediaDevice>>& aDevices, bool aIncludeDescendants) {
+    nsTArray<RefPtr<nsIMediaDevice>>& aDevices) {
   MOZ_ASSERT(NS_IsMainThread());
 
   CaptureState camera = CaptureState::Off;
@@ -3984,33 +3983,14 @@ MediaManager::MediaCaptureWindowState(
 
   nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aCapturedWindow);
   if (piWin) {
-    auto combineCaptureState =
-        [&camera, &microphone, &screen, &window, &browser,
-         &devices](const RefPtr<GetUserMediaWindowListener>& aListener) {
-          camera = CombineCaptureState(
-              camera, aListener->CapturingSource(MediaSourceEnum::Camera));
-          microphone = CombineCaptureState(
-              microphone,
-              aListener->CapturingSource(MediaSourceEnum::Microphone));
-          screen = CombineCaptureState(
-              screen, aListener->CapturingSource(MediaSourceEnum::Screen));
-          window = CombineCaptureState(
-              window, aListener->CapturingSource(MediaSourceEnum::Window));
-          browser = CombineCaptureState(
-              browser, aListener->CapturingSource(MediaSourceEnum::Browser));
-
-          aListener->GetDevices(devices);
-        };
-
-    if (aIncludeDescendants) {
-      IterateWindowListeners(piWin, combineCaptureState);
-    } else {
-      uint64_t windowID = piWin->WindowID();
-      RefPtr<GetUserMediaWindowListener> listener = GetWindowListener(windowID);
-      // listener might have been destroyed.
-      if (listener) {
-        combineCaptureState(listener);
-      }
+    if (RefPtr<GetUserMediaWindowListener> listener =
+            GetWindowListener(piWin->WindowID())) {
+      camera = listener->CapturingSource(MediaSourceEnum::Camera);
+      microphone = listener->CapturingSource(MediaSourceEnum::Microphone);
+      screen = listener->CapturingSource(MediaSourceEnum::Screen);
+      window = listener->CapturingSource(MediaSourceEnum::Window);
+      browser = listener->CapturingSource(MediaSourceEnum::Browser);
+      listener->GetDevices(devices);
     }
   }
 
@@ -4056,40 +4036,6 @@ void MediaManager::StopScreensharing(uint64_t aWindowID) {
   if (RefPtr<GetUserMediaWindowListener> listener =
           GetWindowListener(aWindowID)) {
     listener->StopSharing();
-  }
-}
-
-template <typename FunctionType>
-void MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
-                                          const FunctionType& aCallback) {
-  // Iterate the docshell tree to find all the child windows, and for each
-  // invoke the callback
-  MOZ_DIAGNOSTIC_ASSERT(aWindow);
-  MOZ_DIAGNOSTIC_ASSERT(aWindow->IsCurrentInnerWindow());
-  {
-    uint64_t windowID = aWindow->WindowID();
-    RefPtr<GetUserMediaWindowListener> listener = GetWindowListener(windowID);
-    if (listener) {
-      aCallback(listener);
-    }
-    // NB: `listener` might have been destroyed.
-  }
-
-  // iterate any children of *this* window (iframes, etc)
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-  if (docShell) {
-    int32_t i, count;
-    docShell->GetInProcessChildCount(&count);
-    for (i = 0; i < count; ++i) {
-      nsCOMPtr<nsIDocShellTreeItem> item;
-      docShell->GetInProcessChildAt(i, getter_AddRefs(item));
-      nsCOMPtr<nsPIDOMWindowOuter> child = item ? item->GetWindow() : nullptr;
-      if (child) {
-        if (auto* innerChild = child->GetCurrentInnerWindow()) {
-          IterateWindowListeners(innerChild, aCallback);
-        }
-      }
-    }
   }
 }
 

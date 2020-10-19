@@ -328,14 +328,6 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
 
   void StopScreensharing(uint64_t aWindowID);
 
-  /**
-   * Calls aCallback with a GetUserMediaWindowListener argument once for
-   * each window listener associated with aWindow and its child windows.
-   */
-  template <typename FunctionType>
-  void IterateWindowListeners(nsPIDOMWindowInner* aWindow,
-                              const FunctionType& aCallback);
-
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
 

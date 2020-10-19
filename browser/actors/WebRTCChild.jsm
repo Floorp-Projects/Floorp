@@ -537,8 +537,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     screen,
     window,
     browser,
-    devices,
-    false
+    devices
   );
 
   if (
