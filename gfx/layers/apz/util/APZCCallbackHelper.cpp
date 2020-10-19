@@ -312,19 +312,14 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     return;
   }
 
+  APZCCH_LOG("Handling request %s\n", ToString(aRequest).c_str());
   if (nsLayoutUtils::AllowZoomingForDocument(presShell->GetDocument()) &&
-      aRequest.GetScrollOffsetUpdated()) {
+      aRequest.GetAsyncZoom().scale != 1.0) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
     // no-op, but setting the visual viewport size is bad because it can cause a
     // stale value to be returned by window.innerWidth/innerHeight (see bug
     // 1187792).
-    //
-    // We also skip this codepath unless the metrics has a scroll offset update
-    // type other eNone, because eNone just means that this repaint request
-    // was triggered by APZ in response to a main-thread update. In this
-    // scenario we don't want to update the main-thread resolution because
-    // it can trigger unnecessary reflows.
 
     float presShellResolution = presShell->GetResolution();
 
@@ -343,6 +338,18 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
         aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom().scale;
     presShell->SetResolutionAndScaleTo(presShellResolution,
                                        ResolutionChangeOrigin::Apz);
+
+    // Changing the resolution will trigger a reflow which will cause the
+    // main-thread scroll position to be realigned in layer pixels. This
+    // (subpixel) scroll mutation can trigger a scroll update to APZ which
+    // is undesirable. Instead of having that happen as part of the post-reflow
+    // code, we force it to happen here with ScrollOrigin::Apz so that it
+    // doesn't trigger a scroll update to APZ.
+    nsIScrollableFrame* sf =
+        nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
+    CSSPoint currentScrollPosition =
+        CSSPoint::FromAppUnits(sf->GetScrollPosition());
+    sf->ScrollToCSSPixelsApproximate(currentScrollPosition, ScrollOrigin::Apz);
   }
 
   // Do this as late as possible since scrolling can flush layout. It also

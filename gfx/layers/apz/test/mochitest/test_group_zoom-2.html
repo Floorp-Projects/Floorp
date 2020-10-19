@@ -38,6 +38,13 @@ var prefs = [
   ["ui.scrollToClick", 0],
 ];
 
+var instant_repaint_prefs = [
+  // When zooming, trigger repaint requests for each scale event rather than
+  // delaying the repaints
+  ["apz.scale_repaint_delay_ms", 0],
+  ... prefs
+];
+
 var subtests = [
   {"file": "helper_bug1280013.html", "prefs": prefs},
   {"file": "helper_zoom_restore_position_tabswitch.html", "prefs": prefs},
@@ -46,6 +53,8 @@ var subtests = [
   {"file": "helper_click_interrupt_animation.html", "prefs": prefs},
   {"file": "helper_overflowhidden_zoom.html", "prefs": prefs},
   {"file": "helper_zoom_keyboardscroll.html", "prefs": prefs},
+  {"file": "helper_zoom_out_clamped_scrollpos.html", "prefs": instant_repaint_prefs},
+  {"file": "helper_zoom_out_with_mainthread_clamping.html", "prefs": instant_repaint_prefs},
 ];
 
 if (isApzEnabled()) {
