@@ -294,10 +294,7 @@ public final class GeckoRuntime implements Parcelable {
         if (DEBUG) {
             Log.d(LOGTAG, "init");
         }
-        int flags = 0;
-        if (settings.getUseMultiprocess()) {
-            flags |= GeckoThread.FLAG_PRELOAD_CHILD;
-        }
+        int flags = GeckoThread.FLAG_PRELOAD_CHILD;
 
         if (settings.getPauseForDebuggerEnabled()) {
             flags |= GeckoThread.FLAG_DEBUGGING;
