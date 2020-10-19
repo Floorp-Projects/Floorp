@@ -149,7 +149,7 @@ def test_playback_setup_failed(*args):
         "host": "example.com",
     }
 
-    prefix = "mozproxy.backends.mitm.MitmproxyDesktop."
+    prefix = "mozproxy.backends.mitm.desktop.MitmproxyDesktop."
 
     with tempdir() as obj_path:
         config["obj_path"] = obj_path
