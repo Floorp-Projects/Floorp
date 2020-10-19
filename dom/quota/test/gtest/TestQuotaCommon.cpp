@@ -30,7 +30,7 @@ TEST(QuotaCommon_Try, Success)
 }
 
 #ifdef DEBUG
-TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
+TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
 {
   bool tryDidNotReturn = false;
 
@@ -46,7 +46,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
   EXPECT_EQ(rv, NS_OK);
 }
 
-TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
+TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
 {
   bool tryDidNotReturn = false;
 
@@ -65,7 +65,7 @@ TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
 #endif
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
+TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
 {
   bool tryDidNotReturn = false;
 
@@ -81,7 +81,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
   EXPECT_EQ(rv, NS_OK);
 }
 
-TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
+TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
 {
   bool tryDidNotReturn = false;
 
