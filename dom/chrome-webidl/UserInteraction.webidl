@@ -27,8 +27,9 @@ namespace UserInteraction {
    * associated with different objects.
    *
    * @returns True if the timer was successfully started, false otherwise.
-   * If a timer already exists, it can't be started again, and the existing
-   * one will be cleared in order to avoid measurement errors.
+   * If a timer already exists, it will be overwritten, and the new timer
+   * will include a "(clobbered)" suffix in any BHR annotations that get
+   * created.
    */
   boolean start(DOMString id,
                 UTF8String value,
