@@ -60,6 +60,7 @@ class WebConsoleWrapper {
    * @param {WebConsoleUI} webConsoleUI
    * @param {Toolbox} toolbox
    * @param {Document} document
+   *
    */
   constructor(parentNode, webConsoleUI, toolbox, document) {
     EventEmitter.decorate(this);
@@ -89,6 +90,7 @@ class WebConsoleWrapper {
         updateRequest: (id, data) => this.batchedRequestUpdates({ id, data }),
       },
       webConsoleFront,
+      resourceWatcher: this.hud.resourceWatcher,
     });
 
     return new Promise(resolve => {
