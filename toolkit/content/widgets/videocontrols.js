@@ -2773,7 +2773,8 @@ this.VideoControlsImplWidget = class {
               </div>
               <button id="castingButton" class="button castingButton"
                       aria-label="&castingButton.castingLabel;"/>
-              <button id="closedCaptionButton" class="button closedCaptionButton"/>
+              <button id="closedCaptionButton" class="button closedCaptionButton"
+                      data-l10n-id="videocontrols-closed-caption-button"/>
               <button id="fullscreenButton"
                       class="button fullscreenButton"
                       enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
