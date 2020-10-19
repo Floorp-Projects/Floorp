@@ -31,7 +31,6 @@ class ContentCrashTest : BaseSessionTest() {
     @IgnoreCrash
     @Test
     fun crashContent() {
-        assumeTrue(sessionRule.env.isMultiprocess)
         // We need the crash reporter for this test
         assumeTrue(BuildConfig.MOZ_CRASHREPORTER)
 
