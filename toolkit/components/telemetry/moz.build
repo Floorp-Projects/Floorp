@@ -73,7 +73,6 @@ SOURCES += [
     'core/TelemetryHistogram.cpp',
     'core/TelemetryOrigin.cpp',
     'core/TelemetryScalar.cpp',
-    'core/TelemetryUserInteraction.cpp',
     'geckoview/streaming/GeckoViewStreamingTelemetry.cpp',
     'other/CombinedStacks.cpp',
     'other/ProcessedStack.cpp',
@@ -223,17 +222,6 @@ GeneratedFile(
     'glean_checks',
     script='build_scripts/run_glean_parser.py',
     inputs=['geckoview/streaming/metrics.yaml'])
-
-# Generate UserInteraction file
-userinteraction_files = [
-    'UserInteractions.yaml',
-]
-GeneratedFile('TelemetryUserInteractionData.h',
-              script='build_scripts/gen_userinteraction_data.py',
-              inputs=userinteraction_files)
-GeneratedFile('TelemetryUserInteractionNameMap.h',
-              script='build_scripts/gen_userinteraction_phf.py',
-              inputs=userinteraction_files)
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
