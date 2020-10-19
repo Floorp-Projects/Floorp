@@ -139,25 +139,13 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
 }
 
 ScaledFontMac::~ScaledFontMac() {
-  if (mCTFont) {
-    CFRelease(mCTFont);
-  }
+  CFRelease(mCTFont);
   CGFontRelease(mFont);
 }
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontMac::CreateSkTypeface() {
-  if (mCTFont) {
-    return SkCreateTypefaceFromCTFont(mCTFont);
-  } else {
-    auto unscaledMac = static_cast<UnscaledFontMac*>(GetUnscaledFont().get());
-    bool dataFont = unscaledMac->IsDataFont();
-    CTFontRef fontFace =
-        CreateCTFontFromCGFontWithVariations(mFont, mSize, !dataFont);
-    SkTypeface* typeface = SkCreateTypefaceFromCTFont(fontFace);
-    CFRelease(fontFace);
-    return typeface;
-  }
+  return SkCreateTypefaceFromCTFont(mCTFont);
 }
 
 void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {
