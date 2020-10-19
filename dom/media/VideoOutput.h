@@ -11,15 +11,10 @@
 
 namespace mozilla {
 
-using layers::Image;
-using layers::ImageContainer;
-using layers::PlanarYCbCrData;
-using layers::PlanarYCbCrImage;
-
-static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
+static bool SetImageToBlackPixel(layers::PlanarYCbCrImage* aImage) {
   uint8_t blackPixel[] = {0x10, 0x80, 0x80};
 
-  PlanarYCbCrData data;
+  layers::PlanarYCbCrData data;
   data.mYChannel = blackPixel;
   data.mCbChannel = blackPixel + 1;
   data.mCrChannel = blackPixel + 2;
@@ -35,6 +30,11 @@ static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
 
 class VideoOutput : public DirectMediaTrackListener {
  protected:
+  typedef layers::Image Image;
+  typedef layers::ImageContainer ImageContainer;
+  typedef layers::ImageContainer::FrameID FrameID;
+  typedef layers::ImageContainer::ProducerID ProducerID;
+
   virtual ~VideoOutput() = default;
 
   void DropPastFrames() {
@@ -227,8 +227,7 @@ class VideoOutput : public DirectMediaTrackListener {
   FrameID mFrameID = 0;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const RefPtr<AbstractThread> mMainThread;
-  const layers::ImageContainer::ProducerID mProducerID =
-      layers::ImageContainer::AllocateProducerID();
+  const ProducerID mProducerID = ImageContainer::AllocateProducerID();
 };
 
 /**
