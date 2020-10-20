@@ -644,7 +644,30 @@ class SessionStateAggregator extends GeckoViewChildModule {
   }
 }
 
+// TODO: Bug 1648158 Move SessionAggregator to the parent process
+class DummySessionStateAggregator extends GeckoViewChildModule {
+  constructor(aModuleName, aMessageManager) {
+    super(aModuleName, aMessageManager);
+    this.messageManager.addMessageListener("GeckoView:FlushSessionState", this);
+  }
+
+  receiveMessage(aMsg) {
+    debug`receiveMessage: ${aMsg.name}`;
+
+    switch (aMsg.name) {
+      case "GeckoView:FlushSessionState":
+        // Do nothing
+        break;
+    }
+  }
+}
+
 const { debug, warn } = SessionStateAggregator.initLogging(
   "SessionStateAggregator"
 );
-const module = SessionStateAggregator.create(this);
+
+const module = Services.appinfo.sessionHistoryInParent
+  ? // If history is handled in the parent we don't need a session aggregator
+    // TODO: Bug 1648158 remove this and do everything in the parent
+    DummySessionStateAggregator.create(this)
+  : SessionStateAggregator.create(this);
