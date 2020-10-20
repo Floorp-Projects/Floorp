@@ -20240,15 +20240,16 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreAddOrPutRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, ([this, aConnection](const auto) {
+            if (!aConnection->GetUpdateRefcountFunction()) {
+              mAssumingPreviousOperationFail = true;
+            }
+          })
 #endif
-    return rv;
-  }
+  );
 
   IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
                   ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
@@ -20264,10 +20265,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   // First delete old index_data_values if we're overwriting something and we
   // have indexes.
   if (mOverwrite && !keyUnset && objectStoreHasIndexes) {
-    rv = RemoveOldIndexDataValues(aConnection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(RemoveOldIndexDataValues(aConnection));
   }
 
   int64_t autoIncrementNum = 0;
@@ -20289,14 +20287,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
                         kStmtParamNameKey + ", :"_ns + kStmtParamNameFileIds +
                         ", :"_ns + kStmtParamNameData + ");"_ns));
 
-    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, osid);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, osid));
 
     const SerializedStructuredCloneWriteInfo& cloneInfo = mParams.cloneInfo();
     const JSStructuredCloneData& cloneData = cloneInfo.data().data;
-    size_t cloneDataSize = cloneData.Size();
+    const size_t cloneDataSize = cloneData.Size();
 
     MOZ_ASSERT(!keyUnset || mMetadata->mCommonMetadata.autoIncrement(),
                "Should have key unless autoIncrement");
@@ -20359,14 +20354,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       uint32_t flags = 0;
       flags |= kCompressedFlag;
 
-      uint32_t index = mStoredFileInfos.Length() - 1;
+      const uint32_t index = mStoredFileInfos.Length() - 1;
 
-      int64_t data = (uint64_t(flags) << 32) | index;
+      const int64_t data = (uint64_t(flags) << 32) | index;
 
-      rv = stmt->BindInt64ByName(kStmtParamNameData, data);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(stmt->BindInt64ByName(kStmtParamNameData, data));
     } else {
       nsCString flatCloneData;
       if (!flatCloneData.SetLength(cloneDataSize, fallible)) {
@@ -20379,8 +20371,8 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       }
 
       // Compress the bytes before adding into the database.
-      const char* uncompressed = flatCloneData.BeginReading();
-      size_t uncompressedLength = cloneDataSize;
+      const char* const uncompressed = flatCloneData.BeginReading();
+      const size_t uncompressedLength = cloneDataSize;
 
       size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
 
@@ -20393,14 +20385,12 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
                           &compressedLength);
 
-      uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed.release());
-      size_t dataBufferLength = compressedLength;
+      uint8_t* const dataBuffer =
+          reinterpret_cast<uint8_t*>(compressed.release());
+      const size_t dataBufferLength = compressedLength;
 
-      rv = stmt->BindAdoptedBlobByName(kStmtParamNameData, dataBuffer,
-                                       dataBufferLength);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(stmt->BindAdoptedBlobByName(kStmtParamNameData, dataBuffer,
+                                          dataBufferLength));
     }
 
     if (!mStoredFileInfos.IsEmpty()) {
@@ -20419,47 +20409,41 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         if (inputStream) {
           if (fileHelper.isNothing()) {
             fileHelper.emplace(Transaction().GetDatabase().GetFileManagerPtr());
-            rv = fileHelper->Init();
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              IDB_REPORT_INTERNAL_ERR();
-              return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            }
+            IDB_TRY(fileHelper->Init(), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
           }
 
           const FileInfo& fileInfo = storedFileInfo.GetFileInfo();
 
           const auto file = fileHelper->GetFile(fileInfo);
-          if (NS_WARN_IF(!file)) {
-            IDB_REPORT_INTERNAL_ERR();
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-          }
+          IDB_TRY(OkIf(file), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                  IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
           const auto journalFile = fileHelper->GetJournalFile(fileInfo);
-          if (NS_WARN_IF(!journalFile)) {
-            IDB_REPORT_INTERNAL_ERR();
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-          }
+          IDB_TRY(OkIf(journalFile), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                  IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-          const bool compress = storedFileInfo.ShouldCompress();
-
-          rv = fileHelper->CreateFileFromStream(
-              *file, *journalFile, *inputStream, compress,
-              Transaction().GetDatabase().MaybeKeyRef());
-          if (NS_FAILED(rv) &&
-              NS_ERROR_GET_MODULE(rv) != NS_ERROR_MODULE_DOM_INDEXEDDB) {
-            IDB_REPORT_INTERNAL_ERR();
-            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            // Try to remove the file if the copy failed.
-            nsresult rv2 =
-                Transaction().GetDatabase().GetFileManager().SyncDeleteFile(
-                    *file, *journalFile);
-            if (NS_WARN_IF(NS_FAILED(rv2))) {
-              return rv;
-            }
-            return rv;
-          }
+          IDB_TRY(
+              ToResult(fileHelper->CreateFileFromStream(
+                           *file, *journalFile, *inputStream,
+                           storedFileInfo.ShouldCompress(),
+                           Transaction().GetDatabase().MaybeKeyRef()))
+                  .mapErr([](const nsresult rv) {
+                    if (NS_ERROR_GET_MODULE(rv) !=
+                        NS_ERROR_MODULE_DOM_INDEXEDDB) {
+                      IDB_REPORT_INTERNAL_ERR();
+                      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+                    }
+                    return rv;
+                  }),
+              QM_PROPAGATE,
+              ([this, &file = *file, &journalFile = *journalFile](const auto) {
+                // Try to remove the file if the copy failed.
+                IDB_TRY(
+                    Transaction().GetDatabase().GetFileManager().SyncDeleteFile(
+                        file, journalFile),
+                    QM_VOID);
+              }));
 
           storedFileInfo.NotifyWriteSucceeded();
         }
@@ -20470,26 +20454,17 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         storedFileInfo.Serialize(fileIds);
       }
 
-      rv = stmt->BindStringByName(kStmtParamNameFileIds, fileIds);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(stmt->BindStringByName(kStmtParamNameFileIds, fileIds));
     } else {
-      rv = stmt->BindNullByName(kStmtParamNameFileIds);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(stmt->BindNullByName(kStmtParamNameFileIds));
     }
 
-    rv = stmt->Execute();
-    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
-      MOZ_ASSERT(!keyUnset, "Generated key had a collision!");
-      return rv;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->Execute(), QM_PROPAGATE,
+            [keyUnset = DebugOnly{keyUnset}](const nsresult rv) {
+              if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+                MOZ_ASSERT(!keyUnset, "Generated key had a collision!");
+              }
+            });
   }
 
   // Update our indexes if needed.
@@ -20501,21 +20476,12 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
                     IndexDataValuesFromUpdateInfos(mParams.indexUpdateInfos(),
                                                    mUniqueIndexTable.ref()));
 
-    rv = UpdateIndexValues(aConnection, osid, key, indexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(UpdateIndexValues(aConnection, osid, key, indexValues));
 
-    rv = InsertIndexTableRows(aConnection, osid, key, indexValues);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    IDB_TRY(InsertIndexTableRows(aConnection, osid, key, indexValues));
   }
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   if (autoIncrementNum) {
     mMetadata->mNextAutoIncrementId = autoIncrementNum + 1;
