@@ -42,12 +42,14 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       codeRange_(nullptr),
       lineOrBytecode_(0),
       fp_(fp ? fp : activation->wasmExitFP()),
+      tls_(nullptr),
       unwoundIonCallerFP_(nullptr),
       unwoundIonFrameType_(jit::FrameType(-1)),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr) {
   MOZ_ASSERT(fp_);
+  tls_ = GetNearestEffectiveTls(fp_);
 
   // When the stack is captured during a trap (viz., to create the .stack
   // for an Error object), use the pc/bytecode information captured by the
@@ -59,7 +61,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
-    code_ = &fp_->instance()->code();
+    code_ = &tls_->instance->code();
     MOZ_ASSERT(code_ == LookupCode(unwoundPC));
 
     codeRange_ = code_->lookupFuncRange(unwoundPC);
@@ -196,11 +198,17 @@ void WasmFrameIter::popFrame() {
     return;
   }
 
-  MOZ_ASSERT(code_ == &fp_->instance()->code());
   MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
   const CallSite* callsite = code_->lookupCallSite(returnAddress);
   MOZ_ASSERT(callsite);
+
+  if (callsite->mightBeCrossInstance()) {
+    tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
+  }
+
+  MOZ_ASSERT(code_ == &fp_->instance()->code());
+  MOZ_ASSERT(fp_->instance() == tls()->instance);
 
   lineOrBytecode_ = callsite->lineOrBytecode();
 
@@ -274,7 +282,7 @@ unsigned WasmFrameIter::computeLine(uint32_t* column) const {
 
 Instance* WasmFrameIter::instance() const {
   MOZ_ASSERT(!done());
-  return fp_->instance();
+  return tls_->instance;
 }
 
 void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
