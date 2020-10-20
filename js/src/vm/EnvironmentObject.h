@@ -875,28 +875,46 @@ class LiveEnvironmentVal {
 /****************************************************************************/
 
 /*
- * Debug environment objects
+ * [SMDOC] Debug environment objects
  *
- * The debugger effectively turns every opcode into a potential direct eval.
- * Naively, this would require creating a EnvironmentObject for every
- * call/block scope and using JSOp::GetAliasedVar for every access. To optimize
- * this, the engine assumes there is no debugger and optimizes scope access
- * and creation accordingly. When the debugger wants to perform an unexpected
- * eval-in-frame (or other, similar environment-requiring operations),
- * fp->environmentChain is now incomplete.
+ * The frontend optimizes unaliased variables into stack slots and can optimize
+ * away whole EnvironmentObjects. So when the debugger wants to perform an
+ * unexpected eval-in-frame (or otherwise access the environment),
+ * `fp->environmentChain` is often incomplete. This is a problem: a major use
+ * case for eval-in-frame is to access the local variables in debuggee code.
  *
- * To resolve this, the debugger first calls GetDebugEnvironmentFor* to
- * synthesize a "debug env chain". A debug env chain is just a chain of
- * objects that fill in missing environments and protect the engine from
- * unexpected access. (The latter means that some debugger operations, like
- * redefining a lexical binding, can fail when a true eval would succeed.) To
- * do both of these things, GetDebugEnvironmentFor* creates a new proxy
- * DebugEnvironmentProxy to sit in front of every existing EnvironmentObject.
+ * Even when all EnvironmentObjects exist, giving complete information for all
+ * bindings, stack and heap, there's another issue: eval-in-frame code can
+ * create closures that capture stack locals. The variable slots go away when
+ * the frame is popped, but the closure, which uses them, may survive.
  *
- * GetDebugEnvironmentFor* ensures the invariant that the same
- * DebugEnvironmentProxy is always produced for the same underlying
- * environment (optimized or not!). This is maintained by some bookkeeping
- * information stored in DebugEnvironments.
+ * To solve both problems, eval-in-frame code is compiled and run against a
+ * "debug environment chain" of DebugEnvironmentProxy objects rather than real
+ * EnvironmentObjects. The `GetDebugEnvironmentFor` functions below create
+ * these proxies, one to sit in front of each existing EnvironmentObject. They
+ * also create bogus "hollow" EnvironmentObjects to stand in for environments
+ * that were optimized away; and proxies for those. The frontend sees these
+ * environments as something like `with` scopes, and emits deoptimized bytecode
+ * instructions for all variable accesses.
+ *
+ * When eval-in-frame code runs, `fp->environmentChain` points to this chain of
+ * proxies. On each variable access, the proxy laboriously figures out what to
+ * do. See e.g. `DebuggerEnvironmentProxyHandler::handleUnaliasedAccess`.
+ *
+ * There's a limit to what the proxies can manage, since they're proxying
+ * environments that are already optimized. Some debugger operations, like
+ * redefining a lexical binding, can fail when a true direct eval would
+ * succeed. Even plain variable accesses can throw, if the variable has been
+ * optimized away.
+ *
+ * To support accessing stack variables after they've gone out of scope, we
+ * copy the variables to the heap as they leave scope. See
+ * `DebugEnvironments::onPopCall` and `onPopLexical`.
+ *
+ * `GetDebugEnvironmentFor*` guarantees that the same DebugEnvironmentProxy is
+ * always produced for the same underlying environment (optimized or not!).
+ * This is maintained by some bookkeeping information stored in
+ * `DebugEnvironments`.
  */
 
 extern JSObject* GetDebugEnvironmentForFunction(JSContext* cx,
