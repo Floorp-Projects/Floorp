@@ -129,12 +129,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.showGridViewInTabsSettings
     )
 
-    var waitToShowPageUntilFirstPaint by featureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_wait_first_paint),
-        default = false,
-        featureFlag = FeatureFlags.waitUntilPaintToDraw
-    )
-
     var syncedTabsInTabsTray by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_synced_tabs_tabs_tray),
         default = false,

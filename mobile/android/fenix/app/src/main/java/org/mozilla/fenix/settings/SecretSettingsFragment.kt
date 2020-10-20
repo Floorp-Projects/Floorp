@@ -31,12 +31,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_wait_first_paint).apply {
-            isVisible = FeatureFlags.waitUntilPaintToDraw
-            isChecked = context.settings().waitToShowPageUntilFirstPaint
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_synced_tabs_tabs_tray).apply {
             isVisible = FeatureFlags.syncedTabsInTabsTray
             isChecked = context.settings().syncedTabsInTabsTray

@@ -247,9 +247,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             fragment = WeakReference(this),
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
-            viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope),
-            settings = context.components.settings,
-            firstContentfulHappened = ::didFirstContentfulHappen
+            viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope)
         ).apply {
             beginAnimateInIfNecessary()
         }
@@ -657,28 +655,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
                     .ifChanged { tab -> tab.content.pictureInPictureEnabled }
                     .collect { tab -> pipModeChanged(tab) }
-            }
-
-            if (context.settings().waitToShowPageUntilFirstPaint) {
-                store.flowScoped(viewLifecycleOwner) { flow ->
-                    flow.mapNotNull { state ->
-                        state.findTabOrCustomTabOrSelectedTab(
-                            customTabSessionId
-                        )
-                    }
-                        .ifChanged { it.content.firstContentfulPaint }
-                        .collect {
-                            val showEngineView =
-                                it.content.firstContentfulPaint || it.content.progress == LOADING_PROGRESS_COMPLETE
-
-                            if (showEngineView) {
-                                engineView?.asView()?.isVisible = true
-                                swipeRefresh?.alpha = 1f
-                            } else {
-                                engineView?.asView()?.isVisible = false
-                            }
-                        }
-                }
             }
 
             view.swipeRefresh.isEnabled =
@@ -1152,15 +1128,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             }
         }
     }
-
-    private fun didFirstContentfulHappen() =
-        if (components.settings.waitToShowPageUntilFirstPaint) {
-            val tab =
-                components.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
-            tab?.content?.firstContentfulPaint ?: false
-        } else {
-            true
-        }
 
     /*
      * Dereference these views when the fragment view is destroyed to prevent memory leaks

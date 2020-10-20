@@ -27,11 +27,6 @@ object FeatureFlags {
     val showGridViewInTabsSettings = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables wait til first contentful paint
-     */
-    val waitUntilPaintToDraw = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables downloads with external download managers.
      */
     const val externalDownloadManager = true

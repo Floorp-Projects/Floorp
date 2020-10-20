@@ -8,6 +8,7 @@ import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
 import android.os.StrictMode
+import androidx.core.content.ContextCompat
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -21,8 +22,8 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.session.undo.UndoMiddleware
-import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
+import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
@@ -101,7 +102,11 @@ class Core(
             fontInflationEnabled = context.settings().shouldUseAutoSize,
             suspendMediaWhenInactive = false,
             forceUserScalableContent = context.settings().forceEnableZoom,
-            loginAutofillEnabled = context.settings().shouldAutofillLogins
+            loginAutofillEnabled = context.settings().shouldAutofillLogins,
+            clearColor = ContextCompat.getColor(
+                context,
+                R.color.foundation_normal_theme
+            )
         )
 
         GeckoEngine(
@@ -230,7 +235,8 @@ class Core(
                 // Now that we have restored our previous state (if there's one) let's remove timed out tabs
                 if (!context.settings().manuallyCloseTabs) {
                     store.state.tabs.filter {
-                        (System.currentTimeMillis() - it.lastAccess) > context.settings().getTabTimeout()
+                        (System.currentTimeMillis() - it.lastAccess) > context.settings()
+                            .getTabTimeout()
                     }.forEach {
                         val session = sessionManager.findSessionById(it.id)
                         if (session != null) {
