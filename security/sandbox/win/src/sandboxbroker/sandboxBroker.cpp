@@ -867,7 +867,7 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
       "SetJobLevel should never fail with these arguments, what happened?");
 
   result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_LOCKDOWN);
+                                  sandbox::USER_LIMITED);
   SANDBOX_ENSURE_SUCCESS(
       result,
       "SetTokenLevel should never fail with these arguments, what happened?");
@@ -884,7 +884,7 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
                          "arguments, what happened?");
 
   result =
-      mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
+      mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   SANDBOX_ENSURE_SUCCESS(result,
                          "SetDelayedIntegrityLevel should never fail with "
                          "these arguments, what happened?");
@@ -907,9 +907,12 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
   }
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                sandbox::MITIGATION_DYNAMIC_CODE_DISABLE |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER |
                 sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+
+#if defined(_WIN64)
+  mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+#endif
 
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,

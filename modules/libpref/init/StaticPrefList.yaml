@@ -9296,7 +9296,7 @@
   # true means that win32k system calls are not permitted.
 -   name: security.sandbox.rdd.win32k-disable
     type: RelaxedAtomicBool
-    value: true
+    value: false
     mirror: always
 
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
