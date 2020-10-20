@@ -832,6 +832,9 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.movePtr(ImmWord(0), FramePointer);
   masm.loadWasmPinnedRegsFromTls();
 
+  masm.storePtr(WasmTlsReg,
+                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
   masm.assertStackAlignment(WasmStackAlignment);
@@ -1290,6 +1293,9 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // Setup wasm register state.
   masm.loadWasmPinnedRegsFromTls();
 
+  masm.storePtr(WasmTlsReg,
+                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
   masm.assertStackAlignment(WasmStackAlignment);
@@ -1604,6 +1610,8 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 
   // Load tls; from now on, WasmTlsReg is live.
   masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
+  masm.storePtr(WasmTlsReg,
+                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
   masm.loadWasmPinnedRegsFromTls();
 
   // Actual call.
