@@ -82,15 +82,12 @@ exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
   }
 
   return {
-    onBrowserSwap: setMessageManager,
     onDisconnected: () => setMessageManager(null),
   };
 };
 ```
 
 The server will call the `onDisconnected` method returned by the parent process setup flow to give the actor modules the chance to cleanup their handlers registered on the disconnected message manager.
-
-The server will call the `onBrowserSwap` method returned by the parent process setup flow to notify actor modules when the message manager for the target frame has changed.  The parent process code should remove any message listeners from the previous message manager and add them to the new one.
 
 ## Summary of the setup flow
 
@@ -108,4 +105,4 @@ In the parent process:
 * tries to load the required module,
 * tries to call the `module[setupParent]` function with the frame message manager and the prefix as parameters `{ mm, prefix }`,
 * the `setupParent` function then uses the mm to subscribe the message manager events,
-* the `setupParent` function returns an object with `onDisconnected` and `onBrowserSwap` methods which the server can use to notify the module of various lifecycle events
+* the `setupParent` function returns an object with a `onDisconnected` method which the server can use to notify the module of various lifecycle events

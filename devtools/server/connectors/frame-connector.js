@@ -42,7 +42,7 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
   return new Promise(resolve => {
     // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
     // or else fallback to asking the frameLoader itself.
-    let mm = frame.messageManager || frame.frameLoader.messageManager;
+    const mm = frame.messageManager || frame.frameLoader.messageManager;
     mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
 
     const spawnInParentActorPool = new Pool(
@@ -52,7 +52,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
     connection.addActor(spawnInParentActorPool);
 
     const trackMessageManager = () => {
-      frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
       mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
       mm.addMessageListener(
         "debug:spawn-actor-in-parent",
@@ -65,7 +64,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
     };
 
     const untrackMessageManager = () => {
-      frame.removeEventListener("DevTools:BrowserSwap", onBrowserSwap);
       mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
       mm.removeMessageListener(
         "debug:spawn-actor-in-parent",
@@ -196,38 +194,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       actor = msg.json.actor;
       resolve(actor);
     });
-
-    // Listen for browser frame swap
-    const onBrowserSwap = ({ detail: newFrame }) => {
-      // Remove listeners from old frame and mm
-      untrackMessageManager();
-      // Update frame and mm to point to the new browser frame
-      frame = newFrame;
-      // Get messageManager from XUL browser (which might be a specialized tunnel for
-      // RDM) or else fallback to asking the frameLoader itself.
-      mm = frame.messageManager || frame.frameLoader.messageManager;
-      // Add listeners to new frame and mm
-      trackMessageManager();
-
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      parentModules.forEach(mod => {
-        if (mod.onBrowserSwap) {
-          mod.onBrowserSwap(mm);
-        }
-      });
-
-      // Also notify actors spawned in the parent process about the new message manager.
-      parentActors.forEach(parentActor => {
-        if (parentActor.onBrowserSwap) {
-          parentActor.onBrowserSwap(mm);
-        }
-      });
-
-      if (childTransport) {
-        childTransport.swapBrowser(mm);
-      }
-    };
 
     const destroy = DevToolsUtils.makeInfallible(function() {
       EventEmitter.off(connection, "closed", destroy);

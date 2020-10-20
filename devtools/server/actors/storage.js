@@ -1233,7 +1233,6 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
   }
 
   return {
-    onBrowserSwap: setMessageManager,
     onDisconnected: () => {
       // Although "disconnected-from-child" implies that the child is already
       // disconnected this is not the case. The disconnection takes place after
@@ -1708,7 +1707,6 @@ exports.setupParentProcessForExtensionStorage = function({ mm, prefix }) {
   }
 
   return {
-    onBrowserSwap: setMessageManager,
     onDisconnected: () => {
       // Although "disconnected-from-child" implies that the child is already
       // disconnected this is not the case. The disconnection takes place after
@@ -3389,7 +3387,6 @@ exports.setupParentProcessForIndexedDB = function({ mm, prefix }) {
   }
 
   return {
-    onBrowserSwap: setMessageManager,
     onDisconnected: () => setMessageManager(null),
   };
 };
