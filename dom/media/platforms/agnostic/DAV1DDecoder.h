@@ -43,6 +43,7 @@ class DAV1DDecoder : public MediaDataDecoder,
   const VideoInfo& mInfo;
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<layers::ImageContainer> mImageContainer;
+  const RefPtr<layers::KnowsCompositor> mImageAllocator;
 
   // Keep the buffers alive until dav1d
   // does not need them any more.

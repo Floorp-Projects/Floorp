@@ -22,7 +22,8 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
       mTaskQueue(
           new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                         "Dav1dDecoder")),
-      mImageContainer(aParams.mImageContainer) {}
+      mImageContainer(aParams.mImageContainer),
+      mImageAllocator(aParams.mKnowsCompositor) {}
 
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
@@ -275,7 +276,7 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
 
   return VideoData::CreateAndCopyData(
       mInfo, mImageContainer, offset, timecode, duration, b, keyframe, timecode,
-      mInfo.ScaledImageRect(aPicture.p.w, aPicture.p.h));
+      mInfo.ScaledImageRect(aPicture.p.w, aPicture.p.h), mImageAllocator);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {
