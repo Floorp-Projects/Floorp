@@ -15,7 +15,6 @@ py2commands="
     android
     awsy-test
     check-spidermonkey
-    cramtest
     crashtest
     devtools-css-db
     firefox-ui-functional
