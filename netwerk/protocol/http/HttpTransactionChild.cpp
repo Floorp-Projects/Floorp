@@ -215,16 +215,6 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult HttpTransactionChild::RecvUpdateClassOfService(
-    const uint32_t& classOfService) {
-  LOG(("HttpTransactionChild::RecvUpdateClassOfService start [this=%p]\n",
-       this));
-  if (mTransaction) {
-    mTransaction->SetClassOfService(classOfService);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult HttpTransactionChild::RecvSetDNSWasRefreshed() {
   LOG(("HttpTransactionChild::SetDNSWasRefreshed [this=%p]\n", this));
   if (mTransaction) {
