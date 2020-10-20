@@ -783,11 +783,6 @@ video > .caption-box {
 }
 
 /* details & summary */
-details > summary:-moz-native-anonymous {
-  /* TODO(krosylight): Remove this when fixing bug 1308080 */
-  user-select: none;
-}
-
 details > summary:is(:first-of-type, :-moz-native-anonymous) {
   display: list-item;
   counter-increment: list-item 0;
