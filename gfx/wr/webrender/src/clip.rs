@@ -278,6 +278,36 @@ impl ClipChainBuilder {
         )
     }
 
+    /// Return true if any of the clips in the hierarchy from clip_id to the
+    /// root clip are complex.
+    // TODO(gw): This method should only be required until the shared_clip
+    //           optimization patches are complete, and can then be removed.
+    fn has_complex_clips(
+        &self,
+        clip_id: ClipId,
+        templates: &FastHashMap<ClipId, ClipTemplate>,
+    ) -> bool {
+        let template = &templates[&clip_id];
+
+        // Check if any of the clips in this template are complex
+        for clip in &template.clips {
+            if let ClipNodeKind::Complex = clip.key.kind.node_kind() {
+                return true;
+            }
+        }
+
+        // The ClipId parenting is terminated when we reach the root ClipId
+        if clip_id == template.parent {
+            return false;
+        }
+
+        // Recurse into parent clip template to also check those
+        self.has_complex_clips(
+            template.parent,
+            templates,
+        )
+    }
+
     /// This is the main method used to get a clip chain for a primitive. Given a
     /// clip id, it builds a clip-chain for that primitive, parented to the current
     /// root clip chain hosted in this builder.
@@ -983,6 +1013,23 @@ impl ClipStore {
             .get_or_build_clip_chain_id(
                 clip_id,
                 &mut self.clip_chain_nodes,
+                &self.templates,
+            )
+    }
+
+    /// Return true if any of the clips in the hierarchy from clip_id to the
+    /// root clip are complex.
+    // TODO(gw): This method should only be required until the shared_clip
+    //           optimization patches are complete, and can then be removed.
+    pub fn has_complex_clips(
+        &self,
+        clip_id: ClipId,
+    ) -> bool {
+        self.chain_builder_stack
+            .last()
+            .unwrap()
+            .has_complex_clips(
+                clip_id,
                 &self.templates,
             )
     }
