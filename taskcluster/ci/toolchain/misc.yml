@@ -248,7 +248,7 @@ linux64-liblowercase:
             - build/liblowercase/
     fetches:
         toolchain:
-            - linux64-rust-1.47
+            - linux64-rust-1.41
 
 linux64-wine:
     description: "Wine build for Windows Cross Compile"
@@ -339,4 +339,4 @@ linux64-makecab:
         fetch:
             - makecab
         toolchain:
-            - linux64-rust-1.47
+            - linux64-rust-1.41
