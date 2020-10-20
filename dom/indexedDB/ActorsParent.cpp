@@ -2113,10 +2113,8 @@ class DatabaseOperationBase : public Runnable,
       DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
       const Key& aObjectStoreKey, const nsTArray<IndexDataValue>& aIndexValues);
 
-  static nsresult ObjectStoreHasIndexes(DatabaseConnection* aConnection,
-
-                                        IndexOrObjectStoreId aObjectStoreId,
-                                        bool* aHasIndexes);
+  static Result<bool, nsresult> ObjectStoreHasIndexes(
+      DatabaseConnection& aConnection, IndexOrObjectStoreId aObjectStoreId);
 
  private:
   template <typename KeyTransformation>
@@ -3911,11 +3909,9 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
 
   // An overload of DatabaseOperationBase's function that can avoid doing extra
   // work on non-versionchange transactions.
-  static nsresult ObjectStoreHasIndexes(NormalTransactionOp* aOp,
-                                        DatabaseConnection* aConnection,
-                                        IndexOrObjectStoreId aObjectStoreId,
-                                        const bool aMayHaveIndexes,
-                                        bool* aHasIndexes);
+  mozilla::Result<bool, nsresult> ObjectStoreHasIndexes(
+      DatabaseConnection& aConnection, IndexOrObjectStoreId aObjectStoreId,
+      bool aMayHaveIndexes);
 
   virtual mozilla::Result<PreprocessParams, nsresult> GetPreprocessParams();
 
@@ -15337,9 +15333,9 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
 #ifdef DEBUG
   {
-    bool hasIndexes = false;
-    MOZ_ASSERT(NS_SUCCEEDED(
-        ObjectStoreHasIndexes(aConnection, aObjectStoreId, &hasIndexes)));
+    IDB_TRY_INSPECT(const bool& hasIndexes,
+                    ObjectStoreHasIndexes(*aConnection, aObjectStoreId),
+                    QM_PROPAGATE, [](const auto&) { MOZ_ASSERT(false); });
     MOZ_ASSERT(hasIndexes,
                "Don't use this slow method if there are no indexes!");
   }
@@ -15480,32 +15476,22 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 }
 
 // static
-nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
-    DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
-    bool* aHasIndexes) {
-  MOZ_ASSERT(aConnection);
-  aConnection->AssertIsOnConnectionThread();
+Result<bool, nsresult> DatabaseOperationBase::ObjectStoreHasIndexes(
+    DatabaseConnection& aConnection,
+    const IndexOrObjectStoreId aObjectStoreId) {
+  aConnection.AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
-  MOZ_ASSERT(aHasIndexes);
 
   IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->BorrowCachedStatement(
+                  aConnection.BorrowCachedStatement(
                       "SELECT id "
                       "FROM object_store_index "
                       "WHERE object_store_id = :"_ns +
                       kStmtParamNameObjectStoreId + kOpenLimit + "1;"_ns));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId));
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
-
-  *aHasIndexes = hasResult;
-  return NS_OK;
+  IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(DatabaseOperationBase, Runnable,
@@ -19054,12 +19040,9 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       return rv;
     }
   } else {
-    bool hasIndexes;
-    rv = ObjectStoreHasIndexes(aConnection, mMetadata->mCommonMetadata.id(),
-                               &hasIndexes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(
+        const bool& hasIndexes,
+        ObjectStoreHasIndexes(*aConnection, mMetadata->mCommonMetadata.id()));
 
     if (hasIndexes) {
       rv = DeleteObjectStoreDataTableRowsWithIndexes(
@@ -20046,39 +20029,31 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   return NS_OK;
 }
 
-// static
-nsresult NormalTransactionOp::ObjectStoreHasIndexes(
-    NormalTransactionOp* aOp, DatabaseConnection* aConnection,
-    const IndexOrObjectStoreId aObjectStoreId, const bool aMayHaveIndexes,
-    bool* aHasIndexes) {
-  MOZ_ASSERT(aOp);
-  MOZ_ASSERT(aConnection);
-  aConnection->AssertIsOnConnectionThread();
+Result<bool, nsresult> NormalTransactionOp::ObjectStoreHasIndexes(
+    DatabaseConnection& aConnection, const IndexOrObjectStoreId aObjectStoreId,
+    const bool aMayHaveIndexes) {
+  aConnection.AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
-  MOZ_ASSERT(aHasIndexes);
 
-  bool hasIndexes;
-  if (aOp->Transaction().GetMode() == IDBTransaction::Mode::VersionChange &&
+  if (Transaction().GetMode() == IDBTransaction::Mode::VersionChange &&
       aMayHaveIndexes) {
     // If this is a version change transaction then mObjectStoreMayHaveIndexes
     // could be wrong (e.g. if a unique index failed to be created due to a
     // constraint error). We have to check on this thread by asking the database
     // directly.
-    nsresult rv = DatabaseOperationBase::ObjectStoreHasIndexes(
-        aConnection, aObjectStoreId, &hasIndexes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    MOZ_ASSERT(NS_SUCCEEDED(DatabaseOperationBase::ObjectStoreHasIndexes(
-        aConnection, aObjectStoreId, &hasIndexes)));
-    MOZ_ASSERT(aMayHaveIndexes == hasIndexes);
-
-    hasIndexes = aMayHaveIndexes;
+    IDB_TRY_RETURN(DatabaseOperationBase::ObjectStoreHasIndexes(
+        aConnection, aObjectStoreId));
   }
 
-  *aHasIndexes = hasIndexes;
-  return NS_OK;
+#ifdef DEBUG
+  IDB_TRY_INSPECT(
+      const bool& hasIndexes,
+      DatabaseOperationBase::ObjectStoreHasIndexes(aConnection, aObjectStoreId),
+      QM_ASSERT_UNREACHABLE);
+  MOZ_ASSERT(aMayHaveIndexes == hasIndexes);
+#endif
+
+  return aMayHaveIndexes;
 }
 
 Result<PreprocessParams, nsresult> NormalTransactionOp::GetPreprocessParams() {
@@ -20252,9 +20227,11 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
 
 #ifdef DEBUG
   {
-    bool hasIndexes = false;
-    MOZ_ASSERT(NS_SUCCEEDED(DatabaseOperationBase::ObjectStoreHasIndexes(
-        aConnection, mParams.objectStoreId(), &hasIndexes)));
+    IDB_TRY_INSPECT(const bool& hasIndexes,
+                    DatabaseOperationBase::ObjectStoreHasIndexes(
+                        *aConnection, mParams.objectStoreId()),
+                    QM_ASSERT_UNREACHABLE);
+
     MOZ_ASSERT(hasIndexes,
                "Don't use this slow method if there are no indexes!");
   }
@@ -20413,13 +20390,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  bool objectStoreHasIndexes;
-  rv =
-      ObjectStoreHasIndexes(this, aConnection, mParams.objectStoreId(),
-                            mObjectStoreMayHaveIndexes, &objectStoreHasIndexes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
+                  ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
+                                        mObjectStoreMayHaveIndexes));
 
   // This will be the final key we use.
   Key& key = mResponse;
@@ -21070,13 +21043,9 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  bool objectStoreHasIndexes;
-  rv =
-      ObjectStoreHasIndexes(this, aConnection, mParams.objectStoreId(),
-                            mObjectStoreMayHaveIndexes, &objectStoreHasIndexes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
+                  ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
+                                        mObjectStoreMayHaveIndexes));
 
   if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(
@@ -21152,13 +21121,9 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  bool objectStoreHasIndexes;
-  rv =
-      ObjectStoreHasIndexes(this, aConnection, mParams.objectStoreId(),
-                            mObjectStoreMayHaveIndexes, &objectStoreHasIndexes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
+                  ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
+                                        mObjectStoreMayHaveIndexes));
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
