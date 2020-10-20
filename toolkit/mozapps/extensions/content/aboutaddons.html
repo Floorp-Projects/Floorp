@@ -120,6 +120,21 @@
       </panel-list>
     </template>
 
+    <template name="addon-permissions-list">
+      <div class="addon-permissions-required" hidden>
+        <h2 class="permission-header" data-l10n-id="addon-permissions-required"></h2>
+        <ul class="addon-permissions-list"></ul>
+      </div>
+      <div class="addon-permissions-optional" hidden>
+        <h2 class="permission-header" data-l10n-id="addon-permissions-optional"></h2>
+        <ul class="addon-permissions-list"></ul>
+      </div>
+      <div class="addon-detail-row addon-permissions-empty" data-l10n-id="addon-permissions-empty" hidden></div>
+      <div class="addon-detail-row">
+        <a is="support-link" support-page="extension-permissions" data-l10n-id="addon-permissions-learnmore"></a>
+      </div>
+    </template>
+
     <template name="card">
       <div class="card addon">
         <img class="card-heading-image">

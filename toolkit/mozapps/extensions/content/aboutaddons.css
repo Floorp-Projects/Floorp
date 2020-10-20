@@ -632,8 +632,42 @@ panel-item-separator {
   margin-block: 4px;
 }
 
-addon-permissions-list > .addon-detail-row:first-of-type {
+addon-permissions-list > .addon-detail-row {
   border-top: none;
+}
+
+.addon-permissions-list {
+  list-style-type: none;
+  margin: 0;
+  padding-inline-start: 8px;
+}
+
+.addon-permissions-list > li {
+  border: none;
+  padding-block: 4px;
+  padding-inline-start: 2rem;
+  background-image: none;
+  background-position: 0 center;
+  background-size: 1.6rem 1.6rem;
+  background-repeat: no-repeat;
+}
+
+/* justify the permission toggle */
+li.permission-info > label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* using a list-style-image prevents aligning the image */
+.addon-permissions-list > li.permission-checked {
+  background-image: url("chrome://global/skin/icons/check.svg");
+  -moz-context-properties: fill;
+  fill: var(--green-60);
+}
+
+.permission-header {
+  font-size: 1em;
 }
 
 .tab-group {
