@@ -15,7 +15,6 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "nsIObserver.h"
 #include <mozilla/DataMutex.h>
 #include "mozilla/SyncRunnable.h"
@@ -469,21 +468,14 @@ already_AddRefed<SourceSurface> RemoteDecoderManagerChild::Readback(
     return nullptr;
   }
 
-  SynchronousTask task("Readback sync");
-
-  RefPtr<RemoteDecoderManagerChild> ref = this;
   SurfaceDescriptor sd;
-  if (NS_FAILED(managerThread->Dispatch(
-          NS_NewRunnableFunction("RemoteDecoderManagerChild::Readback", [&]() {
-            AutoCompleteTask complete(&task);
-            if (ref->CanSend()) {
-              ref->SendReadback(aSD, &sd);
-            }
-          })))) {
-    return nullptr;
-  }
-
-  task.Wait();
+  RefPtr<Runnable> task =
+      NS_NewRunnableFunction("RemoteDecoderManagerChild::Readback", [&]() {
+        if (CanSend()) {
+          SendReadback(aSD, &sd);
+        }
+      });
+  SyncRunnable::DispatchToThread(managerThread, task);
 
   if (!IsSurfaceDescriptorValid(sd)) {
     return nullptr;
