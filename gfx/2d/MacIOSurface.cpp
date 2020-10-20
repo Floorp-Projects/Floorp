@@ -50,8 +50,10 @@ void SetSizeProperties(const CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
       IOSurfaceAlignProperty(kIOSurfaceBytesPerRow, aWidth * aBytesPerPixel);
   AddDictionaryInt(aDict, kIOSurfaceBytesPerRow, bytesPerRow);
 
+  // Add a SIMD register worth of extra bytes to the end of the allocation for
+  // SWGL.
   size_t totalBytes =
-      IOSurfaceAlignProperty(kIOSurfaceAllocSize, aHeight * bytesPerRow);
+      IOSurfaceAlignProperty(kIOSurfaceAllocSize, aHeight * bytesPerRow + 16);
   AddDictionaryInt(aDict, kIOSurfaceAllocSize, totalBytes);
 }
 
@@ -97,8 +99,10 @@ size_t CreatePlaneDictionary(CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
                              size_t aBytesPerPixel) {
   size_t bytesPerRow = IOSurfaceAlignProperty(kIOSurfaceBytesPerRow,
                                               aSize.width * aBytesPerPixel);
-  size_t totalBytes =
-      IOSurfaceAlignProperty(kIOSurfaceAllocSize, aSize.height * bytesPerRow);
+  // Add a SIMD register worth of extra bytes to the end of the allocation for
+  // SWGL.
+  size_t totalBytes = IOSurfaceAlignProperty(kIOSurfaceAllocSize,
+                                             aSize.height * bytesPerRow + 16);
 
   aDict = CFTypeRefPtr<CFMutableDictionaryRef>::WrapUnderCreateRule(
       ::CFDictionaryCreateMutable(kCFAllocatorDefault, 4,
