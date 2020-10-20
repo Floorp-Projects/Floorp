@@ -7109,6 +7109,19 @@
   mirror: always
 #endif
 
+- name: media.rdd-theora.enabled
+  type: RelaxedAtomicBool
+#if defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_WIN) && !defined(_ARM64_)
+  value: true
+#elif defined(XP_MACOSX)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: media.rdd-vorbis.enabled
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && !defined(ANDROID)
@@ -7116,6 +7129,19 @@
 #elif defined(XP_MACOSX)
   value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+- name: media.rdd-vpx.enabled
+  type: RelaxedAtomicBool
+#if defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_WIN) && !defined(_ARM64_)
+  value: true
+#elif defined(XP_MACOSX)
   value: true
 #else
   value: false
