@@ -26,16 +26,12 @@
  * template instantiations wherever possible, mean that Parser exhibits much of
  * the same unholy template/inheritance complexity as token streams.
  *
- * == ParserSharedBase → JS::AutoGCRooter ==
+ * == ParserSharedBase ==
  *
- * ParserSharedBase is the base class for both regular JS and BinAST parser.
- * This class contains common fields and methods between both parsers.
- *
- * Of particular note: making ParserSharedBase inherit JS::AutoGCRooter (rather
- * than placing it under one of the more-derived parser classes) means that all
- * parsers can be traced using the same AutoGCRooter mechanism: it's not
- * necessary to have separate tracing functionality for syntax/full parsers or
- * parsers of different character types.
+ * ParserSharedBase is the base class for both regular JS and BinAST parsing.
+ * This class contains common fields and methods between both parsers. There is
+ * currently no BinAST parser here so this can potentially be merged into the
+ * ParserBase type below.
  *
  * == ParserBase → ParserSharedBase, ErrorReportMixin ==
  *
@@ -243,7 +239,7 @@ class AutoAwaitIsKeyword;
 template <class ParseHandler, typename Unit>
 class AutoInParametersOfAsyncFunction;
 
-class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
+class MOZ_STACK_CLASS ParserSharedBase {
  public:
   enum class Kind { Parser };
 
@@ -325,8 +321,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   ~ParserBase();
 
   bool checkOptions();
-
-  void trace(JSTracer* trc) final {}
 
   const char* getFilename() const { return anyChars.getFilename(); }
   TokenPos pos() const { return anyChars.currentToken().pos; }
