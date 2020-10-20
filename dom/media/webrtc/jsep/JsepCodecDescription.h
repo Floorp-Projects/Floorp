@@ -87,6 +87,38 @@ class JsepCodecDescription {
 
   virtual void AddParametersToMSection(SdpMediaSection& msection) const {}
 
+  virtual void EnsureNoDuplicatePayloadTypes(std::set<std::string>& aUsedPts) {
+    mEnabled = EnsurePayloadTypeNotDuplicate(aUsedPts, mDefaultPt);
+  }
+
+  bool EnsurePayloadTypeNotDuplicate(std::set<std::string>& aUsedPts,
+                                     std::string& aPtToCheck) {
+    if (!mEnabled) {
+      return false;
+    }
+
+    if (!aUsedPts.count(aPtToCheck)) {
+      aUsedPts.insert(aPtToCheck);
+      return true;
+    }
+
+    // |codec| cannot use its current payload type. Try to find another.
+    for (uint16_t freePt = 96; freePt <= 127; ++freePt) {
+      // Not super efficient, but readability is probably more important.
+      std::ostringstream os;
+      os << freePt;
+      std::string freePtAsString = os.str();
+
+      if (!aUsedPts.count(freePtAsString)) {
+        aUsedPts.insert(freePtAsString);
+        aPtToCheck = freePtAsString;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   mozilla::SdpMediaSection::MediaType mType;
   std::string mDefaultPt;
   std::string mName;
@@ -787,6 +819,17 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     }
   }
 
+  void EnsureNoDuplicatePayloadTypes(std::set<std::string>& aUsedPts) override {
+    JsepCodecDescription::EnsureNoDuplicatePayloadTypes(aUsedPts);
+    if (mFECEnabled) {
+      mFECEnabled = EnsurePayloadTypeNotDuplicate(aUsedPts, mREDPayloadType) &&
+                    EnsurePayloadTypeNotDuplicate(aUsedPts, mULPFECPayloadType);
+    }
+    if (mRtxEnabled) {
+      mRtxEnabled = EnsurePayloadTypeNotDuplicate(aUsedPts, mRtxPayloadType);
+    }
+  }
+
   JSEP_CODEC_CLONE(JsepVideoCodecDescription)
 
   std::vector<std::string> mAckFbTypes;
@@ -890,6 +933,10 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
     }
 
     return false;
+  }
+
+  // We only support one datachannel per m-section
+  void EnsureNoDuplicatePayloadTypes(std::set<std::string>& aUsedPts) override {
   }
 
   uint16_t mLocalPort;
