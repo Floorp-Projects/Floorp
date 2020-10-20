@@ -6,6 +6,8 @@
 #include "RDDParent.h"
 
 #if defined(XP_WIN)
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "WMF.h"
 #  include <process.h>
 #  include <dwrite.h>
 #  include "mozilla/WinDllServices.h"
@@ -22,6 +24,7 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "gfxConfig.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
@@ -90,7 +93,12 @@ bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     return false;
   }
 
+  gfxConfig::Init();
   gfxVars::Initialize();
+#ifdef XP_WIN
+  DeviceManagerDx::Init();
+  wmf::MFStartup();
+#endif
 
   mozilla::ipc::SetThisProcessName("RDD Process");
 
@@ -157,11 +165,33 @@ mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
 }
 
 mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
-    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+    Endpoint<PVideoBridgeChild>&& aEndpoint,
+    const ContentDeviceData& aContentDeviceData) {
   if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
+
+  gfxConfig::Inherit(
+      {
+          Feature::HW_COMPOSITING,
+          Feature::D3D11_COMPOSITING,
+          Feature::OPENGL_COMPOSITING,
+          Feature::ADVANCED_LAYERS,
+          Feature::DIRECT2D,
+          Feature::WEBGPU,
+      },
+      aContentDeviceData.prefs());
+#ifdef XP_WIN
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    auto* devmgr = DeviceManagerDx::Get();
+    if (devmgr) {
+      devmgr->ImportDeviceInfo(aContentDeviceData.d3d11());
+      devmgr->CreateContentDevices();
+    }
+  }
+#endif
+
   return IPC_OK();
 }
 
@@ -208,6 +238,9 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
 #ifndef NS_FREE_PERMANENT_DATA
+#  ifdef XP_WIN
+  wmf::MFShutdown();
+#  endif
   // No point in going through XPCOM shutdown because we don't keep persistent
   // state.
   ProcessChild::QuickExit();
@@ -216,6 +249,10 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Wait until all RemoteDecoderManagerParent have closed.
   mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
       ->Then(GetCurrentSerialEventTarget(), __func__, [this]() {
+
+#ifdef XP_WIN
+        wmf::MFShutdown();
+#endif
 
 #if defined(XP_WIN)
         RefPtr<DllServices> dllSvc(DllServices::Get());
@@ -231,7 +268,11 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
 
         RemoteDecoderManagerParent::ShutdownVideoBridge();
 
+#ifdef XP_WIN
+        DeviceManagerDx::Shutdown();
+#endif
         gfxVars::Shutdown();
+        gfxConfig::Shutdown();
         CrashReporterClient::DestroySingleton();
         XRE_ShutdownChildProcess();
       });

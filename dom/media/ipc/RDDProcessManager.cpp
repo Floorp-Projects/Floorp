@@ -255,7 +255,10 @@ bool RDDProcessManager::CreateVideoBridge() {
     return false;
   }
 
-  mRDDChild->SendInitVideoBridge(std::move(childPipe));
+  ContentDeviceData contentDeviceData;
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
+
+  mRDDChild->SendInitVideoBridge(std::move(childPipe), contentDeviceData);
   if (gpuProcessPid != -1) {
     gpuManager->InitVideoBridge(std::move(parentPipe));
   } else {

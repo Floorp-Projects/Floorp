@@ -104,8 +104,8 @@ void WMFDecoderModule::Init() {
     // directly calls WMFDecoderModule::Supports in the content process.
     // This unnecessary requirement will be fixed in bug 1534815.
     testForVPx = true;
-  } else if (XRE_IsGPUProcess()) {
-    // Always allow DXVA in the GPU process.
+  } else if (XRE_IsGPUProcess() || XRE_IsRDDProcess()) {
+    // Always allow DXVA in the GPU or RDD process.
     testForVPx = sDXVAEnabled = true;
   } else {
     // Only allow DXVA in the UI process if we aren't in e10s Firefox

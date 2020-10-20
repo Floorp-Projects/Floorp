@@ -10,12 +10,14 @@
 #include "gfxFeature.h"
 #include "gfxFallback.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace gfx {
 
 // Defined in GraphicsMessages.ipdlh.
+class DevicePrefs;
 class FeatureFailure;
 
 // Manages the history and state of a graphics feature. The flow of a feature
@@ -77,6 +79,10 @@ class gfxConfig {
 
   // Inherit a computed value from another process.
   static void Inherit(Feature aFeature, FeatureStatus aStatus);
+
+  // Inherit a set of computed values from another process.
+  static void Inherit(EnumSet<Feature> aFeatures,
+                      const DevicePrefs& aDevicePrefs);
 
   // Set a environment status that overrides both the default and user
   // statuses; this should be used to disable features based on system
