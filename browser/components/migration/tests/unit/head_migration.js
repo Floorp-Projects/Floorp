@@ -58,7 +58,7 @@ async function promiseMigration(
   succeeds = null
 ) {
   // Ensure resource migration is available.
-  let availableSources = await migrator.getMigrateData(aProfile, false);
+  let availableSources = await migrator.getMigrateData(aProfile);
   Assert.ok(
     (availableSources & resourceType) > 0,
     "Resource supported by migrator"

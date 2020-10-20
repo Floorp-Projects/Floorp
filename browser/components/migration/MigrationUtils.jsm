@@ -240,7 +240,7 @@ var MigratorPrototype = {
   getMigrateData: async function MP_getMigrateData(aProfile) {
     let resources = await this._getMaybeCachedResources(aProfile);
     if (!resources) {
-      return [];
+      return 0;
     }
     let types = resources.map(r => r.type);
     return types.reduce((a, b) => {
