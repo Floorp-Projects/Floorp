@@ -19,7 +19,6 @@
 #include "VPXDecoder.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/GpuDecoderModule.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/SharedThreadPool.h"
@@ -374,16 +373,14 @@ void PDMFactory::CreateDefaultPDMs() {
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
     RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
-    StartupPDM(MakeAndAddRef<GpuDecoderModule>(m));
     if (!StartupPDM(m.forget())) {
       mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
     }
-  } else {
-    if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
-      mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
-    }
+  } else if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
   }
 #endif
+
 #ifdef MOZ_APPLEMEDIA
   CreateAndStartupPDM<AppleDecoderModule>();
 #endif

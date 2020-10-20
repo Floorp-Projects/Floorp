@@ -13,7 +13,6 @@ IPDL_SOURCES += [
 ]
 
 EXPORTS.mozilla += [
-    'GpuDecoderModule.h',
     'IRemoteDecoderChild.h',
     'RDDChild.h',
     'RDDParent.h',
@@ -36,7 +35,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 SOURCES += [
-    'GpuDecoderModule.cpp',
     'RDDChild.cpp',
     'RDDParent.cpp',
     'RDDProcessHost.cpp',
