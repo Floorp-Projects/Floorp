@@ -20,7 +20,7 @@ class SandboxBrokerPolicyFactory {
   UniquePtr<SandboxBroker::Policy> GetContentPolicy(int aPid,
                                                     bool aFileProcess);
 
-  static UniquePtr<SandboxBroker::Policy> GetUtilityPolicy(int aPid);
+  static UniquePtr<SandboxBroker::Policy> GetRDDPolicy(int aPid);
   static UniquePtr<SandboxBroker::Policy> GetSocketProcessPolicy(int aPid);
 
  private:
