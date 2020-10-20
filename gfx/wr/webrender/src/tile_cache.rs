@@ -8,7 +8,7 @@ use crate::clip::{ClipChainId, ClipNodeKind, ClipStore, ClipInstance};
 use crate::frame_builder::FrameBuilderConfig;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::picture::{PrimitiveList, PictureCompositeMode, PictureOptions, PicturePrimitive, SliceId};
-use crate::picture::{Picture3DContext, TileCacheParams};
+use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
 use crate::prim_store::{PrimitiveInstance, PrimitiveInstanceKind, PrimitiveStore, PictureIndex, SegmentInstanceIndex};
 use crate::prim_store::picture::{Picture, PictureKey, PictureCompositeKey};
 use crate::scene_building::SliceFlags;
@@ -457,4 +457,120 @@ fn create_tile_cache(
         },
         parent_clip_chain_id,
     )
+}
+
+/// Debug information about a set of picture cache slices, exposed via RenderResults
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PictureCacheDebugInfo {
+    pub slices: FastHashMap<usize, SliceDebugInfo>,
+}
+
+impl PictureCacheDebugInfo {
+    pub fn new() -> Self {
+        PictureCacheDebugInfo {
+            slices: FastHashMap::default(),
+        }
+    }
+
+    /// Convenience method to retrieve a given slice. Deliberately panics
+    /// if the slice isn't present.
+    pub fn slice(&self, slice: usize) -> &SliceDebugInfo {
+        &self.slices[&slice]
+    }
+}
+
+impl Default for PictureCacheDebugInfo {
+    fn default() -> PictureCacheDebugInfo {
+        PictureCacheDebugInfo::new()
+    }
+}
+
+/// Debug information about a set of picture cache tiles, exposed via RenderResults
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SliceDebugInfo {
+    pub tiles: FastHashMap<TileOffset, TileDebugInfo>,
+}
+
+impl SliceDebugInfo {
+    pub fn new() -> Self {
+        SliceDebugInfo {
+            tiles: FastHashMap::default(),
+        }
+    }
+
+    /// Convenience method to retrieve a given tile. Deliberately panics
+    /// if the tile isn't present.
+    pub fn tile(&self, x: i32, y: i32) -> &TileDebugInfo {
+        &self.tiles[&TileOffset::new(x, y)]
+    }
+}
+
+/// Debug information about a tile that was dirty and was rasterized
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct DirtyTileDebugInfo {
+    pub local_valid_rect: PictureRect,
+    pub local_dirty_rect: PictureRect,
+}
+
+/// Debug information about the state of a tile
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum TileDebugInfo {
+    /// Tile was occluded by a tile in front of it
+    Occluded,
+    /// Tile was culled (not visible in current display port)
+    Culled,
+    /// Tile was valid (no rasterization was done) and visible
+    Valid,
+    /// Tile was dirty, and was updated
+    Dirty(DirtyTileDebugInfo),
+}
+
+impl TileDebugInfo {
+    pub fn is_occluded(&self) -> bool {
+        match self {
+            TileDebugInfo::Occluded => true,
+            TileDebugInfo::Culled |
+            TileDebugInfo::Valid |
+            TileDebugInfo::Dirty(..) => false,
+        }
+    }
+
+    pub fn is_valid(&self) -> bool {
+        match self {
+            TileDebugInfo::Valid => true,
+            TileDebugInfo::Culled |
+            TileDebugInfo::Occluded |
+            TileDebugInfo::Dirty(..) => false,
+        }
+    }
+
+    pub fn is_culled(&self) -> bool {
+        match self {
+            TileDebugInfo::Culled => true,
+            TileDebugInfo::Valid |
+            TileDebugInfo::Occluded |
+            TileDebugInfo::Dirty(..) => false,
+        }
+    }
+
+    pub fn as_dirty(&self) -> &DirtyTileDebugInfo {
+        match self {
+            TileDebugInfo::Occluded |
+            TileDebugInfo::Culled |
+            TileDebugInfo::Valid => {
+                panic!("not a dirty tile!");
+            }
+            TileDebugInfo::Dirty(ref info) => {
+                info
+            }
+        }
+    }
 }

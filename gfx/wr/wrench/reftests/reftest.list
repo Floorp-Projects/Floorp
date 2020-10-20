@@ -7,7 +7,6 @@ include clip/reftest.list
 include filters/reftest.list
 include gradient/reftest.list
 include image/reftest.list
-include invalidation/reftest.list
 include mask/reftest.list
 include performance/reftest.list
 include scrolling/reftest.list

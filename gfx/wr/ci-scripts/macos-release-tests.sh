@@ -21,6 +21,7 @@ WRENCH_BINARY=${WRENCH_BINARY:-""}
 pushd wrench
 
 python script/headless.py reftest
+python script/headless.py test_invalidation
 if [[ -z "${WRENCH_BINARY}" ]]; then
     cargo build ${CARGOFLAGS} --release
     WRENCH_BINARY="../target/release/wrench"

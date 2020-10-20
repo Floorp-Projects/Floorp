@@ -234,3 +234,4 @@ pub use crate::picture::{PrimitiveCompareResult, PrimitiveCompareResultDetail, C
 pub use crate::picture::{TileNode, TileNodeKind, TileSerializer, TileCacheInstanceSerializer, TileOffset, TileCacheLoggerUpdateLists};
 pub use crate::intern::ItemUid;
 pub use crate::render_api::*;
+pub use crate::tile_cache::{PictureCacheDebugInfo, DirtyTileDebugInfo, TileDebugInfo, SliceDebugInfo};
