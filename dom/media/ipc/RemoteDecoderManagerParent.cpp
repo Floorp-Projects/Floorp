@@ -10,6 +10,7 @@
 #endif
 
 #include "ImageContainer.h"
+#include "PDMFactory.h"
 #include "RemoteAudioDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
@@ -104,6 +105,14 @@ void RemoteDecoderManagerParent::ShutdownVideoBridge() {
 
 bool RemoteDecoderManagerParent::OnManagerThread() {
   return sRemoteDecoderManagerParentThread->IsOnCurrentThread();
+}
+
+PDMFactory& RemoteDecoderManagerParent::EnsurePDMFactory() {
+  MOZ_ASSERT(OnManagerThread());
+  if (!mPDMFactory) {
+    mPDMFactory = MakeRefPtr<PDMFactory>();
+  }
+  return *mPDMFactory;
 }
 
 bool RemoteDecoderManagerParent::CreateForContent(

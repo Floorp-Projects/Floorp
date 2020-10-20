@@ -6,10 +6,9 @@
 #include "RemoteAudioDecoder.h"
 
 #include "MediaDataDecoderProxy.h"
-#include "OpusDecoder.h"
+#include "PDMFactory.h"
 #include "RemoteDecoderManagerChild.h"
-#include "VorbisDecoder.h"
-#include "WAVDecoder.h"
+#include "RemoteDecoderManagerParent.h"
 #include "mozilla/PodOperations.h"
 
 namespace mozilla {
@@ -70,19 +69,12 @@ RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     bool* aSuccess, nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
       mAudioInfo(aAudioInfo) {
-  CreateDecoderParams params(mAudioInfo);
-  params.mOptions = aOptions;
   MediaResult error(NS_OK);
-  params.mError = &error;
+  auto params = CreateDecoderParams{
+      mAudioInfo, aOptions, CreateDecoderParams::NoWrapper(true), &error};
 
-  RefPtr<MediaDataDecoder> decoder;
-  if (VorbisDataDecoder::IsVorbis(params.mConfig.mMimeType)) {
-    decoder = new VorbisDataDecoder(params);
-  } else if (OpusDataDecoder::IsOpus(params.mConfig.mMimeType)) {
-    decoder = new OpusDataDecoder(params);
-  } else if (WaveDataDecoder::IsWave(params.mConfig.mMimeType)) {
-    decoder = new WaveDataDecoder(params);
-  }
+  auto& factory = aParent->EnsurePDMFactory();
+  RefPtr<MediaDataDecoder> decoder = factory.CreateDecoder(params);
 
   if (NS_FAILED(error)) {
     MOZ_ASSERT(aErrorDescription);

@@ -235,9 +235,6 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoder(
     NS_WARNING("Unable to create a decoder, no platform found.");
     return nullptr;
   }
-  if (config.IsAudio()) {
-    decoder = new AudioTrimmer(decoder.forget(), aParams);
-  }
   return decoder.forget();
 }
 
@@ -276,6 +273,9 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoderWithPDM(
 
   if (config.IsAudio()) {
     m = aPDM->CreateAudioDecoder(aParams);
+    if (!aParams.mNoWrapper.mDontUseWrapper) {
+      m = new AudioTrimmer(m.forget(), aParams);
+    }
     return m.forget();
   }
 
