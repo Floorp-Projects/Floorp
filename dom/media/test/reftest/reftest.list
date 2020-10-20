@@ -5,5 +5,6 @@ skip-if(Android) fuzzy-if(OSX,0-25,0-175921) fuzzy-if(winWidget,0-71,0-179198) f
 skip-if(Android) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),0-136,0-427680) == vtt_update_display_after_removed_cue.html vtt_update_display_after_removed_cue_ref.html
 skip-if(Android) fuzzy-if(winWidget,0-170,0-170) == vtt_overlapping_time.html vtt_overlapping_time-ref.html
 skip-if(Android) skip-if(MinGW) skip-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) fuzzy(0-8,0-778236) fuzzy-if(swgl,190-195,769689-778544) == image-10bits-rendering-video.html image-10bits-rendering-ref.html
+skip-if(Android) skip-if(MinGW) skip-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) fuzzy(0-8,0-778236) fuzzy-if(swgl,240-255,769689-778544) == image-10bits-rendering-90-video.html image-10bits-rendering-90-ref.html
 skip-if(Android) fuzzy(0-23,0-565380) fuzzy-if(swgl,240-255,540000-576000) == image-10bits-rendering-720-video.html image-10bits-rendering-720-ref.html
 skip-if(Android) fuzzy(0-23,0-565380) fuzzy-if(swgl,240-255,540000-576000) == image-10bits-rendering-720-90-video.html image-10bits-rendering-720-90-ref.html
