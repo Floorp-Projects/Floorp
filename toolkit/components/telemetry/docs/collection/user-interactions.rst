@@ -232,6 +232,20 @@ Hangs that occurred before the User Interaction was cancelled will not, however,
 
 Returns `false` and logs a message to the browser console if the cancellation cannot be completed for some reason.
 
+``running()``
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: js
+
+  UserInteraction.running(id, object);
+
+Checks to see if a UserInteraction is already running.
+
+* ``id``: Required. A string value, limited to 80 characters. This is the category name concatenated with the User Interaction name.
+* ``object``: Optional. If specified, the User Interaction is associated with this object, so multiple recordings can be done concurrently. If you're checking for a running timer that was started with an object, you'll need to pass in that same object here to check its running state.
+
+Returns `true` if a UserInteraction is already running.
+
 ``finish()``
 ~~~~~~~~~~~~~~~~~~~~
 

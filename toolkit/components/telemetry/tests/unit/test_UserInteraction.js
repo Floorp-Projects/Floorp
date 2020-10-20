@@ -21,6 +21,10 @@ function run_test() {
     UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj2)
   );
 
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
+
   // Same UserInteraction can't be re-started before being stopped
   Assert.ok(!UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1));
   Assert.ok(
@@ -29,6 +33,10 @@ function run_test() {
   Assert.ok(
     !UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj2)
   );
+
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
 
   // Ensure that we can't finish a UserInteraction that was accidentally started
   // twice
@@ -44,6 +52,9 @@ function run_test() {
   Assert.ok(
     !UserInteraction.start("non-existent.interaction", TEST_VALUE_1, obj2)
   );
+  Assert.ok(!UserInteraction.running("non-existent.interaction"));
+  Assert.ok(!UserInteraction.running("non-existent.interaction", obj1));
+  Assert.ok(!UserInteraction.running("non-existent.interaction", obj2));
   Assert.ok(!UserInteraction.finish("non-existent.interaction"));
   Assert.ok(!UserInteraction.finish("non-existent.interaction", obj1));
   Assert.ok(!UserInteraction.finish("non-existent.interaction", obj2));
@@ -58,6 +69,9 @@ function run_test() {
   Assert.ok(
     !UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_INVALID_VALUE, obj2)
   );
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
 
   // Verify that they can be used again
   Assert.ok(UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_2));
@@ -67,6 +81,9 @@ function run_test() {
   Assert.ok(
     UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_2, obj2)
   );
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
   Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID));
   Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID, obj1));
   Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID, obj2));
@@ -74,6 +91,9 @@ function run_test() {
   Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID));
   Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID, obj1));
   Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID, obj2));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
 
   // Verify that they can be used again with different values.
   Assert.ok(UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1));
@@ -83,6 +103,9 @@ function run_test() {
   Assert.ok(
     UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj2)
   );
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
   Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID));
   Assert.ok(
     UserInteraction.finish(
@@ -102,6 +125,7 @@ function run_test() {
   // Test that they can be cancelled
   Assert.ok(UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1));
   Assert.ok(UserInteraction.cancel(TEST_USER_INTERACTION_ID));
+  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID));
   Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID));
 
   // Test that they cannot be cancelled twice
