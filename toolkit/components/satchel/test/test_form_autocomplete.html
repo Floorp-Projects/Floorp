@@ -143,6 +143,7 @@ Form History test: form field autocomplete
 
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true],
                                    ["dom.input_events.beforeinput.enabled", true]]});
+var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
 var input = $_(1, "field1");
 
@@ -244,7 +245,7 @@ registerPopupShownListener(popupShownListener);
  *     to listen to for when the search is complete.
  *   - some items still use setTimeout
  */
-function runTest() { // eslint-disable-line complexity
+async function runTest() { // eslint-disable-line complexity
   testNum++;
 
   ok(true, "Starting test #" + testNum);
@@ -1005,7 +1006,8 @@ function runTest() { // eslint-disable-line complexity
         ok(event instanceof InputEvent,
            `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
         ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
-        ok(event.cancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable`);
+        is(event.cancelable, kSetUserInputCancelable,
+           `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
         is(event.inputType, "insertReplacementText",
            `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
         is(event.data, "value1",
@@ -1048,6 +1050,9 @@ function runTest() { // eslint-disable-line complexity
     }
     // Check that canceling the beforeinput event cancels autocompletion.
     case 501: {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
+      });
       input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
       let inputFired = false;
       input.addEventListener("input", () => { inputFired = true; }, {once: true});
@@ -1058,6 +1063,10 @@ function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Enter");
       ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
       checkForm("");
+
+      await SpecialPowers.pushPrefEnv({
+        clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+      });
 
       // Go to test 500.
       testNum = 599;

@@ -2058,6 +2058,14 @@
   value: true
   mirror: always
 
+# Whether to allow or disallow web apps to cancel `beforeinput` events caused
+# by MozEditableElement#setUserInput() which is used by autocomplete, autofill
+# and password manager.
+- name: dom.input_event.allow_to_cancel_set_user_input
+  type: bool
+  value: false
+  mirror: always
+
 # How long a content process can take before closing its IPC channel
 # after shutdown is initiated.  If the process exceeds the timeout,
 # we fear the worst and kill it.

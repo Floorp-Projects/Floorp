@@ -72,8 +72,8 @@ function checkElementFilled(element, expectedvalue) {
            'dataTransfer value of "beforeinput" event should be null');
         is(event.getTargetRanges().length, 0,
            'getTargetRanges() of "beforeinput" event should return empty array');
-        is(event.cancelable, true,
-           `"beforeinput" event should be cancelable on ${element.name}`);
+        is(event.cancelable, SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input"),
+           `"beforeinput" event should be cancelable on ${element.name} unless it's suppressed by the pref`);
         is(event.bubbles, true,
            `"input" event should always bubble on ${element.name}`);
         is(element.value, oldValue,

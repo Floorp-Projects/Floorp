@@ -864,8 +864,11 @@ mozInlineSpellChecker::ReplaceWord(nsINode* aNode, int32_t aOffset,
     nsContentUtils::PlatformToDOMLineBreaks(newWord);
   }
 
+  // Blink dispatches cancelable `beforeinput` event at collecting misspelled
+  // word so that we should allow to dispatch cancelable event.
   RefPtr<TextEditor> textEditor(mTextEditor);
-  DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newWord, range);
+  DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(
+      newWord, range, TextEditor::AllowBeforeInputEventCancelable::Yes);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new word");
   return NS_OK;
 }

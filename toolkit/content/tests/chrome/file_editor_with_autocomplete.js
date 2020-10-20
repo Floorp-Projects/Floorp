@@ -145,14 +145,19 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
           true,
           `${this._description}, ${aTest.description}: "${events[i].type}" event should be dispatched with InputEvent interface`
         );
+        let expectCancelable =
+          events[i].type === "beforeinput" &&
+          (aTest.inputEvents[i].inputType !== "insertReplacementText" ||
+            SpecialPowers.getBoolPref(
+              "dom.input_event.allow_to_cancel_set_user_input"
+            ));
+
         this._is(
           events[i].cancelable,
-          events[i].type === "beforeinput",
+          expectCancelable,
           `${this._description}, ${aTest.description}: "${
             events[i].type
-          }" event should ${
-            events[i].type === "beforeinput" ? "be" : "be never"
-          } cancelable`
+          }" event should ${expectCancelable ? "be" : "be never"} cancelable`
         );
         this._is(
           events[i].bubbles,

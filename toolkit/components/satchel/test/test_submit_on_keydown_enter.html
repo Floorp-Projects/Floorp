@@ -40,8 +40,8 @@ function handleBeforeInput(aEvent) {
   is(input.value, "value", "The value should've not been modified yet");
   ok(aEvent instanceof InputEvent,
      '"beforeinput" event should be dispatched with InputEvent interface');
-  is(aEvent.cancelable, true,
-     '"beforeinput" event should be cancelable');
+  is(aEvent.cancelable, SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input"),
+     `"beforeinput" event should be cancelable unless it's supporessed by the pref`);
   is(aEvent.bubbles, true,
      '"beforeinput" event should always bubble');
   is(aEvent.inputType, "insertReplacementText",

@@ -74,6 +74,7 @@ function checkForm(expectedValue) {
 var testNum = 0;
 var prevValue;
 var expectingPopup = false;
+var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
 function expectPopup() {
   info("expecting popup for test " + testNum);
@@ -101,7 +102,7 @@ registerPopupShownListener(popupShownListener);
 *   - call waitForMenuChange(x) to run the next test when the autocomplete popup
 *     to have x items in it
 */
-function runTest() {
+async function runTest() {
   testNum++;
   let datalist;
 
@@ -465,7 +466,7 @@ function runTest() {
         ok(event instanceof InputEvent,
            `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
         ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
-        ok(event.cancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable`);
+        is(event.cancelable, kSetUserInputCancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed`);
         is(event.inputType, "insertReplacementText", `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
         is(event.data, "Google", `${testNum} data of "beforeinput" event should be "Google"`);
         is(event.dataTransfer, null, `${testNum} dataTransfer of "beforeinput" event should be null`);
@@ -498,6 +499,9 @@ function runTest() {
     }
 
     case 401: {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
+      });
       input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
       let inputFired = false;
       input.addEventListener("input", () => { inputFired = true; }, {once: true});
@@ -510,6 +514,9 @@ function runTest() {
       checkForm("");
 
       input.blur();
+      await SpecialPowers.pushPrefEnv({
+        clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+      });
       SimpleTest.finish();
       break;
     }
