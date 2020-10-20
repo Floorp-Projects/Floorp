@@ -142,14 +142,6 @@ nsresult WMFDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  // Temporary - forces use of VPXDecoder when alpha is present.
-  // Bug 1263836 will handle alpha scenario once implemented. It will shift
-  // the check for alpha to PDMFactory but not itself remove the need for a
-  // check.
-  if (aParams.VideoConfig().HasAlpha()) {
-    return nullptr;
-  }
-
   UniquePtr<WMFVideoMFTManager> manager(new WMFVideoMFTManager(
       aParams.VideoConfig(), aParams.mKnowsCompositor, aParams.mImageContainer,
       aParams.mRate.mValue, aParams.mOptions, sDXVAEnabled));
@@ -249,7 +241,12 @@ bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
 
   const auto& trackInfo = aParams.mConfig;
   const auto* videoInfo = trackInfo.GetAsVideoInfo();
-  if (videoInfo && !SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics)) {
+  // Temporary - forces use of VPXDecoder when alpha is present.
+  // Bug 1263836 will handle alpha scenario once implemented. It will shift
+  // the check for alpha to PDMFactory but not itself remove the need for a
+  // check.
+  if (videoInfo && (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics) ||
+                    videoInfo->HasAlpha())) {
     return false;
   }
 

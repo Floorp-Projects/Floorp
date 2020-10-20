@@ -17,6 +17,8 @@ class AgnosticDecoderModule : public PlatformDecoderModule {
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
+  bool Supports(const SupportDecoderParams& aParams,
+                DecoderDoctorDiagnostics* aDiagnostics) const override;
 
  protected:
   AgnosticDecoderModule() = default;
