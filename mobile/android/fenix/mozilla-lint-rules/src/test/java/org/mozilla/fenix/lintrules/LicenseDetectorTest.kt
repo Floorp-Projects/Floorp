@@ -4,14 +4,24 @@
 
 package org.mozilla.fenix.lintrules
 
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles
-import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Issue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 import org.mozilla.fenix.lintrules.LicenseCommentChecker.Companion.ValidLicenseForKotlinFiles
 import org.mozilla.fenix.lintrules.LicenseDetector.Companion.ISSUE_INVALID_LICENSE_FORMAT
 import org.mozilla.fenix.lintrules.LicenseDetector.Companion.ISSUE_MISSING_LICENSE
 
-class LicenseDetectorTest {
+@RunWith(JUnit4::class)
+class LicenseDetectorTest : LintDetectorTest() {
+
+    override fun getIssues(): MutableList<Issue> =
+        mutableListOf(ISSUE_MISSING_LICENSE, ISSUE_INVALID_LICENSE_FORMAT)
+
+    override fun getDetector(): Detector = LicenseDetector()
 
     @Test
     fun `report missing license if it isn't at the top of the file`() {
@@ -41,7 +51,7 @@ class LicenseDetectorTest {
 
         lint()
             .files(TestFiles.kt(code))
-            .issues(ISSUE_MISSING_LICENSE, ISSUE_INVALID_LICENSE_FORMAT)
+            .allowMissingSdk(true)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
@@ -73,7 +83,7 @@ class LicenseDetectorTest {
 
         lint()
             .files(TestFiles.kt(code))
-            .issues(ISSUE_MISSING_LICENSE, ISSUE_INVALID_LICENSE_FORMAT)
+            .allowMissingSdk(true)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
@@ -95,7 +105,7 @@ class LicenseDetectorTest {
 
         lint()
             .files(TestFiles.kt(code))
-            .issues(ISSUE_MISSING_LICENSE, ISSUE_INVALID_LICENSE_FORMAT)
+            .allowMissingSdk(true)
             .run()
             .expectClean()
     }
@@ -132,7 +142,7 @@ class LicenseDetectorTest {
 
         lint()
             .files(TestFiles.kt(code))
-            .issues(ISSUE_MISSING_LICENSE, ISSUE_INVALID_LICENSE_FORMAT)
+            .allowMissingSdk(true)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
