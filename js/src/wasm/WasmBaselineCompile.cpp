@@ -5234,7 +5234,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Labels
 
   void insertBreakablePoint(CallSiteDesc::Kind kind) {
-    fr.loadTlsPtr(WasmTlsReg);
+    // The debug trap exit requires WasmTlsReg be loaded. However, since we
+    // are emitting millions of these breakable points inline, we push this
+    // loading of TLS into the FarJumpIsland created by linkCallSites.
     masm.nopPatchableToCall(CallSiteDesc(iter_.lastOpcodeOffset(), kind));
   }
 
@@ -5265,7 +5267,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     // Identify GC-managed pointers passed on the stack.
-    for (WasmABIArgIter i(args); !i.done(); i++) {
+    for (ABIArgIter i(args); !i.done(); i++) {
       ABIArg argLoc = *i;
       if (argLoc.kind() == ABIArg::Stack &&
           args[i.index()] == MIRType::RefOrNull) {
@@ -5351,7 +5353,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     // Copy arguments from registers to stack.
-    for (WasmABIArgIter i(args); !i.done(); i++) {
+    for (ABIArgIter i(args); !i.done(); i++) {
       if (args.isSyntheticStackResultPointerArg(i.index())) {
         // If there are stack results and the pointer to stack results
         // was passed in a register, store it to the stack.
@@ -5573,9 +5575,6 @@ class BaseCompiler final : public BaseCompilerInterface {
       restoreRegisterReturnValues(resultType);
     }
 
-    // To satisy Tls extent invariant we need to reload WasmTlsReg because
-    // baseline can clobber it.
-    fr.loadTlsPtr(WasmTlsReg);
     GenerateFunctionEpilogue(masm, fr.fixedAllocSize(), &offsets_);
 
 #if defined(JS_ION_PERF)
@@ -5619,7 +5618,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     uint32_t lineOrBytecode;
-    WasmABIArgGenerator abi;
+    ABIArgGenerator abi;
     bool isInterModule;
     bool usesSystemAbi;
 #ifdef JS_CODEGEN_ARM

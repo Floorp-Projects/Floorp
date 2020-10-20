@@ -2033,7 +2033,7 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
 
 void MacroAssembler::setupUnalignedABICall(Register scratch) {
   MOZ_ASSERT(!IsCompilingWasm(), "wasm should only use aligned ABI calls");
-  setupNativeABICall();
+  setupABICall();
   dynamicAlignment_ = true;
 
   ma_move(scratch, StackPointer);
