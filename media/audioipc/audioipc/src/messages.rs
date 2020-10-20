@@ -208,6 +208,7 @@ pub enum ServerMessage {
     StreamGetLatency(usize),
     StreamGetInputLatency(usize),
     StreamSetVolume(usize, f32),
+    StreamSetName(usize, CString),
     StreamGetCurrentDevice(usize),
     StreamRegisterDeviceChangeCallback(usize, bool),
 
@@ -240,6 +241,7 @@ pub enum ClientMessage {
     StreamLatency(u32),
     StreamInputLatency(u32),
     StreamVolumeSet,
+    StreamNameSet,
     StreamCurrentDevice(Device),
     StreamRegisterDeviceChangeCallback,
 
