@@ -80,21 +80,22 @@ ImageBitmapRenderingContext::InitializeWithDrawTarget(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-already_AddRefed<DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 ImageBitmapRenderingContext::MatchWithIntrinsicSize() {
-  RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
-  RefPtr<DataSourceSurface> temp = Factory::CreateDataSourceSurface(
-      IntSize(mWidth, mHeight), surface->GetFormat());
+  RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  RefPtr<gfx::DataSourceSurface> temp = gfx::Factory::CreateDataSourceSurface(
+      gfx::IntSize(mWidth, mHeight), surface->GetFormat());
   if (!temp) {
     return nullptr;
   }
 
-  DataSourceSurface::ScopedMap map(temp, DataSourceSurface::READ_WRITE);
+  gfx::DataSourceSurface::ScopedMap map(temp,
+                                        gfx::DataSourceSurface::READ_WRITE);
   if (!map.IsMapped()) {
     return nullptr;
   }
 
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
+  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
       gfxPlatform::GetPlatform()->GetSoftwareBackend(), map.GetData(),
       temp->GetSize(), map.GetStride(), temp->GetFormat());
   if (!dt || !dt->IsValid()) {
@@ -103,11 +104,11 @@ ImageBitmapRenderingContext::MatchWithIntrinsicSize() {
     return nullptr;
   }
 
-  dt->ClearRect(Rect(0, 0, mWidth, mHeight));
+  dt->ClearRect(gfx::Rect(0, 0, mWidth, mHeight));
   dt->CopySurface(
       surface,
-      IntRect(0, 0, surface->GetSize().width, surface->GetSize().height),
-      IntPoint(0, 0));
+      gfx::IntRect(0, 0, surface->GetSize().width, surface->GetSize().height),
+      gfx::IntPoint(0, 0));
 
   return temp.forget();
 }
@@ -120,13 +121,13 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
-  RefPtr<DataSourceSurface> data = surface->GetDataSurface();
+  RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  RefPtr<gfx::DataSourceSurface> data = surface->GetDataSurface();
   if (!data) {
     return nullptr;
   }
 
-  if (data->GetSize() != IntSize(mWidth, mHeight)) {
+  if (data->GetSize() != gfx::IntSize(mWidth, mHeight)) {
     data = MatchWithIntrinsicSize();
     if (!data) {
       return nullptr;
@@ -134,7 +135,7 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
   }
 
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-  return SurfaceToPackedBGRA(data);
+  return gfx::SurfaceToPackedBGRA(data);
 }
 
 NS_IMETHODIMP
@@ -171,8 +172,8 @@ ImageBitmapRenderingContext::GetSurfaceSnapshot(
         (GetIsOpaque() ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
   }
 
-  RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
-  if (surface->GetSize() != IntSize(mWidth, mHeight)) {
+  RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  if (surface->GetSize() != gfx::IntSize(mWidth, mHeight)) {
     return MatchWithIntrinsicSize();
   }
 
@@ -197,7 +198,7 @@ ImageBitmapRenderingContext::Reset() {
   return NS_OK;
 }
 
-already_AddRefed<Layer> ImageBitmapRenderingContext::GetCanvasLayer(
+already_AddRefed<layers::Layer> ImageBitmapRenderingContext::GetCanvasLayer(
     nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
   if (!mImage) {
     // No DidTransactionCallback will be received, so mark the context clean
@@ -206,26 +207,26 @@ already_AddRefed<Layer> ImageBitmapRenderingContext::GetCanvasLayer(
     return nullptr;
   }
 
-  RefPtr<ImageLayer> imageLayer;
+  RefPtr<layers::ImageLayer> imageLayer;
 
   if (aOldLayer) {
-    imageLayer = static_cast<ImageLayer*>(aOldLayer);
+    imageLayer = static_cast<layers::ImageLayer*>(aOldLayer);
   } else {
     imageLayer = aManager->CreateImageLayer();
   }
 
-  RefPtr<ImageContainer> imageContainer = imageLayer->GetContainer();
+  RefPtr<layers::ImageContainer> imageContainer = imageLayer->GetContainer();
   if (!imageContainer) {
     imageContainer = LayerManager::CreateImageContainer();
     imageLayer->SetContainer(imageContainer);
   }
 
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
   RefPtr<layers::Image> image = ClipToIntrinsicSize();
   if (!image) {
     return nullptr;
   }
-  imageList.AppendElement(ImageContainer::NonOwningImage(image));
+  imageList.AppendElement(layers::ImageContainer::NonOwningImage(image));
   imageContainer->SetCurrentImages(imageList);
 
   return imageLayer.forget();
@@ -240,14 +241,15 @@ bool ImageBitmapRenderingContext::UpdateWebRenderCanvasData(
     return false;
   }
 
-  RefPtr<ImageContainer> imageContainer = aCanvasData->GetImageContainer();
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  RefPtr<layers::ImageContainer> imageContainer =
+      aCanvasData->GetImageContainer();
+  AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
   RefPtr<layers::Image> image = ClipToIntrinsicSize();
   if (!image) {
     return false;
   }
 
-  imageList.AppendElement(ImageContainer::NonOwningImage(image));
+  imageList.AppendElement(layers::ImageContainer::NonOwningImage(image));
   imageContainer->SetCurrentImages(imageList);
   return true;
 }
@@ -264,8 +266,8 @@ ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
     if (imageContainer) {
       RefPtr<layers::Image> image = ClipToIntrinsicSize();
       if (image) {
-        AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-        imageList.AppendElement(ImageContainer::NonOwningImage(image));
+        AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
+        imageList.AppendElement(layers::ImageContainer::NonOwningImage(image));
         imageContainer->SetCurrentImages(imageList);
       } else {
         imageContainer->ClearAllImages();

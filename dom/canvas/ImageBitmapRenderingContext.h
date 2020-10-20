@@ -5,6 +5,13 @@
 #ifndef ImageBitmapRenderingContext_h
 #define ImageBitmapRenderingContext_h
 
+#include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/layers/WebRenderUserData.h"
+#include "imgIEncoder.h"
+#include "ImageEncoder.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsWrapperCache.h"
 
