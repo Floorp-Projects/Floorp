@@ -639,17 +639,17 @@
           },
         },
       }],
-      [ 'OS=="win" and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_aes==0', {
+      [ '(OS=="win" or OS=="mac" or OS=="ios") and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_aes==0', {
         'defines': [
           'USE_HW_AES',
         ],
       }],
-      [ 'OS=="win" and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_sha1==0', {
+      [ '(OS=="win" or OS=="mac" or OS=="ios") and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_sha1==0', {
         'defines': [
           'USE_HW_SHA1',
         ],
       }],
-      [ 'OS=="win" and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_sha2==0', {
+      [ '(OS=="win" or OS=="mac" or OS=="ios") and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_sha2==0', {
         'defines': [
           'USE_HW_SHA2',
         ],
