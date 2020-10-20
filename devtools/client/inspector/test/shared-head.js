@@ -36,12 +36,6 @@ var openInspector = async function(hostType) {
   }
 
   const testActor = await getTestActor(toolbox);
-  // Override the highligher getter with a method to return the active box model
-  // highlighter. Adaptation for multi-process scenarios where there can be multiple
-  // highlighters, one per process.
-  testActor.highlighter = () => {
-    return inspector.highlighters.getActiveHighlighter("BoxModelHighlighter");
-  };
 
   return { toolbox, inspector, testActor };
 };
