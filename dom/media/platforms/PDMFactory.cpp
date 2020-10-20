@@ -77,6 +77,9 @@ class PDMFactoryImpl final {
       FFmpegRuntimeLinker::Init();
     }
 #endif
+    if (XRE_IsContentProcess()) {
+      RemoteDecoderManagerChild::Init();
+    }
   }
 };
 
