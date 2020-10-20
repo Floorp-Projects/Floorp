@@ -91,7 +91,6 @@ typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
 class GeckoEngineSessionTest {
 
     private lateinit var runtime: GeckoRuntime
@@ -397,36 +396,24 @@ class GeckoEngineSessionTest {
         val parentEngineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
 
         engineSession.loadUrl("http://mozilla.org")
-        verify(geckoSession).loadUri(
-            "http://mozilla.org",
-            null as GeckoSession?,
-            GeckoSession.LOAD_FLAGS_NONE,
-            emptyMap()
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("http://mozilla.org")
         )
 
         engineSession.loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        verify(geckoSession).loadUri(
-            "http://www.mozilla.org",
-            null as GeckoSession?,
-            GeckoSession.LOAD_FLAGS_EXTERNAL,
-            emptyMap()
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("http://www.mozilla.org").flags(LoadUrlFlags.EXTERNAL)
         )
 
         engineSession.loadUrl("http://www.mozilla.org", parent = parentEngineSession)
-        verify(geckoSession).loadUri(
-            "http://www.mozilla.org",
-            parentEngineSession.geckoSession,
-            GeckoSession.LOAD_FLAGS_NONE,
-            emptyMap()
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("http://www.mozilla.org").referrer(parentEngineSession.geckoSession)
         )
 
         val extraHeaders = mapOf("X-Extra-Header" to "true")
         engineSession.loadUrl("http://www.mozilla.org", additionalHeaders = extraHeaders)
-        verify(geckoSession).loadUri(
-            "http://www.mozilla.org",
-            null as GeckoSession?,
-            GeckoSession.LOAD_FLAGS_NONE,
-            extraHeaders
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("http://www.mozilla.org").additionalHeaders(extraHeaders)
         )
     }
 
@@ -436,16 +423,24 @@ class GeckoEngineSessionTest {
                 geckoSessionProvider = geckoSessionProvider)
 
         engineSession.loadData("<html><body>Hello!</body></html>")
-        verify(geckoSession).loadString(any(), eq("text/html"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("<html><body>Hello!</body></html>", "text/html")
+        )
 
         engineSession.loadData("Hello!", "text/plain", "UTF-8")
-        verify(geckoSession).loadString(any(), eq("text/plain"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("Hello!", "text/plain")
+        )
 
         engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
-        verify(geckoSession).loadData(any(), eq("text/plain"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("ahr0cdovl21vemlsbgeub3jn==".toByteArray(), "text/plain")
+        )
 
         engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", encoding = "base64")
-        verify(geckoSession).loadData(any(), eq("text/html"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("ahr0cdovl21vemlsbgeub3jn==".toByteArray(), "text/html")
+        )
     }
 
     @Test
@@ -454,13 +449,19 @@ class GeckoEngineSessionTest {
                 geckoSessionProvider = geckoSessionProvider)
 
         engineSession.loadData("Hello!", "text/plain", "UTF-8")
-        verify(geckoSession).loadString(eq("Hello!"), anyString())
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("Hello!", "text/plain")
+        )
 
         engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
-        verify(geckoSession).loadData(eq("ahr0cdovl21vemlsbgeub3jn==".toByteArray()), eq("text/plain"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("ahr0cdovl21vemlsbgeub3jn==".toByteArray(), "text/plain")
+        )
 
         engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", encoding = "base64")
-        verify(geckoSession).loadData(eq("ahr0cdovl21vemlsbgeub3jn==".toByteArray()), eq("text/plain"))
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("ahr0cdovl21vemlsbgeub3jn==".toByteArray(), "text/plain")
+        )
     }
 
     @Test
@@ -483,11 +484,8 @@ class GeckoEngineSessionTest {
         // about:blank.
         engineSession.reload()
         verify(geckoSession, never()).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
-        verify(geckoSession, times(2)).loadUri(
-            "http://mozilla.org",
-            null as GeckoSession?,
-            GeckoSession.LOAD_FLAGS_NONE,
-            emptyMap()
+        verify(geckoSession, times(2)).load(
+            GeckoSession.Loader().uri("http://mozilla.org")
         )
 
         // Subsequent reloads should simply call reload on the gecko session.
@@ -1382,7 +1380,9 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(geckoSession, mockLoadRequest("sample:about"))
 
         assertEquals("sample:about", interceptorCalledWithUri)
-        verify(geckoSession).loadString("<h1>Hello World</h1>", "text/html")
+        verify(geckoSession).load(
+            GeckoSession.Loader().data("<h1>Hello World</h1>", "text/html")
+        )
     }
 
     @Test
@@ -1414,11 +1414,8 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(geckoSession, mockLoadRequest("sample:about", "trigger:uri"))
 
         assertEquals("sample:about", interceptorCalledWithUri)
-        verify(geckoSession).loadUri(
-            "https://mozilla.org",
-            null as GeckoSession?,
-            GeckoSession.LOAD_FLAGS_NONE,
-            emptyMap()
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri("https://mozilla.org")
         )
     }
 
@@ -1466,7 +1463,7 @@ class GeckoEngineSessionTest {
 
         navigationDelegate.value.onLoadRequest(geckoSession, mockLoadRequest("sample:about"))
 
-        verify(geckoSession, never()).loadString(anyString(), anyString())
+        verify(geckoSession, never()).load(any())
     }
 
     @Test
@@ -1501,7 +1498,7 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(geckoSession, mockLoadRequest("sample:about"))
 
         assertEquals("sample:about", interceptorCalledWithUri!!)
-        verify(geckoSession, never()).loadString(anyString(), anyString())
+        verify(geckoSession, never()).load(any())
     }
 
     @Test
@@ -2647,8 +2644,8 @@ class GeckoEngineSessionTest {
 
         // loadUrl(url: String)
         engineSession.loadUrl(fakeUrl)
-        verify(geckoSession).loadUri(
-            fakeUrl, null as GeckoSession?, GeckoSession.LOAD_FLAGS_NONE, emptyMap()
+        verify(geckoSession).load(
+            GeckoSession.Loader().uri(fakeUrl)
         )
         fakePageLoad(false)
 
@@ -2660,7 +2657,9 @@ class GeckoEngineSessionTest {
         val fakeMimeType = ""
         val fakeEncoding = ""
         engineSession.loadData(data = fakeData, mimeType = fakeMimeType, encoding = fakeEncoding)
-        verify(geckoSession).loadString(fakeData, fakeMimeType)
+        verify(geckoSession).load(
+            GeckoSession.Loader().data(fakeData, fakeMimeType)
+        )
         fakePageLoad(false)
 
         fakePageLoad(true)
@@ -2912,6 +2911,7 @@ class GeckoEngineSessionTest {
         engineSession.goBack()
         assertFalse(observedOnNavigateBack)
     }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(
