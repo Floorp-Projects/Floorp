@@ -40,11 +40,11 @@
 }
 
 .notificationbox.border-top .notification {
-   border-top-width: 1px;
+  border-top-width: 1px;
 }
 
 .notificationbox.border-bottom .notification {
-   border-bottom-width: 1px;
+  border-bottom-width: 1px;
 }
 
 .notificationbox .notification[data-type="info"] {
@@ -58,6 +58,8 @@
 }
 
 .notificationbox .messageImage {
+  -moz-context-properties: fill;
+  fill: currentColor;
   background-size: 16px;
   width: 16px;
   height: 16px;
@@ -67,15 +69,17 @@
 /* Default icons for notifications */
 
 .notificationbox .messageImage[data-type="info"] {
-  background-image: url("chrome://global/skin/icons/info.svg");
+  background-image: url("chrome://devtools/skin/images/info.svg");
 }
 
 .notificationbox .messageImage[data-type="warning"] {
   background-image: url("chrome://global/skin/icons/warning.svg");
+  /* Keep the icon colored to make it more eye-catching */
+  fill: #ffbf00;
 }
 
 .notificationbox .messageImage[data-type="critical"] {
-  background-image: url("chrome://global/skin/icons/error-16.png");
+  background-image: url("chrome://devtools/skin/images/error.svg");
 }
 
 /* Close button */
