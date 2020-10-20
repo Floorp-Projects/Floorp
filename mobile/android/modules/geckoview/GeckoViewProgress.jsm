@@ -164,17 +164,18 @@ var IdentityHandler = {
 };
 
 class ProgressTracker {
-  static flags =
-    Ci.nsIWebProgress.NOTIFY_STATE_NETWORK | Ci.nsIWebProgress.NOTIFY_LOCATION;
-
   constructor(aModule) {
     this.progressFilter = Cc[
       "@mozilla.org/appshell/component/browser-status-filter;1"
     ].createInstance(Ci.nsIWebProgress);
-    this.progressFilter.addProgressListener(this, this.flags);
+
+    const flags =
+      Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+      Ci.nsIWebProgress.NOTIFY_LOCATION;
+    this.progressFilter.addProgressListener(this, flags);
 
     const { browser } = aModule;
-    browser.addProgressListener(this.progressFilter, this.flags);
+    browser.addProgressListener(this.progressFilter, flags);
 
     const window = browser.ownerGlobal;
     this.pageLoadProbe = new HistogramStopwatch("GV_PAGE_LOAD_MS", window);
@@ -190,11 +191,8 @@ class ProgressTracker {
   }
 
   destroy() {
-    this.progressFilter.removeProgressListener(this, this.flags);
-    this._module.browser.removeProgressListener(
-      this.progressFilter,
-      this.flags
-    );
+    this.progressFilter.removeProgressListener(this);
+    this._module.browser.removeProgressListener(this.progressFilter);
   }
 
   get eventDispatcher() {
