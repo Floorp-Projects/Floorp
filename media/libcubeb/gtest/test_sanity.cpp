@@ -227,6 +227,9 @@ TEST(cubeb, configure_stream)
   r = cubeb_stream_set_volume(stream, 1.0f);
   ASSERT_TRUE(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
 
+  r = cubeb_stream_set_name(stream, "test 2");
+  ASSERT_TRUE(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
+
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
 }
