@@ -504,7 +504,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect, ScrollbarParams aParams);
   void DrawScrollbarTrack(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
                           ScrollbarParams aParams);
-  void DrawScrollCorner(CGContextRef cgContext, const CGRect& inBoxRect, ScrollbarParams aParams);
+  void DrawScrollCorner(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
+                        ScrollbarParams aParams);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsFocused);
   void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsActive);
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,

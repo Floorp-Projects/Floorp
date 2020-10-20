@@ -2615,56 +2615,52 @@ void nsNativeThemeCocoa::DrawScrollbarTrack(DrawTarget& aDT, const gfx::Rect& aR
   }
 }
 
-void nsNativeThemeCocoa::DrawScrollCorner(CGContextRef cgContext, const CGRect& inBoxRect,
+void nsNativeThemeCocoa::DrawScrollCorner(DrawTarget& aDT, const gfx::Rect& aRect,
                                           ScrollbarParams aParams) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
     return;
   }
 
-  if (!aParams.custom) {
-    // For non-custom scrollbar, just draw a white rect. It is what
-    // Safari does. We don't want to try painting the decorations like
-    // the custom case below because we don't have control over what
-    // the system would draw for the scrollbar.
-    SetCGContextFillColor(cgContext, NS_RGB(255, 255, 255));
-    CGContextFillRect(cgContext, inBoxRect);
-    return;
-  }
+  // Draw the following scroll corner.
+  //
+  //        Output:                      Rectangles:
+  // +---+---+----------+---+     +---+---+----------+---+
+  // | I | S | T ...  T | O |     | I | S | T ...  T | O |
+  // +---+   |          |   |     +---+---+          |   |
+  // | S   S | T ...  T |   |     | S   S | T ...  T | . |
+  // +-------+          | . |     +-------+----------+ . |
+  // | T      ...     T | . |     | T      ...     T | . |
+  // | .              . | . |     | .              . |   |
+  // | T      ...     T |   |     | T      ...     T | O |
+  // +------------------+   |     +------------------+---+
+  // | O       ...        O |     | O       ...        O |
+  // +----------------------+     +----------------------+
 
-  // Paint the background
-  SetCGContextFillColor(cgContext, aParams.trackColor);
-  CGContextFillRect(cgContext, inBoxRect);
-  // Paint the decorations
-  ScrollbarTrackDecorationColors colors = ComputeScrollbarTrackDecorationColors(aParams.trackColor);
-  CGRect shadowRect, innerRect;
-  if (aParams.rtl) {
-    shadowRect.origin.x = inBoxRect.origin.x + inBoxRect.size.width - 2;
-    innerRect.origin.x = shadowRect.origin.x + 1;
-  } else {
-    shadowRect.origin.x = inBoxRect.origin.x;
-    innerRect.origin.x = shadowRect.origin.x;
+  float width = aRect.width;
+  float height = aRect.height;
+  nscolor trackColor = aParams.custom ? aParams.trackColor : NS_RGBA(250, 250, 250, 255);
+  ScrollbarTrackDecorationColors colors = ComputeScrollbarTrackDecorationColors(trackColor);
+  struct {
+    nscolor color;
+    gfx::Rect relativeRect;
+  } pieces[] = {
+      {colors.mInnerColor, {0.0f, 0.0f, 1.0f, 1.0f}},
+      {colors.mShadowColor, {1.0f, 0.0f, 1.0f, 1.0f}},
+      {colors.mShadowColor, {0.0f, 1.0f, 2.0f, 1.0f}},
+      {trackColor, {2.0f, 0.0f, width - 3.0f, 2.0f}},
+      {trackColor, {0.0f, 2.0f, width - 1.0f, height - 3.0f}},
+      {colors.mOuterColor, {width - 1.0f, 0.0f, 1.0f, height - 1.0f}},
+      {colors.mOuterColor, {0.0f, height - 1.0f, width, 1.0f}},
+  };
+
+  for (const auto& piece : pieces) {
+    gfx::Rect pieceRect = piece.relativeRect + aRect.TopLeft();
+    if (aParams.rtl) {
+      pieceRect.x = aRect.XMost() - piece.relativeRect.XMost();
+    }
+    aDT.FillRect(pieceRect, ColorPattern(ToDeviceColor(piece.color)));
   }
-  shadowRect.origin.y = inBoxRect.origin.y;
-  shadowRect.size.width = shadowRect.size.height = 2;
-  innerRect.origin.y = inBoxRect.origin.y;
-  innerRect.size.width = innerRect.size.height = 1;
-  SetCGContextFillColor(cgContext, colors.mShadowColor);
-  CGContextFillRect(cgContext, shadowRect);
-  SetCGContextFillColor(cgContext, colors.mInnerColor);
-  CGContextFillRect(cgContext, innerRect);
-  CGPoint outerPoints[4];
-  outerPoints[0].x =
-      aParams.rtl ? inBoxRect.origin.x + 0.5 : inBoxRect.origin.x + inBoxRect.size.width - 0.5;
-  outerPoints[0].y = inBoxRect.origin.y;
-  outerPoints[1].x = outerPoints[0].x;
-  outerPoints[1].y = outerPoints[0].y + inBoxRect.size.height;
-  outerPoints[2].x = inBoxRect.origin.x;
-  outerPoints[2].y = inBoxRect.origin.y + inBoxRect.size.height - 0.5;
-  outerPoints[3].x = outerPoints[2].x + inBoxRect.size.width - 1;
-  outerPoints[3].y = outerPoints[2].y;
-  SetCGContextStrokeColor(cgContext, colors.mOuterColor);
-  CGContextStrokeLineSegments(cgContext, outerPoints, 4);
 }
 
 static const sRGBColor kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
@@ -3182,6 +3178,11 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
       DrawScrollbarTrack(aDrawTarget, widgetRect, params);
       break;
     }
+    case Widget::eScrollCorner: {
+      ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
+      DrawScrollCorner(aDrawTarget, widgetRect, params);
+      break;
+    }
     default: {
       // The remaining widgets require a CGContext.
       CGRect macRect =
@@ -3203,7 +3204,8 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
 
       switch (widget) {
         case Widget::eColorFill:
-        case Widget::eScrollbarTrack: {
+        case Widget::eScrollbarTrack:
+        case Widget::eScrollCorner: {
           MOZ_CRASH("already handled in outer switch");
           break;
         }
@@ -3339,11 +3341,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         case Widget::eScrollbarThumb: {
           ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
           DrawScrollbarThumb(cgContext, macRect, params);
-          break;
-        }
-        case Widget::eScrollCorner: {
-          ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-          DrawScrollCorner(cgContext, macRect, params);
           break;
         }
         case Widget::eMultilineTextField: {
