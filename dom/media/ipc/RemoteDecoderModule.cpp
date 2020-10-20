@@ -29,8 +29,6 @@ using dom::ContentChild;
 using namespace ipc;
 using namespace layers;
 
-StaticMutex RemoteDecoderModule::sLaunchMonitor;
-
 RemoteDecoderModule::RemoteDecoderModule()
     : mManagerThread(RemoteDecoderManagerChild::GetManagerThread()) {
   MOZ_DIAGNOSTIC_ASSERT(mManagerThread);
@@ -38,6 +36,8 @@ RemoteDecoderModule::RemoteDecoderModule()
 
 /* static */
 void RemoteDecoderModule::Init() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!BrowserTabsRemoteAutostart()) {
     return;
   }
@@ -77,44 +77,9 @@ bool RemoteDecoderModule::SupportsMimeType(
   return supports;
 }
 
-void RemoteDecoderModule::LaunchRDDProcessIfNeeded() const {
-  if (!XRE_IsContentProcess()) {
-    return;
-  }
-
-  StaticMutexAutoLock mon(sLaunchMonitor);
-
-  // We have a couple possible states here.  We are in a content process
-  // and:
-  // 1) the RDD process has never been launched.  RDD should be launched
-  //    and the IPC connections setup.
-  // 2) the RDD process has been launched, but this particular content
-  //    process has not setup (or has lost) its IPC connection.
-  // In the code below, we assume we need to launch the RDD process and
-  // setup the IPC connections.  However, if the manager thread for
-  // RemoteDecoderManagerChild is available we do a quick check to see
-  // if we can send (meaning the IPC channel is open).  If we can send,
-  // then no work is necessary.  If we can't send, then we call
-  // LaunchRDDProcess which will launch RDD if necessary, and setup the
-  // IPC connections between *this* content process and the RDD process.
-  bool needsLaunch = true;
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-      "RemoteDecoderModule::LaunchRDDProcessIfNeeded-CheckSend", [&]() {
-        if (RemoteDecoderManagerChild::GetRDDProcessSingleton()) {
-          needsLaunch =
-              !RemoteDecoderManagerChild::GetRDDProcessSingleton()->CanSend();
-        }
-      });
-  SyncRunnable::DispatchToThread(mManagerThread, task);
-
-  if (needsLaunch) {
-    ContentChild::GetSingleton()->LaunchRDDProcess();
-  }
-}
-
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  LaunchRDDProcessIfNeeded();
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
 
   // OpusDataDecoder will check this option to provide the same info
   // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
@@ -160,7 +125,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  LaunchRDDProcessIfNeeded();
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
 
   RefPtr<RemoteVideoDecoderChild> child = new RemoteVideoDecoderChild();
   MediaResult result(NS_OK);

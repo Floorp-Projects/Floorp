@@ -15,11 +15,14 @@
 #include "mozilla/layers/SynchronousTask.h"
 #include "nsIObserver.h"
 #include <mozilla/DataMutex.h>
+#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
 
 using namespace layers;
 using namespace gfx;
+
+StaticMutex RemoteDecoderManagerChild::sLaunchMonitor;
 
 // Only modified on the main-thread, read on any thread. While it could be read
 // on the main thread directly, for clarity we force access via the DataMutex
@@ -162,6 +165,43 @@ RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetGPUProcessSingleton() {
 nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   return *remoteDecoderManagerThread;
+}
+
+/* static */
+void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded() {
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  StaticMutexAutoLock mon(sLaunchMonitor);
+
+  // We have a couple possible states here.  We are in a content process
+  // and:
+  // 1) the RDD process has never been launched.  RDD should be launched
+  //    and the IPC connections setup.
+  // 2) the RDD process has been launched, but this particular content
+  //    process has not setup (or has lost) its IPC connection.
+  // In the code below, we assume we need to launch the RDD process and
+  // setup the IPC connections.  However, if the manager thread for
+  // RemoteDecoderManagerChild is available we do a quick check to see
+  // if we can send (meaning the IPC channel is open).  If we can send,
+  // then no work is necessary.  If we can't send, then we call
+  // LaunchRDDProcess which will launch RDD if necessary, and setup the
+  // IPC connections between *this* content process and the RDD process.
+  bool needsLaunch = true;
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (managerThread) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded-CheckSend", [&]() {
+          auto* rps = GetRDDProcessSingleton();
+          needsLaunch = rps ? !rps->CanSend() : true;
+        });
+    SyncRunnable::DispatchToThread(managerThread, task);
+  }
+
+  if (needsLaunch) {
+    dom::ContentChild::GetSingleton()->LaunchRDDProcess();
+  }
 }
 
 PRemoteDecoderChild* RemoteDecoderManagerChild::AllocPRemoteDecoderChild(
