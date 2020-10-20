@@ -78,6 +78,7 @@ class RemoteDecoderManagerChild final
   // called from the manager thread.
   void RunWhenGPUProcessRecreated(already_AddRefed<Runnable> aTask);
 
+  RemoteDecodeIn Location() const { return mLocation; }
   layers::VideoBridgeSource GetSource() const;
 
  protected:
