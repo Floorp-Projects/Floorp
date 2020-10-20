@@ -361,7 +361,7 @@ void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(
 
   if (needsLaunch) {
     managerThread->Dispatch(NS_NewRunnableFunction(
-        "RemoteDecoderManagerChild::LaunchRDDProcess", [&]() {
+        "RemoteDecoderManagerChild::EnsureRDDProcessAndCreateBridge", [&]() {
           ipc::PBackgroundChild* bgActor =
               ipc::BackgroundChild::GetForCurrentThread();
           if (NS_WARN_IF(!bgActor)) {
@@ -369,7 +369,8 @@ void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(
           }
           nsresult rv;
           Endpoint<PRemoteDecoderManagerChild> endpoint;
-          Unused << bgActor->SendLaunchRDDProcess(&rv, &endpoint);
+          Unused << bgActor->SendEnsureRDDProcessAndCreateBridge(&rv,
+                                                                 &endpoint);
           if (NS_SUCCEEDED(rv)) {
             OpenForRDDProcess(std::move(endpoint));
           }
