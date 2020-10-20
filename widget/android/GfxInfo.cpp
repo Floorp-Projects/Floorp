@@ -581,6 +581,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
       // On Nightly enable Webrender on all Mali-Gxx GPUs
       isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0;
+
+      // On Nightly enable Webrender on all Mali-Txxx GPUs
+      isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
 #endif
       // Enable Webrender on all Adreno 5xx GPUs, excluding 505 and 506.
       isUnblocked |=
