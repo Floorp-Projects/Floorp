@@ -146,8 +146,10 @@ void KnowsCompositor::IdentifyTextureHost(
     const TextureFactoryIdentifier& aIdentifier) {
   mTextureFactoryIdentifier = aIdentifier;
 
-  mSyncObject =
-      SyncObjectClient::CreateSyncObjectClient(aIdentifier.mSyncHandle);
+  if (XRE_IsContentProcess()) {
+    mSyncObject = SyncObjectClient::CreateSyncObjectClientForContentDevice(
+        aIdentifier.mSyncHandle);
+  }
 }
 
 KnowsCompositor::KnowsCompositor() : mSerial(++sSerialCounter) {}

@@ -8,39 +8,42 @@
 
 #ifdef XP_WIN
 #  include "mozilla/layers/TextureD3D11.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 namespace mozilla {
 namespace layers {
 
+#ifdef XP_WIN
+/* static */
 already_AddRefed<SyncObjectHost> SyncObjectHost::CreateSyncObjectHost(
-#ifdef XP_WIN
-    ID3D11Device* aDevice
-#endif
-) {
-#ifdef XP_WIN
+    ID3D11Device* aDevice) {
   return MakeAndAddRef<SyncObjectD3D11Host>(aDevice);
-#else
-  return nullptr;
-#endif
 }
 
+/* static */
 already_AddRefed<SyncObjectClient> SyncObjectClient::CreateSyncObjectClient(
-    SyncHandle aHandle
-#ifdef XP_WIN
-    ,
-    ID3D11Device* aDevice
-#endif
-) {
+    SyncHandle aHandle, ID3D11Device* aDevice) {
   if (!aHandle) {
     return nullptr;
   }
 
-#ifdef XP_WIN
   return MakeAndAddRef<SyncObjectD3D11Client>(aHandle, aDevice);
-#else
-  MOZ_ASSERT_UNREACHABLE("CreateSyncObjectClient only supports Windows");
+}
+#endif
+
+already_AddRefed<SyncObjectClient>
+SyncObjectClient::CreateSyncObjectClientForContentDevice(SyncHandle aHandle) {
+#ifndef XP_WIN
   return nullptr;
+#else
+  if (!aHandle) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  return MakeAndAddRef<SyncObjectD3D11ClientContentDevice>(aHandle);
 #endif
 }
 
