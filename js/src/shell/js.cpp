@@ -1224,6 +1224,11 @@ static const char* telemetryNames[JS_TELEMETRY_END + 1] = {
   MAP_JS_TELEMETRY(LIT)
   "JS_TELEMETRY_END"
 };
+
+static const char* xyTelemetryNames[JS_XYTELEMETRY_END + 1] = {
+  MAP_JS_XYTELEMETRY(LIT)
+  "JS_XYTELEMETRY_END"
+};
 #undef LIT
 // clang-format on
 
@@ -1251,7 +1256,19 @@ static void AccumulateTelemetryDataCallback(int id, uint32_t sample,
   }
 }
 
-static void WriteTelemetryDataToDisk(const char* dir) {
+using XYTelemetryData = std::pair<uint32_t, uint32_t>;
+using XYTelemetryVec = Vector<XYTelemetryData , 0, SystemAllocPolicy>;
+static mozilla::Array<XYTelemetryVec, JS_XYTELEMETRY_END> xyTelemetryResults;
+static void AccumulateXYTelemetryDataCallback(int id, uint32_t xSample,
+                                              uint32_t ySample) {
+  AutoLockTelemetry alt;
+  // We ignore OOMs while writting teleemtry data.
+  if (xyTelemetryResults[id].append(std::make_pair(xSample, ySample))) {
+    return;
+  }
+}
+
+static void WriteTelemetryDataToDisk(const char *dir) {
   const int pathLen = 260;
   char fileName[pathLen];
   Fprinter output;
@@ -1276,6 +1293,18 @@ static void WriteTelemetryDataToDisk(const char* dir) {
     }
     for (uint32_t data : telemetryResults[id]) {
       output.printf("%u\n", data);
+    }
+    output.finish();
+  }
+  for (size_t id = 0; id < JS_XYTELEMETRY_END; id++) {
+    auto clear = MakeScopeExit([&] {
+      xyTelemetryResults[id].clearAndFree();
+    });
+    if (!initOutput(xyTelemetryNames[id])) {
+      continue;
+    }
+    for (auto &data : xyTelemetryResults[id]) {
+      output.printf("%u,%u\n", data.first, data.second);
     }
     output.finish();
   }
@@ -11726,6 +11755,7 @@ int main(int argc, char** argv, char** envp) {
   // Register telemetry callbacks, if needed.
   if (telemetryLock) {
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryDataCallback);
+    JS_SetAccumulateXYTelemetryCallback(cx, AccumulateXYTelemetryDataCallback);
   }
 
   size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
