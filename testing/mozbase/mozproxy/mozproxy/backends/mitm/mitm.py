@@ -234,10 +234,7 @@ class Mitmproxy(Playback):
         # add proxy host and port options
         command.extend(["--listen-host", self.host, "--listen-port", str(self.port)])
 
-        if self.config.get("playback_tool_args"):
-            LOG.info("Staring Proxy using provided command line!")
-            command.extend(self.config["playback_tool_args"])
-        elif self.config.get("playback_record"):
+        if self.config.get("playback_record"):
             command.extend(["-w", self.config.get("playback_record")])
         elif len(self.recordings) > 0:
             script = os.path.join(
