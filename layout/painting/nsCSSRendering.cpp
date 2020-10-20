@@ -1201,7 +1201,7 @@ nsIFrame* nsCSSRendering::FindNonTransparentBackgroundFrame(
 bool nsCSSRendering::IsCanvasFrame(nsIFrame* aFrame) {
   LayoutFrameType frameType = aFrame->Type();
   return frameType == LayoutFrameType::Canvas ||
-         frameType == LayoutFrameType::Root ||
+         frameType == LayoutFrameType::XULRoot ||
          frameType == LayoutFrameType::PageContent ||
          frameType == LayoutFrameType::Viewport;
 }

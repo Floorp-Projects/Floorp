@@ -5637,8 +5637,6 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
   }
 }
 
-inline bool IsRootBoxFrame(nsIFrame* aFrame) { return (aFrame->IsRootFrame()); }
-
 void nsCSSFrameConstructor::ReconstructDocElementHierarchy(
     InsertionKind aInsertionKind) {
   Element* rootElement = mDocument->GetRootElement();
