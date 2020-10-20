@@ -362,6 +362,12 @@ void PDMFactory::CreateRddPDMs() {
     CreateAndStartupPDM<WMFDecoderModule>();
   }
 #endif
+#ifdef MOZ_FFVPX
+  if (StaticPrefs::media_ffvpx_enabled() &&
+      StaticPrefs::media_rdd_ffvpx_enabled()) {
+    CreateAndStartupPDM<FFVPXRuntimeLinker>();
+  }
+#endif
   CreateAndStartupPDM<AgnosticDecoderModule>();
 }
 
