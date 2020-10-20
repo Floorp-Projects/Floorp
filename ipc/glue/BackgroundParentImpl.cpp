@@ -11,8 +11,13 @@
 #ifdef MOZ_WEBRTC
 #  include "CamerasParent.h"
 #endif
-#include "mozilla/media/MediaParent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/RDDProcessManager.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/RemoteLazyInputStreamParent.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
@@ -22,50 +27,48 @@
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
 #include "mozilla/dom/GamepadTestChannelParent.h"
-#include "mozilla/dom/PGamepadEventChannelParent.h"
-#include "mozilla/dom/PGamepadTestChannelParent.h"
+#include "mozilla/dom/MIDIManagerParent.h"
+#include "mozilla/dom/MIDIPlatformService.h"
+#include "mozilla/dom/MIDIPortParent.h"
 #include "mozilla/dom/MediaTransportParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/PGamepadEventChannelParent.h"
+#include "mozilla/dom/PGamepadTestChannelParent.h"
+#include "mozilla/dom/RemoteWorkerControllerParent.h"
+#include "mozilla/dom/RemoteWorkerParent.h"
+#include "mozilla/dom/RemoteWorkerServiceParent.h"
+#include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/SessionStorageManager.h"
+#include "mozilla/dom/SharedWorkerParent.h"
 #include "mozilla/dom/StorageActivityService.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/TemporaryIPCBlobParent.h"
+#include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
+#include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
-#include "mozilla/dom/RemoteWorkerParent.h"
-#include "mozilla/dom/RemoteWorkerControllerParent.h"
-#include "mozilla/dom/RemoteWorkerServiceParent.h"
-#include "mozilla/dom/ReportingHeader.h"
-#include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/SharedWorkerParent.h"
-#include "mozilla/dom/StorageIPC.h"
-#include "mozilla/dom/MIDIManagerParent.h"
-#include "mozilla/dom/MIDIPortParent.h"
-#include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/IdleSchedulerParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
+#include "mozilla/ipc/IdleSchedulerParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/layout/VsyncParent.h"
-#include "mozilla/net/HttpBackgroundChannelParent.h"
+#include "mozilla/media/MediaParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
-#include "mozilla/dom/network/UDPSocketParent.h"
-#include "mozilla/dom/WebAuthnTransactionParent.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/net/HttpBackgroundChannelParent.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
-#include "mozilla/RemoteLazyInputStreamParent.h"
-#include "mozilla/StaticPrefs_dom.h"
+#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
-#include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
@@ -1314,6 +1317,31 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
     const PrincipalInfo& aPrincipalInfo) {
   static_cast<dom::EndpointForReportParent*>(aActor)->Run(aGroupName,
                                                           aPrincipalInfo);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvLaunchRDDProcess(
+    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
+  *aRv = NS_OK;
+
+  if (XRE_IsParentProcess() &&
+      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
+      StaticPrefs::media_rdd_process_enabled()) {
+    RDDProcessManager* rdd = RDDProcessManager::Get();
+    if (rdd) {
+      bool rddOpened = rdd->LaunchRDDProcess();
+      if (rddOpened) {
+        rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
+      }
+
+      if (NS_WARN_IF(!rddOpened)) {
+        *aRv = NS_ERROR_NOT_AVAILABLE;
+      }
+    } else {
+      *aRv = NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
   return IPC_OK();
 }
 
