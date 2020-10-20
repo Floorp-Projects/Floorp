@@ -87,10 +87,6 @@
       this.mIconURL = null;
       this.lastURI = null;
 
-      // Track progress listeners added to this <browser>. These need to persist
-      // between calls to destroy().
-      this.progressListeners = [];
-
       XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
         return new LazyModules.PopupBlocker(this);
       });
@@ -901,41 +897,11 @@
         aNotifyMask = Ci.nsIWebProgress.NOTIFY_ALL;
       }
 
-      this.progressListeners.push({
-        weakListener: Cu.getWeakReference(aListener),
-        mask: aNotifyMask,
-      });
-
       this.webProgress.addProgressListener(aListener, aNotifyMask);
     }
 
     removeProgressListener(aListener) {
       this.webProgress.removeProgressListener(aListener);
-
-      // Remove aListener from our progress listener list, and clear out dead
-      // weak references while we're at it.
-      this.progressListeners = this.progressListeners.filter(
-        ({ weakListener }) =>
-          weakListener.get() && weakListener.get() !== aListener
-      );
-    }
-
-    /**
-     * Move the previously-tracked web progress listeners to this <browser>'s
-     * current WebProgress.
-     *
-     * Invoked when manually switching remoteness, e.g. by GeckoView
-     */
-    restoreProgressListeners() {
-      let listeners = this.progressListeners;
-      this.progressListeners = [];
-
-      for (let { weakListener, mask } of listeners) {
-        let listener = weakListener.get();
-        if (listener) {
-          this.addProgressListener(listener, mask);
-        }
-      }
     }
 
     onPageHide(aEvent) {
