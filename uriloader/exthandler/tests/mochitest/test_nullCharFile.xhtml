@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Handling of null char</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+var tests = [
+  ["test.html\u0000.png", "test.html_.png"],
+  ["test.html.\u0000png", "test.html._png"],
+];
+
+add_task(async function() {
+  let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
+  let chromeScript = SpecialPowers.loadChromeScript(url);
+
+  for (let [name, expected] of tests) {
+    let promiseName = new Promise(function(resolve) {
+      chromeScript.addMessageListener("suggestedFileName",
+                                      function listener(data) {
+        chromeScript.removeMessageListener("suggestedFileName", listener);
+        resolve(data);
+      });
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(["test"]));
+    a.download = name;
+    a.dispatchEvent(new MouseEvent('click'));
+    is((await promiseName), expected, "got the expected sanitized name");
+  }
+
+  let promise = new Promise(function(resolve) {
+    chromeScript.addMessageListener("unregistered", function listener() {
+      chromeScript.removeMessageListener("unregistered", listener);
+      resolve();
+    });
+  });
+  chromeScript.sendAsyncMessage("unregister");
+  await promise;
+
+  chromeScript.destroy();
+});
+</script>
+</body>
+</html>
