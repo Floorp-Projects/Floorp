@@ -164,6 +164,9 @@ This API is main-thread only, and all functions will return `false` if accessed 
 Starts recording a User Interaction.
 Any hangs that occur on the main thread while recording this User Interaction result in an annotation being added to the background hang report.
 
+If a pre-existing UserInteraction already exists with the same ``id`` and the same ``object``, that pre-existing UserInteraction will be overwritten.
+The newly created UserInteraction will include a "(clobbered)" suffix on its BHR annotation name.
+
 * ``id``: Required. A string value, limited to 80 characters. This is the category name concatenated with the User Interaction name.
 * ``value``: Required. A string value, limited to 50 characters.
 * ``object``: Optional. If specified, the User Interaction is associated with this object, so multiple recordings can be done concurrently.
