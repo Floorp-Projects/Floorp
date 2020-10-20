@@ -20,45 +20,88 @@
 
 namespace mozilla {
 
+enum class DecoderType {
+#ifdef MOZ_AV1
+  AV1,
+#endif
+  Opus,
+  Theora,
+  Vorbis,
+  VPX,
+  Wave,
+};
+
+static bool IsAvailableInDefault(DecoderType type) {
+  switch (type) {
+#ifdef MOZ_AV1
+    case DecoderType::AV1:
+      // We remove support for decoding AV1 here if RDD is enabled so that
+      // decoding on the content process doesn't accidentally happen in case
+      // something goes wrong with launching the RDD process.
+      return StaticPrefs::media_av1_enabled() &&
+             !StaticPrefs::media_rdd_process_enabled();
+#endif
+    case DecoderType::Opus:
+    case DecoderType::Theora:
+    case DecoderType::Vorbis:
+    case DecoderType::VPX:
+    case DecoderType::Wave:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool IsAvailableInRdd(DecoderType type) {
+  switch (type) {
+#ifdef MOZ_AV1
+    case DecoderType::AV1:
+      return StaticPrefs::media_av1_enabled();
+#endif
+    case DecoderType::Opus:
+      return StaticPrefs::media_rdd_opus_enabled();
+    case DecoderType::Vorbis:
+#if defined(__MINGW32__)
+      // If this is a MinGW build we need to force AgnosticDecoderModule to
+      // handle the decision to support Vorbis decoding (instead of
+      // RDD/RemoteDecoderModule) because of Bug 1597408 (Vorbis decoding on
+      // RDD causing sandboxing failure on MinGW-clang).  Typically this
+      // would be dealt with using defines in StaticPrefList.yaml, but we
+      // must handle it here because of Bug 1598426 (the __MINGW32__ define
+      // isn't supported in StaticPrefList.yaml).
+      return false;
+#else
+      return StaticPrefs::media_rdd_vorbis_enabled();
+#endif
+    case DecoderType::Wave:
+      return StaticPrefs::media_rdd_wav_enabled();
+    default:
+      return false;
+  }
+}
+
+// Checks if decoder is available in the current process
+static bool IsAvailable(DecoderType type) {
+  return XRE_IsRDDProcess() ? IsAvailableInRdd(type)
+                            : IsAvailableInDefault(type);
+}
+
 bool AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports =
-      VPXDecoder::IsVPX(aMimeType) || TheoraDecoder::IsTheora(aMimeType);
-#if defined(__MINGW32__)
-  // If this is a MinGW build we need to force AgnosticDecoderModule to
-  // handle the decision to support Vorbis decoding (instead of
-  // RDD/RemoteDecoderModule) because of Bug 1597408 (Vorbis decoding on
-  // RDD causing sandboxing failure on MinGW-clang).  Typically this
-  // would be dealt with using defines in StaticPrefList.yaml, but we
-  // must handle it here because of Bug 1598426 (the __MINGW32__ define
-  // isn't supported in StaticPrefList.yaml).
-  supports |= VorbisDataDecoder::IsVorbis(aMimeType);
-#else
-  if (!StaticPrefs::media_rdd_vorbis_enabled() ||
-      !StaticPrefs::media_rdd_process_enabled() ||
-      !BrowserTabsRemoteAutostart()) {
-    supports |= VorbisDataDecoder::IsVorbis(aMimeType);
-  }
-#endif
-  if (!StaticPrefs::media_rdd_wav_enabled() ||
-      !StaticPrefs::media_rdd_process_enabled() ||
-      !BrowserTabsRemoteAutostart()) {
-    supports |= WaveDataDecoder::IsWave(aMimeType);
-  }
-  if (!StaticPrefs::media_rdd_opus_enabled() ||
-      !StaticPrefs::media_rdd_process_enabled() ||
-      !BrowserTabsRemoteAutostart()) {
-    supports |= OpusDataDecoder::IsOpus(aMimeType);
-  }
 #ifdef MOZ_AV1
-  // We remove support for decoding AV1 here if RDD is enabled so that
-  // decoding on the content process doesn't accidentally happen in case
-  // something goes wrong with launching the RDD process.
-  if (StaticPrefs::media_av1_enabled() &&
-      !StaticPrefs::media_rdd_process_enabled()) {
-    supports |= AOMDecoder::IsAV1(aMimeType);
-  }
+      // We remove support for decoding AV1 here if RDD is enabled so that
+      // decoding on the content process doesn't accidentally happen in case
+      // something goes wrong with launching the RDD process.
+      (AOMDecoder::IsAV1(aMimeType) && IsAvailable(DecoderType::AV1)) ||
 #endif
+      (VPXDecoder::IsVPX(aMimeType) && IsAvailable(DecoderType::VPX)) ||
+      (TheoraDecoder::IsTheora(aMimeType) &&
+       IsAvailable(DecoderType::Theora)) ||
+      (VorbisDataDecoder::IsVorbis(aMimeType) &&
+       IsAvailable(DecoderType::Vorbis)) ||
+      (WaveDataDecoder::IsWave(aMimeType) && IsAvailable(DecoderType::Wave)) ||
+      (OpusDataDecoder::IsOpus(aMimeType) && IsAvailable(DecoderType::Opus));
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Agnostic decoder %s requested type",
            supports ? "supports" : "rejects"));
@@ -74,9 +117,7 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
   }
 #ifdef MOZ_AV1
   // see comment above about AV1 and the RDD process
-  else if (AOMDecoder::IsAV1(aParams.mConfig.mMimeType) &&
-           !StaticPrefs::media_rdd_process_enabled() &&
-           StaticPrefs::media_av1_enabled()) {
+  else if (AOMDecoder::IsAV1(aParams.mConfig.mMimeType)) {
     if (StaticPrefs::media_av1_use_dav1d()) {
       m = new DAV1DDecoder(aParams);
     } else {
@@ -99,14 +140,7 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
   if (VorbisDataDecoder::IsVorbis(config.mMimeType)) {
     m = new VorbisDataDecoder(aParams);
   } else if (OpusDataDecoder::IsOpus(config.mMimeType)) {
-    CreateDecoderParams params(aParams);
-    // Check IsDefaultPlaybackDeviceMono here and set the option in
-    // mOptions so OpusDataDecoder doesn't have to do it later (in case
-    // it is running on RDD).
-    if (IsDefaultPlaybackDeviceMono()) {
-      params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
-    }
-    m = new OpusDataDecoder(params);
+    m = new OpusDataDecoder(aParams);
   } else if (WaveDataDecoder::IsWave(config.mMimeType)) {
     m = new WaveDataDecoder(aParams);
   }
