@@ -160,10 +160,10 @@ RemoteImageHolder::~RemoteImageHolder() {
     return false;
   }
   if (!aResult->mEmpty) {
-    aResult->mManager =
+    aResult->mManager = RemoteDecoderManagerChild::GetSingleton(
         aResult->mSource == VideoBridgeSource::GpuProcess
-            ? RemoteDecoderManagerChild::GetGPUProcessSingleton()
-            : RemoteDecoderManagerChild::GetRDDProcessSingleton();
+            ? RemoteDecodeIn::GpuProcess
+            : RemoteDecodeIn::RddProcess);
   }
   return true;
 }
