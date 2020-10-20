@@ -154,11 +154,6 @@ mod static_fns {
                                offset: i64,
                                seek: pa_seek_mode_t)
                                -> c_int;
-        pub fn pa_stream_set_name(s: *mut pa_stream,
-                                  name: *const c_char,
-                                  cb: pa_stream_success_cb_t,
-                                  userdata: *mut c_void)
-                                  -> *mut pa_operation;
         pub fn pa_sw_volume_from_linear(v: c_double) -> pa_volume_t;
         pub fn pa_threaded_mainloop_free(m: *mut pa_threaded_mainloop);
         pub fn pa_threaded_mainloop_get_api(m: *mut pa_threaded_mainloop) -> *mut pa_mainloop_api;
@@ -639,13 +634,6 @@ mod dynamic_fns {
             };
             PA_STREAM_WRITE = {
                 let fp = dlsym(h, cstr!("pa_stream_write"));
-                if fp.is_null() {
-                    return None;
-                }
-                fp
-            };
-            PA_STREAM_SET_NAME = {
-                let fp = dlsym(h, cstr!("pa_stream_set_name"));
                 if fp.is_null() {
                     return None;
                 }
@@ -1354,21 +1342,6 @@ mod dynamic_fns {
                                                i64,
                                                pa_seek_mode_t)
                                                -> c_int>(PA_STREAM_WRITE))(p, data, nbytes, free_cb, offset, seek)
-    }
-
-    static mut PA_STREAM_SET_NAME: *mut ::libc::c_void = 0 as *mut _;
-    #[inline]
-    pub unsafe fn pa_stream_set_name(s: *mut pa_stream,
-                                     name: *const c_char,
-                                     cb: pa_stream_success_cb_t,
-                                     userdata: *mut c_void)
-                                     -> *mut pa_operation {
-        (::std::mem::transmute::<_,
-                                 extern "C" fn(*mut pa_stream,
-                                               *const c_char,
-                                               pa_stream_success_cb_t,
-                                               *mut c_void)
-                                               -> *mut pa_operation>(PA_STREAM_SET_NAME))(s, name, cb, userdata)
     }
 
     static mut PA_SW_VOLUME_FROM_LINEAR: *mut ::libc::c_void = 0 as *mut _;

@@ -107,10 +107,6 @@ impl StreamOps for TestStream {
         assert_eq!(volume, 0.5);
         Ok(())
     }
-    fn set_name(&mut self, name: &CStr) -> Result<()> {
-        assert_eq!(name, CStr::from_bytes_with_nul(b"test\0").unwrap());
-        Ok(())
-    }
     fn current_device(&mut self) -> Result<&DeviceRef> {
         Ok(unsafe { DeviceRef::from_ptr(0xDEAD_BEEF as *mut _) })
     }
@@ -222,14 +218,6 @@ fn test_ops_stream_set_volume() {
     let s: *mut ffi::cubeb_stream = ptr::null_mut();
     unsafe {
         OPS.stream_set_volume.unwrap()(s, 0.5);
-    }
-}
-
-#[test]
-fn test_ops_stream_set_name() {
-    let s: *mut ffi::cubeb_stream = ptr::null_mut();
-    unsafe {
-        OPS.stream_set_name.unwrap()(s, CStr::from_bytes_with_nul(b"test\0").unwrap().as_ptr());
     }
 }
 
