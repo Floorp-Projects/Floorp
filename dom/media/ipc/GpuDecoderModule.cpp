@@ -29,9 +29,9 @@ bool GpuDecoderModule::SupportsMimeType(
   return mWrapped->SupportsMimeType(aMimeType, aDiagnostics);
 }
 
-bool GpuDecoderModule::Supports(const TrackInfo& aTrackInfo,
+bool GpuDecoderModule::Supports(const SupportDecoderParams& aParams,
                                 DecoderDoctorDiagnostics* aDiagnostics) const {
-  return mWrapped->Supports(aTrackInfo, aDiagnostics);
+  return mWrapped->Supports(aParams, aDiagnostics);
 }
 
 static inline bool IsRemoteAcceleratedCompositor(KnowsCompositor* aKnows) {

@@ -77,12 +77,14 @@ bool AppleDecoderModule::SupportsMimeType(
 }
 
 bool AppleDecoderModule::Supports(
-    const TrackInfo& aTrackInfo, DecoderDoctorDiagnostics* aDiagnostics) const {
-  if (aTrackInfo.IsAudio()) {
-    return SupportsMimeType(aTrackInfo.mMimeType, aDiagnostics);
+    const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) const {
+  const auto& trackInfo = aParams.mConfig;
+  if (trackInfo.IsAudio()) {
+    return SupportsMimeType(trackInfo.mMimeType, aDiagnostics);
   }
-  return aTrackInfo.GetAsVideoInfo() &&
-         IsVideoSupported(*aTrackInfo.GetAsVideoInfo());
+  return trackInfo.GetAsVideoInfo() &&
+         IsVideoSupported(*trackInfo.GetAsVideoInfo());
 }
 
 bool AppleDecoderModule::IsVideoSupported(
