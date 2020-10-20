@@ -19140,22 +19140,16 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  const nsresult rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "UPDATE object_data "
       "SET index_data_values = update_index_data_values "
       "(key, index_data_values, file_ids, data) "
       "WHERE object_store_id = :object_store_id;"_ns,
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      [this](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindInt64ByIndex(0, mObjectStoreId));
 
         return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      }));
 
   return NS_OK;
 }
