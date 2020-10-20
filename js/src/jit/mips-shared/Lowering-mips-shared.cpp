@@ -182,7 +182,21 @@ void LIRGeneratorMIPSShared::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
 
 void LIRGeneratorMIPSShared::lowerWasmBuiltinTruncateToInt32(
     MWasmBuiltinTruncateToInt32* ins) {
-  MOZ_CRASH("NYI");
+  MDefinition* opd = ins->input();
+  MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
+
+  if (opd->type() == MIRType::Double) {
+    define(new (alloc()) LWasmBuiltinTruncateDToInt32(
+               useRegister(opd), useFixed(ins->tls(), WasmTlsReg),
+               LDefinition::BogusTemp()),
+           ins);
+    return;
+  }
+
+  define(new (alloc()) LWasmBuiltinTruncateFToInt32(
+             useRegister(opd), useFixed(ins->tls(), WasmTlsReg),
+             LDefinition::BogusTemp()),
+         ins);
 }
 
 void LIRGeneratorMIPSShared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
