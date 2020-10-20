@@ -33,6 +33,7 @@ Next run the following commands:
 .. code-block:: shell
 
     $ cd path/to/mozilla-central
+    $ watchman watch .
     $ watchman -j < tools/tryselect/watchman.json
 
 You should see output like:
@@ -40,9 +41,9 @@ You should see output like:
 .. code-block:: json
 
     {
-        "version": "4.9.0",
         "triggerid": "rebuild-taskgraph-cache",
-        "disposition": "created"
+        "disposition": "created",
+        "version": "20200920.192359.0"
     }
 
 That's it. Now anytime a file under ``/taskcluster`` is modified (either by your editor, or by
