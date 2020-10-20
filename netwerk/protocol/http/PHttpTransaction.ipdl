@@ -90,7 +90,6 @@ child:
              TimeStamp aRedirectStart,
              TimeStamp aRedirectEnd);
 
-  async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);
   async SuspendPump();
   async ResumePump();

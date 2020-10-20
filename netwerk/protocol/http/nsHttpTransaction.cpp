@@ -101,8 +101,8 @@ nsHttpTransaction::nsHttpTransaction()
       mThrottlingReadAllowance(THROTTLE_NO_LIMIT),
       mCapsToClear(0),
       mResponseIsComplete(false),
-      mReadingStopped(false),
       mClosed(false),
+      mReadingStopped(false),
       mConnected(false),
       mActivated(false),
       mHaveStatusLine(false),
@@ -193,6 +193,10 @@ bool nsHttpTransaction::EligibleForThrottling() const {
 }
 
 void nsHttpTransaction::SetClassOfService(uint32_t cos) {
+  if (mClosed) {
+    return;
+  }
+
   bool wasThrottling = EligibleForThrottling();
   mClassOfService = cos;
   bool isThrottling = EligibleForThrottling();

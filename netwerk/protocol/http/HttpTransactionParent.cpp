@@ -210,10 +210,6 @@ nsresult HttpTransactionParent::AsyncRead(nsIStreamListener* listener,
   return NS_OK;
 }
 
-void HttpTransactionParent::SetClassOfService(uint32_t classOfService) {
-  Unused << SendUpdateClassOfService(classOfService);
-}
-
 UniquePtr<nsHttpResponseHead> HttpTransactionParent::TakeResponseHead() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResponseHeadTaken, "TakeResponseHead called 2x");
