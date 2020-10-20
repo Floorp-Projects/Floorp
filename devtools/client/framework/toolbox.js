@@ -3978,16 +3978,16 @@ Toolbox.prototype = {
     );
   },
 
-  viewElementInInspector: async function(objectActor, inspectFromAnnotation) {
+  viewElementInInspector: async function(objectActor, reason) {
     // Open the inspector and select the DOM Element.
     await this.loadTool("inspector");
     const inspector = this.getPanel("inspector");
     const nodeFound = await inspector.inspectNodeActor(
       objectActor.actor,
-      inspectFromAnnotation
+      reason
     );
     if (nodeFound) {
-      await this.selectTool("inspector");
+      await this.selectTool("inspector", reason);
     }
   },
 
