@@ -60,9 +60,6 @@ void VRManagerChild::IdentifyTextureHost(
     const TextureFactoryIdentifier& aIdentifier) {
   if (sVRManagerChildSingleton) {
     sVRManagerChildSingleton->mBackend = aIdentifier.mParentBackend;
-    sVRManagerChildSingleton->mSyncObject =
-        layers::SyncObjectClient::CreateSyncObjectClient(
-            aIdentifier.mSyncHandle);
   }
 }
 

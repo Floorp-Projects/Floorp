@@ -25,9 +25,6 @@ class Navigator;
 class VRDisplay;
 class FrameRequestCallback;
 }  // namespace dom
-namespace layers {
-class SyncObjectClient;
-}
 namespace gfx {
 class VRLayerChild;
 class VRDisplayClient;
@@ -89,7 +86,6 @@ class VRManagerChild : public PVRManagerChild {
   static void IdentifyTextureHost(
       const layers::TextureFactoryIdentifier& aIdentifier);
   layers::LayersBackend GetBackendType() const;
-  layers::SyncObjectClient* GetSyncObject() { return mSyncObject; }
 
   nsresult ScheduleFrameRequestCallback(dom::FrameRequestCallback& aCallback,
                                         int32_t* aHandle);
@@ -191,7 +187,6 @@ class VRManagerChild : public PVRManagerChild {
   bool mWaitingForEnumeration;
 
   layers::LayersBackend mBackend;
-  RefPtr<layers::SyncObjectClient> mSyncObject;
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mGamepadPromiseList;
   RefPtr<dom::Promise> mRunPuppetPromise;
   nsTArray<RefPtr<dom::Promise>> mResetPuppetPromises;
