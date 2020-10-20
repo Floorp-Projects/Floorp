@@ -40,7 +40,6 @@ toolkit.jar:
   skin/classic/global/icons/search-textbox.svg                       (icons/search-textbox.svg)
   skin/classic/global/icons/warning-64.png                           (icons/warning-64.png)
   skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
-  skin/classic/global/icons/error-16.png                             (icons/error-16.png)
   skin/classic/global/icons/error-64.png                             (icons/error-64.png)
   skin/classic/global/icons/question-64.png                          (icons/question-64.png)
   skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)

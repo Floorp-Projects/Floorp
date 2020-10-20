@@ -188,7 +188,7 @@ add_task(async function test_import_chromefavicon() {
     "chrome://global/skin/icons/info.svg"
   );
   const CHROME_FAVICON_URI_2 = NetUtil.newURI(
-    "chrome://global/skin/icons/error-16.png"
+    "chrome://global/skin/icons/error.svg"
   );
 
   info("Importing from html");
