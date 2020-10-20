@@ -113,10 +113,7 @@ bool AgnosticDecoderModule::Supports(
       // something goes wrong with launching the RDD process.
       (AOMDecoder::IsAV1(mimeType) && IsAvailable(DecoderType::AV1)) ||
 #endif
-      // We currently can't allocate a SharedRGBImage in the RDD process
-      // (see bug 1668840) required to decode a video with an alpha channel.
-      (VPXDecoder::IsVPX(mimeType) && IsAvailable(DecoderType::VPX) &&
-       (!trackInfo.GetAsVideoInfo()->HasAlpha() || !XRE_IsRDDProcess())) ||
+      (VPXDecoder::IsVPX(mimeType) && IsAvailable(DecoderType::VPX)) ||
       (TheoraDecoder::IsTheora(mimeType) && IsAvailable(DecoderType::Theora)) ||
       (VorbisDataDecoder::IsVorbis(mimeType) &&
        IsAvailable(DecoderType::Vorbis)) ||
