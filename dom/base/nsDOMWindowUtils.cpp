@@ -3055,9 +3055,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCString origin;
-  nsresult rv =
-      quota::QuotaManager::GetInfoFromWindow(window, nullptr, nullptr, &origin);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY_VAR(origin, quota::QuotaManager::GetOriginFromWindow(window));
 
   IDBOpenDBOptions options;
   JS::Rooted<JS::Value> optionsVal(aCx, aOptions);
@@ -3073,8 +3071,9 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
 
   if (mgr) {
-    rv = mgr->BlockAndGetFileReferences(persistenceType, origin, aDatabaseName,
-                                        aId, aRefCnt, aDBRefCnt, aResult);
+    nsresult rv =
+        mgr->BlockAndGetFileReferences(persistenceType, origin, aDatabaseName,
+                                       aId, aRefCnt, aDBRefCnt, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     *aRefCnt = *aDBRefCnt = -1;

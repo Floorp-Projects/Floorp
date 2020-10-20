@@ -879,17 +879,13 @@ nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       MOZ_CRASH("Is this needed?!");
 
     case PrincipalInfo::TSystemPrincipalInfo:
-      QuotaManager::GetInfoForChrome(nullptr, nullptr, &aOrigin);
+      aOrigin = QuotaManager::GetOriginForChrome();
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
       IDB_TRY_UNWRAP(auto principal, PrincipalInfoToPrincipal(*principalInfo));
 
-      nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr,
-                                                       nullptr, &aOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY_UNWRAP(aOrigin, QuotaManager::GetOriginFromPrincipal(principal));
 
       return NS_OK;
     }

@@ -18,6 +18,7 @@ class CacheQuotaClient final : public quota::Client {
   static CacheQuotaClient* sInstance;
 
  public:
+  using GroupAndOrigin = quota::GroupAndOrigin;
   using PersistenceType = quota::PersistenceType;
   using UsageInfo = quota::UsageInfo;
 
@@ -28,16 +29,16 @@ class CacheQuotaClient final : public quota::Client {
   virtual Type GetType() override;
 
   virtual Result<UsageInfo, nsresult> InitOrigin(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) override;
 
   virtual nsresult InitOriginWithoutTracking(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) override;
 
   virtual Result<UsageInfo, nsresult> GetUsageForOrigin(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) override;
 
   virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
                                       const nsACString& aOrigin) override;
@@ -132,9 +133,8 @@ class CacheQuotaClient final : public quota::Client {
   ~CacheQuotaClient();
 
   Result<UsageInfo, nsresult> GetUsageForOriginInternal(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled,
-      bool aInitializing);
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled, bool aInitializing);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
 

@@ -555,15 +555,14 @@ nsresult ClampResultCode(nsresult aResultCode) {
   return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
 
-void GetDatabaseFilenameBase(const nsAString& aDatabaseName,
-                             nsAutoString& aDatabaseFilenameBase) {
-  MOZ_ASSERT(aDatabaseFilenameBase.IsEmpty());
+nsAutoString GetDatabaseFilenameBase(const nsAString& aDatabaseName) {
+  nsAutoString databaseFilenameBase;
 
   // WARNING: do not change this hash function. See the comment in HashName()
   // for details.
-  aDatabaseFilenameBase.AppendInt(HashName(aDatabaseName));
+  databaseFilenameBase.AppendInt(HashName(aDatabaseName));
 
-  nsCString escapedName;
+  nsAutoCString escapedName;
   if (!NS_Escape(NS_ConvertUTF16toUTF8(aDatabaseName), escapedName,
                  url_XPAlphas)) {
     MOZ_CRASH("Can't escape database name!");
@@ -581,7 +580,9 @@ void GetDatabaseFilenameBase(const nsAString& aDatabaseName,
     }
   }
 
-  aDatabaseFilenameBase.AppendASCII(substring.get(), substring.Length());
+  databaseFilenameBase.AppendASCII(substring.get(), substring.Length());
+
+  return databaseFilenameBase;
 }
 
 Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
@@ -2385,8 +2386,7 @@ class Database final
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
   const Maybe<ContentParentId> mOptionalContentParentId;
-  const nsCString mGroup;
-  const nsCString mOrigin;
+  const quota::GroupAndOrigin mGroupAndOrigin;
   const nsCString mId;
   const nsString mFilePath;
   const Maybe<const CipherKey> mKey;
@@ -2411,8 +2411,8 @@ class Database final
   // Created by OpenDatabaseOp.
   Database(SafeRefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
            const Maybe<ContentParentId>& aOptionalContentParentId,
-           const nsACString& aGroup, const nsACString& aOrigin,
-           uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
+           const quota::GroupAndOrigin& aGroupAndOrigin, uint32_t aTelemetryId,
+           SafeRefPtr<FullDatabaseMetadata> aMetadata,
            SafeRefPtr<FileManager> aFileManager,
            RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
            bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing,
@@ -2440,9 +2440,9 @@ class Database final
            mOptionalContentParentId.value() == aContentParentId;
   }
 
-  const nsCString& Group() const { return mGroup; }
-
-  const nsCString& Origin() const { return mOrigin; }
+  const quota::GroupAndOrigin& GroupAndOrigin() const {
+    return mGroupAndOrigin;
+  }
 
   const nsCString& Id() const { return mId; }
 
@@ -3339,9 +3339,7 @@ class FactoryOp
   nsTArray<MaybeBlockedDatabaseInfo> mMaybeBlockedDatabases;
 
   const CommonFactoryRequestParams mCommonParams;
-  nsCString mSuffix;
-  nsCString mGroup;
-  nsCString mOrigin;
+  QuotaInfo mQuotaInfo;
   nsCString mDatabaseId;
   nsString mDatabaseFilePath;
   int64_t mDirectoryLockId;
@@ -3357,7 +3355,7 @@ class FactoryOp
   const nsCString& Origin() const {
     AssertIsOnOwningThread();
 
-    return mOrigin;
+    return mQuotaInfo.mOrigin;
   }
 
   bool DatabaseFilePathIsKnown() const {
@@ -4015,8 +4013,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   nsTArray<StoredFileInfo> mStoredFileInfos;
 
   Key mResponse;
-  const nsCString mGroup;
-  const nsCString mOrigin;
+  const GroupAndOrigin mGroupAndOrigin;
   const PersistenceType mPersistenceType;
   const bool mOverwrite;
   bool mObjectStoreMayHaveIndexes;
@@ -5147,18 +5144,16 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   nsresult UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) override;
 
   Result<UsageInfo, nsresult> InitOrigin(PersistenceType aPersistenceType,
-                                         const nsACString& aGroup,
-                                         const nsACString& aOrigin,
+                                         const GroupAndOrigin& aGroupAndOrigin,
                                          const AtomicBool& aCanceled) override;
 
   nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
-                                     const nsACString& aGroup,
-                                     const nsACString& aOrigin,
+                                     const GroupAndOrigin& aGroupAndOrigin,
                                      const AtomicBool& aCanceled) override;
 
   Result<UsageInfo, nsresult> GetUsageForOrigin(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) override;
 
   void OnOriginClearCompleted(PersistenceType aPersistenceType,
                               const nsACString& aOrigin) override;
@@ -5220,8 +5215,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   GetDatabaseFilenames(nsIFile& aDirectory, const AtomicBool& aCanceled);
 
   nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
-                                     const nsACString& aGroup,
-                                     const nsACString& aOrigin,
+                                     const GroupAndOrigin& aGroupAndOrigin,
                                      const AtomicBool& aCanceled,
                                      bool aInitializing, UsageInfo* aUsageInfo);
 
@@ -5292,13 +5286,13 @@ class DeleteFilesRunnable final : public Runnable,
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
   struct DirectoryInfo final {
-    InitializedOnce<const nsCString> mGroup;
-    InitializedOnce<const nsCString> mOrigin;
+    InitializedOnce<const GroupAndOrigin> mGroupAndOrigin;
     InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
     const PersistenceType mPersistenceType;
 
-    DirectoryInfo(PersistenceType aPersistenceType, nsCString aGroup,
-                  nsCString aOrigin, nsTArray<nsString>&& aDatabasePaths);
+    DirectoryInfo(PersistenceType aPersistenceType,
+                  GroupAndOrigin aGroupAndOrigin,
+                  nsTArray<nsString>&& aDatabasePaths);
 
     DirectoryInfo(const DirectoryInfo& aOther) = delete;
     DirectoryInfo(DirectoryInfo&& aOther) = delete;
@@ -5452,15 +5446,14 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
 };
 
 Maintenance::DirectoryInfo::DirectoryInfo(PersistenceType aPersistenceType,
-                                          nsCString aGroup, nsCString aOrigin,
+                                          GroupAndOrigin aGroupAndOrigin,
                                           nsTArray<nsString>&& aDatabasePaths)
-    : mGroup(std::move(aGroup)),
-      mOrigin(std::move(aOrigin)),
+    : mGroupAndOrigin(std::move(aGroupAndOrigin)),
       mDatabasePaths(std::move(aDatabasePaths)),
       mPersistenceType(aPersistenceType) {
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!mGroup->IsEmpty());
-  MOZ_ASSERT(!mOrigin->IsEmpty());
+  MOZ_ASSERT(!mGroupAndOrigin->mGroup.IsEmpty());
+  MOZ_ASSERT(!mGroupAndOrigin->mOrigin.IsEmpty());
 #ifdef DEBUG
   MOZ_ASSERT(!mDatabasePaths->IsEmpty());
   for (const nsString& databasePath : *mDatabasePaths) {
@@ -5499,8 +5492,7 @@ class DatabaseMaintenance final : public Runnable {
 
   RefPtr<Maintenance> mMaintenance;
   RefPtr<DirectoryLock> mDirectoryLock;
-  const nsCString mGroup;
-  const nsCString mOrigin;
+  const GroupAndOrigin mGroupAndOrigin;
   const nsString mDatabasePath;
   int64_t mDirectoryLockId;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
@@ -5508,13 +5500,13 @@ class DatabaseMaintenance final : public Runnable {
 
  public:
   DatabaseMaintenance(Maintenance* aMaintenance, DirectoryLock* aDirectoryLock,
-                      PersistenceType aPersistenceType, const nsCString& aGroup,
-                      const nsCString& aOrigin, const nsString& aDatabasePath)
+                      PersistenceType aPersistenceType,
+                      const GroupAndOrigin& aGroupAndOrigin,
+                      const nsString& aDatabasePath)
       : Runnable("dom::indexedDB::DatabaseMaintenance"),
         mMaintenance(aMaintenance),
         mDirectoryLock(aDirectoryLock),
-        mGroup(aGroup),
-        mOrigin(aOrigin),
+        mGroupAndOrigin(aGroupAndOrigin),
         mDatabasePath(aDatabasePath),
         mPersistenceType(aPersistenceType) {
     MOZ_ASSERT(aDirectoryLock);
@@ -5885,7 +5877,7 @@ enum struct Idempotency { Yes, No };
 // previous deletion call updated the usage.)
 nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
-                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const GroupAndOrigin& aGroupAndOrigin,
                     const Idempotency aIdempotent) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -5919,7 +5911,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   }
 
   if (aQuotaManager && fileSize > 0) {
-    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroup, aOrigin,
+    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroupAndOrigin,
                                           Client::IDB, fileSize);
   }
 
@@ -5929,7 +5921,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
 nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
                     QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
-                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const GroupAndOrigin& aGroupAndOrigin,
                     const Idempotency aIdempotent) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!aFilename.IsEmpty());
@@ -5945,7 +5937,7 @@ nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
     return rv;
   }
 
-  return DeleteFile(*file, aQuotaManager, aPersistenceType, aGroup, aOrigin,
+  return DeleteFile(*file, aQuotaManager, aPersistenceType, aGroupAndOrigin,
                     aIdempotent);
 }
 
@@ -6020,8 +6012,8 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
 
 Result<Ok, nsresult> DeleteFileManagerDirectory(
     nsIFile& aFileManagerDirectory, QuotaManager* aQuotaManager,
-    const PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin) {
+    const PersistenceType aPersistenceType,
+    const GroupAndOrigin& aGroupAndOrigin) {
   if (!aQuotaManager) {
     IDB_TRY(aFileManagerDirectory.Remove(true));
 
@@ -6055,7 +6047,7 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
           });
 
   if (usageValue) {
-    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroup, aOrigin,
+    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroupAndOrigin,
                                           Client::IDB, usageValue);
   }
 
@@ -6075,8 +6067,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
                                          const nsAString& aDatabaseFilenameBase,
                                          QuotaManager* aQuotaManager,
                                          const PersistenceType aPersistenceType,
-                                         const nsACString& aGroup,
-                                         const nsACString& aOrigin,
+                                         const GroupAndOrigin& aGroupAndOrigin,
                                          const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseFilenameBase.IsEmpty());
@@ -6088,23 +6079,23 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
 
   // The database file counts towards quota.
   IDB_TRY(DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSuffix,
-                     aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                     aQuotaManager, aPersistenceType, aGroupAndOrigin,
                      Idempotency::Yes));
 
   // .sqlite-journal files don't count towards quota.
   IDB_TRY(DeleteFile(aBaseDirectory,
                      aDatabaseFilenameBase + kSQLiteJournalSuffix,
-                     /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                     aOrigin, Idempotency::Yes));
+                     /* doesn't count */ nullptr, aPersistenceType,
+                     aGroupAndOrigin, Idempotency::Yes));
 
   // .sqlite-shm files don't count towards quota.
   IDB_TRY(DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSHMSuffix,
-                     /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                     aOrigin, Idempotency::Yes));
+                     /* doesn't count */ nullptr, aPersistenceType,
+                     aGroupAndOrigin, Idempotency::Yes));
 
   // .sqlite-wal files do count towards quota.
   IDB_TRY(DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteWALSuffix,
-                     aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                     aQuotaManager, aPersistenceType, aGroupAndOrigin,
                      Idempotency::Yes));
 
   IDB_TRY_INSPECT(
@@ -6125,14 +6116,15 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
     IDB_TRY(OkIf(isDirectory), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IDB_TRY(DeleteFileManagerDirectory(*fmDirectory, aQuotaManager,
-                                       aPersistenceType, aGroup, aOrigin));
+                                       aPersistenceType, aGroupAndOrigin));
   }
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   MOZ_ASSERT_IF(aQuotaManager, mgr);
 
   if (mgr) {
-    mgr->InvalidateFileManager(aPersistenceType, aOrigin, aDatabaseName);
+    mgr->InvalidateFileManager(aPersistenceType, aGroupAndOrigin.mOrigin,
+                               aDatabaseName);
   }
 
   IDB_TRY(RemoveMarkerFile(markerFile));
@@ -9792,7 +9784,7 @@ WaitForTransactionsHelper::Run() {
 Database::Database(
     SafeRefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
     const Maybe<ContentParentId>& aOptionalContentParentId,
-    const nsACString& aGroup, const nsACString& aOrigin, uint32_t aTelemetryId,
+    const quota::GroupAndOrigin& aGroupAndOrigin, uint32_t aTelemetryId,
     SafeRefPtr<FullDatabaseMetadata> aMetadata,
     SafeRefPtr<FileManager> aFileManager, RefPtr<DirectoryLock> aDirectoryLock,
     bool aFileHandleDisabled, bool aChromeWriteAccessAllowed,
@@ -9803,8 +9795,7 @@ Database::Database(
       mDirectoryLock(std::move(aDirectoryLock)),
       mPrincipalInfo(aPrincipalInfo),
       mOptionalContentParentId(aOptionalContentParentId),
-      mGroup(aGroup),
-      mOrigin(aOrigin),
+      mGroupAndOrigin(aGroupAndOrigin),
       mId(mMetadata->mDatabaseId),
       mFilePath(mMetadata->mFilePath),
       mKey(aMaybeKey),
@@ -10023,7 +10014,7 @@ void Database::Stringify(nsACString& aResult) const {
           BackgroundParent::IsOtherProcessActor(GetBackgroundParent())) +
       kQuotaGenericDelimiterString +
       //
-      "Origin:"_ns + AnonymizedOriginString(mOrigin) +
+      "Origin:"_ns + AnonymizedOriginString(mGroupAndOrigin.mOrigin) +
       kQuotaGenericDelimiterString +
       //
       "PersistenceType:"_ns + PersistenceTypeToString(mPersistenceType) +
@@ -12518,11 +12509,10 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
 FileManager::MutexType FileManager::sMutex;
 
 FileManager::FileManager(PersistenceType aPersistenceType,
-                         const nsACString& aGroup, const nsACString& aOrigin,
+                         const quota::GroupAndOrigin& aGroupAndOrigin,
                          const nsAString& aDatabaseName, bool aEnforcingQuota)
     : mPersistenceType(aPersistenceType),
-      mGroup(aGroup),
-      mOrigin(aOrigin),
+      mGroupAndOrigin(aGroupAndOrigin),
       mDatabaseName(aDatabaseName),
       mEnforcingQuota(aEnforcingQuota) {}
 
@@ -12903,7 +12893,7 @@ nsresult FileManager::SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile) {
       EnforcingQuota() ? QuotaManager::Get() : nullptr;
   MOZ_ASSERT_IF(EnforcingQuota(), quotaManager);
 
-  IDB_TRY(DeleteFile(aFile, quotaManager, Type(), Group(), Origin(),
+  IDB_TRY(DeleteFile(aFile, quotaManager, Type(), GroupAndOrigin(),
                      Idempotency::No));
 
   IDB_TRY(aJournalFile.Remove(false));
@@ -13161,44 +13151,44 @@ nsresult QuotaClient::UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) {
 }
 
 Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
   IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(this, GetUsageForOriginInternal,
-                                      aPersistenceType, aGroup, aOrigin,
+                                      aPersistenceType, aGroupAndOrigin,
                                       aCanceled,
                                       /* aInitializing*/ true));
 }
 
 nsresult QuotaClient::InitOriginWithoutTracking(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+  return GetUsageForOriginInternal(aPersistenceType, aGroupAndOrigin, aCanceled,
                                    /* aInitializing*/ true, nullptr);
 }
 
 Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
   IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(this, GetUsageForOriginInternal,
-                                      aPersistenceType, aGroup, aOrigin,
+                                      aPersistenceType, aGroupAndOrigin,
                                       aCanceled,
                                       /* aInitializing*/ false));
 }
 
 nsresult QuotaClient::GetUsageForOriginInternal(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled,
-    const bool aInitializing, UsageInfo* aUsageInfo) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled, const bool aInitializing,
+    UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
   IDB_TRY_INSPECT(const nsCOMPtr<nsIFile>& directory,
-                  GetDirectory(aPersistenceType, aOrigin));
+                  GetDirectory(aPersistenceType, aGroupAndOrigin.mOrigin));
 
   // We need to see if there are any files in the directory already. If they
   // are database files then we need to cleanup stored files (if it's needed)
@@ -13215,8 +13205,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     IDB_TRY(CollectEachInRange(
         subdirsToProcess,
         [&directory, &obsoleteFilenames = obsoleteFilenames,
-         &databaseFilenames = databaseFilenames, aPersistenceType, &aGroup,
-         &aOrigin](const nsString& subdirName) -> Result<Ok, nsresult> {
+         &databaseFilenames = databaseFilenames, aPersistenceType,
+         &aGroupAndOrigin](const nsString& subdirName) -> Result<Ok, nsresult> {
           // The directory must have the correct suffix.
           nsDependentSubstring subdirNameBase;
           IDB_TRY(([&subdirName, &subdirNameBase] {
@@ -13241,7 +13231,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
             // e.g. Filesystem corruption. Will handle this in bug 1521541.
             IDB_TRY(RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
                                                     nullptr, aPersistenceType,
-                                                    aGroup, aOrigin, u""_ns),
+                                                    aGroupAndOrigin, u""_ns),
                     Err(NS_ERROR_UNEXPECTED));
 
             databaseFilenames.RemoveEntry(subdirNameBase);
@@ -13293,7 +13283,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     IDB_TRY(databaseFile->Append(databaseFilename + kSQLiteSuffix));
 
     if (aInitializing) {
-      IDB_TRY(FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
+      IDB_TRY(FileManager::InitDirectory(*fmDirectory, *databaseFile,
+                                         aGroupAndOrigin.mOrigin,
                                          TelemetryIdForFile(databaseFile)));
     }
 
@@ -13389,7 +13380,7 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   AssertIsOnBackgroundThread();
 
   InvalidateLiveDatabasesMatching([&aOrigin](const auto& database) {
-    return aOrigin.IsVoid() || database->Origin() == aOrigin;
+    return aOrigin.IsVoid() || database->GroupAndOrigin().mOrigin == aOrigin;
   });
 }
 
@@ -13712,10 +13703,9 @@ void DeleteFilesRunnable::Open() {
 
   mState = State_DirectoryOpenPending;
 
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      quotaManager->OpenDirectory(mFileManager->Type(), mFileManager->Group(),
-                                  mFileManager->Origin(), quota::Client::IDB,
-                                  /* aExclusive */ false, this);
+  RefPtr<DirectoryLock> pendingDirectoryLock = quotaManager->OpenDirectory(
+      mFileManager->Type(), mFileManager->GroupAndOrigin(), quota::Client::IDB,
+      /* aExclusive */ false, this);
 }
 
 void DeleteFilesRunnable::DoDatabaseWork() {
@@ -14122,11 +14112,9 @@ nsresult Maintenance::DirectoryWork() {
 
       int64_t timestamp;
       bool persisted;
-      nsCString suffix;
-      nsCString group;
-      nsCString origin;
+      QuotaInfo quotaInfo;
       rv = quotaManager->GetDirectoryMetadata2WithRestore(
-          originDir, persistent, &timestamp, &persisted, suffix, group, origin);
+          originDir, persistent, &timestamp, &persisted, quotaInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Not much we can do here...
         continue;
@@ -14142,7 +14130,7 @@ nsresult Maintenance::DirectoryWork() {
         nsCOMPtr<nsIFile> directory;
         bool created;
         rv = quotaManager->EnsurePersistentOriginIsInitialized(
-            suffix, group, origin, getter_AddRefs(directory), &created);
+            quotaInfo, getter_AddRefs(directory), &created);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           continue;
         }
@@ -14245,7 +14233,7 @@ nsresult Maintenance::DirectoryWork() {
       }
 
       if (!databasePaths.IsEmpty()) {
-        mDirectoryInfos.EmplaceBack(persistenceType, group, origin,
+        mDirectoryInfos.EmplaceBack(persistenceType, quotaInfo,
                                     std::move(databasePaths));
       }
     }
@@ -14311,14 +14299,14 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
           directoryLock = mDirectoryLock->Specialize(
-              directoryInfo.mPersistenceType, *directoryInfo.mGroup,
-              *directoryInfo.mOrigin, Client::IDB);
+              directoryInfo.mPersistenceType, *directoryInfo.mGroupAndOrigin,
+              Client::IDB);
           MOZ_ASSERT(directoryLock);
         }
 
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            *directoryInfo.mGroup, *directoryInfo.mOrigin, databasePath);
+            *directoryInfo.mGroupAndOrigin, databasePath);
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
@@ -14462,7 +14450,7 @@ void DatabaseMaintenance::Stringify(nsACString& aResult) const {
   AssertIsOnBackgroundThread();
 
   aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mOrigin));
+  aResult.Append(AnonymizedOriginString(mGroupAndOrigin.mOrigin));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("PersistenceType:");
@@ -14480,8 +14468,8 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(mMaintenance->StartTime());
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(!mDatabasePath.IsEmpty());
-  MOZ_ASSERT(!mGroup.IsEmpty());
-  MOZ_ASSERT(!mOrigin.IsEmpty());
+  MOZ_ASSERT(!mGroupAndOrigin.mGroup.IsEmpty());
+  MOZ_ASSERT(!mGroupAndOrigin.mOrigin.IsEmpty());
 
   class MOZ_STACK_CLASS AutoClose final {
     NotNull<nsCOMPtr<mozIStorageConnection>> mConnection;
@@ -15615,20 +15603,19 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
   AssertIsOnBackgroundThread();
 
   const PersistenceType persistenceType = mDatabase->Type();
-  const nsACString& group = mDatabase->Group();
-  const nsACString& origin = mDatabase->Origin();
+  const auto& groupAndOrigin = mDatabase->GroupAndOrigin();
 
   nsCOMPtr<nsISupports> result;
 
   if (aReadOnly) {
     RefPtr<FileInputStream> stream =
-        CreateFileInputStream(persistenceType, group, origin, Client::IDB,
+        CreateFileInputStream(persistenceType, groupAndOrigin, Client::IDB,
                               mFile, -1, -1, nsIFileInputStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream);
   } else {
     RefPtr<FileStream> stream =
-        CreateFileStream(persistenceType, group, origin, Client::IDB, mFile, -1,
-                         -1, nsIFileStream::DEFER_OPEN);
+        CreateFileStream(persistenceType, groupAndOrigin, Client::IDB, mFile,
+                         -1, -1, nsIFileStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileStream*, stream);
   }
   if (NS_WARN_IF(!result)) {
@@ -15867,7 +15854,7 @@ void FactoryOp::Stringify(nsACString& aResult) const {
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mOrigin));
+  aResult.Append(AnonymizedOriginString(mQuotaInfo.mOrigin));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("State:");
@@ -15915,8 +15902,8 @@ nsresult FactoryOp::Open() {
 
   const DatabaseMetadata& metadata = mCommonParams.metadata();
 
-  QuotaManager::GetStorageId(metadata.persistenceType(), mOrigin, Client::IDB,
-                             mDatabaseId);
+  QuotaManager::GetStorageId(metadata.persistenceType(), mQuotaInfo.mOrigin,
+                             Client::IDB, mDatabaseId);
 
   mDatabaseId.Append('*');
   mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
@@ -16211,9 +16198,9 @@ FactoryOp::CheckPermission(ContentParent* aContentParent) {
     }
 
     if (State::Initial == mState) {
-      QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
+      mQuotaInfo = QuotaManager::GetInfoForChrome();
 
-      MOZ_ASSERT(QuotaManager::IsOriginInternal(mOrigin));
+      MOZ_ASSERT(QuotaManager::IsOriginInternal(mQuotaInfo.mOrigin));
 
       mEnforcingQuota = false;
     }
@@ -16226,15 +16213,11 @@ FactoryOp::CheckPermission(ContentParent* aContentParent) {
   IDB_TRY_INSPECT(const auto& principal,
                   PrincipalInfoToPrincipal(principalInfo));
 
-  nsCString suffix;
-  nsCString group;
-  nsCString origin;
-  IDB_TRY(
-      QuotaManager::GetInfoFromPrincipal(principal, &suffix, &group, &origin));
+  IDB_TRY_UNWRAP(auto quotaInfo, QuotaManager::GetInfoFromPrincipal(principal));
 
   IDB_TRY_INSPECT(
       const auto& permission,
-      ([persistenceType, &origin, &principal = *principal]()
+      ([persistenceType, &origin = quotaInfo.mOrigin, &principal = *principal]()
            -> mozilla::Result<PermissionRequestBase::PermissionValue,
                               nsresult> {
         if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
@@ -16252,9 +16235,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent) {
 
   if (permission != PermissionRequestBase::kPermissionDenied &&
       State::Initial == mState) {
-    mSuffix = suffix;
-    mGroup = group;
-    mOrigin = origin;
+    mQuotaInfo = std::move(quotaInfo);
 
     mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
   }
@@ -16359,7 +16340,7 @@ nsresult FactoryOp::OpenDirectory() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen ||
              mState == State::QuotaManagerPending);
-  MOZ_ASSERT(!mOrigin.IsEmpty());
+  MOZ_ASSERT(!mQuotaInfo.mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
@@ -16371,8 +16352,8 @@ nsresult FactoryOp::OpenDirectory() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_UNWRAP(auto dbFile,
-                 quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
+  IDB_TRY_UNWRAP(auto dbFile, quotaManager->GetDirectoryForOrigin(
+                                  persistenceType, mQuotaInfo.mOrigin));
 
   nsresult rv =
       dbFile->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
@@ -16380,10 +16361,7 @@ nsresult FactoryOp::OpenDirectory() {
     return rv;
   }
 
-  nsAutoString databaseFilenameBase;
-  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
-
-  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
+  rv = dbFile->Append(GetDatabaseFilenameBase(databaseName) + kSQLiteSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -16396,7 +16374,7 @@ nsresult FactoryOp::OpenDirectory() {
   mState = State::DirectoryOpenPending;
 
   RefPtr<DirectoryLock> pendingDirectoryLock =
-      quotaManager->OpenDirectory(persistenceType, mGroup, mOrigin, Client::IDB,
+      quotaManager->OpenDirectory(persistenceType, mQuotaInfo, Client::IDB,
                                   /* aExclusive */ false, this);
 
   return NS_OK;
@@ -16409,7 +16387,7 @@ bool FactoryOp::MustWaitFor(const FactoryOp& aExistingOp) {
   // database must wait.
   return aExistingOp.mCommonParams.metadata().persistenceType() ==
              mCommonParams.metadata().persistenceType() &&
-         aExistingOp.mOrigin == mOrigin &&
+         aExistingOp.mQuotaInfo.mOrigin == mQuotaInfo.mOrigin &&
          aExistingOp.mDatabaseId == mDatabaseId;
 }
 
@@ -16622,7 +16600,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   IDB_TRY_INSPECT(const auto& dbDirectory,
                   quotaManager->EnsureStorageAndOriginIsInitialized(
-                      persistenceType, mSuffix, mGroup, mOrigin, Client::IDB));
+                      persistenceType, mQuotaInfo, Client::IDB));
 
   IDB_TRY(
       dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
@@ -16643,8 +16621,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 #endif
   }
 
-  nsAutoString databaseFilenameBase;
-  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
+  const auto databaseFilenameBase = GetDatabaseFilenameBase(databaseName);
 
   IDB_TRY_INSPECT(
       const auto& markerFile,
@@ -16661,8 +16638,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     // Note: only update usage to the QuotaManager when mEnforcingQuota == true
     IDB_TRY(RemoveDatabaseFilesAndDirectory(
         *dbDirectory, databaseFilenameBase,
-        mEnforcingQuota ? quotaManager : nullptr, persistenceType, mGroup,
-        mOrigin, databaseName));
+        mEnforcingQuota ? quotaManager : nullptr, persistenceType, mQuotaInfo,
+        databaseName));
   }
 
   IDB_TRY_INSPECT(
@@ -16689,10 +16666,10 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   IDB_TRY(fmDirectory->Append(databaseFilenameBase +
                               kFileManagerDirectoryNameSuffix));
 
-  IDB_TRY_UNWRAP(
-      NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-      CreateStorageConnection(*dbFile, *fmDirectory, databaseName, mOrigin,
-                              mDirectoryLockId, mTelemetryId));
+  IDB_TRY_UNWRAP(NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+                 CreateStorageConnection(*dbFile, *fmDirectory, databaseName,
+                                         mQuotaInfo.mOrigin, mDirectoryLockId,
+                                         mTelemetryId));
 
   AutoSetProgressHandler asph;
   IDB_TRY(asph.Register(*connection, this));
@@ -16724,12 +16701,12 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
         IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
         MOZ_ASSERT(mgr);
 
-        SafeRefPtr<FileManager> fileManager =
-            mgr->GetFileManager(persistenceType, mOrigin, databaseName);
+        SafeRefPtr<FileManager> fileManager = mgr->GetFileManager(
+            persistenceType, mQuotaInfo.mOrigin, databaseName);
 
         if (!fileManager) {
           fileManager = MakeSafeRefPtr<FileManager>(
-              persistenceType, mGroup, mOrigin, databaseName, mEnforcingQuota);
+              persistenceType, mQuotaInfo, databaseName, mEnforcingQuota);
 
           IDB_TRY(fileManager->Init(fmDirectory, *connection));
 
@@ -16784,8 +16761,9 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
                                             nsCString, stmt, GetUTF8String, 1));
 
     // We can't just compare these strings directly. See bug 1339081 comment 69.
-    IDB_TRY(OkIf(QuotaManager::AreOriginsEqualOnDisk(mOrigin, origin)),
-            NS_ERROR_FILE_CORRUPTED);
+    IDB_TRY(
+        OkIf(QuotaManager::AreOriginsEqualOnDisk(mQuotaInfo.mOrigin, origin)),
+        NS_ERROR_FILE_CORRUPTED);
 
     IDB_TRY_INSPECT(const int64_t& version,
                     MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 2));
@@ -17414,7 +17392,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   mDatabase = MakeSafeRefPtr<Database>(
       SafeRefPtr{static_cast<Factory*>(Manager()),
                  AcquireStrongRefFromRawPtr{}},
-      mCommonParams.principalInfo(), mOptionalContentParentId, mGroup, mOrigin,
+      mCommonParams.principalInfo(), mOptionalContentParentId, mQuotaInfo,
       mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
       std::move(mDirectoryLock), mFileHandleDisabled, mChromeWriteAccessAllowed,
       mInPrivateBrowsing, maybeKey);
@@ -17792,8 +17770,8 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_UNWRAP(auto directory,
-                 quotaManager->GetDirectoryForOrigin(persistenceType, mOrigin));
+  IDB_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
+                                     persistenceType, mQuotaInfo.mOrigin));
 
   nsresult rv =
       directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
@@ -17806,10 +17784,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  nsAutoString databaseFilenameBase;
-  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
-
-  mDatabaseFilenameBase = databaseFilenameBase;
+  mDatabaseFilenameBase = GetDatabaseFilenameBase(databaseName);
 
   nsCOMPtr<nsIFile> dbFile;
   rv = directory->Clone(getter_AddRefs(dbFile));
@@ -17817,7 +17792,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
+  rv = dbFile->Append(mDatabaseFilenameBase + kSQLiteSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17995,7 +17970,7 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
 
   nsresult rv = RemoveDatabaseFilesAndDirectory(
       *directory, mDeleteDatabaseOp->mDatabaseFilenameBase, quotaManager,
-      persistenceType, mDeleteDatabaseOp->mGroup, mDeleteDatabaseOp->mOrigin,
+      persistenceType, mDeleteDatabaseOp->mQuotaInfo,
       mDeleteDatabaseOp->mCommonParams.metadata().name());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -20199,8 +20174,7 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
           std::move(aParams.type() == RequestParams::TObjectStoreAddParams
                         ? aParams.get_ObjectStoreAddParams().commonParams()
                         : aParams.get_ObjectStorePutParams().commonParams())),
-      mGroup(Transaction().GetDatabase().Group()),
-      mOrigin(Transaction().GetDatabase().Origin()),
+      mGroupAndOrigin(Transaction().GetDatabase().GroupAndOrigin()),
       mPersistenceType(Transaction().GetDatabase().Type()),
       mOverwrite(aParams.type() == RequestParams::TObjectStorePutParams),
       mObjectStoreMayHaveIndexes(false) {
@@ -22621,9 +22595,9 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
   IDB_TRY(aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644));
 
   // Now try to copy the stream.
-  nsCOMPtr<nsIOutputStream> fileOutputStream =
-      CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
-                             mFileManager->Origin(), Client::IDB, &aFile);
+  nsCOMPtr<nsIOutputStream> fileOutputStream = CreateFileOutputStream(
+      mFileManager->Type(), mFileManager->GroupAndOrigin(), Client::IDB,
+      &aFile);
 
   IDB_TRY(OkIf(fileOutputStream), NS_ERROR_FAILURE);
 
