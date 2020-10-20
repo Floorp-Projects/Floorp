@@ -140,6 +140,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
     (sysctl-name "hw.optional.sse4_2")
     (sysctl-name "hw.optional.avx1_0")
     (sysctl-name "hw.optional.avx2_0")
+    (sysctl-name "hw.optional.avx512f")
     (sysctl-name "machdep.cpu.vendor")
     (sysctl-name "machdep.cpu.family")
     (sysctl-name "machdep.cpu.model")

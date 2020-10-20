@@ -11,22 +11,23 @@
 
 #include "Sandbox.h"
 
+#include <CoreFoundation/CoreFoundation.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/sysctl.h>
-#include <CoreFoundation/CoreFoundation.h>
+#include <sys/types.h>
 
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#include "mozilla/Assertions.h"
 #include "SandboxPolicyContent.h"
 #include "SandboxPolicyFlash.h"
 #include "SandboxPolicyGMP.h"
-#include "SandboxPolicyUtility.h"
+#include "SandboxPolicyRDD.h"
 #include "SandboxPolicySocket.h"
+#include "SandboxPolicyUtility.h"
+#include "mozilla/Assertions.h"
 
 // Undocumented sandbox setup routines.
 extern "C" int sandbox_init_with_parameters(const char* profile, uint64_t flags,
@@ -168,8 +169,9 @@ void MacSandboxInfo::AppendAsParams(std::vector<std::string>& aParams) const {
       this->AppendDebugWriteDirParam(aParams);
 #endif
       break;
-    case MacSandboxType_Utility:
+    case MacSandboxType_RDD:
     case MacSandboxType_Socket:
+    case MacSandboxType_Utility:
       break;
     case MacSandboxType_GMP:
       this->AppendPluginPathParam(aParams);
@@ -329,6 +331,20 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("APP_PATH");
     params.push_back(aInfo.appPath.c_str());
+    if (!aInfo.crashServerPort.empty()) {
+      params.push_back("CRASH_PORT");
+      params.push_back(aInfo.crashServerPort.c_str());
+    }
+  } else if (aInfo.type == MacSandboxType_RDD) {
+    profile = const_cast<char*>(SandboxPolicyRDD);
+    params.push_back("SHOULD_LOG");
+    params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
+    params.push_back("APP_PATH");
+    params.push_back(aInfo.appPath.c_str());
+    params.push_back("HOME_PATH");
+    params.push_back(getenv("HOME"));
     if (!aInfo.crashServerPort.empty()) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
@@ -713,6 +729,10 @@ bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aIn
   return true;
 }
 
+bool GetRDDSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
+  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo);
+}
+
 /*
  * Returns true if no errors were encountered or if early sandbox startup is
  * not enabled for this process. Returns false if an error was encountered.
@@ -748,8 +768,13 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
         return false;
       }
       break;
-    case MacSandboxType_Utility:
-      if (!GetUtilitySandboxParamsFromArgs(aArgc, aArgv, info)) {
+    case MacSandboxType_GMP:
+      if (!GetPluginSandboxParamsFromArgs(aArgc, aArgv, info)) {
+        return false;
+      }
+      break;
+    case MacSandboxType_RDD:
+      if (!GetRDDSandboxParamsFromArgs(aArgc, aArgv, info)) {
         return false;
       }
       break;
@@ -758,8 +783,8 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
         return false;
       }
       break;
-    case MacSandboxType_GMP:
-      if (!GetPluginSandboxParamsFromArgs(aArgc, aArgv, info)) {
+    case MacSandboxType_Utility:
+      if (!GetUtilitySandboxParamsFromArgs(aArgc, aArgv, info)) {
         return false;
       }
       break;

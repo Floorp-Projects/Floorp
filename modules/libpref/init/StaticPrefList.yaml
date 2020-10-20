@@ -7081,6 +7081,8 @@
   type: RelaxedAtomicBool
 #if defined(XP_WIN) && !defined(_ARM64_)
   value: true
+#elif defined(XP_MACOSX)
+  value: true
 #else
   value: false
 #endif
@@ -7095,6 +7097,13 @@
 #else
   value: false
 #endif
+  mirror: always
+#endif
+
+#ifdef MOZ_APPLEMEDIA
+- name: media.rdd-applemedia.enabled
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 #endif
 
