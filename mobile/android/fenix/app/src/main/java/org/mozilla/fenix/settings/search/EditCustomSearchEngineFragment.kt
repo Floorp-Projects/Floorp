@@ -36,7 +36,6 @@ import java.util.Locale
 class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine) {
 
     private val args by navArgs<EditCustomSearchEngineFragmentArgs>()
-
     private lateinit var searchEngine: SearchEngine
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,48 +92,13 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         val name = edit_engine_name.text?.toString()?.trim() ?: ""
         val searchString = edit_search_string.text?.toString() ?: ""
 
-        var hasError = false
-        if (name.isEmpty()) {
-            custom_search_engine_name_field.error = resources
-                .getString(R.string.search_add_custom_engine_error_empty_name)
-            hasError = true
-        }
-
-        val existingIdentifiers = requireComponents
-            .search
-            .provider
-            .allSearchEngineIdentifiers()
-            .map { it.toLowerCase(Locale.ROOT) }
-
-        val nameHasChanged = name != args.searchEngineIdentifier
-
-        if (existingIdentifiers.contains(name.toLowerCase(Locale.ROOT)) && nameHasChanged) {
-            custom_search_engine_name_field.error = String.format(
-                resources
-                    .getString(R.string.search_add_custom_engine_error_existing_name), name
-            )
-            hasError = true
-        }
-
-        if (searchString.isEmpty()) {
-            custom_search_engine_search_string_field
-                .error =
-                resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
-            hasError = true
-        }
-
-        if (!searchString.contains("%s")) {
-            custom_search_engine_search_string_field
-                .error =
-                resources.getString(R.string.search_add_custom_engine_error_missing_template)
-            hasError = true
-        }
+        val hasError = checkForErrors(name, searchString)
 
         if (hasError) {
             return
         }
 
-        viewLifecycleOwner.lifecycleScope.launch(Main) {
+        lifecycleScope.launch(Main) {
             val result = withContext(IO) {
                 SearchStringValidator.isSearchStringValid(
                     requireComponents.core.client,
@@ -167,10 +131,50 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                             .setText(successMessage)
                             .show()
                     }
-
+                    if (args.isDefaultSearchEngine) {
+                        requireComponents.search.provider.setDefaultEngine(requireContext(), name)
+                    }
                     findNavController().popBackStack()
                 }
             }
         }
+    }
+
+    private fun checkForErrors(name: String, searchString: String): Boolean {
+        val existingIdentifiers = requireComponents
+            .search
+            .provider
+            .allSearchEngineIdentifiers()
+            .map { it.toLowerCase(Locale.ROOT) }
+
+        val nameHasChanged = name != args.searchEngineIdentifier
+        val hasError = when {
+            name.isEmpty() -> {
+                custom_search_engine_name_field.error = resources
+                    .getString(R.string.search_add_custom_engine_error_empty_name)
+                true
+            }
+            existingIdentifiers.contains(name.toLowerCase(Locale.ROOT)) && nameHasChanged -> {
+                custom_search_engine_name_field.error =
+                    String.format(
+                        resources.getString(
+                            R.string.search_add_custom_engine_error_existing_name
+                        ), name
+                    )
+                true
+            }
+            searchString.isEmpty() -> {
+                custom_search_engine_search_string_field.error =
+                    resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
+                true
+            }
+            !searchString.contains("%s") -> {
+                custom_search_engine_search_string_field.error =
+                    resources.getString(R.string.search_add_custom_engine_error_missing_template)
+                true
+            }
+            else -> false
+        }
+        return hasError
     }
 }

@@ -1,12 +1,12 @@
 package org.mozilla.fenix.components.searchengine
 
 import android.content.Context
-import io.mockk.every
-import io.mockk.mockk
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkObject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -35,7 +35,8 @@ class FenixSearchEngineProviderTest {
         mockkObject(CustomSearchEngineStore)
         fenixSearchEngineProvider.let {
             every { CustomSearchEngineStore.loadCustomSearchEngines(testContext) } returns listOf(
-                (it as FakeFenixSearchEngineProvider).mockSearchEngine("my custom site", "my custom site")
+                (it as FakeFenixSearchEngineProvider)
+                    .mockSearchEngine("my custom site", "my custom site")
             )
         }
     }
@@ -82,8 +83,14 @@ class FenixSearchEngineProviderTest {
 
     @Test
     fun `GIVEN sharedprefs contains installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
-        val sp = testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE)
-        sp.edit().putStringSet(fenixSearchEngineProvider.localeAwareInstalledEnginesKey(), persistedInstalledEngines).apply()
+        val sp = testContext.getSharedPreferences(
+            FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES,
+            Context.MODE_PRIVATE
+        )
+        sp.edit().putStringSet(
+            fenixSearchEngineProvider.localeAwareInstalledEnginesKey(),
+            persistedInstalledEngines
+        ).apply()
 
         val expectedStored = persistedInstalledEngines
         val expectedCustom = fenixSearchEngineProvider.customSearchEngines.toIdSet()

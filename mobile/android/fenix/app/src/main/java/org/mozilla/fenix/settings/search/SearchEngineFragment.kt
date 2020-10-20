@@ -10,6 +10,7 @@ import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
@@ -21,10 +22,12 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.search_preferences, rootKey)
+        view?.hideKeyboard()
     }
 
     override fun onResume() {
         super.onResume()
+        view?.hideKeyboard()
         showToolbar(getString(R.string.preferences_search))
 
         val searchSuggestionsPreference =

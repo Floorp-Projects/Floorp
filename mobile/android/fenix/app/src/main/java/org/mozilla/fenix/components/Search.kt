@@ -10,7 +10,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Mockable
 
 /**
@@ -30,10 +29,7 @@ class Search(private val context: Context) {
         ).apply {
             registerForLocaleUpdates(context)
             GlobalScope.launch {
-                defaultSearchEngine = getDefaultSearchEngineAsync(
-                    context,
-                    context.settings().defaultSearchEngineName
-                )
+                defaultSearchEngine = provider.getDefaultEngine(context)
             }
         }
     }

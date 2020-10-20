@@ -71,15 +71,14 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             return
         }
 
-        val defaultEngine = context.components.search.provider.getDefaultEngine(context).identifier
+        val defaultEngineId = context.components.search.provider.getDefaultEngine(context).identifier
+
         val selectedEngine = (searchEngineList.list.find {
-            it.identifier == defaultEngine
+            it.identifier == defaultEngineId
         } ?: searchEngineList.list.first()).identifier
 
-        context.components.search.searchEngineManager.defaultSearchEngine =
-            searchEngineList.list.find {
-                it.identifier == selectedEngine
-            }
+        // set the search engine manager default
+        context.components.search.provider.setDefaultEngine(context, selectedEngine)
 
         searchEngineGroup!!.removeAllViews()
 
@@ -175,8 +174,9 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     }
 
     private fun editCustomSearchEngine(engine: SearchEngine) {
+        val wasDefault = context.components.search.provider.getDefaultEngine(context).identifier == engine.identifier
         val directions = SearchEngineFragmentDirections
-            .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.identifier)
+            .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.identifier, wasDefault)
         Navigation.findNavController(searchEngineGroup!!).navigate(directions)
     }
 
@@ -215,12 +215,9 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             },
             operation = {
                 if (isDefaultEngine) {
-                    context.settings().defaultSearchEngineName = context
-                        .components
-                        .search
-                        .provider
-                        .getDefaultEngine(context)
-                        .name
+                    val default = context.components.search.provider.getDefaultEngine(context)
+                    context.components.search.provider.setDefaultEngine(context, default.identifier)
+                    context.settings().defaultSearchEngineName = default.name
                 }
                 if (isCustomSearchEngine) {
                     context.components.analytics.metrics.track(Event.CustomEngineDeleted)

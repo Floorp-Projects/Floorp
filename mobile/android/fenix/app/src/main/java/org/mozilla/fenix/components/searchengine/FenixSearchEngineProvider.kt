@@ -33,7 +33,7 @@ import java.util.Locale
 open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
-    private val shouldMockMLS = Config.channel.isDebug || BuildConfig.MLS_TOKEN.isNullOrEmpty()
+    private val shouldMockMLS = Config.channel.isDebug || BuildConfig.MLS_TOKEN.isEmpty()
     private val locationService: LocationService = if (shouldMockMLS) {
         LocationService.dummy()
     } else {
@@ -55,8 +55,12 @@ open class FenixSearchEngineProvider(
     open val localizationProvider: SearchLocalizationProvider =
         RegionSearchLocalizationProvider(locationService)
 
+    /**
+     * Unfiltered list of search engines based on locale.
+     */
     open var baseSearchEngines = async {
-        AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
+        AssetsSearchEngineProvider(localizationProvider)
+            .loadSearchEngines(context)
     }
 
     private val loadedRegion = async { localizationProvider.determineRegion() }
@@ -72,9 +76,13 @@ open class FenixSearchEngineProvider(
     open val fallbackEngines = async { fallBackProvider.loadSearchEngines(context) }
     private val fallbackRegion = async { fallbackLocationService.determineRegion() }
 
+    /**
+     * Default bundled search engines based on locale.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val bundledSearchEngines = async {
-        val defaultEngineIdentifiers = baseSearchEngines.await().list.map { it.identifier }.toSet()
+        val defaultEngineIdentifiers =
+            baseSearchEngines.await().list.map { it.identifier }.toSet()
         AssetsSearchEngineProvider(
             localizationProvider,
             filters = listOf(object : SearchEngineFilter {
@@ -87,12 +95,15 @@ open class FenixSearchEngineProvider(
         ).loadSearchEngines(context)
     }
 
+    /**
+     * Search engines that have been manually added by a user.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open var customSearchEngines = async {
         CustomSearchEngineProvider().loadSearchEngines(context)
     }
 
-    private var loadedSearchEngines = refreshAsync(baseSearchEngines)
+    private var loadedSearchEngines = refreshInstalledEngineListAsync(baseSearchEngines)
 
     // https://github.com/mozilla-mobile/fenix/issues/9935
     // Create new getter that will return the fallback SearchEngineList if
@@ -102,29 +113,45 @@ open class FenixSearchEngineProvider(
             if (isRegionCachedByLocationService) {
                 loadedSearchEngines
             } else {
-                refreshAsync(fallbackEngines)
+                refreshInstalledEngineListAsync(fallbackEngines)
             }
 
     fun getDefaultEngine(context: Context): SearchEngine {
         val engines = installedSearchEngines(context)
         val selectedName = context.settings().defaultSearchEngineName
 
-        return engines.list.find { it.name == selectedName } ?: engines.default ?: engines.list.first()
+        return engines.list.find { it.name == selectedName }
+            ?: engines.default
+            ?: engines.list.first()
+    }
+
+    // We should only be setting the default search engine here
+    fun setDefaultEngine(context: Context, id: String) {
+        val engines = installedSearchEngines(context)
+        val newDefault = engines.list.find { it.name == id }
+            ?: engines.default
+            ?: engines.list.first()
+
+        context.settings().defaultSearchEngineName = newDefault.name
+        context.components.search.searchEngineManager.defaultSearchEngine = newDefault
     }
 
     /**
      * @return a list of all SearchEngines that are currently active. These are the engines that
-     * are readily available throughout the app.
+     * are readily available throughout the app. Includes all installed engines, both
+     * default and custom
      */
     fun installedSearchEngines(context: Context): SearchEngineList = runBlocking {
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
-        val engineList = searchEngines.await()
+        val defaultList = searchEngines.await()
 
-        engineList.copy(
-            list = engineList.list.filter {
+        defaultList.copy(
+            list = defaultList.list.filter {
                 installedIdentifiers.contains(it.identifier)
-            }.sortedBy { it.name.toLowerCase(Locale.getDefault()) },
-            default = engineList.default?.let {
+            }.sortedBy {
+                it.name.toLowerCase(Locale.getDefault())
+            },
+            default = defaultList.default?.let {
                 if (installedIdentifiers.contains(it.identifier)) {
                     it
                 } else {
@@ -142,14 +169,20 @@ open class FenixSearchEngineProvider(
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
         val engineList = loadedSearchEngines.await()
 
-        engineList.copy(list = engineList.list.filterNot { installedIdentifiers.contains(it.identifier) })
+        return@runBlocking engineList.copy(
+            list = engineList.list.filterNot { installedIdentifiers.contains(it.identifier) }
+        )
     }
 
     override suspend fun loadSearchEngines(context: Context): SearchEngineList {
         return installedSearchEngines(context)
     }
 
-    fun installSearchEngine(context: Context, searchEngine: SearchEngine, isCustom: Boolean = false) = runBlocking {
+    fun installSearchEngine(
+        context: Context,
+        searchEngine: SearchEngine,
+        isCustom: Boolean = false
+    ) = runBlocking {
         if (isCustom) {
             val searchUrl = searchEngine.getSearchTemplate()
             CustomSearchEngineStore.addSearchEngine(context, searchEngine.name, searchUrl)
@@ -158,25 +191,34 @@ open class FenixSearchEngineProvider(
             val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
             installedIdentifiers.add(searchEngine.identifier)
             prefs(context).edit()
-                .putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
+                .putStringSet(
+                    localeAwareInstalledEnginesKey(), installedIdentifiers
+                ).apply()
         }
     }
 
-    fun uninstallSearchEngine(context: Context, searchEngine: SearchEngine, isCustom: Boolean = false) = runBlocking {
+    fun uninstallSearchEngine(
+        context: Context,
+        searchEngine: SearchEngine,
+        isCustom: Boolean = false
+    ) = runBlocking {
         if (isCustom) {
             CustomSearchEngineStore.removeSearchEngine(context, searchEngine.identifier)
             reload()
         } else {
             val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
             installedIdentifiers.remove(searchEngine.identifier)
-            prefs(context).edit().putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
+            prefs(context).edit().putStringSet(
+                localeAwareInstalledEnginesKey(),
+                installedIdentifiers
+            ).apply()
         }
     }
 
     fun reload() {
         launch {
             customSearchEngines = async { CustomSearchEngineProvider().loadSearchEngines(context) }
-            loadedSearchEngines = refreshAsync(baseSearchEngines)
+            loadedSearchEngines = refreshInstalledEngineListAsync(baseSearchEngines)
         }
     }
 
@@ -184,16 +226,19 @@ open class FenixSearchEngineProvider(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open fun updateBaseSearchEngines() {
         baseSearchEngines = async {
-            AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
+            AssetsSearchEngineProvider(localizationProvider)
+                .loadSearchEngines(context)
         }
     }
 
-    private fun refreshAsync(baseList: Deferred<SearchEngineList>) = async {
-        val engineList = baseList.await()
+    private fun refreshInstalledEngineListAsync(
+        engines: Deferred<SearchEngineList>
+    ): Deferred<SearchEngineList> = async {
+        val engineList = engines.await()
         val bundledList = bundledSearchEngines.await().list
         val customList = customSearchEngines.await().list
 
-        engineList.copy(list = engineList.list + bundledList + customList)
+        return@async engineList.copy(list = engineList.list + bundledList + customList)
     }
 
     private fun prefs(context: Context) = context.getSharedPreferences(
@@ -208,8 +253,11 @@ open class FenixSearchEngineProvider(
 
         if (!prefs.contains(installedEnginesKey)) {
             val searchEngines =
-                if (isRegionCachedByLocationService) baseSearchEngines
-                else fallbackEngines
+                if (isRegionCachedByLocationService) {
+                    baseSearchEngines
+                } else {
+                    fallbackEngines
+                }
 
             val defaultSet = searchEngines.await()
                 .list
@@ -219,9 +267,12 @@ open class FenixSearchEngineProvider(
             prefs.edit().putStringSet(installedEnginesKey, defaultSet).apply()
         }
 
-        val installedIdentifiers = prefs(context).getStringSet(installedEnginesKey, setOf()) ?: setOf()
+        val installedIdentifiers: Set<String> =
+            prefs(context).getStringSet(installedEnginesKey, setOf()) ?: setOf()
 
-        val customEngineIdentifiers = customSearchEngines.await().list.map { it.identifier }.toSet()
+        val customEngineIdentifiers =
+            customSearchEngines.await().list.map { it.identifier }.toSet()
+
         return installedIdentifiers + customEngineIdentifiers
     }
 
@@ -251,6 +302,5 @@ open class FenixSearchEngineProvider(
         val BUNDLED_SEARCH_ENGINES = listOf("reddit", "youtube")
         const val PREF_FILE_SEARCH_ENGINES = "fenix-search-engine-provider"
         const val INSTALLED_ENGINES_KEY = "fenix-installed-search-engines"
-        const val CURRENT_LOCALE_KEY = "fenix-current-locale"
     }
 }

@@ -25,7 +25,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     }
 
     override fun onSearchEngineSelected(searchEngine: SearchEngine) {
-        context.components.search.searchEngineManager.defaultSearchEngine = searchEngine
+        context.components.search.provider.setDefaultEngine(context, searchEngine.identifier)
         context.settings().defaultSearchEngineName = searchEngine.name
     }
 }
