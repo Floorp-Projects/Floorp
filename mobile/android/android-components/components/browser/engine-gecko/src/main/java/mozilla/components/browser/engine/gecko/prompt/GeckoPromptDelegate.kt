@@ -459,6 +459,35 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         return geckoResult
     }
 
+    override fun onRepostConfirmPrompt(
+        session: GeckoSession,
+        prompt: PromptDelegate.RepostConfirmPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+
+        val onConfirm: () -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(AllowOrDeny.ALLOW))
+            }
+        }
+        val onCancel: () -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(AllowOrDeny.DENY))
+                geckoEngineSession.notifyObservers { onRepostPromptCancelled() }
+            }
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Repost(
+                    onConfirm,
+                    onCancel
+                )
+            )
+        }
+        return geckoResult
+    }
+
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
         // On the GeckoView docs states that label is a @NonNull, but on run-time
@@ -578,6 +607,7 @@ internal fun Date.toString(format: String): String {
  * Only dismiss if the prompt is not already dismissed.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+
 internal fun PromptDelegate.BasePrompt.dismissSafely(geckoResult: GeckoResult<PromptResponse>) {
     if (!this.isComplete) {
         geckoResult.complete(dismiss())

@@ -8,14 +8,14 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.Settings
-import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.geckoview.GeckoRuntime
 
 /**
  * Helper factory for creating and maintaining a speculative [EngineSession].
  */
 internal class SpeculativeSessionFactory {
-    @VisibleForTesting internal var speculativeEngineSession: SpeculativeEngineSession? = null
+    @VisibleForTesting
+    internal var speculativeEngineSession: SpeculativeEngineSession? = null
 
     /**
      * Creates a speculative [EngineSession] using the provided [contextId] and [defaultSettings].
@@ -30,8 +30,6 @@ internal class SpeculativeSessionFactory {
         contextId: String?,
         defaultSettings: Settings?
     ) {
-        ThreadUtils.assertOnUiThread()
-
         if (speculativeEngineSession?.matches(private, contextId) == true) {
             // We already have a speculative engine session for this configuration. Nothing to do here.
             return
@@ -59,9 +57,9 @@ internal class SpeculativeSessionFactory {
     }
 
     /**
-     * Returns a previously created ([private] speculative [EngineSession] if it uses the same
-     * [contextId]. Returns `null` if no speculative [EngineSession] for that configuration is
-     * available.
+     * Returns and consumes a previously created [private] speculative [EngineSession] if it uses
+     * the same [contextId]. Returns `null` if no speculative [EngineSession] for that
+     * configuration is available.
      */
     @Synchronized
     fun get(
@@ -104,7 +102,7 @@ internal class SpeculativeEngineSession constructor(
     /**
      * Unwraps the internal [GeckoEngineSession].
      *
-     * After calling [unwrap] the wrapper will no longer observe the [GeckoEngineSession] and fruther
+     * After calling [unwrap] the wrapper will no longer observe the [GeckoEngineSession] and further
      * crash handling is left to the application.
      */
     fun unwrap(): GeckoEngineSession {
@@ -114,7 +112,7 @@ internal class SpeculativeEngineSession constructor(
 
     /**
      * Cleans up the internal state of this [SpeculativeEngineSession]. After calling this method
-     * his [SpeculativeEngineSession] cannot be used anynmore.
+     * his [SpeculativeEngineSession] cannot be used anymore.
      */
     fun cleanUp() {
         engineSession.unregister(observer)

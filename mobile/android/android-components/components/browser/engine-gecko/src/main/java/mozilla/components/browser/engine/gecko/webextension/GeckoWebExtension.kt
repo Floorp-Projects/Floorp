@@ -403,7 +403,7 @@ class GeckoPort(
 
 private fun GeckoNativeWebExtensionAction.convert(): Action {
     val loadIcon: (suspend (Int) -> Bitmap?)? = icon?.let {
-        { size -> icon?.get(size)?.await() }
+        { size -> icon?.getBitmap(size)?.await() }
     }
 
     val onClick = { click() }

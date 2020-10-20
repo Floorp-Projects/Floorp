@@ -724,7 +724,9 @@ class GeckoEngineSession(
         }
 
         override fun onKill(session: GeckoSession) {
-            notifyObservers { onProcessKilled() }
+            notifyObservers {
+                onProcessKilled()
+            }
         }
 
         private fun recoverGeckoSession() {

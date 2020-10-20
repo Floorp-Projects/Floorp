@@ -26,9 +26,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
-import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
@@ -1091,7 +1092,99 @@ class GeckoPromptDelegateTest {
 
         prompt.dismissSafely(geckoResult)
 
-        Mockito.verify(geckoResult).complete(any())
+        verify(geckoResult).complete(any())
+    }
+
+    @Test
+    fun `onRepostConfirmPrompt must provide a Repost PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var request: PromptRequest.Repost = mock()
+        var onPositiveButtonWasCalled = false
+        var onNegativeButtonWasCalled = false
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Repost
+            }
+        })
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        var geckoResult = promptDelegate.onRepostConfirmPrompt(mock(), GeckoRepostPrompt())
+        geckoResult!!.accept {
+            onPositiveButtonWasCalled = true
+        }
+        request.onConfirm()
+        assertTrue(onPositiveButtonWasCalled)
+
+        geckoResult = promptDelegate.onRepostConfirmPrompt(mock(), GeckoRepostPrompt())
+        geckoResult!!.accept {
+            onNegativeButtonWasCalled = true
+        }
+        request.onDismiss()
+        assertTrue(onNegativeButtonWasCalled)
+    }
+
+    @Test
+    fun `onRepostConfirmPrompt will not be able to complete multiple times`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var request: PromptRequest.Repost = mock()
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Repost
+            }
+        })
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        var prompt = mock<GeckoRepostPrompt>()
+        promptDelegate.onRepostConfirmPrompt(mock(), prompt)
+        doReturn(false).`when`(prompt).isComplete
+        request.onConfirm()
+        verify(prompt).confirm(any())
+
+        prompt = mock()
+        promptDelegate.onRepostConfirmPrompt(mock(), prompt)
+        doReturn(true).`when`(prompt).isComplete
+        request.onConfirm()
+        verify(prompt, never()).confirm(any())
+
+        prompt = mock()
+        promptDelegate.onRepostConfirmPrompt(mock(), prompt)
+        doReturn(false).`when`(prompt).isComplete
+        request.onDismiss()
+        verify(prompt).confirm(any())
+
+        prompt = mock()
+        promptDelegate.onRepostConfirmPrompt(mock(), prompt)
+        doReturn(true).`when`(prompt).isComplete
+        request.onDismiss()
+        verify(prompt, never()).confirm(any())
+    }
+
+    @Test
+    fun `onRepostConfirmPrompt will inform listeners when it is being dismissed`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onRepostPromptCancelledCalled = false
+        var request: PromptRequest.Repost = mock()
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Repost
+            }
+
+            override fun onRepostPromptCancelled() {
+                onRepostPromptCancelledCalled = true
+            }
+        })
+        val prompt = mock<GeckoRepostPrompt>()
+        doReturn(false).`when`(prompt).isComplete
+
+        GeckoPromptDelegate(mockSession).onRepostConfirmPrompt(mock(), prompt)
+        request.onDismiss()
+
+        assertTrue(onRepostPromptCancelledCalled)
     }
 
     @Test
@@ -1103,7 +1196,7 @@ class GeckoPromptDelegateTest {
 
         prompt.dismissSafely(geckoResult)
 
-        Mockito.verify(geckoResult, Mockito.never()).complete(any())
+        verify(geckoResult, never()).complete(any())
     }
 
     class GeckoChoicePrompt(
@@ -1174,6 +1267,8 @@ class GeckoPromptDelegateTest {
     ) : GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>(login)
 
     class GeckoAuthOptions : GeckoSession.PromptDelegate.AuthPrompt.AuthOptions()
+
+    class GeckoRepostPrompt : GeckoSession.PromptDelegate.RepostConfirmPrompt()
 
     private fun GeckoSession.PromptDelegate.BasePrompt.getGeckoResult(): GeckoBundle {
         val javaClass = GeckoSession.PromptDelegate.BasePrompt::class.java

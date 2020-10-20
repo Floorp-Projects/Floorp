@@ -63,6 +63,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.StorageController
+import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_HASH
@@ -72,7 +73,6 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POST
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
-import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
@@ -1292,14 +1292,14 @@ class GeckoEngineTest {
         }
 
         val unrecoverableExceptions = listOf(
-                mockGeckoInstallException(ERROR_NETWORK_FAILURE),
-                mockGeckoInstallException(ERROR_INCORRECT_HASH),
-                mockGeckoInstallException(ERROR_CORRUPT_FILE),
-                mockGeckoInstallException(ERROR_FILE_ACCESS),
-                mockGeckoInstallException(ERROR_SIGNEDSTATE_REQUIRED),
-                mockGeckoInstallException(ERROR_UNEXPECTED_ADDON_TYPE),
-                mockGeckoInstallException(ERROR_INCORRECT_ID),
-                mockGeckoInstallException(ERROR_POSTPONED)
+            mockGeckoInstallException(ERROR_NETWORK_FAILURE),
+            mockGeckoInstallException(ERROR_INCORRECT_HASH),
+            mockGeckoInstallException(ERROR_CORRUPT_FILE),
+            mockGeckoInstallException(ERROR_FILE_ACCESS),
+            mockGeckoInstallException(ERROR_SIGNEDSTATE_REQUIRED),
+            mockGeckoInstallException(ERROR_UNEXPECTED_ADDON_TYPE),
+            mockGeckoInstallException(ERROR_INCORRECT_ID),
+            mockGeckoInstallException(ERROR_POSTPONED)
         )
 
         unrecoverableExceptions.forEach { exception ->
