@@ -7,6 +7,7 @@
 #include "mozilla/telemetry/Stopwatch.h"
 
 #include "TelemetryHistogram.h"
+#include "TelemetryUserInteraction.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/BackgroundHangMonitor.h"
@@ -390,6 +391,17 @@ bool Timers::StartUserInteraction(JSContext* aCx,
                                   JS::HandleObject aObj) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Ensure that this ID maps to a UserInteraction that can be recorded
+  // for this product.
+  if (!TelemetryUserInteraction::CanRecord(aUserInteraction)) {
+    if (!mSuppressErrors) {
+      LogError(aCx, nsPrintfCString(
+                        "UserInteraction with name \"%s\" cannot be recorded.",
+                        NS_ConvertUTF16toUTF8(aUserInteraction).get()));
+    }
+    return false;
+  }
+
   if (aValue.Length() > USER_INTERACTION_VALUE_MAX_LENGTH) {
     if (!mSuppressErrors) {
       LogError(aCx,
@@ -428,6 +440,17 @@ bool Timers::UpdateUserInteraction(JSContext* aCx,
                                    const nsACString& aValue,
                                    JS::HandleObject aObj) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // Ensure that this ID maps to a UserInteraction that can be recorded
+  // for this product.
+  if (!TelemetryUserInteraction::CanRecord(aUserInteraction)) {
+    if (!mSuppressErrors) {
+      LogError(aCx, nsPrintfCString(
+                        "UserInteraction with name \"%s\" cannot be recorded.",
+                        NS_ConvertUTF16toUTF8(aUserInteraction).get()));
+    }
+    return false;
+  }
 
   if (RefPtr<Timer> timer = Get(aCx, aUserInteraction, aObj, VoidString())) {
     if (!timer->Started()) {
