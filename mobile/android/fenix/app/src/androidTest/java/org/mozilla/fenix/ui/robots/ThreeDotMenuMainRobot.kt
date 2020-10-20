@@ -14,6 +14,7 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -532,6 +533,6 @@ private fun assertOpenInAppButton() {
 private fun addonsManagerButton() = onView(withText("Add-ons Manager"))
 
 private fun clickAddonsManagerButton() {
-    onView(withText("Add-ons")).click()
-    addonsManagerButton().click()
+    onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeDown())
+    onView(withText("Add-ons")).check(matches(isCompletelyDisplayed())).click()
 }

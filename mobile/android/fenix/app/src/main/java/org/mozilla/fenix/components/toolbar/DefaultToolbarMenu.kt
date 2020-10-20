@@ -18,11 +18,13 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -188,6 +190,7 @@ class DefaultToolbarMenu(
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),
+            reportSiteIssuePlaceholder,
             findInPage,
             addToTopSites,
             addToHomescreen.apply { visible = ::canAddToHomescreen },
@@ -282,6 +285,10 @@ class DefaultToolbarMenu(
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
     }
+
+    private val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
+        id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID
+    )
 
     private val saveToCollection = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_save_to_collection_2),
