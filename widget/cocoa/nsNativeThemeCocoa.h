@@ -501,7 +501,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                           const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect, bool aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
-  void DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect, ScrollbarParams aParams);
+  void DrawScrollbarThumb(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
+                          ScrollbarParams aParams);
   void DrawScrollbarTrack(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
                           ScrollbarParams aParams);
   void DrawScrollCorner(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
