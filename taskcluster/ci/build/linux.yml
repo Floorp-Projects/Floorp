@@ -855,7 +855,7 @@ linux64-asan-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-9
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
@@ -864,7 +864,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
-            - wasi-sysroot
+            - wasi-sysroot-9
 
 linux64-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt w/ Coverage"
@@ -899,7 +899,7 @@ linux64-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-9
             - linux64-gcc-7
             - linux64-cbindgen
             - linux64-dump-syms
@@ -909,7 +909,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
-            - wasi-sysroot
+            - wasi-sysroot-9
     optimization:
         skip-unless-expanded: null
 
@@ -1229,7 +1229,7 @@ linux64-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-9
             - linux64-rust
             - linux64-gcc-7
             - linux64-cbindgen
@@ -1239,7 +1239,7 @@ linux64-ccov/opt:
             - linux64-node
             - linux64-grcov
             - linux64-lucetc
-            - wasi-sysroot
+            - wasi-sysroot-9
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"

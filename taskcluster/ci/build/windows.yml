@@ -872,7 +872,7 @@ win64-ccov/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - win64-clang-cl
+            - win64-clang-cl-9
             - win64-rust
             - win64-rust-size
             - win64-cbindgen
