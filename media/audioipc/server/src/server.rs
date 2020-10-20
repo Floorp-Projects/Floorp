@@ -556,12 +556,6 @@ impl CubebServer {
                 .map(|_| ClientMessage::StreamVolumeSet)
                 .unwrap_or_else(error),
 
-            ServerMessage::StreamSetName(stm_tok, ref name) => try_stream!(self, stm_tok)
-                .stream
-                .set_name(name)
-                .map(|_| ClientMessage::StreamNameSet)
-                .unwrap_or_else(error),
-
             ServerMessage::StreamGetCurrentDevice(stm_tok) => try_stream!(self, stm_tok)
                 .stream
                 .current_device()
