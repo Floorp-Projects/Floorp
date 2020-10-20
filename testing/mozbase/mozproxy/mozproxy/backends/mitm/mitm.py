@@ -15,6 +15,7 @@ from mozprocess import ProcessHandler
 from mozproxy.backends.base import Playback
 from mozproxy.recordings import RecordingFile
 from mozproxy.utils import (
+    download_file_from_url,
     transform_platform,
     tooltool_download,
     get_available_port,
@@ -38,6 +39,7 @@ MITMDUMP_COMMAND_TIMEOUT = 30
 class Mitmproxy(Playback):
     def __init__(self, config):
         self.config = config
+
         self.host = (
             "127.0.0.1" if "localhost" in self.config["host"] else self.config["host"]
         )
@@ -57,16 +59,11 @@ class Mitmproxy(Playback):
         self.recording_paths = None
 
         if self.config.get("playback_version") is None:
-            LOG.info(
+            LOG.error(
                 "mitmproxy was not provided with a 'playback_version' "
-                "Using default playback version: 4.0.4"
+                "Please provide a valid playback version"
             )
-            self.config["playback_version"] = "4.0.4"
-
-        self.config["playback_binary_manifest"] = (
-                "mitmproxy-rel-bin-%s-{platform}.manifest"
-                % self.config["playback_version"]
-            )
+            raise Exception("playback_version not specified!")
 
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
@@ -94,38 +91,16 @@ class Mitmproxy(Playback):
         LOG.info("Playback tool: %s" % self.config["playback_tool"])
         LOG.info("Playback tool version: %s" % self.config["playback_version"])
 
-    def start(self):
-        # go ahead and download and setup mitmproxy
-        self.download()
+    def download_mitm_bin(self):
+        # Download and setup mitm binaries
 
-        # load any playback file added by playback_files argument
-        for playback_file in self.config.get("playback_files", []):
-            self.recordings.append(RecordingFile(playback_file))
-
-        # mitmproxy must be started before setup, so that the CA cert is available
-        self.start_mitmproxy_playback(self.mitmdump_path, self.browser_path)
-
-        # In case the setup fails, we want to stop the process before raising.
-        try:
-            self.setup()
-        except Exception:
-            self.stop()
-            raise
-
-    def get_recordings_from_manifest(self, manifest_path, download_path):
-        with open(manifest_path) as manifest_file:
-            manifest = json.load(manifest_file)
-            for file in manifest:
-                self.recordings.append(RecordingFile(os.path.join(download_path,
-                                                                  file["filename"])))
-
-    def download(self):
-        """Download and unpack mitmproxy binary and pageset using tooltool"""
-        if not os.path.exists(self.mozproxy_dir):
-            os.makedirs(self.mozproxy_dir)
-
-        _manifest = os.path.join(here, "manifests", self.config["playback_binary_manifest"])
-        transformed_manifest = transform_platform(_manifest, self.config["platform"])
+        manifest = os.path.join(
+            here,
+            "manifests",
+            "mitmproxy-rel-bin-%s-{platform}.manifest"
+            % self.config["playback_version"]
+        )
+        transformed_manifest = transform_platform(manifest, self.config["platform"])
 
         # generate the mitmdump_path
         self.mitmdump_path = os.path.normpath(
@@ -151,19 +126,66 @@ class Mitmproxy(Playback):
                 transformed_manifest, self.config["run_local"], download_path
             )
 
-        if "playback_pageset_manifest" in self.config:
-            # we use one pageset for all platforms
-            LOG.info("downloading mitmproxy pageset")
-            _manifest = self.config["playback_pageset_manifest"]
-            transformed_manifest = transform_platform(
-                _manifest, self.config["platform"]
-            )
+    def download_manifest_file(self, manifest_path):
+        # Manifest File
+        # we use one pageset for all platforms
+        LOG.info("downloading mitmproxy pageset")
 
-            tooltool_download(
-                transformed_manifest, self.config["run_local"], self.mozproxy_dir
-            )
+        tooltool_download(
+            manifest_path, self.config["run_local"], self.mozproxy_dir
+        )
 
-            self.get_recordings_from_manifest(_manifest, self.mozproxy_dir)
+        with open(manifest_path) as manifest_file:
+            manifest = json.load(manifest_file)
+            for file in manifest:
+                zip_path = os.path.join(self.mozproxy_dir, file["filename"])
+                LOG.info("Adding %s to recording list" % zip_path)
+                self.recordings.append(RecordingFile(zip_path))
+
+    def download_playback_files(self):
+        # Detect type of file from playback_files and download accordingly
+
+        if "playback_files" not in self.config:
+            LOG.error("playback_files value was not provided. Proxy service wont' start ")
+            raise Exception("Please provide a playback_files list.")
+
+        if not isinstance(self.config["playback_files"], list):
+            LOG.error("playback_files should be a list")
+            raise Exception("playback_files should be a list")
+
+        for playback_file in self.config["playback_files"]:
+
+            if playback_file.startswith("https://") and "mozilla.com" in playback_file:
+                # URL provided
+                dest = os.path.join(self.mozproxy_dir, os.path.basename(playback_file))
+                download_file_from_url(playback_file, self.mozproxy_dir, extract=False)
+                # Add Downloaded file to recordings list
+                LOG.info("Adding %s to recording list" % dest)
+                self.recordings.append(RecordingFile(dest))
+                continue
+
+            if not os.path.exists(playback_file):
+                LOG.error(
+                    "Zip or manifest file path (%s) does not exist. Please provide a valid path!"
+                    % playback_file
+                )
+                raise Exception("Zip or manifest file path does not exist")
+
+            if os.path.splitext(playback_file)[1] == ".zip":
+                # zip file path provided
+                LOG.info("Adding %s to recording list" % playback_file)
+                self.recordings.append(RecordingFile(playback_file))
+            elif os.path.splitext(playback_file)[1] == ".manifest":
+                # manifest file path provided
+                self.download_manifest_file(playback_file)
+
+    def download(self):
+        """Download and unpack mitmproxy binary and pageset using tooltool"""
+        if not os.path.exists(self.mozproxy_dir):
+            os.makedirs(self.mozproxy_dir)
+
+        self.download_mitm_bin()
+        self.download_playback_files()
 
     def stop(self):
         self.stop_mitmproxy_playback()
@@ -177,11 +199,30 @@ class Mitmproxy(Playback):
             if returncode is not None:
                 return returncode
 
+    def start(self):
+        # go ahead and download and setup mitmproxy
+        self.download()
+
+        # mitmproxy must be started before setup, so that the CA cert is available
+        self.start_mitmproxy_playback(self.mitmdump_path, self.browser_path)
+
+        # In case the setup fails, we want to stop the process before raising.
+        try:
+            self.setup()
+        except Exception:
+            try:
+                self.stop()
+            except Exception:
+                LOG.error("MitmProxy failed to STOP.", exc_info=True)
+            LOG.error("Setup of MitmProxy failed.", exc_info=True)
+            raise
+
     def start_mitmproxy_playback(self, mitmdump_path, browser_path):
         """Startup mitmproxy and replay the specified flow file"""
         if self.mitmproxy_proc is not None:
             raise Exception("Proxy already started.")
         self.port = get_available_port()
+
         LOG.info("mitmdump path: %s" % mitmdump_path)
         LOG.info("browser path: %s" % browser_path)
 
@@ -209,7 +250,7 @@ class Mitmproxy(Playback):
 
             if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
                 args = [
-                    "-v",
+                    "-v",  # Verbose mode
                     "--set",
                     "upstream_cert=false",
                     "--set",
@@ -230,6 +271,11 @@ class Mitmproxy(Playback):
                 "Mitmproxy can't start playback! Playback settings missing."
             )
 
+        # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
+        env = os.environ.copy()
+        if not os.path.dirname(self.browser_path) in env["PATH"]:
+            env["PATH"] = os.path.dirname(self.browser_path) + os.pathsep + env["PATH"]
+
         LOG.info("Starting mitmproxy playback using env path: %s" % env["PATH"])
         LOG.info("Starting mitmproxy playback using command: %s" % " ".join(command))
         # to turn off mitmproxy log output, use these params for Popen:
@@ -243,6 +289,7 @@ class Mitmproxy(Playback):
         )
         self.mitmproxy_proc.run()
         end_time = time.time() + MITMDUMP_COMMAND_TIMEOUT
+
         ready = False
         while time.time() < end_time:
             ready = self.check_proxy(host=self.host, port=self.port)
@@ -253,6 +300,7 @@ class Mitmproxy(Playback):
                 )
                 return
             time.sleep(0.25)
+
         # cannot continue as we won't be able to playback the pages
         LOG.error("Aborting: Mitmproxy process did not startup")
         self.stop_mitmproxy_playback()
@@ -299,6 +347,11 @@ class Mitmproxy(Playback):
             LOG.info("Successfully killed the mitmproxy playback process")
 
     def check_proxy(self, host, port):
+        """Check that mitmproxy process is working by doing a socket call using the proxy settings
+        :param host:  Host of the proxy server
+        :param port: Port of the proxy server
+        :return: True if the proxy service is working
+        """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((host, port))
