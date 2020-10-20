@@ -3,11 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Required Plugins:
-# AppAssocReg http://nsis.sourceforge.net/Application_Association_Registration_plug-in
-# BitsUtils   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/BitsUtils
-# CityHash    http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
-# ShellLink   http://nsis.sourceforge.net/ShellLink_plug-in
-# UAC         http://nsis.sourceforge.net/UAC_plug-in
+# AppAssocReg
+#   http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# BitsUtils
+#   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/BitsUtils
+# CityHash
+#   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
+# HttpPostFile
+#   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/HttpPostFile
+# ShellLink
+#   http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC
+#   http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -39,6 +46,9 @@ ManifestDPIAware true
 Var TmpVal
 Var MaintCertKey
 Var ShouldOpenSurvey
+Var ShouldSendPing
+Var InstalledVersion
+Var InstalledBuildID
 Var ShouldPromptForRefresh
 Var RefreshRequested
 ; AddTaskbarSC is defined here in order to silence warnings from inside
@@ -315,6 +325,82 @@ FunctionEnd
 
 Function un.OpenRefreshHelpURL
   ExecShell "open" "${URLProfileRefreshHelp}"
+FunctionEnd
+
+Function un.SendUninstallPing
+  ${If} $AppUserModelID == ""
+    Return
+  ${EndIf}
+
+  Push $0   ; $0 = Find handle
+  Push $1   ; $1 = Found ping file name
+  Push $2   ; $2 = Directory containing the pings
+  Push $3   ; $3 = Ping file name filespec
+  Push $4   ; $4 = Offset of ID in file name
+  Push $5   ; $5 = URL, POST result
+  Push $6   ; $6 = Full path to the ping file
+
+  ; This gets C:\ProgramData or the equivalent.
+  ; 0x23 is CSIDL_COMMON_APPDATA, see CreateUpdateDir in common.nsh.
+  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.r2, i 0x23, i 0)"
+  ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
+  ; several other places.
+  StrCpy $2 "$2\Mozilla"
+
+  ; The ping ID is in the file name, so that we can get it for the submission URL
+  ; without having to parse the ping. Since we don't know the exact name, use FindFirst
+  ; to locate the file.
+  ; Format is uninstall_ping_$AppUserModelID_$PingUUID.json
+
+  ; File name base
+  StrCpy $3 "uninstall_ping_$AppUserModelID_"
+  ; Get length of the fixed prefix, this is the offset of ping ID in the file name
+  StrLen $4 $3
+  ; Finish building filespec
+  StrCpy $3 "$2\$3*.json"
+
+  ClearErrors
+  FindFirst $0 $1 $3
+  ; Build the full path
+  StrCpy $6 "$2\$1"
+
+  ${IfNot} ${Errors}
+    ; Copy the ping ID, starting after $AppUserModelID_, ending 5 from the end to remove .json
+    StrCpy $5 $1 -5 $4
+
+    ; Build the full submission URL from the ID
+    ; https://docs.telemetry.mozilla.org/concepts/pipeline/http_edge_spec.html#special-handling-for-firefox-desktop-telemetry
+    ; It's possible for the path components to disagree with the contents of the ping,
+    ; but this should be rare, and shouldn't affect the collection.
+    StrCpy $5 "${TELEMETRY_BASE_URL}/${TELEMETRY_UNINSTALL_PING_NAMESPACE}/$5/${TELEMETRY_UNINSTALL_PING_DOCTYPE}/${AppName}/$InstalledVersion/${UpdateChannel}/$InstalledBuildID?v=4"
+
+    HttpPostFile::Post $6 "Content-Type: application/json$\r$\n" $5
+    ; Pop the result. This could indicate an error if it's something other than
+    ; "success", but we don't have any recovery path here anyway.
+    Pop $5
+
+    ${Do}
+      Delete $6
+
+      ; Continue to delete any other pings from this install. Only the first found will be sent:
+      ; there should only be one ping, if there are more than one then something has gone wrong,
+      ; it seems preferable to not try to send them all.
+      ClearErrors
+      FindNext $0 $1
+      ; Build the full path
+      StrCpy $6 "$2\$1"
+    ${LoopUntil} ${Errors}
+
+    FindClose $0
+  ${Endif}
+
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
 FunctionEnd
 
 ################################################################################
@@ -824,6 +910,16 @@ Function un.preConfirm
   !insertmacro MUI_INSTALLOPTIONS_SHOW
 FunctionEnd
 
+Function un.onUninstSuccess
+  ; Send a ping at un.onGUIEnd, to avoid freezing the GUI.
+  StrCpy $ShouldSendPing "1"
+
+  ${If} ${Silent}
+    ; If this is a silent uninstall then un.onGUIEnd doesn't run, so do it now.
+    Call un.SendUninstallPing
+  ${EndIf}
+FunctionEnd
+
 Function un.preFinish
   ; Need to give the survey (readme) checkbox a few extra DU's of height
   ; to accommodate a potentially multi-line label. If the reboot flag is set,
@@ -905,6 +1001,10 @@ Function un.onInit
     StrCpy $ShouldPromptForRefresh "1"
   ${EndIf}
 
+  ; Load version info for uninstall ping (sent after uninstall is complete)
+  ReadINIStr $InstalledVersion "$INSTDIR\application.ini" "App" "Version"
+  ReadINIStr $InstalledBuildID "$INSTDIR\application.ini" "App" "BuildID"
+
   !insertmacro InitInstallOptionsFile "unconfirm.ini"
 FunctionEnd
 
@@ -961,5 +1061,10 @@ Function un.onGUIEnd
     ${Else}
       ExecInExplorer::Exec "iexplore.exe" /cmdargs "$R1"
     ${EndIf}
+  ${EndIf}
+
+  ; Finally send the ping, there's no GUI to freeze in case it is slow.
+  ${If} $ShouldSendPing == "1"
+    Call un.SendUninstallPing
   ${EndIf}
 FunctionEnd

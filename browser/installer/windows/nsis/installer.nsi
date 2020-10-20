@@ -3,13 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Required Plugins:
-# AppAssocReg    http://nsis.sourceforge.net/Application_Association_Registration_plug-in
-# ApplicationID  http://nsis.sourceforge.net/ApplicationID_plug-in
-# CityHash       http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
-# nsJSON         http://nsis.sourceforge.net/NsJSON_plug-in
-# ShellLink      http://nsis.sourceforge.net/ShellLink_plug-in
-# UAC            http://nsis.sourceforge.net/UAC_plug-in
-# ServicesHelper Mozilla specific plugin that is located in /other-licenses/nsis
+# AppAssocReg
+#   http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# ApplicationID
+#   http://nsis.sourceforge.net/ApplicationID_plug-in
+# CityHash
+#   http://searchfox.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
+# nsJSON
+#   http://nsis.sourceforge.net/NsJSON_plug-in
+# ShellLink
+#   http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC
+#   http://nsis.sourceforge.net/UAC_plug-in
+# ServicesHelper
+#   Mozilla specific plugin that is located in /other-licenses/nsis
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
