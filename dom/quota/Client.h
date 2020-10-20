@@ -13,6 +13,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 
 #include "PersistenceType.h"
+#include "QuotaInfo.h"
 
 class nsIFile;
 class nsIRunnable;
@@ -93,17 +94,16 @@ class Client {
   }
 
   virtual Result<UsageInfo, nsresult> InitOrigin(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) = 0;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) = 0;
 
-  virtual nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
-                                             const nsACString& aGroup,
-                                             const nsACString& aOrigin,
-                                             const AtomicBool& aCanceled) = 0;
+  virtual nsresult InitOriginWithoutTracking(
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) = 0;
 
   virtual Result<UsageInfo, nsresult> GetUsageForOrigin(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, const AtomicBool& aCanceled) = 0;
+      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      const AtomicBool& aCanceled) = 0;
 
   // This method is called when origins are about to be cleared
   // (except the case when clearing is triggered by the origin eviction).

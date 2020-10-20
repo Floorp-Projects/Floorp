@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/cache/Context.h"
 
+#include "CacheCommon.h"
+
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Action.h"
@@ -227,8 +229,7 @@ void Context::QuotaInitRunnable::OpenDirectory() {
   // thread when it is safe to access our storage directory.
   mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
   RefPtr<DirectoryLock> pendingDirectoryLock =
-      QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
-                                         mQuotaInfo.mGroup, mQuotaInfo.mOrigin,
+      QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT, mQuotaInfo,
                                          quota::Client::DOMCACHE,
                                          /* aExclusive */ false, this);
 }
@@ -338,17 +339,24 @@ Context::QuotaInitRunnable::Run() {
       }
 
       nsCOMPtr<nsIPrincipal> principal = mManager->GetManagerId().Principal();
-      nsresult rv = QuotaManager::GetInfoFromPrincipal(
-          principal, &mQuotaInfo.mSuffix, &mQuotaInfo.mGroup,
-          &mQuotaInfo.mOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        resolver->Resolve(rv);
-        break;
-      }
+      DebugOnly res =
+          QuotaManager::GetInfoFromPrincipal(principal)
+              .andThen([&self = *this](quota::QuotaInfo&& quotaInfo) {
+                static_cast<quota::QuotaInfo&>(self.mQuotaInfo) =
+                    std::move(quotaInfo);
 
-      mState = STATE_CREATE_QUOTA_MANAGER;
-      MOZ_ALWAYS_SUCCEEDS(
-          mInitiatingEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
+                self.mState = STATE_CREATE_QUOTA_MANAGER;
+                MOZ_ALWAYS_SUCCEEDS(self.mInitiatingEventTarget->Dispatch(
+                    &self, nsIThread::DISPATCH_NORMAL));
+
+                return Result<Ok, nsresult>{Ok{}};
+              })
+              .orElse([&resolver](const auto& res) {
+                resolver->Resolve(res);
+
+                return Result<Ok, nsresult>{Ok{}};
+              });
+      MOZ_ASSERT(res.inspect().isOk());
       break;
     }
     // ----------------------------------
@@ -394,8 +402,7 @@ Context::QuotaInitRunnable::Run() {
       MOZ_DIAGNOSTIC_ASSERT(qm);
 
       auto directoryOrErr = qm->EnsureStorageAndOriginIsInitialized(
-          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo.mSuffix, mQuotaInfo.mGroup,
-          mQuotaInfo.mOrigin, quota::Client::DOMCACHE);
+          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, quota::Client::DOMCACHE);
       if (directoryOrErr.isErr()) {
         resolver->Resolve(directoryOrErr.inspectErr());
         break;

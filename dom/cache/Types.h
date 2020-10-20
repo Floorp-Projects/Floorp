@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <stdint.h>
+#include "mozilla/dom/quota/QuotaInfo.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -28,14 +29,9 @@ static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 typedef int64_t CacheId;
 static const CacheId INVALID_CACHE_ID = -1;
 
-struct QuotaInfo {
+struct QuotaInfo : quota::QuotaInfo {
   nsCOMPtr<nsIFile> mDir;
-  nsCString mSuffix;
-  nsCString mGroup;
-  nsCString mOrigin;
-  int64_t mDirectoryLockId;
-
-  QuotaInfo() : mDirectoryLockId(-1) {}
+  int64_t mDirectoryLockId = -1;
 };
 
 struct DeletionInfo {
