@@ -429,13 +429,18 @@ nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::SetTextAsAction(const nsAString& aString,
-                                     nsIPrincipal* aPrincipal) {
+nsresult TextEditor::SetTextAsAction(
+    const nsAString& aString,
+    AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aString.FindChar(nsCRT::CR) == kNotFound);
   MOZ_ASSERT(!AsHTMLEditor());
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetText,
                                           aPrincipal);
+  if (aAllowBeforeInputEventCancelable == AllowBeforeInputEventCancelable::No) {
+    editActionData.MakeBeforeInputEventNonCancelable();
+  }
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
@@ -451,15 +456,19 @@ nsresult TextEditor::SetTextAsAction(const nsAString& aString,
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
-                                         nsRange* aReplaceRange,
-                                         nsIPrincipal* aPrincipal) {
+nsresult TextEditor::ReplaceTextAsAction(
+    const nsAString& aString, nsRange* aReplaceRange,
+    AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aString.FindChar(nsCRT::CR) == kNotFound);
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText,
                                           aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (aAllowBeforeInputEventCancelable == AllowBeforeInputEventCancelable::No) {
+    editActionData.MakeBeforeInputEventNonCancelable();
   }
 
   if (!AsHTMLEditor()) {

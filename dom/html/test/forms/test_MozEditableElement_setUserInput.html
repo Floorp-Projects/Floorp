@@ -20,6 +20,7 @@ SimpleTest.waitForFocus(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.beforeinput.enabled", true]],
   });
+  const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let content = document.getElementById("content");
   /**
@@ -181,8 +182,8 @@ SimpleTest.waitForFocus(async () => {
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         } else {
           if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
-            is(beforeInputEvents[0].cancelable, true,
-               `"beforeinput" event for "insertReplacementText" should be cancelable when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+            is(beforeInputEvents[0].cancelable, kSetUserInputCancelable,
+               `"beforeinput" event for "insertReplacementText" should be cancelable when setUserInput("${test.input.before}") is called before ${tag} gets focus unless it's suppressed by the pref`);
             is(beforeInputEvents[0].inputType, "insertReplacementText",
                `inputType of "beforeinput"event should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
             is(beforeInputEvents[0].data, test.input.before,
@@ -267,8 +268,8 @@ SimpleTest.waitForFocus(async () => {
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         } else {
           if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
-            is(beforeInputEvents[0].cancelable, true,
-               `"beforeinput" event should be cancelable when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+            is(beforeInputEvents[0].cancelable, kSetUserInputCancelable,
+               `"beforeinput" event should be cancelable when setUserInput("${test.input.after}") is called after ${tag} gets focus unless it's suppressed by the pref`);
             is(beforeInputEvents[0].inputType, "insertReplacementText",
                `inputType of "beforeinput" event should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
             is(beforeInputEvents[0].data, test.input.after,
@@ -534,6 +535,47 @@ SimpleTest.waitForFocus(async () => {
   }
   testEditorValueAtEachEvent("text");
   testEditorValueAtEachEvent("textarea");
+
+  async function testBeforeInputCancelable(aType) {
+    let tag = aType === "textarea" ? "<textarea>" : `<input type="${aType}">`
+    let closeTag = aType === "textarea" ? "</textarea>" : "";
+    for (const kShouldBeCancelable of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_event.allow_to_cancel_set_user_input", kShouldBeCancelable]],
+      });
+
+      content.innerHTML = `${tag}${closeTag}`;
+      content.scrollTop; // Flush pending layout.
+      let target = content.firstChild;
+      target.value = "Old Value";
+      let description = `Setting new value of ${tag} before setting focus (the pref ${kShouldBeCancelable ? "allows" : "disallows"} to cancel beforeinput): `;
+      let onBeforeInput = (aEvent) => {
+        is(aEvent.cancelable, kShouldBeCancelable,
+          `${description}The "beforeinput" event should be ${kShouldBeCancelable ? "cancelable" : "not be cancelable due to suppressed by the pref"}`);
+      };
+      let onInput = (aEvent) => {
+        is(aEvent.cancelable, false,
+          `${description}The value should have been modified at "input" event (inputType: "${aEvent.inputType}", data: "${aEvent.data}"`);
+      };
+      target.addEventListener("beforeinput", onBeforeInput);
+      target.addEventListener("input", onInput);
+      SpecialPowers.wrap(target).setUserInput("New Value");
+
+      description = `Setting new value of ${tag} after setting focus (the pref ${kShouldBeCancelable ? "allows" : "disallows"} to cancel beforeinput): `;
+      target.value = "Old Value";
+      target.focus();
+      SpecialPowers.wrap(target).setUserInput("New Value");
+
+      target.removeEventListener("beforeinput", onBeforeInput);
+      target.removeEventListener("input", onInput);
+    }
+
+    await SpecialPowers.clearUserPref({
+      clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+    });
+  }
+  await testBeforeInputCancelable("text");
+  await testBeforeInputCancelable("textarea");
 
   SimpleTest.finish();
 });

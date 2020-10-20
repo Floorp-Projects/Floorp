@@ -19,6 +19,7 @@ SimpleTest.waitForFocus(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.beforeinput.enabled", true]],
   });
+  const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let input = document.querySelector("input[type=text]");
 
@@ -417,7 +418,7 @@ SimpleTest.waitForFocus(async () => {
         inputEvents.push(aEvent);
       }
     }
-    let condition = `(${aWithEditor ? "with editor" : "without editor"}${aPreventDefaultOfBeforeInput ? ' and canceling "beforeinput" event' : ""})`;
+    let condition = `(${aWithEditor ? "with editor" : "without editor"}${aPreventDefaultOfBeforeInput ? ' and canceling "beforeinput" event' : ""}, the pref ${kSetUserInputCancelable ? "allows" : "disallows"} to cancel "beforeinput" event})`;
     function Reset() {
       beforeInputEvents = [];
       inputEvents = [];
@@ -449,7 +450,7 @@ SimpleTest.waitForFocus(async () => {
     }
     input.addEventListener("beforeinput", (aEvent) => {
       is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
-      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(aEvent.cancelable, kSetUserInputCancelable, `${description}"beforeinput" event should be cancelable unless it's suppressed by the pref`);
       is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
       input.addEventListener("beforeinput", recordEvent);
       input.addEventListener("input", recordEvent);
@@ -460,7 +461,7 @@ SimpleTest.waitForFocus(async () => {
     }, {once: true});
     SpecialPowers.wrap(input).setUserInput("def");
     is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
-    if (aPreventDefaultOfBeforeInput) {
+    if (aPreventDefaultOfBeforeInput && kSetUserInputCancelable) {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
       is(inputEvents.length, 0,
@@ -490,7 +491,7 @@ SimpleTest.waitForFocus(async () => {
     }
     input.addEventListener("beforeinput", (aEvent) => {
       is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
-      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(aEvent.cancelable, kSetUserInputCancelable, `${description}"beforeinput" event should be cancelable unless it's suppressed by the pref`);
       is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
       input.addEventListener("beforeinput", recordEvent);
       input.addEventListener("input", recordEvent);
@@ -502,7 +503,7 @@ SimpleTest.waitForFocus(async () => {
     }, {once: true});
     SpecialPowers.wrap(input).setUserInput("def");
     is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
-    if (aPreventDefaultOfBeforeInput) {
+    if (aPreventDefaultOfBeforeInput && kSetUserInputCancelable) {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
       is(inputEvents.length, 0,
@@ -527,7 +528,7 @@ SimpleTest.waitForFocus(async () => {
     }
     input.addEventListener("beforeinput", (aEvent) => {
       is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
-      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(aEvent.cancelable, kSetUserInputCancelable, `${description}"beforeinput" event should be cancelable unless it's suppressed by the pref`);
       is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
       input.addEventListener("beforeinput", recordEvent);
       input.addEventListener("input", recordEvent);
@@ -539,7 +540,7 @@ SimpleTest.waitForFocus(async () => {
     }, {once: true});
     SpecialPowers.wrap(input).setUserInput("def");
     is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
-    if (aPreventDefaultOfBeforeInput) {
+    if (aPreventDefaultOfBeforeInput && kSetUserInputCancelable) {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
       is(inputEvents.length, 0,
@@ -574,7 +575,7 @@ SimpleTest.waitForFocus(async () => {
     }
     input.addEventListener("beforeinput", (aEvent) => {
       is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
-      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(aEvent.cancelable, kSetUserInputCancelable, `${description}"beforeinput" event should be cancelable unless it's suppressed by the pref`);
       is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
       input.addEventListener("beforeinput", recordEvent);
       input.addEventListener("input", recordEvent);
@@ -586,7 +587,7 @@ SimpleTest.waitForFocus(async () => {
     }, {once: true});
     SpecialPowers.wrap(input).setUserInput("def");
     is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
-    if (aPreventDefaultOfBeforeInput) {
+    if (aPreventDefaultOfBeforeInput && kSetUserInputCancelable) {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
       is(inputEvents.length, 0,

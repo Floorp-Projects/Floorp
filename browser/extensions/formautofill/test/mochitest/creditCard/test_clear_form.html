@@ -73,8 +73,8 @@ async function confirmClear(selector) {
       beforeInputFired = true;
       ok(event instanceof InputEvent,
          '"beforeinput" event should be dispatched with InputEvent interface');
-      is(event.cancelable, true,
-         '"beforeinput" event should be cancelable');
+      is(event.cancelable, SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input"),
+         `"beforeinput" event should be cancelable unless it's disabled by the pref`);
       is(event.bubbles, true,
          '"beforeinput" event should always bubble');
       is(event.inputType, "insertReplacementText",

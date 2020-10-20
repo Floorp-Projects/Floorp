@@ -19,7 +19,13 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.expectAssertions(0, 1);  // In a11y module
 SimpleTest.waitForFocus(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
+    set: [
+      ["dom.input_events.beforeinput.enabled", true],
+      // Even if `beforeinput` events for `setUserInput()` calls are not
+      // allowed to cancel, correcting the spells should be cancelable for
+      // compatibility with the other browsers.
+      ["dom.input_event.allow_to_cancel_set_user_input", false],
+    ],
   });
 
   let textarea = document.getElementById("textarea");
