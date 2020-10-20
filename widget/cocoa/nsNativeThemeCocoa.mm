@@ -1170,16 +1170,6 @@ static void SetCGContextFillColor(CGContextRef cgContext, const sRGBColor& aColo
   CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
 }
 
-static void SetCGContextFillColor(CGContextRef cgContext, nscolor aColor) {
-  DeviceColor color = ToDeviceColor(aColor);
-  CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
-}
-
-static void SetCGContextStrokeColor(CGContextRef cgContext, nscolor aColor) {
-  DeviceColor color = ToDeviceColor(aColor);
-  CGContextSetRGBStrokeColor(cgContext, color.r, color.g, color.b, color.a);
-}
-
 void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
                                       const MenuItemParams& aParams) {
   // If the background is contributed by vibrancy (which is part of the window background), we don't
@@ -2472,11 +2462,11 @@ nsNativeThemeCocoa::ScrollbarParams nsNativeThemeCocoa::ComputeScrollbarParams(n
   return params;
 }
 
-void nsNativeThemeCocoa::DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect,
+void nsNativeThemeCocoa::DrawScrollbarThumb(DrawTarget& aDT, const gfx::Rect& aRect,
                                             ScrollbarParams aParams) {
   // Compute the thumb thickness. This varies based on aParams.small, aParams.overlay and
   // aParams.rolledOver. non-overlay: 6 / 8, overlay non-hovered: 5 / 7, overlay hovered: 9 / 11
-  CGFloat thickness = aParams.small ? 6.0f : 8.0f;
+  float thickness = aParams.small ? 6.0f : 8.0f;
   if (aParams.overlay) {
     thickness -= 1.0f;
     if (aParams.rolledOver) {
@@ -2485,18 +2475,20 @@ void nsNativeThemeCocoa::DrawScrollbarThumb(CGContextRef cgContext, const CGRect
   }
 
   // Compute the thumb rect.
-  CGFloat outerSpacing = (aParams.overlay || aParams.small) ? 1.0f : 2.0f;
-  CGRect thumbRect = CGRectInset(inBoxRect, 1.0f, 1.0f);
+  float outerSpacing = (aParams.overlay || aParams.small) ? 1.0f : 2.0f;
+  gfx::Rect thumbRect = aRect;
+  thumbRect.Deflate(1.0f);
   if (aParams.horizontal) {
-    thumbRect.origin.y = CGRectGetMaxY(thumbRect) - outerSpacing - thickness;
-    thumbRect.size.height = thickness;
+    float bottomEdge = thumbRect.YMost() - outerSpacing;
+    thumbRect.SetBoxY(bottomEdge - thickness, bottomEdge);
   } else {
     if (aParams.rtl) {
-      thumbRect.origin.x = thumbRect.origin.x + outerSpacing;
+      float leftEdge = thumbRect.X() + outerSpacing;
+      thumbRect.SetBoxX(leftEdge, leftEdge + thickness);
     } else {
-      thumbRect.origin.x = CGRectGetMaxX(thumbRect) - outerSpacing - thickness;
+      float rightEdge = thumbRect.XMost() - outerSpacing;
+      thumbRect.SetBoxX(rightEdge - thickness, rightEdge);
     }
-    thumbRect.size.width = thickness;
   }
 
   // Compute the thumb fill color.
@@ -2512,29 +2504,23 @@ void nsNativeThemeCocoa::DrawScrollbarThumb(CGContextRef cgContext, const CGRect
   }
 
   // Fill the thumb shape with the color.
-  CGFloat cornerRadius = (aParams.horizontal ? thumbRect.size.height : thumbRect.size.width) / 2.0f;
-  CGPathRef path = CGPathCreateWithRoundedRect(thumbRect, cornerRadius, cornerRadius, nullptr);
-  CGContextAddPath(cgContext, path);
-  CGPathRelease(path);
-  SetCGContextFillColor(cgContext, faceColor);
-  CGContextFillPath(cgContext);
+  float cornerRadius = (aParams.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+  aDT.FillRoundedRect(RoundedRect(thumbRect, RectCornerRadii(cornerRadius)),
+                      ColorPattern(ToDeviceColor(faceColor)));
 
   // Overlay scrollbars have an additional stroke around the fill.
   if (aParams.overlay) {
-    CGFloat strokeOutset = aParams.onDarkBackground ? 0.3f : 0.5f;
-    CGFloat strokeWidth = aParams.onDarkBackground ? 0.6f : 0.8f;
+    float strokeOutset = aParams.onDarkBackground ? 0.3f : 0.5f;
+    float strokeWidth = aParams.onDarkBackground ? 0.6f : 0.8f;
     nscolor strokeColor =
         aParams.onDarkBackground ? NS_RGBA(0, 0, 0, 48) : NS_RGBA(255, 255, 255, 48);
-    CGRect thumbStrokeRect = CGRectInset(thumbRect, -strokeOutset, -strokeOutset);
-    CGFloat strokeRadius =
-        (aParams.horizontal ? thumbStrokeRect.size.height : thumbStrokeRect.size.width) / 2.0f;
-    CGPathRef path =
-        CGPathCreateWithRoundedRect(thumbStrokeRect, strokeRadius, strokeRadius, nullptr);
-    CGContextAddPath(cgContext, path);
-    CGPathRelease(path);
-    SetCGContextStrokeColor(cgContext, strokeColor);
-    CGContextSetLineWidth(cgContext, strokeWidth);
-    CGContextStrokePath(cgContext);
+    gfx::Rect thumbStrokeRect = thumbRect;
+    thumbStrokeRect.Inflate(strokeOutset);
+    float strokeRadius =
+        (aParams.horizontal ? thumbStrokeRect.Height() : thumbStrokeRect.Width()) / 2.0f;
+
+    RefPtr<Path> path = MakePathForRoundedRect(aDT, thumbStrokeRect, RectCornerRadii(strokeRadius));
+    aDT.Stroke(path, ColorPattern(ToDeviceColor(strokeColor)), StrokeOptions(strokeWidth));
   }
 }
 
@@ -3173,6 +3159,11 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
       aDrawTarget.FillRect(widgetRect, ColorPattern(ToDeviceColor(color)));
       break;
     }
+    case Widget::eScrollbarThumb: {
+      ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
+      DrawScrollbarThumb(aDrawTarget, widgetRect, params);
+      break;
+    }
     case Widget::eScrollbarTrack: {
       ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
       DrawScrollbarTrack(aDrawTarget, widgetRect, params);
@@ -3204,6 +3195,7 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
 
       switch (widget) {
         case Widget::eColorFill:
+        case Widget::eScrollbarThumb:
         case Widget::eScrollbarTrack:
         case Widget::eScrollCorner: {
           MOZ_CRASH("already handled in outer switch");
@@ -3336,11 +3328,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         case Widget::eScale: {
           ScaleParams params = aWidgetInfo.Params<ScaleParams>();
           DrawScale(cgContext, macRect, params);
-          break;
-        }
-        case Widget::eScrollbarThumb: {
-          ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-          DrawScrollbarThumb(cgContext, macRect, params);
           break;
         }
         case Widget::eMultilineTextField: {
