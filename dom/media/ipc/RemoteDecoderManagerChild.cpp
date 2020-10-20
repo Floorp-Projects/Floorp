@@ -192,6 +192,11 @@ bool RemoteDecoderManagerChild::Supports(
     RefPtr<Runnable> task =
         NS_NewRunnableFunction("RemoteDecoderManager::Supports", [&]() {
           auto* rdm = GetSingleton(aLocation);
+          if (!rdm) {
+            // The RDD process failed to launch. Fail for now.
+            // Creation will be attempted again later.
+            return;
+          }
           const auto& trackInfo = aParams.mConfig;
           if (trackInfo.GetAsVideoInfo()) {
             VideoDecoderInfoIPDL info(*trackInfo.GetAsVideoInfo(),
@@ -392,6 +397,7 @@ void RemoteDecoderManagerChild::OpenForRDDProcess(
 
 void RemoteDecoderManagerChild::OpenForGPUProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
+  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
   // Make sure we always dispatch everything in sRecreateTasks, even if we
   // fail since this is as close to being recreated as we will ever be.
   sRemoteDecoderManagerChildForGPUProcess = nullptr;
