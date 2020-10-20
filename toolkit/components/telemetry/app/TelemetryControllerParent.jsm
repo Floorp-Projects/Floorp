@@ -42,6 +42,7 @@ const NEWPROFILE_PING_DEFAULT_DELAY = 30 * 60 * 1000;
 // Ping types.
 const PING_TYPE_MAIN = "main";
 const PING_TYPE_DELETION_REQUEST = "deletion-request";
+const PING_TYPE_UNINSTALL = "uninstall";
 
 // Session ping reasons.
 const REASON_GATHER_PAYLOAD = "gather-payload";
@@ -251,6 +252,19 @@ var TelemetryController = Object.freeze({
    */
   removeAbortedSessionPing() {
     return Impl.removeAbortedSessionPing();
+  },
+
+  /**
+   * Create an uninstall ping and write it to disk, replacing any already present.
+   * This is stored independently from other pings, and only read by
+   * the Windows uninstaller.
+   *
+   * WINDOWS ONLY, does nothing and resolves immediately on other platforms.
+   *
+   * @return {Promise} Resolved when the ping has been saved.
+   */
+  saveUninstallPing() {
+    return Impl.saveUninstallPing();
   },
 
   /**
@@ -689,6 +703,30 @@ var Impl = {
     return TelemetryStorage.removeAbortedSessionPing();
   },
 
+  _countOtherInstalls() {
+    // TODO
+    throw new Error("_countOtherInstalls - not implemented");
+  },
+
+  async saveUninstallPing() {
+    if (AppConstants.platform != "win") {
+      return undefined;
+    }
+
+    this._log.trace("saveUninstallPing");
+
+    let payload = {};
+    try {
+      payload.otherInstalls = this._countOtherInstalls();
+    } catch (e) {
+      this._log.warn("saveUninstallPing - _countOtherInstalls failed", e);
+    }
+    const options = { addClientId: true, addEnvironment: true };
+    const pingData = this.assemblePing(PING_TYPE_UNINSTALL, payload, options);
+
+    return TelemetryStorage.saveUninstallPing(pingData);
+  },
+
   /**
    * This triggers basic telemetry initialization and schedules a full initialized for later
    * for performance reasons.
@@ -835,6 +873,16 @@ var Impl = {
           TelemetryEventPing.startup();
           EcosystemTelemetry.startup();
           TelemetryPrioPing.startup();
+
+          if (uploadEnabled) {
+            await this.saveUninstallPing().catch(e =>
+              this._log.warn("_delayedInitTask - saveUninstallPing failed", e)
+            );
+          } else {
+            await TelemetryStorage.removeUninstallPings().catch(e =>
+              this._log.warn("_delayedInitTask - saveUninstallPing", e)
+            );
+          }
 
           this._delayedInitTaskDeferred.resolve();
         } catch (e) {
@@ -1004,6 +1052,10 @@ var Impl = {
         let id = await ClientID.getClientID();
         this._clientID = id;
         Telemetry.scalarSet("telemetry.data_upload_optin", true);
+
+        await this.saveUninstallPing().catch(e =>
+          this._log.warn("_onUploadPrefChange - saveUninstallPing failed", e)
+        );
       })();
 
       this._shutdownBarrier.client.addBlocker(
@@ -1023,6 +1075,7 @@ var Impl = {
         // 3. Remove all pending pings
         await TelemetryStorage.removeAppDataPings();
         await TelemetryStorage.runRemovePendingPingsTask();
+        await TelemetryStorage.removeUninstallPings();
       } catch (e) {
         this._log.error(
           "_onUploadPrefChange - error clearing pending pings",

@@ -439,6 +439,20 @@ function fakeIntlReady() {
   Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
 }
 
+// Override the uninstall ping file names
+function fakeUninstallPingPath(aPathFcn) {
+  const m = ChromeUtils.import(
+    "resource://gre/modules/TelemetryStorage.jsm",
+    null
+  );
+  m.Policy.getUninstallPingPath =
+    aPathFcn ||
+    (id => ({
+      directory: new FileUtils.File(OS.Constants.Path.profileDir),
+      file: `uninstall_ping_0123456789ABCDEF_${id}.json`,
+    }));
+}
+
 // Return a date that is |offset| ms in the future from |date|.
 function futureDate(date, offset) {
   return new Date(date.getTime() + offset);
@@ -570,3 +584,6 @@ fakeSchedulerTimer(
 );
 // Make pind sending predictable.
 fakeMidnightPingFuzzingDelay(0);
+
+// Avoid using the directory service, which is not registered in some tests.
+fakeUninstallPingPath();
