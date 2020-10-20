@@ -1810,8 +1810,10 @@ void EditorBase::DispatchInputEvent() {
   RefPtr<DataTransfer> dataTransfer = GetInputEventDataTransfer();
   DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
       targetElement, eEditorInput, ToInputType(GetEditAction()), textEditor,
-      dataTransfer ? InputEventOptions(dataTransfer)
-                   : InputEventOptions(GetInputEventData()));
+      dataTransfer ? InputEventOptions(dataTransfer,
+                                       InputEventOptions::NeverCancelable::No)
+                   : InputEventOptions(GetInputEventData(),
+                                       InputEventOptions::NeverCancelable::No));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "nsContentUtils::DispatchInputEvent() failed, but ignored");
@@ -5127,7 +5129,8 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mTopLevelEditSubAction(EditSubAction::eNone),
       mAborted(false),
       mHasTriedToDispatchBeforeInputEvent(false),
-      mBeforeInputEventCanceled(false) {
+      mBeforeInputEventCanceled(false),
+      mMakeBeforeInputEventNonCancelable(false) {
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
     mSelection = mParentData->mSelection;
@@ -5407,10 +5410,16 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     }
   }
   nsEventStatus status = nsEventStatus_eIgnore;
+  InputEventOptions::NeverCancelable neverCancelable =
+      mMakeBeforeInputEventNonCancelable
+          ? InputEventOptions::NeverCancelable::Yes
+          : InputEventOptions::NeverCancelable::No;
   nsresult rv = nsContentUtils::DispatchInputEvent(
       targetElement, eEditorBeforeInput, inputType, textEditor,
-      mDataTransfer ? InputEventOptions(mDataTransfer, std::move(mTargetRanges))
-                    : InputEventOptions(mData, std::move(mTargetRanges)),
+      mDataTransfer
+          ? InputEventOptions(mDataTransfer, std::move(mTargetRanges),
+                              neverCancelable)
+          : InputEventOptions(mData, std::move(mTargetRanges), neverCancelable),
       &status);
   if (NS_WARN_IF(mEditorBase.Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;

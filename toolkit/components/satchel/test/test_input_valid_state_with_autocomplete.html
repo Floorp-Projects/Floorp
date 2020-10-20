@@ -31,6 +31,7 @@ async function runTest() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.beforeinput.enabled", true]],
   });
+  const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let resolveFunc = null;
   function onPopup() {
@@ -83,8 +84,8 @@ async function runTest() {
   input.addEventListener("beforeinput", (event) => {
     ok(!beforeInputFired, '"input" event should be fired only once at typing');
     beforeInputFired = true;
-    ok(event.cancelable,
-       '"beforeinput" event for "insertReplacementText" should be cancelable');
+    is(event.cancelable, kSetUserInputCancelable,
+       `"beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
     is(event.inputType, "insertReplacementText",
        "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
     ok(!input.validity.valid,
@@ -116,8 +117,8 @@ async function runTest() {
   input.addEventListener("beforeinput", (event) => {
     ok(!beforeInputFired, '"input" event should be fired only once at typing');
     beforeInputFired = true;
-    ok(event.cancelable,
-       '"beforeinput" event for "insertReplacementText" should be cancelable');
+    is(event.cancelable, kSetUserInputCancelable,
+       `"beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
     is(event.inputType, "insertReplacementText",
        "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
     ok(input.validity.valid,

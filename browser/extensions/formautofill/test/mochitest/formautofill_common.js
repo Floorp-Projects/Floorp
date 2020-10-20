@@ -173,8 +173,10 @@ async function triggerAutofillAndCheckProfile(profile) {
             );
             is(
               event.cancelable,
-              true,
-              `"beforeinput" event should be cancelable on ${element.tagName}`
+              SpecialPowers.getBoolPref(
+                "dom.input_event.allow_to_cancel_set_user_input"
+              ),
+              `"beforeinput" event should be cancelable on ${element.tagName} unless it's suppressed by the pref`
             );
             is(
               event.bubbles,
