@@ -7,46 +7,47 @@ const kTestPath = getRootDirectory(gTestPath).replace(
 const kTestURI = kTestPath + "file_data_text_csv.html";
 
 function addWindowListener(aURL, aCallback) {
-  Services.wm.addListener({
-    onOpenWindow(aXULWindow) {
-      info("window opened, waiting for focus");
-      Services.wm.removeListener(this);
-      var domwindow = aXULWindow.docShell.domWindow;
-      waitForFocus(function() {
-        is(
-          domwindow.document.location.href,
-          aURL,
-          "should have seen the right window open"
-        );
-        aCallback(domwindow);
-      }, domwindow);
-    },
-    onCloseWindow(aXULWindow) {},
+  return new Promise(resolve => {
+    Services.wm.addListener({
+      onOpenWindow(aXULWindow) {
+        info("window opened, waiting for focus");
+        Services.wm.removeListener(this);
+        var domwindow = aXULWindow.docShell.domWindow;
+        waitForFocus(function() {
+          is(
+            domwindow.document.location.href,
+            aURL,
+            "should have seen the right window open"
+          );
+          resolve(domwindow);
+        }, domwindow);
+      },
+      onCloseWindow(aXULWindow) {},
+    });
   });
 }
 
-function test() {
-  waitForExplicitFinish();
-  Services.prefs.setBoolPref(
-    "security.data_uri.block_toplevel_data_uri_navigations",
-    true
-  );
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(
-      "security.data_uri.block_toplevel_data_uri_navigations"
-    );
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
-  addWindowListener(
-    "chrome://mozapps/content/downloads/unknownContentType.xhtml",
-    function(win) {
-      is(
-        win.document.getElementById("location").value,
-        "text/csv;foo,bar,foobar",
-        "file name of download should match"
-      );
-      win.close();
-      finish();
-    }
+  let windowPromise = addWindowListener(
+    "chrome://mozapps/content/downloads/unknownContentType.xhtml"
   );
   BrowserTestUtils.loadURI(gBrowser, kTestURI);
-}
+  let win = await windowPromise;
+
+  let expectedValue = "text/csv;foo,bar,foobar";
+  let mimeInfo = getMIMEInfoForType("text/csv");
+  try {
+    expectedValue = "." + mimeInfo.primaryExtension;
+  } catch (ex) {
+    /* fails on Windows, bug 1671930 */
+  }
+  is(
+    win.document.getElementById("location").value,
+    expectedValue,
+    "file name of download should match"
+  );
+  win.close();
+});
