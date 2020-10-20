@@ -26,7 +26,6 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 **config** is a dict with the following options:
 
 - **playback_tool**: name of the backend. can be "mitmproxy", "mitmproxy-android"
-- **playback_tool_args**: extra options to pass to the playback tool
 - **playback_version**: playback tool version
 - **playback_files**: playback recording path/manifest/URL
 - **binary**: path of the browser binary
