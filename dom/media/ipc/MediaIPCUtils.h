@@ -7,8 +7,10 @@
 #ifndef mozilla_dom_media_MediaIPCUtils_h
 #define mozilla_dom_media_MediaIPCUtils_h
 
+#include "DecoderDoctorDiagnostics.h"
 #include "PlatformDecoderModule.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/gfx/Rect.h"
 
@@ -185,6 +187,59 @@ struct ParamTraits<mozilla::MediaResult> {
         ReadParam(aMsg, aIter, &timeStamp)) {
       *aResult = paramType(result, std::move(message));
       aResult->SetGPUCrashTimeStamp(timeStamp);
+      return true;
+    }
+    return false;
+  };
+};
+
+template <>
+struct ParamTraits<mozilla::DecoderDoctorDiagnostics> {
+  typedef mozilla::DecoderDoctorDiagnostics paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mDiagnosticsType);
+    WriteParam(aMsg, aParam.mFormat);
+    WriteParam(aMsg, aParam.mFlags);
+    WriteParam(aMsg, aParam.mEvent);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (ReadParam(aMsg, aIter, &aResult->mDiagnosticsType) &&
+        ReadParam(aMsg, aIter, &aResult->mFormat) &&
+        ReadParam(aMsg, aIter, &aResult->mFlags) &&
+        ReadParam(aMsg, aIter, &aResult->mEvent)) {
+      return true;
+    }
+    return false;
+  };
+};
+
+template <>
+struct ParamTraits<mozilla::DecoderDoctorDiagnostics::DiagnosticsType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::DecoderDoctorDiagnostics::DiagnosticsType,
+          mozilla::DecoderDoctorDiagnostics::DiagnosticsType::eUnsaved,
+          mozilla::DecoderDoctorDiagnostics::DiagnosticsType::eDecodeWarning> {
+};
+
+template <>
+struct ParamTraits<mozilla::DecoderDoctorEvent> {
+  typedef mozilla::DecoderDoctorEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    int domain = aParam.mDomain;
+    WriteParam(aMsg, domain);
+    WriteParam(aMsg, aParam.mResult);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    int domain = 0;
+    if (ReadParam(aMsg, aIter, &domain) &&
+        ReadParam(aMsg, aIter, &aResult->mResult)) {
+      aResult->mDomain = paramType::Domain(domain);
       return true;
     }
     return false;

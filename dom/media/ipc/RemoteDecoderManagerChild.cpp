@@ -63,6 +63,13 @@ ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 StaticRefPtr<ShutdownObserver> sObserver;
 
+static Maybe<layers::TextureFactoryIdentifier> MaybeTextureFactoryIdentifier(
+    const SupportDecoderParams& aParams) {
+  return aParams.mKnowsCompositor
+             ? Some(aParams.mKnowsCompositor->GetTextureFactoryIdentifier())
+             : Nothing();
+}
+
 /* static */
 void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -172,6 +179,40 @@ RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetSingleton(
 nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   return *remoteDecoderManagerThread;
+}
+
+/* static */
+bool RemoteDecoderManagerChild::Supports(
+    RemoteDecodeIn aLocation, const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) {
+  bool supports = false;
+  DecoderDoctorDiagnostics diagnostics;
+
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (managerThread) {
+    RefPtr<Runnable> task =
+        NS_NewRunnableFunction("RemoteDecoderManager::Supports", [&]() {
+          auto* rdm = GetSingleton(aLocation);
+          const auto& trackInfo = aParams.mConfig;
+          if (trackInfo.GetAsVideoInfo()) {
+            VideoDecoderInfoIPDL info(*trackInfo.GetAsVideoInfo(),
+                                      aParams.mRate.mValue);
+            Unused << rdm->SendSupports(info,
+                                        MaybeTextureFactoryIdentifier(aParams),
+                                        &supports, &diagnostics);
+          } else if (trackInfo.GetAsAudioInfo()) {
+            Unused << rdm->SendSupports(*trackInfo.GetAsAudioInfo(), Nothing(),
+                                        &supports, &diagnostics);
+          }
+        });
+    SyncRunnable::DispatchToThread(managerThread, task);
+  }
+
+  if (aDiagnostics) {
+    *aDiagnostics = diagnostics;
+  }
+
+  return supports;
 }
 
 /* static */
