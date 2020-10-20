@@ -14,11 +14,11 @@ import re
 import shutil
 import subprocess
 import sys
-import distutils
 
 from mozbuild.base import MozbuildObject, BinaryNotFoundException
 from mozfile import NamedTemporaryFile, TemporaryDirectory
 from mozprofile.permissions import ServerLocations
+from distutils.spawn import find_executable
 
 dbFiles = [
     re.compile("^cert[0-9]+\.db$"),
@@ -96,7 +96,7 @@ def constructCertDatabase(build, srcDir):
     except BinaryNotFoundException as e:
         print('{}\n\n{}\n'.format(e, e.help()))
         return 1
-    openssl = distutils.spawn.find_executable("openssl")
+    openssl = find_executable("openssl")
     pycert = os.path.join(build.topsrcdir, "security", "manager", "ssl", "tests",
                           "unit", "pycert.py")
     pykey = os.path.join(build.topsrcdir, "security", "manager", "ssl", "tests",
