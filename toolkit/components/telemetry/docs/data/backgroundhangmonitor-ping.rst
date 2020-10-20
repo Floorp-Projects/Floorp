@@ -158,3 +158,5 @@ The following annotations are currently present in tree:
 +-----------------+-------------------------------------------------+
 | Unrecovered     | "true" if the hang persisted until process exit |
 +-----------------+-------------------------------------------------+
+
+Additional annotations can be added at run-time via :doc:`../collection/user-interactions`.
