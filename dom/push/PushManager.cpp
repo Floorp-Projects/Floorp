@@ -174,7 +174,9 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
         worker, std::move(mProxy), aStatus, endpoint, mScope,
         std::move(rawP256dhKey), std::move(authSecret),
         std::move(appServerKey));
-    MOZ_ALWAYS_TRUE(r->Dispatch());
+    if (!r->Dispatch()) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     return NS_OK;
   }
