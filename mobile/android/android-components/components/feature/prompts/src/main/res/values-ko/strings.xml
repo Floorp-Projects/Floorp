@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">제안된 로그인 접기</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">제안된 로그인</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">이 사이트로 데이터를 다시 보내시겠습니까?</string>
+    <string name="mozac_feature_prompt_repost_message">이 페이지를 새로 고침하면 결제를 두 번 보내거나 댓글을 두 번 게시하는 등 최근 작업이 중복될 수 있습니다.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">데이터 다시 보내기</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">취소</string>
 </resources>
