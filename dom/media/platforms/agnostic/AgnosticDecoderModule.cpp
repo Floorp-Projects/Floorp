@@ -60,6 +60,8 @@ static bool IsAvailableInRdd(DecoderType type) {
 #endif
     case DecoderType::Opus:
       return StaticPrefs::media_rdd_opus_enabled();
+    case DecoderType::Theora:
+      return StaticPrefs::media_rdd_theora_enabled();
     case DecoderType::Vorbis:
 #if defined(__MINGW32__)
       // If this is a MinGW build we need to force AgnosticDecoderModule to
@@ -73,6 +75,8 @@ static bool IsAvailableInRdd(DecoderType type) {
 #else
       return StaticPrefs::media_rdd_vorbis_enabled();
 #endif
+    case DecoderType::VPX:
+      return StaticPrefs::media_rdd_vpx_enabled();
     case DecoderType::Wave:
       return StaticPrefs::media_rdd_wav_enabled();
     default:
