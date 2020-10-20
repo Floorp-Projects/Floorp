@@ -20,6 +20,7 @@
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GpuDecoderModule.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -361,9 +362,13 @@ void PDMFactory::CreateRddPDMs() {
 
 void PDMFactory::CreateDefaultPDMs() {
   MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess());
+  if (StaticPrefs::media_gpu_process_decoder()) {
+    CreateAndStartupPDM<RemoteDecoderModule>(RemoteDecodeIn::GpuProcess);
+  }
+
   if (StaticPrefs::media_rdd_process_enabled() &&
       BrowserTabsRemoteAutostart()) {
-    CreateAndStartupPDM<RemoteDecoderModule>();
+    CreateAndStartupPDM<RemoteDecoderModule>(RemoteDecodeIn::RddProcess);
   }
 
 #ifdef XP_WIN
