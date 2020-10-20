@@ -509,8 +509,9 @@ IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapter() {
     // should never reach here. Furthermore, the UI process does not create
     // devices when using a GPU process.
     //
-    // So, this should only ever get called on the content process.
-    MOZ_ASSERT(XRE_IsContentProcess());
+    // So, this should only ever get called on the content process or RDD
+    // process
+    MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsRDDProcess());
 
     // In the child process, we search for the adapter that matches the parent
     // process. The first adapter can be mismatched on dual-GPU systems.

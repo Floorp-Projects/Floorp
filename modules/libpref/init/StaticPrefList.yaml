@@ -7069,6 +7069,17 @@
   value: 5000
   mirror: always
 
+#ifdef MOZ_WMF
+- name: media.rdd-wmf.enabled
+  type: RelaxedAtomicBool
+#if defined(XP_WIN) && !defined(_ARM64_)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+#endif
+
 - name: media.rdd-vorbis.enabled
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && !defined(ANDROID)

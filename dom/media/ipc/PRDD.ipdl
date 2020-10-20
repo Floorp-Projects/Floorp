@@ -44,7 +44,8 @@ parent:
 
   async UpdateVar(GfxVarUpdate var);
 
-  async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint);
+  async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint,
+                        ContentDeviceData contentDeviceData);
 
   async GetUntrustedModulesData() returns (UntrustedModulesData? data);
 
