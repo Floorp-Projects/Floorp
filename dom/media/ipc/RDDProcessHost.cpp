@@ -258,7 +258,7 @@ bool RDDProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
 
 /* static */
 MacSandboxType RDDProcessHost::GetMacSandboxType() {
-  return GeckoChildProcessHost::GetDefaultMacSandboxType();
+  return MacSandboxType_RDD;
 }
 #endif
 

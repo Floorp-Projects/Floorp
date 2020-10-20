@@ -361,6 +361,11 @@ void PDMFactory::CreateRddPDMs() {
     CreateAndStartupPDM<WMFDecoderModule>();
   }
 #endif
+#ifdef MOZ_APPLEMEDIA
+  if (StaticPrefs::media_rdd_applemedia_enabled()) {
+    CreateAndStartupPDM<AppleDecoderModule>();
+  }
+#endif
 #ifdef MOZ_FFVPX
   if (StaticPrefs::media_ffvpx_enabled() &&
       StaticPrefs::media_rdd_ffvpx_enabled()) {

@@ -9,6 +9,7 @@ EXPORTS.mozilla += [
     'SandboxPolicyContent.h',
     'SandboxPolicyFlash.h',
     'SandboxPolicyGMP.h',
+    'SandboxPolicyRDD.h',
     'SandboxPolicyUtility.h'
 ]
 

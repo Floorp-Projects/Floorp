@@ -13,8 +13,9 @@ enum MacSandboxType {
   MacSandboxType_Content,
   MacSandboxType_Flash,
   MacSandboxType_GMP,
-  MacSandboxType_Utility,
+  MacSandboxType_RDD,
   MacSandboxType_Socket,
+  MacSandboxType_Utility,
   MacSandboxType_Invalid
 };
 
