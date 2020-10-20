@@ -25,12 +25,10 @@ interface nsIRunnablePriority : nsISupports
     const unsigned short PRIORITY_DEFERRED_TIMERS = 1;
     // INPUT_LOW isn't supposed to be used directly.
     // const unsigned short PRIORITY_INPUT_LOW = 2;
-    // HIGH_LOW isn't supposed to be used directly.
-    // const unsigned short PRIORITY_HIGH_LOW = 3;
-    const unsigned short PRIORITY_NORMAL = 4;
-    const unsigned short PRIORITY_MEDIUMHIGH = 5;
-    const unsigned short PRIORITY_INPUT_HIGH = 6;
-    const unsigned short PRIORITY_HIGH = 7;
+    const unsigned short PRIORITY_NORMAL = 3;
+    const unsigned short PRIORITY_MEDIUMHIGH = 4;
+    const unsigned short PRIORITY_INPUT_HIGH = 5;
+    const unsigned short PRIORITY_HIGH = 6;
     readonly attribute unsigned long priority;
 };
 

@@ -20,6 +20,19 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
     const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aDelay) {
   nsCOMPtr<nsIRunnable> event(aEvent);
 
+  static_assert(static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_IDLE) ==
+                static_cast<uint32_t>(EventQueuePriority::Idle));
+  static_assert(static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_NORMAL) ==
+                static_cast<uint32_t>(EventQueuePriority::Normal));
+  static_assert(
+      static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_MEDIUMHIGH) ==
+      static_cast<uint32_t>(EventQueuePriority::MediumHigh));
+  static_assert(
+      static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_INPUT_HIGH) ==
+      static_cast<uint32_t>(EventQueuePriority::InputHigh));
+  static_assert(static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_HIGH) ==
+                static_cast<uint32_t>(EventQueuePriority::High));
+
   if (mForwardToTC) {
     TaskController* tc = TaskController::Get();
 
