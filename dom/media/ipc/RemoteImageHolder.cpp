@@ -21,24 +21,19 @@ RemoteImageHolder::RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
                                      layers::VideoBridgeSource aSource,
                                      const gfx::IntSize& aSize,
                                      const layers::SurfaceDescriptor& aSD)
-    : mSource(aSource),
-      mSize(aSize),
-      mSD(aSD),
-      mManager(aManager),
-      mEmpty(false) {}
+    : mSource(aSource), mSize(aSize), mSD(Some(aSD)), mManager(aManager) {}
 RemoteImageHolder::RemoteImageHolder(RemoteImageHolder&& aOther)
     : mSource(aOther.mSource),
       mSize(aOther.mSize),
-      mSD(aOther.mSD),
-      mManager(aOther.mManager),
-      mEmpty(aOther.mEmpty) {
-  aOther.mEmpty = true;
+      mSD(std::move(aOther.mSD)),
+      mManager(aOther.mManager) {
+  aOther.mSD = Nothing();
 }
 
 already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
     layers::BufferRecycleBin* aBufferRecycleBin) {
-  MOZ_ASSERT(mSD.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer);
-  const SurfaceDescriptorBuffer& sdBuffer = mSD.get_SurfaceDescriptorBuffer();
+  MOZ_ASSERT(mSD && mSD->type() == SurfaceDescriptor::TSurfaceDescriptorBuffer);
+  const SurfaceDescriptorBuffer& sdBuffer = mSD->get_SurfaceDescriptorBuffer();
   MOZ_ASSERT(sdBuffer.desc().type() == BufferDescriptor::TYCbCrDescriptor);
   if (sdBuffer.desc().type() != BufferDescriptor::TYCbCrDescriptor ||
       !aBufferRecycleBin) {
@@ -105,22 +100,22 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
 
 already_AddRefed<layers::Image> RemoteImageHolder::TransferToImage(
     layers::BufferRecycleBin* aBufferRecycleBin) {
-  if (mEmpty) {
+  if (IsEmpty()) {
     return nullptr;
   }
   RefPtr<Image> image;
-  if (mSD.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
+  if (mSD->type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
     image = DeserializeImage(aBufferRecycleBin);
   } else {
     // The Image here creates a TextureData object that takes ownership
     // of the SurfaceDescriptor, and is responsible for making sure that
     // it gets deallocated.
     SurfaceDescriptorRemoteDecoder remoteSD =
-        static_cast<const SurfaceDescriptorGPUVideo&>(mSD);
+        static_cast<const SurfaceDescriptorGPUVideo&>(*mSD);
     remoteSD.source() = Some(mSource);
     image = new GPUVideoImage(mManager, remoteSD, mSize);
   }
-  mEmpty = true;
+  mSD = Nothing();
   mManager = nullptr;
 
   return image.forget();
@@ -131,10 +126,10 @@ RemoteImageHolder::~RemoteImageHolder() {
   // this image holder (the decoder could have been flushed). We don't need to
   // worry about Shmem based image as the Shmem will be automatically re-used
   // once the decoder is used again.
-  if (!mEmpty && mManager &&
-      mSD.type() != SurfaceDescriptor::TSurfaceDescriptorBuffer) {
+  if (!IsEmpty() && mManager &&
+      mSD->type() != SurfaceDescriptor::TSurfaceDescriptorBuffer) {
     SurfaceDescriptorRemoteDecoder remoteSD =
-        static_cast<const SurfaceDescriptorGPUVideo&>(mSD);
+        static_cast<const SurfaceDescriptorGPUVideo&>(*mSD);
     mManager->DeallocateSurfaceDescriptor(remoteSD);
   }
 }
@@ -144,9 +139,8 @@ RemoteImageHolder::~RemoteImageHolder() {
   WriteIPDLParam(aMsg, aActor, aParam.mSource);
   WriteIPDLParam(aMsg, aActor, aParam.mSize);
   WriteIPDLParam(aMsg, aActor, aParam.mSD);
-  WriteIPDLParam(aMsg, aActor, aParam.mEmpty);
   // Empty this holder.
-  aParam.mEmpty = true;
+  aParam.mSD = Nothing();
   aParam.mManager = nullptr;
 }
 
@@ -155,11 +149,10 @@ RemoteImageHolder::~RemoteImageHolder() {
     RemoteImageHolder* aResult) {
   if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSource) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSize) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSD) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEmpty)) {
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSD)) {
     return false;
   }
-  if (!aResult->mEmpty) {
+  if (!aResult->IsEmpty()) {
     aResult->mManager = RemoteDecoderManagerChild::GetSingleton(
         aResult->mSource == VideoBridgeSource::GpuProcess
             ? RemoteDecodeIn::GpuProcess
