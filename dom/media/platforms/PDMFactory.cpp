@@ -68,10 +68,14 @@ class PDMFactoryImpl final {
     OmxDecoderModule::Init();
 #endif
 #ifdef MOZ_FFVPX
-    FFVPXRuntimeLinker::Init();
+    if (!XRE_IsRDDProcess() || StaticPrefs::media_rdd_ffvpx_enabled()) {
+      FFVPXRuntimeLinker::Init();
+    }
 #endif
 #ifdef MOZ_FFMPEG
-    FFmpegRuntimeLinker::Init();
+    if (!XRE_IsRDDProcess() || StaticPrefs::media_rdd_ffmpeg_enabled()) {
+      FFmpegRuntimeLinker::Init();
+    }
 #endif
   }
 };
