@@ -633,12 +633,20 @@ nsresult ReadCompressedIndexDataValues(
                                                  &aOutIndexValues);
 }
 
+template <typename T>
 Result<IndexDataValuesAutoArray, nsresult> ReadCompressedIndexDataValues(
-    mozIStorageValueArray& aValues, uint32_t aColumnIndex) {
+    T& aValues, uint32_t aColumnIndex) {
   return ToResultInvoke<IndexDataValuesAutoArray>(
-      &ReadCompressedIndexDataValuesFromSource<mozIStorageValueArray>, aValues,
-      aColumnIndex);
+      &ReadCompressedIndexDataValuesFromSource<T>, aValues, aColumnIndex);
 }
+
+template Result<IndexDataValuesAutoArray, nsresult>
+ReadCompressedIndexDataValues<mozIStorageValueArray>(mozIStorageValueArray&,
+                                                     uint32_t);
+
+template Result<IndexDataValuesAutoArray, nsresult>
+ReadCompressedIndexDataValues<mozIStorageStatement>(mozIStorageStatement&,
+                                                    uint32_t);
 
 Result<std::tuple<IndexOrObjectStoreId, bool, Span<const uint8_t>>, nsresult>
 ReadCompressedIndexId(const Span<const uint8_t> aData) {
