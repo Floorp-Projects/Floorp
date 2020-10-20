@@ -78,7 +78,11 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
               return;
             }
             const auto& initResponse = aResponse.get_InitCompletionIPDL();
-            mDescription = initResponse.decoderDescription();
+            mDescription =
+                initResponse.decoderDescription() +
+                (GetManager()->Location() == RemoteDecodeIn::RddProcess
+                     ? " (RDD remote)"_ns
+                     : " (GPU remote)"_ns);
             mIsHardwareAccelerated = initResponse.hardware();
             mHardwareAcceleratedReason = initResponse.hardwareReason();
             mConversion = initResponse.conversion();
