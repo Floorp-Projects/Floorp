@@ -30,6 +30,9 @@ class ScaledFontMac : public ScaledFontBase {
                 bool aOwnsFont = false,
                 const DeviceColor& aFontSmoothingBackgroundColor = DeviceColor(),
                 bool aUseFontSmoothing = true, bool aApplySyntheticBold = false);
+  ScaledFontMac(CTFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont,
+                const DeviceColor& aFontSmoothingBackgroundColor = DeviceColor(),
+                bool aUseFontSmoothing = true, bool aApplySyntheticBold = false);
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
