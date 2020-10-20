@@ -8,8 +8,10 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "ClientWebGLContext.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "GLContext.h"
 #include "WebGLContext.h"
 #include "WebGL2Context.h"
 #include "WebGLFramebuffer.h"

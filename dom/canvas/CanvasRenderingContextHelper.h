@@ -77,6 +77,9 @@ class CanvasRenderingContextHelper {
 };
 
 }  // namespace dom
+namespace CanvasUtils {
+bool GetCanvasContextType(const nsAString&, dom::CanvasContextType* const);
+}  // namespace CanvasUtils
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOM_CANVASRENDERINGCONTEXTHELPER_H_

@@ -258,7 +258,7 @@ CheckVertexAttribPointer(const bool isWebgl2,
   return calc;
 }
 
-void DoVertexAttribPointer(GLContext& gl, const uint32_t index,
+void DoVertexAttribPointer(gl::GLContext& gl, const uint32_t index,
                            const webgl::VertAttribPointerDesc& desc) {
   if (desc.intFunc) {
     gl.fVertexAttribIPointer(index, desc.channels, desc.type,

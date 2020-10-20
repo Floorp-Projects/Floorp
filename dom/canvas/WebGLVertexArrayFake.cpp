@@ -6,6 +6,7 @@
 #include "WebGLVertexArrayFake.h"
 
 #include "GLContext.h"
+#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 
 namespace mozilla {

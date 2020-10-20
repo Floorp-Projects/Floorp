@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <utility>
 #include "js/RootingAPI.h"
+#include "js/StructuredClone.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/TypedArray.h"
