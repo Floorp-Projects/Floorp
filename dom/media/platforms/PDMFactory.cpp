@@ -221,7 +221,7 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoder(
       }
 
       for (auto& current : mCurrentPDMs) {
-        if (!current->Supports(config, diagnostics)) {
+        if (!current->Supports(SupportDecoderParams(aParams), diagnostics)) {
           continue;
         }
         decoder = CreateDecoderWithPDM(current, aParams);
@@ -313,15 +313,15 @@ bool PDMFactory::SupportsMimeType(
   if (!trackInfo) {
     return false;
   }
-  return Supports(*trackInfo, aDiagnostics);
+  return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
 }
 
-bool PDMFactory::Supports(const TrackInfo& aTrackInfo,
+bool PDMFactory::Supports(const SupportDecoderParams& aParams,
                           DecoderDoctorDiagnostics* aDiagnostics) const {
   if (mEMEPDM) {
-    return mEMEPDM->Supports(aTrackInfo, aDiagnostics);
+    return mEMEPDM->Supports(aParams, aDiagnostics);
   }
-  if (VPXDecoder::IsVPX(aTrackInfo.mMimeType,
+  if (VPXDecoder::IsVPX(aParams.MimeType(),
                         VPXDecoder::VP8 | VPXDecoder::VP9)) {
     // Work around bug 1521370, where trying to instantiate an external decoder
     // could cause a crash.
@@ -329,7 +329,9 @@ bool PDMFactory::Supports(const TrackInfo& aTrackInfo,
     // So we can speed up the test by assuming that this codec is supported.
     return true;
   }
-  RefPtr<PlatformDecoderModule> current = GetDecoder(aTrackInfo, aDiagnostics);
+
+  RefPtr<PlatformDecoderModule> current =
+      GetDecoderModule(aParams, aDiagnostics);
   return !!current;
 }
 
@@ -433,8 +435,9 @@ bool PDMFactory::StartupPDM(already_AddRefed<PlatformDecoderModule> aPDM,
   return false;
 }
 
-already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoder(
-    const TrackInfo& aTrackInfo, DecoderDoctorDiagnostics* aDiagnostics) const {
+already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoderModule(
+    const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) const {
   if (aDiagnostics) {
     // If libraries failed to load, the following loop over mCurrentPDMs
     // will not even try to use them. So we record failures now.
@@ -451,7 +454,7 @@ already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoder(
 
   RefPtr<PlatformDecoderModule> pdm;
   for (auto& current : mCurrentPDMs) {
-    if (current->Supports(aTrackInfo, aDiagnostics)) {
+    if (current->Supports(aParams, aDiagnostics)) {
       pdm = current;
       break;
     }

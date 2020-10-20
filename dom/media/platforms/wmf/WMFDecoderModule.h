@@ -26,7 +26,7 @@ class WMFDecoderModule : public PlatformDecoderModule {
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
-  bool Supports(const TrackInfo& aTrackInfo,
+  bool Supports(const SupportDecoderParams& aParams,
                 DecoderDoctorDiagnostics* aDiagnostics) const override;
 
   // Called on main thread.
