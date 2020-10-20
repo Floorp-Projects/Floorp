@@ -12,9 +12,9 @@
  * fall-back and only fail if HTTPS connection fails.
  *
  * This tests that when a user enters "example.com", it attempts to load
- * http://example.com:80 (not rejected), and when trying 127.0.0.2
+ * http://example.com:80 (not rejected), and when trying secureonly.example.com
  * (which rejects connections on port 80), it fails then loads
- * https://127.0.0.2:443 instead.
+ * https://secureonly.example.com:443 instead.
  */
 
 const { UrlbarTestUtils } = ChromeUtils.import(
@@ -28,9 +28,10 @@ const bug1002724_tests = [
     explanation: "Should load HTTP version of example.com",
   },
   {
-    original: "127.0.0.2",
-    expected: "https://127.0.0.2",
-    explanation: "Should reject 127.0.0.2 on HTTP but load the HTTPS version",
+    original: "secureonly.example.com",
+    expected: "https://secureonly.example.com",
+    explanation:
+      "Should reject secureonly.example.com on HTTP but load the HTTPS version",
   },
 ];
 
@@ -57,7 +58,12 @@ async function test_one(test_obj) {
 add_task(async function test_bug1002724() {
   await SpecialPowers.pushPrefEnv(
     // Disable HSTS preload just in case.
-    { set: [["network.stricttransportsecurity.preloadlist", false]] }
+    {
+      set: [
+        ["network.stricttransportsecurity.preloadlist", false],
+        ["network.dns.native-is-localhost", true],
+      ],
+    }
   );
 
   for (let test of bug1002724_tests) {
