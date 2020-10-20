@@ -1938,6 +1938,10 @@
       if (tab.linkedPanel) {
         NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
       }
+
+      if (UserInteraction.running("browser.tabs.opening", window)) {
+        UserInteraction.finish("browser.tabs.opening", window);
+      }
     }
 
     _canAdvanceToTab(aTab) {
