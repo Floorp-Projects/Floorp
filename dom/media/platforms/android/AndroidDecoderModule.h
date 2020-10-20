@@ -11,14 +11,18 @@
 namespace mozilla {
 
 class AndroidDecoderModule : public PlatformDecoderModule {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> MakeAndAddRef(Args&&...);
+
  public:
+  static already_AddRefed<PlatformDecoderModule> Create(
+      CDMProxy* aProxy = nullptr);
+
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override;
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override;
-
-  explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
@@ -26,7 +30,8 @@ class AndroidDecoderModule : public PlatformDecoderModule {
   static bool SupportsMimeType(const nsACString& aMimeType);
 
  private:
-  virtual ~AndroidDecoderModule() {}
+  explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
+  virtual ~AndroidDecoderModule() = default;
   RefPtr<MediaDrmCDMProxy> mProxy;
 };
 

@@ -159,4 +159,10 @@ already_AddRefed<MediaDataDecoder> AndroidDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
+/* static */
+already_AddRefed<PlatformDecoderModule> AndroidDecoderModule::Create(
+    CDMProxy* aProxy) {
+  return MakeAndAddRef<AndroidDecoderModule>(aProxy);
+}
+
 }  // namespace mozilla

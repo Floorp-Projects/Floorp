@@ -48,6 +48,11 @@ namespace mozilla {
 static Atomic<bool> sDXVAEnabled(false);
 static Atomic<bool> sUsableVPXMFT(false);
 
+/* static */
+already_AddRefed<PlatformDecoderModule> WMFDecoderModule::Create() {
+  return MakeAndAddRef<WMFDecoderModule>();
+}
+
 WMFDecoderModule::~WMFDecoderModule() {
   if (mWMFInitialized) {
     DebugOnly<HRESULT> hr = wmf::MFShutdown();

@@ -26,8 +26,11 @@
 namespace mozilla {
 
 class GMPDecoderModule : public PlatformDecoderModule {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> MakeAndAddRef(Args&&...);
+
  public:
-  GMPDecoderModule();
+  static already_AddRefed<PlatformDecoderModule> Create();
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
@@ -44,7 +47,8 @@ class GMPDecoderModule : public PlatformDecoderModule {
                                const Maybe<nsCString>& aGMP);
 
  private:
-  virtual ~GMPDecoderModule();
+  GMPDecoderModule() = default;
+  virtual ~GMPDecoderModule() = default;
 };
 
 }  // namespace mozilla

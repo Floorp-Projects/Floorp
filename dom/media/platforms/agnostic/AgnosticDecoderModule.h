@@ -13,12 +13,13 @@ namespace mozilla {
 
 class AgnosticDecoderModule : public PlatformDecoderModule {
  public:
-  AgnosticDecoderModule() = default;
+  static already_AddRefed<PlatformDecoderModule> Create();
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
  protected:
+  AgnosticDecoderModule() = default;
   virtual ~AgnosticDecoderModule() = default;
   // Decode thread.
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(

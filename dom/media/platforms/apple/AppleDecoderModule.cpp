@@ -31,10 +31,6 @@ bool AppleDecoderModule::sInitialized = false;
 bool AppleDecoderModule::sCanUseHardwareVideoDecoder = true;
 bool AppleDecoderModule::sCanUseVP9Decoder = false;
 
-AppleDecoderModule::AppleDecoderModule() {}
-
-AppleDecoderModule::~AppleDecoderModule() {}
-
 /* static */
 void AppleDecoderModule::Init() {
   if (sInitialized) {
@@ -162,6 +158,11 @@ bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
     return false;
   }();
   return sRegisterIfAvailable;
+}
+
+/* static */
+already_AddRefed<PlatformDecoderModule> AppleDecoderModule::Create() {
+  return MakeAndAddRef<AppleDecoderModule>();
 }
 
 }  // namespace mozilla
