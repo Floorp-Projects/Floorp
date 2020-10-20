@@ -171,7 +171,8 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
   // Verify that we have a PDM that supports the whitelisted types.
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
-    if (!track || !platform->Supports(*track, aDiagnostics)) {
+    if (!track ||
+        !platform->Supports(SupportDecoderParams(*track), aDiagnostics)) {
       return false;
     }
   }

@@ -41,44 +41,53 @@ class CDMProxy;
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
 
+namespace media {
+
+enum class Option {
+  Default,
+  LowLatency,
+  HardwareDecoderNotAllowed,
+  FullH264Parsing,
+  ErrorIfNoInitializationData,  // By default frames delivered before
+                                // initialization data are dropped. Pass this
+                                // option to raise an error if frames are
+                                // delivered before initialization data.
+  DefaultPlaybackDeviceMono,    // Currently only used by Opus on RDD to avoid
+                                // initialization of audio backends on RDD
+
+  SENTINEL  // one past the last valid value
+};
+using OptionSet = EnumSet<Option>;
+
+struct UseNullDecoder {
+  UseNullDecoder() = default;
+  explicit UseNullDecoder(bool aUseNullDecoder) : mUse(aUseNullDecoder) {}
+  bool mUse = false;
+};
+
+// Do not wrap H264 decoder in a H264Converter.
+struct NoWrapper {
+  NoWrapper() = default;
+  explicit NoWrapper(bool aDontUseWrapper) : mDontUseWrapper(aDontUseWrapper) {}
+  bool mDontUseWrapper = false;
+};
+
+struct VideoFrameRate {
+  VideoFrameRate() = default;
+  explicit VideoFrameRate(float aFramerate) : mValue(aFramerate) {}
+  float mValue = 0.0f;
+};
+
+}  // namespace media
+
 struct MOZ_STACK_CLASS CreateDecoderParams final {
+  using Option = media::Option;
+  using OptionSet = media::OptionSet;
+  using UseNullDecoder = media::UseNullDecoder;
+  using NoWrapper = media::NoWrapper;
+  using VideoFrameRate = media::VideoFrameRate;
+
   explicit CreateDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) {}
-
-  enum class Option {
-    Default,
-    LowLatency,
-    HardwareDecoderNotAllowed,
-    FullH264Parsing,
-    ErrorIfNoInitializationData,  // By default frames delivered before
-                                  // initialization data are dropped. Pass this
-                                  // option to raise an error if frames are
-                                  // delivered before initialization data.
-    DefaultPlaybackDeviceMono,    // Currently only used by Opus on RDD to avoid
-                                  // initialization of audio backends on RDD
-
-    SENTINEL  // one past the last valid value
-  };
-  using OptionSet = EnumSet<Option>;
-
-  struct UseNullDecoder {
-    UseNullDecoder() = default;
-    explicit UseNullDecoder(bool aUseNullDecoder) : mUse(aUseNullDecoder) {}
-    bool mUse = false;
-  };
-
-  // Do not wrap decoder in a MediaChangeMonitor.
-  struct NoWrapper {
-    NoWrapper() = default;
-    explicit NoWrapper(bool aDontUseWrapper)
-        : mDontUseWrapper(aDontUseWrapper) {}
-    bool mDontUseWrapper = false;
-  };
-
-  struct VideoFrameRate {
-    VideoFrameRate() = default;
-    explicit VideoFrameRate(float aFramerate) : mValue(aFramerate) {}
-    float mValue = 0.0f;
-  };
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -115,12 +124,12 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<GMPCrashHelper> mCrashHelper;
-  UseNullDecoder mUseNullDecoder;
-  NoWrapper mNoWrapper;
+  media::UseNullDecoder mUseNullDecoder;
+  media::NoWrapper mNoWrapper;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
   OptionSet mOptions = OptionSet(Option::Default);
-  VideoFrameRate mRate;
+  media::VideoFrameRate mRate;
 
  private:
   void Set(DecoderDoctorDiagnostics* aDiagnostics) {
@@ -147,6 +156,67 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   void Set(MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey) {
     mOnWaitingForKeyEvent = aOnWaitingForKey;
   }
+  template <typename T1, typename T2, typename... Ts>
+  void Set(T1&& a1, T2&& a2, Ts&&... args) {
+    Set(std::forward<T1>(a1));
+    Set(std::forward<T2>(a2), std::forward<Ts>(args)...);
+  }
+};
+
+struct MOZ_STACK_CLASS SupportDecoderParams final {
+  using Option = media::Option;
+  using OptionSet = media::OptionSet;
+  using UseNullDecoder = media::UseNullDecoder;
+  using NoWrapper = media::NoWrapper;
+  using VideoFrameRate = media::VideoFrameRate;
+
+  explicit SupportDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) {}
+
+  explicit SupportDecoderParams(const CreateDecoderParams& aParams)
+      : mConfig(aParams.mConfig),
+        mDiagnostics(aParams.mDiagnostics),
+        mError(aParams.mError),
+        mKnowsCompositor(aParams.mKnowsCompositor),
+        mUseNullDecoder(aParams.mUseNullDecoder),
+        mNoWrapper(aParams.mNoWrapper),
+        mOptions(aParams.mOptions),
+        mRate(aParams.mRate) {}
+
+  template <typename T1, typename... Ts>
+  SupportDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
+      : mConfig(aConfig) {
+    Set(std::forward<T1>(a1), std::forward<Ts>(args)...);
+  }
+
+  const nsCString& MimeType() const { return mConfig.mMimeType; }
+
+  const TrackInfo& mConfig;
+  DecoderDoctorDiagnostics* mDiagnostics = nullptr;
+  MediaResult* mError = nullptr;
+  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
+  UseNullDecoder mUseNullDecoder;
+  NoWrapper mNoWrapper;
+  OptionSet mOptions = OptionSet(Option::Default);
+  VideoFrameRate mRate;
+
+ private:
+  void Set(DecoderDoctorDiagnostics* aDiagnostics) {
+    mDiagnostics = aDiagnostics;
+  }
+  void Set(MediaResult* aError) { mError = aError; }
+  void Set(media::UseNullDecoder aUseNullDecoder) {
+    mUseNullDecoder = aUseNullDecoder;
+  }
+  void Set(media::NoWrapper aNoWrapper) { mNoWrapper = aNoWrapper; }
+  void Set(media::OptionSet aOptions) { mOptions = aOptions; }
+  void Set(media::VideoFrameRate aRate) { mRate = aRate; }
+  void Set(layers::KnowsCompositor* aKnowsCompositor) {
+    if (aKnowsCompositor) {
+      mKnowsCompositor = aKnowsCompositor;
+      MOZ_ASSERT(aKnowsCompositor->IsThreadSafe());
+    }
+  }
+
   template <typename T1, typename T2, typename... Ts>
   void Set(T1&& a1, T2&& a2, Ts&&... args) {
     Set(std::forward<T1>(a1));
@@ -189,12 +259,13 @@ class PlatformDecoderModule {
       const nsACString& aMimeType,
       DecoderDoctorDiagnostics* aDiagnostics) const = 0;
 
-  virtual bool Supports(const TrackInfo& aTrackInfo,
+  virtual bool Supports(const SupportDecoderParams& aParams,
                         DecoderDoctorDiagnostics* aDiagnostics) const {
-    if (!SupportsMimeType(aTrackInfo.mMimeType, aDiagnostics)) {
+    const TrackInfo& trackInfo = aParams.mConfig;
+    if (!SupportsMimeType(trackInfo.mMimeType, aDiagnostics)) {
       return false;
     }
-    const auto videoInfo = aTrackInfo.GetAsVideoInfo();
+    const auto* videoInfo = trackInfo.GetAsVideoInfo();
     return !videoInfo ||
            SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
   }

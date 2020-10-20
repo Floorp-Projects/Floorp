@@ -224,20 +224,21 @@ bool WMFDecoderModule::SupportsMimeType(
   if (!trackInfo) {
     return false;
   }
-  return Supports(*trackInfo, aDiagnostics);
+  return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
 }
 
-bool WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
+bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
                                 DecoderDoctorDiagnostics* aDiagnostics) const {
-  const auto videoInfo = aTrackInfo.GetAsVideoInfo();
+  const auto& trackInfo = aParams.mConfig;
+  const auto* videoInfo = trackInfo.GetAsVideoInfo();
   if (videoInfo && !SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics)) {
     return false;
   }
 
-  if ((aTrackInfo.mMimeType.EqualsLiteral("audio/mp4a-latm") ||
-       aTrackInfo.mMimeType.EqualsLiteral("audio/mp4")) &&
+  if ((trackInfo.mMimeType.EqualsLiteral("audio/mp4a-latm") ||
+       trackInfo.mMimeType.EqualsLiteral("audio/mp4")) &&
       WMFDecoderModule::HasAAC()) {
-    const auto audioInfo = aTrackInfo.GetAsAudioInfo();
+    const auto audioInfo = trackInfo.GetAsAudioInfo();
     if (audioInfo && audioInfo->mRate > 0) {
       // Supported sampling rates per:
       // https://msdn.microsoft.com/en-us/library/windows/desktop/dd742784(v=vs.85).aspx
@@ -249,19 +250,19 @@ bool WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
     }
     return true;
   }
-  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
+  if (MP4Decoder::IsH264(trackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
     return true;
   }
-  if (aTrackInfo.mMimeType.EqualsLiteral("audio/mpeg") &&
+  if (trackInfo.mMimeType.EqualsLiteral("audio/mpeg") &&
       !StaticPrefs::media_ffvpx_mp3_enabled() &&
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
   if (sUsableVPXMFT) {
     static const uint32_t VP8_USABLE_BUILD = 16287;
-    if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType) &&
+    if ((VPXDecoder::IsVP8(trackInfo.mMimeType) &&
          IsWindowsBuildOrLater(VP8_USABLE_BUILD)) ||
-        VPXDecoder::IsVP9(aTrackInfo.mMimeType)) {
+        VPXDecoder::IsVP9(trackInfo.mMimeType)) {
       return CanCreateWMFDecoder<CLSID_WebmMfVpxDec>();
     }
   }

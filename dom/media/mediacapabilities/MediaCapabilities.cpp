@@ -215,7 +215,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
       // There's no need to create an audio decoder has we only want to know if
       // such codec is supported
       RefPtr<PDMFactory> pdm = new PDMFactory();
-      if (!pdm->Supports(*config, nullptr /* decoder doctor */)) {
+      SupportDecoderParams params{*config};
+      if (!pdm->Supports(params, nullptr /* decoder doctor */)) {
         auto info = MakeUnique<MediaCapabilitiesInfo>(
             false /* supported */, false /* smooth */,
             false /* power efficient */);
