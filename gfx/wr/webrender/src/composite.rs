@@ -14,6 +14,7 @@ use crate::prim_store::DeferredResolve;
 use crate::renderer::ImageBufferKind;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::Preallocator;
+use crate::tile_cache::PictureCacheDebugInfo;
 use std::{ops, u64};
 
 /*
@@ -460,6 +461,8 @@ pub struct CompositeState {
     pub occluders: Occluders,
     /// Description of the surfaces and properties that are being composited.
     pub descriptor: CompositeDescriptor,
+    /// Debugging information about the state of the pictures cached for regression testing.
+    pub picture_cache_debug: PictureCacheDebugInfo,
 }
 
 impl CompositeState {
@@ -482,6 +485,7 @@ impl CompositeState {
             occluders: Occluders::new(),
             descriptor: CompositeDescriptor::empty(),
             external_surfaces: Vec::new(),
+            picture_cache_debug: PictureCacheDebugInfo::new(),
         }
     }
 

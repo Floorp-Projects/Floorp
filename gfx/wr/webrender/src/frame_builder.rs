@@ -13,7 +13,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
-use crate::picture::{DirtyRegion, RecordedDirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
+use crate::picture::{DirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceRenderTasks, SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
@@ -643,7 +643,6 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
-            recorded_dirty_regions: mem::replace(&mut scratch.primitive.recorded_dirty_regions, Vec::new()),
             debug_items: mem::replace(&mut scratch.primitive.debug_items, Vec::new()),
             composite_state,
         }
@@ -1016,11 +1015,6 @@ pub struct Frame {
     /// True if this frame has been drawn by the
     /// renderer.
     pub has_been_rendered: bool,
-
-    /// Dirty regions recorded when generating this frame. Empty when not in
-    /// testing.
-    #[cfg_attr(feature = "serde", serde(skip))]
-    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
 
     /// Debugging information to overlay for this frame.
     pub debug_items: Vec<DebugItem>,
