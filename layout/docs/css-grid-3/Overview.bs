@@ -5,7 +5,10 @@ Status: LS
 Work Status: Testing
 Level: none
 URL: https://drafts.csswg.org/css-grid-3/
+Editor: Tab Atkins Jr., Google, http://www.xanthir.com/contact/, w3cid 42199
+Editor: Elika J. Etemad / fantasai, Invited Expert, http://fantasai.inkedblade.net/contact, w3cid 35400
 Editor: Mats Palmgren, Mozilla, mailto:mats@mozilla.com
+Editor: Jen Simmons, Apple, http://jensimmons.com/
 Abstract: This module introduces masonry layout as an additional layout mode for <a href="https://www.w3.org/TR/css-grid-2/">CSS Grid</a> containers.
 WPT Path Prefix: css/css-grid/masonry/tentative/
 Markup Shorthands: css yes
