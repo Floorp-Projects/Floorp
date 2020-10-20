@@ -372,16 +372,9 @@ class ConduitsParent extends JSWindowActorParent {
   }
 
   /**
-   * JSWindowActor method, called before actor is destroyed.
-   */
-  willDestroy() {
-    Hub.actorClosed(this);
-  }
-
-  /**
-   * JSWindowActor method, ensure cleanup (see bug 1596187).
+   * JSWindowActor method, ensure cleanup.
    */
   didDestroy() {
-    this.willDestroy();
+    Hub.actorClosed(this);
   }
 }
