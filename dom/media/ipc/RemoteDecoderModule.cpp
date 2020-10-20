@@ -29,15 +29,6 @@ namespace mozilla {
 using namespace ipc;
 using namespace layers;
 
-/* static */
-void RemoteDecoderModule::Init() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (BrowserTabsRemoteAutostart()) {
-    RemoteDecoderManagerChild::InitializeThread();
-  }
-}
-
 already_AddRefed<PlatformDecoderModule> RemoteDecoderModule::Create(
     RemoteDecodeIn aLocation) {
   MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess(),

@@ -17,7 +17,6 @@ class RemoteDecoderModule : public PlatformDecoderModule {
   friend already_AddRefed<T> MakeAndAddRef(Args&&...);
 
  public:
-  static void Init();
   static already_AddRefed<PlatformDecoderModule> Create(
       RemoteDecodeIn aLocation);
 

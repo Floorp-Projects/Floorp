@@ -66,7 +66,6 @@ class RemoteDecoderManagerChild final
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   // Main thread only
-  static void InitializeThread();
   static void InitForRDDProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aVideoManager);
   static void InitForGPUProcess(
@@ -103,6 +102,7 @@ class RemoteDecoderManagerChild final
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static void OpenForGPUProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+  static void InitializeThread();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
 
