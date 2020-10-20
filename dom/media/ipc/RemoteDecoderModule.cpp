@@ -21,11 +21,11 @@
 #include "VideoUtils.h"
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
+#include "gfxConfig.h"
 #include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 
 namespace mozilla {
 
-using dom::ContentChild;
 using namespace ipc;
 using namespace layers;
 
@@ -38,7 +38,8 @@ void RemoteDecoderModule::Init() {
   }
 }
 
-already_AddRefed<PlatformDecoderModule> RemoteDecoderModule::Create() {
+already_AddRefed<PlatformDecoderModule> RemoteDecoderModule::Create(
+    RemoteDecodeIn aLocation) {
   MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess(),
              "Should not be created in GPU or RDD process.");
   if (!XRE_IsContentProcess()) {
@@ -46,45 +47,34 @@ already_AddRefed<PlatformDecoderModule> RemoteDecoderModule::Create() {
     // process.
     return nullptr;
   }
-  return MakeAndAddRef<RemoteDecoderModule>();
+  return MakeAndAddRef<RemoteDecoderModule>(aLocation);
 }
+
+RemoteDecoderModule::RemoteDecoderModule(RemoteDecodeIn aLocation)
+    : mLocation(aLocation) {}
 
 bool RemoteDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  bool supports = false;
+  MOZ_CRASH("Deprecated: Use RemoteDecoderModule::Supports");
+}  // namespace mozilla
 
-#ifdef MOZ_AV1
-  if (StaticPrefs::media_av1_enabled()) {
-    supports |= AOMDecoder::IsAV1(aMimeType);
-  }
-#endif
-#if !defined(__MINGW32__)
-  // We can't let RDD handle the decision to support Vorbis decoding on
-  // MinGW builds because of Bug 1597408 (Vorbis decoding on RDD causing
-  // sandboxing failure on MinGW-clang).  Typically this would be dealt
-  // with using defines in StaticPrefList.yaml, but we must handle it
-  // here because of Bug 1598426 (the __MINGW32__ define isn't supported
-  // in StaticPrefList.yaml).
-  if (StaticPrefs::media_rdd_vorbis_enabled()) {
-    supports |= VorbisDataDecoder::IsVorbis(aMimeType);
-  }
-#endif
-  if (StaticPrefs::media_rdd_wav_enabled()) {
-    supports |= WaveDataDecoder::IsWave(aMimeType);
-  }
-  if (StaticPrefs::media_rdd_opus_enabled()) {
-    supports |= OpusDataDecoder::IsOpus(aMimeType);
-  }
+bool RemoteDecoderModule::Supports(
+    const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) const {
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
 
-  MOZ_LOG(
-      sPDMLog, LogLevel::Debug,
-      ("Sandbox decoder %s requested type", supports ? "supports" : "rejects"));
+  bool supports =
+      RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
+  MOZ_LOG(sPDMLog, LogLevel::Debug,
+          ("Sandbox %s decoder %s requested type",
+           mLocation == RemoteDecodeIn::GpuProcess ? "GPU" : "RDD",
+           supports ? "supports" : "rejects"));
   return supports;
 }
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
 
   // OpusDataDecoder will check this option to provide the same info
   // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
@@ -102,9 +92,8 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
-  return RemoteDecoderManagerChild::CreateVideoDecoder(
-      aParams, RemoteDecodeIn::RddProcess);
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
+  return RemoteDecoderManagerChild::CreateVideoDecoder(aParams, mLocation);
 }
 
 }  // namespace mozilla

@@ -40,7 +40,7 @@ class RemoteDecoderManagerChild final
 
   // Can be called from any thread.
   static nsISerialEventTarget* GetManagerThread();
-  static void LaunchRDDProcessIfNeeded();
+  static void LaunchRDDProcessIfNeeded(RemoteDecodeIn aLocation);
 
   // Can be called from any thread, dispatches the request to the IPDL thread
   // internally and will be ignored if the IPDL actor has been destroyed.

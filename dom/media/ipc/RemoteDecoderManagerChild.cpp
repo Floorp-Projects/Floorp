@@ -303,8 +303,13 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
 }
 
 /* static */
-void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded() {
-  if (!XRE_IsContentProcess()) {
+void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(
+    RemoteDecodeIn aLocation) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess(),
+                        "Only supported from a content process.");
+
+  if (aLocation != RemoteDecodeIn::RddProcess) {
+    // Not targeting RDD process? No need to launch RDD.
     return;
   }
 
