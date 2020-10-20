@@ -633,6 +633,11 @@ toolbarbutton.bookmark-item {
 #whats-new-menu-button {
   list-style-image: url("chrome://browser/skin/whatsnew.svg");
 }
+
 #ion-button {
   list-style-image: url("chrome://browser/skin/ion.svg");
+}
+
+#import-button {
+  list-style-image: url("chrome://browser/skin/import.svg");
 }

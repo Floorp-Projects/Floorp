@@ -21,6 +21,8 @@
   --backbutton-active-background: var(--toolbarbutton-active-background);
   --backbutton-border-color: hsla(240,5%,5%,.3);
 
+  --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.3));
+
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
      as a more specific value should be set when the value will be used. */
@@ -51,6 +53,8 @@ toolbar[brighttext] {
   --backbutton-background: var(--toolbarbutton-hover-background);
   --backbutton-hover-background: var(--toolbarbutton-active-background);
   --backbutton-active-background: hsla(0,0%,100%,.4);
+
+  --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(255,255,255,.3));
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -327,7 +331,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   height: 16px;
 }
 
-/* Force the display of the label for bookmarks */
+/* Force the display of the label for bookmarks and the import button */
+#PersonalToolbar #import-button > .toolbarbutton-text,
 .bookmark-item > .toolbarbutton-text {
   display: -moz-box !important;
 }
@@ -341,6 +346,41 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 4px;
 }
+
+/* Import button styling in the bookmarks toolbar */
+
+#PersonalToolbar #import-button {
+  padding: 4px !important; /* overrides the styling for other toolbar buttons in the bookmarks toolbar. */
+  margin: 0 2px;
+}
+
+#PersonalToolbar #import-button > .toolbarbutton-text {
+  min-height: unset; /* override the .toolbarbutton-1 .toolbarbutton-text rule */
+}
+
+#PersonalToolbar #import-button > .toolbarbutton-icon {
+  margin-inline-end: 4px !important; /* Overrides the styling for .toolbarbutton-1 */
+}
+
+/* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
+#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
+#PersonalToolbar > #import-button + #personal-bookmarks {
+  border-inline-start: 1px solid;
+  border-image-source: linear-gradient(
+    transparent 3.75px,
+    var(--toolbarseparator-color) 3.75px,
+    var(--toolbarseparator-color) calc(100% - 3.75px),
+    transparent calc(100% - 3.75px) );
+  border-image-slice: 1;
+}
+
+@media (min-resolution: 2dppx) {
+  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
+  #PersonalToolbar > #import-button + #personal-bookmarks {
+    border-inline-start-width: 0.5px;
+  }
+}
+
 
 /* The bookmarks toolbar is smaller than the other toolbars, so we
  * need to override the badge position to not be cut off. */

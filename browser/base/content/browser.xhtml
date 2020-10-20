@@ -2092,6 +2092,10 @@
     </toolbar>
 
     <html:template id="BrowserToolbarPalette">
+      <toolbarbutton id="import-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     oncommand="MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_BOOKMARKS_TOOLBAR]);"
+                     data-l10n-id="browser-import-button"/>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
 #ifdef XP_MACOSX

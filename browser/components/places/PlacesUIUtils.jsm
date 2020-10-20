@@ -1400,6 +1400,32 @@ var PlacesUIUtils = {
       }
     },
   },
+
+  async maybeAddImportButton() {
+    let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
+      "PlacesUIUtils: maybeAddImportButton",
+      async db => {
+        let rows = await db.execute(
+          `SELECT COUNT(*) as n FROM moz_bookmarks b
+           WHERE b.parent = :parentId`,
+          { parentId: PlacesUtils.toolbarFolderId }
+        );
+        return rows[0].getResultByName("n");
+      }
+    ).catch(e => {
+      // We want to report errors, but we still want to add the button then:
+      Cu.reportError(e);
+      return 0;
+    });
+
+    if (numberOfBookmarks < 3) {
+      CustomizableUI.addWidgetToArea(
+        "import-button",
+        CustomizableUI.AREA_BOOKMARKS,
+        0
+      );
+    }
+  },
 };
 
 // These are lazy getters to avoid importing PlacesUtils immediately.
