@@ -4,19 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gfxUtils.h"
 #include "GLBlitHelper.h"
+
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
-#include "ScopedGLHelpers.h"
-#include "mozilla/Preferences.h"
-#include "ImageContainer.h"
+#include "GPUVideoImage.h"
 #include "HeapCopyOfStackArray.h"
+#include "ImageContainer.h"
+#include "ScopedGLHelpers.h"
+#include "gfxUtils.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Matrix.h"
-#include "mozilla/UniquePtr.h"
-#include "GPUVideoImage.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/LayersSurfaces.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidSurfaceTexture.h"
@@ -26,8 +29,8 @@
 #endif
 
 #ifdef XP_MACOSX
-#  include "MacIOSurfaceImage.h"
 #  include "GLContextCGL.h"
+#  include "MacIOSurfaceImage.h"
 #endif
 
 #ifdef XP_WIN
@@ -701,10 +704,10 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       return false;
 #endif
 
-#ifdef XP_WIN
     case ImageFormat::GPU_VIDEO:
       return BlitImage(static_cast<layers::GPUVideoImage*>(srcImage), destSize,
                        destOrigin);
+#ifdef XP_WIN
     case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
       return BlitImage(static_cast<layers::D3D11ShareHandleImage*>(srcImage),
                        destSize, destOrigin);
@@ -714,7 +717,6 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
     case ImageFormat::D3D9_RGB32_TEXTURE:
       return false;  // todo
 #else
-    case ImageFormat::GPU_VIDEO:
     case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
     case ImageFormat::D3D11_YCBCR_IMAGE:
     case ImageFormat::D3D9_RGB32_TEXTURE:
@@ -1140,6 +1142,53 @@ void GLBlitHelper::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
   const ScopedFramebufferForTexture srcWrapper(mGL, srcTex, srcTarget);
   const ScopedBindFramebuffer bindFB(mGL, srcWrapper.FB());
   BlitFramebufferToTexture(destTex, srcSize, destSize, destTarget);
+}
+
+// -------------------------------------
+
+bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
+                             const gfx::IntSize& destSize,
+                             const OriginPos destOrigin) const {
+  const auto& data = srcImage->GetData();
+  if (!data) return false;
+
+  const auto& desc = data->SD();
+
+  if (desc.type() ==
+      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorPlugin) {
+    MOZ_ASSERT_UNREACHABLE(
+        "BlitImage does not support plugin surface descriptors");
+    return false;
+  }
+  MOZ_ASSERT(
+      desc.type() ==
+      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder);
+  const auto& subdescUnion =
+      desc.get_SurfaceDescriptorRemoteDecoder().subdesc();
+  switch (subdescUnion.type()) {
+    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDMABuf: {
+      // TODO.
+      return false;
+    }
+#ifdef XP_WIN
+    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
+      const auto& subdesc = subdescUnion.get_SurfaceDescriptorD3D10();
+      return BlitDescriptor(subdesc, destSize, destOrigin);
+    }
+    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDXGIYCbCr: {
+      const auto& subdesc = subdescUnion.get_SurfaceDescriptorDXGIYCbCr();
+      return BlitDescriptor(subdesc, destSize, destOrigin);
+    }
+#endif
+    case layers::RemoteDecoderVideoSubDescriptor::Tnull_t:
+      // This GPUVideoImage isn't directly readable outside the GPU process.
+      // Abort.
+      return false;
+    default:
+      gfxCriticalError() << "Unhandled subdesc type: "
+                         << uint32_t(subdescUnion.type());
+      return false;
+  }
 }
 
 }  // namespace gl
