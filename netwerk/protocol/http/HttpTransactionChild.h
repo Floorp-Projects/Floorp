@@ -60,8 +60,6 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue,
       const bool& aIsDocumentLoad, const TimeStamp& aRedirectStart,
       const TimeStamp& aRedirectEnd);
-  mozilla::ipc::IPCResult RecvUpdateClassOfService(
-      const uint32_t& classOfService);
   mozilla::ipc::IPCResult RecvCancelPump(const nsresult& aStatus);
   mozilla::ipc::IPCResult RecvSuspendPump();
   mozilla::ipc::IPCResult RecvResumePump();
