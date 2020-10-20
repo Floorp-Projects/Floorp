@@ -18,6 +18,7 @@ CARGOFLAGS=${CARGOFLAGS:-""}  # default to empty if not set
 pushd wrench
 python script/headless.py reftest
 python script/headless.py rawtest
+python script/headless.py test_invalidation
 CXX=clang++ cargo run ${CARGOFLAGS} --release --features=software -- \
   --software --headless reftest
 popd

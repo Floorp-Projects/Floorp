@@ -179,6 +179,8 @@ subcommands:
               long: sample_count
               takes_value: true
               help: number of samples to capture
+    - test_invalidation:
+        about: run invalidation tests
     - compare_perf:
         about: compare two benchmark files
         args:

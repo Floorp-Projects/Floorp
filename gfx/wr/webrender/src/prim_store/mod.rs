@@ -19,7 +19,7 @@ use crate::glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
-use crate::picture::{PicturePrimitive, RecordedDirtyRegion};
+use crate::picture::PicturePrimitive;
 use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle, ConicGradientDataHandle};
@@ -1171,10 +1171,6 @@ pub struct PrimitiveScratchBuffer {
     /// per-tile information.
     pub gradient_tiles: GradientTileStorage,
 
-    /// List of dirty regions for the cached pictures in this document, used to
-    /// verify invalidation in wrench reftests. Only collected in testing.
-    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
-
     /// List of debug display items for rendering.
     pub debug_items: Vec<DebugItem>,
 }
@@ -1188,7 +1184,6 @@ impl Default for PrimitiveScratchBuffer {
             segments: SegmentStorage::new(0),
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
-            recorded_dirty_regions: Vec::new(),
             debug_items: Vec::new(),
         }
     }
@@ -1221,8 +1216,6 @@ impl PrimitiveScratchBuffer {
         self.gradient_tiles.clear();
 
         self.debug_items.clear();
-
-        assert!(self.recorded_dirty_regions.is_empty(), "Should have sent to Renderer");
     }
 
     #[allow(dead_code)]

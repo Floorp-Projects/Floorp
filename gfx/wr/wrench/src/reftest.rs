@@ -77,9 +77,6 @@ enum ExtraCheck {
     DrawCalls(usize),
     AlphaTargets(usize),
     ColorTargets(usize),
-    /// Checks the dirty region when rendering the test at |index| in the
-    /// sequence, and compares its serialization to |region|.
-    DirtyRegion { index: usize, region: String },
 }
 
 impl ExtraCheck {
@@ -91,9 +88,6 @@ impl ExtraCheck {
                 x == results.last().unwrap().stats.alpha_target_count,
             ExtraCheck::ColorTargets(x) =>
                 x == results.last().unwrap().stats.color_target_count,
-            ExtraCheck::DirtyRegion { index, ref region } => {
-                *region == format!("{}", results[index].recorded_dirty_regions[0])
-            }
         }
     }
 }
@@ -373,7 +367,6 @@ impl ReftestManifest {
             let mut disable_dual_source_blending = false;
             let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
-            let mut dirty_region_index = 0;
             let mut force_subpixel_aa_where_possible = None;
 
             let mut parse_command = |token: &str| -> bool {
@@ -435,15 +428,6 @@ impl ReftestManifest {
                     function if function.starts_with("color_targets(") => {
                         let (_, args, _) = parse_function(function);
                         extra_checks.push(ExtraCheck::ColorTargets(args[0].parse().unwrap()));
-                    }
-                    function if function.starts_with("dirty(") => {
-                        let (_, args, _) = parse_function(function);
-                        let region: String = args[0].parse().unwrap();
-                        extra_checks.push(ExtraCheck::DirtyRegion {
-                            index: dirty_region_index,
-                            region,
-                        });
-                        dirty_region_index += 1;
                     }
                     options if options.starts_with("options(") => {
                         let (_, args, _) = parse_function(options);

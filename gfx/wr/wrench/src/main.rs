@@ -20,6 +20,7 @@ mod png;
 mod premultiply;
 mod rawtest;
 mod reftest;
+mod test_invalidation;
 mod wrench;
 mod yaml_frame_reader;
 mod yaml_helper;
@@ -637,7 +638,7 @@ fn main() {
     let dp_ratio = dp_ratio.unwrap_or(window.hidpi_factor());
     let dim = window.get_inner_size();
 
-    let needs_frame_notifier = ["perf", "reftest", "png", "rawtest"]
+    let needs_frame_notifier = ["perf", "reftest", "png", "rawtest", "test_invalidation"]
         .iter()
         .any(|s| args.subcommand_matches(s).is_some());
     let (notifier, rx) = if needs_frame_notifier {
@@ -740,6 +741,14 @@ fn main() {
         }
         harness.run(base_manifest, &filename, as_csv);
         return;
+    } else if let Some(_) = args.subcommand_matches("test_invalidation") {
+        let harness = test_invalidation::TestHarness::new(
+            &mut wrench,
+            &mut window,
+            rx.unwrap(),
+        );
+
+        harness.run();
     } else if let Some(subargs) = args.subcommand_matches("compare_perf") {
         let first_filename = subargs.value_of("first_filename").unwrap();
         let second_filename = subargs.value_of("second_filename").unwrap();
