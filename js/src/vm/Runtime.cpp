@@ -326,6 +326,17 @@ void JSRuntime::setTelemetryCallback(
   rt->telemetryCallback = callback;
 }
 
+void JSRuntime::addXYTelemetry(int id, uint32_t xSample, uint32_t ySample) {
+  if (xyTelemetryCallback) {
+    (*xyTelemetryCallback)(id, xSample, ySample);
+  }
+}
+
+void JSRuntime::setXYTelemetryCallback(
+    JSRuntime* rt, JSAccumulateXYTelemetryDataCallback callback) {
+  rt->xyTelemetryCallback = callback;
+}
+
 void JSRuntime::setElementCallback(JSRuntime* rt,
                                    JSGetElementCallback callback) {
   rt->getElementCallback = callback;

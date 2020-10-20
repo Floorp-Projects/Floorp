@@ -62,11 +62,18 @@ class JS_PUBLIC_API JSObject;
   _(JS_TELEMETRY_WASM_COMPILE_TIME_ION_US)      \
   _(JS_TELEMETRY_WASM_COMPILE_TIME_CRANELIFT_US)
 
+#define MAP_JS_XYTELEMETRY(_)
+
 // clang-format off
 #define ENUM_DEF(NAME) NAME ,
 enum {
   MAP_JS_TELEMETRY(ENUM_DEF)
   JS_TELEMETRY_END
+};
+
+enum {
+  MAP_JS_XYTELEMETRY(ENUM_DEF)
+  JS_XYTELEMETRY_END
 };
 #undef ENUM_DEF
 // clang-format on
@@ -75,6 +82,12 @@ using JSAccumulateTelemetryDataCallback = void (*)(int, uint32_t, const char*);
 
 extern JS_FRIEND_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
+
+typedef void (*JSAccumulateXYTelemetryDataCallback)(int id, uint32_t xSample,
+                                                    uint32_t ySample);
+
+extern JS_FRIEND_API void JS_SetAccumulateXYTelemetryCallback(
+    JSContext* cx, JSAccumulateXYTelemetryDataCallback callback);
 
 /*
  * Use counter names passed to the accumulate use counter callback.

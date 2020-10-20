@@ -14,6 +14,11 @@ void JS_SetAccumulateTelemetryCallback(
   cx->runtime()->setTelemetryCallback(cx->runtime(), callback);
 }
 
+JS_FRIEND_API void JS_SetAccumulateXYTelemetryCallback(
+    JSContext* cx, JSAccumulateXYTelemetryDataCallback callback) {
+  cx->runtime()->setXYTelemetryCallback(cx->runtime(), callback);
+}
+
 void JS_SetSetUseCounterCallback(JSContext* cx,
                                  JSSetUseCounterCallback callback) {
   cx->runtime()->setUseCounterCallback(cx->runtime(), callback);
