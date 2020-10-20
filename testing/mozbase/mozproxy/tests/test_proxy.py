@@ -68,7 +68,7 @@ def test_mitm_check_proxy(*args):
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_pageset_manifest": os.path.join(here, "files", pageset_name),
+        "playback_files": [os.path.join(here, "files", pageset_name)],
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "run_local": "MOZ_AUTOMATION" not in os.environ,
@@ -103,7 +103,7 @@ def test_mitm(*args):
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_pageset_manifest": pageset_name,
+        "playback_files": [pageset_name],
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "run_local": True,
@@ -140,7 +140,7 @@ def test_playback_setup_failed(*args):
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_pageset_manifest": pageset_name,
+        "playback_files": [pageset_name],
         "playback_version": '4.0.4',
         "platform": mozinfo.os,
         "run_local": True,
@@ -173,7 +173,7 @@ def test_mitm_with_retry(*args):
 
     config = {
         "playback_tool": "mitmproxy",
-        "playback_pageset_manifest": pageset_name,
+        "playback_files": [pageset_name],
         "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "run_local": True,
