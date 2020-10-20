@@ -49,15 +49,8 @@ KnowsCompositorVideo::TryCreateForIdentifier(
     return nullptr;
   }
 
-  // The RDD process will never use hardware decoding since it's
-  // sandboxed, so don't bother trying to create a sync object.
-  TextureFactoryIdentifier ident = aIdentifier;
-  if (XRE_IsRDDProcess()) {
-    ident.mSyncHandle = 0;
-  }
-
   RefPtr<KnowsCompositorVideo> knowsCompositor = new KnowsCompositorVideo();
-  knowsCompositor->IdentifyTextureHost(ident);
+  knowsCompositor->IdentifyTextureHost(aIdentifier);
   return knowsCompositor.forget();
 }
 
