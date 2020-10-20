@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AgnosticDecoderModule.h"
+
 #include "OpusDecoder.h"
 #include "TheoraDecoder.h"
 #include "VPXDecoder.h"
@@ -92,20 +93,35 @@ static bool IsAvailable(DecoderType type) {
 
 bool AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
+  UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
+  if (!trackInfo) {
+    return false;
+  }
+  return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
+}
+
+bool AgnosticDecoderModule::Supports(
+    const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) const {
+  const auto& trackInfo = aParams.mConfig;
+  const nsACString& mimeType = trackInfo.mMimeType;
+
   bool supports =
 #ifdef MOZ_AV1
       // We remove support for decoding AV1 here if RDD is enabled so that
       // decoding on the content process doesn't accidentally happen in case
       // something goes wrong with launching the RDD process.
-      (AOMDecoder::IsAV1(aMimeType) && IsAvailable(DecoderType::AV1)) ||
+      (AOMDecoder::IsAV1(mimeType) && IsAvailable(DecoderType::AV1)) ||
 #endif
-      (VPXDecoder::IsVPX(aMimeType) && IsAvailable(DecoderType::VPX)) ||
-      (TheoraDecoder::IsTheora(aMimeType) &&
-       IsAvailable(DecoderType::Theora)) ||
-      (VorbisDataDecoder::IsVorbis(aMimeType) &&
+      // We currently can't allocate a SharedRGBImage in the RDD process
+      // (see bug 1668840) required to decode a video with an alpha channel.
+      (VPXDecoder::IsVPX(mimeType) && IsAvailable(DecoderType::VPX) &&
+       (!trackInfo.GetAsVideoInfo()->HasAlpha() || !XRE_IsRDDProcess())) ||
+      (TheoraDecoder::IsTheora(mimeType) && IsAvailable(DecoderType::Theora)) ||
+      (VorbisDataDecoder::IsVorbis(mimeType) &&
        IsAvailable(DecoderType::Vorbis)) ||
-      (WaveDataDecoder::IsWave(aMimeType) && IsAvailable(DecoderType::Wave)) ||
-      (OpusDataDecoder::IsOpus(aMimeType) && IsAvailable(DecoderType::Opus));
+      (WaveDataDecoder::IsWave(mimeType) && IsAvailable(DecoderType::Wave)) ||
+      (OpusDataDecoder::IsOpus(mimeType) && IsAvailable(DecoderType::Opus));
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Agnostic decoder %s requested type",
            supports ? "supports" : "rejects"));
