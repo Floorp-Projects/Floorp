@@ -9,7 +9,10 @@ const { Ci, Cu } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
-const { customHighlighterSpec } = require("devtools/shared/specs/highlighters");
+const {
+  highlighterSpec,
+  customHighlighterSpec,
+} = require("devtools/shared/specs/highlighters");
 
 loader.lazyRequireGetter(
   this,
@@ -17,10 +20,27 @@ loader.lazyRequireGetter(
   "devtools/server/actors/highlighters/utils/markup",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "isDocumentReady",
+  "devtools/server/actors/inspector/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "BoxModelHighlighter",
+  "devtools/server/actors/highlighters/box-model",
+  true
+);
 
 /**
- * The registration mechanism for highlighters provides a quick way to
- * have modular highlighters instead of a hard coded list.
+ * The registration mechanism for highlighters provide a quick way to
+ * have modular highlighters, instead of a hard coded list.
+ * It allow us to split highlighers in sub modules, and add them dynamically
+ * using add-on (useful for 3rd party developers, or prototyping)
+ *
+ * Note that currently, highlighters added using add-ons, can only work on
+ * Firefox desktop, or Fennec if the same add-on is installed in both.
  */
 const highlighterTypes = new Map();
 
@@ -33,6 +53,8 @@ exports.isTypeRegistered = isTypeRegistered;
 
 /**
  * Registers a given constructor as highlighter, for the `typeName` given.
+ * If no `typeName` is provided, the `typeName` property on the constructor's prototype
+ * is used, if one is found, otherwise the name of the constructor function is used.
  */
 const register = (typeName, modulePath) => {
   if (highlighterTypes.has(typeName)) {
@@ -44,16 +66,157 @@ const register = (typeName, modulePath) => {
 exports.register = register;
 
 /**
- * CustomHighlighterActor is a generic Actor that instantiates a custom implementation of
- * a highlighter class given its type name which must be registered in `highlighterTypes`.
- * CustomHighlighterActor proxies calls to methods of the highlighter class instance:
- * constructor(targetActor), show(node, options), hide(), destroy()
+ * The Highlighter is the server-side entry points for any tool that wishes to
+ * highlight elements in some way in the content document.
+ *
+ * A little bit of vocabulary:
+ * - <something>HighlighterActor classes are the actors that can be used from
+ *   the client. They do very little else than instantiate a given
+ *   <something>Highlighter and use it to highlight elements.
+ * - <something>Highlighter classes aren't actors, they're just JS classes that
+ *   know how to create and attach the actual highlighter elements on top of the
+ *   content
+ *
+ * The most used highlighter actor is the HighlighterActor which can be
+ * conveniently retrieved via the InspectorActor's 'getHighlighter' method.
+ * The InspectorActor will always return the same instance of
+ * HighlighterActor if asked several times and this instance is used in the
+ * toolbox to highlighter elements's box-model from the markup-view,
+ * box model view, console, debugger, ... as well as select elements with the
+ * pointer (pick).
+ *
+ * Other types of highlighter actors exist and can be accessed via the
+ * InspectorActor's 'getHighlighterByType' method.
+ */
+
+/**
+ * The HighlighterActor class
+ */
+exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
+  initialize: function(inspector, autohide) {
+    protocol.Actor.prototype.initialize.call(this, null);
+
+    this._inspector = inspector;
+    this._targetActor = this._inspector.targetActor;
+    this._highlighterEnv = new HighlighterEnvironment();
+    this._highlighterEnv.initFromTargetActor(this._targetActor);
+
+    this._onNavigate = this._onNavigate.bind(this);
+    // Listen to navigation events to switch from the BoxModelHighlighter to the
+    // SimpleOutlineHighlighter, and back, if the top level window changes.
+    this._targetActor.on("navigate", this._onNavigate);
+  },
+
+  get conn() {
+    return this._inspector && this._inspector.conn;
+  },
+
+  /**
+   * Get an instance of the box model highlighter.
+   */
+  get instance() {
+    return this._highlighter;
+  },
+
+  form: function() {
+    return {
+      actor: this.actorID,
+    };
+  },
+
+  initializeInstance() {
+    // _createHighlighter will resolve this promise once the highlighter
+    // instance is created.
+    const onInitialized = new Promise(resolve => {
+      this._initialized = resolve;
+    });
+    // Only try to create the highlighter instance when the document is loaded,
+    // otherwise, wait for the navigate event to fire.
+    const doc = this._targetActor.window.document;
+    if (doc.documentElement && isDocumentReady(doc)) {
+      this._createHighlighter();
+    }
+
+    return onInitialized;
+  },
+
+  _createHighlighter: function() {
+    this._highlighter = new BoxModelHighlighter(
+      this._highlighterEnv,
+      this._inspector
+    );
+    this._initialized();
+  },
+
+  _destroyHighlighter: function() {
+    if (this._highlighter) {
+      this._highlighter.destroy();
+      this._highlighter = null;
+    }
+  },
+
+  _onNavigate: function({ isTopLevel }) {
+    // Skip navigation events for non top-level windows, or if the document
+    // doesn't exist anymore.
+    if (!isTopLevel || !this._targetActor.window.document.documentElement) {
+      return;
+    }
+
+    this._destroyHighlighter();
+    this._createHighlighter();
+  },
+
+  destroy: function() {
+    protocol.Actor.prototype.destroy.call(this);
+
+    this.hideBoxModel();
+    this._destroyHighlighter();
+    this._targetActor.off("navigate", this._onNavigate);
+
+    this._highlighterEnv.destroy();
+    this._highlighterEnv = null;
+
+    this._inspector = null;
+    this._targetActor = null;
+  },
+
+  /**
+   * Display the box model highlighting on a given NodeActor.
+   * There is only one instance of the box model highlighter, so calling this
+   * method several times won't display several highlighters, it will just move
+   * the highlighter instance to these nodes.
+   *
+   * @param NodeActor The node to be highlighted
+   * @param Options See the request part for existing options. Note that not
+   * all options may be supported by all types of highlighters.
+   */
+  showBoxModel: function(node, options = {}) {
+    if (!node || !this._highlighter.show(node.rawNode, options)) {
+      this._highlighter.hide();
+    }
+  },
+
+  /**
+   * Hide the box model highlighting if it was shown before
+   */
+  hideBoxModel: function() {
+    if (this._highlighter) {
+      this._highlighter.hide();
+    }
+  },
+});
+
+/**
+ * A generic highlighter actor class that instantiate a highlighter given its
+ * type name and allows to show/hide it.
  */
 exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
   customHighlighterSpec,
   {
     /**
-     * Create a highlighter instance given its typeName.
+     * Create a highlighter instance given its typename
+     * The typename must be one of HIGHLIGHTER_CLASSES and the class must
+     * implement constructor(targetActor), show(node), hide(), destroy()
      */
     initialize: function(parent, typeName) {
       protocol.Actor.prototype.initialize.call(this, null);
@@ -117,14 +280,16 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
      * method.
      *
      * Most custom highlighters are made to highlight DOM nodes, hence the first
-     * NodeActor argument (NodeActor as in devtools/server/actor/inspector).
+     * NodeActor argument (NodeActor as in
+     * devtools/server/actor/inspector).
      * Note however that some highlighters use this argument merely as a context
-     * node: The SelectorHighlighter for instance uses it as a base node to run the
+     * node: The SelectHighlighter for instance uses it as a base node to run the
      * provided CSS selector on.
      *
      * @param {NodeActor} The node to be highlighted
      * @param {Object} Options for the custom highlighter
      * @return {Boolean} True, if the highlighter has been successfully shown
+     * (FF41+)
      */
     show: function(node, options) {
       if (!this._highlighter) {
@@ -153,8 +318,8 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
     },
 
     /**
-     * Destroy the custom highlighter implementation.
-     * This method is called automatically just before the actor is destroyed.
+     * Kill this actor. This method is called automatically just before the actor
+     * is destroyed.
      */
     finalize: function() {
       if (this._highlighter) {
@@ -183,9 +348,9 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
  * similarly to the BrowsingContextTargetActor.
  *
  * It can be initialized either from a BrowsingContextTargetActor (which is the
- * most frequent way of using it, since highlighters are initialized by
- * CustomHighlighterActor, which has a targetActor reference).
- * It can also be initialized just with a window object (which is
+ * most frequent way of using it, since highlighters are usually initialized by
+ * the HighlighterActor or CustomHighlighterActor, which have a targetActor
+ * reference). It can also be initialized just with a window object (which is
  * useful for when a highlighter is used outside of the devtools server context.
  */
 function HighlighterEnvironment() {

@@ -12,6 +12,7 @@ const {
   registerFront,
 } = require("devtools/shared/protocol.js");
 const { inspectorSpec } = require("devtools/shared/specs/inspector");
+loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
 const TELEMETRY_EYEDROPPER_OPENED_MENU =
@@ -47,6 +48,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     this.initialized = await Promise.all([
       this._getWalker(),
+      this._getHighlighter(),
       this._getPageStyle(),
     ]);
 
@@ -72,6 +74,11 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     await this.walker.reparentRemoteFrame();
   }
 
+  async _getHighlighter() {
+    const autohide = !flags.testing;
+    this.highlighter = await this.getHighlighter(autohide);
+  }
+
   hasHighlighter(type) {
     return this._highlighters.has(type);
   }
@@ -90,7 +97,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   destroy() {
     this._compatibility = null;
-    // CustomHighlighter fronts are managed by InspectorFront and so will be
+    // Highlighter fronts are managed by InspectorFront and so will be
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
     this.destroyHighlighters();

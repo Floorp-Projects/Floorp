@@ -26,9 +26,6 @@ add_task(async function() {
   const toolbox = hud.toolbox;
 
   const testActor = await getTestActor(toolbox);
-  const highlighter = toolbox.getHighlighter();
-  let onHighlighterShown;
-  let onHighlighterHidden;
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.logNode("h1");
@@ -43,29 +40,33 @@ add_task(async function() {
   );
 
   info("Highlight the node by moving the cursor on it");
-  onHighlighterShown = highlighter.waitForHighlighterShown();
+
+  // the inspector should be initialized first and then the node should
+  // highlight after the hover effect.
+  const inspectorFront = await toolbox.target.getFront("inspector");
+  let onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
 
   EventUtils.synthesizeMouseAtCenter(node, { type: "mousemove" }, view);
 
-  const { nodeFront } = await onHighlighterShown;
+  const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "h1", "The correct node was highlighted");
   isVisible = await testActor.isHighlighting();
   ok(isVisible, "Highlighter is displayed");
 
   info("Unhighlight the node by moving away from the node");
-  onHighlighterHidden = highlighter.waitForHighlighterHidden();
+  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   EventUtils.synthesizeMouseAtCenter(
     nonHighlightEl,
     { type: "mousemove" },
     view
   );
 
-  await onHighlighterHidden;
+  await onNodeUnhighlight;
   ok(true, "node-unhighlight event was fired when moving away from the node");
 
   info("Check we don't have zombie highlighters when briefly hovering a node");
-  onHighlighterShown = highlighter.waitForHighlighterShown();
-  onHighlighterHidden = highlighter.waitForHighlighterHidden();
+  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   // Move hover the node and then right after move out.
   EventUtils.synthesizeMouseAtCenter(node, { type: "mousemove" }, view);
   EventUtils.synthesizeMouseAtCenter(
@@ -73,7 +74,7 @@ add_task(async function() {
     { type: "mousemove" },
     view
   );
-  await Promise.all([onHighlighterShown, onHighlighterHidden]);
+  await Promise.all([onNodeHighlight, onNodeUnhighlight]);
   ok(true, "The highlighter was removed");
 
   isVisible = await testActor.isHighlighting();

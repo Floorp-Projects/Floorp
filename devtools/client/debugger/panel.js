@@ -163,7 +163,8 @@ class DebuggerPanel {
       return;
     }
 
-    return this._unhighlight();
+    const forceUnHighlightInTest = true;
+    return this._unhighlight(forceUnHighlightInTest);
   }
 
   getFrames() {

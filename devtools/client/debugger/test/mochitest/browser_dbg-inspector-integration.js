@@ -14,7 +14,6 @@ add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
   const { toolbox } = dbg;
   const testActor = await getTestActor(toolbox);
-  const highlighter = toolbox.getHighlighter();
 
   // Bug 1562165: the WhyPaused element is displayed for a few hundred ms when adding an
   // expression, which can break synthesizeMouseAtCenter. So here we wait for the
@@ -31,7 +30,8 @@ add_task(async function() {
   info(
     "Check that hovering over DOM element highlights the node in content panel"
   );
-  let onNodeHighlight = highlighter.waitForHighlighterShown();
+  const inspectorFront = await toolbox.target.getFront("inspector");
+  let onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
 
   info("Mouseover the open in inspector button");
   const inspectorNode = await waitUntilPredicate(() =>
@@ -44,12 +44,14 @@ add_task(async function() {
     view
   );
 
-  info("Wait for highligther to be shown");
-  const { nodeFront } = await onNodeHighlight;
+  info("Wait for node-highlight");
+  const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "button", "The correct node was highlighted");
+  isVisible = await testActor.isHighlighting();
+  ok(isVisible, "Highlighter is displayed");
 
   info("Check that moving the mouse away from the node hides the highlighter");
-  let onNodeUnhighlight = highlighter.waitForHighlighterHidden();
+  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   const nonHighlightEl = inspectorNode.closest(".object-node");
   EventUtils.synthesizeMouseAtCenter(
     nonHighlightEl,
@@ -62,8 +64,8 @@ add_task(async function() {
   is(isVisible, false, "The highlighter is not displayed anymore");
 
   info("Check we don't have zombie highlighters when briefly hovering a node");
-  onNodeHighlight = highlighter.waitForHighlighterShown();
-  onNodeUnhighlight = highlighter.waitForHighlighterHidden();
+  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
 
   // Move hover the node and then, right after, move out.
   EventUtils.synthesizeMouseAtCenter(
@@ -84,7 +86,9 @@ add_task(async function() {
   info("Ensure panel changes when button is clicked");
   // Loading the inspector panel at first, to make it possible to listen for
   // new node selections
-  const inspector = await toolbox.loadTool("inspector");
+  await toolbox.loadTool("inspector");
+  const inspector = toolbox.getPanel("inspector");
+
   const onInspectorSelected = toolbox.once("inspector-selected");
   const onInspectorUpdated = inspector.once("inspector-updated");
   const onNewNode = toolbox.selection.once("new-node-front");
@@ -124,7 +128,8 @@ add_task(async function() {
 
   // Loading the inspector panel at first, to make it possible to listen for
   // new node selections
-  const inspector = await toolbox.loadTool("inspector");
+  await toolbox.loadTool("inspector");
+  const inspector = toolbox.getPanel("inspector");
 
   const onInspectorSelected = toolbox.once("inspector-selected");
   const onInspectorUpdated = inspector.once("inspector-updated");

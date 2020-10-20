@@ -418,6 +418,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this.parentFront.parentFront;
   }
 
+  get highlighterFront() {
+    return this.inspectorFront.highlighter;
+  }
+
   get walkerFront() {
     return this.parentFront;
   }
