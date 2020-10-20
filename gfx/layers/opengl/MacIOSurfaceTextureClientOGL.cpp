@@ -56,6 +56,13 @@ bool MacIOSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   return true;
 }
 
+void MacIOSurfaceTextureData::GetSubDescriptor(
+    RemoteDecoderVideoSubDescriptor* const aOutDesc) {
+  *aOutDesc = SurfaceDescriptorMacIOSurface(
+      mSurface->GetIOSurfaceID(), mSurface->GetContentsScaleFactor(),
+      !mSurface->HasAlpha(), mSurface->GetYUVColorSpace());
+}
+
 void MacIOSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = gfx::IntSize(mSurface->GetDevicePixelWidth(),
                             mSurface->GetDevicePixelHeight());
