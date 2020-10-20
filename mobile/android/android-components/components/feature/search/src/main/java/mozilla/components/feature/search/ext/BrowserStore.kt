@@ -6,8 +6,11 @@ package mozilla.components.feature.search.ext
 
 import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.defaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.Store
 
 /**
  * Converts a [BrowserStore] to follow the [DefaultSearchEngineProvider] interface.
@@ -26,4 +29,29 @@ fun BrowserStore.toDefaultSearchEngineProvider() = object : DefaultSearchEngineP
     override suspend fun retrieveDefaultSearchEngine(): SearchEngine? {
         return getDefaultSearchEngine()
     }
+}
+
+/**
+ * Waits (asynchronously, non-blocking) for the search state to be loaded from disk (when using
+ * `RegionMiddleware` and `SearchMiddleware`) and invokes [block] with the default search engine
+ * (or `null` if no default could be loaded).
+ */
+fun BrowserStore.waitForDefaultSearchEngine(
+    block: (mozilla.components.browser.state.search.SearchEngine?) -> Unit
+) {
+    // Did we already load the search state? In that case we can invoke `block` immediately.
+    if (state.search.complete) {
+        block(state.search.defaultSearchEngine)
+        return
+    }
+
+    // Otherwise: Wait for the search state to be loaded and then invoke `block`.
+    var subscription: Store.Subscription<BrowserState, BrowserAction>? = null
+    subscription = observeManually { state ->
+        if (state.search.complete) {
+            block(state.search.defaultSearchEngine)
+            subscription!!.unsubscribe()
+        }
+    }
+    subscription.resume()
 }
