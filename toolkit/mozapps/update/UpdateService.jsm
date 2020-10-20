@@ -1359,7 +1359,7 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
       .getService(Ci.nsIApplicationUpdateService)
       .downloadUpdate(update, !postStaging);
     if (!success) {
-      cleanupReadyUpdate();
+      cleanupDownloadingUpdate();
     }
   } else {
     LOG(
@@ -3495,7 +3495,7 @@ function UpdateManager() {
     } else if (status == STATE_DOWNLOADING) {
       // The first update we read out of activeUpdates may not be the ready
       // update, it may be the downloading update.
-      if (this._downloadUpdate) {
+      if (this._downloadingUpdate) {
         // If the first update we read is a downloading update, it's
         // unexpected to have read another active update. That would seem to
         // indicate that we were downloading two updates at once, which we don't
