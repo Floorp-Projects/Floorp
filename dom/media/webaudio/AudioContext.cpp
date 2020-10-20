@@ -929,7 +929,9 @@ void AudioContext::SuspendFromChrome() {
   if (mIsOffline || mIsShutDown) {
     return;
   }
-  SuspendInternal(nullptr, AudioContextOperationFlags::None);
+  SuspendInternal(nullptr, Preferences::GetBool("dom.audiocontext.testing")
+                               ? AudioContextOperationFlags::SendStateChange
+                               : AudioContextOperationFlags::None);
 }
 
 void AudioContext::SuspendInternal(void* aPromise,
@@ -965,7 +967,9 @@ void AudioContext::ResumeFromChrome() {
   if (mIsOffline || mIsShutDown) {
     return;
   }
-  ResumeInternal(AudioContextOperationFlags::None);
+  ResumeInternal(Preferences::GetBool("dom.audiocontext.testing")
+                     ? AudioContextOperationFlags::SendStateChange
+                     : AudioContextOperationFlags::None);
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
