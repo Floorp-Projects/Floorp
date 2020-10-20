@@ -153,6 +153,37 @@ void gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus) {
 }
 
 /* static */
+void gfxConfig::Inherit(EnumSet<Feature> aFeatures,
+                        const DevicePrefs& aDevicePrefs) {
+  for (Feature feature : aFeatures) {
+    FeatureStatus status = FeatureStatus::Unused;
+    switch (feature) {
+      case Feature::HW_COMPOSITING:
+        status = aDevicePrefs.hwCompositing();
+        break;
+      case Feature::D3D11_COMPOSITING:
+        status = aDevicePrefs.d3d11Compositing();
+        break;
+      case Feature::OPENGL_COMPOSITING:
+        status = aDevicePrefs.oglCompositing();
+        break;
+      case Feature::ADVANCED_LAYERS:
+        status = aDevicePrefs.advancedLayers();
+        break;
+      case Feature::DIRECT2D:
+        status = aDevicePrefs.useD2D1();
+        break;
+      case Feature::WEBGPU:
+        status = aDevicePrefs.webGPU();
+        break;
+      default:
+        break;
+    }
+    gfxConfig::Inherit(feature, status);
+  }
+}
+
+/* static */
 bool gfxConfig::UseFallback(Fallback aFallback) {
   return sConfig->UseFallbackImpl(aFallback);
 }

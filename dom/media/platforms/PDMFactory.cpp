@@ -356,6 +356,12 @@ void PDMFactory::CreateGpuPDMs() {
 
 void PDMFactory::CreateRddPDMs() {
   MOZ_ASSERT(XRE_IsRDDProcess());
+#ifdef XP_WIN
+  if (StaticPrefs::media_wmf_enabled() &&
+      StaticPrefs::media_rdd_wmf_enabled()) {
+    CreateAndStartupPDM<WMFDecoderModule>();
+  }
+#endif
   CreateAndStartupPDM<AgnosticDecoderModule>();
 }
 

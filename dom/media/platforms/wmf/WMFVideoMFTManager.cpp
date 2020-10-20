@@ -925,7 +925,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
       !mKnowsCompositor->SupportsD3D11() || !mIMFUsable) {
     RefPtr<VideoData> v = VideoData::CreateAndCopyData(
         mVideoInfo, mImageContainer, aStreamOffset, pts, duration, b, false,
-        TimeUnit::FromMicroseconds(-1), pictureRegion);
+        TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
     if (twoDBuffer) {
       twoDBuffer->Unlock2D();
     } else {
