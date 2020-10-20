@@ -13,11 +13,8 @@ pub struct InternalMetrics {
     pub app_build: StringMetric,
     pub app_display_version: StringMetric,
     pub app_channel: StringMetric,
-    pub os: StringMetric,
     pub os_version: StringMetric,
     pub architecture: StringMetric,
-    pub device_manufacturer: StringMetric,
-    pub device_model: StringMetric,
 }
 
 impl InternalMetrics {
@@ -47,14 +44,6 @@ impl InternalMetrics {
                 disabled: false,
                 dynamic_label: None,
             }),
-            os: StringMetric::new(CommonMetricData {
-                name: "os".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
             os_version: StringMetric::new(CommonMetricData {
                 name: "os_version".into(),
                 category: "".into(),
@@ -65,22 +54,6 @@ impl InternalMetrics {
             }),
             architecture: StringMetric::new(CommonMetricData {
                 name: "architecture".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            device_manufacturer: StringMetric::new(CommonMetricData {
-                name: "device_manufacturer".into(),
-                category: "".into(),
-                send_in_pings: vec!["glean_client_info".into()],
-                lifetime: Lifetime::Application,
-                disabled: false,
-                dynamic_label: None,
-            }),
-            device_model: StringMetric::new(CommonMetricData {
-                name: "device_model".into(),
                 category: "".into(),
                 send_in_pings: vec!["glean_client_info".into()],
                 lifetime: Lifetime::Application,
