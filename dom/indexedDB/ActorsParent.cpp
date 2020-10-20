@@ -20117,32 +20117,20 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
                       kStmtParamNameObjectStoreId + " AND key = :"_ns +
                       kStmtParamNameKey + ";"_ns));
 
-  nsresult rv = indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                                 mParams.objectStoreId());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                           mParams.objectStoreId()));
 
-  rv = mResponse.BindToStatement(&*indexValuesStmt, kStmtParamNameKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(mResponse.BindToStatement(&*indexValuesStmt, kStmtParamNameKey));
 
   IDB_TRY_INSPECT(const bool& hasResult,
                   MOZ_TO_RESULT_INVOKE(&*indexValuesStmt, ExecuteStep));
 
   if (hasResult) {
-    IndexDataValuesAutoArray existingIndexValues;
-    rv =
-        ReadCompressedIndexDataValues(*indexValuesStmt, 0, existingIndexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const auto& existingIndexValues,
+                    ReadCompressedIndexDataValues(*indexValuesStmt, 0));
 
-    rv = DeleteIndexDataTableRows(aConnection, mResponse, existingIndexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        DeleteIndexDataTableRows(aConnection, mResponse, existingIndexValues));
   }
 
   return NS_OK;
