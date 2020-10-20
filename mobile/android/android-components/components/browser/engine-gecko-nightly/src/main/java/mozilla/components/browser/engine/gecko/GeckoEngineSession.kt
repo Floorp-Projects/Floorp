@@ -1036,6 +1036,7 @@ class GeckoEngineSession(
         defaultSettings?.testingModeEnabled?.let { geckoSession.settings.fullAccessibilityTree = it }
         defaultSettings?.userAgentString?.let { geckoSession.settings.userAgentOverride = it }
         defaultSettings?.suspendMediaWhenInactive?.let { geckoSession.settings.suspendMediaWhenInactive = it }
+        defaultSettings?.clearColor?.let { geckoSession.compositorController.clearColor = it }
 
         if (shouldOpen) {
             geckoSession.open(runtime)

@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * Exposes GeckoView `CompositorController#ClearColor` as Setting
+
 # 63.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v62.0.0...v63.0.0)

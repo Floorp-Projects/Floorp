@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.graphics.Color
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
@@ -80,7 +81,9 @@ class SettingsTest {
             { settings.forceUserScalableContent },
             { settings.forceUserScalableContent = true },
             { settings.loginAutofillEnabled },
-            { settings.loginAutofillEnabled = false }
+            { settings.loginAutofillEnabled = false },
+            { settings.clearColor },
+            { settings.clearColor = Color.BLUE }
         )
     }
 
@@ -121,6 +124,7 @@ class SettingsTest {
         assertNull(settings.fontSizeFactor)
         assertFalse(settings.forceUserScalableContent)
         assertFalse(settings.loginAutofillEnabled)
+        assertNull(settings.clearColor)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -154,7 +158,8 @@ class SettingsTest {
             fontInflationEnabled = false,
             fontSizeFactor = 2.0F,
             forceUserScalableContent = true,
-            loginAutofillEnabled = true
+            loginAutofillEnabled = true,
+            clearColor = Color.BLUE
         )
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -186,5 +191,6 @@ class SettingsTest {
         assertEquals(2.0F, defaultSettings.fontSizeFactor)
         assertTrue(defaultSettings.forceUserScalableContent)
         assertTrue(defaultSettings.loginAutofillEnabled)
+        assertEquals(Color.BLUE, defaultSettings.clearColor)
     }
 }

@@ -566,6 +566,10 @@ class GeckoEngine(
             get() = defaultSettings?.suspendMediaWhenInactive ?: false
             set(value) { defaultSettings?.suspendMediaWhenInactive = value }
 
+        override var clearColor: Int?
+            get() = defaultSettings?.clearColor
+            set(value) { defaultSettings?.clearColor = value }
+
         override var fontInflationEnabled: Boolean?
             get() = runtime.settings.fontInflationEnabled
             set(value) {
@@ -616,6 +620,7 @@ class GeckoEngine(
             this.fontSizeFactor = it.fontSizeFactor
             this.forceUserScalableContent = it.forceUserScalableContent
             this.loginAutofillEnabled = it.loginAutofillEnabled
+            this.clearColor = it.clearColor
         }
     }
 

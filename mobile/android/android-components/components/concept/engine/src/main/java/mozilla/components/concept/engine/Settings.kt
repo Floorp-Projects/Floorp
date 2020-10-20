@@ -174,6 +174,11 @@ abstract class Settings {
      * Setting to force the ability to scale the content
      */
     open var forceUserScalableContent: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the clear color while drawing.
+     */
+    open var clearColor: Int? by UnsupportedSetting()
 }
 
 /**
@@ -208,7 +213,8 @@ data class DefaultSettings(
     override var fontInflationEnabled: Boolean? = null,
     override var fontSizeFactor: Float? = null,
     override var forceUserScalableContent: Boolean = false,
-    override var loginAutofillEnabled: Boolean = false
+    override var loginAutofillEnabled: Boolean = false,
+    override var clearColor: Int? = null
 ) : Settings()
 
 class UnsupportedSetting<T> {

@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
@@ -257,6 +258,10 @@ class GeckoEngineTest {
         assertFalse(engine.settings.suspendMediaWhenInactive)
         engine.settings.suspendMediaWhenInactive = true
         assertEquals(true, engine.settings.suspendMediaWhenInactive)
+
+        assertNull(engine.settings.clearColor)
+        engine.settings.clearColor = Color.BLUE
+        assertEquals(Color.BLUE, engine.settings.clearColor)
 
         // Specifying no ua-string default should result in GeckoView's default.
         assertEquals(GeckoSession.getDefaultUserAgent(), engine.settings.userAgentString)

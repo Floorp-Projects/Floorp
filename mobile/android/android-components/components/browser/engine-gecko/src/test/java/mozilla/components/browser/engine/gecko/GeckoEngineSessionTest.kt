@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Handler
 import android.os.Message
 import android.view.WindowManager
@@ -1280,6 +1281,25 @@ class GeckoEngineSessionTest {
             geckoSessionProvider = geckoSessionProvider,
             defaultSettings = DefaultSettings(suspendMediaWhenInactive = true))
         verify(geckoSession.settings).suspendMediaWhenInactive = true
+    }
+
+    @Test
+    fun settingClearColorDefault() {
+        whenever(geckoSession.compositorController).thenReturn(mock())
+
+        GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+
+        verify(geckoSession.compositorController, never()).clearColor = anyInt()
+
+        GeckoEngineSession(runtime,
+                geckoSessionProvider = geckoSessionProvider,
+                defaultSettings = DefaultSettings())
+        verify(geckoSession.compositorController, never()).clearColor = anyInt()
+
+        GeckoEngineSession(runtime,
+                geckoSessionProvider = geckoSessionProvider,
+                defaultSettings = DefaultSettings(clearColor = Color.BLUE))
+        verify(geckoSession.compositorController).clearColor = Color.BLUE
     }
 
     @Test
