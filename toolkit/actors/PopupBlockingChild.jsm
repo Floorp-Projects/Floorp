@@ -24,7 +24,7 @@ class PopupBlockingChild extends JSWindowActorChild {
     this.contentWindow.addEventListener("pageshow", this);
   }
 
-  willDestroy() {
+  didDestroy() {
     this.contentWindow.removeEventListener("pageshow", this);
   }
 

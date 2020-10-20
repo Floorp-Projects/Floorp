@@ -53,7 +53,7 @@ class PluginChild extends JSWindowActorChild {
     Services.cpmm.addMessageListener(kSubmitMsg, this);
   }
 
-  willDestroy() {
+  didDestroy() {
     Services.cpmm.removeMessageListener(kSubmitMsg, this);
     if (this._addedListeners) {
       this.contentWindow.removeEventListener("pagehide", this, {

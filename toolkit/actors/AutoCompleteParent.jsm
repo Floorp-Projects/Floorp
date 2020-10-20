@@ -165,7 +165,7 @@ var AutoCompleteResultView = {
 };
 
 class AutoCompleteParent extends JSWindowActorParent {
-  willDestroy() {
+  didDestroy() {
     if (this.openedPopup) {
       this.openedPopup.closePopup();
     }
