@@ -174,6 +174,9 @@ add_task(async function testEnterPrintsFromOrientation() {
 
 add_task(async function testPrintOnNewWindowDoesntClose() {
   info("Test that printing doesn't close a window with a single tab");
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
   await BrowserTestUtils.loadURI(browser, PrintHelper.defaultTestPageUrl);
@@ -190,4 +193,5 @@ add_task(async function testPrintOnNewWindowDoesntClose() {
   });
   ok(!win.closed, "Shouldn't be closed");
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
