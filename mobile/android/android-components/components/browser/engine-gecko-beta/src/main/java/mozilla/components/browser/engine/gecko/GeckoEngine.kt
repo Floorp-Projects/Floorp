@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
@@ -487,15 +488,7 @@ class GeckoEngine(
 
         override var automaticFontSizeAdjustment: Boolean
             get() = runtime.settings.automaticFontSizeAdjustment
-            set(value) {
-                try {
-                    runtime.settings.automaticFontSizeAdjustment = value
-                } catch (e: IllegalArgumentException) {
-                    // Catching exception here as a temporary workaround for:
-                    // - https://github.com/mozilla-mobile/android-components/issues/7922
-                    // - https://bugzilla.mozilla.org/show_bug.cgi?id=1656078
-                }
-            }
+            set(value) { runtime.settings.automaticFontSizeAdjustment = value }
 
         override var automaticLanguageAdjustment: Boolean
             get() = localeUpdater.enabled
@@ -692,12 +685,17 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
         category == Event.COOKIES_BLOCKED_SOCIALTRACKER
 }
 
+// There is going to be a patch from GV for adding [REPLACED_UNSAFE_CONTENT] as
+// a valid option for [BlockingData.category]
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1669577
+@SuppressLint("SwitchIntDef")
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
         Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
         Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
         Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+        Event.REPLACED_TRACKING_CONTENT -> TrackingCategory.SHIMMED
         else -> TrackingCategory.NONE
     }
 }

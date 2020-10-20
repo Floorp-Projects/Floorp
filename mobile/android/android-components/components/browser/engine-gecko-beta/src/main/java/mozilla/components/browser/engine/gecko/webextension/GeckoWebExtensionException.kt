@@ -10,7 +10,7 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER
 
 /**
  * An unexpected gecko exception that occurs when trying to perform an action on the extension like
- * (but not exclusively) installing/uninstalling, removing or updating.
+ * (but not exclusively) installing/uninstalling, removing or updating..
  */
 class GeckoWebExtensionException(throwable: Throwable) : WebExtensionException(throwable) {
     override val isRecoverable: Boolean = throwable is InstallException &&

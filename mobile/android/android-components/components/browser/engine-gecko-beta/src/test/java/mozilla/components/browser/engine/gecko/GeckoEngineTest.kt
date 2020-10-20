@@ -63,7 +63,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.StorageController
-import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_HASH
@@ -73,10 +72,10 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POST
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
+import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
-import java.lang.Exception
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 typealias GeckoInstallException = org.mozilla.geckoview.WebExtension.InstallException
@@ -887,7 +886,7 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-                currentExtension, updatedExtension, updatedPermissions, hostPermissions
+            currentExtension, updatedExtension, updatedPermissions, hostPermissions
         )
         assertNotNull(result)
 
@@ -901,10 +900,10 @@ class GeckoEngineTest {
             onPermissionsGrantedCaptor.capture()
         )
         val current =
-                currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(currentExtension, current.nativeExtension)
         val updated =
-                updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
@@ -928,7 +927,7 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-            currentExtension, updatedExtension, updatedPermissions, emptyArray()
+                currentExtension, updatedExtension, updatedPermissions, emptyArray()
         )
         assertNotNull(result)
 
@@ -942,10 +941,10 @@ class GeckoEngineTest {
             onPermissionsGrantedCaptor.capture()
         )
         val current =
-            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+                currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(currentExtension, current.nativeExtension)
         val updated =
-            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+                updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
@@ -1284,7 +1283,8 @@ class GeckoEngineTest {
 
             engine.updateWebExtension(
                 extension,
-                onError = { _, e -> throwable = e as WebExtensionException }
+                onError = { _, e -> throwable = e as WebExtensionException
+                }
             )
 
             updateExtensionResult.completeExceptionally(exception)
@@ -1787,6 +1787,7 @@ class GeckoEngineTest {
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SHIMMED))
 
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
@@ -1964,6 +1965,7 @@ class GeckoEngineTest {
         val blockedFingerprintingContent = createBlockingData(Event.BLOCKED_FINGERPRINTING_CONTENT)
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
+        val shimmedContent = createBlockingData(Event.REPLACED_TRACKING_CONTENT)
 
         val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
         val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
@@ -1983,7 +1985,8 @@ class GeckoEngineTest {
             blockedSocialContent,
             loadedSocialContent,
             loadedCookieSocialTracker,
-            blockedCookieSocialTracker
+            blockedCookieSocialTracker,
+            shimmedContent
         )
 
         val addLogSecondEntry = object : ContentBlockingController.LogEntry() {}

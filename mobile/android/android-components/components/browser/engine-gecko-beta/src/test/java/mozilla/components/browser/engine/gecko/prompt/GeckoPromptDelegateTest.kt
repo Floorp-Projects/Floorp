@@ -1084,18 +1084,6 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
-    fun `dismissSafely only dismiss if the prompt is NOT already dismissed`() {
-        val prompt = spy(GeckoAlertPrompt())
-        val geckoResult = mock<GeckoResult<GeckoSession.PromptDelegate.PromptResponse>>()
-
-        doReturn(false).`when`(prompt).isComplete
-
-        prompt.dismissSafely(geckoResult)
-
-        verify(geckoResult).complete(any())
-    }
-
-    @Test
     fun `onRepostConfirmPrompt must provide a Repost PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Repost = mock()
@@ -1185,6 +1173,18 @@ class GeckoPromptDelegateTest {
         request.onDismiss()
 
         assertTrue(onRepostPromptCancelledCalled)
+    }
+
+    @Test
+    fun `dismissSafely only dismiss if the prompt is NOT already dismissed`() {
+        val prompt = spy(GeckoAlertPrompt())
+        val geckoResult = mock<GeckoResult<GeckoSession.PromptDelegate.PromptResponse>>()
+
+        doReturn(false).`when`(prompt).isComplete
+
+        prompt.dismissSafely(geckoResult)
+
+        verify(geckoResult).complete(any())
     }
 
     @Test

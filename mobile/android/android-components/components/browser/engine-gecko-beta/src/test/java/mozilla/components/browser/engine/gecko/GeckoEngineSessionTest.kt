@@ -29,6 +29,8 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Headers
+import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -39,6 +41,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.test.ReflectionUtils
+import mozilla.components.support.test.argumentCaptor
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,6 +64,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -73,7 +77,6 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_NO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.MockWebResponseInfo
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
@@ -87,6 +90,7 @@ typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
+@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
 class GeckoEngineSessionTest {
 
     private lateinit var runtime: GeckoRuntime
@@ -271,24 +275,27 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
-        val info: GeckoSession.WebResponseInfo = MockWebResponseInfo(
-            uri = "https://download.mozilla.org",
-            contentLength = 42,
-            contentType = "image/png",
-            filename = "image.png"
-        )
+        val response = WebResponse.Builder("https://download.mozilla.org/image.png")
+            .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
+            .addHeader(Headers.Names.CONTENT_LENGTH, "42")
+            .body(mock())
+            .build()
 
+        val captor = argumentCaptor<Response>()
         captureDelegates()
-        contentDelegate.value.onExternalResponse(mock(), info)
+        contentDelegate.value.onExternalResponse(mock(), response)
 
         verify(observer).onExternalResource(
-            url = "https://download.mozilla.org",
-            fileName = "image.png",
-            contentLength = 42,
-            contentType = "image/png",
-            userAgent = null,
-            isPrivate = true,
-            cookie = null)
+            url = eq("https://download.mozilla.org/image.png"),
+            fileName = eq("image.png"),
+            contentLength = eq(42),
+            contentType = eq("image/png"),
+            userAgent = eq(null),
+            cookie = eq(null),
+            isPrivate = eq(true),
+            response = captor.capture()
+        )
+        assertNotNull(captor.value)
     }
 
     @Test
@@ -393,7 +400,7 @@ class GeckoEngineSessionTest {
             "http://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         engineSession.loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
@@ -401,7 +408,7 @@ class GeckoEngineSessionTest {
             "http://www.mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_EXTERNAL,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         engineSession.loadUrl("http://www.mozilla.org", parent = parentEngineSession)
@@ -409,7 +416,7 @@ class GeckoEngineSessionTest {
             "http://www.mozilla.org",
             parentEngineSession.geckoSession,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
 
         val extraHeaders = mapOf("X-Extra-Header" to "true")
@@ -479,7 +486,7 @@ class GeckoEngineSessionTest {
             "http://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null
+            emptyMap()
         )
 
         // Subsequent reloads should simply call reload on the gecko session.
@@ -550,9 +557,19 @@ class GeckoEngineSessionTest {
                 geckoSessionProvider = geckoSessionProvider)
 
         var observedSecurityChange = false
+        var progressObserved = false
+        var loadingStateChangeObserved = false
         engineSession.register(object : EngineSession.Observer {
             override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
                 observedSecurityChange = true
+            }
+
+            override fun onProgress(progress: Int) {
+                progressObserved = true
+            }
+
+            override fun onLoadingStateChange(loading: Boolean) {
+                loadingStateChangeObserved = true
             }
         })
 
@@ -565,6 +582,22 @@ class GeckoEngineSessionTest {
         progressDelegate.value.onSecurityChange(mock(),
                 MockSecurityInformation("https://www.mozilla.org"))
         assertTrue(observedSecurityChange)
+
+        progressDelegate.value.onPageStart(mock(), "about:blank")
+        assertFalse(progressObserved)
+        assertFalse(loadingStateChangeObserved)
+
+        progressDelegate.value.onPageStop(mock(), true)
+        assertFalse(progressObserved)
+        assertFalse(loadingStateChangeObserved)
+
+        progressDelegate.value.onPageStart(mock(), "https://www.mozilla.org")
+        assertTrue(progressObserved)
+        assertTrue(loadingStateChangeObserved)
+
+        progressDelegate.value.onPageStop(mock(), true)
+        assertTrue(progressObserved)
+        assertTrue(loadingStateChangeObserved)
     }
 
     @Test
@@ -1365,7 +1398,7 @@ class GeckoEngineSessionTest {
             "https://mozilla.org",
             null as GeckoSession?,
             GeckoSession.LOAD_FLAGS_NONE,
-            null as Map<String, String>?
+            emptyMap()
         )
     }
 
@@ -2595,7 +2628,7 @@ class GeckoEngineSessionTest {
         // loadUrl(url: String)
         engineSession.loadUrl(fakeUrl)
         verify(geckoSession).loadUri(
-            fakeUrl, null as GeckoSession?, GeckoSession.LOAD_FLAGS_NONE, null as Map<String, String>?
+            fakeUrl, null as GeckoSession?, GeckoSession.LOAD_FLAGS_NONE, emptyMap()
         )
         fakePageLoad(false)
 
