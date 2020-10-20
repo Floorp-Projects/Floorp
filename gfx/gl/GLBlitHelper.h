@@ -19,6 +19,10 @@
 #  include <windows.h>
 #endif
 
+#ifdef XP_MACOSX
+class MacIOSurface;
+#endif
+
 namespace mozilla {
 
 namespace layers {
@@ -188,6 +192,10 @@ class GLBlitHelper final {
  private:
   bool BlitImage(layers::GPUVideoImage* srcImage, const gfx::IntSize& destSize,
                  OriginPos destOrigin) const;
+#ifdef XP_MACOSX
+  bool BlitImage(MacIOSurface* const iosurf, const gfx::IntSize& destSize,
+                 OriginPos destOrigin) const;
+#endif
 #ifdef XP_WIN
   // GLBlitHelperD3D.cpp:
   bool BlitImage(layers::D3D11ShareHandleImage* srcImage,

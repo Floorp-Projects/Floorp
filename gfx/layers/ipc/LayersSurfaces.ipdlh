@@ -110,6 +110,7 @@ comparable union RemoteDecoderVideoSubDescriptor {
   SurfaceDescriptorD3D10;
   SurfaceDescriptorDXGIYCbCr;
   SurfaceDescriptorDMABuf;
+  SurfaceDescriptorMacIOSurface;
   null_t;
 };
 

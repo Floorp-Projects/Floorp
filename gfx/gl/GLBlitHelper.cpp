@@ -941,7 +941,12 @@ bool GLBlitHelper::BlitImage(layers::PlanarYCbCrImage* const yuvImage,
 bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
-  MacIOSurface* const iosurf = srcImage->GetSurface();
+  return BlitImage(srcImage->GetSurface(), destSize, destOrigin);
+}
+
+bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
+                             const gfx::IntSize& destSize,
+                             const OriginPos destOrigin) const {
   if (mGL->GetContextType() != GLContextType::CGL) {
     MOZ_ASSERT(false);
     return false;
@@ -955,6 +960,8 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
   baseArgs.yFlip = (destOrigin != srcOrigin);
   baseArgs.destSize = destSize;
 
+  // TODO: The colorspace is known by the IOSurface, why override it?
+  // See GetYUVColorSpace/GetFullRange()
   DrawBlitProg::YUVArgs yuvArgs;
   yuvArgs.colorSpace = gfx::YUVColorSpace::BT601;
 
@@ -1178,6 +1185,20 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
     case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDXGIYCbCr: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorDXGIYCbCr();
       return BlitDescriptor(subdesc, destSize, destOrigin);
+    }
+#endif
+#ifdef XP_MACOSX
+    case layers::RemoteDecoderVideoSubDescriptor::
+        TSurfaceDescriptorMacIOSurface: {
+      const auto& subdesc = subdescUnion.get_SurfaceDescriptorMacIOSurface();
+      RefPtr<MacIOSurface> surface = MacIOSurface::LookupSurface(
+          subdesc.surfaceId(), subdesc.scaleFactor(), !subdesc.isOpaque(),
+          subdesc.yUVColorSpace());
+      MOZ_ASSERT(surface);
+      if (!surface) {
+        return false;
+      }
+      return BlitImage(surface, destSize, destOrigin);
     }
 #endif
     case layers::RemoteDecoderVideoSubDescriptor::Tnull_t:
