@@ -46,7 +46,12 @@ class BlankAudioDataCreator : public DummyDataCreator {
 };
 
 class BlankDecoderModule : public PlatformDecoderModule {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> MakeAndAddRef(Args&&...);
+
  public:
+  static already_AddRefed<PlatformDecoderModule> Create();
+
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override;
 

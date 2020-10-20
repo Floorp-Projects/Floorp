@@ -23,10 +23,6 @@
 
 namespace mozilla {
 
-GMPDecoderModule::GMPDecoderModule() = default;
-
-GMPDecoderModule::~GMPDecoderModule() = default;
-
 static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
     GMPVideoDecoderParams&& aParams) {
   RefPtr<gmp::GeckoMediaPluginService> s(
@@ -87,6 +83,11 @@ bool GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 bool GMPDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   return false;
+}
+
+/* static */
+already_AddRefed<PlatformDecoderModule> GMPDecoderModule::Create() {
+  return MakeAndAddRef<GMPDecoderModule>();
 }
 
 }  // namespace mozilla
