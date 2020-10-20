@@ -15,7 +15,7 @@ use crate::gpu_types::UvRectKind;
 use crate::glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
 use crate::internal_types::FastHashMap;
 use crate::resource_cache::CachedImageData;
-use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
+use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::gpu_cache::GpuCache;
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task_cache::RenderTaskCache;
@@ -301,6 +301,7 @@ impl GlyphRasterizer {
                             Some(glyph_key_cache.eviction_notice()),
                             UvRectKind::Rect,
                             Eviction::Auto,
+                            TargetShader::Text,
                         );
                         GlyphCacheEntry::Cached(CachedGlyphInfo {
                             texture_cache_handle,

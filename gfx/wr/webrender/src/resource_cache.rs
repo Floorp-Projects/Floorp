@@ -47,7 +47,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::u32;
-use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
+use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 
 // Counter for generating unique native surface ids
 static NEXT_NATIVE_SURFACE_ID: AtomicUsize = AtomicUsize::new(0);
@@ -1297,6 +1297,7 @@ impl ResourceCache {
                     None,
                     UvRectKind::Rect,
                     eviction,
+                    TargetShader::Default,
                 );
             }
         }

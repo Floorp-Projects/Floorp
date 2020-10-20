@@ -189,7 +189,10 @@ pub const INTERNED_PICTURES: usize = 71;
 pub const INTERNED_FILTER_DATA: usize = 72;
 pub const INTERNED_BACKDROPS: usize = 73;
 
-pub const NUM_PROFILER_EVENTS: usize = 74;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS: usize = 74;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_MEM: usize = 75;
+
+pub const NUM_PROFILER_EVENTS: usize = 76;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -312,6 +315,9 @@ impl Profiler {
             int("Interned pictures", "", INTERNED_PICTURES, Expected::none()),
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
+
+            int("Texture cache glyphs regions", "", TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS, expected(0..100)),
+            float("Texture cache glyphs mem", "MB", TEXTURE_CACHE_RGBA8_GLYPHS_MEM, expected(0.0..100.0)),
         ];
 
 
