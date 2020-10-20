@@ -3067,14 +3067,13 @@ Toolbox.prototype = {
    */
   onHighlightFrame: async function(frameId) {
     const inspectorFront = await this.target.getFront("inspector");
-    const highlighter = this.getHighlighter();
 
     // Only enable frame highlighting when the top level document is targeted
     if (this.rootFrameSelected) {
-      const nodeFront = await inspectorFront.walker.getNodeActorFromWindowID(
+      const frameActor = await inspectorFront.walker.getNodeActorFromWindowID(
         frameId
       );
-      return highlighter.highlight(nodeFront);
+      inspectorFront.highlighter.highlight(frameActor);
     }
   },
 
@@ -3389,63 +3388,23 @@ Toolbox.prototype = {
   },
 
   /**
-   * A helper function that returns an object containing methods to show and hide the
-   * Box Model Highlighter on a given NodeFront or node grip (object with metadata which
-   * can be used to obtain a NodeFront for a node), as well as helpers to listen to the
-   * higligher show and hide events. The event helpers are used in tests where it is
-   * cumbersome to load the Inspector panel in order to listen to highlighter events.
+   * An helper function that returns an object contain a highlighter and unhighlighter
+   * function.
    *
    * @returns {Object} an object of the following shape:
-   *   - {AsyncFunction} highlight: A function that will show a Box Model Highlighter
-   *                     for the provided NodeFront or node grip.
-   *   - {AsyncFunction} unhighlight: A function that will hide any Box Model Highlighter
-   *                     that is visible. If the `highlight` promise isn't settled yet,
-   *                     it will wait until it's done and then unhighlight to prevent
-   *                     zombie highlighters.
-   *   - {AsyncFunction} waitForHighlighterShown: Returns a promise which resolves with
-   *                     the "highlighter-shown" event data once the highlighter is shown.
-   *   - {AsyncFunction} waitForHighlighterHidden: Returns a promise which resolves with
-   *                     the "highlighter-hidden" event data once the highlighter is
-   *                     hidden.
+   *   - {AsyncFunction} highlight: A function that will initialize the highlighter front
+   *                                and call highlighter.highlight with the provided node
+   *                                front (which will be retrieved from a grip, if
+   *                                `fromGrip` is true.)
+   *   - {AsyncFunction} unhighlight: A function that will unhighlight the node that is
+   *                                  currently highlighted. If the `highlight` function
+   *                                  isn't settled yet, it will wait until it's done and
+   *                                  then unhighlight to prevent zombie highlighters.
    *
    */
   getHighlighter() {
     let pendingHighlight;
-
-    /**
-     * Return a promise wich resolves with a reference to the Inspector panel.
-     */
-    const _getInspector = async () => {
-      const inspector = this.getPanel("inspector");
-      if (inspector) {
-        return inspector;
-      }
-
-      return this.loadTool("inspector");
-    };
-
-    /**
-     * Returns a promise which resolves when a Box Model Highlighter emits the given event
-     *
-     * @param  {String} eventName
-     *         Name of the event to listen to.
-     * @return {Promise}
-     *         Promise which resolves when the highlighter event occurs.
-     *         Resolves with the data payload attached to the event.
-     */
-    async function _waitForHighlighterEvent(eventName) {
-      const inspector = await _getInspector();
-      return new Promise(resolve => {
-        function _handler(data) {
-          if (data.type === inspector.highlighters.TYPES.BOXMODEL) {
-            inspector.highlighters.off(eventName, _handler);
-            resolve(data);
-          }
-        }
-
-        inspector.highlighters.on(eventName, _handler);
-      });
-    }
+    let currentHighlighterFront;
 
     return {
       // highlight might be triggered right before a test finishes. Wrap it
@@ -3463,33 +3422,25 @@ Toolbox.prototype = {
             return null;
           }
 
-          const inspector = await _getInspector();
-          return inspector.highlighters.showHighlighterTypeForNode(
-            inspector.highlighters.TYPES.BOXMODEL,
-            nodeFront,
-            options
-          );
+          // We cache the highlighter front so we can unhighlight easily.
+          currentHighlighterFront = nodeFront.highlighterFront;
+          return nodeFront.highlighterFront.highlight(nodeFront, options);
         })();
         return pendingHighlight;
       }),
-      unhighlight: this._safeAsyncAfterDestroy(async () => {
+      unhighlight: this._safeAsyncAfterDestroy(async forceHide => {
         if (pendingHighlight) {
           await pendingHighlight;
           pendingHighlight = null;
         }
 
-        const inspector = await _getInspector();
-        return inspector.highlighters.hideHighlighterType(
-          inspector.highlighters.TYPES.BOXMODEL
-        );
-      }),
+        if (!currentHighlighterFront) {
+          return null;
+        }
 
-      waitForHighlighterShown: this._safeAsyncAfterDestroy(async () => {
-        return _waitForHighlighterEvent("highlighter-shown");
-      }),
-
-      waitForHighlighterHidden: this._safeAsyncAfterDestroy(async () => {
-        return _waitForHighlighterEvent("highlighter-hidden");
+        const unHighlight = currentHighlighterFront.unhighlight(forceHide);
+        currentHighlighterFront = null;
+        return unHighlight;
       }),
     };
   },
@@ -3979,16 +3930,16 @@ Toolbox.prototype = {
     );
   },
 
-  viewElementInInspector: async function(objectActor, reason) {
+  viewElementInInspector: async function(objectActor, inspectFromAnnotation) {
     // Open the inspector and select the DOM Element.
     await this.loadTool("inspector");
     const inspector = this.getPanel("inspector");
     const nodeFound = await inspector.inspectNodeActor(
       objectActor.actor,
-      reason
+      inspectFromAnnotation
     );
     if (nodeFound) {
-      await this.selectTool("inspector", reason);
+      await this.selectTool("inspector");
     }
   },
 

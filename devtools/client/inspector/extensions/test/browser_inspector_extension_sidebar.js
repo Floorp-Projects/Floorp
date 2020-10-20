@@ -270,11 +270,6 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
-
   const expression = "({ body: document.body })";
 
   const consoleFront = await toolbox.target.getFront("console");
@@ -309,25 +304,21 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   // Test highlight DOMNode on mouseover.
   info("Highlight the node by moving the cursor on it");
 
-  const onNodeHighlight = waitForHighlighterTypeShown(
-    inspector.highlighters.TYPES.BOXMODEL
-  );
+  const onNodeHighlight = inspector.highlighter.once("node-highlight");
 
   moveMouseOnObjectInspectorDOMNode(sidebarPanelContent);
 
-  const { nodeFront } = await onNodeHighlight;
+  const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "body", "The correct node was highlighted");
 
   // Test unhighlight DOMNode on mousemove.
   info("Unhighlight the node by moving away from the node");
-  const onNodeUnhighlight = waitForHighlighterTypeHidden(
-    inspector.highlighters.TYPES.BOXMODEL
-  );
+  const onNodeUnhighlight = inspector.highlighter.once("node-unhighlight");
 
   moveMouseOnPanelCenter(sidebarPanelContent);
 
   await onNodeUnhighlight;
-  info("The node is no longer highlighted");
+  info("node-unhighlight event was fired when moving away from the node");
 
   inspectedWindowFront.destroy();
 });

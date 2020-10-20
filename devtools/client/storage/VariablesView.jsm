@@ -2937,12 +2937,12 @@ Variable.prototype = extend(Scope.prototype, {
 
     if (!this._nodeFront) {
       const inspectorFront = await this.toolbox.target.getFront("inspector");
-      this._nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(
+      this.nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(
         this._valueGrip
       );
     }
 
-    await this.toolbox.getHighlighter().highlight(this._nodeFront);
+    await this.nodeFront.highlighterFront.highlight(this._nodeFront);
   },
 
   /**
@@ -2954,7 +2954,7 @@ Variable.prototype = extend(Scope.prototype, {
       return;
     }
 
-    this.toolbox.getHighlighter().unhighlight();
+    this.nodeFront.highlighterFront.unhighlight();
   },
 
   /**
