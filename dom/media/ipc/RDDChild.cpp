@@ -42,7 +42,7 @@ bool RDDChild::Init() {
   Maybe<FileDescriptor> brokerFd;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  auto policy = SandboxBrokerPolicyFactory::GetUtilityPolicy(OtherPid());
+  auto policy = SandboxBrokerPolicyFactory::GetRDDPolicy(OtherPid());
   if (policy != nullptr) {
     brokerFd = Some(FileDescriptor());
     mSandboxBroker =

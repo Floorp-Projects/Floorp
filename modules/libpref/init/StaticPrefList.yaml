@@ -7083,6 +7083,8 @@
   value: true
 #elif defined(XP_MACOSX)
   value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
 #else
   value: false
 #endif
