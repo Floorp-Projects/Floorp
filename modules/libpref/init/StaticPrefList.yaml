@@ -7080,11 +7080,11 @@
 - name: media.rdd-ffvpx.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN) && !defined(_ARM64_)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_LINUX) && !defined(ANDROID)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
@@ -7095,7 +7095,7 @@
 - name: media.rdd-wmf.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN) && !defined(_ARM64_)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
@@ -7105,18 +7105,18 @@
 #ifdef MOZ_APPLEMEDIA
 - name: media.rdd-applemedia.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 #endif
 
 - name: media.rdd-theora.enabled
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && !defined(ANDROID)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
@@ -7138,11 +7138,11 @@
 - name: media.rdd-vpx.enabled
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && !defined(ANDROID)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
-  value: true
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
