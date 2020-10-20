@@ -654,6 +654,7 @@ module.exports = {
     UIEvent: false,
     URL: false,
     URLSearchParams: false,
+    UserInteraction: false,
     UserProximityEvent: false,
     VRDisplay: false,
     VRDisplayCapabilities: false,
