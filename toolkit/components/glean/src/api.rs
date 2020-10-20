@@ -121,20 +121,12 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfo) {
     if let Some(app_channel) = &client_info.channel {
         core_metrics.app_channel.set(glean, app_channel);
     }
-    // FIXME(bug 1625916): OS should be handled inside glean-core.
-    core_metrics.os.set(glean, "unknown".to_string());
     core_metrics
         .os_version
         .set(glean, &client_info.os_version[..]);
     core_metrics
         .architecture
         .set(glean, &client_info.architecture);
-    // FIXME(bug 1625207): Device manufacturer should be made optional.
-    core_metrics
-        .device_manufacturer
-        .set(glean, "unknown".to_string());
-    // FIXME(bug 1624823): Device model should be made optional.
-    core_metrics.device_model.set(glean, "unknown".to_string());
 }
 
 /// Set whether upload is enabled or not.
