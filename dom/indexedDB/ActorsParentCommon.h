@@ -120,6 +120,9 @@ Result<nsTArray<StructuredCloneFileParent>, nsresult>
 DeserializeStructuredCloneFiles(const FileManager& aFileManager,
                                 const nsAString& aText);
 
+nsresult ExecuteSimpleSQLSequence(mozIStorageConnection& aConnection,
+                                  Span<const nsLiteralCString> aSQLCommands);
+
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla

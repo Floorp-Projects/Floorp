@@ -25,6 +25,7 @@
 #include "SafeRefPtr.h"
 #include "js/RootingAPI.h"
 #include "js/StructuredClone.h"
+#include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "mozilla/Assertions.h"
@@ -715,6 +716,18 @@ DeserializeStructuredCloneFiles(const FileManager& aFileManager,
   }
 
   return result;
+}
+
+nsresult ExecuteSimpleSQLSequence(mozIStorageConnection& aConnection,
+                                  Span<const nsLiteralCString> aSQLCommands) {
+  for (const auto& aSQLCommand : aSQLCommands) {
+    const auto extraInfo = quota::ScopedLogExtraInfo{
+        quota::ScopedLogExtraInfo::kTagQuery, aSQLCommand};
+
+    IDB_TRY(aConnection.ExecuteSimpleSQL(aSQLCommand));
+  }
+
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom::indexedDB
