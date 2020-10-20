@@ -594,8 +594,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   bool shouldUpgrade = mUpgradeToSecure;
   if (mURI->SchemeIs("http")) {
     OriginAttributes originAttributes;
-    if (!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-            this, originAttributes)) {
+    if (!StoragePrincipalHelper::GetOriginAttributesForHSTS(this,
+                                                            originAttributes)) {
       return NS_ERROR_FAILURE;
     }
 
