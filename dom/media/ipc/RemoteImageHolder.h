@@ -9,6 +9,7 @@
 
 #include "MediaData.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
@@ -17,13 +18,13 @@ namespace mozilla {
 namespace layers {
 class BufferRecycleBin;
 class IGPUVideoSurfaceManager;
+class SurfaceDescriptor;
 }  // namespace layers
 class RemoteImageHolder final {
   friend struct ipc::IPDLParamTraits<RemoteImageHolder>;
 
  public:
-  RemoteImageHolder();  // only required for the IPDL binding code,
-                        // not used in practice.
+  RemoteImageHolder();
   RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
                     layers::VideoBridgeSource aSource,
                     const gfx::IntSize& aSize,
@@ -33,6 +34,8 @@ class RemoteImageHolder final {
   RemoteImageHolder(const RemoteImageHolder& aOther) = delete;
   RemoteImageHolder& operator=(const RemoteImageHolder& aOther) = delete;
   ~RemoteImageHolder();
+
+  bool IsEmpty() const { return mSD.isNothing(); }
   // Move content of RemoteImageHolder into a usable Image. Ownership is
   // transfered to that Image.
   already_AddRefed<layers::Image> TransferToImage(
@@ -44,9 +47,8 @@ class RemoteImageHolder final {
   // We need a default for the default constructor, never used in practice.
   layers::VideoBridgeSource mSource = layers::VideoBridgeSource::GpuProcess;
   gfx::IntSize mSize;
-  layers::SurfaceDescriptor mSD;
+  Maybe<layers::SurfaceDescriptor> mSD;
   RefPtr<layers::IGPUVideoSurfaceManager> mManager;
-  bool mEmpty = true;
 };
 
 template <>

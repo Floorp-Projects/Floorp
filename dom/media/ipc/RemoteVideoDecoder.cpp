@@ -75,7 +75,14 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
       aDecodedData.get_ArrayOfRemoteVideoData()->Array();
 
   for (auto&& data : arrayData) {
+    if (data.image().IsEmpty()) {
+      // This is a NullData object.
+      mDecodedData.AppendElement(MakeRefPtr<NullData>(
+          data.base().offset(), data.base().time(), data.base().duration()));
+      continue;
+    }
     RefPtr<Image> image = data.image().TransferToImage(mBufferRecycleBin);
+
     RefPtr<VideoData> video = VideoData::CreateFromImage(
         data.display(), data.base().offset(), data.base().time(),
         data.base().duration(), image, data.base().keyframe(),
@@ -193,8 +200,18 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
   nsTArray<RemoteVideoData> array;
 
   for (const auto& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA ||
+                   data->mType == MediaData::Type::NULL_DATA,
                "Can only decode videos using RemoteDecoderParent!");
+    if (data->mType == MediaData::Type::NULL_DATA) {
+      RemoteVideoData output(
+          MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+                        data->mDuration, data->mKeyframe),
+          IntSize(), RemoteImageHolder(), -1);
+
+      array.AppendElement(std::move(output));
+      continue;
+    }
     VideoData* video = static_cast<VideoData*>(data.get());
 
     MOZ_ASSERT(video->mImage,
