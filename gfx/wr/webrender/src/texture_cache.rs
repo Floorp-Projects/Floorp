@@ -17,7 +17,7 @@ use crate::internal_types::{
     TextureCacheAllocInfo, TextureCacheUpdate,
 };
 use crate::lru_cache::LRUCache;
-use crate::profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
+use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::FrameStamp;
 use crate::resource_cache::{CacheItem, CachedImageData};
 use smallvec::SmallVec;
@@ -376,7 +376,7 @@ impl PictureTextures {
         }
     }
 
-    fn update_profile(&self, profile: &mut ResourceProfileCounter) {
+    fn update_profile(&self, profile: &mut TransactionProfile) {
         // For now, this profile counter just accumulates the slices and bytes
         // from all picture cache texture arrays.
         let mut picture_slices = 0;
@@ -385,7 +385,8 @@ impl PictureTextures {
             picture_slices += texture.slices.len();
             picture_bytes += texture.size_in_bytes();
         }
-        profile.set(picture_slices, picture_bytes);
+        profile.set(profiler::PICTURE_TILES, picture_slices);
+        profile.set(profiler::PICTURE_TILES_MEM, profiler::bytes_to_mb(picture_bytes));
     }
 }
 
@@ -615,7 +616,7 @@ impl TextureCache {
         self.evict_items_from_cache_if_required();
     }
 
-    pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
+    pub fn end_frame(&mut self, profile: &mut TransactionProfile) {
         debug_assert!(self.now.is_valid());
         self.expire_old_picture_cache_tiles();
 
@@ -627,18 +628,30 @@ impl TextureCache {
         self.shared_textures.array_color8_linear.release_empty_textures(&mut self.pending_updates);
         self.shared_textures.array_color8_nearest.release_empty_textures(&mut self.pending_updates);
 
-        self.shared_textures.array_alpha8_linear
-            .update_profile(&mut texture_cache_profile.pages_alpha8_linear);
-        self.shared_textures.array_alpha16_linear
-            .update_profile(&mut texture_cache_profile.pages_alpha16_linear);
-        self.shared_textures.array_color8_linear
-            .update_profile(&mut texture_cache_profile.pages_color8_linear);
-        self.shared_textures.array_color8_nearest
-            .update_profile(&mut texture_cache_profile.pages_color8_nearest);
-        self.picture_textures
-            .update_profile(&mut texture_cache_profile.pages_picture);
-        texture_cache_profile.shared_bytes.set(self.shared_bytes_allocated);
-        texture_cache_profile.standalone_bytes.set(self.standalone_bytes_allocated);
+        self.shared_textures.array_alpha8_linear.update_profile(
+            profiler::TEXTURE_CACHE_A8_REGIONS,
+            profiler::TEXTURE_CACHE_A8_MEM,
+            profile,
+        );
+        self.shared_textures.array_alpha16_linear.update_profile(
+            profiler::TEXTURE_CACHE_A16_REGIONS,
+            profiler::TEXTURE_CACHE_A16_MEM,
+            profile,
+        );
+        self.shared_textures.array_color8_linear.update_profile(
+            profiler::TEXTURE_CACHE_RGBA8_LINEAR_REGIONS,
+            profiler::TEXTURE_CACHE_RGBA8_LINEAR_MEM,
+            profile,
+        );
+        self.shared_textures.array_color8_nearest.update_profile(
+            profiler::TEXTURE_CACHE_RGBA8_NEAREST_REGIONS,
+            profiler::TEXTURE_CACHE_RGBA8_NEAREST_MEM,
+            profile,
+        );
+        self.picture_textures.update_profile(profile);
+
+        profile.set(profiler::TEXTURE_CACHE_SHARED_MEM, self.shared_bytes_allocated);
+        profile.set(profiler::TEXTURE_CACHE_STANDALONE_MEM, self.standalone_bytes_allocated);
 
         self.now = FrameStamp::INVALID;
     }
@@ -1461,9 +1474,10 @@ impl TextureArray {
         });
     }
 
-    fn update_profile(&self, counter: &mut ResourceProfileCounter) {
+    fn update_profile(&self, count_idx: usize, mem_idx: usize, profile: &mut TransactionProfile) {
         let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
-        counter.set(num_regions, self.size_in_bytes());
+        profile.set(count_idx, num_regions);
+        profile.set(mem_idx, profiler::bytes_to_mb(self.size_in_bytes()));
     }
 
     /// Allocate space in this texture array.
