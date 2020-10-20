@@ -63,7 +63,8 @@
   _(ThreadId, 600)                    \
   _(WasmCodeSegmentMap, 600)          \
   _(TraceLoggerGraphState, 600)       \
-  _(VTuneLock, 600)
+  _(VTuneLock, 600)                   \
+  _(ShellTelemetry, 600)
 
 namespace js {
 namespace mutexid {
