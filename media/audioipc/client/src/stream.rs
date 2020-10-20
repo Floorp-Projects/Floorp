@@ -13,7 +13,7 @@ use audioipc::shm::{SharedMemMutSlice, SharedMemSlice};
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::ptr;
 use std::sync::mpsc;
@@ -296,6 +296,12 @@ impl<'ctx> StreamOps for ClientStream<'ctx> {
         assert_not_in_callback();
         let rpc = self.context.rpc();
         send_recv!(rpc, StreamSetVolume(self.token, volume) => StreamVolumeSet)
+    }
+
+    fn set_name(&mut self, name: &CStr) -> Result<()> {
+        assert_not_in_callback();
+        let rpc = self.context.rpc();
+        send_recv!(rpc, StreamSetName(self.token, name.to_owned()) => StreamNameSet)
     }
 
     fn current_device(&mut self) -> Result<&DeviceRef> {
