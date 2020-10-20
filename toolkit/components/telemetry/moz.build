@@ -121,6 +121,11 @@ EXTRA_JS_MODULES += [
     'TelemetryStartup.jsm',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXTRA_JS_MODULES += [
+        'pings/UninstallPing.jsm',
+    ]
+
 TESTING_JS_MODULES += [
   'tests/unit/TelemetryArchiveTesting.jsm',
 ]
