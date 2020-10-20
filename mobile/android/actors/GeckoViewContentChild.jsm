@@ -101,32 +101,6 @@ class GeckoViewContentChild extends GeckoViewActorChild {
     return { history, formdata, scrolldata };
   }
 
-  loadEntry(loadOptions, history) {
-    if (!loadOptions) {
-      history.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
-      return;
-    }
-
-    const webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
-
-    const {
-      referrerInfo,
-      triggeringPrincipal,
-      uri,
-      flags,
-      csp,
-      headers,
-    } = loadOptions;
-
-    webNavigation.loadURI(uri, {
-      triggeringPrincipal: E10SUtils.deserializePrincipal(triggeringPrincipal),
-      referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
-      loadFlags: flags,
-      csp: E10SUtils.deserializeCSP(csp),
-      headers,
-    });
-  }
-
   receiveMessage(message) {
     const { name } = message;
     debug`receiveMessage: ${name}`;
@@ -190,13 +164,20 @@ class GeckoViewContentChild extends GeckoViewActorChild {
         break;
       }
       case "RestoreHistoryAndNavigate": {
-        const { history, loadOptions } = message.data;
+        const { history, switchId } = message.data;
         if (history) {
-          const restoredHistory = SessionHistory.restore(
-            this.docShell,
-            history
+          SessionHistory.restore(this.docShell, history);
+          const historyIndex = history.requestedIndex - 1;
+          const webNavigation = this.docShell.QueryInterface(
+            Ci.nsIWebNavigation
           );
-          this.loadEntry(loadOptions, restoredHistory);
+
+          if (!switchId) {
+            // TODO: Bug 1648158 This won't work for Fission or HistoryInParent.
+            webNavigation.sessionHistory.legacySHistory.reloadCurrentEntry();
+          } else {
+            webNavigation.resumeRedirectedLoad(switchId, historyIndex);
+          }
         }
         break;
       }

@@ -20,7 +20,7 @@ class GeckoViewContentParent extends GeckoViewActorParent {
     return this.sendQuery("CollectSessionState");
   }
 
-  restoreState({ history, loadOptions, formdata, scrolldata }) {
+  restoreState({ history, switchId, formdata, scrolldata }) {
     // Restoring is made of two parts. First we need to restore the history
     // of the tab and navigating to the current page, after the page
     // navigates to the current page we need to restore the state of the
@@ -31,7 +31,7 @@ class GeckoViewContentParent extends GeckoViewActorParent {
     // on the parent side until we navigate.
     this.sendAsyncMessage("RestoreHistoryAndNavigate", {
       history,
-      loadOptions,
+      switchId,
     });
 
     if (!formdata && !scrolldata) {
