@@ -10,14 +10,14 @@
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "nsIObserver.h"
-#include <mozilla/DataMutex.h>
-#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
 
@@ -31,8 +31,8 @@ StaticMutex sLaunchMutex;
 // Only modified on the main-thread, read on any thread. While it could be read
 // on the main thread directly, for clarity we force access via the DataMutex
 // wrapper.
-StaticDataMutex<StaticRefPtr<nsIThread>> sRemoteDecoderManagerChildThread(
-    "sRemoteDecoderManagerChildThread");
+static StaticDataMutex<StaticRefPtr<nsIThread>>
+    sRemoteDecoderManagerChildThread("sRemoteDecoderManagerChildThread");
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild>
@@ -70,7 +70,7 @@ static Maybe<layers::TextureFactoryIdentifier> MaybeTextureFactoryIdentifier(
 }
 
 /* static */
-void RemoteDecoderManagerChild::InitializeThread() {
+void RemoteDecoderManagerChild::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
@@ -93,7 +93,9 @@ void RemoteDecoderManagerChild::InitializeThread() {
 void RemoteDecoderManagerChild::InitForRDDProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   MOZ_ASSERT(NS_IsMainThread());
-  InitializeThread();
+
+  Init();
+
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   MOZ_ALWAYS_SUCCEEDS((*remoteDecoderManagerThread)
                           ->Dispatch(NewRunnableFunction(
@@ -105,7 +107,9 @@ void RemoteDecoderManagerChild::InitForRDDProcess(
 void RemoteDecoderManagerChild::InitForGPUProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   MOZ_ASSERT(NS_IsMainThread());
-  InitializeThread();
+
+  Init();
+
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   MOZ_ALWAYS_SUCCEEDS((*remoteDecoderManagerThread)
                           ->Dispatch(NewRunnableFunction(
@@ -209,6 +213,8 @@ bool RemoteDecoderManagerChild::Supports(
                                         &supports, &diagnostics);
           }
         });
+    // If we've already got shutdown, the dispatch will fail and SyncRunnable
+    // will immediately return.
     SyncRunnable::DispatchToThread(managerThread, task);
   }
 
@@ -225,11 +231,13 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
   nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
   if (!managerThread) {
+    // We got shutdown.
     return nullptr;
   }
 
-  auto child = MakeRefPtr<RemoteAudioDecoderChild>();
-  MediaResult result(NS_OK);
+  RefPtr<RemoteAudioDecoderChild> child;
+  MediaResult result(NS_ERROR_DOM_MEDIA_CANCELED);
+
   // We can use child as a ref here because this is a sync dispatch. In
   // the error case for InitIPDL, we can't just let the RefPtr go out of
   // scope at the end of the method because it will release the
@@ -239,6 +247,7 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
   // thread during this single dispatch.
   RefPtr<Runnable> task =
       NS_NewRunnableFunction("RemoteDecoderModule::CreateAudioDecoder", [&]() {
+        child = new RemoteAudioDecoderChild();
         result = child->InitIPDL(aParams.AudioConfig(), aParams.mOptions);
         if (NS_FAILED(result)) {
           // Release RemoteAudioDecoderChild here, while we're on
@@ -266,12 +275,14 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
     const CreateDecoderParams& aParams, RemoteDecodeIn aLocation) {
   nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
   if (!managerThread) {
+    // We got shutdown.
     return nullptr;
   }
 
   MOZ_ASSERT(aLocation != RemoteDecodeIn::Unspecified);
-  auto child = MakeRefPtr<RemoteVideoDecoderChild>(aLocation);
-  MediaResult result(NS_OK);
+  RefPtr<RemoteVideoDecoderChild> child;
+  MediaResult result(NS_ERROR_DOM_MEDIA_CANCELED);
+
   // We can use child as a ref here because this is a sync dispatch. In
   // the error case for InitIPDL, we can't just let the RefPtr go out of
   // scope at the end of the method because it will release the
@@ -281,6 +292,7 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
   // thread during this single dispatch.
   RefPtr<Runnable> task = NS_NewRunnableFunction(
       "RemoteDecoderManagerChild::CreateVideoDecoder", [&]() {
+        child = new RemoteVideoDecoderChild(aLocation);
         result = child->InitIPDL(
             aParams.VideoConfig(), aParams.mRate.mValue, aParams.mOptions,
             aParams.mKnowsCompositor

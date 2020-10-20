@@ -29,6 +29,8 @@ class RemoteDecoderManagerChild final
   // Can only be called from the manager thread
   static RemoteDecoderManagerChild* GetSingleton(RemoteDecodeIn aLocation);
 
+  static void Init();
+
   // Can be called from any thread.
   static bool Supports(RemoteDecodeIn aLocation,
                        const SupportDecoderParams& aParams,
@@ -103,10 +105,8 @@ class RemoteDecoderManagerChild final
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static void OpenForGPUProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
-  static void InitializeThread();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
-
   // The location for decoding, Rdd or Gpu process.
   const RemoteDecodeIn mLocation;
 };
