@@ -700,19 +700,7 @@ void MediaTransportHandlerSTS::StartIceGathering(
         // Start gathering, but only if there are streams
         if (!mIceCtx->GetStreams().empty()) {
           mIceCtx->StartGathering(aDefaultRouteOnly, aObfuscateHostAddresses);
-          return;
         }
-
-        CSFLogWarn(
-            LOGTAG,
-            "%s: No streams to start gathering on. Can happen with rollback",
-            __FUNCTION__);
-
-        // If there are no streams, we're probably in a situation where we've
-        // rolled back while still waiting for our proxy configuration to come
-        // back. Make sure content knows that the rollback has stuck wrt
-        // gathering.
-        OnGatheringStateChange(dom::RTCIceGatheringState::Complete);
       },
       [](const std::string& aError) {});
 }
