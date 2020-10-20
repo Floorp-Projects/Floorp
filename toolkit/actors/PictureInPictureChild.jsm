@@ -232,7 +232,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     Services.cpmm.sharedData.addEventListener("change", this);
   }
 
-  willDestroy() {
+  didDestroy() {
     this.stopTrackingMouseOverVideos();
     Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
     Services.prefs.removeObserver(
@@ -547,6 +547,12 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   }
 
   removeMouseButtonListeners() {
+    // This can be null when closing the tab, but the event
+    // listeners should be removed in that case already.
+    if (!this.contentWindow.windowRoot) {
+      return;
+    }
+
     this.contentWindow.windowRoot.removeEventListener("pointerdown", this, {
       capture: true,
     });

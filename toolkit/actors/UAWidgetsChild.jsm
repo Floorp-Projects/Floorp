@@ -24,7 +24,7 @@ class UAWidgetsChild extends JSWindowActorChild {
     };
   }
 
-  willDestroy() {
+  didDestroy() {
     for (let pref in this.observedPrefs) {
       Services.prefs.removeObserver(pref, this.observerFunction);
     }

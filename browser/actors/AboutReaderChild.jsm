@@ -31,7 +31,7 @@ class AboutReaderChild extends JSWindowActorChild {
     this._isLeavingReaderableReaderMode = false;
   }
 
-  willDestroy() {
+  didDestroy() {
     this.cancelPotentialPendingReadabilityCheck();
     this.readerModeHidden();
   }

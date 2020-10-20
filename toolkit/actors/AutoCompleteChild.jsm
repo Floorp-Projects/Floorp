@@ -101,7 +101,7 @@ class AutoCompleteChild extends JSWindowActorChild {
     autoCompleteListeners.delete(listener);
   }
 
-  willDestroy() {
+  didDestroy() {
     if (this._attached) {
       formFill.detachFromDocument(this.document);
     }

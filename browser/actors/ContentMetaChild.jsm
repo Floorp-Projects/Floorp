@@ -92,7 +92,7 @@ class ContentMetaChild extends JSWindowActorChild {
     this.metaTags = new Map();
   }
 
-  willDestroy() {
+  didDestroy() {
     for (let entry of this.metaTags.values()) {
       entry.timeout.cancel();
     }

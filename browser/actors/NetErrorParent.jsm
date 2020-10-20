@@ -70,7 +70,7 @@ class NetErrorParent extends JSWindowActorParent {
     this.captivePortalObserver = new CaptivePortalObserver(this);
   }
 
-  willDestroy() {
+  didDestroy() {
     if (this.captivePortalObserver) {
       this.captivePortalObserver.stop();
     }
