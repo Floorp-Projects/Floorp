@@ -1198,7 +1198,10 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
   );
 
   // listen for director-script requests from the child process
-  setMessageManager(mm);
+  mm.addMessageListener(
+    "debug:storage-cookie-request-parent",
+    cookieHelpers.handleChildRequest
+  );
 
   function callChildProcess(methodName, ...args) {
     if (methodName === "onCookieChanged") {
@@ -1216,22 +1219,6 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
     }
   }
 
-  function setMessageManager(newMM) {
-    if (mm) {
-      mm.removeMessageListener(
-        "debug:storage-cookie-request-parent",
-        cookieHelpers.handleChildRequest
-      );
-    }
-    mm = newMM;
-    if (mm) {
-      mm.addMessageListener(
-        "debug:storage-cookie-request-parent",
-        cookieHelpers.handleChildRequest
-      );
-    }
-  }
-
   return {
     onDisconnected: () => {
       // Although "disconnected-from-child" implies that the child is already
@@ -1239,7 +1226,10 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
       // this method has finished. This gives us chance to clean up items within
       // the parent process e.g. observers.
       cookieHelpers.removeCookieObservers();
-      setMessageManager(null);
+      mm.removeMessageListener(
+        "debug:storage-cookie-request-parent",
+        cookieHelpers.handleChildRequest
+      );
     },
   };
 };
@@ -1688,23 +1678,10 @@ const extensionStorageHelpers = {
  */
 exports.setupParentProcessForExtensionStorage = function({ mm, prefix }) {
   // listen for director-script requests from the child process
-  setMessageManager(mm);
-
-  function setMessageManager(newMM) {
-    if (mm) {
-      mm.removeMessageListener(
-        "debug:storage-extensionStorage-request-parent",
-        extensionStorageHelpers.handleChildRequest
-      );
-    }
-    mm = newMM;
-    if (mm) {
-      mm.addMessageListener(
-        "debug:storage-extensionStorage-request-parent",
-        extensionStorageHelpers.handleChildRequest
-      );
-    }
-  }
+  mm.addMessageListener(
+    "debug:storage-extensionStorage-request-parent",
+    extensionStorageHelpers.handleChildRequest
+  );
 
   return {
     onDisconnected: () => {
@@ -1712,7 +1689,10 @@ exports.setupParentProcessForExtensionStorage = function({ mm, prefix }) {
       // disconnected this is not the case. The disconnection takes place after
       // this method has finished. This gives us chance to clean up items within
       // the parent process e.g. observers.
-      setMessageManager(null);
+      mm.removeMessageListener(
+        "debug:storage-extensionStorage-request-parent",
+        extensionStorageHelpers.handleChildRequest
+      );
       extensionStorageHelpers.onDisconnected();
     },
   };
@@ -3367,27 +3347,18 @@ var indexedDBHelpers = {
  */
 
 exports.setupParentProcessForIndexedDB = function({ mm, prefix }) {
-  // listen for director-script requests from the child process
-  setMessageManager(mm);
+  mm.addMessageListener(
+    "debug:storage-indexedDB-request-parent",
+    indexedDBHelpers.handleChildRequest
+  );
 
-  function setMessageManager(newMM) {
-    if (mm) {
+  return {
+    onDisconnected: () => {
       mm.removeMessageListener(
         "debug:storage-indexedDB-request-parent",
         indexedDBHelpers.handleChildRequest
       );
-    }
-    mm = newMM;
-    if (mm) {
-      mm.addMessageListener(
-        "debug:storage-indexedDB-request-parent",
-        indexedDBHelpers.handleChildRequest
-      );
-    }
-  }
-
-  return {
-    onDisconnected: () => setMessageManager(null),
+    },
   };
 };
 
