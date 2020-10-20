@@ -39,6 +39,10 @@
     <string name="tab_tray_close_multiselect_content_description">Colar del mou d\'esbilla múltiple</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Guardar les llingüetes esbillaes nuna coleición</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Esbillóse %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Deseleicionóse %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Colesti del mou d\'esbilla múltiple</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
@@ -208,7 +212,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Deprender más</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Buscar</string>
 
@@ -838,6 +841,8 @@
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Sesiones de restolar en privao</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Toca pa desaniciar les llingüetes privaes</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Toca pa zarrar les llingüetes privaes</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Abrir</string>
@@ -867,6 +872,8 @@
     <string name="snackbar_private_tabs_deleted">Desaniciáronse les llingüetes privaes</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DESFACER</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Desanicióse\'l sitiu</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Desfacer</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1507,6 +1514,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Calca pa más detalles</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
