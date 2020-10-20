@@ -40,6 +40,12 @@ if CONFIG['MOZ_JACK']:
     ]
     DEFINES['USE_JACK'] = True
 
+if CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD', 'SunOS'):
+    SOURCES += [
+        'cubeb_oss.c',
+    ]
+    DEFINES['USE_OSS'] = True
+
 if CONFIG['OS_ARCH'] == 'OpenBSD':
     SOURCES += [
         'cubeb_sndio.c',
