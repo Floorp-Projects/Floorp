@@ -11,9 +11,21 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.zst
 
+linux64-rust-1.41:
+    treeherder:
+        symbol: TL(rust-1.41)
+    run:
+        arguments: [
+            '--channel', '1.41.1',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'aarch64-unknown-linux-gnu',
+        ]
+
 linux64-rust-1.43:
     treeherder:
-        symbol: TL(rust-1.43)
+        symbol: TL(rust)
     run:
         arguments: [
             '--channel', '1.43.0',
@@ -22,23 +34,7 @@ linux64-rust-1.43:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
         ]
-
-linux64-rust-1.47:
-    treeherder:
-        symbol: TL(rust)
-    run:
-        arguments: [
-            '--channel', '1.47.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-            '--compiler-builtins-hack',
-        ]
         toolchain-alias: linux64-rust
-    fetches:
-        toolchain:
-            - linux64-clang
 
 linux64-rust-nightly:
     description: "rust nightly repack"
@@ -52,13 +48,13 @@ linux64-rust-nightly:
             '--target', 'i686-unknown-linux-gnu',
         ]
 
-linux64-rust-cross-1.47:
+linux64-rust-cross-1.43:
     description: "rust repack with macos and windows cross support"
     treeherder:
         symbol: TL(rust-cross)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -68,13 +64,13 @@ linux64-rust-cross-1.47:
         ]
         toolchain-alias: linux64-rust-cross
 
-linux64-rust-static-1.47:
+linux64-rust-static-1.43:
     description: "rust repack with static linking support"
     treeherder:
         symbol: TL(rust-static)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-musl',
@@ -83,26 +79,38 @@ linux64-rust-static-1.47:
         ]
         toolchain-alias: linux64-rust-static
 
-linux64-rust-macos-1.47:
+linux64-rust-macos-1.41:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos-1.41)
+    run:
+        arguments: [
+            '--channel', '1.41.1',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+
+linux64-rust-macos-1.43:
     description: "rust repack with macos-cross support"
     treeherder:
         symbol: TL(rust-macos)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
         ]
         toolchain-alias: linux64-rust-macos
 
-linux64-rust-android-1.47:
+linux64-rust-android-1.43:
     description: "rust repack with android-cross support"
     treeherder:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -110,20 +118,16 @@ linux64-rust-android-1.47:
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust-android
-    fetches:
-        toolchain:
-            - linux64-clang
 
-linux64-rust-windows-1.47:
+linux64-rust-windows-1.43:
     description: "rust repack with windows-cross support"
     treeherder:
         symbol: TL(rust-win)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
@@ -131,12 +135,24 @@ linux64-rust-windows-1.47:
         ]
         toolchain-alias: linux64-rust-windows
 
-win64-rust-1.47:
+win64-rust-1.41:
+    treeherder:
+        symbol: TW64(rust-1.41)
+    run:
+        arguments: [
+            '--channel', '1.41.1',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+        ]
+
+win64-rust-1.43:
     treeherder:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.43.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -144,12 +160,25 @@ win64-rust-1.47:
         ]
         toolchain-alias: win64-rust
 
-mingw32-rust-1.47:
+mingw32-rust-1.41:
+    treeherder:
+        symbol: TMW(rust-1.41)
+    run:
+        arguments: [
+            '--channel', '1.41.1',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+
+mingw32-rust-1.44:
     treeherder:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.47.0',
+            '--channel', '1.44.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',

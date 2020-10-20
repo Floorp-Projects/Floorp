@@ -191,16 +191,7 @@ target_rust_ltoable := force-cargo-library-build
 target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
 
 ifdef MOZ_PGO_RUST
-ifdef MOZ_PROFILE_GENERATE
-rust_pgo_flags := -C profile-generate=$(topobjdir)
-# The C compiler may be passed extra llvm flags for PGO that we also want to pass to rust as well.
-# In PROFILE_GEN_CFLAGS, they look like "-mllvm foo", and we want "-C llvm-args=foo", so first turn
-# "-mllvm foo" into "-mllvm:foo" so that it becomes a unique argument, that we can then filter for,
-# excluding other flags, and then turn into the right string.
-rust_pgo_flags += $(patsubst -mllvm:%,-C llvm-args=%,$(filter -mllvm:%,$(subst -mllvm ,-mllvm:,$(PROFILE_GEN_CFLAGS))))
-else # MOZ_PROFILE_USE
-rust_pgo_flags := -C profile-use=$(PGO_PROFILE_PATH)
-endif
+rust_pgo_flags := $(if $(MOZ_PROFILE_GENERATE),-C profile-generate=$(topobjdir)) $(if $(MOZ_PROFILE_USE),-C profile-use=$(PGO_PROFILE_PATH))
 endif
 
 $(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST),-Clinker-plugin-lto) $(rust_pgo_flags)
