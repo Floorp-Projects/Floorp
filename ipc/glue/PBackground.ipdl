@@ -263,8 +263,8 @@ parent:
                              uint32_t aProviderFlags,
                              uint32_t aCertVerifierFlags);
 
-  // See Bug 1518344 - Investigate using async for PBackground::LaunchRDDProcess
-  sync LaunchRDDProcess()
+  // See Bug 1518344 - Investigate using async for PBackground::EnsureRDDProcessAndCreateBridge
+  sync EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
 child:

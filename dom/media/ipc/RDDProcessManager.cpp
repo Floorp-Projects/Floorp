@@ -99,13 +99,17 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
-bool RDDProcessManager::LaunchRDDProcess() {
+bool RDDProcessManager::EnsureRDDProcessAndCreateBridge(
+    base::ProcessId aOtherProcess,
+    mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
+        aOutRemoteDecoderManager) {
   bool success = false;
 
   RefPtr<Runnable> task =
       NS_NewRunnableFunction("RDDProcessManager::RDDProcessManager", [&]() {
         if (mProcess) {
-          success = true;
+          success =
+              CreateContentBridge(aOtherProcess, aOutRemoteDecoderManager);
           return;
         }
 
@@ -127,7 +131,8 @@ bool RDDProcessManager::LaunchRDDProcess() {
           return;
         }
 
-        success = CreateVideoBridge();
+        success = CreateVideoBridge() &&
+                  CreateContentBridge(aOtherProcess, aOutRemoteDecoderManager);
       });
   SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), task);
 

@@ -17,7 +17,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
@@ -66,7 +65,6 @@
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/HttpBackgroundChannelParent.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
-#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -1320,26 +1318,14 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BackgroundParentImpl::RecvLaunchRDDProcess(
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
     nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
-  *aRv = NS_OK;
-
-  if (XRE_IsParentProcess() &&
-      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
-      StaticPrefs::media_rdd_process_enabled()) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-    if (rdd) {
-      bool rddOpened = rdd->LaunchRDDProcess();
-      if (rddOpened) {
-        rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
-      }
-
-      if (NS_WARN_IF(!rddOpened)) {
-        *aRv = NS_ERROR_NOT_AVAILABLE;
-      }
-    } else {
-      *aRv = NS_ERROR_NOT_AVAILABLE;
-    }
+  RDDProcessManager* rdd = RDDProcessManager::Get();
+  if (rdd && rdd->EnsureRDDProcessAndCreateBridge(OtherPid(), aEndpoint)) {
+    *aRv = NS_OK;
+  } else {
+    *aRv = NS_ERROR_NOT_AVAILABLE;
   }
 
   return IPC_OK();

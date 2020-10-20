@@ -408,7 +408,7 @@ class BackgroundParentImpl : public PBackgroundParent,
       PEndpointForReportParent* actor, const nsString& aGroupName,
       const PrincipalInfo& aPrincipalInfo) override;
 
-  virtual mozilla::ipc::IPCResult RecvLaunchRDDProcess(
+  virtual mozilla::ipc::IPCResult RecvEnsureRDDProcessAndCreateBridge(
       nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) override;
 
   virtual bool DeallocPEndpointForReportParent(
