@@ -8,7 +8,9 @@
 #define MOZILLA_GFX_TEXTURED3D11_H
 
 #include <d3d11.h>
+
 #include <vector>
+
 #include "d3d9.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/GfxMessageUtils.h"
@@ -506,15 +508,30 @@ class SyncObjectD3D11Client : public SyncObjectClient {
 
   void RegisterTexture(ID3D11Texture2D* aTexture);
 
- private:
-  bool Init(bool aFallible);
-
-  SyncHandle mSyncHandle;
-  RefPtr<ID3D11Device> mDevice;
-  RefPtr<ID3D11Texture2D> mSyncTexture;
-  RefPtr<IDXGIKeyedMutex> mKeyedMutex;
-  std::vector<ID3D11Texture2D*> mSyncedTextures;
+ protected:
+  explicit SyncObjectD3D11Client(SyncHandle aSyncHandle);
+  bool Init(ID3D11Device* aDevice, bool aFallible);
+  bool SynchronizeInternal(ID3D11Device* aDevice, bool aFallible);
   Mutex mSyncLock;
+  RefPtr<ID3D11Texture2D> mSyncTexture;
+  std::vector<ID3D11Texture2D*> mSyncedTextures;
+
+ private:
+  const SyncHandle mSyncHandle;
+  RefPtr<IDXGIKeyedMutex> mKeyedMutex;
+  const RefPtr<ID3D11Device> mDevice;
+};
+
+class SyncObjectD3D11ClientContentDevice : public SyncObjectD3D11Client {
+ public:
+  explicit SyncObjectD3D11ClientContentDevice(SyncHandle aSyncHandle);
+
+  bool Synchronize(bool aFallible) override;
+
+  bool IsSyncObjectValid() override;
+
+ private:
+  RefPtr<ID3D11Device> mContentDevice;
 };
 
 inline uint32_t GetMaxTextureSizeForFeatureLevel(

@@ -25,12 +25,10 @@ class SyncObjectHost : public RefCounted<SyncObjectHost> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObjectHost)
   virtual ~SyncObjectHost() = default;
 
-  static already_AddRefed<SyncObjectHost> CreateSyncObjectHost(
 #ifdef XP_WIN
-      ID3D11Device* aDevice = nullptr
+  static already_AddRefed<SyncObjectHost> CreateSyncObjectHost(
+      ID3D11Device* aDevice);
 #endif
-  );
-
   virtual bool Init() = 0;
 
   virtual SyncHandle GetSyncHandle() = 0;
@@ -47,13 +45,12 @@ class SyncObjectClient : public external::AtomicRefCounted<SyncObjectClient> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObjectClient)
   virtual ~SyncObjectClient() = default;
 
-  static already_AddRefed<SyncObjectClient> CreateSyncObjectClient(
-      SyncHandle aHandle
 #ifdef XP_WIN
-      ,
-      ID3D11Device* aDevice = nullptr
+  static already_AddRefed<SyncObjectClient> CreateSyncObjectClient(
+      SyncHandle aHandle, ID3D11Device* aDevice);
 #endif
-  );
+  static already_AddRefed<SyncObjectClient>
+  CreateSyncObjectClientForContentDevice(SyncHandle aHandle);
 
   enum class SyncType {
     D3D11,
