@@ -43,7 +43,7 @@ nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
 
   NS_ASSERTION(!mQuotaObject, "Creating quota object more than once?");
   mQuotaObject = quotaManager->GetQuotaObject(
-      mPersistenceType, mGroup, mOrigin, mClientType,
+      mPersistenceType, mGroupAndOrigin, mClientType,
       FileStreamBase::mOpenParams.localFile);
 
   QM_TRY(FileStreamBase::DoOpen());
@@ -79,11 +79,11 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
 }
 
 already_AddRefed<FileInputStream> CreateFileInputStream(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
-    int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
+    int32_t aBehaviorFlags) {
   RefPtr<FileInputStream> stream =
-      new FileInputStream(aPersistenceType, aGroup, aOrigin, aClientType);
+      new FileInputStream(aPersistenceType, aGroupAndOrigin, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
 
@@ -91,11 +91,11 @@ already_AddRefed<FileInputStream> CreateFileInputStream(
 }
 
 already_AddRefed<FileOutputStream> CreateFileOutputStream(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
-    int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
+    int32_t aBehaviorFlags) {
   RefPtr<FileOutputStream> stream =
-      new FileOutputStream(aPersistenceType, aGroup, aOrigin, aClientType);
+      new FileOutputStream(aPersistenceType, aGroupAndOrigin, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
 
@@ -103,11 +103,11 @@ already_AddRefed<FileOutputStream> CreateFileOutputStream(
 }
 
 already_AddRefed<FileStream> CreateFileStream(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
-    int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
+    int32_t aBehaviorFlags) {
   RefPtr<FileStream> stream =
-      new FileStream(aPersistenceType, aGroup, aOrigin, aClientType);
+      new FileStream(aPersistenceType, aGroupAndOrigin, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
 

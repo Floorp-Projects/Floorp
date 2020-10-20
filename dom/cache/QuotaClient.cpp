@@ -33,6 +33,7 @@ using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::DatabaseUsageType;
+using mozilla::dom::quota::GroupAndOrigin;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -120,18 +121,16 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
   return NS_OK;
 }
 
-static nsresult LockedGetPaddingSizeFromDB(nsIFile* aDir,
-                                           const nsACString& aGroup,
-                                           const nsACString& aOrigin,
-                                           int64_t* aPaddingSizeOut) {
+static nsresult LockedGetPaddingSizeFromDB(
+    nsIFile* aDir, const GroupAndOrigin& aGroupAndOrigin,
+    int64_t* aPaddingSizeOut) {
   MOZ_DIAGNOSTIC_ASSERT(aDir);
   MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
 
   *aPaddingSizeOut = 0;
 
   QuotaInfo quotaInfo;
-  quotaInfo.mGroup = aGroup;
-  quotaInfo.mOrigin = aOrigin;
+  static_cast<GroupAndOrigin&>(quotaInfo) = aGroupAndOrigin;
   // quotaInfo.mDirectoryLockId must be -1 (which is default for new QuotaInfo)
   // because this method should only be called from QuotaClient::InitOrigin
   // (via QuotaClient::GetUsageForOriginInternal) when the temporary storage
@@ -220,17 +219,17 @@ CacheQuotaClient* CacheQuotaClient::Get() {
 CacheQuotaClient::Type CacheQuotaClient::GetType() { return DOMCACHE; }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+  return GetUsageForOriginInternal(aPersistenceType, aGroupAndOrigin, aCanceled,
                                    /* aInitializing*/ true);
 }
 
 nsresult CacheQuotaClient::InitOriginWithoutTracking(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
   // This is called when a storage/permanent/chrome/cache directory exists. Even
@@ -242,11 +241,11 @@ nsresult CacheQuotaClient::InitOriginWithoutTracking(
 }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+  return GetUsageForOriginInternal(aPersistenceType, aGroupAndOrigin, aCanceled,
                                    /* aInitializing*/ false);
 }
 
@@ -377,9 +376,8 @@ CacheQuotaClient::~CacheQuotaClient() {
 }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
-    PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const AtomicBool& aCanceled,
-    const bool aInitializing) {
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    const AtomicBool& aCanceled, const bool aInitializing) {
   AssertIsOnIOThread();
 #ifndef NIGHTLY_BUILD
   Unused << aInitializing;
@@ -388,8 +386,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
   QuotaManager* qm = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(qm);
 
-  CACHE_TRY_UNWRAP(auto dir,
-                   qm->GetDirectoryForOrigin(aPersistenceType, aOrigin));
+  CACHE_TRY_UNWRAP(auto dir, qm->GetDirectoryForOrigin(
+                                 aPersistenceType, aGroupAndOrigin.mOrigin));
 
   nsresult rv =
       dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME));
@@ -412,7 +410,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
         NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
             dir, &paddingSize)))) {
       if (aInitializing) {
-        rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
+        rv = LockedGetPaddingSizeFromDB(dir, aGroupAndOrigin, &paddingSize);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
                                        Cache_GetPaddingSize);
@@ -433,7 +431,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
 
   if (useCachedValue) {
     uint64_t usage;
-    if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
+    if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin,
                               Client::DOMCACHE, usage)) {
       usageInfo += DatabaseUsageType(Some(usage));
     }

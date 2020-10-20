@@ -301,15 +301,17 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_FAILURE;
   }
 
-  nsCString suffix;
-  nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(storagePrincipal.get(), &suffix,
-                                          nullptr, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+#ifdef DEBUG
+  LS_TRY_INSPECT(const auto& quotaInfo,
+                 QuotaManager::GetInfoFromPrincipal(storagePrincipal.get()));
 
-  MOZ_ASSERT(originAttrSuffix == suffix);
+  MOZ_ASSERT(originAttrSuffix == quotaInfo.mSuffix);
+
+  const auto& origin = quotaInfo.mOrigin;
+#else
+  LS_TRY_INSPECT(const auto& origin,
+                 QuotaManager::GetOriginFromPrincipal(storagePrincipal.get()));
+#endif
 
   uint32_t privateBrowsingId;
   rv = storagePrincipal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -387,20 +389,33 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_FAILURE;
   }
 
-  nsCString suffix;
-  nsCString origin;
+#ifdef DEBUG
+  LS_TRY_INSPECT(
+      const auto& quotaInfo,
+      ([&storagePrincipalInfo, &aPrincipal]() -> Result<QuotaInfo, nsresult> {
+        if (storagePrincipalInfo->type() ==
+            PrincipalInfo::TSystemPrincipalInfo) {
+          return QuotaManager::GetInfoForChrome();
+        }
 
-  if (storagePrincipalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
-    QuotaManager::GetInfoForChrome(&suffix, nullptr, &origin);
-  } else {
-    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, &suffix, nullptr,
-                                            &origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+        LS_TRY_RETURN(QuotaManager::GetInfoFromPrincipal(aPrincipal));
+      }()));
 
-  MOZ_ASSERT(originAttrSuffix == suffix);
+  MOZ_ASSERT(originAttrSuffix == quotaInfo.mSuffix);
+
+  const auto& origin = quotaInfo.mOrigin;
+#else
+  LS_TRY_INSPECT(
+      const auto& origin, ([&storagePrincipalInfo,
+                            &aPrincipal]() -> Result<nsAutoCString, nsresult> {
+        if (storagePrincipalInfo->type() ==
+            PrincipalInfo::TSystemPrincipalInfo) {
+          return nsAutoCString{QuotaManager::GetOriginForChrome()};
+        }
+
+        LS_TRY_RETURN(QuotaManager::GetOriginFromPrincipal(aPrincipal));
+      }()));
+#endif
 
   Maybe<nsID> clientId;
   if (aWindow) {
