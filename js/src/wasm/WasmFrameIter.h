@@ -65,7 +65,7 @@ class WasmFrameIter {
   const CodeRange* codeRange_;
   unsigned lineOrBytecode_;
   Frame* fp_;
-  TlsData* tls_;
+  const TlsData* tls_;
   uint8_t* unwoundIonCallerFP_;
   jit::FrameType unwoundIonFrameType_;
   Unwind unwind_;
@@ -96,7 +96,7 @@ class WasmFrameIter {
   jit::FrameType unwoundIonFrameType() const;
   uint8_t* unwoundIonCallerFP() const { return unwoundIonCallerFP_; }
   Frame* frame() const { return fp_; }
-  TlsData* tls() const { return tls_; }
+  const TlsData* tls() const { return tls_; }
 
   // Returns the address of the next instruction that will execute in this
   // frame, once control returns to this frame.
@@ -237,6 +237,7 @@ void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
 
 // Iterates through frames for either possible cross-instance call or an entry
 // stub to obtain tls that corresponds to the passed fp.
+const TlsData* GetNearestEffectiveTls(const Frame* fp);
 TlsData* GetNearestEffectiveTls(Frame* fp);
 
 // Describes register state and associated code at a given call frame.
