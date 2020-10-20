@@ -368,6 +368,15 @@ void PDMFactory::CreateRddPDMs() {
     CreateAndStartupPDM<FFVPXRuntimeLinker>();
   }
 #endif
+#ifdef MOZ_FFMPEG
+  if (StaticPrefs::media_ffmpeg_enabled() &&
+      StaticPrefs::media_rdd_ffmpeg_enabled() &&
+      !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
+  } else {
+    mFailureFlags -= DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
+  }
+#endif
   CreateAndStartupPDM<AgnosticDecoderModule>();
 }
 
