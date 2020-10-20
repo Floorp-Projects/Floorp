@@ -362,9 +362,24 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin-inline-end: 4px !important; /* Overrides the styling for .toolbarbutton-1 */
 }
 
+/* Separators */
+
+/* Override the toolkit styles, and make sure separators are draggable by
+ * making them wider, and using a pseudo-element for the visual separator. */
+#PlacesToolbarItems > toolbarseparator {
+  margin: 0;
+  padding-inline: 4px;
+  appearance: none;
+}
+#PlacesToolbarItems > toolbarseparator::before {
+  content: "";
+  display: block;
+}
+
 /* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
 #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
-#PersonalToolbar > #import-button + #personal-bookmarks {
+#PersonalToolbar > #import-button + #personal-bookmarks,
+#PlacesToolbarItems > toolbarseparator::before {
   border-inline-start: 1px solid;
   border-image-source: linear-gradient(
     transparent 3.75px,
@@ -376,7 +391,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 
 @media (min-resolution: 2dppx) {
   #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
-  #PersonalToolbar > #import-button + #personal-bookmarks {
+  #PersonalToolbar > #import-button + #personal-bookmarks,
+  #PlacesToolbarItems > toolbarseparator::before {
     border-inline-start-width: 0.5px;
   }
 }
