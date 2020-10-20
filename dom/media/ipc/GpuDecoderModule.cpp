@@ -48,32 +48,8 @@ already_AddRefed<MediaDataDecoder> GpuDecoderModule::CreateVideoDecoder(
     return mWrapped->CreateVideoDecoder(aParams);
   }
 
-  RefPtr<GpuRemoteVideoDecoderChild> child = new GpuRemoteVideoDecoderChild();
-  MediaResult result(NS_OK);
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-      "dom::GpuDecoderModule::CreateVideoDecoder", [&]() {
-        result = child->InitIPDL(
-            aParams.VideoConfig(), aParams.mRate.mValue, aParams.mOptions,
-            aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
-        if (NS_FAILED(result)) {
-          // Release GpuRemoteVideoDecoderChild here, while we're on
-          // manager thread.  Don't just let the RefPtr go out of scope.
-          child = nullptr;
-        }
-      });
-  SyncRunnable::DispatchToThread(RemoteDecoderManagerChild::GetManagerThread(),
-                                 task);
-
-  if (NS_FAILED(result)) {
-    if (aParams.mError) {
-      *aParams.mError = result;
-    }
-    return nullptr;
-  }
-
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(child);
-
-  return object.forget();
+  return RemoteDecoderManagerChild::CreateVideoDecoder(
+      aParams, RemoteDecodeIn::GpuProcess);
 }
 
 }  // namespace mozilla

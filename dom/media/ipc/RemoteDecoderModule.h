@@ -6,7 +6,6 @@
 #ifndef include_dom_media_ipc_RemoteDecoderModule_h
 #define include_dom_media_ipc_RemoteDecoderModule_h
 #include "PlatformDecoderModule.h"
-#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
@@ -18,8 +17,6 @@ class RemoteDecoderModule : public PlatformDecoderModule {
  public:
   static void Init();
 
-  RemoteDecoderModule();
-
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
@@ -28,9 +25,6 @@ class RemoteDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override;
-
- private:
-  const nsCOMPtr<nsISerialEventTarget> mManagerThread;
 };
 
 }  // namespace mozilla

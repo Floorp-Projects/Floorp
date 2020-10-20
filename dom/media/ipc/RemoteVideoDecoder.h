@@ -6,6 +6,7 @@
 #ifndef include_dom_media_ipc_RemoteVideoDecoderChild_h
 #define include_dom_media_ipc_RemoteVideoDecoderChild_h
 #include "RemoteDecoderChild.h"
+#include "RemoteDecoderManagerChild.h"
 #include "RemoteDecoderParent.h"
 
 namespace mozilla {
@@ -17,31 +18,25 @@ class BufferRecycleBin;
 namespace mozilla {
 
 class KnowsCompositorVideo;
+
 using mozilla::ipc::IPCResult;
 
 class RemoteVideoDecoderChild : public RemoteDecoderChild {
  public:
-  explicit RemoteVideoDecoderChild(bool aRecreatedOnCrash = false);
+  explicit RemoteVideoDecoderChild(RemoteDecodeIn aLocation);
 
-  MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
-                       const CreateDecoderParams::OptionSet& aOptions,
-                       const layers::TextureFactoryIdentifier* aIdentifier);
+  MOZ_IS_CLASS_INIT MediaResult
+  InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
+           const CreateDecoderParams::OptionSet& aOptions,
+           const layers::TextureFactoryIdentifier* aIdentifier);
 
   MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) override;
 
  private:
   RefPtr<mozilla::layers::BufferRecycleBin> mBufferRecycleBin;
-};
 
-class GpuRemoteVideoDecoderChild final : public RemoteVideoDecoderChild {
- public:
-  GpuRemoteVideoDecoderChild();
-
-  MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
-                       const CreateDecoderParams::OptionSet& aOptions,
-                       const layers::TextureFactoryIdentifier& aIdentifier);
+  // The location of the RemoteVideoDecoderParent - Gpu or Rdd process.
+  const RemoteDecodeIn mLocation;
 };
 
 class RemoteVideoDecoderParent final : public RemoteDecoderParent {

@@ -19,7 +19,6 @@
 #include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
-#include "RemoteDecoderManagerChild.h"
 #include "RemoteDecoderManagerParent.h"
 #include "RemoteImageHolder.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -70,9 +69,10 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
   virtual ~KnowsCompositorVideo() = default;
 };
 
-RemoteVideoDecoderChild::RemoteVideoDecoderChild(bool aRecreatedOnCrash)
-    : RemoteDecoderChild(aRecreatedOnCrash),
-      mBufferRecycleBin(new BufferRecycleBin) {}
+RemoteVideoDecoderChild::RemoteVideoDecoderChild(RemoteDecodeIn aLocation)
+    : RemoteDecoderChild(aLocation == RemoteDecodeIn::GpuProcess),
+      mBufferRecycleBin(new BufferRecycleBin),
+      mLocation(aLocation) {}
 
 MediaResult RemoteVideoDecoderChild::ProcessOutput(
     DecodedOutputIPDL&& aDecodedData) {
@@ -102,8 +102,10 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
     const CreateDecoderParams::OptionSet& aOptions,
     const layers::TextureFactoryIdentifier* aIdentifier) {
+  MOZ_ASSERT_IF(mLocation == RemoteDecodeIn::GpuProcess, aIdentifier);
+
   RefPtr<RemoteDecoderManagerChild> manager =
-      RemoteDecoderManagerChild::GetRDDProcessSingleton();
+      RemoteDecoderManagerChild::GetSingleton(mLocation);
 
   // The manager isn't available because RemoteDecoderManagerChild has been
   // initialized with null end points and we don't want to decode video on RDD
@@ -114,6 +116,16 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   }
 
   if (!manager->CanSend()) {
+    if (mLocation == RemoteDecodeIn::GpuProcess) {
+      // The manager doesn't support sending messages because we've just crashed
+      // and are working on reinitialization. Don't initialize mIPDLSelfRef and
+      // leave us in an error state. We'll then immediately reject the promise
+      // when Init() is called and the caller can try again. Hopefully by then
+      // the new manager is ready, or we've notified the caller of it being no
+      // longer available. If not, then the cycle repeats until we're ready.
+      return NS_OK;
+    }
+
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("RemoteDecoderManager unable to send."));
   }
@@ -125,46 +137,6 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   Unused << manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
                                                    ToMaybe(aIdentifier),
                                                    &success, &errorDescription);
-
-  return success ? MediaResult(NS_OK)
-                 : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
-}
-
-GpuRemoteVideoDecoderChild::GpuRemoteVideoDecoderChild()
-    : RemoteVideoDecoderChild(true) {}
-
-MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
-    const VideoInfo& aVideoInfo, float aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier& aIdentifier) {
-  RefPtr<RemoteDecoderManagerChild> manager =
-      RemoteDecoderManagerChild::GetGPUProcessSingleton();
-
-  // The manager isn't available because RemoteDecoderManagerChild has been
-  // initialized with null end points and we don't want to decode video on GPU
-  // process anymore. Return false here so that we can fallback to other PDMs.
-  if (!manager) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                       RESULT_DETAIL("RemoteDecoderManager is not available."));
-  }
-
-  // The manager doesn't support sending messages because we've just crashed
-  // and are working on reinitialization. Don't initialize mIPDLSelfRef and
-  // leave us in an error state. We'll then immediately reject the promise when
-  // Init() is called and the caller can try again. Hopefully by then the new
-  // manager is ready, or we've notified the caller of it being no longer
-  // available. If not, then the cycle repeats until we're ready.
-  if (!manager->CanSend()) {
-    return NS_OK;
-  }
-
-  mIPDLSelfRef = this;
-  bool success = false;
-  nsCString errorDescription;
-  VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
-  Unused << manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
-                                                   Some(aIdentifier), &success,
-                                                   &errorDescription);
 
   return success ? MediaResult(NS_OK)
                  : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);

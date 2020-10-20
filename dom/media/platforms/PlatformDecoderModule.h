@@ -86,6 +86,12 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     Set(std::forward<T1>(a1), std::forward<Ts>(args)...);
   }
 
+  template <typename T1, typename... Ts>
+  CreateDecoderParams(const CreateDecoderParams& aParams, T1&& a1, Ts&&... args)
+      : CreateDecoderParams(aParams) {
+    Set(std::forward<T1>(a1), std::forward<Ts>(args)...);
+  }
+
   const VideoInfo& VideoConfig() const {
     MOZ_ASSERT(mConfig.IsVideo());
     return *mConfig.GetAsVideoInfo();

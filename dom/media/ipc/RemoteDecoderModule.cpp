@@ -29,11 +29,6 @@ using dom::ContentChild;
 using namespace ipc;
 using namespace layers;
 
-RemoteDecoderModule::RemoteDecoderModule()
-    : mManagerThread(RemoteDecoderManagerChild::GetManagerThread()) {
-  MOZ_DIAGNOSTIC_ASSERT(mManagerThread);
-}
-
 /* static */
 void RemoteDecoderModule::Init() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -85,82 +80,21 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
   // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
   // to IsDefaultPlaybackDeviceMono on RDD because initializing audio
   // backends on RDD will be blocked by the sandbox.
-  CreateDecoderParams::OptionSet options(aParams.mOptions);
   if (OpusDataDecoder::IsOpus(aParams.mConfig.mMimeType) &&
       IsDefaultPlaybackDeviceMono()) {
-    options += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
+    CreateDecoderParams params = aParams;
+    params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
+    return RemoteDecoderManagerChild::CreateAudioDecoder(params);
   }
 
-  RefPtr<RemoteAudioDecoderChild> child = new RemoteAudioDecoderChild();
-  MediaResult result(NS_OK);
-  // We can use child as a ref here because this is a sync dispatch. In
-  // the error case for InitIPDL, we can't just let the RefPtr go out of
-  // scope at the end of the method because it will release the
-  // RemoteAudioDecoderChild on the wrong thread.  This will assert in
-  // RemoteDecoderChild's destructor.  Passing the RefPtr by reference
-  // allows us to release the RemoteAudioDecoderChild on the manager
-  // thread during this single dispatch.
-  RefPtr<Runnable> task =
-      NS_NewRunnableFunction("RemoteDecoderModule::CreateAudioDecoder", [&]() {
-        result = child->InitIPDL(aParams.AudioConfig(), options);
-        if (NS_FAILED(result)) {
-          // Release RemoteAudioDecoderChild here, while we're on
-          // manager thread.  Don't just let the RefPtr go out of scope.
-          child = nullptr;
-        }
-      });
-  SyncRunnable::DispatchToThread(mManagerThread, task);
-
-  if (NS_FAILED(result)) {
-    if (aParams.mError) {
-      *aParams.mError = result;
-    }
-    return nullptr;
-  }
-
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(child);
-
-  return object.forget();
+  return RemoteDecoderManagerChild::CreateAudioDecoder(aParams);
 }
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
   RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
-
-  RefPtr<RemoteVideoDecoderChild> child = new RemoteVideoDecoderChild();
-  MediaResult result(NS_OK);
-  // We can use child as a ref here because this is a sync dispatch. In
-  // the error case for InitIPDL, we can't just let the RefPtr go out of
-  // scope at the end of the method because it will release the
-  // RemoteVideoDecoderChild on the wrong thread.  This will assert in
-  // RemoteDecoderChild's destructor.  Passing the RefPtr by reference
-  // allows us to release the RemoteVideoDecoderChild on the manager
-  // thread during this single dispatch.
-  RefPtr<Runnable> task =
-      NS_NewRunnableFunction("RemoteDecoderModule::CreateVideoDecoder", [&]() {
-        result = child->InitIPDL(
-            aParams.VideoConfig(), aParams.mRate.mValue, aParams.mOptions,
-            aParams.mKnowsCompositor
-                ? &aParams.mKnowsCompositor->GetTextureFactoryIdentifier()
-                : nullptr);
-        if (NS_FAILED(result)) {
-          // Release RemoteVideoDecoderChild here, while we're on
-          // manager thread.  Don't just let the RefPtr go out of scope.
-          child = nullptr;
-        }
-      });
-  SyncRunnable::DispatchToThread(mManagerThread, task);
-
-  if (NS_FAILED(result)) {
-    if (aParams.mError) {
-      *aParams.mError = result;
-    }
-    return nullptr;
-  }
-
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(child);
-
-  return object.forget();
+  return RemoteDecoderManagerChild::CreateVideoDecoder(
+      aParams, RemoteDecodeIn::RddProcess);
 }
 
 }  // namespace mozilla
