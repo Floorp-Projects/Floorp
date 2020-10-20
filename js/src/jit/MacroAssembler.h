@@ -4420,6 +4420,9 @@ class WasmABIArgIter : public ABIArgIterBase<VecT, WasmABIArgGenerator> {
       : ABIArgIterBase<VecT, WasmABIArgGenerator>(types) {}
 };
 
+wasm::TlsData* ExtractCalleeTlsFromFrameWithTls(wasm::Frame* fp);
+wasm::TlsData* ExtractCallerTlsFromFrameWithTls(wasm::Frame* fp);
+
 }  // namespace jit
 }  // namespace js
 
