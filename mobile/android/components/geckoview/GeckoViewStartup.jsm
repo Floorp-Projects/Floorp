@@ -23,11 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
 
 const JSWINDOWACTORS = {
-  BrowserTab: {
-    parent: {
-      moduleURI: "resource:///actors/BrowserTabParent.jsm",
-    },
-  },
   LoadURIDelegate: {
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
