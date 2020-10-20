@@ -14763,48 +14763,31 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection& aConnection,
     return;
   }
 
-  nsresult rv = aConnection.ExecuteSimpleSQL("VACUUM;"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY(aConnection.ExecuteSimpleSQL("VACUUM;"_ns), QM_VOID);
 
-  PRTime vacuumTime = PR_Now();
+  const PRTime vacuumTime = PR_Now();
   MOZ_ASSERT(vacuumTime > 0);
 
-  int64_t fileSize;
-  rv = aDatabaseFile->GetFileSize(&fileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY_INSPECT(const int64_t& fileSize,
+                  MOZ_TO_RESULT_INVOKE(aDatabaseFile, GetFileSize), QM_VOID);
 
   MOZ_ASSERT(fileSize > 0);
 
-  nsCOMPtr<mozIStorageStatement> stmt;
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection.CreateStatement(
-      "UPDATE database "
-      "SET last_vacuum_time = :time"
-      ", last_vacuum_size = :size;"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY_INSPECT(const auto& stmt,
+                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                             aConnection, CreateStatement,
+                                             "UPDATE database "
+                                             "SET last_vacuum_time = :time"
+                                             ", last_vacuum_size = :size;"_ns),
+                  QM_VOID);
 
-  rv = stmt->BindInt64ByIndex(0, vacuumTime);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY(stmt->BindInt64ByIndex(0, vacuumTime), QM_VOID);
 
-  rv = stmt->BindInt64ByIndex(1, fileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY(stmt->BindInt64ByIndex(1, fileSize), QM_VOID);
 
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  IDB_TRY(stmt->Execute(), QM_VOID);
 }
 
 void DatabaseMaintenance::RunOnOwningThread() {
